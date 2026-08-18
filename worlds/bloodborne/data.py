@@ -64,7 +64,12 @@ ENTRANCES = (
         ("hunter_chief_emblem",),
         ("event_blood_starved_beast_defeated",),
     )),
-    Entrance("Road to Hemwick", "Cathedral Ward", "Hemwick Charnel Lane"),
+    # The road to Hemwick starts left of the Grand Cathedral entrance, so it is
+    # behind the plaza and carries the plaza's requirement, not nothing.
+    Entrance("Road to Hemwick", "Cathedral Ward", "Hemwick Charnel Lane", Rule.any(
+        ("hunter_chief_emblem",),
+        ("event_blood_starved_beast_defeated",),
+    )),
     Entrance("Forbidden Woods password door", "Cathedral Ward", "Forbidden Woods",
              Rule.all("event_forbidden_woods_password")),
     Entrance("Forbidden Woods clinic passage", "Forbidden Woods", "Iosefka's Clinic"),
@@ -74,7 +79,10 @@ ENTRANCES = (
     Entrance("Lecture Hall giant door", "Lecture Building 2F", "Nightmare of Mensis"),
     Entrance("Amygdala's grasp", "Cathedral Ward", "Lecture Building 1F", Rule.all("tonsil_stone")),
     Entrance("Lecture Building frontier door", "Lecture Building 1F", "Nightmare Frontier"),
-    Entrance("Upper Cathedral door", "Cathedral Ward", "Upper Cathedral Ward", Rule.all("upper_cathedral_key")),
+    # The chapel side doors that reach the Upper Cathedral only open after
+    # Blood-starved Beast; the key alone is not sufficient.
+    Entrance("Upper Cathedral door", "Cathedral Ward", "Upper Cathedral Ward",
+             Rule.all("upper_cathedral_key", "event_blood_starved_beast_defeated")),
     Entrance("Cainhurst carriage", "Hemwick Charnel Lane", "Castle Cainhurst", Rule.all("cainhurst_summons")),
     Entrance("Amygdala's DLC grasp", "Cathedral Ward", "Hunter's Nightmare",
              Rule.all("event_forbidden_woods_password", "eye_of_blood_drunk_hunter")),
