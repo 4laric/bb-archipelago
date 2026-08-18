@@ -124,6 +124,7 @@ class LocationRuleTests(unittest.TestCase):
         "boss_mergos_wet_nurse": {frozenset({"event_micolash_defeated"})},
         "pickup_eye_of_blood_drunk_hunter": {frozenset({"event_forbidden_woods_password"})},
         "boss_laurence": {frozenset({"laurences_skull"})},
+        "treasure_cosmic_eye_watcher_badge": {frozenset({"orphanage_key"})},
     }
 
     def test_gated_locations_match(self):

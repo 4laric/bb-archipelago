@@ -20,16 +20,23 @@ do not imply that the client grants a physical game item.
 
 ## Current vertical slice
 
-The first slice describes the critical path from Central Yharnam through Mergo's
-Wet Nurse plus four optional destinations. It includes only ten candidate checks:
-seven bosses and three key-item pickups. This small set is meant to give event-flag
-research exact targets while avoiding unsupported claims about hundreds of loose
-pickups.
+The slice describes the critical path from Central Yharnam through Mergo's Wet
+Nurse plus the optional destinations. It has 29 checks: boss/event checks, the
+original six fixed key-item locations, and nine catalog-backed fixed treasures.
+The added treasures give Cathedral Ward, Healing Church Workshop, Hemwick,
+Lecture Building 1F and 2F, Nightmare Frontier, Castle Cainhurst, and Underground
+Corpse Pile a concrete multiworld contribution. Cosmic Eye Watcher Badge is gated by Orphanage Key,
+giving that shuffled key a logical use.
+
+Every fixed check records its exact acquisition flag, item-lot row, item category,
+item ID, and MSB or EMEVD source in `runtime_bindings.py`. The suppression planner
+includes each check's vanilla award so adding checks cannot silently produce both
+the original reward and the Archipelago reward.
 
 ## Explicit open design questions
 
-1. Which checks are in the first playable pool: bosses only, key items, fixed
-   treasures, NPC rewards, or all of those?
+1. How far should the pool grow beyond the current fixed treasures, and which NPC
+   rewards can be made non-missable?
 2. Do progression key items keep their vanilla gate behavior after delivery, or
    must the client set a separate gate flag?
 3. Should Vicar Amelia's password interaction be represented solely by her defeat

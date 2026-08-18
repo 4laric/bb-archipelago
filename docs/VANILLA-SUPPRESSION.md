@@ -78,9 +78,10 @@ python tools/plan_vanilla_suppression.py --output work/suppression-plan.json
 ```
 
 Reads the committed research, resolves each randomized item to the single row
-that awards it, and **refuses rather than guessing**. A planner that picks one of
-two candidate lots is worse than no planner: the wrong pick leaves the vanilla
-item reachable and looks identical to success.
+that awards it, then adds every declared fixed check by its explicit runtime
+binding. Location bindings name the exact lot and item identity, so a common item
+does not become an ambiguous global lookup. The planner **refuses rather than
+guessing** whenever either source disagrees.
 
 Refusal cases, each with a test that fires it:
 
@@ -94,7 +95,8 @@ Refusal cases, each with a test that fires it:
 
 ## Current result
 
-**Nine of the ten pool items plan cleanly. One is refused.**
+**Eighteen rows plan cleanly: nine shuffled-key awards and nine additional
+fixed checks. One pool item is refused.**
 
 `tonsil_stone` resolves to lot 39000 — a Patches gift — whose
 `generic_acquisition_flag` is `-1`. That is "no flag", not flag −1; 2,778 rows in
@@ -116,12 +118,10 @@ of them — a consistency test that can pass by checking nothing is not a test.
 
 ## Not done here
 
-Writing. Applying the plan needs `ItemLotParam` round-tripped through the game's
-param BND, on a machine with the dump. `tools/msbb_miner` reads params from a CSV
-dump today; there is no write path yet. The design constraint for whoever builds
-it: **the row id and the acquisition flag must survive the edit unchanged**, and
-the writer should re-read the file afterwards and prove it, the way
-`tools/bb_enemizer_writer` already does for MSB.
+Repacking. `tools/apply_vanilla_suppression.py` writes and re-verifies the edited
+CSV directly from the committed bundle. Putting that CSV back into the game's
+param BND still needs the owner's game tooling. The writer proves that the changed
+row set is exact and that every row ID and acquisition flag survives.
 
 Open questions that need the game rather than the corpus:
 

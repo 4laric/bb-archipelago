@@ -1,6 +1,6 @@
 # Bloodborne location-signal research
 
-Status: six fixed-pickup acquisition flags mapped statically; live accessor not yet mapped  
+Status: fifteen fixed-location acquisition flags mapped statically; live accessor not yet mapped
 Target builds: `CUSA00900` and `CUSA03173`, AppVer `01.09`
 
 ## Scope and evidence boundary
@@ -32,10 +32,11 @@ nearby pickup has been checked.
 
 ## Static mappings now available
 
-The committed source census establishes acquisition-flag IDs for six randomized
-fixed locations in the vertical slice. Upper Cathedral Key is the only MSB
-treasure; the other five are EMEVD item-lot awards. Their source kind, source
-location, item-lot ID, and acquisition flag are recorded in
+The committed source census establishes acquisition-flag IDs for fifteen
+randomized fixed locations in the vertical slice. Of the original six, Upper
+Cathedral Key is the only MSB treasure and the other five are EMEVD item-lot
+awards; the nine expansion checks are MSB treasures. Their source kind, source
+location, item-lot ID, item identity, and acquisition flag are recorded in
 `worlds/bloodborne/runtime_bindings.py`. This completes the static mapping only;
 automatic client reporting remains disabled until Lane B identifies and validates
 the live flag-manager accessor.

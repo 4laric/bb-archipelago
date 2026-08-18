@@ -125,6 +125,19 @@ LOCATIONS = (
     Location("boss_orphan_of_kos", "Orphan of Kos", "Fishing Hamlet",
              locked_item="event_orphan_of_kos_defeated"),
     Location("pickup_laurences_skull", "Research Hall - Laurence's Skull", "Research Hall"),
+    # Catalog-backed fixed treasures. These make the previously empty optional
+    # regions contribute checks without inventing placement or flag IDs.
+    Location("treasure_radiant_sword_hunter_badge", "Cathedral Ward - Radiant Sword Hunter Badge", "Cathedral Ward"),
+    Location("treasure_old_hunter_bone", "Healing Church Workshop - Old Hunter Bone", "Healing Church Workshop"),
+    Location("treasure_rune_workshop_tool", "Hemwick Charnel Lane - Rune Workshop Tool", "Hemwick Charnel Lane"),
+    Location("treasure_augur_of_ebrietas", "Lecture Building 1F - Augur of Ebrietas", "Lecture Building 1F"),
+    Location("treasure_lecture_theatre_key", "Lecture Building 2F - Lecture Theatre Key", "Lecture Building 2F"),
+    Location("treasure_messengers_gift", "Nightmare Frontier - Messenger's Gift", "Nightmare Frontier"),
+    Location("treasure_executioners_gloves", "Castle Cainhurst - Executioner's Gloves", "Castle Cainhurst"),
+    Location("treasure_underground_jail_chunk", "Underground Corpse Pile - Underground Jail Blood Stone Chunk",
+             "Underground Corpse Pile"),
+    Location("treasure_cosmic_eye_watcher_badge", "Upper Cathedral Ward - Cosmic Eye Watcher Badge",
+             "Upper Cathedral Ward", Rule.all("orphanage_key")),
     Location("boss_laurence", "Laurence, the First Vicar", "Nightmare Grand Cathedral",
              Rule.all("laurences_skull"), locked_item="event_laurence_defeated"),
 )

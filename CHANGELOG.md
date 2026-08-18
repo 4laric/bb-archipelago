@@ -8,6 +8,9 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- Nine catalog-backed fixed treasure checks expand the pool to 29 locations.
+  Cainhurst Summons, Tonsil Stone, and Orphanage Key now each gate at least one
+  multiworld check, and suppression planning covers every added vanilla award.
 - Manual `/check` commands now keep a timestamped local journal and suggest close
   location names after a typo.
 - The vanilla-award suppression tool can replace nine planned key-item awards
