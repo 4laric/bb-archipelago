@@ -138,7 +138,7 @@ class CoverageGateTests(unittest.TestCase):
 class CliTests(unittest.TestCase):
     def run_cli(self, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run([sys.executable, str(REPO / "tools" / "bb_inputs.py"), *args],
-                              capture_output=True, text=True, cwd=REPO)
+                              capture_output=True, text=True, encoding="utf-8", cwd=REPO)
 
     @unittest.skipUnless(BUNDLE.exists(), "the committed bundle is missing")
     def test_get_streams_one_file_without_extracting(self):

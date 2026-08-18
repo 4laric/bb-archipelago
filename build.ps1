@@ -122,6 +122,9 @@ if ($Data) {
         $EventRoot,
         (Join-Path $Repo "research\validation\progression_items.tsv")
     )
+    Invoke-Python @(
+        (Join-Path $Repo "tools\build_emevd_entity_usage.py")
+    )
     Write-Host "  derived tables regenerated" -ForegroundColor Green
 }
 
@@ -141,7 +144,9 @@ if ($Preflight) {
         (Join-Path $WorldDir "runtime_bindings.py"),
         (Join-Path $Repo "research\catalog\fixed_location_catalog.tsv"),
         (Join-Path $Repo "research\joined\event_flag_references.tsv"),
-        (Join-Path $Repo "research\validation\progression_items.tsv")
+        (Join-Path $Repo "research\validation\progression_items.tsv"),
+        (Join-Path $Repo "research\enemizer\emevd_entity_usage.tsv"),
+        (Join-Path $Repo "research\enemizer\emevd_entity_usage_summary.json")
     )) {
         if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
             $failures.Add("missing: $required")
