@@ -1,4 +1,5 @@
 item_name	goods_param_id	expected_kind	wiki_source_or_area	item_lot_ids	acquisition_flags	observed_sources	msb_maps	enemy_maps	script_awards	status
+Hunter Chief Emblem	4011	treasure	Cathedral Ward	2400450	52400450	treasure	m24_00_00_00;m24_00_00_01			source_type_matches
 Cainhurst Summons	4003	treasure	Iosefka's Clinic	2410990	52410990	script_award			m24_01_00_00.emevd.dcx.js:2310	scripted_treasure_compatible
 Iron Door Key	4009	treasure	Nightmare of Mensis	2600550;2600610	52600550;52600610	treasure	m26_00_00_00			source_type_matches
 Lecture Theatre Key	4012	treasure	Lecture Building	3200720	53200720	treasure	m32_00_00_00;m32_00_00_01			source_type_matches

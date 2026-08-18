@@ -15,6 +15,10 @@ from pathlib import Path
 
 
 EXPECTED = [
+    # EquipParamGoods 4011's Japanese internal name is stale ("key to the old town").
+    # English FMG, runtime descriptor, lot 2400450, flag 52400450, and the m24 MSB
+    # treasure placement independently agree on Hunter Chief Emblem.
+    ("Hunter Chief Emblem", "treasure", "Cathedral Ward"),
     ("Cainhurst Summons", "treasure", "Iosefka's Clinic"),
     ("Iron Door Key", "treasure", "Nightmare of Mensis"),
     ("Lecture Theatre Key", "treasure", "Lecture Building"),
