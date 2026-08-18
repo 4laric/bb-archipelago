@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output = [[C:\Users\alari\bb-archipelago\work\code-cave-candidates.txt]]
+local regions = {
+    { name="performance_cave", address=0x800400170, size=0x100 },
+    { name="goldhen_cave", address=0x8050DB800, size=0x100 }
+}
+
+openProcess("shadPS4.exe")
+local lines = {}
+for _, region in ipairs(regions) do
+    local bytes = readBytes(region.address, region.size, true)
+    lines[#lines+1] = string.format("[%s] address=0x%X size=0x%X readable=%s",
+        region.name, region.address, region.size, tostring(bytes ~= nil))
+    if bytes then
+        for offset=0,#bytes-1,16 do
+            local parts = {}
+            for i=1,math.min(16,#bytes-offset) do
+                parts[#parts+1] = string.format("%02X", bytes[offset+i])
+            end
+            lines[#lines+1] = string.format("0x%X  %s", region.address+offset, table.concat(parts," "))
+        end
+    end
+end
+local f=assert(io.open(output,"w")); f:write(table.concat(lines,"\n").."\n"); f:close()
+showMessage("Read-only code-cave candidate capture completed")
+]]></LuaScript>
+</CheatTable>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local address = 0x8014D9575
+local expected = { 0xFF,0x25,0x00,0x00,0x00,0x00,0x00,0x00,0xC9,0x00,0x00,0x00,0x00,0x00 }
+local original = { 0x44,0x89,0xE0,0x48,0x83,0xC4,0x28,0x5B,0x41,0x5C,0x41,0x5D,0x41,0x5E }
+
+openProcess("shadPS4.exe")
+local actual = readBytes(address, #expected, true)
+if not actual or #actual ~= #expected then error("Could not read the patched epilogue") end
+for i = 1, #expected do
+    if actual[i] ~= expected[i] then
+        error(string.format("Restore safety check failed at byte %d; nothing was written", i))
+    end
+end
+
+writeBytes(address, table.unpack(original))
+local verified = readBytes(address, #original, true)
+for i = 1, #original do
+    if verified[i] ~= original[i] then error("Original-byte restoration did not verify") end
+end
+showMessage("Original Bloodborne epilogue restored and verified")
+]]></LuaScript>
+</CheatTable>

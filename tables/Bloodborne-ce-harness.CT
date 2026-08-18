@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local hpHook = 0x801BFC5F7
+local inventoryHook = 0x8014D9559
+local root = [[C:\Users\alari\bb-archipelago\work\]]
+local commandPath = root .. [[ce-harness-command.txt]]
+local statePath = root .. [[ce-harness-state.txt]]
+local logPath = root .. [[ce-harness.log]]
+
+local hpBase = nil
+local inventoryAnchor = nil
+local attachedPid = nil
+local allowedOffsets = {
+    F8 = 0xF8,
+    FC = 0xFC,
+    ["100"] = 0x100,
+    ["104"] = 0x104
+}
+local knownItems = {
+    BULLET = 0x40000384,
+    BULLETS = 0x40000384,
+    VIAL = 0x400003E8,
+    VIALS = 0x400003E8
+}
+
+local function appendLog(message)
+    local f = io.open(logPath, "a")
+    if f then
+        f:write(os.date("!%Y-%m-%dT%H:%M:%SZ"), " ", tostring(message), "\n")
+        f:close()
+    end
+end
+
+local function writeState(status, detail)
+    local f = io.open(statePath, "w")
+    if not f then return end
+    f:write("status=", tostring(status), "\n")
+    f:write("pid=", tostring(attachedPid or ""), "\n")
+    f:write("base=", hpBase and string.format("0x%X", hpBase) or "", "\n")
+    f:write("inventory_anchor=", inventoryAnchor and string.format("0x%X", inventoryAnchor) or "", "\n")
+    if hpBase then
+        f:write("current_F8=", tostring(readInteger(hpBase + 0xF8)), "\n")
+        f:write("candidate_FC=", tostring(readInteger(hpBase + 0xFC)), "\n")
+        f:write("candidate_100=", tostring(readInteger(hpBase + 0x100)), "\n")
+        f:write("candidate_104=", tostring(readInteger(hpBase + 0x104)), "\n")
+    end
+    f:write("detail=", tostring(detail or ""), "\n")
+    f:close()
+end
+
+local function parseItem(text)
+    local upper = string.upper(text or "")
+    if knownItems[upper] then return knownItems[upper] end
+    return tonumber(text or "")
+end
+
+local function findInventoryEntry(itemId)
+    if not inventoryAnchor then return nil end
+    -- Records are 16 bytes. Search around the entry captured at the consumable
+    -- hook, preserving its alignment and preferring the nearest match.
+    for distance = 0, 0x4000, 0x10 do
+        local low = inventoryAnchor - distance
+        if readInteger(low + 4) == itemId then return low end
+        if distance ~= 0 then
+            local high = inventoryAnchor + distance
+            if readInteger(high + 4) == itemId then return high end
+        end
+    end
+    return nil
+end
+
+local function processCommand(line)
+    local words = {}
+    for word in string.gmatch(line or "", "%S+") do
+        words[#words + 1] = word
+    end
+    local command = string.upper(words[1] or "")
+
+    if command == "READ" then
+        if not hpBase then
+            writeState("waiting_for_capture", "Open the in-game Status screen")
+            return
+        end
+        writeState("read_ok", "guarded read completed")
+        appendLog("READ base=" .. string.format("0x%X", hpBase))
+        return
+    end
+
+    if command == "WRITE" then
+        if not hpBase then
+            writeState("write_rejected", "HP base has not been captured")
+            appendLog("WRITE rejected: no captured base")
+            return
+        end
+
+        local offsetKey = string.upper(words[2] or "")
+        local offset = allowedOffsets[offsetKey]
+        local expected = tonumber(words[3] or "")
+        local replacement = tonumber(words[4] or "")
+        if not offset or not expected or not replacement then
+            writeState("write_rejected", "Usage: WRITE F8|FC|100|104 expected replacement")
+            appendLog("WRITE rejected: malformed command " .. tostring(line))
+            return
+        end
+        if replacement < 1 or replacement > 10000 then
+            writeState("write_rejected", "Replacement outside guarded range 1..10000")
+            appendLog("WRITE rejected: replacement out of range")
+            return
+        end
+
+        local address = hpBase + offset
+        local actual = readInteger(address)
+        if actual ~= expected then
+            writeState("write_rejected", string.format("Expected %d at +0x%X but found %s", expected, offset, tostring(actual)))
+            appendLog(string.format("WRITE rejected offset=0x%X expected=%d actual=%s", offset, expected, tostring(actual)))
+            return
+        end
+
+        if not writeInteger(address, replacement) then
+            writeState("write_failed", string.format("writeInteger failed at +0x%X", offset))
+            appendLog(string.format("WRITE failed offset=0x%X", offset))
+            return
+        end
+
+        local verified = readInteger(address)
+        if verified ~= replacement then
+            writeState("write_failed", string.format("Read-back expected %d but found %s", replacement, tostring(verified)))
+            appendLog(string.format("WRITE read-back failed offset=0x%X wanted=%d got=%s", offset, replacement, tostring(verified)))
+            return
+        end
+
+        writeState("write_ok", string.format("+0x%X: %d -> %d", offset, actual, replacement))
+        appendLog(string.format("WRITE verified pid=%d base=0x%X offset=0x%X address=0x%X old=%d new=%d", attachedPid, hpBase, offset, address, actual, replacement))
+        return
+    end
+
+    if command == "INVREAD" then
+        if not inventoryAnchor then
+            writeState("waiting_for_inventory_capture", "Use one bullet or vial to capture the inventory block")
+            return
+        end
+        local itemId = parseItem(words[2])
+        if not itemId then
+            writeState("inventory_read_rejected", "Usage: INVREAD BULLET|VIAL|item-id")
+            return
+        end
+        local entry = findInventoryEntry(itemId)
+        if not entry then
+            writeState("inventory_item_not_found", string.format("item=0x%08X", itemId))
+            appendLog(string.format("INVREAD item not found id=0x%08X", itemId))
+            return
+        end
+        local quantity = readInteger(entry + 8)
+        writeState("inventory_read_ok", string.format("item=0x%08X entry=0x%X quantity=%s", itemId, entry, tostring(quantity)))
+        appendLog(string.format("INVREAD item=0x%08X entry=0x%X quantity=%s", itemId, entry, tostring(quantity)))
+        return
+    end
+
+    if command == "INVWRITE" then
+        if not inventoryAnchor then
+            writeState("inventory_write_rejected", "Inventory block has not been captured; use one bullet or vial")
+            return
+        end
+        local itemId = parseItem(words[2])
+        local expected = tonumber(words[3] or "")
+        local replacement = tonumber(words[4] or "")
+        if not itemId or expected == nil or replacement == nil then
+            writeState("inventory_write_rejected", "Usage: INVWRITE BULLET|VIAL|item-id expected replacement")
+            return
+        end
+        if replacement < 1 or replacement > 99 then
+            writeState("inventory_write_rejected", "Replacement outside guarded range 1..99")
+            return
+        end
+        local entry = findInventoryEntry(itemId)
+        if not entry then
+            writeState("inventory_item_not_found", string.format("item=0x%08X", itemId))
+            appendLog(string.format("INVWRITE item not found id=0x%08X", itemId))
+            return
+        end
+        local actualItem = readInteger(entry + 4)
+        local actual = readInteger(entry + 8)
+        if actualItem ~= itemId or actual ~= expected then
+            writeState("inventory_write_rejected", string.format(
+                "item=0x%08X entry=0x%X expected=%d actual=%s", itemId, entry, expected, tostring(actual)))
+            appendLog(string.format("INVWRITE rejected item=0x%08X entry=0x%X expected=%d actual=%s",
+                itemId, entry, expected, tostring(actual)))
+            return
+        end
+        if not writeInteger(entry + 8, replacement) or readInteger(entry + 8) ~= replacement then
+            writeState("inventory_write_failed", string.format("item=0x%08X entry=0x%X", itemId, entry))
+            appendLog(string.format("INVWRITE failed item=0x%08X entry=0x%X", itemId, entry))
+            return
+        end
+        writeState("inventory_write_ok", string.format(
+            "item=0x%08X entry=0x%X quantity=%d->%d", itemId, entry, actual, replacement))
+        appendLog(string.format("INVWRITE verified pid=%d item=0x%08X entry=0x%X old=%d new=%d",
+            attachedPid, itemId, entry, actual, replacement))
+        return
+    end
+
+    writeState("command_rejected", "Unknown command: " .. tostring(command))
+    appendLog("Unknown command: " .. tostring(line))
+end
+
+local function pollCommand()
+    local f = io.open(commandPath, "r")
+    if not f then return end
+    local line = f:read("*l")
+    f:close()
+    os.remove(commandPath)
+    local ok, err = xpcall(function() processCommand(line) end, debug.traceback)
+    if not ok then
+        writeState("command_error", err)
+        appendLog("COMMAND ERROR " .. tostring(err))
+    end
+end
+
+local ok, err = xpcall(function()
+    os.remove(commandPath)
+    openProcess("shadPS4.exe")
+    attachedPid = getOpenedProcessID()
+    if not attachedPid or attachedPid == 0 then error("Could not attach to shadPS4.exe") end
+
+    debugProcess(2)
+    debug_setBreakpoint(hpHook, 1, bptExecute, bpmDebugRegister, function()
+        hpBase = RDI
+        writeState("captured", "HP structure captured from execution breakpoint")
+        appendLog(string.format("CAPTURE pid=%d hook=0x%X base=0x%X current=%s FC=%s 100=%s 104=%s",
+            attachedPid, hpHook, hpBase,
+            tostring(readInteger(hpBase + 0xF8)),
+            tostring(readInteger(hpBase + 0xFC)),
+            tostring(readInteger(hpBase + 0x100)),
+            tostring(readInteger(hpBase + 0x104))))
+        debug_removeBreakpoint(hpHook)
+        debug_continueFromBreakpoint(co_run)
+        return 1
+    end)
+
+    debug_setBreakpoint(inventoryHook, 1, bptExecute, bpmDebugRegister, function()
+        inventoryAnchor = RBX
+        local itemId = readInteger(inventoryAnchor + 4)
+        local quantity = readInteger(inventoryAnchor + 8)
+        writeState("inventory_captured", string.format(
+            "entry=0x%X item=0x%08X quantity=%s", inventoryAnchor, itemId or 0, tostring(quantity)))
+        appendLog(string.format("INVENTORY CAPTURE pid=%d hook=0x%X entry=0x%X item=0x%08X quantity=%s",
+            attachedPid, inventoryHook, inventoryAnchor, itemId or 0, tostring(quantity)))
+        debug_removeBreakpoint(inventoryHook)
+        debug_continueFromBreakpoint(co_run)
+        return 1
+    end)
+
+    if ceHpHarnessTimer then ceHpHarnessTimer.destroy() end
+    ceHpHarnessTimer = createTimer(nil)
+    ceHpHarnessTimer.Interval = 250
+    ceHpHarnessTimer.OnTimer = pollCommand
+    ceHpHarnessTimer.Enabled = true
+
+    writeState("armed", "Open Status for HP; use one bullet or vial for inventory")
+    appendLog(string.format("ARMED pid=%d hpHook=0x%X inventoryHook=0x%X", attachedPid, hpHook, inventoryHook))
+end, debug.traceback)
+
+if not ok then
+    writeState("setup_error", err)
+    appendLog("SETUP ERROR " .. tostring(err))
+    error(err)
+end
+]]></LuaScript>
+</CheatTable>

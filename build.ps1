@@ -1,0 +1,199 @@
+# build.ps1 -- Bloodborne Archipelago build driver
+#
+# Usage from the repository root:
+#   .\build.ps1 -Test          # run the dependency-free unit tests
+#   .\build.ps1 -Data          # regenerate joined events, catalog, and wiki-validation tables
+#   .\build.ps1 -Preflight     # verify tests, generated outputs, and shipping boundaries
+#   .\build.ps1 -Apworld       # package worlds\bloodborne -> build\bloodborne.apworld
+#   .\build.ps1 -All           # Data + Test + Preflight + Apworld
+#   .\build.ps1 -Clean         # remove only build\ outputs
+#
+# The large extracted game tree is a research/build input and is never included in the apworld.
+
+[CmdletBinding()]
+param(
+    [switch]$Test,
+    [switch]$Data,
+    [switch]$Preflight,
+    [switch]$Apworld,
+    [switch]$Clean,
+    [switch]$All,
+    [string]$Python = "python"
+)
+
+$ErrorActionPreference = "Stop"
+$Repo = $PSScriptRoot
+$WorldDir = Join-Path $Repo "worlds\bloodborne"
+$BuildDir = Join-Path $Repo "build"
+$ArtifactRoot = Join-Path $Repo "Bloodborne.Game.of.the.Year.Edition.PS4-PRELUDE"
+$GameArtifacts = Join-Path $ArtifactRoot "bloodborne_artifacts"
+$InstallRoot = Join-Path $ArtifactRoot "install\CUSA03173\dvdroot_ps4"
+$Params = Join-Path $InstallRoot "params_dump"
+$EventRoot = Join-Path $GameArtifacts "event"
+$FmgRoot = Join-Path $GameArtifacts "msg\engus\item-msgbnd-dcx"
+# Keep this script ASCII-safe: Windows PowerShell 5 treats UTF-8 without a BOM as ANSI.
+$GoodsFmg = Join-Path $FmgRoot ((-join [char[]](0x30A2, 0x30A4, 0x30C6, 0x30E0, 0x540D)) + ".fmg.xml")
+$WeaponFmg = Join-Path $FmgRoot ((-join [char[]](0x6B66, 0x5668, 0x540D)) + ".fmg.xml")
+$ArmorFmg = Join-Path $FmgRoot ((-join [char[]](0x9632, 0x5177, 0x540D)) + ".fmg.xml")
+
+function Step([string]$Message) {
+    Write-Host "`n==== $Message" -ForegroundColor Cyan
+}
+
+function Invoke-Python([string[]]$Arguments) {
+    & $Python @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Python command failed (exit $LASTEXITCODE): $Python $($Arguments -join ' ')"
+    }
+}
+
+function Require-File([string]$Path, [string]$Hint = "") {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        $suffix = if ($Hint) { " -- $Hint" } else { "" }
+        throw "Required file missing: $Path$suffix"
+    }
+}
+
+function Require-Directory([string]$Path, [string]$Hint = "") {
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        $suffix = if ($Hint) { " -- $Hint" } else { "" }
+        throw "Required directory missing: $Path$suffix"
+    }
+}
+
+if ($All) {
+    $Data = $true
+    $Test = $true
+    $Preflight = $true
+    $Apworld = $true
+}
+
+if (-not ($Test -or $Data -or $Preflight -or $Apworld -or $Clean)) {
+    Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 9 |
+        ForEach-Object { $_ -replace '^#\s?', '' }
+    return
+}
+
+if ($Clean) {
+    Step "Cleaning build outputs"
+    if (Test-Path -LiteralPath $BuildDir) {
+        $resolvedBuild = (Resolve-Path -LiteralPath $BuildDir).Path
+        $resolvedRepo = (Resolve-Path -LiteralPath $Repo).Path
+        if (-not $resolvedBuild.StartsWith($resolvedRepo + [IO.Path]::DirectorySeparatorChar)) {
+            throw "Refusing to clean a build directory outside the repository: $resolvedBuild"
+        }
+        Remove-Item -LiteralPath $resolvedBuild -Recurse -Force
+    }
+    Write-Host "  build outputs removed" -ForegroundColor Green
+}
+
+if ($Data) {
+    Step "Regenerating data-derived research tables"
+    Require-Directory $Params "dump parameters with Smithbox first"
+    Require-Directory $EventRoot "decompile EMEVD with DarkScript first"
+    Require-File $GoodsFmg "unpack engus item.msgbnd.dcx with WitchyBND"
+    Require-File (Join-Path $Repo "research\mined\msb_treasures.tsv") "run the MSBB miner first"
+
+    Invoke-Python @(
+        (Join-Path $Repo "tools\mine_param_joins.py"),
+        $Params,
+        (Join-Path $Repo "research\mined"),
+        (Join-Path $Repo "research\joined")
+    )
+    Invoke-Python @(
+        (Join-Path $Repo "tools\mine_event_flag_joins.py"),
+        $EventRoot,
+        (Join-Path $Repo "research\joined\fixed_treasure_lots.tsv"),
+        (Join-Path $Repo "research\joined")
+    )
+    Invoke-Python @(
+        (Join-Path $Repo "tools\build_location_catalog.py"),
+        (Join-Path $Repo "research\joined"),
+        $Params,
+        $GoodsFmg,
+        $WeaponFmg,
+        $ArmorFmg,
+        (Join-Path $Repo "research\catalog")
+    )
+    Invoke-Python @(
+        (Join-Path $Repo "tools\validate_progression_items.py"),
+        $GoodsFmg,
+        (Join-Path $Repo "research\joined"),
+        $EventRoot,
+        (Join-Path $Repo "research\validation\progression_items.tsv")
+    )
+    Write-Host "  derived tables regenerated" -ForegroundColor Green
+}
+
+if ($Test) {
+    Step "Running tests"
+    Invoke-Python @("-m", "unittest", "discover", "-s", (Join-Path $Repo "tests"), "-v")
+    Write-Host "  tests passed" -ForegroundColor Green
+}
+
+if ($Preflight) {
+    Step "Preflight"
+    $failures = [Collections.Generic.List[string]]::new()
+    foreach ($required in @(
+        (Join-Path $WorldDir "__init__.py"),
+        (Join-Path $WorldDir "data.py"),
+        (Join-Path $WorldDir "model.py"),
+        (Join-Path $WorldDir "runtime_bindings.py"),
+        (Join-Path $Repo "research\catalog\fixed_location_catalog.tsv"),
+        (Join-Path $Repo "research\joined\event_flag_references.tsv"),
+        (Join-Path $Repo "research\validation\progression_items.tsv")
+    )) {
+        if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
+            $failures.Add("missing: $required")
+        }
+    }
+
+    $worldFiles = Get-ChildItem -LiteralPath $WorldDir -Recurse -File -ErrorAction SilentlyContinue
+    $forbidden = @($worldFiles | Where-Object {
+        $_.Extension -in @(".dcx", ".msb", ".emevd", ".esd", ".ct") -or
+        $_.FullName -match '[\\/]research[\\/]'
+    })
+    if ($forbidden.Count) {
+        $failures.Add("shipping world contains research/game artifacts: $($forbidden.FullName -join ', ')")
+    }
+
+    Invoke-Python @("-m", "unittest", "discover", "-s", (Join-Path $Repo "tests"), "-v")
+    if ($failures.Count) {
+        $failures | ForEach-Object { Write-Host "[FAIL] $_" -ForegroundColor Red }
+        throw "Preflight failed with $($failures.Count) problem(s)"
+    }
+    Write-Host "[PASS] model/tests, generated tables, and shipping boundary" -ForegroundColor Green
+}
+
+if ($Apworld) {
+    Step "Packaging bloodborne.apworld"
+    Require-Directory $WorldDir
+    $initText = Get-Content -LiteralPath (Join-Path $WorldDir "__init__.py") -Raw
+    if ($initText -notmatch '(?m)^\s*class\s+\w*Bloodborne\w*\s*\(') {
+        throw "Archipelago World adapter is not implemented yet; refusing to package the design scaffold as playable."
+    }
+
+    New-Item -ItemType Directory -Path $BuildDir -Force | Out-Null
+    $outFile = Join-Path $BuildDir "bloodborne.apworld"
+    if (Test-Path -LiteralPath $outFile) {
+        Remove-Item -LiteralPath $outFile -Force
+    }
+    Add-Type -AssemblyName System.IO.Compression.FileSystem | Out-Null
+    $source = (Resolve-Path -LiteralPath $WorldDir).Path.TrimEnd('\')
+    $files = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object {
+        $_.FullName -notmatch '[\\/]__pycache__[\\/]' -and
+        $_.Extension -notin @('.pyc', '.pyo', '.bak')
+    })
+    $zip = [IO.Compression.ZipFile]::Open($outFile, [IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($file in $files) {
+            $relative = $file.FullName.Substring($source.Length).TrimStart('\', '/').Replace('\', '/')
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $zip, $file.FullName, "bloodborne/$relative"
+            ) | Out-Null
+        }
+    } finally {
+        $zip.Dispose()
+    }
+    Write-Host "  -> $outFile ($($files.Count) files)" -ForegroundColor Green
+}

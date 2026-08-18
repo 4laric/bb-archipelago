@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output=[[C:\Users\alari\bb-archipelago\work\native-thread-contexts-live.txt]]
+openProcess("shadPS4.exe")
+local f=assert(io.open(output,"w"))
+f:write(string.format("consume=%u\nhp=%u\nstamina=%u\nblood_echoes=%u\nfrenzy=%u\n",
+  readInteger(0x8050DB8C0),readInteger(0x8050DB8C4),readInteger(0x8050DB8C8),
+  readInteger(0x8050DB8CC),readInteger(0x8050DB8D0)))
+f:close()
+showMessage("Read-only live thread-ID capture completed")
+]]></LuaScript>
+</CheatTable>

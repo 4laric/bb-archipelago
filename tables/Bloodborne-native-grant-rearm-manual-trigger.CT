@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local heartbeat=0x801BFE882
+local b=readBytes(heartbeat,7,true)
+if not b or #b~=7 then error("Could not read heartbeat hook") end
+local original={0x48,0x81,0xC4,0xE8,0x07,0x00,0x00}
+local alreadyOriginal=true
+for i=1,7 do if b[i]~=original[i] then alreadyOriginal=false break end end
+if not alreadyOriginal and b[1]~=0xE9 then
+  error(string.format("Unexpected heartbeat bytes: %02X %02X %02X %02X %02X %02X %02X",unpack(b)))
+end
+if not alreadyOriginal then writeBytes(heartbeat,unpack(original)) end
+writeInteger(0x8050DB888,0xFFFFFFFF)
+writeInteger(0x8050DB88C,0)
+writeInteger(0x8050DB880,1)
+showMessage("Manual trigger armed. Fire one bullet now.")
+]]></LuaScript>
+</CheatTable>

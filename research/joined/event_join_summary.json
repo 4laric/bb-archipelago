@@ -1,0 +1,20 @@
+{
+  "event_script_files": 2668,
+  "total_resolved_flag_references": 10301,
+  "literal_flag_references": 5933,
+  "parameter_resolved_flag_references": 4368,
+  "distinct_resolved_flags": 2589,
+  "dynamic_flag_calls_seen_by_operation": {
+    "EventFlag": 1339,
+    "EventFlagState": 7,
+    "ObjActEventFlag": 84,
+    "SetEventFlag": 579
+  },
+  "parameterized_flag_uses": 2009,
+  "resolved_parameterized_references": 4368,
+  "unresolved_parameterized_uses": 859,
+  "unresolved_or_ambiguous_initializers": 1,
+  "fixed_acquisition_flags": 651,
+  "fixed_acquisition_flags_referenced_by_scripts": 37,
+  "fixed_acquisition_flags_not_referenced_by_scripts": 614
+}

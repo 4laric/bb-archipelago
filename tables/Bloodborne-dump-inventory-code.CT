@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local startAddress = 0x8014D7000
+local size = 0x6000
+local output = [[C:\Users\alari\bb-archipelago\work\inventory-code-8014D7000.bin]]
+local metadata = [[C:\Users\alari\bb-archipelago\work\inventory-code-8014D7000.txt]]
+
+openProcess("shadPS4.exe")
+local f = assert(io.open(output, "wb"))
+for offset = 0, size - 1, 0x1000 do
+    local count = math.min(0x1000, size - offset)
+    local bytes = readBytes(startAddress + offset, count, true)
+    if not bytes or #bytes ~= count then
+        f:close()
+        error(string.format("Could not read executable memory at 0x%X", startAddress + offset))
+    end
+    for i = 1, #bytes do f:write(string.char(bytes[i])) end
+end
+f:close()
+
+local m = assert(io.open(metadata, "w"))
+m:write(string.format("base=0x%X\nsize=0x%X\n", startAddress, size))
+m:close()
+showMessage("Read-only inventory code dump completed")
+]]></LuaScript>
+</CheatTable>

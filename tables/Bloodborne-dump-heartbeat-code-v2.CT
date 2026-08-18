@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local startAddress=0x801BFB000
+local size=0x4000
+local output=[[C:\Users\alari\bb-archipelago\work\heartbeat-code-801BFB000-v2.bin]]
+openProcess("shadPS4.exe")
+local f=assert(io.open(output,"wb"))
+for offset=0,size-1,0x1000 do
+  local bytes=readBytes(startAddress+offset,0x1000,true)
+  if not bytes or #bytes~=0x1000 then f:close(); error(string.format("Read failed at 0x%X",startAddress+offset)) end
+  for i=1,#bytes do f:write(string.char(bytes[i])) end
+end
+f:close()
+showMessage("Read-only heartbeat code dump completed")
+]]></LuaScript>
+</CheatTable>

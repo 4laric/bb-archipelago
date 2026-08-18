@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output=[[C:\Users\alari\bb-archipelago\work\idle-hook-bytes.txt]]
+local hooks={
+  {name="stamina",address=0x8018F78DB},
+  {name="blood_echoes",address=0x80190029B},
+  {name="frenzy",address=0x801901FB4}
+}
+openProcess("shadPS4.exe")
+local lines={}
+for _,hook in ipairs(hooks) do
+  local bytes=readBytes(hook.address,16,true)
+  local parts={}; for i=1,#bytes do parts[#parts+1]=string.format("%02X",bytes[i]) end
+  lines[#lines+1]=string.format("%s address=0x%X bytes=%s",hook.name,hook.address,table.concat(parts," "))
+end
+local f=assert(io.open(output,"w")); f:write(table.concat(lines,"\n").."\n"); f:close()
+showMessage("Read-only idle-hook byte capture completed")
+]]></LuaScript>
+</CheatTable>

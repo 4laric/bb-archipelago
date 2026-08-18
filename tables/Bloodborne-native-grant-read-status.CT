@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local p=[[C:\Users\alari\bb-archipelago\work\native-grant-diagnostic.txt]]
+local f=assert(io.open(p,"w"))
+local entry=readBytes(0x8014D94A0,16,true) or {}
+local entryText={}
+for i=1,#entry do entryText[#entryText+1]=string.format("%02X",entry[i]) end
+f:write(string.format("request=%s\nquantity=%s\nresult=%s\ndone=%s\ninventory=0x%X\ndescriptor_raw=0x%08X\ndescriptor_normalized=0x%08X\nslot_index=%s\nquantity_pointer=0x%X\n",
+  tostring(readInteger(0x8050DBE00)),
+  tostring(readInteger(0x8050DBE04)),
+  tostring(readInteger(0x8050DBE08)),
+  tostring(readInteger(0x8050DBE0C)),
+  readQword(0x8050DBE10) or 0,
+  readInteger(0x8050DBE20) or 0,
+  readInteger(0x8050DBE24) or 0,
+  tostring(readInteger(0x8050DBE34)),
+  readQword(0x8050DBE38) or 0))
+f:write("updater_entry=",table.concat(entryText," "),"\n")
+f:close()
+showMessage("Grant status captured. No memory was changed.")
+]]></LuaScript>
+</CheatTable>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Validated trigger-based predecessor; each grant requires a consumable use. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local root=[[C:\Users\alari\bb-archipelago\work\]]
+local commandPath=root..[[native-grant-command.txt]]
+local statePath=root..[[native-grant-state.txt]]
+local logPath=root..[[native-grant.log]]
+local hook=0x8014D9575
+local cave=0x8050DB800
+local request=0x8050DB850
+local quantity=0x8050DB854
+local result=0x8050DB858
+local done=0x8050DB85C
+local descriptor=0x8050DB860
+local activeCommand=nil
+local pid=nil
+local originalHook={0x44,0x89,0xE0,0x48,0x83,0xC4,0x28}
+local installedHook={0xE9,0x86,0x22,0xC0,0x03,0x66,0x90}
+
+local function append(message)
+    local f=io.open(logPath,"a")
+    if f then f:write(os.date("!%Y-%m-%dT%H:%M:%SZ")," ",message,"\n"); f:close() end
+end
+local function state(status,detail)
+    local f=assert(io.open(statePath,"w"))
+    f:write("status=",status,"\npid=",tostring(pid or ""),"\ndetail=",tostring(detail or ""),"\n")
+    f:close()
+end
+local function parse(line)
+    local token={}
+    for word in string.gmatch(line or "","%S+") do token[#token+1]=word end
+    if string.upper(token[1] or "")~="GRANT" then return nil,"Usage: GRANT raw-id normalized-id quantity tag" end
+    local raw=tonumber(token[2] or "")
+    local normalized=tonumber(token[3] or "")
+    local count=tonumber(token[4] or "")
+    local tag=token[5] or "untagged"
+    if not raw or not normalized or not count or count<1 or count>99 then return nil,"Invalid IDs or quantity (1..99)" end
+    return {line=line,raw=raw,normalized=normalized,count=count,tag=tag}
+end
+local function bytesMatch(address, expected)
+    local actual=readBytes(address,#expected,true)
+    if not actual then return false end
+    for i=1,#expected do if actual[i]~=expected[i] then return false end end
+    return true
+end
+
+openProcess("shadPS4.exe")
+pid=getOpenedProcessID()
+local install=[[
+assert(8014D9575,44 89 E0 48 83 C4 28)
+assert(8050DB800,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+label(bbGrantOriginal)
+label(bbGrantRequest)
+label(bbGrantQuantity)
+label(bbGrantResult)
+label(bbGrantDone)
+label(bbGrantDescriptor)
+
+8050DB800:
+  cmp dword ptr [bbGrantRequest],0
+  je bbGrantOriginal
+  mov dword ptr [bbGrantRequest],0
+  mov rdi,r13
+  lea rsi,[bbGrantDescriptor]
+  mov edx,[bbGrantQuantity]
+  mov rax,8014DA0A0
+  call rax
+  mov [bbGrantResult],eax
+  mov dword ptr [bbGrantDone],1
+bbGrantOriginal:
+  mov eax,r12d
+  add rsp,28
+  jmp 8014D957C
+align 10 CC
+bbGrantRequest:
+  dd 0
+bbGrantQuantity:
+  dd 0
+bbGrantResult:
+  dd 0
+bbGrantDone:
+  dd 0
+bbGrantDescriptor:
+  dd 0
+  dd 0
+  dd 0
+  dd 0
+8014D9575:
+  jmp 8050DB800
+  nop 2
+]]
+if bytesMatch(hook,originalHook) then
+    local ok,detail=autoAssemble(install)
+    if not ok then state("setup_error",detail); error("Grant harness install failed: "..tostring(detail)) end
+elseif bytesMatch(hook,installedHook) then
+    append(string.format("ATTACHED pid=%d existing hook=0x%X",pid,hook))
+else
+    state("setup_error","Hook bytes are neither original nor the validated harness jump")
+    error("Unknown bytes at native grant hook; nothing changed")
+end
+
+local function poll()
+    if activeCommand then
+        if readInteger(done)==1 then
+            local nativeResult=readInteger(result)
+            append(string.format("COMPLETED tag=%s raw=0x%08X normalized=0x%08X quantity=%d native_result=%s",
+                activeCommand.tag,activeCommand.raw,activeCommand.normalized,activeCommand.count,tostring(nativeResult)))
+            os.remove(commandPath)
+            state("completed",string.format("tag=%s native_result=%s",activeCommand.tag,tostring(nativeResult)))
+            activeCommand=nil
+        end
+        return
+    end
+    local f=io.open(commandPath,"r")
+    if not f then return end
+    local line=f:read("*l") or ""; f:close()
+    local command,parseError=parse(line)
+    if not command then state("command_rejected",parseError); return end
+    if readInteger(request)~=0 then state("busy","Cave already has a pending request"); return end
+    writeInteger(descriptor+0,command.raw)
+    writeInteger(descriptor+4,command.normalized)
+    writeInteger(descriptor+8,0)
+    writeInteger(descriptor+12,0)
+    writeInteger(quantity,command.count)
+    writeInteger(result,0xFFFFFFFF)
+    writeInteger(done,0)
+    writeInteger(request,1)
+    activeCommand=command
+    append(string.format("QUEUED tag=%s raw=0x%08X normalized=0x%08X quantity=%d",
+        command.tag,command.raw,command.normalized,command.count))
+    state("queued",string.format("tag=%s; use one consumable to trigger",command.tag))
+end
+
+if bbNativeGrantHarnessTimer then bbNativeGrantHarnessTimer.destroy() end
+bbNativeGrantHarnessTimer=createTimer(nil)
+bbNativeGrantHarnessTimer.Interval=250
+bbNativeGrantHarnessTimer.OnTimer=poll
+bbNativeGrantHarnessTimer.Enabled=true
+-- Re-associate with a command that was queued before a table reload.
+local pending=io.open(commandPath,"r")
+if pending then
+    local line=pending:read("*l") or ""; pending:close()
+    local recovered=parse(line)
+    if recovered and (readInteger(request)~=0 or readInteger(done)==1) then activeCommand=recovered end
+end
+state("ready","Send a GRANT command; one consumable action triggers it")
+append(string.format("READY pid=%d hook=0x%X cave=0x%X",pid,hook,cave))
+]]></LuaScript>
+</CheatTable>

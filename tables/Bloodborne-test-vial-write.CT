@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local entry = 0x208067BF0
+local expectedItem = 0x400003E8
+local expectedQuantity = 5
+local replacementQuantity = 6
+
+openProcess("shadPS4.exe")
+local item = readInteger(entry + 4)
+local quantity = readInteger(entry + 8)
+if item ~= expectedItem or quantity ~= expectedQuantity then
+    error(string.format(
+        "Safety check failed: item=0x%08X quantity=%s; nothing was written",
+        item or 0, tostring(quantity)))
+end
+
+writeInteger(entry + 8, replacementQuantity)
+local verified = readInteger(entry + 8)
+if verified ~= replacementQuantity then
+    error("Vial quantity write did not stick")
+end
+showMessage("Blood Vial test write succeeded: 5 -> 6")
+]]></LuaScript>
+</CheatTable>

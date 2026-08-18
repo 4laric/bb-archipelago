@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local hook=readBytes(0x8018F78DB,6,true)
+if not hook or hook[1]~=0xE9 or hook[6]~=0x90 then
+  error("Stamina direct-write hook is not installed")
+end
+local pointer=readQword(0x8050DBE38)
+if not pointer or pointer==0 then error("Quantity pointer is not populated") end
+writeInteger(0x8050DBE08,0xFFFFFFFF)
+writeInteger(0x8050DBE0C,0)
+writeInteger(0x8050DBE00,3)
+showMessage(string.format("Direct trigger re-armed at 0x%X. Move or sprint briefly.",pointer))
+]]></LuaScript>
+</CheatTable>

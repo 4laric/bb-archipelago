@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local statePath = [[C:\Users\alari\bb-archipelago\work\game-thread-grant-state.txt]]
+
+local function writeState(status, detail)
+    local f = assert(io.open(statePath, "w"))
+    f:write("status=", status, "\ndetail=", tostring(detail or ""), "\n")
+    f:close()
+end
+
+openProcess("shadPS4.exe")
+local ok, assemblerDetail = autoAssemble([[
+assert(8014D9575,44 89 E0 48 83 C4 28 5B 41 5C 41 5D 41 5E)
+alloc(bbThreadGrantCaveV3,2048)
+alloc(bbThreadGrantRequestV3,4)
+alloc(bbThreadGrantQuantityV3,4)
+alloc(bbThreadGrantResultV3,4)
+alloc(bbThreadGrantDoneV3,4)
+alloc(bbThreadGrantDescriptorV3,16)
+registersymbol(bbThreadGrantRequestV3)
+registersymbol(bbThreadGrantQuantityV3)
+registersymbol(bbThreadGrantResultV3)
+registersymbol(bbThreadGrantDoneV3)
+registersymbol(bbThreadGrantDescriptorV3)
+
+label(bbThreadGrantOriginal)
+label(bbThreadGrantReturn)
+
+bbThreadGrantCaveV3:
+  cmp dword ptr [bbThreadGrantRequestV3],0
+  je bbThreadGrantOriginal
+  mov dword ptr [bbThreadGrantRequestV3],0
+  mov rdi,r13
+  lea rsi,[bbThreadGrantDescriptorV3]
+  mov edx,[bbThreadGrantQuantityV3]
+  mov rax,8014DA0A0
+  call rax
+  mov [bbThreadGrantResultV3],eax
+  mov dword ptr [bbThreadGrantDoneV3],1
+
+bbThreadGrantOriginal:
+  mov eax,r12d
+  add rsp,28
+  pop rbx
+  pop r12
+  pop r13
+  pop r14
+  jmp bbThreadGrantReturn
+
+8014D9575:
+  db FF 25 00 00 00 00
+  dq bbThreadGrantCaveV3
+bbThreadGrantReturn:
+]])
+if not ok then
+    writeState("setup_error", "Assembler detail: " .. tostring(assemblerDetail))
+    error("Could not install game-thread grant hook: " .. tostring(assemblerDetail))
+end
+
+local descriptor = getAddress("bbThreadGrantDescriptorV3")
+writeInteger(descriptor + 0, 0xB00003E8)
+writeInteger(descriptor + 4, 0x400003E8)
+writeInteger(descriptor + 8, 0)
+writeInteger(descriptor + 12, 0)
+writeInteger(getAddress("bbThreadGrantQuantityV3"), 1)
+writeInteger(getAddress("bbThreadGrantResultV3"), 0xFFFFFFFF)
+writeInteger(getAddress("bbThreadGrantDoneV3"), 0)
+writeInteger(getAddress("bbThreadGrantRequestV3"), 1)
+
+if bbThreadGrantTimer then bbThreadGrantTimer.destroy() end
+bbThreadGrantTimer = createTimer(nil)
+bbThreadGrantTimer.Interval = 250
+bbThreadGrantTimer.OnTimer = function()
+    if readInteger(getAddress("bbThreadGrantDoneV3")) == 1 then
+        local result = readInteger(getAddress("bbThreadGrantResultV3"))
+        writeState("completed", string.format("native_result=%s", tostring(result)))
+        bbThreadGrantTimer.Enabled = false
+    end
+end
+bbThreadGrantTimer.Enabled = true
+writeState("armed", "Fire one bullet; +1 Vial is queued on the game thread")
+]]></LuaScript>
+</CheatTable>

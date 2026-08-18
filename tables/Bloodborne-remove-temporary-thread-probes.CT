@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local probes={
+  {address=0x8018F78DB,patched={0xE9,0x20,0x41,0x7E,0x03,0x90},original={0x8B,0x80,0x34,0x01,0x00,0x00}},
+  {address=0x80190029B,patched={0xE9,0x60,0xB8,0x7D,0x03,0x90},original={0x89,0x8A,0x94,0x00,0x00,0x00}},
+  {address=0x801901FB4,patched={0xE9,0x47,0x9C,0x7D,0x03,0x90},original={0x8B,0xB3,0x84,0x00,0x00,0x00}}
+}
+openProcess("shadPS4.exe")
+for _,probe in ipairs(probes) do
+  local actual=readBytes(probe.address,#probe.patched,true)
+  for i=1,#probe.patched do
+    if not actual or actual[i]~=probe.patched[i] then
+      error(string.format("Safety check failed at 0x%X; no probe bytes were changed",probe.address))
+    end
+  end
+end
+for _,probe in ipairs(probes) do writeBytes(probe.address,table.unpack(probe.original)) end
+for _,probe in ipairs(probes) do
+  local actual=readBytes(probe.address,#probe.original,true)
+  for i=1,#probe.original do if actual[i]~=probe.original[i] then error("Probe restoration did not verify") end end
+end
+showMessage("Temporary thread probes removed and original bytes verified")
+]]></LuaScript>
+</CheatTable>

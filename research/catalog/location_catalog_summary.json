@@ -1,0 +1,13 @@
+{
+  "canonical_locations": 651,
+  "catalog_item_rows": 654,
+  "unresolved_treasure_references": 3,
+  "classifications": {
+    "filler": 510,
+    "key_or_badge": 17,
+    "optional": 58,
+    "useful": 66
+  },
+  "mvp_candidates": 83,
+  "duplicate_or_revision_placements_collapsed": 405
+}

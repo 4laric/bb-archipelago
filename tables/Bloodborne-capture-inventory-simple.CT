@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local hook = 0x8014D9556
+local output = [[C:\Users\alari\bb-archipelago\work\inventory-breakpoint.txt]]
+local state = [[C:\Users\alari\bb-archipelago\work\inventory-breakpoint-state.txt]]
+
+openProcess("shadPS4.exe")
+debugProcess(2)
+
+debug_setBreakpoint(hook, 1, bptExecute, bpmDebugRegister, function()
+    local f = assert(io.open(output, "w"))
+    f:write(string.format(
+        "hook=0x%X\nRBX=0x%X\nEAX=%s\nquantity_before=%s\nquantity_address=0x%X\n",
+        hook,
+        RBX,
+        tostring(RAX % 0x100000000),
+        tostring(readInteger(RBX + 0x08)),
+        RBX + 0x08))
+    f:close()
+    local sf = assert(io.open(state, "w"))
+    sf:write("status=captured\n")
+    sf:close()
+    debug_removeBreakpoint(hook)
+    debug_continueFromBreakpoint(co_run)
+    return 1
+end)
+
+local sf = assert(io.open(state, "w"))
+sf:write("status=armed\n")
+sf:close()
+]]></LuaScript>
+</CheatTable>

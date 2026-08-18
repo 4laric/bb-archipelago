@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local pid=getOpenedProcessID()
+if bbDirectQuantityTriggerPid==pid then
+  showMessage("Direct quantity trigger is already armed; duplicate execution ignored.")
+  return
+end
+local hook=readBytes(0x8018F78DB,6,true)
+if not hook or hook[1]~=0xE9 or hook[6]~=0x90 then
+  error("Stamina hook is not installed in this process")
+end
+local aa=[[
+label(bbDirectNoRequest)
+label(bbDirectFailed)
+label(bbDirectFinished)
+label(bbDirectOriginal)
+
+8050DB800:
+  pushfq
+  cmp dword ptr [8050DBE00],3
+  jne bbDirectNoRequest
+  push rax
+  push rcx
+  mov dword ptr [8050DBE00],0
+  mov rax,[8050DBE38]
+  test rax,rax
+  je bbDirectFailed
+  mov ecx,[8050DBE04]
+  lock add [rax],ecx
+  mov eax,[rax]
+  mov [8050DBE08],eax
+  jmp bbDirectFinished
+bbDirectFailed:
+  mov dword ptr [8050DBE08],FFFFFFFF
+bbDirectFinished:
+  mov dword ptr [8050DBE0C],1
+  pop rcx
+  pop rax
+bbDirectNoRequest:
+  popfq
+bbDirectOriginal:
+  mov eax,[rax+00000134]
+  jmp 8018F78E1
+]]
+local ok,why=autoAssemble(aa)
+if not ok then error("Direct quantity trigger upgrade failed: "..tostring(why)) end
+writeInteger(0x8050DBE08,0xFFFFFFFF)
+writeInteger(0x8050DBE0C,0)
+writeInteger(0x8050DBE00,3)
+bbDirectQuantityTriggerPid=pid
+showMessage("Direct Pebble quantity update armed. Move or sprint briefly.")
+]]></LuaScript>
+</CheatTable>

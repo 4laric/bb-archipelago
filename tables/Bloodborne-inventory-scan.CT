@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local root = [[C:\Users\alari\bb-archipelago\work\]]
+local commandPath = root .. [[inventory-scan-command.txt]]
+local statePath = root .. [[inventory-scan-state.txt]]
+local resultPath = root .. [[inventory-scan-results.txt]]
+local errorPath = root .. [[inventory-scan-error.txt]]
+local initialValue = "2"
+
+local function writeFile(path, text)
+    local f = assert(io.open(path, "w"))
+    f:write(text)
+    f:close()
+end
+
+local function writeState(status, detail)
+    writeFile(statePath, "status=" .. status .. "\ndetail=" .. tostring(detail or "") .. "\n")
+end
+
+local scan = nil
+local ok, err = xpcall(function()
+    os.remove(commandPath)
+    os.remove(resultPath)
+    os.remove(errorPath)
+    openProcess("shadPS4.exe")
+
+    setSpecialScanOptionsOverride({ MEM_PRIVATE = true, MEM_IMAGE = false, MEM_MAPPED = true })
+    scan = createMemScan()
+    scan.firstScan(
+        soExactValue, vtDword, rtRounded,
+        initialValue, "",
+        0, 0x7FFFFFFFFFFFFFFF,
+        "+W-C", fsmAligned, "4",
+        false, false, false, false)
+    scan.waitTillDone()
+    writeState("initial_ready", "value=" .. initialValue .. " count=" .. tostring(scan.FoundCount))
+
+    if inventoryScanTimer then inventoryScanTimer.destroy() end
+    inventoryScanTimer = createTimer(nil)
+    inventoryScanTimer.Interval = 250
+    inventoryScanTimer.OnTimer = function()
+        local f = io.open(commandPath, "r")
+        if not f then return end
+        local command = f:read("*l") or ""
+        f:close()
+        os.remove(commandPath)
+
+        local target = string.match(command, "^NEXT%s+(%d+)$")
+        if not target then
+            writeState("command_rejected", "Use NEXT <decimal value>")
+            return
+        end
+
+        inventoryScanTimer.Enabled = false
+        writeState("scanning", "next exact value=" .. target)
+        scan.nextScan(soExactValue, rtRounded, target, "", false, false, false, false, false)
+        scan.waitTillDone()
+
+        local results = scan.Results
+        local lines = {
+            "target=" .. target,
+            "count=" .. tostring(scan.FoundCount)
+        }
+        for i = 1, #results do
+            local address = results[i]
+            lines[#lines + 1] = string.format("0x%X value=%s", address, tostring(readInteger(address)))
+        end
+        writeFile(resultPath, table.concat(lines, "\n") .. "\n")
+        writeState("next_ready", "value=" .. target .. " count=" .. tostring(scan.FoundCount))
+        inventoryScanTimer.Enabled = true
+    end
+    inventoryScanTimer.Enabled = true
+end, debug.traceback)
+
+if not ok then
+    writeFile(errorPath, tostring(err) .. "\n")
+    writeState("setup_error", err)
+    error(err)
+end
+]]></LuaScript>
+</CheatTable>

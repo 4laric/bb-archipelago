@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output=[[C:\Users\alari\bb-archipelago\work\native-thread-contexts.txt]]
+local consumeTid=0x8050DB8C0
+local hpTid=0x8050DB8C4
+local staminaTid=0x8050DB8C8
+local echoesTid=0x8050DB8CC
+local frenzyTid=0x8050DB8D0
+openProcess("shadPS4.exe")
+
+local script=[[
+assert(8018F78DB,8B 80 34 01 00 00)
+assert(80190029B,89 8A 94 00 00 00)
+assert(801901FB4,8B B3 84 00 00 00)
+assert(8050DBA00,00 00 00 00 00 00 00 00)
+assert(8050DBB00,00 00 00 00 00 00 00 00)
+assert(8050DBC00,00 00 00 00 00 00 00 00)
+
+8050DBA00:
+  push rax
+  mov eax,gs:[48]
+  mov [8050DB8C8],eax
+  pop rax
+  mov eax,[rax+00000134]
+  jmp 8018F78E1
+
+8050DBB00:
+  push rax
+  mov eax,gs:[48]
+  mov [8050DB8CC],eax
+  pop rax
+  mov [rdx+00000094],ecx
+  jmp 8019002A1
+
+8050DBC00:
+  push rax
+  mov eax,gs:[48]
+  mov [8050DB8D0],eax
+  pop rax
+  mov esi,[rbx+00000084]
+  jmp 801901FBA
+
+8018F78DB:
+  jmp 8050DBA00
+  nop
+80190029B:
+  jmp 8050DBB00
+  nop
+801901FB4:
+  jmp 8050DBC00
+  nop
+]]
+local ok,detail=autoAssemble(script)
+if not ok then error("Thread-context probe install failed: "..tostring(detail)) end
+
+writeInteger(consumeTid,0); writeInteger(hpTid,0); writeInteger(staminaTid,0); writeInteger(echoesTid,0); writeInteger(frenzyTid,0)
+
+-- Extend the already-installed automatic caves with thread-ID recording while
+-- retaining their validated behavior and data layout.
+local upgrade=[[
+label(probeHeartbeatOriginal)
+8050DB800:
+  mov [8050DB890],r13
+  push rax
+  mov eax,gs:[48]
+  mov [8050DB8C0],eax
+  pop rax
+  mov eax,r12d
+  add rsp,28
+  jmp 8014D957C
+
+8050DB900:
+  push rax
+  mov eax,gs:[48]
+  mov [8050DB8C4],eax
+  pop rax
+  cmp dword ptr [8050DB880],0
+  je probeHeartbeatOriginal
+  cmp qword ptr [8050DB890],0
+  je probeHeartbeatOriginal
+  mov dword ptr [8050DB880],0
+  mov rdi,[8050DB890]
+  lea rsi,[8050DB8A0]
+  mov edx,[8050DB884]
+  mov rax,8014DA0A0
+  call rax
+  mov [8050DB888],eax
+  mov dword ptr [8050DB88C],1
+probeHeartbeatOriginal:
+  add rsp,000007E8
+  jmp 801BFE889
+]]
+local upgraded,why=autoAssemble(upgrade)
+if not upgraded then error("Thread recorder cave upgrade failed: "..tostring(why)) end
+
+if bbThreadContextTimer then bbThreadContextTimer.destroy() end
+bbThreadContextTimer=createTimer(nil); bbThreadContextTimer.Interval=7500
+bbThreadContextTimer.OnTimer=function()
+  local f=assert(io.open(output,"w"))
+  f:write(string.format("consume=%u\nhp=%u\nstamina=%u\nblood_echoes=%u\nfrenzy=%u\n",
+    readInteger(consumeTid),readInteger(hpTid),readInteger(staminaTid),readInteger(echoesTid),readInteger(frenzyTid)))
+  f:close(); bbThreadContextTimer.Enabled=false; showMessage("Thread-context probe complete")
+end
+bbThreadContextTimer.Enabled=true
+showMessage("Thread-context probe armed: remain idle five seconds, then fire one bullet")
+]]></LuaScript>
+</CheatTable>

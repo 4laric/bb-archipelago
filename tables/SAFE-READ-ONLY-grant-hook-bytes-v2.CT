@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This table only reads 16 bytes and writes them to grant-hook-bytes.txt. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local address = 0x8014D9575
+local output = [[C:\Users\alari\bb-archipelago\work\grant-hook-bytes.txt]]
+openProcess("shadPS4.exe")
+local bytes = readBytes(address, 16, true)
+if not bytes or #bytes ~= 16 then error("Could not read hook bytes") end
+local parts = {}
+for i = 1, #bytes do parts[i] = string.format("%02X", bytes[i]) end
+local f = assert(io.open(output, "w"))
+f:write(string.format("address=0x%X\nbytes=%s\n", address, table.concat(parts, " ")))
+f:close()
+showMessage("Read-only hook-byte capture completed")
+]]></LuaScript>
+</CheatTable>

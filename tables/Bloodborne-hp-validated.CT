@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"HP capture status (run table script first)"</Description>
+      <Color>808080</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>bbHpBase+F8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"Current HP [validated]"</Description>
+      <Color>008000</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>bbHpBase+F8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>3</ID>
+      <Description>"Maximum HP candidate A (+FC)"</Description>
+      <Color>808000</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>bbHpBase+FC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>4</ID>
+      <Description>"Maximum HP candidate B (+100)"</Description>
+      <Color>808000</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>bbHpBase+100</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>5</ID>
+      <Description>"Maximum HP candidate C (+104)"</Description>
+      <Color>808000</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>bbHpBase+104</Address>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local hook = 0x801BFC5F7
+local output = [[C:\Users\alari\bb-archipelago\work\hp-table-capture.txt]]
+local errorOutput = [[C:\Users\alari\bb-archipelago\work\hp-table-error.txt]]
+
+local function logError(message)
+    local f = io.open(errorOutput, "w")
+    if f then
+        f:write(tostring(message), "\n")
+        f:close()
+    end
+end
+
+local ok, setupError = xpcall(function()
+    openProcess("shadPS4.exe")
+    debugProcess(2)
+    pcall(unregisterSymbol, "bbHpBase")
+
+    debug_setBreakpoint(hook, 1, bptExecute, bpmDebugRegister, function()
+        local callbackOk, callbackError = xpcall(function()
+            local capturedBase = RDI
+            local currentHp = readInteger(RDI + 0xF8)
+            local candidateA = readInteger(RDI + 0xFC)
+            local candidateB = readInteger(RDI + 0x100)
+            local candidateC = readInteger(RDI + 0x104)
+            local f = assert(io.open(output, "w"))
+            f:write(string.format(
+                "hook=0x%X\nbase=0x%X\ncurrent_hp=%s\nmax_candidate_FC=%s\nmax_candidate_100=%s\nmax_candidate_104=%s\n",
+                hook, RDI, tostring(currentHp), tostring(candidateA), tostring(candidateB), tostring(candidateC)))
+            f:close()
+
+            synchronize(function()
+                pcall(unregisterSymbol, "bbHpBase")
+                registerSymbol("bbHpBase", capturedBase, true)
+            end)
+        end, debug.traceback)
+
+        if not callbackOk then logError(callbackError) end
+        debug_removeBreakpoint(hook)
+        debug_continueFromBreakpoint(co_run)
+        return 1
+    end)
+end, debug.traceback)
+
+if not ok then
+    logError(setupError)
+    error(setupError)
+end
+]]></LuaScript>
+</CheatTable>

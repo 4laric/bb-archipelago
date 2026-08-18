@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local cachedPointer=0x8050DB890
+local output=[[C:\Users\alari\bb-archipelago\work\auto-grant-context.txt]]
+local pebbleId=0x400004CE
+openProcess("shadPS4.exe")
+local inventory=readQword(cachedPointer)
+local lines={string.format("cached_inventory=0x%X",inventory or 0)}
+if inventory and inventory~=0 then
+  local split=readInteger(inventory+0x24)
+  local last=readInteger(inventory+0x88)
+  local primary=readQword(inventory+0x58)
+  local secondary=readQword(inventory+0x48)
+  lines[#lines+1]=string.format("split=%s last=%s primary=0x%X secondary=0x%X",tostring(split),tostring(last),primary or 0,secondary or 0)
+  if split and last and primary and secondary and last<4096 then
+    for slot=0,last do
+      local entry
+      if slot<split then entry=primary+slot*0x10 else entry=secondary+(slot-split)*0x10 end
+      if readInteger(entry+4)==pebbleId then
+        lines[#lines+1]=string.format("pebble_slot=%d entry=0x%X quantity=%s raw=0x%08X",
+          slot,entry,tostring(readInteger(entry+8)),readInteger(entry) or 0)
+      end
+    end
+  end
+end
+local f=assert(io.open(output,"w")); f:write(table.concat(lines,"\n").."\n"); f:close()
+showMessage("Read-only auto-grant context capture completed")
+]]></LuaScript>
+</CheatTable>

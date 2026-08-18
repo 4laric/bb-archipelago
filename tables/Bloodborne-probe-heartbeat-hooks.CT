@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output=[[C:\Users\alari\bb-archipelago\work\heartbeat-probe.txt]]
+local hooks={
+  {name="hp",address=0x801BFC5F7},
+  {name="stamina",address=0x8018F78DB},
+  {name="blood_echoes",address=0x80190029B},
+  {name="frenzy",address=0x801901FB4}
+}
+local hits={}
+local started=getTickCount()
+
+local function writeReport(status)
+  local f=assert(io.open(output,"w"))
+  f:write("status=",status,"\nelapsed_ms=",tostring(getTickCount()-started),"\n")
+  for _,hook in ipairs(hooks) do f:write(hook.name,"=",hits[hook.name] and "hit" or "not_hit","\n") end
+  f:close()
+end
+
+openProcess("shadPS4.exe")
+debugProcess(2)
+for _,hook in ipairs(hooks) do
+  local capturedHook=hook
+  debug_setBreakpoint(capturedHook.address,1,bptExecute,bpmDebugRegister,function()
+    hits[capturedHook.name]=true
+    debug_removeBreakpoint(capturedHook.address)
+    writeReport("running")
+    debug_continueFromBreakpoint(co_run)
+    return 1
+  end)
+end
+
+if bbHeartbeatProbeTimer then bbHeartbeatProbeTimer.destroy() end
+bbHeartbeatProbeTimer=createTimer(nil)
+bbHeartbeatProbeTimer.Interval=5000
+bbHeartbeatProbeTimer.OnTimer=function()
+  for _,hook in ipairs(hooks) do debug_removeBreakpoint(hook.address) end
+  writeReport("complete")
+  bbHeartbeatProbeTimer.Enabled=false
+  showMessage("Heartbeat probe complete")
+end
+bbHeartbeatProbeTimer.Enabled=true
+writeReport("armed")
+]]></LuaScript>
+</CheatTable>

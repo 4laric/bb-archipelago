@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"Published hook sites (read-only bytes)"</Description>
+      <Options moHideChildren="1"/>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry><ID>2</ID><Description>"HP hook"</Description><ShowAsHex>1</ShowAsHex><VariableType>Array of byte</VariableType><ByteLength>16</ByteLength><Address>801BFC5F7</Address></CheatEntry>
+        <CheatEntry><ID>3</ID><Description>"Blood Echoes hook"</Description><ShowAsHex>1</ShowAsHex><VariableType>Array of byte</VariableType><ByteLength>16</ByteLength><Address>80190029B</Address></CheatEntry>
+        <CheatEntry><ID>4</ID><Description>"Stamina hook"</Description><ShowAsHex>1</ShowAsHex><VariableType>Array of byte</VariableType><ByteLength>16</ByteLength><Address>8018F78DB</Address></CheatEntry>
+        <CheatEntry><ID>5</ID><Description>"Frenzy/lucidity hook"</Description><ShowAsHex>1</ShowAsHex><VariableType>Array of byte</VariableType><ByteLength>16</ByteLength><Address>801901FB4</Address></CheatEntry>
+        <CheatEntry><ID>6</ID><Description>"Consumable quantity hook"</Description><ShowAsHex>1</ShowAsHex><VariableType>Array of byte</VariableType><ByteLength>16</ByteLength><Address>8014D9556</Address></CheatEntry>
+        <CheatEntry><ID>7</ID><Description>"Damage/one-hit hook"</Description><ShowAsHex>1</ShowAsHex><VariableType>Array of byte</VariableType><ByteLength>16</ByteLength><Address>801A0D47B</Address></CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+  <LuaScript>getAutoAttachList().add("shadPS4.exe")</LuaScript>
+</CheatTable>

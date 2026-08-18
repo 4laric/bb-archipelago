@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local hook = 0x8014D9556
+local output = [[C:\Users\alari\bb-archipelago\work\inventory-breakpoint.txt]]
+local errorOutput = [[C:\Users\alari\bb-archipelago\work\inventory-breakpoint-error.txt]]
+local stateOutput = [[C:\Users\alari\bb-archipelago\work\inventory-breakpoint-state.txt]]
+
+local function writeState(status)
+    local f = io.open(stateOutput, "w")
+    if f then
+        f:write("status=", tostring(status), "\n")
+        f:close()
+    end
+end
+
+local function bytesToHex(bytes)
+    local parts = {}
+    if bytes then
+        for i = 1, #bytes do
+            parts[#parts + 1] = string.format("%02X", bytes[i])
+        end
+    end
+    return table.concat(parts, " ")
+end
+
+local function writeError(message)
+    local f = io.open(errorOutput, "w")
+    if f then
+        f:write(tostring(message), "\n")
+        f:close()
+    end
+end
+
+local ok, setupError = xpcall(function()
+    os.remove(output)
+    os.remove(errorOutput)
+    writeState("attaching")
+    openProcess("shadPS4.exe")
+    debugProcess(2)
+
+    debug_setBreakpoint(hook, 1, bptExecute, bpmDebugRegister, function()
+        local callbackOk, callbackError = xpcall(function()
+            local entry = RBX
+            local bytes = readBytes(entry, 0x80, true)
+            local f = assert(io.open(output, "w"))
+            f:write(string.format(
+                "hook=0x%X\nRBX=0x%X\nRAX=0x%X\nEAX=%u\nR12=0x%X\nquantity_before_i32=%s\nentry_plus_08=0x%X\nnearby_80=%s\n",
+                hook,
+                entry,
+                RAX,
+                RAX % 0x100000000,
+                R12,
+                tostring(readInteger(entry + 0x08)),
+                entry + 0x08,
+                bytesToHex(bytes)))
+            f:close()
+            writeState("captured")
+        end, debug.traceback)
+
+        if not callbackOk then writeError(callbackError) end
+        debug_removeBreakpoint(hook)
+        debug_continueFromBreakpoint(co_run)
+        return 1
+    end)
+    writeState("armed")
+end, debug.traceback)
+
+if not ok then
+    writeState("setup_error")
+    writeError(setupError)
+    error(setupError)
+end
+]]></LuaScript>
+</CheatTable>

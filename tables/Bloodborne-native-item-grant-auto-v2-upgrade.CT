@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local consumeHook={0xE9,0x86,0x22,0xC0,0x03,0x66,0x90}
+local heartbeatHook={0xE9,0x79,0xD0,0x4D,0x03,0x66,0x90}
+local function match(address,expected)
+  local actual=readBytes(address,#expected,true); if not actual then return false end
+  for i=1,#expected do if actual[i]~=expected[i] then return false end end
+  return true
+end
+if not match(0x8014D9575,consumeHook) or not match(0x801BFE882,heartbeatHook) then
+  error("Safety check failed: automatic v1 hooks are not installed")
+end
+if readInteger(0x8050DB880)~=0 then error("A grant is still pending; upgrade refused") end
+
+local script=[[
+label(bbV2ConsumeOriginal)
+label(bbV2HeartbeatOriginal)
+
+8050DB800:
+  mov [8050DB890],r13
+  cmp dword ptr [8050DB880],0
+  je bbV2ConsumeOriginal
+  mov dword ptr [8050DB880],0
+  mov rdi,r13
+  lea rsi,[8050DB8A0]
+  mov edx,[8050DB884]
+  mov rax,8014DA0A0
+  call rax
+  mov [8050DB888],eax
+  mov dword ptr [8050DB88C],1
+bbV2ConsumeOriginal:
+  mov eax,r12d
+  add rsp,28
+  jmp 8014D957C
+
+8050DB900:
+  cmp dword ptr [8050DB880],0
+  je bbV2HeartbeatOriginal
+  cmp qword ptr [8050DB890],0
+  je bbV2HeartbeatOriginal
+  mov rdi,[8050DB890]
+  lea rsi,[8050DB8B0]
+  mov rax,8014DA2C0
+  call rax
+  cmp eax,-1
+  je bbV2HeartbeatOriginal
+  mov rdi,[8050DB890]
+  mov esi,eax
+  xor edx,edx
+  lea rcx,[8050DB8BC]
+  mov rax,8014D94A0
+  call rax
+bbV2HeartbeatOriginal:
+  add rsp,000007E8
+  jmp 801BFE889
+]]
+local ok,detail=autoAssemble(script)
+if not ok then error("Automatic v2 cave upgrade failed: "..tostring(detail)) end
+
+-- Existing Bullet descriptor used only to locate its slot for a zero-delta update.
+writeInteger(0x8050DB8B0,0xB0000384)
+writeInteger(0x8050DB8B4,0x40000384)
+writeInteger(0x8050DB8B8,0)
+writeInteger(0x8050DB8BC,0)
+showMessage("Automatic v2 zero-delta bridge installed")
+]]></LuaScript>
+</CheatTable>

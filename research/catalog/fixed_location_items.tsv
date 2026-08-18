@@ -1,0 +1,655 @@
+location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name	quantity	normalized_runtime_id	classification	classification_reason
+50002200	42000	01	4	goods	4903	White Messenger Ribbon	1	0x40001327	key_or_badge	goods_type_1_requires_logic_review
+50002360	43221	01	4	goods	4015	Underground Cell Inner Chamber Key	1	0x40000FAF	key_or_badge	goods_type_1_requires_logic_review
+52100000	2100000	01	4	goods	1230	Pebble	1	0x400004CE	filler	consumable_or_material
+52110000	2110000	01	4	goods	2060	Old Hunter Bone	1	0x4000080C	useful	unique_goods_or_hunter_tool
+52110010	2110010	01	1	armor	200000	Gehrman's Hunter Cap	1		useful	armor
+52110020	2110020	01	1	armor	220000	Doll Hat	1		useful	armor
+52200100	2200100	01	4	goods	1230	Pebble	4	0x400004CE	filler	consumable_or_material
+52200110	2200110	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52200120	2200120	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52200130	2200130	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+52200140	2200140	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52200150	2200150	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52200160	2200160	01	4	goods	1330	Bone Marrow Ash	8	0x40000532	filler	consumable_or_material
+52200170	2200170	01	4	goods	1330	Bone Marrow Ash	8	0x40000532	filler	consumable_or_material
+52200180	2200180	01	4	goods	7150	Bloodshot Eyeball	1	0x40001BEE	filler	consumable_or_material
+52200190	2200190	01	8	gem	122000		1		optional	generated_blood_gem
+52200200	2200200	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52200210	2200210	01	4	goods	1512	Coldblood Dew (3)	1	0x400005E8	filler	consumable_or_material
+52200220	2200220	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52200230	2200230	01	4	goods	900	Quicksilver Bullets	4	0x40000384	filler	consumable_or_material
+52200240	2200240	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+52200250	2200250	01	4	goods	900	Quicksilver Bullets	4	0x40000384	filler	consumable_or_material
+52200260	2200260	01	4	goods	1240	Throwing Knife	3	0x400004D8	filler	consumable_or_material
+52200270	2200270	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+52200280	2200280	01	8	gem	122001		1		optional	generated_blood_gem
+52200290	2200290	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52200300	2200300	01	4	goods	1230	Pebble	4	0x400004CE	filler	consumable_or_material
+52200310	2200310	01	4	goods	900	Quicksilver Bullets	4	0x40000384	filler	consumable_or_material
+52200320	2200320	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+52200330	2200330	01	4	goods	1330	Bone Marrow Ash	9	0x40000532	filler	consumable_or_material
+52200340	2200340	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+52200350	2200350	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52200360	2200360	01	4	goods	4104	Rune Workshop Tool	1	0x40001008	key_or_badge	goods_type_1_requires_logic_review
+52200365	2200365	01	4	goods	1591	Kin Coldblood (12)	1	0x40000637	filler	consumable_or_material
+52200370	2200370	01	4	goods	7150	Bloodshot Eyeball	1	0x40001BEE	filler	consumable_or_material
+52200380	2200380	01	8	gem	101701		1		optional	generated_blood_gem
+52200385	2200385	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52200390	2200390	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52200400	2200400	01	4	goods	1200	Molotov Cocktail	5	0x400004B0	filler	consumable_or_material
+52300000	2300000	01	4	goods	1100	Antidote	1	0x4000044C	filler	consumable_or_material
+52300010	2300010	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52300020	2300020	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52300030	2300030	01	4	goods	1300	Fire Paper	2	0x40000514	filler	consumable_or_material
+52300040	2300040	01	8	gem	123000		1		optional	generated_blood_gem
+52300050	2300050	01	4	goods	1512	Coldblood Dew (3)	1	0x400005E8	filler	consumable_or_material
+52300060	2300060	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52300070	2300070	01	4	goods	4907	Bloody Messenger Head Bandage	1	0x4000132B	key_or_badge	goods_type_1_requires_logic_review
+52300080	2300080	01	4	goods	1511	Coldblood Dew (2)	1	0x400005E7	filler	consumable_or_material
+52300090	2300090	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+52300100	2300100	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+52300110	2300110	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+52300120	2300120	01	4	goods	1110	Beast Blood Pellet	6	0x40000456	filler	consumable_or_material
+52300130	2300130	01	4	goods	1512	Coldblood Dew (3)	1	0x400005E8	filler	consumable_or_material
+52300140	2300140	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52300150	2300150	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52300160	2300160	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52300170	2300170	01	4	goods	7000	Ritual Blood (1)	2	0x40001B58	filler	consumable_or_material
+52300180	2300180	01	4	goods	1260	Pungent Blood Cocktail	3	0x400004EC	filler	consumable_or_material
+52300190	2300190	01	4	goods	1300	Fire Paper	2	0x40000514	filler	consumable_or_material
+52300200	2300200	01	0	weapon	20000000	Hunter's Torch	1		useful	weapon
+52300210	2300210	01	4	goods	1100	Antidote	1	0x4000044C	filler	consumable_or_material
+52300220	2300220	01	4	goods	1200	Molotov Cocktail	4	0x400004B0	filler	consumable_or_material
+52300230	2300230	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52300240	2300240	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52300250	2300250	01	4	goods	1230	Pebble	3	0x400004CE	filler	consumable_or_material
+52300260	2300260	01	4	goods	1200	Molotov Cocktail	3	0x400004B0	filler	consumable_or_material
+52300270	2300270	01	4	goods	6000		1		filler	consumable_or_material
+52300280	2300280	01	4	goods	1100	Antidote	4	0x4000044C	filler	consumable_or_material
+52300290	2300290	01	4	goods	1511	Coldblood Dew (2)	1	0x400005E7	filler	consumable_or_material
+52300300	2300300	01	8	gem	123001		1		optional	generated_blood_gem
+52300310	2300310	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
+52300320	2300320	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
+52300330	2300330	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52300340	2300340	01	4	goods	1512	Coldblood Dew (3)	1	0x400005E8	filler	consumable_or_material
+52300350	2300350	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52300360	2300360	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52300370	2300370	01	4	goods	1511	Coldblood Dew (2)	1	0x400005E7	filler	consumable_or_material
+52300380	2300380	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52300390	2300390	01	0	weapon	10000000	Rifle Spear	1		useful	weapon
+52300400	2300400	01	1	armor	11000	Charred Hunter Garb	1		useful	armor
+52300410	2300410	01	4	goods	1200	Molotov Cocktail	5	0x400004B0	filler	consumable_or_material
+52300420	2300420	01	4	goods	1100	Antidote	2	0x4000044C	filler	consumable_or_material
+52300430	2300430	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
+52300440	2300440	01	4	goods	1260	Pungent Blood Cocktail	2	0x400004EC	filler	consumable_or_material
+52300450	2300450	01	4	goods	1100	Antidote	1	0x4000044C	filler	consumable_or_material
+52300460	2300460	01	4	goods	1400	Bold Hunter's Mark	2	0x40000578	filler	consumable_or_material
+52300470	2300470	01	4	goods	1511	Coldblood Dew (2)	1	0x400005E7	filler	consumable_or_material
+52300480	2300480	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52300490	2300490	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
+52300500	2300500	01	4	goods	1511	Coldblood Dew (2)	1	0x400005E7	filler	consumable_or_material
+52300510	2300510	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52300520	2300520	01	4	goods	1512	Coldblood Dew (3)	1	0x400005E8	filler	consumable_or_material
+52300530	2300530	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
+52400100	2400100	01	4	goods	1260	Pungent Blood Cocktail	2	0x400004EC	filler	consumable_or_material
+52400120	2400120	01	1	armor	280000	Top Hat	1		useful	armor
+52400130	2400130	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52400140	2400140	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52400150	2400150	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
+52400160	2400160	01	4	goods	900	Quicksilver Bullets	2	0x40000384	filler	consumable_or_material
+52400170	2400170	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52400180	2400180	01	4	goods	7150	Bloodshot Eyeball	1	0x40001BEE	filler	consumable_or_material
+52400190	2400190	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+52400200	2400200	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52400210	2400210	01	4	goods	1210	Poison Knife	12	0x400004BA	filler	consumable_or_material
+52400220	2400220	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52400230	2400230	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52400240	2400240	01	4	goods	1411	Monocular	1	0x40000583	filler	consumable_or_material
+52400250	2400250	01	4	goods	1230	Pebble	1	0x400004CE	filler	consumable_or_material
+52400260	2400260	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52400270	2400270	01	4	goods	4906	Black Messenger Hat	1	0x4000132A	key_or_badge	goods_type_1_requires_logic_review
+52400280	2400280	01	4	goods	1270	Numbing Mist	6	0x400004F6	filler	consumable_or_material
+52400290	2400290	01	1	armor	110000	Black Church Hat	1		useful	armor
+52400300	2400300	01	8	gem	124002		1		optional	generated_blood_gem
+52400310	2400310	01	4	goods	1410	Shining Coins	12	0x40000582	filler	consumable_or_material
+52400320	2400320	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52400330	2400330	01	4	goods	3000	Blood Stone Shard	3	0x40000BB8	filler	consumable_or_material
+52400340	2400340	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52400350	2400350	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+52400360	2400360	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52400370	2400370	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52400380	2400380	01	4	goods	1240	Throwing Knife	3	0x400004D8	filler	consumable_or_material
+52400390	2400390	01	4	goods	1200	Molotov Cocktail	4	0x400004B0	filler	consumable_or_material
+52400400	2400400	01	4	goods	1511	Coldblood Dew (2)	1	0x400005E7	filler	consumable_or_material
+52400410	2400410	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52400420	2400420	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52400430	2400430	01	8	gem	124003		1		optional	generated_blood_gem
+52400440	2400440	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52400450	2400450	01	4	goods	4011	Hunter Chief Emblem	1	0x40000FAB	key_or_badge	goods_type_1_requires_logic_review
+52400460	2400460	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
+52400470	2400470	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+52400480	2400480	01	4	goods	4115	Radiant Sword Hunter Badge	1	0x40001013	key_or_badge	goods_type_1_requires_logic_review
+52400485	2400485	01	4	goods	1400	Bold Hunter's Mark	1	0x40000578	filler	consumable_or_material
+52410100	2410100	01	0	weapon	7100000	Saw Spear	1		useful	weapon
+52410110	2410110	01	4	goods	3000	Blood Stone Shard	2	0x40000BB8	filler	consumable_or_material
+52410120	2410120	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52410130	2410130	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410140	2410140	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52410150	2410150	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410160	2410160	01	4	goods	1230	Pebble	8	0x400004CE	filler	consumable_or_material
+52410170	2410170	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410180	2410180	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410190	2410190	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52410200	2410200	01	4	goods	1200	Molotov Cocktail	4	0x400004B0	filler	consumable_or_material
+52410210	2410210	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410220	2410220	01	4	goods	1260	Pungent Blood Cocktail	2	0x400004EC	filler	consumable_or_material
+52410240	2410240	01	4	goods	1512	Coldblood Dew (3)	1	0x400005E8	filler	consumable_or_material
+52410250	2410250	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52410260	2410260	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410270	2410270	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52410280	2410280	01	4	goods	1511	Coldblood Dew (2)	1	0x400005E7	filler	consumable_or_material
+52410290	2410290	01	4	goods	4110	Saw Hunter Badge	1	0x4000100E	key_or_badge	goods_type_1_requires_logic_review
+52410295	2410295	01	4	goods	1400	Bold Hunter's Mark	1	0x40000578	filler	consumable_or_material
+52410310	2410310	01	4	goods	1230	Pebble	10	0x400004CE	filler	consumable_or_material
+52410330	2410330	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410340	2410340	01	4	goods	1000	Blood Vial	4	0x400003E8	filler	consumable_or_material
+52410360	2410360	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52410370	2410370	01	4	goods	1220	Oil Urn	2	0x400004C4	filler	consumable_or_material
+52410380	2410380	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52410390	2410390	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52410400	2410400	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410430	2410430	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52410440	2410440	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410450	2410450	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410470	2410470	01	4	goods	1220	Oil Urn	2	0x400004C4	filler	consumable_or_material
+52410480	2410480	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52410490	2410490	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410510	2410510	01	4	goods	1400	Bold Hunter's Mark	2	0x40000578	filler	consumable_or_material
+52410520	2410520	01	0	weapon	20100000	Torch	1		useful	weapon
+52410530	2410530	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410540	2410540	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410560	2410560	01	4	goods	900	Quicksilver Bullets	5	0x40000384	filler	consumable_or_material
+52410570	2410570	01	4	goods	1200	Molotov Cocktail	4	0x400004B0	filler	consumable_or_material
+52410580	2400760	01	8	gem	124001		1		optional	generated_blood_gem
+52410590	2410590	01	4	goods	1200	Molotov Cocktail	6	0x400004B0	filler	consumable_or_material
+52410600	2410600	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410610	2410610	01	1	armor	70000	Hunter Hat	1		useful	armor
+52410620	2410620	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
+52410630	2410630	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
+52410640	2410640	01	8	gem	102903		1		optional	generated_blood_gem
+52410645	2410645	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52410650	2410650	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
+52410800	2410800	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52410920	2410920	01	4	goods	4306	Red Jeweled Brooch	1	0x400010D2	filler	consumable_or_material
+52411000	2411000	01	4	goods	4103	Blood Gem Workshop Tool	1	0x40001007	key_or_badge	goods_type_1_requires_logic_review
+52411005	2411005	01	4	goods	1591	Kin Coldblood (12)	1	0x40000637	filler	consumable_or_material
+52420110	2420110	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
+52420120	2420120	01	8	gem	101802		1		optional	generated_blood_gem
+52420125	2420125	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420130	2420130	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52420140	2420140	01	4	goods	900	Quicksilver Bullets	3	0x40000384	filler	consumable_or_material
+52420150	2420150	01	1	armor	121000	Choir Garb	1		useful	armor
+52420160	2420160	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52420170	2420170	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420180	2420180	01	4	goods	1120	Blue Elixir	1	0x40000460	filler	consumable_or_material
+52420190	2420190	01	1	armor	120000	Blindfold Cap	1		useful	armor
+52420200	2420200	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420210	2420210	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420220	2420220	01	4	goods	7100	Pearl Slug	2	0x40001BBC	filler	consumable_or_material
+52420230	2420230	01	1	armor	130000	Gascoigne's Cap	1		useful	armor
+52420240	2420240	01	4	goods	7004	Ritual Blood (5)	3	0x40001B5C	filler	consumable_or_material
+52420250	2420250	01	0	weapon	6100000	Ludwig's Rifle	1		useful	weapon
+52420260	2420260	01	4	goods	7023	Tomb Mold (4)	1	0x40001B6F	filler	consumable_or_material
+52420270	2420270	01	4	goods	4119	Cosmic Eye Watcher Badge	1	0x40001017	key_or_badge	goods_type_1_requires_logic_review
+52420285	2420275	01	4	goods	1400	Bold Hunter's Mark	1	0x40000578	filler	consumable_or_material
+52420300	2420300	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52420310	2420310	01	4	goods	1120	Blue Elixir	1	0x40000460	filler	consumable_or_material
+52420320	2420320	01	4	goods	2010	A Call Beyond	1	0x400007DA	useful	unique_goods_or_hunter_tool
+52420540	2400540	01	1	armor	320000	Rumpled Yharnam Hat	1		useful	armor
+52420550	2400550	01	0	weapon	19000000	Wooden Shield	1		useful	weapon
+52420560	2400560	01	4	goods	3000	Blood Stone Shard	5	0x40000BB8	filler	consumable_or_material
+52420570	2400570	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
+52420580	2400580	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
+52420590	2400590	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420600	2400600	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52420610	2400610	01	4	goods	1100	Antidote	1	0x4000044C	filler	consumable_or_material
+52420620	2400620	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420630	2400630	01	4	goods	1210	Poison Knife	18	0x400004BA	filler	consumable_or_material
+52420640	2400640	01	8	gem	102901		1		optional	generated_blood_gem
+52420645	2400645	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420650	2400650	01	8	gem	124004		1		optional	generated_blood_gem
+52420660	2400660	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420670	2400670	01	4	goods	4905	Messenger Top Hat	1	0x40001329	key_or_badge	goods_type_1_requires_logic_review
+52420690	2400690	01	8	gem	103104		1		optional	generated_blood_gem
+52420695	2400695	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420700	2400700	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52420710	2400710	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52420720	2400720	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52420730	2400730	01	4	goods	4908	Messenger Urn Festival	1	0x4000132C	key_or_badge	goods_type_1_requires_logic_review
+52420740	2400740	01	8	gem	124000		1		optional	generated_blood_gem
+52420750	2400750	01	4	goods	1400	Bold Hunter's Mark	3	0x40000578	filler	consumable_or_material
+52500100	2500100	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52500110	2500110	01	4	goods	1270	Numbing Mist	2	0x400004F6	filler	consumable_or_material
+52500120	2500120	01	4	goods	1270	Numbing Mist	4	0x400004F6	filler	consumable_or_material
+52500130	2500130	01	4	goods	1270	Numbing Mist	4	0x400004F6	filler	consumable_or_material
+52500140	2500140	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52500150	2500150	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52500160	2500160	01	1	armor	311000	Noble Dress	1		useful	armor
+52500170	2500170	01	4	goods	130	Vileblood Register	1	0x40000082	useful	unique_goods_or_hunter_tool
+52500180	2500180	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
+52500190	2500190	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+52500200	2500200	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
+52500210	2500210	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52500220	2500220	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52500230	2500230	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52500240	2500240	01	4	goods	900	Quicksilver Bullets	4	0x40000384	filler	consumable_or_material
+52500250	2500250	01	4	goods	2080	Executioner's Gloves	1	0x40000820	useful	unique_goods_or_hunter_tool
+52500260	2500260	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+52500270	2500270	01	4	goods	1400	Bold Hunter's Mark	2	0x40000578	filler	consumable_or_material
+52501000	2501000	01	0	weapon	10100000	Reiterpallasch	1		useful	weapon
+52501010	2501010	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52501020	2501020	01	1	armor	151000	Executioner Garb	1		useful	armor
+52501030	2501030	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52501040	2501040	01	8	gem	125000		1		optional	generated_blood_gem
+52501050	2501050	01	1	armor	80000	Knight's Wig	1		useful	armor
+52501060	2501060	01	8	gem	125001		1		optional	generated_blood_gem
+52501070	2501070	01	1	armor	81000	Knight's Garb	1		useful	armor
+52501080	2501080	01	0	weapon	14100000	Evelyn	1		useful	weapon
+52600100	2600100	01	4	goods	2090	Shaman Bone Blade	6	0x4000082A	filler	consumable_or_material
+52600110	2600110	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52600120	2600120	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+52600130	2600130	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+52600140	2600140	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+52600150	2600150	01	8	gem	126002		1		optional	generated_blood_gem
+52600160	2600160	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+52600170	2600170	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52600180	2600180	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52600190	2600190	01	4	goods	1000	Blood Vial	8	0x400003E8	filler	consumable_or_material
+52600200	2600200	01	8	gem	126003		1		optional	generated_blood_gem
+52600210	2600210	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52600220	2600220	01	8	gem	126000		1		optional	generated_blood_gem
+52600230	2600230	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
+52600240	2600240	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52600250	2600250	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
+52600260	2600260	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52600270	2600270	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
+52600280	2600280	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52600290	2600290	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52600300	2600300	01	8	gem	100201		1		optional	generated_blood_gem
+52600305	2600305	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52600310	2600310	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52600320	2600320	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+52600330	2600330	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52600340	2600340	01	4	goods	1120	Blue Elixir	2	0x40000460	filler	consumable_or_material
+52600350	2600350	01	4	goods	3010	Twin Blood Stone Shards	3	0x40000BC2	filler	consumable_or_material
+52600360	2600360	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+52600370	2600370	01	4	goods	1000	Blood Vial	4	0x400003E8	filler	consumable_or_material
+52600380	2600380	01	4	goods	1101	Sedative	3	0x4000044D	filler	consumable_or_material
+52600390	2600390	01	8	gem	100002		1		optional	generated_blood_gem
+52600395	2600395	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52600400	2600400	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+52600410	2600410	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+52600420	2600420	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52600430	2600430	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52600440	2600440	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52600450	2600450	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52600460	2600460	01	4	goods	1590	Kin Coldblood (11)	1	0x40000636	filler	consumable_or_material
+52600470	2600470	01	4	goods	1590	Kin Coldblood (11)	1	0x40000636	filler	consumable_or_material
+52600480	2600480	01	8	gem	126004		1		optional	generated_blood_gem
+52600490	2600490	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52600500	2600500	01	4	goods	1590	Kin Coldblood (11)	1	0x40000636	filler	consumable_or_material
+52600510	2600510	01	8	gem	126001		1		optional	generated_blood_gem
+52600520	2600520	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52600530	2600530	01	8	gem	126000		1		optional	generated_blood_gem
+52600540	2600540	01	4	goods	3030	Blood Rock	1	0x40000BD6	filler	consumable_or_material
+52600550	2600550	01	4	goods	4009	Iron Door Key	1	0x40000FA9	key_or_badge	goods_type_1_requires_logic_review
+52600560	2600560	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52600580	2600580	01	4	goods	1000	Blood Vial	8	0x400003E8	filler	consumable_or_material
+52600590	2600590	01	4	goods	7130	Inflicted Organ	1	0x40001BDA	filler	consumable_or_material
+52600600	2600600	01	4	goods	2050	Choir Bell	1	0x40000802	useful	unique_goods_or_hunter_tool
+52600610	2600610	01	4	goods	4009	Iron Door Key	1	0x40000FA9	key_or_badge	goods_type_1_requires_logic_review
+52601000	2601000	01	4	goods	703	Iosefka's Blood Vial	1	0x400002BF	useful	unique_goods_or_hunter_tool
+52601010	2601010	01	4	goods	7131	Yellow Backbone	2	0x40001BDB	filler	consumable_or_material
+52700100	2700100	01	4	goods	3010	Twin Blood Stone Shards	3	0x40000BC2	filler	consumable_or_material
+52700110	2700110	01	4	goods	1210	Poison Knife	8	0x400004BA	filler	consumable_or_material
+52700120	2700120	01	0	weapon	15000000	Cannon	1		useful	weapon
+52700130	2700130	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700140	2700140	01	4	goods	1200	Molotov Cocktail	11	0x400004B0	filler	consumable_or_material
+52700150	2700150	01	1	armor	290000	White Church Hat	1		useful	armor
+52700170	2700170	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52700180	2700180	01	8	gem	102001		1		optional	generated_blood_gem
+52700185	2700185	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700190	2700190	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700200	2700200	01	8	gem	101601		1		optional	generated_blood_gem
+52700205	2700205	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700210	2700210	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700220	2700220	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700230	2700230	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52700240	2700240	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700250	2700250	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700260	2700260	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700270	2700270	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700290	2700290	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700300	2700300	01	8	gem	127001		1		optional	generated_blood_gem
+52700310	2700310	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52700320	2700320	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52700330	2700330	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700340	2700340	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
+52700350	2700350	01	4	goods	1100	Antidote	4	0x4000044C	filler	consumable_or_material
+52700360	2700360	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52700370	2700370	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52700380	2700380	01	8	gem	100401		1		optional	generated_blood_gem
+52700385	2700385	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700390	2700390	01	4	goods	1210	Poison Knife	3	0x400004BA	filler	consumable_or_material
+52700400	2700400	01	4	goods	1110	Beast Blood Pellet	6	0x40000456	filler	consumable_or_material
+52700410	2700410	01	1	armor	31000	Graveguard Robe	1		useful	armor
+52700420	2700420	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52700430	2700430	01	4	goods	1410	Shining Coins	5	0x40000582	filler	consumable_or_material
+52700440	2700440	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700450	2700450	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700460	2700460	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52700470	2700470	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700480	2700480	01	4	goods	2020	Beast Roar	1	0x400007E4	useful	unique_goods_or_hunter_tool
+52700490	2700490	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52700500	2700500	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52700510	2700510	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
+52700520	2700520	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700540	2700540	01	8	gem	102202		1		optional	generated_blood_gem
+52700545	2700545	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700550	2700550	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700560	2700560	01	1	armor	30000	Graveguard Mask	1		useful	armor
+52700570	2700570	01	8	gem	100301		1		optional	generated_blood_gem
+52700575	2700575	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700580	2700580	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700590	2700590	01	4	goods	1110	Beast Blood Pellet	3	0x40000456	filler	consumable_or_material
+52700600	2700600	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52700610	2700610	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+52700640	2700640	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52700650	2700650	01	8	gem	127003		1		optional	generated_blood_gem
+52700660	2700660	01	8	gem	127004		1		optional	generated_blood_gem
+52700670	2700670	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52700690	2700690	01	8	gem	127002		1		optional	generated_blood_gem
+52700700	2700700	01	8	gem	127000		1		optional	generated_blood_gem
+52700720	2700720	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700740	2700740	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52700750	2700750	01	4	goods	1410	Shining Coins	6	0x40000582	filler	consumable_or_material
+52700760	2700760	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700770	2700770	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52700780	2700780	01	4	goods	1100	Antidote	4	0x4000044C	filler	consumable_or_material
+52700790	2700790	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52700800	2700800	01	0	weapon	5100000	Burial Blade	1		useful	weapon
+52700810	2700810	01	4	goods	1230	Pebble	2	0x400004CE	filler	consumable_or_material
+52700860	2700860	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52700870	2700870	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52700880	2700880	01	4	goods	1000	Blood Vial	5	0x400003E8	filler	consumable_or_material
+52700890	2700890	01	4	goods	1120	Blue Elixir	4	0x40000460	filler	consumable_or_material
+52700900	2700900	01	4	goods	1260	Pungent Blood Cocktail	3	0x400004EC	filler	consumable_or_material
+52700910	2700910	01	4	goods	1260	Pungent Blood Cocktail	4	0x400004EC	filler	consumable_or_material
+52700920	2700920	01	4	goods	1110	Beast Blood Pellet	4	0x40000456	filler	consumable_or_material
+52700930	2700930	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52700940	2700940	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52700945	2700950	01	4	goods	1100	Antidote	2	0x4000044C	filler	consumable_or_material
+52700960	2700960	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+52800000	2800000	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52800010	2800010	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52800020	2800020	01	8	gem	128000		1		optional	generated_blood_gem
+52800030	2800030	01	4	goods	1320	Bolt Paper	3	0x40000528	filler	consumable_or_material
+52800040	2800040	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52800050	2800050	01	8	gem	100802		1		optional	generated_blood_gem
+52800055	2800055	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800060	2800060	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52800070	2800070	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52800080	2800080	01	4	goods	1000	Blood Vial	8	0x400003E8	filler	consumable_or_material
+52800090	2800090	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+52800100	2800100	01	1	armor	270000	Iron Yahar'gul Helm	1		useful	armor
+52800110	2800110	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52800120	2800120	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52800130	2800130	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52800140	2800140	01	8	gem	101301		1		optional	generated_blood_gem
+52800145	2800145	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800150	2800150	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800160	2800160	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800170	2800170	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52800170	2800320	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52800180	2800180	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52800210	2800210	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+52800290	2800290	01	4	goods	4010	Upper Cathedral Key	1	0x40000FAA	key_or_badge	goods_type_1_requires_logic_review
+52800300	2800300	01	4	goods	1260	Pungent Blood Cocktail	1	0x400004EC	filler	consumable_or_material
+52800310	2800310	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+52800330	2800330	01	0	weapon	13000000	Tonitrus	1		useful	weapon
+52800340	2800340	01	4	goods	1320	Bolt Paper	5	0x40000528	filler	consumable_or_material
+52800350	2800350	01	8	gem	100001		1		optional	generated_blood_gem
+52800355	2800355	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800360	2800360	01	4	goods	1260	Pungent Blood Cocktail	3	0x400004EC	filler	consumable_or_material
+52800380	2800380	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52800400	2800400	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52800410	2800410	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52800420	2800420	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52800430	2800430	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52800440	2800440	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52800450	2800450	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+52800500	2800500	01	4	goods	2070	Tiny Tonitrus	1	0x40000816	useful	unique_goods_or_hunter_tool
+52800510	2800510	01	4	goods	2050	Choir Bell	1	0x40000802	useful	unique_goods_or_hunter_tool
+52800520	2800520	01	1	armor	40000	Bone Ash Mask	1		useful	armor
+52800530	2800530	01	8	gem	228001		1		optional	generated_blood_gem
+52800610	2800610	01	1	armor	20000	Black Hooded Iron Helm	1		useful	armor
+52800610	2800611	01	1	armor	21000	Yahar'gul Black Garb	1		useful	armor
+52800620	2800620	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800630	2800630	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
+52800640	2800640	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
+52800650	2800650	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+52800660	2800660	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+52800670	2800670	01	4	goods	2030	Lead Elixir	3	0x400007EE	filler	consumable_or_material
+52800680	2800680	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+52800690	2800690	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800700	2800700	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+52800710	2800710	01	8	gem	132000		1		optional	generated_blood_gem
+53200000	3200000	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53200010	3200010	01	8	gem	101302		1		optional	generated_blood_gem
+53200015	3200015	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53200020	3200020	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53200030	3200030	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+53200040	3200040	01	4	goods	1101	Sedative	5	0x4000044D	filler	consumable_or_material
+53200100	3200100	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53200110	3200110	01	4	goods	1101	Sedative	6	0x4000044D	filler	consumable_or_material
+53200500	3200500	01	4	goods	1310	Empty Phantasm Shell	1	0x4000051E	useful	unique_goods_or_hunter_tool
+53200540	3200540	01	1	armor	191000	Student Uniform	1		useful	armor
+53200600	3200600	01	4	goods	2000	Augur of Ebrietas	1	0x400007D0	useful	unique_goods_or_hunter_tool
+53200620	3200620	01	4	goods	7110	Red Jelly	2	0x40001BC6	filler	consumable_or_material
+53200640	3200640	01	8	gem	102902		1		optional	generated_blood_gem
+53200645	3200645	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53200700	3200700	01	4	goods	7100	Pearl Slug	1	0x40001BBC	filler	consumable_or_material
+53200720	3200720	01	4	goods	4012	Lecture Theatre Key	1	0x40000FAC	key_or_badge	goods_type_1_requires_logic_review
+53200730	3200730	01	1	armor	301000	Student Uniform	1		useful	armor
+53200740	3200740	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53200750	3200750	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53300100	3300000	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300110	3300010	01	8	gem	101401		1		optional	generated_blood_gem
+53300115	3300015	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300120	3300020	01	4	goods	1320	Bolt Paper	2	0x40000528	filler	consumable_or_material
+53300130	3300030	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
+53300140	3300040	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53300150	3300050	01	8	gem	102302		1		optional	generated_blood_gem
+53300155	3300055	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300160	3300060	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53300170	3300070	01	4	goods	900	Quicksilver Bullets	5	0x40000384	filler	consumable_or_material
+53300180	3300080	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+53300190	3300090	01	4	goods	1100	Antidote	2	0x4000044C	filler	consumable_or_material
+53300200	3300100	01	4	goods	6008		1		filler	consumable_or_material
+53300210	3300110	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
+53300220	3300120	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300230	3300130	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300240	3300140	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53300250	3300150	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+53300260	3300160	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
+53300270	3300170	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300280	3300180	01	4	goods	7012	Coldblood Flowerbud	1	0x40001B64	filler	consumable_or_material
+53300290	3300190	01	4	goods	1100	Antidote	2	0x4000044C	filler	consumable_or_material
+53300300	3300200	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+53300310	3300210	01	4	goods	1100	Antidote	4	0x4000044C	filler	consumable_or_material
+53300320	3300220	01	8	gem	102002		1		optional	generated_blood_gem
+53300325	3300225	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300330	3300230	01	4	goods	2110	Messenger's Gift	1	0x4000083E	useful	unique_goods_or_hunter_tool
+53300340	3300240	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+53300350	3300250	01	4	goods	2030	Lead Elixir	3	0x400007EE	filler	consumable_or_material
+53300360	3300260	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300370	3300270	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53300380	3300280	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300390	3300290	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53300400	3300300	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53300410	3300310	01	4	goods	1400	Bold Hunter's Mark	3	0x40000578	filler	consumable_or_material
+53300420	3300320	01	8	gem	100302		1		optional	generated_blood_gem
+53300425	3300325	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300430	3300330	01	4	goods	7012	Coldblood Flowerbud	2	0x40001B64	filler	consumable_or_material
+53300440	3300340	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
+53300450	3300350	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
+53300460	3300360	01	4	goods	7012	Coldblood Flowerbud	1	0x40001B64	filler	consumable_or_material
+53300470	3300370	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+53300480	3300380	01	8	gem	102102		1		optional	generated_blood_gem
+53300485	3300385	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53300490	3300390	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53400000	3400000	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+53400010	3400010	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53400020	3400020	01	1	armor	353000	Old Hunter Trousers	1		useful	armor
+53400030	3400030	01	4	goods	1200	Molotov Cocktail	4	0x400004B0	filler	consumable_or_material
+53400040	3400040	01	1	armor	351000	Old Hunter Garb	1		useful	armor
+53400050	3400050	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53400060	3400060	01	0	weapon	24000000	Beast Cutter	1		useful	weapon
+53400070	3400070	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53400080	3400080	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+53400090	3400090	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53400100	3400100	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+53400110	3400110	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53400120	3400120	01	4	goods	1201	Delayed Molotov	5	0x400004B1	filler	consumable_or_material
+53400130	3400130	01	0	weapon	28000000	Boom Hammer	1		useful	weapon
+53400140	3400140	01	4	goods	1110	Beast Blood Pellet	3	0x40000456	filler	consumable_or_material
+53400150	3400150	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53400160	3400160	01	1	armor	360000	Old Hunter Top Hat	1		useful	armor
+53400170	3400170	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53400180	3400180	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+53400190	3400190	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53400200	3400200	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+53400210	3400210	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+53400220	3400220	01	0	weapon	25000000	Amygdalan Arm	1		useful	weapon
+53400230	3400230	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+53400240	3400240	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
+53400250	3400250	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53400260	3400260	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53400270	3400270	01	1	armor	381000	Constable's Garb	1		useful	armor
+53400280	3400280	01	0	weapon	31000000	Whirligig Saw	1		useful	weapon
+53400330	3400330	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53400350	3400350	01	1	armor	382000	Constable's Gloves	1		useful	armor
+53400360	3400360	01	1	armor	383000	Constable's Trousers	1		useful	armor
+53400370	3400370	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53400380	3400380	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53400390	3400390	01	4	goods	3010	Twin Blood Stone Shards	3	0x40000BC2	filler	consumable_or_material
+53400400	3400400	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
+53400410	3400410	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53400420	3400420	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53400430	3400430	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53400440	3400440	01	0	weapon	23000000	Beasthunter Saif	1		useful	weapon
+53400450	3400450	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53400460	3400460	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+53400470	3400470	01	4	goods	1230	Pebble	1	0x400004CE	filler	consumable_or_material
+53400480	3400480	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
+53400490	3400490	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+53400500	3400500	01	4	goods	1220	Oil Urn	3	0x400004C4	filler	consumable_or_material
+53400510	3400510	01	1	armor	330000	Butcher Mask	1		useful	armor
+53400520	3400520	01	4	goods	900	Quicksilver Bullets	4	0x40000384	filler	consumable_or_material
+53400530	3400530	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
+53400540	3400540	01	4	goods	1200	Molotov Cocktail	3	0x400004B0	filler	consumable_or_material
+53400580	3400580	01	1	armor	350000	Old Hunter Cap	1		useful	armor
+53400590	3400590	01	4	goods	3010	Twin Blood Stone Shards	3	0x40000BC2	filler	consumable_or_material
+53400600	3400610	01	1	armor	352000	Old Hunter Gloves	1		useful	armor
+53400600	3400600	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53401000	3401000	01	4	goods	1201	Delayed Molotov	5	0x400004B1	filler	consumable_or_material
+53401010	3401010	01	4	goods	1220	Oil Urn	3	0x400004C4	filler	consumable_or_material
+53401020	3401020	01	4	goods	1330	Bone Marrow Ash	3	0x40000532	filler	consumable_or_material
+53401030	3401030	01	4	goods	1300	Fire Paper	3	0x40000514	filler	consumable_or_material
+53401040	3401040	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+53401050	3401050	01	4	goods	1000	Blood Vial	1	0x400003E8	filler	consumable_or_material
+53401060	3401060	01	4	goods	1220	Oil Urn	4	0x400004C4	filler	consumable_or_material
+53401070	3401070	01	4	goods	900	Quicksilver Bullets	8	0x40000384	filler	consumable_or_material
+53401080	3401080	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+53401090	3401090	01	4	goods	1000	Blood Vial	10	0x400003E8	filler	consumable_or_material
+53401100	3401100	01	4	goods	1000	Blood Vial	4	0x400003E8	filler	consumable_or_material
+53401110	3401110	01	4	goods	1230	Pebble	1	0x400004CE	filler	consumable_or_material
+53401120	3401120	01	4	goods	1300	Fire Paper	1	0x40000514	filler	consumable_or_material
+53401130	3401130	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
+53500000	3500000	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53500110	3500110	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+53500120	3500120	01	4	goods	1120	Blue Elixir	2	0x40000460	filler	consumable_or_material
+53500130	3500130	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53500140	3500140	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53500150	3500150	01	4	goods	1120	Blue Elixir	1	0x40000460	filler	consumable_or_material
+53500160	3500160	01	8	gem	135000		1		optional	generated_blood_gem
+53500180	3500180	01	4	goods	1120	Blue Elixir	1	0x40000460	filler	consumable_or_material
+53500190	3500190	01	8	gem	135004		1		optional	generated_blood_gem
+53500200	3500200	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53500210	3500210	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53500220	3500220	01	4	goods	1101	Sedative	3	0x4000044D	filler	consumable_or_material
+53500230	3500230	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53500250	3500250	01	4	goods	1110	Beast Blood Pellet	6	0x40000456	filler	consumable_or_material
+53500260	3500260	01	4	goods	900	Quicksilver Bullets	3	0x40000384	filler	consumable_or_material
+53500270	3500270	01	4	goods	1000	Blood Vial	5	0x400003E8	filler	consumable_or_material
+53500280	3500280	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
+53500290	3500290	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53500300	3500300	01	4	goods	1100	Antidote	2	0x4000044C	filler	consumable_or_material
+53500310	3500310	01	4	goods	900	Quicksilver Bullets	4	0x40000384	filler	consumable_or_material
+53500500	3500500	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53500530	3500530	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53500540	3500540	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+53500600	3500600	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
+53500620	3500620	01	4	goods	1120	Blue Elixir	4	0x40000460	filler	consumable_or_material
+53500630	3500630	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53500800	3500800	01	4	goods	4018	Underground Cell Key	1	0x40000FB2	key_or_badge	goods_type_1_requires_logic_review
+53500810	3500810	01	0	weapon	34000000	Fist of Gratia	1		useful	weapon
+53500820	3500820	01	1	armor	430000	Enlarged Head	1		useful	armor
+53500830	3500830	01	4	goods	2120	Blacksky Eye	1	0x40000848	useful	unique_goods_or_hunter_tool
+53500840	3500840	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+53500850	3500850	01	0	weapon	35000000	Church Cannon	1		useful	weapon
+53500860	3500860	01	0	weapon	19100000	Loch Shield	1		useful	weapon
+53500870	3500870	01	1	armor	361000	Decorative Old Hunter Garb	1		useful	armor
+53501100	3501100	01	8	gem	134000		1		optional	generated_blood_gem
+53501500	3501500	01	8	gem	135005		1		optional	generated_blood_gem
+53600000	3600000	01	4	goods	2030	Lead Elixir	1	0x400007EE	filler	consumable_or_material
+53600010	3600010	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53600100	3600100	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53600110	3600110	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
+53600120	3600120	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53600130	3600130	01	4	goods	1220	Oil Urn	4	0x400004C4	filler	consumable_or_material
+53600140	3600140	01	8	gem	134001		1		optional	generated_blood_gem
+53600150	3600150	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+53600160	3600160	01	8	gem	136002		1		optional	generated_blood_gem
+53600170	3600170	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53600200	3600200	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53600210	3600210	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+53600220	3600220	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53600230	3600230	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53600300	3600300	01	4	goods	3020	Blood Stone Chunk	2	0x40000BCC	filler	consumable_or_material
+53600310	3600310	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
+53600320	3600320	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53600330	3600330	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53600340	3600340	01	8	gem	136001		1		optional	generated_blood_gem
+53600350	3600350	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53600360	3600360	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
+53600400	3600400	01	4	goods	1220	Oil Urn	4	0x400004C4	filler	consumable_or_material
+53600410	3600410	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
+53600420	3600420	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53600430	3600430	01	8	gem	136004		1		optional	generated_blood_gem
+53600440	3600440	01	4	goods	3010	Twin Blood Stone Shards	3	0x40000BC2	filler	consumable_or_material
+53600450	3600450	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53600460	3600460	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53600470	3600470	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
+53600500	3600500	01	4	goods	2030	Lead Elixir	1	0x400007EE	filler	consumable_or_material
+53600510	3600510	01	4	goods	1590	Kin Coldblood (11)	1	0x40000636	filler	consumable_or_material
+53600520	3600520	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
+53600530	3600530	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
+53600540	3600540	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
+53600550	3600550	01	4	goods	1590	Kin Coldblood (11)	1	0x40000636	filler	consumable_or_material
+53600560	3600560	01	8	gem	136003		1		optional	generated_blood_gem
+53600570	3600570	01	8	gem	136006		1		optional	generated_blood_gem
+53600600	3600600	01	4	goods	3030	Blood Rock	1	0x40000BD6	filler	consumable_or_material
+53600610	3600610	01	8	gem	136005		1		optional	generated_blood_gem
+53600700	3600700	01	1	armor	340000	Harrowed Hood	1		useful	armor

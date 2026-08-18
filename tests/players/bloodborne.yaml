@@ -1,0 +1,7 @@
+description: Bloodborne vertical slice test
+name: Tester
+game: Bloodborne
+Bloodborne:
+  progression_balancing: 50
+  accessibility: items
+  enemizer: true

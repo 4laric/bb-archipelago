@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local entry = 0x208067BD0
+local output = [[C:\Users\alari\bb-archipelago\work\bullet-entry-dump.txt]]
+
+openProcess("shadPS4.exe")
+if readInteger(entry + 8) ~= 16 then
+    error("Safety check failed: expected quantity 16 at bullet entry +8")
+end
+
+local lines = { string.format("entry=0x%X", entry) }
+for offset = -0x80, 0x100, 4 do
+    local address = entry + offset
+    local value = readInteger(address)
+    lines[#lines + 1] = string.format(
+        "%+04X  address=0x%X  dword=0x%08X  signed=%d",
+        offset, address, value, value)
+end
+
+local f = assert(io.open(output, "w"))
+f:write(table.concat(lines, "\n") .. "\n")
+f:close()
+showMessage("Read-only bullet entry dump completed")
+]]></LuaScript>
+</CheatTable>

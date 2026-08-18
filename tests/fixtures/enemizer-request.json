@@ -1,0 +1,9 @@
+{
+  "format": "bb-enemizer-request-v1",
+  "version": 1,
+  "enemizer": true,
+  "enemizer_seed": "vertical-slice-test:1",
+  "runtime_locations": "manual",
+  "player": 1,
+  "player_name": "Tester"
+}

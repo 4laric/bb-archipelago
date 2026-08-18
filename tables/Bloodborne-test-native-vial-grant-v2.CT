@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local inventory = 0x208067778
+local vialEntry = 0x208067BF0
+local expectedItem = 0x400003E8
+local expectedQuantity = 6
+local nativeAdd = 0x8014DA0A0
+
+openProcess("shadPS4.exe")
+if readInteger(vialEntry + 4) ~= expectedItem or readInteger(vialEntry + 8) ~= expectedQuantity then
+    error("Safety check failed: expected the validated Vial record at quantity 6; nothing called")
+end
+
+local assembled = autoAssemble([[
+alloc(bbNativeGrantThunkV2,256)
+alloc(bbNativeGrantDescriptorV2,16)
+registersymbol(bbNativeGrantThunkV2)
+registersymbol(bbNativeGrantDescriptorV2)
+
+bbNativeGrantThunkV2:
+  push rdi
+  push rsi
+  sub rsp,08
+  mov rdi,rcx
+  mov rsi,rdx
+  mov edx,r8d
+  mov rax,8014DA0A0
+  call rax
+  add rsp,08
+  pop rsi
+  pop rdi
+  ret
+]])
+if not assembled then error("Could not assemble the native-call thunk") end
+
+local descriptor = getAddress("bbNativeGrantDescriptorV2")
+writeInteger(descriptor + 0, 0xB00003E8)
+writeInteger(descriptor + 4, expectedItem)
+writeInteger(descriptor + 8, 0)
+writeInteger(descriptor + 12, 0)
+
+local result = executeCodeEx(0, 5000, getAddress("bbNativeGrantThunkV2"),
+    inventory, descriptor, 1)
+local actual = readInteger(vialEntry + 8)
+if actual ~= 7 then
+    error(string.format("Native add returned %s, but Vials are %s instead of 7", tostring(result), tostring(actual)))
+end
+showMessage(string.format("Native Vial grant succeeded: 6 -> 7 (result=%s)", tostring(result)))
+]]></LuaScript>
+</CheatTable>

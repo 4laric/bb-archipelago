@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local statePath = [[C:\Users\alari\bb-archipelago\work\game-thread-grant-state.txt]]
+local function state(status, detail)
+    local f=assert(io.open(statePath,"w")); f:write("status=",status,"\ndetail=",tostring(detail or ""),"\n"); f:close()
+end
+
+openProcess("shadPS4.exe")
+local script = [[
+assert(8014D9575,44 89 E0 48 83 C4 28)
+assert(8050DB800,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+label(bbV5Original)
+label(bbV5Request)
+label(bbV5Quantity)
+label(bbV5Result)
+label(bbV5Done)
+label(bbV5Descriptor)
+registersymbol(bbV5Request)
+registersymbol(bbV5Quantity)
+registersymbol(bbV5Result)
+registersymbol(bbV5Done)
+registersymbol(bbV5Descriptor)
+
+8050DB800:
+  cmp dword ptr [bbV5Request],0
+  je bbV5Original
+  mov dword ptr [bbV5Request],0
+  mov rdi,r13
+  lea rsi,[bbV5Descriptor]
+  mov edx,[bbV5Quantity]
+  mov rax,8014DA0A0
+  call rax
+  mov [bbV5Result],eax
+  mov dword ptr [bbV5Done],1
+
+bbV5Original:
+  mov eax,r12d
+  add rsp,28
+  jmp 8014D957C
+
+align 10 CC
+bbV5Request:
+  dd 0
+bbV5Quantity:
+  dd 0
+bbV5Result:
+  dd 0
+bbV5Done:
+  dd 0
+bbV5Descriptor:
+  dd 0
+  dd 0
+  dd 0
+  dd 0
+
+8014D9575:
+  jmp 8050DB800
+  nop 2
+]]
+
+local ok, detail = autoAssemble(script)
+if not ok then
+    state("setup_error", tostring(detail))
+    error("V5 hook was not installed: " .. tostring(detail))
+end
+
+local descriptor=getAddress("bbV5Descriptor")
+writeInteger(descriptor+0,0xB00003E8)
+writeInteger(descriptor+4,0x400003E8)
+writeInteger(descriptor+8,0)
+writeInteger(descriptor+12,0)
+writeInteger(getAddress("bbV5Quantity"),1)
+writeInteger(getAddress("bbV5Result"),0xFFFFFFFF)
+writeInteger(getAddress("bbV5Done"),0)
+writeInteger(getAddress("bbV5Request"),1)
+
+if bbV5Timer then bbV5Timer.destroy() end
+bbV5Timer=createTimer(nil)
+bbV5Timer.Interval=250
+bbV5Timer.OnTimer=function()
+    if readInteger(getAddress("bbV5Done"))==1 then
+        state("completed","native_result="..tostring(readInteger(getAddress("bbV5Result"))))
+        bbV5Timer.Enabled=false
+    end
+end
+bbV5Timer.Enabled=true
+state("armed","Fire one bullet; +1 Vial queued on Bloodborne thread")
+]]></LuaScript>
+</CheatTable>

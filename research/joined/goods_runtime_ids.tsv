@@ -1,0 +1,296 @@
+goods_param_id	param_name	normalized_runtime_id	raw_runtime_descriptor	max_num	max_repository_num	is_only_one	is_auto_replenish	mapping_evidence
+1	アイテム切替テストA	0x40000001	0xB0000001	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2	アイテム切替テストb	0x40000002	0xB0000002	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+100	ダークリング	0x40000064	0xB0000064	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+111	別れの空砲	0x4000006F	0xB000006F	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+120	呼び鈴	0x40000078	0xB0000078	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+130	血族ランキング観覧アイテム	0x40000082	0xB0000082	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+131	連盟ランキング観覧アイテム	0x40000083	0xB0000083	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+200	通常協力要請	0x400000C8	0xB00000C8	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+201	通常協力要請_使用不可	0x400000C9	0xB00000C9	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+205	通常協力希望	0x400000CD	0xB00000CD	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+206	通常協力希望_使用不可	0x400000CE	0xB00000CE	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+225	通常侵入希望	0x400000E1	0xB00000E1	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+226	通常侵入希望_使用不可	0x400000E2	0xB00000E2	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+700	ガスコインのオルゴール	0x400002BC	0xB00002BC	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+701	娼婦の血	0x400002BD	0xB00002BD	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+702	囚われの尼僧の血	0x400002BE	0xB00002BE	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+703	女医の薬	0x400002BF	0xB00002BF	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+704	血濡れの赤子	0x400002C0	0xB00002C0	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+705	女王の血	0x400002C1	0xB00002C1	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+706	時計塔女医の血	0x400002C2	0xB00002C2	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+800	前をさす	0x40000320	0xB0000320	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+801	一礼（男／軽い）	0x40000321	0xB0000321	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+802	さあ、行こう	0x40000322	0xB0000322	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+803	歓喜	0x40000323	0xB0000323	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+804	マントをひるがえす	0x40000324	0xB0000324	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+805	一礼（男／丁寧）	0x40000325	0xB0000325	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+806	一礼（女／軽い）	0x40000326	0xB0000326	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+807	一礼（女／丁寧）	0x40000327	0xB0000327	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+808	手を振る	0x40000328	0xB0000328	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+809	祈る	0x40000329	0xB0000329	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+810	待て！	0x4000032A	0xB000032A	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+811	静かに	0x4000032B	0xB000032B	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+812	エイエイオー	0x4000032C	0xB000032C	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+813	ガッツポーズ	0x4000032D	0xB000032D	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+814	賞賛する	0x4000032E	0xB000032E	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+815	雄叫び	0x4000032F	0xB000032F	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+816	命乞い	0x40000330	0xB0000330	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+817	ほこりをはらう	0x40000331	0xB0000331	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+818	宗教A（簡易）	0x40000332	0xB0000332	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+819	宗教A（丁寧）	0x40000333	0xB0000333	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+820	宗教B	0x40000334	0xB0000334	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+821	座る	0x40000335	0xB0000335	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+822	連盟	0x40000336	0xB0000336	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+900	弾丸【PG直接指定】	0x40000384	0xB0000384	20	600	0	1	formula validated by Bullets, Vials, Pebble, and Augur
+901	テンポラリ弾丸【PG直接指定】	0x40000385	0xB0000385	5	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+910	弾丸回復	0x4000038E	0xB000038E	5	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+999	E3版用リセットアイテム	0x400003E7	0xB00003E7	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+1000	HP回復【PG直接指定】	0x400003E8	0xB00003E8	20	600	0	1	formula validated by Bullets, Vials, Pebble, and Augur
+1100	毒・出血回復薬	0x4000044C	0xB000044C	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1101	狂気・獣化回復薬	0x4000044D	0xB000044D	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1110	獣化薬	0x40000456	0xB0000456	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1120	石ころ帽子	0x40000460	0xB0000460	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1200	火炎壺	0x400004B0	0xB00004B0	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1201	時限爆発瓶	0x400004B1	0xB00004B1	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1210	毒ナイフ	0x400004BA	0xB00004BA	20	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1220	油壺	0x400004C4	0xB00004C4	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1230	石ころ	0x400004CE	0xB00004CE	20	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1240	投げナイフ	0x400004D8	0xB00004D8	20	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1250	背後火炎壺	0x400004E2	0xB00004E2	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1251	背後時限爆発瓶	0x400004E3	0xB00004E3	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1260	獣誘い	0x400004EC	0xB00004EC	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1270	HP回復不可	0x400004F6	0xB00004F6	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1300	エンチャント【炎】	0x40000514	0xB0000514	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1310	エンチャント【魔法】	0x4000051E	0xB000051E	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+1320	エンチャント【雷】	0x40000528	0xB0000528	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1330	銃威力アップ	0x40000532	0xB0000532	10	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1400	帰還	0x40000578	0xB0000578	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1410	道標	0x40000582	0xB0000582	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1411	遠眼鏡	0x40000583	0xB0000583	1	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1412	ランタン	0x40000584	0xB0000584	1	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1500	SAN値回復＋1	0x400005DC	0xB00005DC	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1501	SAN値回復＋2	0x400005DD	0xB00005DD	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1510	ソウル【0】	0x400005E6	0xB00005E6	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1511	ソウル【1】	0x400005E7	0xB00005E7	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1512	ソウル【2】	0x400005E8	0xB00005E8	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1513	ソウル【3】	0x400005E9	0xB00005E9	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1514	ソウル【4】	0x400005EA	0xB00005EA	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1515	ソウル【5】	0x400005EB	0xB00005EB	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1516	ソウル【6】	0x400005EC	0xB00005EC	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1517	ソウル【7】	0x400005ED	0xB00005ED	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1518	ソウル【8】	0x400005EE	0xB00005EE	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1519	ソウル【9】	0x400005EF	0xB00005EF	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1590	ソウル【10】	0x40000636	0xB0000636	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1591	ソウル【11】	0x40000637	0xB0000637	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1592	ソウル【12】	0x40000638	0xB0000638	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1593	ソウル【13】	0x40000639	0xB0000639	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1594	ソウル【14】	0x4000063A	0xB000063A	99	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1600	BJ「右回りの変態」の原石	0x40000640	0xB0000640	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1601	BJ「左回りの変態」の原石	0x40000641	0xB0000641	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1602	BJ「拝領」の原石	0x40000642	0xB0000642	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1603	BJ「オドンの交わり」の原石	0x40000643	0xB0000643	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1604	BJ「湖」の原石	0x40000644	0xB0000644	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1605	BJ「深海」の原石	0x40000645	0xB0000645	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1606	BJ「破壊者」の原石	0x40000646	0xB0000646	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1607	BJ「歓楽者」の原石	0x40000647	0xB0000647	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1608	BJ「交わる者」の原石	0x40000648	0xB0000648	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1609	BJ「継承者」の原石	0x40000649	0xB0000649	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1610	BJ「獣」の原石	0x4000064A	0xB000064A	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1611	BJ「月」の原石	0x4000064B	0xB000064B	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1612	BJ「瞳」の原石	0x4000064C	0xB000064C	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1650	放射型魔石の原石　レベル1	0x40000672	0xB0000672	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1651	放射型魔石の原石　レベル2	0x40000673	0xB0000673	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1652	放射型魔石の原石　レベル3	0x40000674	0xB0000674	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1653	放射型魔石の原石　レベル4	0x40000675	0xB0000675	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1654	放射型魔石の原石　レベル5	0x40000676	0xB0000676	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1655	放射型魔石の原石　レベル6	0x40000677	0xB0000677	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1656	放射型魔石の原石　レベル7	0x40000678	0xB0000678	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1657	三角型魔石の原石　レベル1	0x40000679	0xB0000679	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1658	三角型魔石の原石　レベル2	0x4000067A	0xB000067A	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1659	三角型魔石の原石　レベル3	0x4000067B	0xB000067B	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1660	三角型魔石の原石　レベル4	0x4000067C	0xB000067C	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1661	三角型魔石の原石　レベル5	0x4000067D	0xB000067D	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1662	三角型魔石の原石　レベル6	0x4000067E	0xB000067E	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1663	三角型魔石の原石　レベル7	0x4000067F	0xB000067F	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1664	欠損型魔石の原石　レベル1	0x40000680	0xB0000680	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1665	欠損型魔石の原石　レベル2	0x40000681	0xB0000681	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1666	欠損型魔石の原石　レベル3	0x40000682	0xB0000682	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1667	欠損型魔石の原石　レベル4	0x40000683	0xB0000683	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1668	欠損型魔石の原石　レベル5	0x40000684	0xB0000684	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1669	欠損型魔石の原石　レベル6	0x40000685	0xB0000685	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1670	欠損型魔石の原石　レベル7	0x40000686	0xB0000686	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1671	円型魔石の原石　レベル1	0x40000687	0xB0000687	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1672	円型魔石の原石　レベル2	0x40000688	0xB0000688	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1673	円型魔石の原石　レベル3	0x40000689	0xB0000689	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1674	円型魔石の原石　レベル4	0x4000068A	0xB000068A	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1675	円型魔石の原石　レベル5	0x4000068B	0xB000068B	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1676	円型魔石の原石　レベル6	0x4000068C	0xB000068C	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1677	円型魔石の原石　レベル7	0x4000068D	0xB000068D	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1678	雫型魔石の原石　レベル1	0x4000068E	0xB000068E	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1679	雫型魔石の原石　レベル2	0x4000068F	0xB000068F	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1680	雫型魔石の原石　レベル3	0x40000690	0xB0000690	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1681	雫型魔石の原石　レベル4	0x40000691	0xB0000691	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1682	雫型魔石の原石　レベル5	0x40000692	0xB0000692	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1683	雫型魔石の原石　レベル6	0x40000693	0xB0000693	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1684	雫型魔石の原石　レベル7	0x40000694	0xB0000694	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+1700	血の淀み	0x400006A4	0xB00006A4	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+2000	触手召喚	0x400007D0	0xB00007D0	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2010	宇宙召喚	0x400007DA	0xB00007DA	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2020	リフレクトウォール	0x400007E4	0xB00007E4	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2030	ヌルヌル化	0x400007EE	0xB00007EE	3	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+2050	範囲回復	0x40000802	0xB0000802	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2060	加速	0x4000080C	0xB000080C	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2070	カインの衝撃	0x40000816	0xB0000816	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2080	誘導弾	0x40000820	0xB0000820	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2090	同士討ち	0x4000082A	0xB000082A	3	99	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+2110	メッセンジャー擬態	0x4000083E	0xB000083E	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2120	コズミックアロー	0x40000848	0xB0000848	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2130	怨霊弾	0x40000852	0xB0000852	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+2140	蛇召喚	0x4000085C	0xB000085C	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+3000	武器強化素材【コモン】	0x40000BB8	0xB0000BB8	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+3010	武器強化素材【アンコモン】	0x40000BC2	0xB0000BC2	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+3020	武器強化素材【レア】	0x40000BCC	0xB0000BCC	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+3030	武器強化素材【Sレア】	0x40000BD6	0xB0000BD6	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4000	聖堂街Bの鍵	0x40000FA0	0xB0000FA0	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4001	金のペンダント	0x40000FA1	0xB0000FA1	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4003	古城への招待状	0x40000FA3	0xB0000FA3	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4006	聖堂街C孤児院1Fの鍵	0x40000FA6	0xB0000FA6	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4009	邪眼橋の鍵	0x40000FA9	0xB0000FA9	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4010	聖堂街Cへの鍵	0x40000FAA	0xB0000FAA	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4011	旧市街への鍵	0x40000FAB	0xB0000FAB	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4012	悪夢教室の鍵	0x40000FAC	0xB0000FAC	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4013	ベランダの鍵	0x40000FAD	0xB0000FAD	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4014	教区長Ω起動アイテム	0x40000FAE	0xB0000FAE	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4015	時計塔：地下牢の鍵	0x40000FAF	0xB0000FAF	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4016	観測盤の鍵	0x40000FB0	0xB0000FB0	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4017	祭壇エレベーター起動アイテム	0x40000FB1	0xB0000FB1	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4018	地下牢通常扉の鍵	0x40000FB2	0xB0000FB2	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4019	時計塔の扉の鍵	0x40000FB3	0xB0000FB3	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4020	時計塔狩人部屋（ボス部屋）の鍵	0x40000FB4	0xB0000FB4	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4021	時計盤起動アイテム	0x40000FB5	0xB0000FB5	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4102	武器強化解禁アイテム	0x40001006	0xB0001006	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4103	魔石着脱解禁アイテム	0x40001007	0xB0001007	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4104	ボディジェム着脱アイテム	0x40001008	0xB0001008	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4105	クイックダンジョン解禁アイテム	0x40001009	0xB0001009	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4110	ショップ解禁　工房ショップA	0x4000100E	0xB000100E	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4111	ショップ解禁　工房ショップD	0x4000100F	0xB000100F	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4112	ショップ解禁　工房ショップB	0x40001010	0xB0001010	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4113	ショップ解禁　工房ショップC	0x40001011	0xB0001011	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4114	ショップ解禁　教会ショップA	0x40001012	0xB0001012	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4115	ショップ解禁　教会ショップB	0x40001013	0xB0001013	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4116	ショップ解禁　教会ショップC	0x40001014	0xB0001014	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4117	ショップ解禁　ヴァンパイア	0x40001015	0xB0001015	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4118	ショップ解禁　工房ショップE	0x40001016	0xB0001016	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4119	ショップ解禁　教会ショップD	0x40001017	0xB0001017	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4120	ショップ解禁　古い狩人証	0x40001018	0xB0001018	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4121	ショップ解禁　時計塔の狩人証	0x40001019	0xB0001019	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4300	人形にゆかりのあるもの	0x400010CC	0xB00010CC	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4301	人形の涙	0x400010CD	0xB00010CD	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4304	婚約指輪	0x400010D0	0xB00010D0	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4305	ピンク色の肉片	0x400010D1	0xB00010D1	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4306	真っ赤なブローチ	0x400010D2	0xB00010D2	1	1	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4308	古城への招待状（無記名）	0x400010D4	0xB00010D4	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4310	邪神投げで故郷へワープできるアイテム	0x400010D6	0xB00010D6	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4311	【DLC】邪神投げで聖堂街Dへワープできるアイテム	0x400010D7	0xB00010D7	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4312	【DLC】NPC召喚アイテム	0x400010D8	0xB00010D8	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4313	【DLC】連盟の杖	0x400010D9	0xB00010D9	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4320	3本目のへその緒A	0x400010E0	0xB00010E0	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+4321	3本目のへその緒B	0x400010E1	0xB00010E1	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+4322	3本目のへその緒A	0x400010E2	0xB00010E2	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+4323	3本目のへその緒B	0x400010E3	0xB00010E3	1	0	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+4330	深き彼方の最終聖杯	0x400010EA	0xB00010EA	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4340	脳液A	0x400010F4	0xB00010F4	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4341	脳液B	0x400010F5	0xB00010F5	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4342	脳液C	0x400010F6	0xB00010F6	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4900	メッセンジャー装備（帽子A）	0x40001324	0xB0001324	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4901	メッセンジャー装備（帽子B）	0x40001325	0xB0001325	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4902	メッセンジャー装備（包帯）	0x40001326	0xB0001326	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4903	メッセンジャー装備（白いリボン）	0x40001327	0xB0001327	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4904	メッセンジャー装備（臓物まみれの白いリボン）	0x40001328	0xB0001328	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4905	メッセンジャー装備（使者のしっかりトップ（よれよれでないトップハット））	0x40001329	0xB0001329	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4906	メッセンジャー装備（使者の教会帽子）	0x4000132A	0xB000132A	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4907	メッセンジャー装備（使者の血塗れ包帯）	0x4000132B	0xB000132B	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+4908	メッセンジャー装備（使者の壺祭り）	0x4000132C	0xB000132C	1	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+6100	自動生成聖杯【レベル1】トゥメル	0x400017D4	0xB00017D4	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6109	固定聖杯【レベル1】トゥメル	0x400017DD	0xB00017DD	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6200	自動生成聖杯【レベル2】トゥメル	0x40001838	0xB0001838	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6209	固定聖杯【レベル2】トゥメル	0x40001841	0xB0001841	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6210	自動生成聖杯【レベル2】僻墓	0x40001842	0xB0001842	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6219	固定聖杯【レベル2】僻墓	0x4000184B	0xB000184B	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6300	自動生成聖杯【レベル3】トゥメル	0x4000189C	0xB000189C	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6302	自動生成聖杯【レベル3】トゥメル_マルチ	0x4000189E	0xB000189E	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6309	固定聖杯【レベル3】トゥメル	0x400018A5	0xB00018A5	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6310	自動生成聖杯【レベル3】僻墓	0x400018A6	0xB00018A6	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6312	自動生成聖杯【レベル3】僻墓_マルチ	0x400018A8	0xB00018A8	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6319	固定聖杯【レベル3】僻墓	0x400018AF	0xB00018AF	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6401	自動生成聖杯【レベル4】トゥメル_呪い	0x40001901	0xB0001901	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6409	固定聖杯【レベル4】トゥメル_呪い	0x40001909	0xB0001909	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6420	自動生成聖杯【レベル4】ローラン	0x40001914	0xB0001914	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6429	固定聖杯【レベル4】ローラン	0x4000191D	0xB000191D	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6500	自動生成聖杯【レベル5】トゥメル	0x40001964	0xB0001964	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6502	自動生成聖杯【レベル5】トゥメル_マルチ	0x40001966	0xB0001966	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6509	固定聖杯【レベル5】トゥメル	0x4000196D	0xB000196D	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6520	自動生成聖杯【レベル5】ローラン	0x40001978	0xB0001978	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6522	自動生成聖杯【レベル5】ローラン_マルチ	0x4000197A	0xB000197A	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6529	固定聖杯【レベル5】ローラン	0x40001981	0xB0001981	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6530	自動生成聖杯【レベル5】イズ	0x40001982	0xB0001982	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6532	自動生成聖杯【レベル5】イズ_マルチ	0x40001984	0xB0001984	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+6539	固定聖杯【レベル5】イズ	0x4000198B	0xB000198B	1	99	1	0	formula validated by Bullets, Vials, Pebble, and Augur
+7000	儀式素材【コモンA】レベル1	0x40001B58	0xB0001B58	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7001	儀式素材【コモンA】レベル2	0x40001B59	0xB0001B59	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7002	儀式素材【コモンA】レベル3	0x40001B5A	0xB0001B5A	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7003	儀式素材【コモンA】レベル4	0x40001B5B	0xB0001B5B	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7004	儀式素材【コモンA】レベル5	0x40001B5C	0xB0001B5C	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7012	儀式素材【コモンB】レベル3	0x40001B64	0xB0001B64	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7013	儀式素材【コモンB】レベル4	0x40001B65	0xB0001B65	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7014	儀式素材【コモンB】レベル5	0x40001B66	0xB0001B66	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7020	儀式素材【コモンC】レベル1	0x40001B6C	0xB0001B6C	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7021	儀式素材【コモンC】レベル2	0x40001B6D	0xB0001B6D	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7022	儀式素材【コモンC】レベル3	0x40001B6E	0xB0001B6E	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7023	儀式素材【コモンC】レベル4	0x40001B6F	0xB0001B6F	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7024	儀式素材【コモンC】レベル5	0x40001B70	0xB0001B70	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7050	儀式素材のかけら	0x40001B8A	0xB0001B8A	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7100	儀式素材【アンコモンA】レベル1	0x40001BBC	0xB0001BBC	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7110	儀式素材【アンコモンB】レベル1	0x40001BC6	0xB0001BC6	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7120	儀式素材【アンコモンC】レベル1	0x40001BD0	0xB0001BD0	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7121	儀式素材【アンコモンC】レベル2	0x40001BD1	0xB0001BD1	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7130	儀式素材【アンコモンD】レベル1	0x40001BDA	0xB0001BDA	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7131	儀式素材【アンコモンD】レベル2	0x40001BDB	0xB0001BDB	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7140	儀式素材【アンコモンE】レベル1	0x40001BE4	0xB0001BE4	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7150	儀式素材【アンコモンF】レベル1	0x40001BEE	0xB0001BEE	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+7200	儀式素材【A5ロック】	0x40001C20	0xB0001C20	99	600	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+10900	弾丸【PG直接指定】	0x40002A94	0xB0002A94	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+10910	弾丸回復	0x40002A9E	0xB0002A9E	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11000	HP回復【PG直接指定】	0x40002AF8	0xB0002AF8	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11100	毒・出血回復薬	0x40002B5C	0xB0002B5C	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11101	狂気・獣化回復薬	0x40002B5D	0xB0002B5D	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11110	獣化薬	0x40002B66	0xB0002B66	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11130	リゲインアップ	0x40002B7A	0xB0002B7A	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11200	火炎壺	0x40002BC0	0xB0002BC0	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11201	時限爆発瓶	0x40002BC1	0xB0002BC1	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11210	毒ナイフ	0x40002BCA	0xB0002BCA	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11220	油壺	0x40002BD4	0xB0002BD4	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11230	石ころ	0x40002BDE	0xB0002BDE	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11240	投げナイフ	0x40002BE8	0xB0002BE8	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11250	背後火炎壺	0x40002BF2	0xB0002BF2	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11251	背後時限爆発瓶	0x40002BF3	0xB0002BF3	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11260	獣誘い	0x40002BFC	0xB0002BFC	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11270	HP回復不可	0x40002C06	0xB0002C06	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11300	エンチャント【炎】	0x40002C24	0xB0002C24	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11310	エンチャント【魔法】	0x40002C2E	0xB0002C2E	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11320	エンチャント【雷】	0x40002C38	0xB0002C38	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+11330	銃威力アップ	0x40002C42	0xB0002C42	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12000	触手召喚	0x40002EE0	0xB0002EE0	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12010	宇宙召喚	0x40002EEA	0xB0002EEA	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12020	リフレクトウォール	0x40002EF4	0xB0002EF4	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12030	ヌルヌル化	0x40002EFE	0xB0002EFE	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12050	範囲回復	0x40002F12	0xB0002F12	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12060	加速	0x40002F1C	0xB0002F1C	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12070	地を這う魔法	0x40002F26	0xB0002F26	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12080	誘導弾	0x40002F30	0xB0002F30	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12090	同士討ち	0x40002F3A	0xB0002F3A	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12110	メッセンジャー擬態	0x40002F4E	0xB0002F4E	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12120	コズミックアロー	0x40002F58	0xB0002F58	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12130	怨霊弾	0x40002F62	0xB0002F62	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur
+12140	蛇召喚	0x40002F6C	0xB0002F6C	99	0	0	0	formula validated by Bullets, Vials, Pebble, and Augur

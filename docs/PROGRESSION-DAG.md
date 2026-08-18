@@ -1,0 +1,67 @@
+# Bloodborne MVP progression DAG
+
+This is the current base-game reachability graph. It models requirements, not a prescribed
+walkthrough order. Return shortcuts and travel edges are omitted so the graph remains acyclic.
+Chalice Dungeons are outside MVP scope. Old Hunters is an optional branch and is not required for
+the default Wet Nurse goal.
+
+```mermaid
+flowchart LR
+    Menu --> Dream[Hunter's Dream] --> CY[Central Yharnam]
+    CY -->|Father Gascoigne defeated| CW[Cathedral Ward]
+    CW --> OY[Old Yharnam]
+    OY -->|Blood-starved Beast defeated| HCW[Healing Church Workshop]
+    CW -->|Hunter Chief Emblem OR Blood-starved Beast defeated| GC[Grand Cathedral]
+    CW --> Hemwick[Hemwick Charnel Lane]
+    GC -->|Vicar Amelia defeated; inspect Laurence's Skull| FW[Forbidden Woods]
+    FW --> Clinic[Iosefka's Clinic]
+    FW -->|Shadows of Yharnam defeated| Byrgenwerth
+    Byrgenwerth -->|Rom defeated| Yahar["Yahar'gul (Blood Moon)"]
+    Yahar -->|The One Reborn defeated; inspect mummy| L2[Lecture Building 2F]
+    L2 --> Mensis[Nightmare of Mensis]
+    Mensis -->|Micolash defeated| WetNurse[Mergo's Wet Nurse]
+    CW -->|Tonsil Stone; Amygdala grab| L1[Lecture Building 1F]
+    L1 --> Frontier[Nightmare Frontier]
+    CW -->|Upper Cathedral Key| Upper[Upper Cathedral Ward]
+    Hemwick -->|Cainhurst Summons| Cainhurst[Castle Cainhurst]
+
+    CW -->|Password learned + Eye of a Blood-drunk Hunter| HN[Hunter's Nightmare]
+    HN -->|Ludwig defeated| UCP[Underground Corpse Pile]
+    UCP -->|Eye Pendant| RH[Research Hall]
+    RH --> LG[Lumenwood Garden]
+    LG -->|Living Failures + Astral Clocktower Key| AC[Astral Clocktower]
+    AC -->|Lady Maria + Celestial Dial| FH[Fishing Hamlet]
+    HN --> NGC[Nightmare Grand Cathedral]
+    NGC -->|Laurence's Skull| Laurence[Laurence]
+```
+
+## Wiki audit
+
+| Edge or gate | Result | Evidence |
+|---|---|---|
+| Gascoigne -> Cathedral Ward | Matches | Gascoigne awards the Oedon Tomb Key and opens Cathedral Ward. |
+| Cathedral plaza | Corrected | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. |
+| Amelia -> Forbidden Woods | Corrected | Amelia must be defeated and Laurence's Skull inspected to learn the password. |
+| Forbidden Woods -> Byrgenwerth | Matches | Defeating Shadows of Yharnam opens the path. |
+| Rom -> Blood Moon Yahar'gul | Matches | Rom's death is the Blood Moon trigger. |
+| One Reborn -> Lecture 2F | Matches | Inspecting the mummy after The One Reborn transports to Lecture Building 2F. |
+| Tonsil Stone route | Corrected | The Cathedral Ward grab transports to Lecture Building 1F; its door reaches the Frontier. |
+| Cainhurst branch | Matches | Cainhurst Summons plus the Hemwick obelisk summons the carriage. |
+| Upper Cathedral branch | Matches | Upper Cathedral Key opens the Upper Cathedral Ward seal. |
+| DLC access | Matches | After Amelia and the altar interaction, the Dream supplies the Eye; the Oedon Chapel grab enters Hunter's Nightmare. |
+| Ludwig -> Research Hall | Matches | Ludwig gates the recovery-room route and the Eye Pendant operates its surgery altar. |
+| Living Failures -> Clocktower | Matches | Living Failures award the Astral Clocktower Key. |
+| Maria -> Fishing Hamlet | Matches | Maria awards the Celestial Dial, which opens the Astral Clock. |
+| Laurence branch | Matches | Laurence's Skull, found beneath the surgery altar, enables Laurence's optional fight. |
+
+Primary human-readable sources:
+
+- https://www.bloodborne-wiki.com/2015/08/progression-guide.html
+- https://www.bloodborne-wiki.com/2015/03/cathedral-ward.html
+- https://www.bloodborne-wiki.com/p/keys.html
+- https://www.bloodborne-wiki.com/p/bosses.html
+- https://www.bloodborne-wiki.com/2015/09/the-old-hunters.html
+- https://www.bloodborne-wiki.com/2015/11/eye-pendant.html
+
+Wiki evidence is semantic corroboration only. Numeric flags, lots, and runtime behavior remain
+grounded in extracted game data and live tests.

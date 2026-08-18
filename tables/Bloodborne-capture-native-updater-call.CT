@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local pid=getOpenedProcessID()
+if bbUpdaterCapturePid==pid and bbUpdaterCaptureTimer then
+  writeInteger(0x8050DBFC0,0)
+  bbUpdaterCaptureTimer.Enabled=true
+  showMessage("Updater capture re-armed. Perform the next item use now.")
+  return
+end
+local aa=[[
+assert(8014D94A0,55 48 89 E5 41 57 41 56 41 55 41 54 53)
+assert(8050DBF00,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+assert(8050DBFC0,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+label(bbCaptureCount)
+label(bbCaptureRdi)
+label(bbCaptureRsi)
+label(bbCaptureRdx)
+label(bbCaptureRcx)
+label(bbCaptureR8)
+label(bbCaptureR9)
+label(bbCaptureRsp)
+
+8050DBF00:
+  mov [bbCaptureRdi],rdi
+  mov [bbCaptureRsi],rsi
+  mov [bbCaptureRdx],rdx
+  mov [bbCaptureRcx],rcx
+  mov [bbCaptureR8],r8
+  mov [bbCaptureR9],r9
+  mov [bbCaptureRsp],rsp
+  inc dword ptr [bbCaptureCount]
+  push rbp
+  mov rbp,rsp
+  push r15
+  push r14
+  push r13
+  push r12
+  push rbx
+  jmp 8014D94AD
+
+8050DBFC0:
+bbCaptureCount:
+  dd 0
+  dd 0
+bbCaptureRdi:
+  dq 0
+bbCaptureRsi:
+  dq 0
+bbCaptureRdx:
+  dq 0
+bbCaptureRcx:
+  dq 0
+bbCaptureR8:
+  dq 0
+bbCaptureR9:
+  dq 0
+bbCaptureRsp:
+  dq 0
+
+8014D94A0:
+  jmp 8050DBF00
+  nop 8
+]]
+local ok,why=autoAssemble(aa)
+if not ok then error("Updater capture install failed: "..tostring(why)) end
+bbUpdaterCapturePid=pid
+bbUpdaterCaptureTimer=createTimer(nil)
+bbUpdaterCaptureTimer.Interval=100
+bbUpdaterCaptureTimer.OnTimer=function(t)
+  local count=readInteger(0x8050DBFC0) or 0
+  if count==0 then return end
+  local f=assert(io.open([[C:\Users\alari\bb-archipelago\work\native-updater-call.txt]],"w"))
+  f:write(string.format("count=%d\nrdi=0x%X\nrsi=0x%X\nrdx=0x%X\nrcx=0x%X\nr8=0x%X\nr9=0x%X\nrsp=0x%X\n",
+    count,readQword(0x8050DBFC8) or 0,readQword(0x8050DBFD0) or 0,
+    readQword(0x8050DBFD8) or 0,readQword(0x8050DBFE0) or 0,
+    readQword(0x8050DBFE8) or 0,readQword(0x8050DBFF0) or 0,
+    readQword(0x8050DBFF8) or 0))
+  f:close()
+  t.Enabled=false
+end
+bbUpdaterCaptureTimer.Enabled=true
+showMessage("Updater capture armed. Fire one bullet now.")
+]]></LuaScript>
+</CheatTable>

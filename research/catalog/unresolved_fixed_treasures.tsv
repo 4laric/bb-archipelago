@@ -1,0 +1,4 @@
+map_path	map_name	event_name	event_id	event_entity_id	treasure_part_name	part_entity_id	x	y	z	lot_field	item_lot_id	lot_name	acquisition_flags
+m24_01_00_00.msb	m24_01_00_00	Item_宝死体_620	143	-1	o000632_0004	-1	-193.07	-54.93	-56.97	item_lot_3	2410621		
+m24_01_00_01.msb	m24_01_00_01	Item_宝死体_620	143	-1	o000632_0004	-1	-193.07	-54.93	-56.97	item_lot_3	2410621		
+m24_01_00_11.msb	m24_01_00_11	Item_宝死体_620	143	-1	o000632_0004	-1	-193.07	-54.93	-56.97	item_lot_3	2410621		

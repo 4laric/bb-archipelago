@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local root = [[C:\Users\alari\bb-archipelago\work\]]
+local commandPath = root .. [[bullet-scan-command.txt]]
+local statePath = root .. [[bullet-scan-state.txt]]
+local resultPath = root .. [[bullet-scan-results.txt]]
+local errorPath = root .. [[bullet-scan-error.txt]]
+local initialValue = "19"
+
+local function writeFile(path, contents)
+    local f = assert(io.open(path, "w"))
+    f:write(contents)
+    f:close()
+end
+
+local function writeState(status, detail)
+    writeFile(statePath, "status=" .. status .. "\ndetail=" .. tostring(detail or "") .. "\n")
+end
+
+local scan
+local foundList
+local ok, err = xpcall(function()
+    os.remove(commandPath)
+    os.remove(resultPath)
+    os.remove(errorPath)
+    openProcess("shadPS4.exe")
+
+    -- Bloodborne guest allocations observed in this run live in the 0x2... range.
+    setSpecialScanOptionsOverride({ MEM_PRIVATE = true, MEM_IMAGE = false, MEM_MAPPED = true })
+    scan = createMemScan()
+    scan.firstScan(
+        soExactValue, vtDword, rtRounded,
+        initialValue, "",
+        0x200000000, 0x2FFFFFFFF,
+        "+W-C", fsmAligned, "4",
+        false, false, false, false)
+    scan.waitTillDone()
+    writeState("initial_ready", "bullets=" .. initialValue .. " count=" .. tostring(scan.FoundCount))
+
+    if bulletScanTimer then bulletScanTimer.destroy() end
+    bulletScanTimer = createTimer(nil)
+    bulletScanTimer.Interval = 250
+    bulletScanTimer.OnTimer = function()
+        local f = io.open(commandPath, "r")
+        if not f then return end
+        local command = f:read("*l") or ""
+        f:close()
+        os.remove(commandPath)
+
+        local target = string.match(command, "^NEXT%s+(%d+)$")
+        if not target then
+            writeState("command_rejected", "Use NEXT <current bullet count>")
+            return
+        end
+
+        bulletScanTimer.Enabled = false
+        writeState("scanning", "bullets=" .. target)
+        scan.nextScan(soExactValue, rtRounded, target, "", false, false, false, false, false)
+        scan.waitTillDone()
+
+        if foundList then foundList.destroy() end
+        foundList = createFoundList(scan)
+        foundList.initialize()
+        local lines = {
+            "target=" .. target,
+            "count=" .. tostring(foundList.Count)
+        }
+        for i = 0, foundList.Count - 1 do
+            local addressText = foundList.Address[i]
+            local address = getAddress(addressText)
+            lines[#lines + 1] = addressText .. " value=" .. tostring(readInteger(address))
+        end
+        writeFile(resultPath, table.concat(lines, "\n") .. "\n")
+        writeState("next_ready", "bullets=" .. target .. " count=" .. tostring(foundList.Count))
+        bulletScanTimer.Enabled = true
+    end
+    bulletScanTimer.Enabled = true
+end, debug.traceback)
+
+if not ok then
+    writeFile(errorPath, tostring(err) .. "\n")
+    writeState("setup_error", err)
+    error(err)
+end
+]]></LuaScript>
+</CheatTable>

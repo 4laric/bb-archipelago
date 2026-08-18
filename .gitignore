@@ -1,0 +1,35 @@
+# Locally supplied game/emulator files; never commit or redistribute.
+/Bloodborne.Game.of.the.Year.Edition.PS4-PRELUDE/
+
+# Locally installed analysis tools and third-party research checkouts.
+/ghidra_*/
+/Hexinton All in One*/
+/third_party/
+
+# Upstream Archipelago checkout. Pin it in .ap-version instead of vendoring it.
+/Archipelago/
+
+# Raw extractions from the user's own game files. Regenerate with tools/msbb_miner
+# and tools/mine_*.py; do not commit or redistribute game data.
+/research/mined/
+
+# Generated reverse-engineering projects, dumps, logs, and saves.
+/work/
+/dumps/
+/logs/
+/saves/
+*.gpr
+*.rep/
+*.dmp
+*.log
+
+# Build outputs.
+/build/
+bin/
+obj/
+__pycache__/
+*.pyc
+
+# Local machine configuration.
+.env
+*.user.toml

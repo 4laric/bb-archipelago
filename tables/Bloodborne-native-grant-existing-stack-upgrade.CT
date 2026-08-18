@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local script=[[
+label(bbExistingOriginal)
+label(bbExistingUpdate)
+label(bbExistingFinish)
+
+8050DB800:
+  mov [8050DB890],r13
+  cmp dword ptr [8050DB880],0
+  je bbExistingOriginal
+  cmp dword ptr [8050DB880],2
+  je bbExistingUpdate
+  mov dword ptr [8050DB880],0
+  mov rdi,r13
+  lea rsi,[8050DB8A0]
+  mov edx,[8050DB884]
+  mov rax,8014DA0A0
+  call rax
+  jmp bbExistingFinish
+
+bbExistingUpdate:
+  mov dword ptr [8050DB880],0
+  mov rdi,r13
+  lea rsi,[8050DB8A0]
+  mov rax,8014DA2C0
+  call rax
+  cmp eax,-1
+  je bbExistingFinish
+  mov rdi,r13
+  mov esi,eax
+  mov edx,[8050DB884]
+  lea rcx,[8050DB8BC]
+  mov rax,8014D94A0
+  call rax
+
+bbExistingFinish:
+  mov [8050DB888],eax
+  mov dword ptr [8050DB88C],1
+bbExistingOriginal:
+  mov eax,r12d
+  add rsp,28
+  jmp 8014D957C
+]]
+local ok,why=autoAssemble(script)
+if not ok then error("Existing-stack upgrade failed: "..tostring(why)) end
+writeInteger(0x8050DB888,0xFFFFFFFF)
+writeInteger(0x8050DB88C,0)
+writeInteger(0x8050DB880,2)
+showMessage("Existing-stack request armed. Fire one bullet now.")
+]]></LuaScript>
+</CheatTable>

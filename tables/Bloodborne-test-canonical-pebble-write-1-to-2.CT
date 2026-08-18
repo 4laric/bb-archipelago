@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local pid=getOpenedProcessID()
+if bbCanonicalPebbleWritePid==pid then
+  showMessage("Canonical Pebble write already performed; duplicate execution ignored.")
+  return
+end
+local address=0x208067C08
+local before=readInteger(address)
+if before~=1 then error("Guard refused Pebble quantity write: expected 1, found "..tostring(before)) end
+if not writeInteger(address,2) then error("Pebble quantity write failed") end
+local after=readInteger(address)
+if after~=2 then error("Pebble quantity verification failed: found "..tostring(after)) end
+bbCanonicalPebbleWritePid=pid
+showMessage("Pebble quantity changed 1 -> 2 and verified in memory.")
+]]></LuaScript>
+</CheatTable>

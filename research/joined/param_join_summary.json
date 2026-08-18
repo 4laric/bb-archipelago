@@ -1,0 +1,26 @@
+{
+  "item_lot_rows": 9706,
+  "equip_param_goods_rows": 295,
+  "lot_item_rows": 9966,
+  "lots_with_acquisition_flags": 7187,
+  "fixed_treasure_lot_references": 1059,
+  "fixed_distinct_treasure_lots": 655,
+  "fixed_missing_treasure_lot_ids": {
+    "2410621": 3
+  },
+  "npc_param_rows": 6064,
+  "npc_drop_lot_rows": 4276,
+  "fixed_enemy_drop_source_rows": 3294,
+  "fixed_unknown_enemy_npc_ids": {
+    "6200": 1,
+    "105805": 12,
+    "273210": 2
+  },
+  "measured_item_category_counts": {
+    "0": 72,
+    "1": 101,
+    "15": 451,
+    "4": 7450,
+    "8": 1892
+  }
+}

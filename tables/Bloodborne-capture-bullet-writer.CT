@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local watched = 0x208067BD8
+local output = [[C:\Users\alari\bb-archipelago\work\bullet-writer-breakpoint.txt]]
+local state = [[C:\Users\alari\bb-archipelago\work\bullet-writer-state.txt]]
+
+local function writeFile(path, contents)
+    local f = assert(io.open(path, "w"))
+    f:write(contents)
+    f:close()
+end
+
+openProcess("shadPS4.exe")
+if readInteger(watched) ~= 17 then
+    error("Safety check failed: expected 17 bullets at the watched address")
+end
+
+debugProcess(2)
+debug_setBreakpoint(watched, 4, bptWrite, bpmDebugRegister, function()
+    local ok, err = pcall(function()
+        local registers = string.format(
+            "watched=0x%X\nvalue_after=%s\nRIP=0x%X\nRAX=0x%X\nRBX=0x%X\nRCX=0x%X\nRDX=0x%X\nRSI=0x%X\nRDI=0x%X\nRBP=0x%X\nRSP=0x%X\nR8=0x%X\nR9=0x%X\nR10=0x%X\nR11=0x%X\nR12=0x%X\nR13=0x%X\nR14=0x%X\nR15=0x%X\n",
+            watched, tostring(readInteger(watched)), RIP, RAX, RBX, RCX, RDX,
+            RSI, RDI, RBP, RSP, R8, R9, R10, R11, R12, R13, R14, R15)
+        writeFile(output, registers)
+        writeFile(state, "status=captured\n")
+    end)
+    if not ok then writeFile(state, "status=capture_error\ndetail=" .. tostring(err) .. "\n") end
+    debug_removeBreakpoint(watched)
+    debug_continueFromBreakpoint(co_run)
+    return 1
+end)
+
+writeFile(state, "status=armed\n")
+]]></LuaScript>
+</CheatTable>

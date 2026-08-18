@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local root=[[C:\Users\alari\bb-archipelago\work\]]
+local commandPath=root..[[native-grant-command.txt]]
+local statePath=root..[[native-grant-state.txt]]
+local logPath=root..[[native-grant.log]]
+local consumeHook=0x8014D9575
+local heartbeatHook=0x801BFE882
+local request=0x8050DBE00
+local quantity=0x8050DBE04
+local result=0x8050DBE08
+local done=0x8050DBE0C
+local inventoryPointer=0x8050DBE10
+local descriptor=0x8050DBE20
+local slotIndex=0x8050DBE34
+local itemQuantityPointer=0x8050DBE38
+local active=nil
+local pid=nil
+
+local function append(message)
+  local f=io.open(logPath,"a"); if f then f:write(os.date("!%Y-%m-%dT%H:%M:%SZ")," ",message,"\n"); f:close() end
+end
+local function state(status,detail)
+  local f=assert(io.open(statePath,"w")); f:write("status=",status,"\npid=",tostring(pid or ""),"\ndetail=",tostring(detail or ""),"\n"); f:close()
+end
+local function parse(line)
+  local t={}; for word in string.gmatch(line or "","%S+") do t[#t+1]=word end
+  if string.upper(t[1] or "")~="GRANT" then return nil,"Usage: GRANT raw-id normalized-id quantity expected-before|AUTO tag" end
+  local raw,normalized,count,expected=tonumber(t[2] or ""),tonumber(t[3] or ""),tonumber(t[4] or ""),tonumber(t[5] or "")
+  local autoExpected=string.upper(t[5] or "")=="AUTO"
+  if not raw or not normalized or not count or (expected==nil and not autoExpected) or count<1 or count>99 or (expected and expected<0) then return nil,"Invalid IDs, quantity, or expected count" end
+  return {line=line,raw=raw,normalized=normalized,count=count,expected=expected,autoExpected=autoExpected,tag=t[6] or "untagged"}
+end
+local function findItem(itemId)
+  local inventory=readQword(inventoryPointer)
+  if not inventory or inventory==0 then return nil end
+  local split,last=readInteger(inventory+0x24),readInteger(inventory+0x88)
+  local primary,secondary=readQword(inventory+0x58),readQword(inventory+0x48)
+  if not split or not last or not primary or not secondary or last>=4096 then return nil end
+  for slot=0,last do
+    local entry=slot<split and (primary+slot*0x10) or (secondary+(slot-split)*0x10)
+    if readInteger(entry+4)==itemId then return readInteger(entry+8) or 0,true,slot,entry+8 end
+  end
+  return 0,false
+end
+
+openProcess("shadPS4.exe")
+pid=getOpenedProcessID()
+if bbNativeGrantHarnessPid==pid and bbNativeGrantHarnessTimer then
+  state("already_ready","Duplicate table execution ignored")
+  return
+end
+local install=[[
+assert(8014D9575,44 89 E0 48 83 C4 28)
+assert(801BFE882,48 81 C4 E8 07 00 00)
+assert(8050DBA00,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+assert(8050DBC00,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+assert(8050DBE00,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+label(bbAutoConsumeOriginal)
+label(bbAutoHeartbeatOriginal)
+label(bbAutoExisting)
+label(bbAutoFinish)
+label(bbAutoRequest)
+label(bbAutoQuantity)
+label(bbAutoResult)
+label(bbAutoDone)
+label(bbAutoInventory)
+label(bbAutoDescriptor)
+label(bbAutoOverflow)
+label(bbAutoSlotIndex)
+label(bbAutoItemQuantityPointer)
+
+8050DBA00:
+  mov [bbAutoInventory],r13
+  cmp dword ptr [bbAutoRequest],0
+  je bbAutoConsumeOriginal
+  cmp dword ptr [bbAutoRequest],2
+  je bbAutoExisting
+  mov dword ptr [bbAutoRequest],0
+  mov rdi,r13
+  lea rsi,[bbAutoDescriptor]
+  mov edx,[bbAutoQuantity]
+  mov rax,8014DA0A0
+  call rax
+  jmp bbAutoFinish
+
+bbAutoExisting:
+  mov dword ptr [bbAutoRequest],0
+  mov rdi,r13
+  mov esi,[bbAutoSlotIndex]
+  mov edx,[bbAutoQuantity]
+  lea rcx,[bbAutoOverflow]
+  mov r8,[bbAutoItemQuantityPointer]
+  xor r9d,r9d
+  mov rax,8014D94A0
+  call rax
+
+bbAutoFinish:
+  mov [bbAutoResult],eax
+  mov dword ptr [bbAutoDone],1
+bbAutoConsumeOriginal:
+  mov eax,r12d
+  add rsp,28
+  jmp 8014D957C
+
+8050DBE00:
+bbAutoRequest:
+  dd 0
+bbAutoQuantity:
+  dd 0
+bbAutoResult:
+  dd 0
+bbAutoDone:
+  dd 0
+bbAutoInventory:
+  dq 0
+bbAutoDescriptor:
+  dd 0
+  dd 0
+  dd 0
+  dd 0
+
+bbAutoOverflow:
+  dd 0
+bbAutoSlotIndex:
+  dd FFFFFFFF
+bbAutoItemQuantityPointer:
+  dq 0
+
+8050DBE40:
+  dd B0000384
+  dd 40000384
+  dd 0
+  dd 0
+
+8050DBC00:
+  cmp dword ptr [bbAutoRequest],0
+  je bbAutoHeartbeatOriginal
+  cmp qword ptr [bbAutoInventory],0
+  je bbAutoHeartbeatOriginal
+  mov rdi,[bbAutoInventory]
+  lea rsi,[8050DBE40]
+  mov rax,8014DA2C0
+  call rax
+  cmp eax,-1
+  je bbAutoHeartbeatOriginal
+  mov rdi,[bbAutoInventory]
+  mov esi,eax
+  xor edx,edx
+  lea rcx,[8050DBE4C]
+  mov rax,8014D94A0
+  call rax
+bbAutoHeartbeatOriginal:
+  add rsp,000007E8
+  jmp 801BFE889
+
+8014D9575:
+  jmp 8050DBA00
+  nop 2
+801BFE882:
+  jmp 8050DBC00
+  nop 2
+]]
+local ok,detail=autoAssemble(install)
+if not ok then state("setup_error",detail); error("Automatic grant harness install failed: "..tostring(detail)) end
+
+local function poll()
+  if active then
+    if readInteger(done)==1 then
+      local nativeResult=readInteger(result)
+      local actual=findItem(active.normalized)
+      local wanted=active.expected+active.count
+      if actual~=wanted then
+        state("verify_pending",string.format("tag=%s expected_after=%d actual=%s",active.tag,wanted,tostring(actual)))
+        return
+      end
+      append(string.format("AUTO COMPLETED tag=%s raw=0x%08X normalized=0x%08X quantity=%d native_result=%s",
+        active.tag,active.raw,active.normalized,active.count,tostring(nativeResult)))
+      os.remove(commandPath)
+      state("completed",string.format("tag=%s native_result=%s",active.tag,tostring(nativeResult)))
+      active=nil
+    end
+    return
+  end
+  local f=io.open(commandPath,"r")
+  if not f then
+    if readQword(inventoryPointer)==0 then state("awaiting_inventory","Use one bullet once after launch") end
+    return
+  end
+  local line=f:read("*l") or ""; f:close()
+  local command,why=parse(line)
+  if not command then state("command_rejected",why); return end
+  if readQword(inventoryPointer)==0 then state("awaiting_inventory","Command retained; use one bullet once") return end
+  local actual,exists,slot,quantityPointer=findItem(command.normalized)
+  if command.autoExpected then command.expected=actual end
+  local wanted=command.expected+command.count
+  if actual==wanted then
+    append(string.format("AUTO RECOVERED tag=%s quantity=%d; command already applied",command.tag,actual))
+    os.remove(commandPath)
+    state("recovered_complete",string.format("tag=%s quantity=%d",command.tag,actual))
+    return
+  end
+  if actual~=command.expected then
+    state("quantity_mismatch",string.format("tag=%s expected_before=%d actual=%s",command.tag,command.expected,tostring(actual)))
+    return
+  end
+  if exists then
+    if not quantityPointer or quantityPointer==0 then
+      state("write_error",string.format("tag=%s quantity pointer missing",command.tag))
+      return
+    end
+    local before=readInteger(quantityPointer)
+    if before~=command.expected then
+      state("write_error",string.format("tag=%s pointer quantity changed expected=%d actual=%s",command.tag,command.expected,tostring(before)))
+      return
+    end
+    if not writeInteger(quantityPointer,wanted) then
+      state("write_error",string.format("tag=%s quantity write failed",command.tag))
+      return
+    end
+    local after=readInteger(quantityPointer)
+    if after~=wanted then
+      state("verify_pending",string.format("tag=%s expected_after=%d actual=%s",command.tag,wanted,tostring(after)))
+      return
+    end
+    append(string.format("DIRECT COMPLETED tag=%s normalized=0x%08X before=%d after=%d address=0x%X",
+      command.tag,command.normalized,before,after,quantityPointer))
+    os.remove(commandPath)
+    state("completed",string.format("tag=%s direct before=%d after=%d",command.tag,before,after))
+    return
+  end
+  if readInteger(request)~=0 then state("busy","Native request already pending") return end
+  writeInteger(descriptor+0,command.raw); writeInteger(descriptor+4,command.normalized)
+  writeInteger(descriptor+8,0); writeInteger(descriptor+12,0)
+  writeInteger(slotIndex,slot or 0xFFFFFFFF)
+  writeQword(itemQuantityPointer,quantityPointer or 0)
+  writeInteger(quantity,command.count); writeInteger(result,0xFFFFFFFF); writeInteger(done,0)
+  writeInteger(request,1); active=command
+  append(string.format("AUTO QUEUED tag=%s raw=0x%08X normalized=0x%08X quantity=%d expected_before=%d",command.tag,command.raw,command.normalized,command.count,command.expected))
+  state("queued",string.format("tag=%s; heartbeat will execute automatically",command.tag))
+end
+
+if bbNativeGrantHarnessTimer then bbNativeGrantHarnessTimer.destroy() end
+bbNativeGrantHarnessTimer=createTimer(nil); bbNativeGrantHarnessTimer.Interval=250
+bbNativeGrantHarnessTimer.OnTimer=poll; bbNativeGrantHarnessTimer.Enabled=true
+bbNativeGrantHarnessPid=pid
+state("awaiting_inventory","Use one bullet once after launch")
+append(string.format("AUTO V2 READY pid=%d consumeHook=0x%X heartbeatHook=0x%X",pid,consumeHook,heartbeatHook))
+]]></LuaScript>
+</CheatTable>

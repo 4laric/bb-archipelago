@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+local aa=[[
+assert(8018F78DB,8B 80 34 01 00 00)
+assert(8050DB800,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+label(bbStaminaNoRequest)
+label(bbStaminaOriginal)
+
+8050DB800:
+  pushfq
+  cmp dword ptr [8050DBE00],2
+  jne bbStaminaNoRequest
+  push rax
+  push rcx
+  push rdx
+  push rsi
+  push rdi
+  push r8
+  push r9
+  push r10
+  push r11
+  mov dword ptr [8050DBE00],0
+  mov rdi,[8050DBE10]
+  mov esi,[8050DBE34]
+  mov edx,[8050DBE04]
+  lea rcx,[8050DBE30]
+  mov r8,[8050DBE38]
+  xor r9d,r9d
+  mov rax,8014D94A0
+  call rax
+  mov [8050DBE08],eax
+  mov dword ptr [8050DBE0C],1
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+  pop rdi
+  pop rsi
+  pop rdx
+  pop rcx
+  pop rax
+bbStaminaNoRequest:
+  popfq
+bbStaminaOriginal:
+  mov eax,[rax+00000134]
+  jmp 8018F78E1
+
+8018F78DB:
+  jmp 8050DB800
+  nop
+]]
+local ok,why=autoAssemble(aa)
+if not ok then error("Stamina trigger install failed: "..tostring(why)) end
+writeInteger(0x8050DBE08,0xFFFFFFFF)
+writeInteger(0x8050DBE0C,0)
+writeInteger(0x8050DBE00,2)
+showMessage("Non-reentrant stamina trigger armed. Return to gameplay.")
+]]></LuaScript>
+</CheatTable>

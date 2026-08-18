@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local hook=0x8014D9575
+local request=0x8050DB850
+local quantity=0x8050DB854
+local result=0x8050DB858
+local done=0x8050DB85C
+local descriptor=0x8050DB860
+local expectedHook={0xE9,0x86,0x22,0xC0,0x03,0x66,0x90}
+
+openProcess("shadPS4.exe")
+local actual=readBytes(hook,#expectedHook,true)
+for i=1,#expectedHook do
+    if not actual or actual[i]~=expectedHook[i] then
+        error("Safety check failed: the validated v5 game-thread hook is not installed")
+    end
+end
+if readInteger(request)~=0 or readInteger(done)~=1 then
+    error("Safety check failed: previous native grant is not in the completed state")
+end
+
+-- Pebble ID captured directly at the decrement hook on this run.
+writeInteger(descriptor+0,0xB00004CE)
+writeInteger(descriptor+4,0x400004CE)
+writeInteger(descriptor+8,0)
+writeInteger(descriptor+12,0)
+writeInteger(quantity,1)
+writeInteger(result,0xFFFFFFFF)
+writeInteger(done,0)
+writeInteger(request,1)
+showMessage("One native Pebble grant queued; fire one bullet to trigger it")
+]]></LuaScript>
+</CheatTable>

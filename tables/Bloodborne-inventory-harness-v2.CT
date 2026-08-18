@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- v2: breakpoint moved to the observed quantity-write instruction -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+-- The live decrement path enters at the quantity write itself. A data-write
+-- breakpoint observed RIP=0x8014D955D after this four-byte instruction.
+local hook = 0x8014D9559
+local root = [[C:\Users\alari\bb-archipelago\work\]]
+local commandPath = root .. [[inventory-harness-command.txt]]
+local statePath = root .. [[inventory-harness-state.txt]]
+local logPath = root .. [[inventory-harness.log]]
+local anchor = nil
+local pid = nil
+local knownItems = {
+    BULLET = 0x40000384, BULLETS = 0x40000384,
+    VIAL = 0x400003E8, VIALS = 0x400003E8
+}
+
+local function appendLog(message)
+    local f = io.open(logPath, "a")
+    if f then
+        f:write(os.date("!%Y-%m-%dT%H:%M:%SZ"), " ", tostring(message), "\n")
+        f:close()
+    end
+end
+
+local function writeState(status, detail)
+    local f = assert(io.open(statePath, "w"))
+    f:write("status=", status, "\npid=", tostring(pid or ""), "\nanchor=",
+        anchor and string.format("0x%X", anchor) or "", "\ndetail=", tostring(detail or ""), "\n")
+    f:close()
+end
+
+local function parseItem(text)
+    return knownItems[string.upper(text or "")] or tonumber(text or "")
+end
+
+local function findEntry(itemId)
+    if not anchor then return nil end
+    for distance = 0, 0x4000, 0x10 do
+        local low = anchor - distance
+        if readInteger(low + 4) == itemId then return low end
+        if distance > 0 then
+            local high = anchor + distance
+            if readInteger(high + 4) == itemId then return high end
+        end
+    end
+    return nil
+end
+
+local function processCommand(line)
+    local words = {}
+    for word in string.gmatch(line or "", "%S+") do words[#words + 1] = word end
+    local command = string.upper(words[1] or "")
+    if not anchor then
+        writeState("waiting_for_capture", "Fire one bullet")
+        return
+    end
+    local itemId = parseItem(words[2])
+    if not itemId then
+        writeState("command_rejected", "Use READ item or WRITE item expected replacement")
+        return
+    end
+    local entry = findEntry(itemId)
+    if not entry then
+        writeState("item_not_found", string.format("item=0x%08X", itemId))
+        return
+    end
+    local quantity = readInteger(entry + 8)
+    if command == "READ" then
+        writeState("read_ok", string.format("item=0x%08X entry=0x%X quantity=%s", itemId, entry, tostring(quantity)))
+        appendLog(string.format("READ item=0x%08X entry=0x%X quantity=%s", itemId, entry, tostring(quantity)))
+        return
+    end
+    if command == "WRITE" then
+        local expected = tonumber(words[3] or "")
+        local replacement = tonumber(words[4] or "")
+        if expected == nil or replacement == nil or replacement < 1 or replacement > 99 then
+            writeState("write_rejected", "Use WRITE item expected replacement; replacement range is 1..99")
+            return
+        end
+        if quantity ~= expected then
+            writeState("write_rejected", string.format("item=0x%08X expected=%d actual=%s", itemId, expected, tostring(quantity)))
+            return
+        end
+        if not writeInteger(entry + 8, replacement) or readInteger(entry + 8) ~= replacement then
+            writeState("write_failed", string.format("item=0x%08X entry=0x%X", itemId, entry))
+            return
+        end
+        writeState("write_ok", string.format("item=0x%08X entry=0x%X quantity=%d->%d", itemId, entry, quantity, replacement))
+        appendLog(string.format("WRITE item=0x%08X entry=0x%X quantity=%d->%d", itemId, entry, quantity, replacement))
+        return
+    end
+    writeState("command_rejected", "Unknown command")
+end
+
+local function poll()
+    local f = io.open(commandPath, "r")
+    if not f then return end
+    local line = f:read("*l")
+    f:close()
+    os.remove(commandPath)
+    local ok, err = xpcall(function() processCommand(line) end, debug.traceback)
+    if not ok then writeState("command_error", err); appendLog("ERROR " .. tostring(err)) end
+end
+
+local ok, err = xpcall(function()
+    os.remove(commandPath)
+    openProcess("shadPS4.exe")
+    pid = getOpenedProcessID()
+    if not pid or pid == 0 then error("Could not attach to shadPS4.exe") end
+    debugProcess(2)
+    debug_removeBreakpoint(hook)
+    debug_setBreakpoint(hook, 1, bptExecute, bpmDebugRegister, function()
+        anchor = RBX
+        local itemId = readInteger(anchor + 4)
+        local quantity = readInteger(anchor + 8)
+        writeState("captured", string.format("item=0x%08X entry=0x%X quantity_before=%s", itemId or 0, anchor, tostring(quantity)))
+        appendLog(string.format("CAPTURE hook=0x%X item=0x%08X entry=0x%X quantity_before=%s", hook, itemId or 0, anchor, tostring(quantity)))
+        debug_removeBreakpoint(hook)
+        debug_continueFromBreakpoint(co_run)
+        return 1
+    end)
+    if bbInventoryTimer then bbInventoryTimer.destroy() end
+    bbInventoryTimer = createTimer(nil)
+    bbInventoryTimer.Interval = 250
+    bbInventoryTimer.OnTimer = poll
+    bbInventoryTimer.Enabled = true
+    writeState("armed", "Fire one bullet")
+    appendLog(string.format("ARMED pid=%d hook=0x%X", pid, hook))
+end, debug.traceback)
+
+if not ok then
+    writeState("setup_error", err)
+    appendLog("SETUP ERROR " .. tostring(err))
+    error(err)
+end
+]]></LuaScript>
+</CheatTable>

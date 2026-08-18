@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="52">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript>
+local hook = 0x801BFC5F7
+local output = [[C:\Users\alari\bb-archipelago\work\hp-breakpoint.txt]]
+
+openProcess("shadPS4.exe")
+debugProcess(2)
+
+debug_setBreakpoint(hook, 1, bptExecute, bpmDebugRegister, function()
+    local currentHp = readInteger(RDI + 0xF8)
+    local f = assert(io.open(output, "w"))
+    f:write(string.format(
+        "hook=0x%X\nRDI=0x%X\ncurrent_hp=%s\n",
+        hook, RDI, tostring(currentHp)))
+    f:close()
+    debug_removeBreakpoint(hook)
+    debug_continueFromBreakpoint(co_run)
+    return 1
+end)
+</LuaScript>
+</CheatTable>
