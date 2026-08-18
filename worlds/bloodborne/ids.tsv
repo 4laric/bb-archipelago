@@ -21,7 +21,7 @@ location	boss_micolash	0xBB1008
 location	boss_mergos_wet_nurse	0xBB1009
 location	pickup_cainhurst_summons	0xBB100A
 location	pickup_upper_cathedral_key	0xBB100B
-location	pickup_orphanage_key	0xBB100C
+location	script_award_orphanage_key	0xBB100C
 location	pickup_eye_of_blood_drunk_hunter	0xBB100D
 location	pickup_eye_pendant	0xBB100E
 location	boss_ludwig	0xBB100F

@@ -112,7 +112,7 @@ LOCATIONS = (
     # Candidate randomized checks; source acquisition/event flags need mapping.
     Location("pickup_cainhurst_summons", "Iosefka's Clinic - Cainhurst Summons", "Iosefka's Clinic"),
     Location("pickup_upper_cathedral_key", "Yahar'gul - Upper Cathedral Key", "Yahar'gul"),
-    Location("pickup_orphanage_key", "Upper Cathedral Ward - Orphanage Key", "Upper Cathedral Ward"),
+    Location("script_award_orphanage_key", "Upper Cathedral Ward - Orphanage Key", "Upper Cathedral Ward"),
     Location("pickup_eye_of_blood_drunk_hunter", "Hunter's Dream - Eye of a Blood-drunk Hunter", "Hunter's Dream",
              Rule.all("event_forbidden_woods_password")),
     Location("pickup_eye_pendant", "Hunter's Nightmare - Eye Pendant", "Hunter's Nightmare"),

@@ -56,7 +56,7 @@ GOLDEN_LOCATIONS = {
     "boss_mergos_wet_nurse": 0xBB1009,
     "pickup_cainhurst_summons": 0xBB100A,
     "pickup_upper_cathedral_key": 0xBB100B,
-    "pickup_orphanage_key": 0xBB100C,
+    "script_award_orphanage_key": 0xBB100C,
     "pickup_eye_of_blood_drunk_hunter": 0xBB100D,
     "pickup_eye_pendant": 0xBB100E,
     "boss_ludwig": 0xBB100F,

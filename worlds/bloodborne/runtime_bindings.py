@@ -1,8 +1,9 @@
 """Runtime-facing IDs, kept strictly separate from game-design data.
 
-``None`` means unknown, not zero. Fixed-pickup acquisition flags are statically
-derived from MSB treasure -> ItemLotParam joins. They identify the correct save
-flag, but do not imply that a live flag-manager accessor has been validated.
+``None`` means unknown, not zero. Fixed-location acquisition flags are derived
+from their actual MSB or EMEVD award source and its ItemLotParam row. They
+identify the correct save flag, but do not imply that a live flag-manager
+accessor has been validated.
 """
 
 from dataclasses import dataclass
@@ -19,6 +20,9 @@ class RuntimeItemBinding:
 class RuntimeLocationBinding:
     event_flag: int | None
     evidence: str
+    item_lot_id: int
+    source_kind: str
+    source_ref: str
 
 
 ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
@@ -37,12 +41,24 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
 }
 
 LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
-    "pickup_cainhurst_summons": RuntimeLocationBinding(52410990, "MSB treasure + ItemLotParam acquisition flag"),
-    "pickup_upper_cathedral_key": RuntimeLocationBinding(52800290, "MSB treasure + ItemLotParam acquisition flag"),
-    "pickup_orphanage_key": RuntimeLocationBinding(52420900, "MSB treasure + ItemLotParam acquisition flag"),
-    "pickup_eye_of_blood_drunk_hunter": RuntimeLocationBinding(50000100, "scripted treasure + ItemLotParam acquisition flag"),
-    "pickup_eye_pendant": RuntimeLocationBinding(9470, "scripted treasure + ItemLotParam acquisition flag"),
-    "pickup_laurences_skull": RuntimeLocationBinding(53502000, "scripted treasure + ItemLotParam acquisition flag"),
+    "pickup_cainhurst_summons": RuntimeLocationBinding(
+        52410990, "EMEVD award m24_01_00_00:2310 + ItemLotParam 2410990 acquisition flag",
+        2410990, "script_award", "m24_01_00_00.emevd.dcx.js:2310"),
+    "pickup_upper_cathedral_key": RuntimeLocationBinding(
+        52800290, "MSB treasure m28_00_00_00/m28_00_00_01 + ItemLotParam 2800290 acquisition flag",
+        2800290, "treasure", "m28_00_00_00;m28_00_00_01"),
+    "script_award_orphanage_key": RuntimeLocationBinding(
+        52420900, "EMEVD award m24_02_00_00:252 + ItemLotParam 2420900 acquisition flag",
+        2420900, "script_award", "m24_02_00_00.emevd.dcx.js:252"),
+    "pickup_eye_of_blood_drunk_hunter": RuntimeLocationBinding(
+        50000100, "EMEVD award m21_00_00_00:3002 + ItemLotParam 10040 acquisition flag",
+        10040, "script_award", "m21_00_00_00.emevd.dcx.js:3002"),
+    "pickup_eye_pendant": RuntimeLocationBinding(
+        9470, "EMEVD award m34_00_00_00:1725 + ItemLotParam 3401810 acquisition flag",
+        3401810, "script_award", "m34_00_00_00.emevd.dcx.js:1725"),
+    "pickup_laurences_skull": RuntimeLocationBinding(
+        53502000, "EMEVD award m35_00_00_00:1832 + ItemLotParam 3502000 acquisition flag",
+        3502000, "script_award", "m35_00_00_00.emevd.dcx.js:1832"),
 }
 
 # Known delivery fixtures, not currently part of the randomized design pool.

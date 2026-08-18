@@ -44,6 +44,23 @@ class BloodborneModelTests(unittest.TestCase):
 
         self.assertEqual({"3401810"}, lots_by_flag[9470])
 
+    def test_runtime_location_provenance_matches_the_validation_census(self):
+        """Evidence must describe the source row, not merely contain a plausible flag."""
+        names_by_key = {location.key: location.name.rsplit(" - ", 1)[-1]
+                        for location in MODEL.locations if not location.locked_item}
+        with (ROOT / "research/validation/progression_items.tsv").open(
+                encoding="utf-8", newline="") as handle:
+            rows_by_name = {row["item_name"]: row for row in csv.DictReader(handle, delimiter="\t")}
+
+        for key, binding in LOCATION_BINDINGS.items():
+            row = rows_by_name[names_by_key[key]]
+            self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
+            self.assertIn(str(binding.event_flag), row["acquisition_flags"], key)
+            self.assertIn(binding.source_kind, row["observed_sources"].split(";"), key)
+            expected_ref = row["script_awards"] if binding.source_kind == "script_award" else row["msb_maps"]
+            self.assertEqual(expected_ref, binding.source_ref, key)
+            self.assertIn(str(binding.item_lot_id), binding.evidence, key)
+
     def test_progression_validation_covers_every_pool_item(self):
         from tools.validate_progression_items import EXPECTED
         validated_names = {name for name, _, _ in EXPECTED}
