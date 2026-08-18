@@ -142,9 +142,9 @@ def main() -> int:
 
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "enemy_tags.json").write_text(
-        json.dumps(tags, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+        json.dumps(tags, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     (args.output / "slot_policy.json").write_text(
-        json.dumps(slot_policy, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        json.dumps(slot_policy, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     summary = {
         "physical_slots": len(slots),
         "archetypes": len(tags),
@@ -162,7 +162,7 @@ def main() -> int:
         "unknown_npc_param_ids": sorted(set(unknown_npcs)),
     }
     (args.output / "summary.json").write_text(
-        json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(summary, indent=2, sort_keys=True))
     return 0
 

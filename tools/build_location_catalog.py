@@ -145,7 +145,7 @@ def main() -> int:
         "duplicate_or_revision_placements_collapsed": sum(len(v) for v in groups.values()) - len(groups),
     }
     (ns.output / "location_catalog_summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        json.dumps(summary, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(summary, indent=2))
     return 0
 
