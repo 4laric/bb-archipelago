@@ -10,6 +10,7 @@ extracted datasets, address tables, and patches are out of scope. See `docs/RESE
 for the evidence boundary and the labelling discipline every address claim is held to.
 See `CONTRIBUTING.md` for the repo-only contributor path, claiming protocol, and
 the evidence and validation requirements used in review.
+Player-visible changes and known release limitations are recorded in `CHANGELOG.md`.
 
 ## Layout
 
