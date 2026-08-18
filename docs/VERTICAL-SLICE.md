@@ -17,6 +17,9 @@ The slice now has one generation contract across all three pieces.
 5. The six pickup acquisition-flag IDs are statically mapped, but the live
    flag-manager accessor is not yet validated, so checks remain manual. Use
    `/check <exact location name>` in the client; `/missing` lists the names.
+   Successful manual checks are appended to `manual-checks.jsonl` in the client
+   work directory with their UTC time, resolved name and ID, and world version.
+   Misspelled names receive up to three nearby suggestions.
 
 The manual check boundary is deliberate. Static flag IDs alone do not reveal
 their live memory state. Generation, delivery, reconnect-safe receipts, and

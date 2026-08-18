@@ -9,6 +9,9 @@ have failed.
 from __future__ import annotations
 
 import unittest
+import json
+import tempfile
+from pathlib import Path
 
 try:
     from worlds.bloodborne import client as bb_client
@@ -106,6 +109,28 @@ class GrantCommandTests(unittest.TestCase):
         self.assertEqual(parts[0], "GRANT")
         self.assertEqual(len(parts), 6)
         self.assertTrue(parts[1].startswith("0x") and parts[2].startswith("0x"))
+
+
+@unittest.skipUnless(AP_AVAILABLE, "requires an Archipelago checkout on sys.path")
+class ManualCheckTests(unittest.TestCase):
+    def test_a_check_is_appended_to_the_journal(self):
+        from worlds.bloodborne import LOCATION_ID_BY_KEY, WORLD_VERSION
+        location = LOCATION_ID_BY_KEY["boss_mergos_wet_nurse"]
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            bb_client.journal_check(root, location)
+            bb_client.journal_check(root, location)
+            records = [json.loads(line) for line in (
+                root / bb_client.CHECK_JOURNAL).read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[0]["location_name"], "Mergo's Loft - Mergo's Wet Nurse")
+        self.assertEqual(records[0]["location_id"], location)
+        self.assertEqual(records[0]["world_version"], WORLD_VERSION)
+        self.assertTrue(records[0]["timestamp"].endswith("+00:00"))
+
+    def test_a_typo_gets_a_nearby_location_name(self):
+        suggestions = bb_client.location_suggestions("Mergos Loft - Mergos Wet Nurs")
+        self.assertIn("Mergo's Loft - Mergo's Wet Nurse", suggestions)
 
 
 if __name__ == "__main__":

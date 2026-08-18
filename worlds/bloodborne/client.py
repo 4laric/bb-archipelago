@@ -1,6 +1,8 @@
 """File bridge between Archipelago and the validated Cheat Engine grant harness."""
 from __future__ import annotations
 import argparse, asyncio, json, logging
+from datetime import datetime, timezone
+from difflib import get_close_matches
 from pathlib import Path
 from CommonClient import (ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled,
                           handle_url_arg, server_loop)
@@ -13,6 +15,27 @@ from .runtime_bindings import DELIVERY_FIXTURES, ITEM_BINDINGS
 logger = logging.getLogger("BloodborneClient")
 ITEM_KEY_BY_AP_ID = {value: key for key, value in ITEM_ID_BY_KEY.items()}
 LOCATION_BY_NAME = {loc.name.casefold(): LOCATION_ID_BY_KEY[loc.key] for loc in MODEL.locations}
+LOCATION_NAME_BY_ID = {LOCATION_ID_BY_KEY[loc.key]: loc.name for loc in MODEL.locations}
+CHECK_JOURNAL = "manual-checks.jsonl"
+
+
+def location_suggestions(query: str, limit: int = 3) -> list[str]:
+    """Return player-facing names closest to an unsuccessful `/check` query."""
+    matches = get_close_matches(query.strip().casefold(), LOCATION_BY_NAME, n=limit, cutoff=0.45)
+    return [LOCATION_NAME_BY_ID[LOCATION_BY_NAME[match]] for match in matches]
+
+
+def journal_check(work_dir: Path, location: int) -> None:
+    """Append one durable, machine-readable record for a manual location check."""
+    work_dir.mkdir(parents=True, exist_ok=True)
+    record = {
+        "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "location_name": LOCATION_NAME_BY_ID[location],
+        "location_id": location,
+        "world_version": WORLD_VERSION,
+    }
+    with (work_dir / CHECK_JOURNAL).open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(record, sort_keys=True) + "\n")
 
 
 def attach_report_lines() -> list[str]:
@@ -32,10 +55,17 @@ def attach_report_lines() -> list[str]:
 class BloodborneCommandProcessor(ClientCommandProcessor):
     def _cmd_check(self, *parts: str) -> bool:
         """Manually report a check: /check <exact location name>."""
-        location = LOCATION_BY_NAME.get(" ".join(parts).strip().casefold())
+        query = " ".join(parts).strip()
+        location = LOCATION_BY_NAME.get(query.casefold())
         if location is None:
-            self.output("Unknown location. Use /missing for exact names.")
+            suggestions = location_suggestions(query)
+            suffix = f" Did you mean: {'; '.join(suggestions)}?" if suggestions else ""
+            self.output(f"Unknown location.{suffix} Use /missing for exact names.")
             return False
+        try:
+            journal_check(self.ctx.work_dir, location)
+        except OSError as exc:
+            logger.warning("Could not journal manual check: %s", exc)
         async_start(self.ctx.send_msgs([{"cmd": "LocationChecks", "locations": [location]}]))
         if location == LOCATION_ID_BY_KEY["boss_mergos_wet_nurse"]:
             async_start(self.ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
