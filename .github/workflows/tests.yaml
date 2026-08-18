@@ -11,8 +11,8 @@ permissions:
 
 env:
   PIP_DEPS: >-
-    pyyaml schema jellyfish websockets platformdirs typing_extensions
-    orjson colorama certifi bsdiff4
+    pathspec pyyaml schema jellyfish websockets platformdirs typing_extensions
+    orjson colorama certifi bsdiff4 jinja2
 
 jobs:
   # Everything that does not need Archipelago. Most of the suite lives here.
