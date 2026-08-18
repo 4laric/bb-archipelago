@@ -32,11 +32,13 @@ nearby pickup has been checked.
 
 ## Static mappings now available
 
-The MSB treasure to `ItemLotParam` join establishes acquisition-flag IDs for
-the six randomized pickups in the vertical slice. They are recorded in
+The committed source census establishes acquisition-flag IDs for six randomized
+fixed locations in the vertical slice. Upper Cathedral Key is the only MSB
+treasure; the other five are EMEVD item-lot awards. Their source kind, source
+location, item-lot ID, and acquisition flag are recorded in
 `worlds/bloodborne/runtime_bindings.py`. This completes the static mapping only;
-automatic client reporting remains disabled until Lane B identifies and
-validates the live flag-manager accessor.
+automatic client reporting remains disabled until Lane B identifies and validates
+the live flag-manager accessor.
 
 Eye Pendant's flag `9470` is intentionally short. A full `lot_items.tsv` audit
 finds it on exactly one lot, `3401810`; the other short progression flags `6670`
