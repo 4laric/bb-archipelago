@@ -91,13 +91,44 @@ the surviving candidates. Restore the post-action save and verify that the bit i
 still set without repeating the action. A write breakpoint on the final runtime
 candidate should then identify the flag setter or backing-table access path.
 
+### Instrumented session kit
+
+Create the evidence directory before launching the emulator. Include every
+artifact the tester will actually load so the manifest records its hash:
+
+```powershell
+$session = .\tools\event_flag_session.ps1 -Mode Initialize `
+  -LocationName "Healing Church Workshop - Old Hunter Bone" `
+  -Serial CUSA03173 -EmulatorVersion "0.17.0" -TrialCount 3 `
+  -Artifact build\bloodborne.apworld,tables\Bloodborne-native-item-grant-auto-v2.CT
+```
+
+`tables/Bloodborne-event-flag-snapshot.CT` asks once for the candidate memory
+region and the current trial directory. Its four hotkeys write identically sized
+`idle-a`, `idle-b`, `before`, and `after` dumps and append capture timestamps.
+Restore the same pre-action save and reload the table for each trial.
+
+If the inputs are save files or dumps made by another tool, copy them into the
+same layout with `-Mode Capture`. Once all trials are present, run:
+
+```powershell
+.\tools\event_flag_session.ps1 -Mode Analyze -Session $session
+```
+
+The analyzer applies the idle control independently to every trial, then writes
+`intersection.csv` containing only transitions that survived every repetition.
+Arm `tables/Bloodborne-event-flag-write-breakpoint.CT` on the best candidate's
+live byte address. It captures the writer, every general-purpose register, and
+48 surrounding code bytes before disarming itself. Preserve its output in the
+session directory.
+
 ## Discovery order
 
 The first tranche should intentionally contain different signal classes:
 
 | Priority | Check | Class | Why first |
 | ---: | --- | --- | --- |
-| 1 | Central Yharnam fixed corpse pickup near a lamp | world pickup | Fast, atomic, repeatable from a backup |
+| 1 | Healing Church Workshop - Old Hunter Bone (`52110000`) | world pickup | Exact mapped treasure; atomic and repeatable from a backup |
 | 2 | Central Yharnam Lamp activation on a save where it is inactive | lamp/area | Tests a persistent non-item world transition |
 | 3 | Cleric Beast defeat | boss | Optional early boss; separates defeat from story progression |
 | 4 | Father Gascoigne defeat | boss/progression | Early mandatory transition with downstream world changes |
@@ -124,7 +155,8 @@ treated as optional checks until their semantics and logic value are established
 
 ## Next live experiment
 
-Use the fixed Central Yharnam corpse pickup selected in advance:
+Use `Healing Church Workshop - Old Hunter Bone`, the fixed treasure whose
+catalog-backed acquisition flag is `52110000`:
 
 1. Restore the same pre-pickup backup for every trial and disable incidental play.
 2. Capture two idle snapshots 10 seconds apart.
