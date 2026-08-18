@@ -12,10 +12,59 @@ ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(MODEL.locations)
 SHUFFLABLE_ITEMS = tuple(item for item in MODEL.items if item.kind is not ItemKind.EVENT)
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
-ITEM_ID_BY_KEY = {item.key: ID_BASE + index for index, item in enumerate(SHUFFLABLE_ITEMS, 1)}
+FILLER_ITEM_NAME = "Blood Vial"
+
+
+class IdRegistryError(RuntimeError):
+    """A key has no assigned network id, or the registry is malformed."""
+
+
+def _load_id_registry(path: Path) -> dict[str, dict[str, int]]:
+    """Read the append-only key -> network id registry.
+
+    Network ids are a permanent contract: they travel in multidata and in the
+    datapackage, so a key's id must never change once released. Deriving them
+    from tuple order made every id a function of position, so inserting one row
+    in data.py silently renumbered everything after it. They are now looked up.
+    """
+    registry: dict[str, dict[str, int]] = {"item": {}, "location": {}}
+    seen: dict[int, str] = {}
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip() or line.startswith("kind\t"):
+            continue
+        try:
+            kind, key, raw = line.split("\t")
+            value = int(raw, 16)
+        except ValueError as exc:
+            raise IdRegistryError(f"{path.name}:{number}: malformed row: {line!r}") from exc
+        if kind not in registry:
+            raise IdRegistryError(f"{path.name}:{number}: unknown kind {kind!r}")
+        if key in registry[kind]:
+            raise IdRegistryError(f"{path.name}:{number}: duplicate {kind} key {key!r}")
+        if value in seen:
+            raise IdRegistryError(f"{path.name}:{number}: id 0x{value:X} already used by {seen[value]!r}")
+        seen[value] = key
+        registry[kind][key] = value
+    return registry
+
+
+ID_REGISTRY = _load_id_registry(Path(__file__).parent / "ids.tsv")
+
+
+def _assigned(kind: str, key: str) -> int:
+    try:
+        return ID_REGISTRY[kind][key]
+    except KeyError:
+        raise IdRegistryError(
+            f"no network id assigned for {kind} {key!r}. Add a row to "
+            f"worlds/bloodborne/ids.tsv; never reuse an id and never change an existing one."
+        ) from None
+
+
+ITEM_ID_BY_KEY = {item.key: _assigned("item", item.key) for item in SHUFFLABLE_ITEMS}
 ITEM_NAME_TO_ID = {item.name: ITEM_ID_BY_KEY[item.key] for item in SHUFFLABLE_ITEMS}
-ITEM_NAME_TO_ID["Blood Vial"] = ID_BASE + 0x100
-LOCATION_ID_BY_KEY = {loc.key: ID_BASE + 0x1000 + index for index, loc in enumerate(NETWORK_LOCATIONS, 1)}
+ITEM_NAME_TO_ID[FILLER_ITEM_NAME] = _assigned("item", "blood_vial")
+LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in NETWORK_LOCATIONS}
 LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS}
 
 try:
@@ -55,8 +104,14 @@ else:
         location_name_to_id = LOCATION_NAME_TO_ID
         origin_region_name = "Menu"
 
+        def get_filler_item_name(self) -> str:
+            """Archipelago's default picks a RANDOM name from item_name_to_id, and
+            create_item classifies everything but the filler as progression — so
+            without this the world hands out progression-classified keys as filler."""
+            return FILLER_ITEM_NAME
+
         def create_item(self, name: str) -> BloodborneItem:
-            kind = ItemClassification.filler if name == "Blood Vial" else ItemClassification.progression
+            kind = ItemClassification.filler if name == FILLER_ITEM_NAME else ItemClassification.progression
             return BloodborneItem(name, kind, ITEM_NAME_TO_ID[name], self.player)
 
         def create_regions(self) -> None:
@@ -79,7 +134,7 @@ else:
 
         def create_items(self) -> None:
             names = [item.name for item in SHUFFLABLE_ITEMS]
-            names.extend(["Blood Vial"] * (len(NETWORK_LOCATIONS) - len(names)))
+            names.extend([FILLER_ITEM_NAME] * (len(NETWORK_LOCATIONS) - len(names)))
             self.multiworld.itempool.extend(self.create_item(name) for name in names)
 
         def set_rules(self) -> None:
