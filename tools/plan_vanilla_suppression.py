@@ -214,9 +214,12 @@ def main(argv: list[str] | None = None) -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--research", type=Path, default=REPO / "research")
     parser.add_argument("--output", type=Path, default=None)
+    # Goods 1000 is the Blood Vial: 0x400003E8, which DELIVERY_FIXTURES already
+    # records as granted live, with maxNum 20 and isOnlyOne 0. Worthless,
+    # stackable, safe to receive repeatedly, and already this world's filler.
     parser.add_argument("--placeholder-goods", default="1000",
                         help="goods id to award instead of the suppressed item")
-    parser.add_argument("--placeholder-name", default="PLACEHOLDER",
+    parser.add_argument("--placeholder-name", default="Blood Vial",
                         help="human label for the substitute, for the plan only")
     parser.add_argument("--allow-refusals", action="store_true",
                         help="emit a partial plan instead of failing")
