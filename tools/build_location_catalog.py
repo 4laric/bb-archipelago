@@ -12,6 +12,10 @@ from pathlib import Path
 
 
 FMG_BY_CATEGORY = {0: "weapon", 1: "armor", 4: "goods"}
+# Curated exceptions whose English identity and progression role are independently
+# confirmed by the validation pass. Keep this narrow: goodsType 1 alone still
+# requires logic review for the rest of the catalog.
+VALIDATED_PROGRESSION_GOODS = {4011: "hunter_chief_emblem_validation"}
 
 
 def read_tsv(path: Path):
@@ -86,7 +90,9 @@ def main() -> int:
         display_items = []
         for (category, item_id, quantity), item in sorted(unique_items.items()):
             english_name = names.get(category, {}).get(item_id, "")
-            if category == 4 and item_id in goods and goods[item_id].get("goodsType") == "1":
+            if category == 4 and item_id in VALIDATED_PROGRESSION_GOODS:
+                tier, reason = "key_or_badge", VALIDATED_PROGRESSION_GOODS[item_id]
+            elif category == 4 and item_id in goods and goods[item_id].get("goodsType") == "1":
                 tier, reason = "key_or_badge", "goods_type_1_requires_logic_review"
             elif category in (0, 1):
                 tier, reason = "useful", FMG_BY_CATEGORY[category]

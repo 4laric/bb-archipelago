@@ -1,9 +1,13 @@
+import csv
 import unittest
+from pathlib import Path
 
 from worlds.bloodborne.data import MODEL
 from worlds.bloodborne.model import Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 from worlds.bloodborne import ITEM_ID_BY_KEY, ITEM_NAME_TO_ID, LOCATION_ID_BY_KEY
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class BloodborneModelTests(unittest.TestCase):
@@ -24,6 +28,35 @@ class BloodborneModelTests(unittest.TestCase):
         expected = {location.key for location in MODEL.locations if not location.locked_item}
         self.assertEqual(expected, set(LOCATION_BINDINGS))
         self.assertTrue(all(binding.event_flag for binding in LOCATION_BINDINGS.values()))
+
+    def test_runtime_location_flags_are_specific_to_one_item_lot(self):
+        """A short flag is valid; sharing one between lots is not."""
+        with (ROOT / "research/joined/lot_items.tsv").open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle, delimiter="\t"))
+        lots_by_flag = {}
+        for row in rows:
+            for flag in filter(None, row["all_acquisition_flags"].split(";")):
+                lots_by_flag.setdefault(int(flag), set()).add(row["item_lot_id"])
+
+        for location, binding in LOCATION_BINDINGS.items():
+            self.assertIn(binding.event_flag, lots_by_flag, location)
+            self.assertEqual(1, len(lots_by_flag[binding.event_flag]), location)
+
+        self.assertEqual({"3401810"}, lots_by_flag[9470])
+
+    def test_progression_validation_covers_every_pool_item(self):
+        from tools.validate_progression_items import EXPECTED
+        validated_names = {name for name, _, _ in EXPECTED}
+        pool_names = {item.name for item in MODEL.items if item.kind.value != "event"}
+        self.assertEqual(set(), pool_names - validated_names)
+
+    def test_hunter_chief_emblem_catalog_review_is_resolved(self):
+        with (ROOT / "research/catalog/fixed_location_items.tsv").open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle, delimiter="\t"))
+        emblem = next(row for row in rows if row["item_param_id"] == "4011")
+        self.assertEqual("Hunter Chief Emblem", emblem["english_name"])
+        self.assertEqual("0x40000FAB", emblem["normalized_runtime_id"])
+        self.assertEqual("hunter_chief_emblem_validation", emblem["classification_reason"])
 
     def test_vertical_slice_ids_are_complete_and_disjoint(self):
         shufflable = {item.key for item in MODEL.items if item.kind.value != "event"}

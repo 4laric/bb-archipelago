@@ -1,0 +1,159 @@
+"""Gates the model claims, checked against the gates the game has.
+
+A too-permissive entrance rule never fails generation. The spoiler looks fine,
+the seed is unwinnable in the game, and nothing in the tooling notices — so the
+only guard available is writing the expected requirement down and comparing.
+
+The Hemwick edge is why this file exists. It carried no rule at all, and the
+fourteen-row "Wiki audit" table in docs/PROGRESSION-DAG.md does not list it —
+the audit skipped exactly the edge that was wrong. The allow-list below is the
+structural half of the fix: a new ungated entrance has to be added to it
+deliberately, so the next omission is a diff rather than a silence.
+"""
+
+from __future__ import annotations
+
+import unittest
+
+from worlds.bloodborne.data import ENTRANCES, LOCATIONS
+from worlds.bloodborne.model import ItemKind
+from worlds.bloodborne.data import ITEMS
+
+# entrance name -> the clauses that satisfy it, each a frozenset of item keys.
+# Sourced from the game; see docs/PROGRESSION-DAG.md for the citations.
+DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
+    "Tomb of Oedon gate": {frozenset({"event_gascoigne_defeated"})},
+    "Healing Church Workshop door": {frozenset({"event_blood_starved_beast_defeated"})},
+    # Emblem, or the workshop route that opens after Blood-starved Beast.
+    "Cathedral Ward plaza gate": {
+        frozenset({"hunter_chief_emblem"}),
+        frozenset({"event_blood_starved_beast_defeated"}),
+    },
+    # The road starts left of the Grand Cathedral entrance, so it is behind the
+    # plaza and inherits the plaza's requirement.
+    "Road to Hemwick": {
+        frozenset({"hunter_chief_emblem"}),
+        frozenset({"event_blood_starved_beast_defeated"}),
+    },
+    "Forbidden Woods password door": {frozenset({"event_forbidden_woods_password"})},
+    "Path to Byrgenwerth": {frozenset({"event_shadows_defeated"})},
+    "Blood Moon transition": {frozenset({"event_rom_defeated"})},
+    "Advent Plaza mummy": {frozenset({"event_one_reborn_defeated"})},
+    "Amygdala's grasp": {frozenset({"tonsil_stone"})},
+    # The chapel side doors only open after Blood-starved Beast; the key alone
+    # is not sufficient.
+    "Upper Cathedral door": {
+        frozenset({"upper_cathedral_key", "event_blood_starved_beast_defeated"})},
+    "Cainhurst carriage": {frozenset({"cainhurst_summons"})},
+    "Amygdala's DLC grasp": {
+        frozenset({"event_forbidden_woods_password", "eye_of_blood_drunk_hunter"})},
+    "Ludwig's arena exit": {frozenset({"event_ludwig_defeated"})},
+    "Surgery altar": {frozenset({"eye_pendant"})},
+    "Astral Clocktower door": {
+        frozenset({"event_living_failures_defeated", "astral_clocktower_key"})},
+    "Astral clock": {frozenset({"event_lady_maria_defeated", "celestial_dial"})},
+}
+
+# Entrances that are genuinely free in the game. Anything not here must be
+# documented above; the point is that "no rule" becomes a deliberate claim.
+DOCUMENTED_FREE = {
+    "Begin the Hunt",
+    "Awaken in Central Yharnam",
+    "Road into Old Yharnam",
+    "Forbidden Woods clinic passage",
+    "Lecture Hall giant door",
+    "Lecture Building frontier door",
+    "Research Hall summit",
+    "Nightmare Grand Cathedral",
+}
+
+
+def clauses(rule) -> set[frozenset[str]]:
+    return {frozenset(clause) for clause in rule.any_of}
+
+
+class GateTests(unittest.TestCase):
+    def test_documented_gates_match_the_model(self):
+        by_name = {e.name: e for e in ENTRANCES}
+        for name, expected in DOCUMENTED_GATES.items():
+            with self.subTest(entrance=name):
+                self.assertIn(name, by_name)
+                self.assertEqual(clauses(by_name[name].rule), expected)
+
+    def test_every_entrance_is_either_documented_or_declared_free(self):
+        """No entrance gets to be ungated by accident."""
+        described = set(DOCUMENTED_GATES) | DOCUMENTED_FREE
+        for entrance in ENTRANCES:
+            with self.subTest(entrance=entrance.name):
+                self.assertIn(entrance.name, described,
+                              "add it to DOCUMENTED_GATES or justify it in DOCUMENTED_FREE")
+
+    def test_declared_free_entrances_really_have_no_rule(self):
+        by_name = {e.name: e for e in ENTRANCES}
+        for name in DOCUMENTED_FREE:
+            with self.subTest(entrance=name):
+                self.assertIn(name, by_name)
+                self.assertEqual(clauses(by_name[name].rule), {frozenset()},
+                                 "declared free but carries a requirement")
+
+    def test_documented_gates_are_not_free(self):
+        by_name = {e.name: e for e in ENTRANCES}
+        for name in DOCUMENTED_GATES:
+            with self.subTest(entrance=name):
+                self.assertNotIn(frozenset(), clauses(by_name[name].rule),
+                                 "a gate with an empty clause is satisfied by nothing at all")
+
+    def test_no_entrance_appears_twice(self):
+        names = [e.name for e in ENTRANCES]
+        self.assertEqual(len(names), len(set(names)))
+
+    def test_every_referenced_key_exists(self):
+        known = {i.key for i in ITEMS}
+        for name, expected in DOCUMENTED_GATES.items():
+            for clause in expected:
+                for key in clause:
+                    with self.subTest(entrance=name, key=key):
+                        self.assertIn(key, known)
+
+
+class LocationRuleTests(unittest.TestCase):
+    """Same principle for the location rules that carry one."""
+
+    EXPECTED = {
+        "interaction_laurences_skull": {frozenset({"event_amelia_defeated"})},
+        "boss_mergos_wet_nurse": {frozenset({"event_micolash_defeated"})},
+        "pickup_eye_of_blood_drunk_hunter": {frozenset({"event_forbidden_woods_password"})},
+        "boss_laurence": {frozenset({"laurences_skull"})},
+    }
+
+    def test_gated_locations_match(self):
+        by_key = {l.key: l for l in LOCATIONS}
+        for key, expected in self.EXPECTED.items():
+            with self.subTest(location=key):
+                self.assertEqual(clauses(by_key[key].rule), expected)
+
+    def test_no_other_location_carries_a_rule(self):
+        for location in LOCATIONS:
+            if location.key in self.EXPECTED:
+                continue
+            with self.subTest(location=location.key):
+                self.assertEqual(clauses(location.rule), {frozenset()},
+                                 "undocumented location requirement")
+
+
+class EventItemTests(unittest.TestCase):
+    def test_every_event_key_used_by_a_gate_is_granted_somewhere(self):
+        """A gate on an event nothing awards is an unwinnable seed."""
+        granted = {l.locked_item for l in LOCATIONS if l.locked_item}
+        events = {i.key for i in ITEMS if i.kind is ItemKind.EVENT}
+        used = set()
+        for expected in DOCUMENTED_GATES.values():
+            for clause in expected:
+                used |= {k for k in clause if k in events}
+        for key in sorted(used):
+            with self.subTest(event=key):
+                self.assertIn(key, granted, "gated on an event no location grants")
+
+
+if __name__ == "__main__":
+    unittest.main()

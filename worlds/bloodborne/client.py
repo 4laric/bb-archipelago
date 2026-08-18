@@ -2,16 +2,32 @@
 from __future__ import annotations
 import argparse, asyncio, json, logging
 from pathlib import Path
-from CommonClient import ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled, server_loop
+from CommonClient import (ClientCommandProcessor, CommonContext, get_base_parser, gui_enabled,
+                          handle_url_arg, server_loop)
 from NetUtils import ClientStatus
 from Utils import async_start
-from . import GAME, ITEM_ID_BY_KEY, LOCATION_ID_BY_KEY
+from . import GAME, ITEM_ID_BY_KEY, LOCATION_ID_BY_KEY, WORLD_VERSION
 from .data import MODEL
 from .runtime_bindings import DELIVERY_FIXTURES, ITEM_BINDINGS
 
 logger = logging.getLogger("BloodborneClient")
 ITEM_KEY_BY_AP_ID = {value: key for key, value in ITEM_ID_BY_KEY.items()}
 LOCATION_BY_NAME = {loc.name.casefold(): LOCATION_ID_BY_KEY[loc.key] for loc in MODEL.locations}
+
+
+def attach_report_lines() -> list[str]:
+    """Read-only shadPS4 inspection, or an explanation of why it could not run.
+
+    Never raises. A client that cannot attach is still a usable client — manual
+    checks and the file bridge both work without it — so this reports and
+    carries on rather than refusing to start.
+    """
+    try:
+        from .memory import attach_and_verify
+        return attach_and_verify().lines()
+    except Exception as exc:                      # noqa: BLE001 - reporting, not handling
+        return [f"shadPS4 not inspected: {type(exc).__name__}: {exc}"]
+
 
 class BloodborneCommandProcessor(ClientCommandProcessor):
     def _cmd_check(self, *parts: str) -> bool:
@@ -24,6 +40,13 @@ class BloodborneCommandProcessor(ClientCommandProcessor):
         if location == LOCATION_ID_BY_KEY["boss_mergos_wet_nurse"]:
             async_start(self.ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
         return True
+
+    def _cmd_shadps4(self) -> bool:
+        """Re-inspect the running shadPS4 process: guest base and hook sites."""
+        for line in attach_report_lines():
+            self.output(line)
+        return True
+
 
 class BloodborneContext(CommonContext):
     game = GAME
@@ -82,6 +105,9 @@ async def bridge_loop(ctx: BloodborneContext) -> None:
 async def main(args) -> None:
     ctx = BloodborneContext(args.connect, args.password, Path(args.work_dir).resolve())
     ctx.auth = args.name
+    logger.info("Bloodborne Client, world version %s", WORLD_VERSION)
+    for line in attach_report_lines():
+        logger.info("%s", line)
     ctx.server_task = asyncio.create_task(server_loop(ctx))
     bridge = asyncio.create_task(bridge_loop(ctx))
     if gui_enabled: ctx.run_gui()
@@ -90,9 +116,22 @@ async def main(args) -> None:
     bridge.cancel()
     await ctx.shutdown()
 
-def launch(*launch_args: str) -> None:
+def build_parser() -> argparse.ArgumentParser:
+    """Mirrors CommonClient's own ``run_as_textclient`` parser.
+
+    ``get_base_parser`` supplies only --connect/--password/--nogui; --name and the
+    url positional live in CommonClient's ``__main__`` block, so a client that
+    reads ``args.name`` has to declare them itself.
+    """
     parser = get_base_parser(description="Bloodborne Archipelago Client")
+    parser.add_argument("--name", default=None, help="Slot name to connect as.")
     parser.add_argument("--work-dir", default=str(Path.home() / "bb-archipelago" / "work"))
-    asyncio.run(main(parser.parse_args(launch_args)))
+    parser.add_argument("url", nargs="?", help="Archipelago connection url")
+    return parser
+
+def launch(*launch_args: str) -> None:
+    args = build_parser().parse_args(launch_args)
+    args = handle_url_arg(args, parser=build_parser())
+    asyncio.run(main(args))
 
 if __name__ == "__main__": launch()

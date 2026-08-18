@@ -126,7 +126,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52400420	2400420	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
 52400430	2400430	01	8	gem	124003		1		optional	generated_blood_gem
 52400440	2400440	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
-52400450	2400450	01	4	goods	4011	Hunter Chief Emblem	1	0x40000FAB	key_or_badge	goods_type_1_requires_logic_review
+52400450	2400450	01	4	goods	4011	Hunter Chief Emblem	1	0x40000FAB	key_or_badge	hunter_chief_emblem_validation
 52400460	2400460	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
 52400470	2400470	01	4	goods	1513	Thick Coldblood (4)	1	0x400005E9	filler	consumable_or_material
 52400480	2400480	01	4	goods	4115	Radiant Sword Hunter Badge	1	0x40001013	key_or_badge	goods_type_1_requires_logic_review

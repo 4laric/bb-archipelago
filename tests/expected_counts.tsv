@@ -1,0 +1,10 @@
+# What the suite is expected to examine. Raise a number in the same commit that
+# earns it; lower one only with a reason in the commit message.
+#
+# A green run proves nothing on its own: a gate that collects zero tests exits
+# exactly as successfully as one that ran everything.
+
+total		14
+
+module	test_bb_enemizer	8
+module	test_bloodborne_model	6

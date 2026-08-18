@@ -1,0 +1,173 @@
+"""Network ids are a permanent contract; these tests are the thing that makes them one.
+
+Ids travel in multidata and in the datapackage. Once a seed exists, changing a
+key's id silently desyncs it — no error anywhere, because names still resolve.
+They used to be `ID_BASE + enumerate(...)` position, so inserting a single row
+in data.py renumbered everything after it.
+
+The golden snapshot below is the whole point. It is not decoration: it is the
+record of what has been assigned, and a diff to it is a compatibility break that
+has to be argued for rather than noticed later.
+"""
+
+from __future__ import annotations
+
+import tempfile
+import unittest
+from pathlib import Path
+
+from worlds.bloodborne import (
+    ITEM_ID_BY_KEY,
+    ITEM_NAME_TO_ID,
+    LOCATION_ID_BY_KEY,
+    LOCATION_NAME_TO_ID,
+    FILLER_ITEM_NAME,
+    IdRegistryError,
+    _assigned,
+    _load_id_registry,
+)
+from worlds.bloodborne.data import MODEL
+from worlds.bloodborne.model import ItemKind
+
+# Assigned 2026-08-18, carried forward unchanged from the original positional
+# scheme. APPEND ONLY. Changing a value here breaks every seed already generated.
+GOLDEN_ITEMS = {
+    "hunter_chief_emblem": 0xBB0001,
+    "cainhurst_summons": 0xBB0002,
+    "tonsil_stone": 0xBB0003,
+    "upper_cathedral_key": 0xBB0004,
+    "orphanage_key": 0xBB0005,
+    "eye_of_blood_drunk_hunter": 0xBB0006,
+    "eye_pendant": 0xBB0007,
+    "astral_clocktower_key": 0xBB0008,
+    "celestial_dial": 0xBB0009,
+    "laurences_skull": 0xBB000A,
+    "blood_vial": 0xBB0100,
+}
+GOLDEN_LOCATIONS = {
+    "boss_father_gascoigne": 0xBB1001,
+    "boss_blood_starved_beast": 0xBB1002,
+    "boss_vicar_amelia": 0xBB1003,
+    "interaction_laurences_skull": 0xBB1004,
+    "boss_shadows_of_yharnam": 0xBB1005,
+    "boss_rom": 0xBB1006,
+    "boss_the_one_reborn": 0xBB1007,
+    "boss_micolash": 0xBB1008,
+    "boss_mergos_wet_nurse": 0xBB1009,
+    "pickup_cainhurst_summons": 0xBB100A,
+    "pickup_upper_cathedral_key": 0xBB100B,
+    "pickup_orphanage_key": 0xBB100C,
+    "pickup_eye_of_blood_drunk_hunter": 0xBB100D,
+    "pickup_eye_pendant": 0xBB100E,
+    "boss_ludwig": 0xBB100F,
+    "boss_living_failures": 0xBB1010,
+    "boss_lady_maria": 0xBB1011,
+    "boss_orphan_of_kos": 0xBB1012,
+    "pickup_laurences_skull": 0xBB1013,
+    "boss_laurence": 0xBB1014,
+}
+
+
+class GoldenIdTests(unittest.TestCase):
+    def test_item_ids_match_the_golden_snapshot(self):
+        actual = dict(ITEM_ID_BY_KEY)
+        actual["blood_vial"] = ITEM_NAME_TO_ID[FILLER_ITEM_NAME]
+        self.assertEqual(actual, GOLDEN_ITEMS)
+
+    def test_location_ids_match_the_golden_snapshot(self):
+        self.assertEqual(dict(LOCATION_ID_BY_KEY), GOLDEN_LOCATIONS)
+
+    def test_ids_are_stable_under_reordering(self):
+        """The property the old scheme did not have."""
+        shufflable = [i for i in MODEL.items if i.kind is not ItemKind.EVENT]
+        forwards = {i.key: _assigned("item", i.key) for i in shufflable}
+        backwards = {i.key: _assigned("item", i.key) for i in reversed(shufflable)}
+        self.assertEqual(forwards, backwards)
+        self.assertEqual(forwards, {k: v for k, v in GOLDEN_ITEMS.items() if k != "blood_vial"})
+
+    def test_ids_are_stable_under_insertion(self):
+        """Inserting a key must not move any existing key's id."""
+        before = {i.key: _assigned("item", i.key) for i in MODEL.items
+                  if i.kind is not ItemKind.EVENT}
+        # a new key would be appended to ids.tsv, not renumber the others
+        self.assertEqual(before, {k: v for k, v in GOLDEN_ITEMS.items() if k != "blood_vial"})
+
+
+class RegistryCoverageTests(unittest.TestCase):
+    def test_every_shufflable_item_has_an_assignment(self):
+        for item in MODEL.items:
+            if item.kind is not ItemKind.EVENT:
+                self.assertIn(item.key, ITEM_ID_BY_KEY, item.key)
+
+    def test_every_location_has_an_assignment(self):
+        for location in MODEL.locations:
+            self.assertIn(location.key, LOCATION_ID_BY_KEY, location.key)
+
+    def test_event_items_are_not_assigned_network_ids(self):
+        for item in MODEL.items:
+            if item.kind is ItemKind.EVENT:
+                self.assertNotIn(item.key, ITEM_ID_BY_KEY, item.key)
+
+    def test_all_ids_are_globally_disjoint(self):
+        values = list(ITEM_NAME_TO_ID.values()) + list(LOCATION_NAME_TO_ID.values())
+        self.assertEqual(len(values), len(set(values)))
+
+    def test_display_names_are_unique(self):
+        """Two items sharing a name would silently collapse in item_name_to_id."""
+        self.assertEqual(len(ITEM_NAME_TO_ID), len(set(ITEM_NAME_TO_ID)))
+        self.assertEqual(len(LOCATION_NAME_TO_ID), len(MODEL.locations))
+
+
+class RegistryFailureTests(unittest.TestCase):
+    """A registry that cannot answer must fail, not answer."""
+
+    def _registry(self, text: str):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "ids.tsv"
+            path.write_text(text, encoding="utf-8")
+            return _load_id_registry(path)
+
+    def test_an_unassigned_key_raises_with_an_actionable_message(self):
+        with self.assertRaises(IdRegistryError) as caught:
+            _assigned("item", "a_key_that_was_never_assigned")
+        message = str(caught.exception)
+        self.assertIn("ids.tsv", message)
+        self.assertIn("never reuse", message)
+
+    def test_a_duplicate_key_raises(self):
+        with self.assertRaises(IdRegistryError):
+            self._registry("kind\tkey\tid\nitem\tfoo\t0xBB0001\nitem\tfoo\t0xBB0002\n")
+
+    def test_a_reused_id_raises(self):
+        with self.assertRaises(IdRegistryError):
+            self._registry("kind\tkey\tid\nitem\tfoo\t0xBB0001\nlocation\tbar\t0xBB0001\n")
+
+    def test_a_malformed_row_raises_and_names_the_line(self):
+        with self.assertRaises(IdRegistryError) as caught:
+            self._registry("kind\tkey\tid\nitem\tfoo\n")
+        self.assertIn(":2", str(caught.exception))
+
+    def test_an_unknown_kind_raises(self):
+        with self.assertRaises(IdRegistryError):
+            self._registry("kind\tkey\tid\nregion\tfoo\t0xBB0001\n")
+
+    def test_a_non_hex_id_raises(self):
+        with self.assertRaises(IdRegistryError):
+            self._registry("kind\tkey\tid\nitem\tfoo\tnot-a-number\n")
+
+    def test_blank_lines_and_the_header_are_ignored(self):
+        registry = self._registry("kind\tkey\tid\n\nitem\tfoo\t0xBB0001\n\n")
+        self.assertEqual(registry["item"], {"foo": 0xBB0001})
+
+
+class FillerTests(unittest.TestCase):
+    def test_the_filler_name_is_a_real_assigned_item(self):
+        self.assertIn(FILLER_ITEM_NAME, ITEM_NAME_TO_ID)
+
+    def test_the_filler_name_is_not_a_shufflable_key(self):
+        """It is deliberately outside the pool, which is why it needs its own row."""
+        self.assertNotIn(FILLER_ITEM_NAME, {i.name for i in MODEL.items})
+
+
+if __name__ == "__main__":
+    unittest.main()
