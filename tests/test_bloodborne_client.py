@@ -123,14 +123,14 @@ class ManualCheckTests(unittest.TestCase):
             records = [json.loads(line) for line in (
                 root / bb_client.CHECK_JOURNAL).read_text(encoding="utf-8").splitlines()]
         self.assertEqual(len(records), 2)
-        self.assertEqual(records[0]["location_name"], "Mergo's Loft - Mergo's Wet Nurse")
+        self.assertEqual(records[0]["location_name"], "Mergo's Wet Nurse")
         self.assertEqual(records[0]["location_id"], location)
         self.assertEqual(records[0]["world_version"], WORLD_VERSION)
         self.assertTrue(records[0]["timestamp"].endswith("+00:00"))
 
     def test_a_typo_gets_a_nearby_location_name(self):
         suggestions = bb_client.location_suggestions("Mergos Loft - Mergos Wet Nurs")
-        self.assertIn("Mergo's Loft - Mergo's Wet Nurse", suggestions)
+        self.assertIn("Mergo's Wet Nurse", suggestions)
 
 
 if __name__ == "__main__":
