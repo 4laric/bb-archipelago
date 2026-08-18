@@ -143,11 +143,16 @@ class RealCorpusTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from tools.plan_vanilla_suppression import load_item_goods
-        cls.plan = build_plan(load_item_goods(), REPO / "research", PLACEHOLDER)
+        from tools.plan_vanilla_suppression import build_complete_plan
+        cls.plan = build_complete_plan(REPO / "research", PLACEHOLDER)
 
     def test_nine_of_the_ten_pool_items_can_be_suppressed(self):
-        self.assertEqual(len(self.plan.edits), 9)
+        item_edits = [edit for edit in self.plan.edits if not edit.item_key.startswith("location:")]
+        self.assertEqual(len(item_edits), 9)
+
+    def test_every_additional_fixed_check_can_be_suppressed(self):
+        location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
+        self.assertEqual(len(location_edits), 9)
 
     def test_tonsil_stone_is_refused_for_want_of_a_flag(self):
         """Lot 39000 is a Patches gift with generic_acquisition_flag -1.
