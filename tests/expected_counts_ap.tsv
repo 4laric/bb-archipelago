@@ -1,0 +1,6 @@
+# The Archipelago tier. Modules that skip themselves when AP is not importable
+# are correct locally and a silent hole in CI, so CI asserts they ran.
+#
+# When a PR adds an AP-dependent module, it adds its `module` row here.
+
+max_skips	0
