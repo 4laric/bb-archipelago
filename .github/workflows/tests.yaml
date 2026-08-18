@@ -165,6 +165,11 @@ jobs:
           python tools/bb_inputs.py --verify
           python tools/bb_inputs.py --check-coverage
 
+      # A param writer that cannot reproduce its own input has no business
+      # modifying it. This runs against the real 2 MB table, not a fixture.
+      - name: The param writer round-trips losslessly
+        run: python tools/apply_vanilla_suppression.py --check
+
       - name: Extract and re-run the param joins
         run: |
           python tools/bb_inputs.py --extract work/inputs
