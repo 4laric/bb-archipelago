@@ -1,0 +1,135 @@
+# Suppressing the vanilla item award
+
+Status: mechanism decided and planned; nothing written to game files yet.
+
+## The problem
+
+Archipelago shuffles Bloodborne's key items, and nothing stops the game handing
+you the original one where it has always been. Walk into Iosefka's Clinic and
+you pick up the real Cainhurst Summons. Every gate in `worlds/bloodborne/data.py`
+— `Rule.all("cainhurst_summons")`, `upper_cathedral_key`, `laurences_skull` — is
+satisfied by the vanilla copy regardless of where the shuffled one went.
+
+**The world is a check emitter and an item receiver. The shuffle currently
+decides nothing.** That is the item-randomisation half of a randomiser, and it
+was missing from the project entirely.
+
+## Suppress at the lot, not at the placement
+
+The obvious move is to edit the thing holding the item — the MSB treasure Part,
+or the NpcParam drop table. That is the wrong layer, for two reasons that were
+measured rather than assumed.
+
+### 1. The acquisition flag belongs to the lot
+
+Across all 8,888 rows of `research/joined/lot_items.tsv`, the number of lots
+carrying more than one distinct acquisition flag is **zero**. The flag is a
+property of the `ItemLotParam` row.
+
+Those flags are the detection targets recorded in
+`worlds/bloodborne/runtime_bindings.py`. Repointing a placement at a different
+lot moves the flag out from under them. Editing the row in place changes what
+comes out and leaves the flag exactly where the client expects it.
+
+### 2. One lot, several delivery mechanisms
+
+MSB treasures, NpcParam drop tables and EMEVD `AwardItemLot` calls all terminate
+at the same row. Editing the row covers every route at once.
+
+This matters more than it sounds, because the current pool is mostly *not*
+treasure:
+
+| pool item | lot | how the game delivers it |
+| --- | ---: | --- |
+| Upper Cathedral Key | 2800290 | MSB treasure (宝死体_ミイラ) |
+| Cainhurst Summons | 2410990 | scripted award, Iosefka's Clinic bed |
+| Orphanage Key | 2420900 | Brainsucker fixed drop |
+| Eye of a Blood-drunk Hunter | 10040 | Hunter's Dream messenger gift |
+| Eye Pendant | 3401810 | scripted, before the Vicar fight |
+| Laurence's Skull | 3502000 | hidden altar |
+| Astral Clocktower Key | 3501850 | Living Failures defeat reward |
+| Celestial Dial | 3501800 | Lady Maria defeat reward |
+| Hunter Chief Emblem | 2400450 | fixed placement, 2 copies |
+| Tonsil Stone | 39000 | Patches gift |
+
+Only one of ten is an MSB treasure. A placement-level strategy would need three
+separate tools and would still miss the boss rewards.
+
+⚠️ Note the asymmetry with the growth pool: `research/catalog/fixed_location_catalog.tsv`
+is **100% MSB treasure by construction**, because it is built from treasure
+placements. So the 651 catalog locations and the 10 items currently randomized
+sit at opposite ends of the delivery spectrum. Suppressing at the lot is the only
+approach that covers both.
+
+## What the edit is
+
+Rewrite the `ItemLotParam` row to award a placeholder. Keep the row id, keep the
+acquisition flag. The pickup still exists, the player still interacts with it,
+the flag still fires so the check reports, and what comes out is junk instead of
+a key.
+
+Awarding *nothing* is not the same thing and is not the plan: an empty lot risks
+the game skipping the award path entirely, which would take the flag with it.
+
+## The planner
+
+```bash
+python tools/plan_vanilla_suppression.py --output work/suppression-plan.json
+```
+
+Reads the committed research, resolves each randomized item to the single row
+that awards it, and **refuses rather than guessing**. A planner that picks one of
+two candidate lots is worse than no planner: the wrong pick leaves the vanilla
+item reachable and looks identical to success.
+
+Refusal cases, each with a test that fires it:
+
+| refusal | why it cannot be guessed past |
+| --- | --- |
+| `no_lot` | nothing awards it — shop, covenant, or an engine side effect |
+| `multiple_lots` | editing one leaves the others reachable |
+| `no_acquisition_flag` | suppressible, but never detectable |
+| `flag_not_unique` | the edit would make the detection target ambiguous |
+| `multi_item_lot` | the row awards other things too; the edit has to be per-slot |
+
+## Current result
+
+**Nine of the ten pool items plan cleanly. One is refused.**
+
+`tonsil_stone` resolves to lot 39000 — a Patches gift — whose
+`generic_acquisition_flag` is `-1`. That is "no flag", not flag −1; 2,778 rows in
+the corpus carry it. The Tonsil Stone can be suppressed, but **it can never be
+detected**, so it cannot be a check until some other signal is found for it. It
+is currently in the item pool and gates the Nightmare Frontier, which holds no
+checks — so nothing breaks today, but it should not be assumed workable later.
+
+Two lots have two placements each (Hunter Chief Emblem, Upper Cathedral Key). One
+row edit covers both copies, which is what we want here — but the planner reports
+the count, because for a lot with 158 placements it would not be.
+
+## Cross-check
+
+The planner derives each flag from `lot_items.tsv`. `runtime_bindings.py` derived
+its flags independently. `tests/test_vanilla_suppression.py` asserts the two
+agree wherever both exist, and fails if the cross-check examined fewer than five
+of them — a consistency test that can pass by checking nothing is not a test.
+
+## Not done here
+
+Writing. Applying the plan needs `ItemLotParam` round-tripped through the game's
+param BND, on a machine with the dump. `tools/msbb_miner` reads params from a CSV
+dump today; there is no write path yet. The design constraint for whoever builds
+it: **the row id and the acquisition flag must survive the edit unchanged**, and
+the writer should re-read the file afterwards and prove it, the way
+`tools/bb_enemizer_writer` already does for MSB.
+
+Open questions that need the game rather than the corpus:
+
+1. Does the game gate anything on *possession* of a key item rather than on its
+   acquisition flag? `docs/LOGIC-MODEL.md` question 2 is the same question. If it
+   does, a suppressed key needs the client to grant it on receipt for the vanilla
+   door to open.
+2. Does the award path still set the flag when the awarded item is a placeholder?
+   Everything here assumes yes; it is one live test.
+3. What should the placeholder be? Something worthless, repeatable and safe to
+   receive many times.
