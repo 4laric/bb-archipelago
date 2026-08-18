@@ -104,8 +104,16 @@ jobs:
               --seed "$seed" --spoiler 3 < /dev/null 2>&1 | tee "gen-$seed.log"
             grep -q "^Done\." "gen-$seed.log" \
               || { echo "seed $seed did not complete"; exit 1; }
-            if grep -qE "Traceback|FillError" "gen-$seed.log"; then
-              echo "seed $seed produced a traceback or a FillError"; exit 1
+            if grep -q "FillError" "gen-$seed.log"; then
+              echo "seed $seed produced a FillError"; exit 1
+            fi
+            # Stock Archipelago loads ~90 worlds and prints a traceback for any
+            # that fail to import, so a bare grep for Traceback is somebody
+            # else's bug. Only ours counts.
+            if grep -qE "worlds[/.]bloodborne" "gen-$seed.log"; then
+              echo "seed $seed produced a traceback naming this world"
+              grep -nE -B5 "worlds[/.]bloodborne" "gen-$seed.log" | head -40
+              exit 1
             fi
           done
 
