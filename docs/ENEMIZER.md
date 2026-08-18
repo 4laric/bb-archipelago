@@ -29,6 +29,25 @@ currency, respawn, and collider signals form conservative common/elite/boss
 tiers. A slot is protected when its entity ID occurs in its area's EMEVD. Areas
 whose fixed-map EMEVD was not extracted fail closed: every slot stays vanilla.
 
+### EMEVD usage census
+
+The phrase "entity ID referenced by area EMEVD" describes the current lexical
+test, not a proven game-semantic category. `tools/build_emevd_entity_usage.py`
+reproduces that test for all 2,399 protected physical slots and commits a
+policy-neutral derived table at `research/enemizer/emevd_entity_usage.tsv`.
+It separates direct operations, event-initializer arguments, resolved callee
+parameter uses, comments, and collisions with item-lot and acquisition-flag
+namespaces. The companion summary records that no protection policy changed.
+
+The census finds actual character-operation use for 2,254 slots. The remaining
+145 have only event arguments or other operation families and need review; this
+is not evidence that they are safe. Although 308 protected physical slots share
+a number with an ItemLotParam row, only two occurrences are `AwardItemLot`
+operands, and only 20 of those collisions lack a separate character operation.
+This disproves the stronger "all numeric collisions are item-lot uses" premise
+without converting the opposite heuristic into policy. Any relaxation remains
+blocked on an in-game map-load and playtest pass.
+
 Target selection follows the Nightreign engine's two-stage model. It chooses a
 character model family uniformly, preventing enemies with many authored
 NpcParam variants from dominating the pool, then chooses that family's variant
