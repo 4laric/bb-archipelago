@@ -1,140 +1,177 @@
 # Work plan
 
-Written 2026-08-18, after an audit of the 08-16/17 working tree. Every state claim below was
-verified by running the thing, not by reading it.
+Written 2026-08-18, after an audit of the 08-16/17 working tree and a subsequent adversarial
+review. Every state claim below was verified by running the thing, not by reading it.
 
 ## Where the project actually is
 
 | Piece | State |
 | --- | --- |
 | World generation | **Works.** AP 0.6.7 / Python 3.11, clean at `full`, `minimal`, enemizer on and off. |
-| Item delivery | **Works.** Native game-thread grant, absent-item insertion, persistence across a full emulator restart. |
-| Enemizer planning | **Works.** Consumes the AP request, 308 swaps of 4186 slots, deterministic across 25 seeds. |
-| Enemizer writing | Guarded writer + packaging entrypoint exist. Not playtested. |
-| Location detection | **Does not exist.** No flag-manager accessor. Checks are typed by hand. |
+| Item delivery | **Works**, through Cheat Engine. Native game-thread grant, absent-item insertion, persistence across a full emulator restart. Wedges on a failed verify (#19) and can double-grant on restart (#20). |
+| The AP client | **Crashes on every launch path** (#17). Whatever exercised delivery end to end did not go through `launch()`. |
+| Item *randomisation* | **Does not exist.** Nothing suppresses the vanilla award, so shuffled keys gate nothing (#14). |
+| Location detection | **Does not exist.** No flag-manager accessor. Checks are typed by hand (#15). |
+| Enemizer planning | **Works.** 308 swaps of 4186 slots, deterministic across 25 seeds. |
+| Enemizer writing | Guarded writer + packaging entrypoint exist. **Not playtested.** |
 
-## The one blocker
+## The two blockers
 
-Everything else is polish next to this: **the client cannot tell when a player has done something.**
-`docs/EVENT-FLAG-RESEARCH.md` Lane B is the whole game. Until it lands, Bloodborne is an
-Archipelago *item receiver*, not an Archipelago *game* — it can take deliveries but it cannot
-participate.
+An Archipelago game has to do two things: report what the player found, and make what it hands
+back matter. Bloodborne currently does neither.
 
-Two properties of that work shape this plan:
+**#15 — detection.** Until the flag-manager accessor exists, checks are typed by hand.
 
-1. **It cannot be parallelised.** It needs the game running under a debugger on the machine that
-   owns the dump. No contributor and no agent can do it.
-2. **The manual `/check` boundary is a real unlock, not a placeholder.** Because a human can report
-   a check by typing, the entire logic model, item placement, and enemizer can be playtested
-   *today*, with Lane B still open. That is unusual and worth exploiting.
+**#14 — vanilla award suppression.** There is no `ItemLotParam` edit, no MSB treasure edit and no
+runtime lot interception anywhere in the project. The player who walks to Iosefka's Clinic picks
+up the real Cainhurst Summons, so every gate in `data.py` is satisfied by the vanilla copy no
+matter where Archipelago put the shuffled one. Item placement is decorative.
 
-So: Lane B is the critical path and it belongs to one person. Everything in Phase 0 and Phase 2
-runs beside it and does not wait on it.
+These are independent, and only one of them needs the game running.
+
+### On parallelising #15
+
+An earlier draft of this plan said Lane B "cannot be parallelised — no contributor and no agent
+can do it." That was too strong. Four separable activities were collapsed into one debugger
+session:
+
+1. **Candidate narrowing.** Lane A static EMEVD analysis. The corpus is mined and committed.
+2. **Snapshot capture.** Already scripted; the owner's part is "restore save, do one action."
+3. **Diff analysis.** Runs on `.bin` files anywhere.
+4. **The write breakpoint.** The only owner-bound step — and even it is scriptable, since Cheat
+   Engine's Lua API sets breakpoints and logs registers, which is what the delivery harness
+   already does for a living.
+
+The accurate claim: **#15 needs the owner's gameplay minutes, not the owner's engineering weeks**
+— and no advance preparation is currently scheduled that would shorten those minutes. That prep
+is Phase 0 work and it is the highest-leverage schedulable item in the project.
+
+The owner's game time is also the contended resource: #15, the enemizer writer playtest, broader
+item-class delivery validation, and the "does a native grant set acquisition flags" test all queue
+on the same machine and the same person. #15 preempts.
 
 ---
 
 ## Phase 0 — cheap now, expensive later
 
-These are the Elden Ring lessons that cost real money to learn there. Every one of them is
-approximately free today and approximately unfixable once a tester is running an unknown build.
-None of them should wait for Lane B.
+Elden Ring lessons that cost real money to learn there. Ordered by how badly the cost curve bites.
 
-### 0.1 Build identity, on the surface a tester can read
+### 0.1 Stable network IDs (#16)
 
-ER's most expensive single lesson: `APWORLD_VERSION = "0.2.0"` shipped **five distinct contract
-shapes**, and a player on the wrong one is telling the truth when they say "I'm on the new version."
-The fix there was to put the git SHA on the overlay — the surface the player photographs — rather
-than in a log they can't produce.
+Every item and location ID is `ID_BASE + enumerate(...)` position. Insert one row in `data.py`
+and every later ID shifts while names stay valid — old multidata and older clients desync with no
+error. `data.py`'s docstring promises the opposite; `docs/LOGIC-MODEL.md` promises an adapter that
+derives IDs from stable keys, and the adapter derives them from order.
 
-Bloodborne is worse off than ER was. The harness is 43 loose `.CT` files with names like
-`Bloodborne-native-item-grant-auto-v2.CT` and `...-v2-upgrade.CT`. There is no version anywhere
-except `archipelago.json`'s `world_version`. A tester who says "I loaded the auto-grant table" has
-told you almost nothing, and no amount of later work recovers which bytes were in memory.
+Both #1 and #14 grow the location list. A key-to-ID registry costs an hour today and is a
+compatibility break after the first release. **This is the item on this list with the steepest
+curve**, and an earlier draft ranked it below a changelog.
 
-The rule to adopt now: **one version string spans the world, the client and the harness, and the
-client prints it on connect.** A report that cannot name its build is not a report.
+### 0.2 Build identity, on the surface a tester can read (#7, #8)
 
-### 0.2 A version on the command wire
+Elden Ring shipped `APWORLD_VERSION = "0.2.0"` across five distinct contract shapes, and two
+builds of `v0.2.17` — one with a stall guard, one without, both reporting the same version and
+both passing the compatibility check. A player on the wrong one was telling the truth.
 
-`client.py` writes `GRANT 0x… 0x… 1 AUTO <tag>` into a text file that a Cheat Engine script parses.
-That is a protocol between two independently-updated artefacts, with no version field. ER hit this
-exact class and answered it with `CONTRACT_HASH` and the house rule *if the contract changes, the
-release version changes with it*.
+Bloodborne is worse off: 43 `.CT` files named `-v2`, `-v3`, `-upgrade`, and no version anywhere
+except `archipelago.json`. A tester who says "I loaded the auto-grant table" has told us nothing.
 
-Add a version token to the command line before anyone else is running it. The cost now is one
-token; the cost later is a silent mismatch that looks like a game bug.
+One version spanning apworld, client and harness; the client prints it on connect; the harness
+writes its own version into the state file so the client can refuse a mismatch. #7 and #8 are one
+change — the state-file handshake in #7 *is* #8's mechanism — and both belong before the first
+external tester.
 
-### 0.3 CI, and a gate that proves it ran something
+### 0.3 CI that asserts what it collected (#9)
 
-There is no CI. When it goes in, it must **assert the collected test count**, not just a green exit.
-ER's `ci-linux.sh` had a WORLD gate that ran zero tests and reported success for weeks; the
-diagnostic that eventually cracked a related problem was noticing that collected counts differed
-between two environments. A gate that can pass while examining nothing is worse than no gate,
-because it retires the question.
+No CI today. When it lands it must assert the **collected test count**, not just exit green.
+Elden Ring's `ci-linux.sh` carried a WORLD gate that ran zero tests and reported success for
+weeks. A gate that can pass while examining nothing is worse than no gate, because it retires the
+question.
 
-Minimum useful CI: install the world into a pinned AP checkout, run the 14 tests, assert the count,
-generate the three tester seeds, and fail on a `FillError` or a stack trace.
+### 0.4 The witness ratchet, installed at 14 tests (#10)
 
-### 0.4 The witness ratchet, installed at 14 tests
+`test_fixed_pickup_flags_cover_randomized_pickups` passes while the provenance it names is wrong
+(#2), because it checks that six keys exist rather than that they mean anything. Elden Ring
+reached 154 tests of that shape, at which point static classification of the backlog *failed* and
+ranking them needed a bespoke tracing probe. A ceiling at 14 costs nothing.
 
-ER reached **154 tests that assert an empty result without proving they examined anything**, and
-ranking them needed a bespoke `sys.settrace` probe. Issue #2 is already one of these:
-`test_fixed_pickup_flags_cover_randomized_pickups` passes while the provenance it names is wrong,
-because it checks that six keys exist rather than that they mean what they claim.
+### 0.5 Lane B session prep
 
-A ceiling costs nothing to install at 14 tests and cannot be retrofitted cheaply at 154.
+Per the note above: candidate narrowing, an instrumented capture package, diff tooling, a scripted
+breakpoint. Nothing here needs the game; all of it shortens the sessions that do.
 
-### 0.5 Release notes as part of the change
+### 0.6 CONTRIBUTING.md (#22)
 
-ER's rule 14: *every player-visible change lands its changelog line in the same commit.* It exists
-because the blurb series silently stopped for five releases — nobody decided to stop, the
-reconstruction cost just kept rising until it was always tomorrow's job. Start the changelog at
-v0.1.0 while there is nothing to reconstruct.
+Elden Ring's exists as an **external legibility asset** — a way to show someone why the bar is
+where it is without relitigating it per pull request. It is also the only place that tells the
+no-dump contributor population that it exists.
 
-### 0.6 CONTRIBUTING.md
+### 0.7 Release notes as part of the change (#11)
 
-ER's exists primarily as an **external legibility asset** — a way to show someone else why the bar
-is where it is, without relitigating it per pull request. That is exactly the need that appears the
-moment a second person touches this.
+Every player-visible change lands its changelog line in the same commit. Elden Ring's blurb series
+silently stopped for five releases; nobody decided to stop, the reconstruction cost just kept
+rising until it was always tomorrow's job.
 
 ---
 
-## Phase 1 — Lane B: the flag-manager accessor
+## Phase 1 — detection (#15)
 
-`docs/EVENT-FLAG-RESEARCH.md` already specifies this well: control snapshots, three repeats from the
-same pre-action save, intersect survivors, then a write breakpoint to catch the setter. Two additions
-from the Elden Ring experience:
+`docs/EVENT-FLAG-RESEARCH.md` specifies the method well. Three things to hold onto:
 
-- **The deliverable is the code path, not the bit.** The doc says this already; it is worth
-  restating because the temptation at the moment a bit is found is enormous. One repeatable bit
-  plus the instruction that writes it is success. A bit alone is a session that has to be redone.
-- **A coincidence is not evidence, and sufficient is not necessary.** A flag that changes when you
-  do the thing is a candidate. A flag that changes *only* when you do the thing, survives reload,
-  and is written by an identifiable instruction is a finding. Elden Ring lost a filed issue and a
-  parked branch to skipping the control row.
+- **The deliverable is the code path, not the bit.** One repeatable transition plus the instruction
+  that writes it. A bit alone is a session that has to be redone.
+- **A coincidence is not evidence.** A flag that changes *only* when you do the thing, survives
+  reload, and has an identifiable writer is a finding. Skipping the control pair is how this goes
+  wrong; Elden Ring lost a filed issue and a parked branch to exactly that.
+- **The pointer trap.** The harness captures the inventory pointer at a hook (`mov
+  [bbAutoInventory],r13`) and needs "use one bullet once after launch" to bootstrap — which is a
+  confession that no static chain was ever found. If the flag manager lands the same way, automatic
+  checks inherit a cave and a detour. EVENT-FLAG-RESEARCH requirement 6 is an acceptance criterion,
+  not a finding.
 
-Once the accessor exists, the six statically-mapped pickups in `runtime_bindings.py` become the
-first automatic checks, and the manual `/check` path stays as the fallback.
+**Detection has a second half that nothing currently owns: false-positive containment.**
+`LocationChecks` cannot be retracted. A stale pointer after a save reload, a read during a loading
+screen while the flag block is repopulating, or a read against the wrong character slot can each
+mint irreversible false checks across an entire multiworld. Pointer revalidation per poll,
+gameplay-state gating, N-consecutive-poll debounce and save-identity binding are part of this
+phase, not an afterthought.
 
-## Phase 2 — a seed worth playing
+Also one live test to schedule while the debugger is out: **can the native grant path itself set
+acquisition flags?** If it can, Archipelago deliveries self-report as checks.
 
-Issue #1: the critical path currently requires **zero** shuffled items, and 9 of 25 regions hold no
-checks. Twenty locations is not yet a multiworld contribution.
+## Phase 2 — make the randomiser a randomiser
 
-The growth path is already mined and committed: `research/catalog/fixed_location_catalog.tsv` holds
-**651 canonical locations**, of which **83** are already tagged `mvp_candidate`. This is the largest
-piece of work in the project that needs **no game access at all** — which makes it the natural place
-for a contributor, and the natural thing to do while Lane B is blocked.
+**#14 first.** Suppressing the vanilla award is what makes a shuffled item matter. It is offline
+file work through the same SoulsFormatsNEXT path the enemizer writer already proves out, needs no
+live game, and is the largest contributor-shaped task in the project.
 
-Order: fill the empty regions first (Cathedral Ward, Hemwick, Cainhurst, the Lecture Buildings, the
-Frontier), because that is what turns four dead progression items into real gates. Then breadth.
+One constraint to design in: lot edits must preserve the acquisition-flag IDs in
+`runtime_bindings.py`, or Phase 1's detection targets move underneath it.
+
+**Then #1**, growing the pool. `research/catalog/fixed_location_catalog.tsv` holds 651 canonical
+locations, 83 tagged `mvp_candidate`. Fill the nine empty regions first.
+
+⚠️ **Phase 2 outruns the manual-check boundary.** Typing 20 location names works. Typing 83 does
+not — and the catalog contains **no player-facing English names at all**, only flags, maps, lots,
+Japanese event names and coordinates. Every seed Phase 2 produces is unplayable in practice until
+Phase 1 lands. That is acceptable as prep work; it should not be mistaken for shippable progress.
+
+One interim option worth evaluating rather than assuming away: for **unique goods**, the client
+already knows what it delivered and the harness already walks the live inventory (`findItem`), so
+"appeared in inventory and I didn't send it" is a serviceable monotonic signal for exactly the
+key-item pool that makes up the MVP. `EVENT-FLAG-RESEARCH.md` dismisses inventory presence for the
+general case, correctly — but the degenerate case is the current pool.
 
 ## Phase 3 — enemizer to shippable
 
-Issue #3: 308 of 4186 slots, with a single rule — *entity ID appears in the area's EMEVD* —
-protecting 2399 of them. Splitting that bucket by **how** the ID is used is the highest-leverage
-change available, and it is measurable against a fixed 308 baseline. Needs the writer playtested
-first; a wrong swap that crashes a map is worse than a conservative one.
+#3: 308 of 4186 slots, with `entity ID referenced by area EMEVD` protecting 2399. That rule is a
+bare numeric grep over decompiled script text, so it also catches lot IDs, region IDs and numbers
+in comments — 259 of 1979 eligible slots have entity IDs that collide numerically with
+`ItemLotParam` IDs. The refinement may be less "classify usage" than "stop counting collisions."
+
+**Needs the writer playtested first.** A wrong swap that crashes a map load is worse than a
+conservative one, and no oracle short of the game detects it — the 25-seed audit pins determinism,
+not safety.
 
 ---
 
@@ -142,19 +179,37 @@ first; a wrong swap that crashes a map is worse than a conservative one.
 
 | Lesson | Where it bites here |
 | --- | --- |
-| A version number cannot identify a build | 43 unversioned `.CT` files (0.1) |
-| If the contract changes, the version changes | The `GRANT` command wire (0.2) |
-| A gate can pass while examining nothing | No CI yet; assert the collected count (0.3) |
-| A guard its subject cannot witness | Issue #2's coverage test (0.4) |
-| Release notes are part of the change | No changelog yet (0.5) |
-| A coincidence is not evidence | The whole of Lane B (Phase 1) |
+| A version number cannot identify a build | 43 unversioned `.CT` files (#7) |
+| If the contract changes, the version changes | The `GRANT` command wire (#8) |
+| A gate can pass while examining nothing | No CI yet; assert the collected count (#9) |
+| A guard its subject cannot witness | #2's coverage test (#10) |
+| A gate that greps reads comments too | The enemizer's EMEVD protection rule (#3) |
+| A coincidence is not evidence | The whole of Phase 1 |
 | Establish the base before comparing derived numbers | Flag snapshot diffing needs its control pair |
-| Don't use CI as a test runner | The suite runs locally in under a second |
-| Cite the source or probe it — no invented IDs | Issue #2, and every future flag |
+| Cite the source or probe it — no invented IDs | #2, and every future flag |
 | A census column is not a population | 614 of 651 acquisition flags appear in no script |
+| Claim the issue before you branch | Two agents plus a maintainer on one queue (#22) |
+| A corpus ledger is a regression ratchet, not a correctness one | The enemizer's 308 pin (#3) |
 
-## What is deliberately not in scope yet
+## Owned by nobody yet
+
+Named so they stop being invisible. None of these has an issue or a phase:
+
+- **Save-restore and character-slot reconciliation.** The delivery receipt is keyed
+  `seed_name:slot` only. A restored BBLauncher backup rolls inventory back while the receipt says
+  delivered, and the items are gone. A second character in the same slot inherits the first one's
+  queue.
+- **Goal design and detection.** The goal currently fires when a human types `/check Mergo's Wet
+  Nurse`. `docs/LOGIC-MODEL.md` question 5 is open, and no boss flag is in `LOCATION_BINDINGS`.
+- **DeathLink.** Receiving is already technically possible via the validated HP write. Sending
+  needs a death signal — another Phase 1-class find, worth adding to the discovery tranche while
+  the methodology is out anyway.
+- **Location naming as a permanent contract.** Names are datapackage-facing and effectively frozen
+  at first release. The catalog has none to freeze.
+- **Client lifecycle around the emulator.** Re-attach and re-inject after a shadPS4 restart, and
+  the "use one consumable per launch" bootstrap — currently folklore in a status string.
+
+## Deliberately out of scope
 
 Chalice Dungeons, the three endings as selectable goals, cross-serial support beyond the two
-`01.09` builds already reproduced, and any regulation/param editing in the enemizer. Each is a real
-feature; none of them is on the path to the first playable multiworld.
+`01.09` builds already reproduced, and regulation/param editing in the enemizer.
