@@ -11,6 +11,9 @@ import argparse
 import csv
 import json
 import re
+import sqlite3
+import tempfile
+import zlib
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -195,16 +198,46 @@ def build_rows(inventory: Path, policy_path: Path, event_root: Path, lot_items: 
     return result
 
 
+def materialize_bundle(bundle: Path, target: Path) -> tuple[Path, Path]:
+    """Extract only the census inputs, not the bundle's full 146 MB payload."""
+    if not bundle.is_file():
+        raise SystemExit(f"inputs bundle not found: {bundle}")
+    database = sqlite3.connect(bundle)
+    wanted = database.execute(
+        "SELECT path, blob FROM files WHERE path = 'mined/msb_enemies.tsv' OR path LIKE 'event/%.emevd.dcx.js'"
+    ).fetchall()
+    database.close()
+    inventory = target / "mined/msb_enemies.tsv"
+    events = target / "event"
+    for relative, blob in wanted:
+        output = target / relative
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_bytes(zlib.decompress(blob))
+    if not inventory.is_file() or not any(events.glob("m*.emevd.dcx.js")):
+        raise SystemExit("inputs bundle lacks mined/msb_enemies.tsv or fixed-map EMEVD scripts")
+    return inventory, events
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--inventory", type=Path, required=True)
+    parser.add_argument("--bundle", type=Path, default=Path("research/bb_inputs.db"))
+    parser.add_argument("--inventory", type=Path)
     parser.add_argument("--slot-policy", type=Path, default=Path("research/enemizer/slot_policy.json"))
-    parser.add_argument("--events", type=Path, required=True)
+    parser.add_argument("--events", type=Path)
     parser.add_argument("--lot-items", type=Path, default=Path("research/joined/lot_items.tsv"))
     parser.add_argument("--output", type=Path, default=Path("research/enemizer/emevd_entity_usage.tsv"))
     parser.add_argument("--summary", type=Path, default=Path("research/enemizer/emevd_entity_usage_summary.json"))
     args = parser.parse_args(argv)
-    result = build_rows(args.inventory, args.slot_policy, args.events, args.lot_items)
+    if bool(args.inventory) != bool(args.events):
+        parser.error("--inventory and --events must be supplied together")
+    temporary = tempfile.TemporaryDirectory() if not args.inventory else None
+    try:
+        inventory, events = ((args.inventory, args.events) if args.inventory else
+                             materialize_bundle(args.bundle, Path(temporary.name)))
+        result = build_rows(inventory, args.slot_policy, events, args.lot_items)
+    finally:
+        if temporary:
+            temporary.cleanup()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(result[0]), delimiter="\t", lineterminator="\n")

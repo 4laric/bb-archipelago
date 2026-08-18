@@ -127,15 +127,17 @@ def build(dump_root: Path, bundle: Path) -> int:
 def extract(bundle: Path, target: Path) -> int:
     db = connect(bundle)
     count = 0
-    for path, sha, size, blob in db.execute("SELECT path, sha256, size, blob FROM files"):
-        data = zlib.decompress(blob)
-        if hashlib.sha256(data).hexdigest() != sha or len(data) != size:
-            raise SystemExit(f"{path}: bundle content does not match its recorded digest")
-        out = target / path
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_bytes(data)
-        count += 1
-    db.close()
+    try:
+        for path, sha, size, blob in db.execute("SELECT path, sha256, size, blob FROM files"):
+            data = zlib.decompress(blob)
+            if hashlib.sha256(data).hexdigest() != sha or len(data) != size:
+                raise SystemExit(f"{path}: bundle content does not match its recorded digest")
+            out = target / path
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_bytes(data)
+            count += 1
+    finally:
+        db.close()
     print(f"extracted {count} files to {target}")
     return 0
 

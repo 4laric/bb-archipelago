@@ -38,6 +38,8 @@ policy-neutral derived table at `research/enemizer/emevd_entity_usage.tsv`.
 It separates direct operations, event-initializer arguments, resolved callee
 parameter uses, comments, and collisions with item-lot and acquisition-flag
 namespaces. The companion summary records that no protection policy changed.
+It reads `research/bb_inputs.db` by default, so regenerating the census needs no
+game dump; `--inventory` plus `--events` remains available for dump comparison.
 
 The census finds actual character-operation use for 2,254 slots. The remaining
 145 have only event arguments or other operation families and need review; this

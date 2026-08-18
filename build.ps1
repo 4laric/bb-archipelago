@@ -123,9 +123,7 @@ if ($Data) {
         (Join-Path $Repo "research\validation\progression_items.tsv")
     )
     Invoke-Python @(
-        (Join-Path $Repo "tools\build_emevd_entity_usage.py"),
-        "--inventory", (Join-Path $Repo "research\mined\msb_enemies.tsv"),
-        "--events", $EventRoot
+        (Join-Path $Repo "tools\build_emevd_entity_usage.py")
     )
     Write-Host "  derived tables regenerated" -ForegroundColor Green
 }

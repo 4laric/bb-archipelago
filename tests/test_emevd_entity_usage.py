@@ -3,7 +3,9 @@ import json
 import unittest
 from pathlib import Path
 
-from tools.build_emevd_entity_usage import event_definitions, line_uses, operation_family, parameter_uses
+from tools.build_emevd_entity_usage import (
+    event_definitions, line_uses, materialize_bundle, operation_family, parameter_uses,
+)
 
 
 class EmevdEntityUsageTests(unittest.TestCase):
@@ -52,6 +54,14 @@ class EmevdEntityUsageTests(unittest.TestCase):
         self.assertFalse(summary["policy_changed"])
         self.assertEqual(2399, summary["physical_slots"])
         self.assertEqual(summary["physical_slots"], census_rows)
+
+    def test_committed_bundle_carries_both_census_inputs(self):
+        import tempfile
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as temporary:
+            inventory, events = materialize_bundle(root / "research/bb_inputs.db", Path(temporary))
+            self.assertTrue(inventory.is_file())
+            self.assertGreater(len(list(events.glob("m*.emevd.dcx.js"))), 20)
 
 
 if __name__ == "__main__":
