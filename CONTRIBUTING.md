@@ -97,6 +97,11 @@ Keep the pull request description concrete:
 - call out generated artifacts and confirm whether the game was tested;
 - preserve stable network IDs in `worlds/bloodborne/ids.tsv`.
 
+Every player-visible change must update `CHANGELOG.md` in the same commit. Write
+the entry for a player: what changed in their build and why it matters. Keep
+unfinished or unvalidated behavior under `Unreleased`, and do not defer release
+notes until tag time.
+
 Draft pull requests are welcome for research with a clear evidence boundary.
 Do not describe static analysis as playtested, or a single-build observation as
 portable.
