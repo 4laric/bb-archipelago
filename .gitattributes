@@ -1,0 +1,10 @@
+# Generated research output must be byte-identical wherever it was produced, or
+# the regen-and-diff control can only ever pass on the machine that last ran it.
+*.tsv    text eol=lf
+*.json   text eol=lf
+*.py     text eol=lf
+*.md     text eol=lf
+
+# The inputs bundle is sqlite. Never touch it.
+*.db     binary
+*.CT     text eol=lf

@@ -193,7 +193,7 @@ def main() -> int:
         "measured_item_category_counts": dict(sorted(Counter(r["item_category"] for r in lot_item_rows).items())),
     }
     (ns.output / "param_join_summary.json").write_text(
-        json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0
 

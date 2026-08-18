@@ -146,3 +146,36 @@ jobs:
       # own game files and gitignored. CI can prove the request is produced and
       # well formed; it cannot yet prove a plan comes out the far side. Closing
       # that needs a committed derived inventory - see #3.
+
+  # The control that makes the inputs bundle trustworthy: extract it, re-run the
+  # derivation, and require the committed research to be exactly what came out.
+  # Without this, "the bundle reproduces the research" is a claim, and the first
+  # silent divergence makes every number downstream unfalsifiable.
+  research:
+    name: research regenerates from the bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: The bundle is intact and covers what the tools read
+        run: |
+          python tools/bb_inputs.py --verify
+          python tools/bb_inputs.py --check-coverage
+
+      - name: Extract and re-run the param joins
+        run: |
+          python tools/bb_inputs.py --extract work/inputs
+          python tools/mine_param_joins.py work/inputs/params work/inputs/mined research/joined
+
+      - name: The committed research is what the tools produce
+        run: |
+          if ! git diff --exit-code -- research/joined; then
+            echo
+            echo "research/joined differs from what the bundle regenerates."
+            echo "Either the tools changed and the outputs were not refreshed,"
+            echo "or the bundle is stale. Both are real; neither is cosmetic."
+            exit 1
+          fi

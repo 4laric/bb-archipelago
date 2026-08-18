@@ -86,7 +86,7 @@ def main() -> int:
         "peak_large_physical_targets_by_map": dict(large_by_map_peak.most_common()),
     }
     ns.output.parent.mkdir(parents=True, exist_ok=True)
-    ns.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    ns.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({k: v for k, v in report.items()
                       if k not in ("target_family_counts", "peak_large_physical_targets_by_map")},
                      indent=2, sort_keys=True))

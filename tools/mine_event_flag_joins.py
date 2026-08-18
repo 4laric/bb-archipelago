@@ -206,7 +206,7 @@ def main() -> int:
         "fixed_acquisition_flags_not_referenced_by_scripts": len(acquisition_flags - matched_flags),
     }
     (ns.output / "event_join_summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        json.dumps(summary, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(summary, indent=2))
     return 0
 
