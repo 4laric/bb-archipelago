@@ -1,0 +1,140 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PIP_DEPS: >-
+    pyyaml schema jellyfish websockets platformdirs typing_extensions
+    orjson colorama certifi bsdiff4
+
+jobs:
+  # Everything that does not need Archipelago. Most of the suite lives here.
+  unit:
+    name: unit (no Archipelago)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run the AP-free tier
+        run: python tools/run_tests.py --expect-file tests/expected_counts.tsv
+
+  # The tier that skips itself when Archipelago is not importable. It only ever
+  # runs here, so what it examined is asserted rather than assumed.
+  archipelago:
+    name: world + client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Clone Archipelago at the pin
+        run: |
+          PIN="$(cat .ap-version)"
+          git clone --depth 1 --branch "$PIN" \
+            https://github.com/ArchipelagoMW/Archipelago.git _ap
+          # Verify by content, not by tag: a tag can move, __version__ cannot.
+          grep -q "__version__ = \"$PIN\"" _ap/Utils.py \
+            || { echo "checkout is not $PIN"; exit 1; }
+
+      - name: Install headless dependencies
+        run: pip install --no-cache-dir $PIP_DEPS
+
+      # The world is installed the way Archipelago loads it, and tools/ and
+      # research/ come along because the suite imports and reads them.
+      - name: Install the world
+        run: |
+          rm -rf _ap/worlds/bloodborne
+          cp -r worlds/bloodborne _ap/worlds/bloodborne
+          cp -r tools tests research _ap/
+
+      - name: Run the suite inside Archipelago
+        working-directory: _ap
+        env:
+          AP_NONINTERACTIVE: "1"
+          SKIP_REQUIREMENTS_UPDATE: "1"
+        run: |
+          python tools/run_tests.py --expect-file tests/expected_counts_ap.tsv
+
+  generate:
+    name: generation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Clone Archipelago at the pin
+        run: |
+          git clone --depth 1 --branch "$(cat .ap-version)" \
+            https://github.com/ArchipelagoMW/Archipelago.git _ap
+      - name: Install headless dependencies
+        run: pip install --no-cache-dir $PIP_DEPS
+      - name: Install the world
+        run: |
+          rm -rf _ap/worlds/bloodborne
+          cp -r worlds/bloodborne _ap/worlds/bloodborne
+          mkdir -p _ap/Players
+          cp tests/players/*.yaml _ap/Players/
+
+      # A yaml must generate cleanly or be rejected with a message a player can
+      # act on. A FillError or a traceback is the bug, not the yaml.
+      # stdin is /dev/null because Generate.py's atexit prompt otherwise hangs
+      # the runner instead of failing it.
+      - name: Generate across several seeds
+        working-directory: _ap
+        env:
+          AP_NONINTERACTIVE: "1"
+          SKIP_REQUIREMENTS_UPDATE: "1"
+        run: |
+          set -o pipefail
+          for seed in 1 2 3 12345 99999; do
+            echo "--- seed $seed ---"
+            python Generate.py --player_files_path Players --outputpath out \
+              --seed "$seed" --spoiler 3 < /dev/null 2>&1 | tee "gen-$seed.log"
+            grep -q "^Done\." "gen-$seed.log" \
+              || { echo "seed $seed did not complete"; exit 1; }
+            if grep -qE "Traceback|FillError" "gen-$seed.log"; then
+              echo "seed $seed produced a traceback or a FillError"; exit 1
+            fi
+          done
+
+      # The seam between the two halves of the project: the world emits a
+      # request and the planner is supposed to consume it.
+      - name: The enemizer request is emitted and well formed
+        working-directory: _ap
+        run: |
+          python - <<'PY'
+          import glob, json, zipfile
+          zips = sorted(glob.glob("out/*.zip"))
+          assert zips, "no output produced"
+          requests = 0
+          for path in zips:
+              archive = zipfile.ZipFile(path)
+              for name in archive.namelist():
+                  if not name.endswith(".bbenemizer.json"):
+                      continue
+                  requests += 1
+                  payload = json.loads(archive.read(name))
+                  assert payload["format"] == "bb-enemizer-request-v1", payload
+                  assert payload["enemizer_seed"], "the planner is seeded from this"
+                  assert payload["player"] and payload["player_name"]
+          assert requests, "no .bbenemizer.json emitted by any seed"
+          print(f"{requests} enemizer request(s) verified")
+          PY
+
+      # NOTE: the planner itself is deliberately NOT run here. Its default
+      # --inventory is research/mined/msb_enemies.tsv, extracted from the user's
+      # own game files and gitignored. CI can prove the request is produced and
+      # well formed; it cannot yet prove a plan comes out the far side. Closing
+      # that needs a committed derived inventory - see #3.
