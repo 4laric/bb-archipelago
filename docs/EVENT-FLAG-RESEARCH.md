@@ -38,6 +38,13 @@ the six randomized pickups in the vertical slice. They are recorded in
 automatic client reporting remains disabled until Lane B identifies and
 validates the live flag-manager accessor.
 
+Eye Pendant's flag `9470` is intentionally short. A full `lot_items.tsv` audit
+finds it on exactly one lot, `3401810`; the other short progression flags `6670`
+and `6671` are also each unique to one lot. EMEVD references `9470` in the
+Hunter's Nightmare award path and the Research Hall altar-state path, consistent
+with one acquisition transition and its downstream consumer. The unit suite
+asserts that every runtime location flag remains specific to exactly one lot.
+
 ## Two discovery lanes
 
 ### Lane A: event-script candidates
