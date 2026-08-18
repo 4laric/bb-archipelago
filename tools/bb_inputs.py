@@ -175,15 +175,25 @@ def verify(bundle: Path) -> int:
     return 1 if bad else 0
 
 
+# CSV filenames the tools WRITE or name for other reasons. They are not param
+# tables, so requiring the bundle to carry them would be a false alarm - and a
+# gate that cries wolf gets its exclusion list widened until it means nothing.
+# Keep this short, and only for names that are demonstrably not dump inputs.
+NON_PARAM_CSVS = {
+    "intersection.csv",     # written by tools/event_flag_session.ps1
+    "candidates.csv",       # written by tools/compare_event_snapshots.ps1
+}
+
+
 def referenced_csvs() -> set[str]:
-    """Every `*.csv` named in tools/, which is what the bundle must cover."""
+    """Every param `*.csv` named in tools/, which is what the bundle must cover."""
     import re
     names: set[str] = set()
     for path in sorted((REPO / "tools").rglob("*.py")):
         if path.name == Path(__file__).name:
             continue
         names |= set(re.findall(r"([A-Za-z_]+\.csv)", path.read_text(encoding="utf-8")))
-    return names
+    return names - NON_PARAM_CSVS
 
 
 def check_coverage(bundle: Path) -> int:

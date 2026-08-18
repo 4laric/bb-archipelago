@@ -76,6 +76,10 @@ For each trial, restore the identical pre-action save and capture:
   2. idle-b   - ten seconds later, still doing nothing
   3. before   - immediately before the one declared action
   4. after    - after the banner clears, without entering another trigger
+  5. reload   - quit to the title, reload the save, capture again
+
+Stage 5 is what separates a saved flag from a session artefact. Analyze keeps
+only candidates whose bit is still set in every reload capture.
 
 Use Bloodborne-event-flag-snapshot.CT for raw memory regions, or use Capture
 mode to copy matching save/dump files into this session. Never mix sources,
@@ -137,6 +141,42 @@ $survivors = $allRows |
     Sort-Object @{ Expression = { [int64]$_.ByteOffset } }, @{ Expression = { [int]$_.Bit } } |
     Select-Object Offset, ByteOffset, Bit, BeforeByte, AfterByte, Transition, ControlStable
 
+# Requirement 4 of docs/EVENT-FLAG-RESEARCH.md: the bit must still be set after a
+# reload. A transition that does not survive a reload is a session artefact, not a
+# saved flag, and it is the difference between a lead and a finding. Only trials
+# that captured reload.bin take part; if none did, the filter is skipped and said so.
+$reloadTrials = @()
+for ($number = 1; $number -le $manifest.trial_count; $number++) {
+    $reloadPath = Join-Path (Join-Path $sessionPath ('trial-{0:d2}' -f $number)) 'reload.bin'
+    if (Test-Path -LiteralPath $reloadPath) { $reloadTrials += $reloadPath }
+}
+$persisted = $null
+if ($reloadTrials.Count -gt 0) {
+    $kept = @()
+    foreach ($candidate in @($survivors)) {
+        $offset = [int64]$candidate.ByteOffset
+        $mask = [byte](1 -shl [int]$candidate.Bit)
+        $wanted = [int]($candidate.Transition.Split('>')[-1])
+        $survivesAll = $true
+        foreach ($reloadPath in $reloadTrials) {
+            $stream = [System.IO.File]::OpenRead($reloadPath)
+            try {
+                if ($offset -ge $stream.Length) { $survivesAll = $false; break }
+                $null = $stream.Seek($offset, 'Begin')
+                $value = $stream.ReadByte()
+            } finally { $stream.Dispose() }
+            $bit = if ((([byte]$value) -band $mask) -ne 0) { 1 } else { 0 }
+            if ($bit -ne $wanted) { $survivesAll = $false; break }
+        }
+        if ($survivesAll) { $kept += $candidate }
+    }
+    $persisted = $kept
+    Write-Host "Reload filter: $(@($kept).Count) of $(@($survivors).Count) survived $($reloadTrials.Count) reload capture(s)."
+    $survivors = $kept
+} else {
+    Write-Host "No reload.bin captured, so persistence was NOT tested. These are leads, not flags."
+}
+
 $intersectionPath = Join-Path $sessionPath 'intersection.csv'
 $survivors | Export-Csv -LiteralPath $intersectionPath -NoTypeInformation
 [ordered]@{
@@ -146,6 +186,8 @@ $survivors | Export-Csv -LiteralPath $intersectionPath -NoTypeInformation
         @($allRows | Where-Object Trial -eq $number).Count
     })
     intersection_count = @($survivors).Count
+    reload_captures = $reloadTrials.Count
+    persistence_tested = ($reloadTrials.Count -gt 0)
     intersection = $intersectionPath
 } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $sessionPath 'analysis.json') -Encoding utf8
 
