@@ -8,6 +8,8 @@ Target: `CUSA00900` / `CUSA03173`, AppVer `01.09`, running under shadPS4.
 This project does not reuse or adapt the existing Bloodborne randomizer. Its code, binaries,
 extracted datasets, address tables, and patches are out of scope. See `docs/RESEARCH-BASELINE.md`
 for the evidence boundary and the labelling discipline every address claim is held to.
+See `CONTRIBUTING.md` for the repo-only contributor path, claiming protocol, and
+the evidence and validation requirements used in review.
 
 ## Layout
 
