@@ -4,3 +4,5 @@
 # When a PR adds an AP-dependent module, it adds its `module` row here.
 
 max_skips	0
+
+module	test_bloodborne_client	12
