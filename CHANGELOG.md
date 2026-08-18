@@ -8,6 +8,9 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- A repeatable event-flag playtest kit records hashed session manifests, captures
+  four-stage snapshots, intersects candidates across trials, and logs the
+  instruction that writes a surviving candidate.
 - Nine catalog-backed fixed treasure checks expand the pool to 29 locations.
   Cainhurst Summons, Tonsil Stone, and Orphanage Key now each gate at least one
   multiworld check, and suppression planning covers every added vanilla award.

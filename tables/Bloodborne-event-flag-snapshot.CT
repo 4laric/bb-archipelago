@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+
+local baseText = inputQuery("Event-flag snapshot", "Region base address (hex)", "")
+local sizeText = inputQuery("Event-flag snapshot", "Region size in bytes (hex)", "")
+local outputDir = selectDirectory("Choose this trial's output directory")
+if not baseText or not sizeText or not outputDir then error("Capture cancelled") end
+
+local base = tonumber(baseText:gsub("^0[xX]", ""), 16)
+local size = tonumber(sizeText:gsub("^0[xX]", ""), 16)
+if not base or not size or size < 1 then error("Invalid base or size") end
+if size > 0x40000000 then error("Refusing a snapshot larger than 1 GiB") end
+
+local function dump(stage)
+    local path = outputDir .. "\\" .. stage .. ".bin"
+    local file = assert(io.open(path, "wb"))
+    local offset = 0
+    while offset < size do
+        local count = math.min(256, size - offset)
+        local bytes = readBytes(base + offset, count, true)
+        if not bytes or #bytes ~= count then
+            file:close()
+            error(string.format("Read failed at 0x%X", base + offset))
+        end
+        file:write(string.char(table.unpack(bytes)))
+        offset = offset + count
+    end
+    file:close()
+    local state = assert(io.open(outputDir .. "\\capture-state.txt", "a"))
+    state:write(string.format("%s stage=%s base=0x%X size=0x%X path=%s\n",
+        os.date("!%Y-%m-%dT%H:%M:%SZ"), stage, base, size, path))
+    state:close()
+    showMessage(stage .. " captured")
+end
+
+createHotkey(function() dump("idle-a") end, VK_F5)
+createHotkey(function() dump("idle-b") end, VK_F6)
+createHotkey(function() dump("before") end, VK_F7)
+createHotkey(function() dump("after") end, VK_F8)
+showMessage("Snapshot capture armed:\nF5 idle-a\nF6 idle-b\nF7 before\nF8 after")
+]]></LuaScript>
+</CheatTable>
