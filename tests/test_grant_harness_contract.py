@@ -16,9 +16,11 @@ class GrantHarnessContractTests(unittest.TestCase):
         cls.text = TABLE.read_text(encoding="utf-8")
 
     def test_wire_and_harness_versions_are_visible_in_state(self):
+        self.assertIn("local build=[[bb-0.1.0-r3]]", self.text)
         self.assertIn("local protocol=[[BBGRANT1]]", self.text)
         self.assertIn("local harness=[[bb-native-grant-v3]]", self.text)
-        self.assertIn('"protocol=",protocol', self.text)
+        self.assertIn('"build=",build', self.text)
+        self.assertIn('"\\nprotocol=",protocol', self.text)
         self.assertIn('"\\nharness=",harness', self.text)
 
     def test_unversioned_commands_are_rejected_and_removed(self):

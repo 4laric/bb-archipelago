@@ -8,6 +8,7 @@ from .model import ItemKind, Rule
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
+RUNTIME_BUILD = "bb-0.1.0-r3"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(MODEL.locations)
 SHUFFLABLE_ITEMS = tuple(item for item in MODEL.items if item.kind is not ItemKind.EVENT)
@@ -142,7 +143,8 @@ else:
 
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"
-            return {"version": 1, "enemizer": bool(self.options.enemizer), "enemizer_seed": seed,
+            return {"version": 1, "runtime_build": RUNTIME_BUILD,
+                    "enemizer": bool(self.options.enemizer), "enemizer_seed": seed,
                     "runtime_locations": "manual"}
 
         def generate_output(self, output_directory: str) -> None:

@@ -8,6 +8,7 @@ local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
 local logPath=root..[[native-grant.log]]
 local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local build=[[bb-0.1.0-r3]]
 local protocol=[[BBGRANT1]]
 local harness=[[bb-native-grant-v3]]
 local maxVerifyPolls=20
@@ -60,7 +61,7 @@ local function append(message)
 end
 local function state(status,detail)
   local f=assert(io.open(statePath,"w")); f:write(
-    "protocol=",protocol,"\nharness=",harness,"\nstatus=",status,
+    "build=",build,"\nprotocol=",protocol,"\nharness=",harness,"\nstatus=",status,
     "\npid=",tostring(pid or ""),"\ntag=",tostring(stateTag),
     "\nexpected_before=",tostring(stateExpectedBefore),
     "\nexpected_after=",tostring(stateExpectedAfter),
@@ -270,7 +271,7 @@ local function poll()
   local actual,exists,slot,quantityPointer=findItem(command.normalized)
   if command.autoExpected then
     local priorBefore,priorAfter=tonumber(prior.expected_before or ""),tonumber(prior.expected_after or "")
-    local recoverable=prior.protocol==protocol and prior.harness==harness and prior.tag==command.tag
+    local recoverable=prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag==command.tag
       and priorBefore~=nil and priorAfter==priorBefore+command.count
       and (prior.status=="executing" or prior.status=="queued" or prior.status=="verify_pending"
         or prior.status=="recovery_pending" or prior.status=="completed" or prior.status=="recovered_complete")
@@ -343,12 +344,12 @@ bbNativeGrantHarnessTimer.OnTimer=poll; bbNativeGrantHarnessTimer.Enabled=true
 bbNativeGrantHarnessPid=pid
 local pendingCommand=io.open(commandPath,"r")
 if pendingCommand then pendingCommand:close() end
-if pendingCommand and prior.protocol==protocol and prior.harness==harness and prior.tag~="" then
+if pendingCommand and prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag~="" then
   state("recovery_pending","Retained command and durable expected counts will be reconciled")
 else
   stateTag=""; stateExpectedBefore=""; stateExpectedAfter=""
   state("awaiting_inventory","Use one bullet once after launch")
 end
-append(string.format("AUTO V3 READY protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",protocol,harness,pid,base,consumeHook,heartbeatHook))
+append(string.format("AUTO V3 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
 ]]></LuaScript>
 </CheatTable>

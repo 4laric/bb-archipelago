@@ -8,7 +8,7 @@ from CommonClient import (ClientCommandProcessor, CommonContext, get_base_parser
                           handle_url_arg, server_loop)
 from NetUtils import ClientStatus
 from Utils import async_start
-from . import GAME, ITEM_ID_BY_KEY, LOCATION_ID_BY_KEY, WORLD_VERSION
+from . import GAME, ITEM_ID_BY_KEY, LOCATION_ID_BY_KEY, RUNTIME_BUILD, WORLD_VERSION
 from .data import MODEL
 from .runtime_bindings import DELIVERY_FIXTURES, ITEM_BINDINGS
 
@@ -115,7 +115,8 @@ def grant_command(item_id: int, tag: str | None = None) -> str | None:
 
 def grant_state_outcome(state: dict[str, str], tag: str) -> str:
     """Classify only a state written by this protocol for this receipt tag."""
-    if (state.get("protocol") != BRIDGE_PROTOCOL
+    if (state.get("build") != RUNTIME_BUILD
+            or state.get("protocol") != BRIDGE_PROTOCOL
             or state.get("harness") != HARNESS_VERSION):
         return "incompatible"
     if state.get("tag") != tag:
@@ -148,9 +149,10 @@ async def bridge_loop(ctx: BloodborneContext) -> None:
             state = read_state(state_path)
             outcome = grant_state_outcome(state, tag)
             if outcome == "incompatible":
-                logger.error("Grant bridge mismatch: expected %s / %s, found %s / %s",
-                             BRIDGE_PROTOCOL, HARNESS_VERSION,
-                             state.get("protocol", "missing"), state.get("harness", "missing"))
+                logger.error("Grant bridge mismatch: expected %s / %s / %s, found %s / %s / %s",
+                             RUNTIME_BUILD, BRIDGE_PROTOCOL, HARNESS_VERSION,
+                             state.get("build", "missing"), state.get("protocol", "missing"),
+                             state.get("harness", "missing"))
                 await asyncio.sleep(1); continue
             if outcome == "failure":
                 logger.error("Grant failed: %s", state.get("detail", state.get("status")))
@@ -182,7 +184,11 @@ async def bridge_loop(ctx: BloodborneContext) -> None:
 async def main(args) -> None:
     ctx = BloodborneContext(args.connect, args.password, Path(args.work_dir).resolve())
     ctx.auth = args.name
-    logger.info("Bloodborne Client, world version %s", WORLD_VERSION)
+    harness_state = read_state(ctx.work_dir / "native-grant-state.txt")
+    logger.info("Bloodborne Client build %s, world version %s; bridge reports build %s, "
+                "protocol %s, harness %s", RUNTIME_BUILD, WORLD_VERSION,
+                harness_state.get("build", "missing"), harness_state.get("protocol", "missing"),
+                harness_state.get("harness", "missing"))
     for line in attach_report_lines():
         logger.info("%s", line)
     ctx.server_task = asyncio.create_task(server_loop(ctx))

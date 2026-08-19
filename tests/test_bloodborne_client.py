@@ -111,11 +111,12 @@ class GrantCommandTests(unittest.TestCase):
         self.assertTrue(parts[2].startswith("0x") and parts[3].startswith("0x"))
 
     def test_protocol_and_harness_versions_move_together(self):
+        self.assertEqual(bb_client.RUNTIME_BUILD, "bb-0.1.0-r3")
         self.assertEqual(bb_client.BRIDGE_PROTOCOL, "BBGRANT1")
         self.assertEqual(bb_client.HARNESS_VERSION, "bb-native-grant-v3")
 
     def test_state_reconciliation_is_versioned_tagged_and_terminal(self):
-        base = {"protocol": bb_client.BRIDGE_PROTOCOL,
+        base = {"build": bb_client.RUNTIME_BUILD, "protocol": bb_client.BRIDGE_PROTOCOL,
                 "harness": bb_client.HARNESS_VERSION, "tag": "received_3"}
         self.assertEqual(bb_client.grant_state_outcome(
             {**base, "status": "completed"}, "received_3"), "success")
