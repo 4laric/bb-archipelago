@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply a suppression plan to ItemLotParam.csv.
 
-Consumes `bb-vanilla-suppression-plan-v1` from `plan_vanilla_suppression.py` and
+Consumes `bb-vanilla-suppression-plan-v2` from `plan_vanilla_suppression.py` and
 rewrites the planned rows so they award a placeholder instead of the key item
 Archipelago is shuffling. The row id and the acquisition flag are left alone —
 that is the entire point, because the flag is the check's detection target.
@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-PLAN_FORMAT = "bb-vanilla-suppression-plan-v1"
+PLAN_FORMAT = "bb-vanilla-suppression-plan-v2"
 ITEM_SLOTS = range(1, 9)
 GOODS_CATEGORY = "4"
 
@@ -52,7 +52,9 @@ class Table:
         rows = text.split("\n")
         header = rows[0].split(",")
         index = {name: i for i, name in enumerate(header) if name}
-        for required in ("ID", "getItemFlagId", "lotItemId01", "lotItemCategory01"):
+        for required in (
+            "ID", "getItemFlagId", "lotItemId01", "lotItemCategory01", "lotItemNum01"
+        ):
             if required not in index:
                 raise SuppressionError(f"ItemLotParam is missing the {required} column")
         lines = rows[1:]
@@ -81,6 +83,10 @@ class Applied:
     slot: str
     was: str
     now: str
+    was_category: str
+    now_category: str
+    was_quantity: str
+    now_quantity: str
     acquisition_flag: str
 
 
@@ -88,13 +94,19 @@ def apply_plan(table: Table, plan: dict, *, dry_run: bool = False) -> list[Appli
     if plan.get("format") != PLAN_FORMAT:
         raise SuppressionError(f"expected a {PLAN_FORMAT} plan, got {plan.get('format')!r}")
     placeholder = str(plan["placeholder"]["goods_id"])
+    placeholder_quantity = str(plan["placeholder"].get("quantity", 1))
     if not placeholder.isdigit():
         raise SuppressionError(f"placeholder goods id must be numeric, got {placeholder!r}")
+    if not placeholder_quantity.isdigit() or int(placeholder_quantity) < 1:
+        raise SuppressionError(
+            f"placeholder quantity must be a positive integer, got {placeholder_quantity!r}"
+        )
 
     applied: list[Applied] = []
     for edit in plan["edits"]:
         lot = str(edit["item_lot_id"])
         goods = str(edit["goods_id"])
+        category = str(edit["item_category"])
         row = table.row_by_id.get(lot)
         if row is None:
             raise SuppressionError(f"{edit['item_key']}: lot {lot} is not in ItemLotParam")
@@ -104,14 +116,16 @@ def apply_plan(table: Table, plan: dict, *, dry_run: bool = False) -> list[Appli
         # params disagree and the edit would be a guess.
         matches = [n for n in ITEM_SLOTS
                    if table.field(row, f"lotItemId{n:02d}") == goods
-                   and table.field(row, f"lotItemCategory{n:02d}") == GOODS_CATEGORY]
+                   and table.field(row, f"lotItemCategory{n:02d}") == category]
         if len(matches) != 1:
             raise SuppressionError(
-                f"{edit['item_key']}: lot {lot} has {len(matches)} slots awarding goods {goods}; "
+                f"{edit['item_key']}: lot {lot} has {len(matches)} slots awarding "
+                f"category {category} item {goods}; "
                 "the plan was built against different params")
 
         slot = f"{matches[0]:02d}"
         flag_before = table.field(row, "getItemFlagId")
+        quantity_before = table.field(row, f"lotItemNum{slot}")
         if flag_before != str(edit["acquisition_flag"]):
             raise SuppressionError(
                 f"{edit['item_key']}: lot {lot} flag is {flag_before}, plan says "
@@ -119,9 +133,13 @@ def apply_plan(table: Table, plan: dict, *, dry_run: bool = False) -> list[Appli
 
         if not dry_run:
             table.set_field(row, f"lotItemId{slot}", placeholder)
+            table.set_field(row, f"lotItemCategory{slot}", GOODS_CATEGORY)
+            table.set_field(row, f"lotItemNum{slot}", placeholder_quantity)
 
         applied.append(Applied(edit["item_key"], lot, slot, goods,
-                               goods if dry_run else placeholder, flag_before))
+                               goods if dry_run else placeholder, category,
+                               category if dry_run else GOODS_CATEGORY, quantity_before,
+                               quantity_before if dry_run else placeholder_quantity, flag_before))
     return applied
 
 
@@ -147,10 +165,12 @@ def verify(before: Table, after: Table, applied: list[Applied]) -> None:
         row = after.row_by_id[a.item_lot_id]
         if after.field(row, "getItemFlagId") != a.acquisition_flag:
             raise SuppressionError(f"lot {a.item_lot_id}: the acquisition flag changed")
-        if after.field(row, f"lotItemCategory{a.slot}") != GOODS_CATEGORY:
+        if after.field(row, f"lotItemCategory{a.slot}") != a.now_category:
             raise SuppressionError(f"lot {a.item_lot_id}: the item category changed")
         if after.field(row, f"lotItemId{a.slot}") != a.now:
             raise SuppressionError(f"lot {a.item_lot_id}: the item was not replaced")
+        if after.field(row, f"lotItemNum{a.slot}") != a.now_quantity:
+            raise SuppressionError(f"lot {a.item_lot_id}: the quantity was not replaced")
         if after.field(row, "ID") != a.item_lot_id:
             raise SuppressionError(f"lot {a.item_lot_id}: the row id changed")
 
@@ -215,7 +235,9 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"suppressed {len(applied)} vanilla award(s)")
     for a in applied:
-        print(f"  lot {a.item_lot_id:<8} slot {a.slot}  goods {a.was:>6} -> {a.now:<6}"
+        print(f"  lot {a.item_lot_id:<8} slot {a.slot}  "
+              f"category:item {a.was_category}:{a.was} -> 4:{a.now}"
+              f" quantity {a.was_quantity}->{a.now_quantity}"
               f"  flag {a.acquisition_flag} unchanged   {a.item_key}")
 
     if args.output:

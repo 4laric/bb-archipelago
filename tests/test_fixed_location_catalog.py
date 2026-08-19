@@ -56,7 +56,34 @@ class FixedLocationCatalogTests(unittest.TestCase):
         )
         self.assertEqual(2410800, canary.item_lot_id)
         self.assertEqual(52410800, canary.event_flag)
-        self.assertFalse(canary.vanilla_award_suppressed)
+        self.assertTrue(canary.vanilla_award_suppressed)
+
+    def test_manifest_is_the_complete_first_cycle_map_slice(self):
+        from tools.build_central_yharnam_slice import REPLACEMENT_FLAGS, build_rows
+
+        self.assertEqual(51, len(FIXED_LOCATIONS))
+        self.assertEqual(
+            [row.__dict__ for row in FIXED_LOCATIONS],
+            [
+                {
+                    "key": row["key"],
+                    "name": row["name"],
+                    "region": row["region"],
+                    "event_flag": int(row["location_flag"]),
+                    "item_lot_id": int(row["item_lot_id"]),
+                    "item_category": int(row["item_category"]),
+                    "item_id": int(row["item_id"]),
+                    "classification": row["classification"],
+                    "source_kind": row["source_kind"],
+                    "source_ref": row["source_ref"],
+                    "vanilla_award_suppressed": row["vanilla_award_suppressed"] == "True",
+                }
+                for row in build_rows(ROOT)
+            ],
+        )
+        selected_flags = {row.event_flag for row in FIXED_LOCATIONS}
+        self.assertTrue(selected_flags.isdisjoint(REPLACEMENT_FLAGS))
+        self.assertTrue(set(REPLACEMENT_FLAGS.values()) <= selected_flags)
 
     def test_every_selected_location_has_a_stable_id_and_wire_binding(self):
         slot_data = build_runtime_slot_data()

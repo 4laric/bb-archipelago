@@ -21,7 +21,7 @@ sys.path.insert(0, str(REPO))
 
 from tools.plan_vanilla_suppression import build_plan, collect_lot_facts  # noqa: E402
 
-PLACEHOLDER = {"goods_id": "1000", "name": "PLACEHOLDER"}
+PLACEHOLDER = {"goods_id": "1000", "name": "PLACEHOLDER", "quantity": 1}
 
 LOT_HEADER = ("item_lot_id\tlot_name\tslot\titem_category\titem_id\titem_param_name\t"
               "normalized_runtime_id\traw_runtime_descriptor\tquantity\tbase_points\t"
@@ -147,33 +147,24 @@ class RealCorpusTests(unittest.TestCase):
         from tools.plan_vanilla_suppression import build_complete_plan
         cls.plan = build_complete_plan(REPO / "research", PLACEHOLDER)
 
-    def test_nine_pool_goods_can_be_suppressed(self):
+    def test_the_slice_pool_item_can_be_suppressed(self):
         item_edits = [edit for edit in self.plan.edits if not edit.item_key.startswith("location:")]
-        self.assertEqual(len(item_edits), 9)
+        self.assertEqual([edit.item_key for edit in item_edits], ["saw_spear"])
+        self.assertEqual(item_edits[0].item_category, "0")
 
-    def test_goods_fixed_checks_can_be_suppressed(self):
+    def test_all_51_physical_pickups_and_the_hunter_set_group_can_be_suppressed(self):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
-        self.assertEqual(len(location_edits), 13)
+        # Saw Spear's lot is already covered by the pool-item edit. The other
+        # 50 physical lots plus Hunter Set continuation rows 2410611-13 are
+        # location edits.
+        self.assertEqual(len(location_edits), 53)
+        self.assertEqual(
+            {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
+            {"2410611", "2410612", "2410613"},
+        )
 
-    def test_tonsil_stone_is_refused_for_want_of_a_flag(self):
-        """Lot 39000 is a Patches gift with generic_acquisition_flag -1.
-
-        It can be suppressed, but it can never be *detected*, so it cannot be a
-        check until some other signal is found for it.
-        """
-        refusals = {r.item_key: r for r in self.plan.refusals}
-        self.assertEqual(set(refusals), {
-            "tonsil_stone",
-            "saw_spear",
-            "location:fixed_saw_spear",
-            "location:fixed_torch",
-        })
-        self.assertEqual(refusals["tonsil_stone"].problem, "no_acquisition_flag")
-        self.assertTrue(all(
-            refusals[key].problem == "location_not_suppressible"
-            for key in ("location:fixed_saw_spear", "location:fixed_torch")
-        ))
-        self.assertEqual(refusals["saw_spear"].problem, "no_lot")
+    def test_the_slice_plan_has_no_refusals(self):
+        self.assertEqual([], self.plan.refusals)
 
     def test_every_pool_item_resolves_to_exactly_one_lot(self):
         lots = [e.item_lot_id for e in self.plan.edits]
@@ -181,17 +172,18 @@ class RealCorpusTests(unittest.TestCase):
 
     def test_planned_flags_agree_with_the_runtime_bindings(self):
         """Two independent derivations of the same flag must not disagree."""
+        from worlds.bloodborne import NETWORK_LOCATIONS
         from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
-        by_item = {e.item_key: e.acquisition_flag for e in self.plan.edits}
+        by_lot = {e.item_lot_id: e.acquisition_flag for e in self.plan.edits}
         checked = 0
-        for location_key, binding in LOCATION_BINDINGS.items():
-            item_key = location_key.removeprefix("pickup_")
-            if item_key not in by_item:
+        for location in NETWORK_LOCATIONS:
+            binding = LOCATION_BINDINGS[location.key]
+            if binding.item_lot_id is None:
                 continue
             checked += 1
-            self.assertEqual(int(by_item[item_key]), binding.event_flag,
-                             f"{location_key}: planner and runtime_bindings disagree")
-        self.assertGreaterEqual(checked, 5, "the cross-check examined almost nothing")
+            self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
+                             f"{location.key}: planner and runtime_bindings disagree")
+        self.assertEqual(checked, 51)
 
     def test_canonical_plan_digest_matches_the_runtime_contract(self):
         from tools.plan_vanilla_suppression import build_complete_plan, serialize_plan

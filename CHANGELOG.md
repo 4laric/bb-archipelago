@@ -8,6 +8,14 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- The generated world is now the bounded Central Yharnam vertical slice: 51
+  physical pickups, Cleric Beast, and Father Gascoigne. Two later-cycle
+  replacement lots are collapsed onto their physical chests, both boss flags
+  are carried in slot data, and Gascoigne is the client-reported goal.
+- Vanilla-award suppression now covers all 51 pickups across goods, weapons,
+  attire, and blood gems. The 54-row plan includes the Hunter Set continuation
+  rows, has zero refusals, and builds/reopens successfully through the guarded
+  native writer. Installation and in-game canary validation remain pending.
 - The live event-flag manager read path is validated on CUSA03173 `01.09`. A
   save-restored pickup replay and a one-shot write breakpoint proved divisor-1000
   grouping with MSB-first bit packing; a manager-relative resolver rediscovers the

@@ -1,6 +1,6 @@
 # Bloodborne location-signal research
 
-Status: fifteen fixed-location acquisition flags mapped statically; live accessor validated for CUSA03173 01.09; automatic reporting gated on live gameplay/save identity
+Status: 51 Central Yharnam pickup flags plus two boss flags mapped statically; live accessor validated for CUSA03173 01.09; automatic reporting gated on live gameplay/save identity
 Target builds: `CUSA00900` and `CUSA03173`, AppVer `01.09`
 
 ## Scope and evidence boundary
@@ -32,12 +32,19 @@ nearby pickup has been checked.
 
 ## Static mappings now available
 
-The committed source census establishes acquisition-flag IDs for fifteen
-randomized fixed locations in the vertical slice. Of the original six, Upper
-Cathedral Key is the only MSB treasure and the other five are EMEVD item-lot
-awards; the nine expansion checks are MSB treasures. Their source kind, source
-location, item-lot ID, item identity, and acquisition flag are recorded in
-`worlds/bloodborne/runtime_bindings.py`. This completes the static mapping only.
+The committed source census establishes acquisition-flag IDs for all 51
+first-cycle physical pickups in canonical map `m24_01_00_00`. The manifest
+collapses the `_01` / `_11` map variants and two mutually exclusive later-cycle
+replacement rows. Cleric Beast (`12411700`) and Father Gascoigne (`12411800`)
+come from the same map's EMEVD boss-completion paths. Their source kind, item-lot
+identity where applicable, and event flag are recorded in
+`worlds/bloodborne/runtime_bindings.py`.
+
+The Hunter Set is one intentional composite: physical lot `2410610` and three
+continuation rows share acquisition flag `52410610`. It remains one location;
+suppression covers all four award rows.
+
+This completes the static mapping only.
 Lane B has since validated the live read path for these IDs — see "Resolved live
 manager path" below. Automatic reporting remains disabled *in this repo's
 client*. The native client in `from-software-archipelago-clients` has a
@@ -50,7 +57,9 @@ finds it on exactly one lot, `3401810`; the other short progression flags `6670`
 and `6671` are also each unique to one lot. EMEVD references `9470` in the
 Hunter's Nightmare award path and the Research Hall altar-state path, consistent
 with one acquisition transition and its downstream consumer. The unit suite
-asserts that every runtime location flag remains specific to exactly one lot.
+requires each physical binding's primary lot and permits additional same-flag
+rows only when they are not independently placed, which captures the Hunter Set
+without allowing two physical checks to collapse onto one flag.
 
 ## Two discovery lanes
 

@@ -46,21 +46,24 @@ then apply it with the guarded writer as documented in `docs/ENEMIZER.md`.
 
 ## Current boundary
 
-Checks are reported **manually** with `/check <exact location name>` in the client. Fifteen fixed
-location acquisition flags are mapped statically, and as of 2026-08-18 the live event-flag manager
-**read path is validated** for CUSA03173 `01.09`: a manager-relative resolver returns a flag's live
-state from an eboot-relative pointer slot, gated on the setter signature, across two independently
-randomized process launches and without Cheat Engine.
+Generation now emits the bounded Central Yharnam slice: 51 physical pickups,
+Cleric Beast, and Father Gascoigne. Gascoigne is the goal. The fixed-pickup
+manifest is regenerated from the canonical map catalog, and the two boss flags
+(`12411700`, `12411800`) come from Central Yharnam EMEVD.
 
-Nothing is automatic in *this* client. The apworld's Python client still reports manually.
+The complete suppression plan rewrites 54 ItemLotParam rows with zero refusals,
+including Saw Spear, Torch, the Hunter Set award group, and the category-8
+blood-gem pickup. The native writer has built and reopened that binder; it has
+not been installed or playtested. Seeds require the matching installed-binder
+hash witness before the native client arms.
 
-A second client exists in `from-software-archipelago-clients`. Its r4 Rust backend reads flags
-directly, but live `LocationChecks` now fail closed before any flag read unless the backend can
-prove both a stable gameplay state and the explicitly bound save identity. The current v0.18
-backend cannot prove those facts, so only the diagnostic reader is live. Mock mode supplies the
-validated context and requires three consecutive true reads, which lets the complete AP loop run
-without arming irreversible live sends. See `docs/WORKPLAN.md` Phase 1.
+The apworld's Python client remains a manual-check fallback. The native client
+in `from-software-archipelago-clients` consumes all 53 runtime flag bindings,
+debounces true reads three times, delivers the validated Saw Spear and goods
+through the durable r5 grant bridge, and sends Archipelago goal status for the
+Gascoigne check.
 
-Item delivery is real: the client queues received items into the Cheat Engine harness one at a
-time and advances a durable receipt only after the harness confirms completion. Absent-item
-insertion and save persistence across a full emulator restart are both validated.
+Automatic live checks and mutation still fail closed until the backend can
+prove a stable gameplay state and explicitly bound loaded-save identity. Mock
+mode exercises the complete AP loop without weakening that safety boundary.
+See `docs/VERTICAL-SLICE.md` for the exact slice and remaining live tests.

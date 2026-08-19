@@ -5,7 +5,15 @@ from pathlib import Path
 from worlds.bloodborne.data import MODEL
 from worlds.bloodborne.model import ItemKind, Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
-from worlds.bloodborne import ITEM_ID_BY_KEY, ITEM_NAME_TO_ID, LOCATION_ID_BY_KEY
+from worlds.bloodborne import (
+    GOAL_LOCATION_KEY,
+    ITEM_ID_BY_KEY,
+    ITEM_NAME_TO_ID,
+    LOCATION_ID_BY_KEY,
+    NETWORK_LOCATIONS,
+    SHUFFLABLE_ITEMS,
+    build_runtime_slot_data,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,26 +29,49 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertFalse(rule.allows({"a"}))
 
     def test_runtime_item_bindings_cover_shufflable_items(self):
-        expected = {item.key for item in MODEL.items if item.kind.value != "event"}
-        self.assertEqual(expected, set(ITEM_BINDINGS))
+        expected = {item.key for item in SHUFFLABLE_ITEMS}
+        self.assertTrue(expected <= set(ITEM_BINDINGS))
 
     def test_fixed_pickup_flags_cover_randomized_pickups(self):
-        expected = {location.key for location in MODEL.locations if not location.locked_item}
-        self.assertEqual(expected, set(LOCATION_BINDINGS))
-        self.assertTrue(all(binding.event_flag for binding in LOCATION_BINDINGS.values()))
+        expected = {location.key for location in NETWORK_LOCATIONS}
+        self.assertTrue(expected <= set(LOCATION_BINDINGS))
+        self.assertTrue(all(LOCATION_BINDINGS[key].event_flag for key in expected))
+
+    def test_slice_contains_the_map_and_two_bosses(self):
+        self.assertEqual(53, len(NETWORK_LOCATIONS))
+        self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
+        self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
+        self.assertEqual("boss_father_gascoigne", GOAL_LOCATION_KEY)
+        self.assertEqual(
+            LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
+            build_runtime_slot_data()["goal_location"],
+        )
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
         with (ROOT / "research/joined/lot_items.tsv").open(encoding="utf-8", newline="") as handle:
             rows = list(csv.DictReader(handle, delimiter="\t"))
+        with (ROOT / "research/joined/fixed_treasure_lots.tsv").open(
+                encoding="utf-8", newline="") as handle:
+            placed_lots = {
+                row["item_lot_id"] for row in csv.DictReader(handle, delimiter="\t")
+                if row["item_lot_id"]
+            }
         lots_by_flag = {}
         for row in rows:
             for flag in filter(None, row["all_acquisition_flags"].split(";")):
                 lots_by_flag.setdefault(int(flag), set()).add(row["item_lot_id"])
 
         for location, binding in LOCATION_BINDINGS.items():
+            if binding.item_lot_id is None:
+                continue
             self.assertIn(binding.event_flag, lots_by_flag, location)
-            self.assertEqual(1, len(lots_by_flag[binding.event_flag]), location)
+            lots = lots_by_flag[binding.event_flag]
+            self.assertIn(str(binding.item_lot_id), lots, location)
+            self.assertTrue(
+                all(lot not in placed_lots for lot in lots - {str(binding.item_lot_id)}),
+                f"{location}: acquisition flag is shared by another placed lot",
+            )
 
         self.assertEqual({"3401810"}, lots_by_flag[9470])
 
@@ -60,6 +91,10 @@ class BloodborneModelTests(unittest.TestCase):
                                  for row in csv.DictReader(handle, delimiter="\t")}
 
         for key, binding in LOCATION_BINDINGS.items():
+            if binding.source_kind == "boss_defeat":
+                self.assertIsNone(binding.item_lot_id)
+                self.assertIn(str(binding.event_flag), binding.evidence)
+                continue
             if binding.source_kind == "script_award":
                 row = rows_by_name[names_by_key[key]]
                 self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
@@ -95,9 +130,9 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual("hunter_chief_emblem_validation", emblem["classification_reason"])
 
     def test_vertical_slice_ids_are_complete_and_disjoint(self):
-        shufflable = {item.key for item in MODEL.items if item.kind.value != "event"}
+        shufflable = {item.key for item in SHUFFLABLE_ITEMS}
         self.assertEqual(shufflable, set(ITEM_ID_BY_KEY))
-        self.assertEqual({location.key for location in MODEL.locations}, set(LOCATION_ID_BY_KEY))
+        self.assertEqual({location.key for location in NETWORK_LOCATIONS}, set(LOCATION_ID_BY_KEY))
         self.assertEqual(len(ITEM_NAME_TO_ID), len(shufflable) + 1)  # Blood Vial filler
         self.assertFalse(set(ITEM_NAME_TO_ID.values()) & set(LOCATION_ID_BY_KEY.values()))
 

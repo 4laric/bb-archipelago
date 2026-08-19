@@ -32,6 +32,7 @@ ITEMS = (
     # the ItemLot identity. Torch deliberately remains excluded.
     Item("saw_spear", "Saw Spear", U),
     # Locked local events. These are never placed in the random item pool.
+    Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
     Item("event_blood_starved_beast_defeated", "Blood-starved Beast Defeated", E),
     Item("event_amelia_defeated", "Vicar Amelia Defeated", E),
@@ -104,6 +105,8 @@ ENTRANCES = (
 )
 
 LOCATIONS = (
+    Location("boss_cleric_beast", "Cleric Beast", "Central Yharnam",
+             locked_item="event_cleric_beast_defeated"),
     Location("boss_father_gascoigne", "Father Gascoigne", "Central Yharnam", locked_item="event_gascoigne_defeated"),
     Location("boss_blood_starved_beast", "Blood-starved Beast", "Old Yharnam",
              locked_item="event_blood_starved_beast_defeated"),
@@ -158,3 +161,15 @@ LOCATIONS = (
 )
 
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
+
+# The generated player currently exposes one honest, bounded vertical slice.
+# The broader model above remains useful research scaffolding, but none of its
+# later regions enter multidata until their runtime contracts are ready.
+CENTRAL_YHARNAM_SLICE_REGIONS = ("Menu", "Hunter's Dream", "Central Yharnam")
+CENTRAL_YHARNAM_SLICE_ENTRANCES = ENTRANCES[:2]
+CENTRAL_YHARNAM_SLICE_ITEM_KEYS = frozenset({"saw_spear"})
+CENTRAL_YHARNAM_SLICE_LOCATION_KEYS = frozenset({
+    "boss_cleric_beast",
+    "boss_father_gascoigne",
+    *(location.key for location in FIXED_LOCATIONS),
+})

@@ -8,14 +8,25 @@ from CommonClient import (ClientCommandProcessor, CommonContext, get_base_parser
                           handle_url_arg, server_loop)
 from NetUtils import ClientStatus
 from Utils import async_start
-from . import GAME, ITEM_ID_BY_KEY, LOCATION_ID_BY_KEY, RUNTIME_BUILD, WORLD_VERSION
-from .data import MODEL
+from . import (
+    GAME,
+    GOAL_LOCATION_KEY,
+    ITEM_ID_BY_KEY,
+    LOCATION_ID_BY_KEY,
+    NETWORK_LOCATIONS,
+    RUNTIME_BUILD,
+    WORLD_VERSION,
+)
 from .runtime_bindings import DELIVERY_FIXTURES, ITEM_BINDINGS
 
 logger = logging.getLogger("BloodborneClient")
 ITEM_KEY_BY_AP_ID = {value: key for key, value in ITEM_ID_BY_KEY.items()}
-LOCATION_BY_NAME = {loc.name.casefold(): LOCATION_ID_BY_KEY[loc.key] for loc in MODEL.locations}
-LOCATION_NAME_BY_ID = {LOCATION_ID_BY_KEY[loc.key]: loc.name for loc in MODEL.locations}
+LOCATION_BY_NAME = {
+    loc.name.casefold(): LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS
+}
+LOCATION_NAME_BY_ID = {
+    LOCATION_ID_BY_KEY[loc.key]: loc.name for loc in NETWORK_LOCATIONS
+}
 CHECK_JOURNAL = "manual-checks.jsonl"
 BRIDGE_PROTOCOL = "BBGRANT1"
 HARNESS_VERSION = "bb-native-grant-v5"
@@ -71,7 +82,7 @@ class BloodborneCommandProcessor(ClientCommandProcessor):
         except OSError as exc:
             logger.warning("Could not journal manual check: %s", exc)
         async_start(self.ctx.send_msgs([{"cmd": "LocationChecks", "locations": [location]}]))
-        if location == LOCATION_ID_BY_KEY["boss_mergos_wet_nurse"]:
+        if location == LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY]:
             async_start(self.ctx.send_msgs([{"cmd": "StatusUpdate", "status": ClientStatus.CLIENT_GOAL}]))
         return True
 
