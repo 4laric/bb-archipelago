@@ -15,6 +15,26 @@ env:
     orjson colorama certifi bsdiff4 jinja2
 
 jobs:
+  native-suppression-writer:
+    name: native suppression writer builds
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Fetch the pinned SoulsFormatsNEXT writer dependency
+        shell: pwsh
+        run: |
+          git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
+          git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+      - name: Build the native binder writer
+        shell: pwsh
+        run: >-
+          dotnet build tools/bb_suppression_writer/BBSuppressionWriter.csproj
+          -p:SoulsFormatsNextRoot=$PWD\_soulsformats
+          -v:minimal
+
   # Everything that does not need Archipelago. Most of the suite lives here.
   unit:
     name: unit (no Archipelago)
