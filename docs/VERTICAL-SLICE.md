@@ -12,8 +12,15 @@ The slice now has one generation contract across all three pieces.
 4. Load `tables/Bloodborne-native-item-grant-auto-v2.CT`, then launch the
    Bloodborne Client installed with the apworld. It queues received items into
    the harness one at a time and advances its durable receipt only after the
-   harness reports completion. The bridge uses the harness's `AUTO` expected
-   count mode; the durable receipt remains the replay guard.
+   harness reports completion. The wire contract is `BBGRANT1` and the table
+   identifies itself as `bb-native-grant-v3`; either client refuses a different
+   or missing version. The bridge uses the harness's `AUTO` expected-count mode.
+   Before any write, the harness persists the sampled count, target count, and
+   receipt-index tag. A restart can therefore distinguish a command that never
+   ran from one that already changed inventory. Completion is persisted before
+   the command is removed, verification has a finite retry budget, and a stuck
+   command becomes a surfaced error after 30 seconds instead of wedging the AP
+   connection. The durable AP receipt remains the final replay guard.
 5. The six pickup acquisition-flag IDs are statically mapped, but the live
    flag-manager accessor is not yet validated, so checks remain manual. Use
    `/check <exact location name>` in the client; `/missing` lists the names.

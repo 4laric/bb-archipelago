@@ -106,9 +106,25 @@ class GrantCommandTests(unittest.TestCase):
         line = bb_client.grant_command(0xBB0100)
         line.encode("ascii")
         parts = line.split()
-        self.assertEqual(parts[0], "GRANT")
-        self.assertEqual(len(parts), 6)
-        self.assertTrue(parts[1].startswith("0x") and parts[2].startswith("0x"))
+        self.assertEqual(parts[:2], [bb_client.BRIDGE_PROTOCOL, "GRANT"])
+        self.assertEqual(len(parts), 7)
+        self.assertTrue(parts[2].startswith("0x") and parts[3].startswith("0x"))
+
+    def test_protocol_and_harness_versions_move_together(self):
+        self.assertEqual(bb_client.BRIDGE_PROTOCOL, "BBGRANT1")
+        self.assertEqual(bb_client.HARNESS_VERSION, "bb-native-grant-v3")
+
+    def test_state_reconciliation_is_versioned_tagged_and_terminal(self):
+        base = {"protocol": bb_client.BRIDGE_PROTOCOL,
+                "harness": bb_client.HARNESS_VERSION, "tag": "received_3"}
+        self.assertEqual(bb_client.grant_state_outcome(
+            {**base, "status": "completed"}, "received_3"), "success")
+        self.assertEqual(bb_client.grant_state_outcome(
+            {**base, "status": "failed"}, "received_3"), "failure")
+        self.assertEqual(bb_client.grant_state_outcome(
+            {**base, "status": "completed"}, "received_4"), "pending")
+        self.assertEqual(bb_client.grant_state_outcome(
+            {**base, "protocol": "old", "status": "completed"}, "received_3"), "incompatible")
 
 
 @unittest.skipUnless(AP_AVAILABLE, "requires an Archipelago checkout on sys.path")
