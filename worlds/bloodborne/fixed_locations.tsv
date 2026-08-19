@@ -1,0 +1,7 @@
+key	name	region	location_flag	item_lot_id	item_category	item_id	classification	source_kind	source_ref	vanilla_award_suppressed
+fixed_white_messenger_ribbon	Central Yharnam - White Messenger Ribbon	Central Yharnam	50002200	42000	4	4903	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False
+fixed_saw_spear	Central Yharnam - Saw Spear	Central Yharnam	52410100	2410100	0	7100000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False
+fixed_saw_hunter_badge	Central Yharnam - Saw Hunter Badge	Central Yharnam	52410290	2410290	4	4110	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False
+fixed_torch	Central Yharnam - Torch	Central Yharnam	52410520	2410520	0	20100000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False
+fixed_iosefka_courtyard_bullets	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10	Central Yharnam	52410800	2410800	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False
+fixed_blood_gem_workshop_tool	Central Yharnam - Blood Gem Workshop Tool	Central Yharnam	52411000	2411000	4	4103	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False

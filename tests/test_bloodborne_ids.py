@@ -74,6 +74,12 @@ GOLDEN_LOCATIONS = {
     "treasure_executioners_gloves": 0xBB101B,
     "treasure_cosmic_eye_watcher_badge": 0xBB101C,
     "treasure_underground_jail_chunk": 0xBB101D,
+    "fixed_white_messenger_ribbon": 0xBB101E,
+    "fixed_saw_spear": 0xBB101F,
+    "fixed_saw_hunter_badge": 0xBB1020,
+    "fixed_torch": 0xBB1021,
+    "fixed_iosefka_courtyard_bullets": 0xBB1023,
+    "fixed_blood_gem_workshop_tool": 0xBB1024,
 }
 
 

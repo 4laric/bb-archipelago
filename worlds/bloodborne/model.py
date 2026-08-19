@@ -60,6 +60,8 @@ class Location:
     region: str
     rule: Rule = Rule()
     locked_item: str | None = None
+    classification: str = "unclassified"
+    vanilla_award_suppressed: bool = False
 
 
 @dataclass(frozen=True)

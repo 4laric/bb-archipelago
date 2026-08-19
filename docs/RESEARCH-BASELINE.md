@@ -88,10 +88,9 @@ capture surrounding bytes and wildcard relocations or varying displacements. It 
 not complete until each signature is shown to be unique, resolves to the intended
 instruction, and is tested across another executable build.
 
-Everything beyond the small published corpus remains unexplored project work,
-including:
+Everything beyond the small published corpus remains project work, including:
 
-- Event-flag manager/table location and representation.
+- Event-flag-manager portability beyond the validated CUSA03173 01.09 build.
 - Mapping game events to Archipelago locations.
 - Stable Bloodborne item identifiers and inventory semantics.
 - Item-acquisition/grant function and calling convention.
@@ -309,7 +308,24 @@ initial CE table is deliberately read-only.
 5. Capture sufficient bytes around every hook and generate candidate AOB patterns.
 6. Prove uniqueness within `CUSA00900` 01.09.
 7. Test against a second serial or executable version before claiming portability.
-8. Only then begin original event-flag and item-acquisition discovery.
+8. Resolve event flags through the validated manager-relative path and retain
+   signature gates for every supported executable build.
+
+## Validated event-flag manager read path
+
+On 2026-08-18, a save-restored before/after pickup replay and one-shot hardware
+write breakpoint identified the acquisition byte for Iosefka's courtyard Bullet
+lot (`52410800`). The write proved a divisor of 1000 and MSB-first bit packing.
+For CUSA03173 01.09, the manager pointer slot is at eboot `RVA 0x553B100`; a
+generic read-only traversal independently resolved the flag to the observed byte
+and reported it set. The inlined setter write at `RVA 0x17D6EFA` provides the
+current version gate. Full layout and evidence are recorded in
+`docs/EVENT-FLAG-RESEARCH.md`.
+
+The standalone Rust reader was subsequently exercised after a new shadPS4
+process moved eboot from `0x05660000` to `0x057C0000`. It rediscovered the base,
+passed the signature gate, and returned `52410800=true` without Cheat Engine,
+validating the manager-relative path across two launches.
 
 ## Evidence discipline
 

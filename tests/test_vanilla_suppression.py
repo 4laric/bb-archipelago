@@ -150,9 +150,9 @@ class RealCorpusTests(unittest.TestCase):
         item_edits = [edit for edit in self.plan.edits if not edit.item_key.startswith("location:")]
         self.assertEqual(len(item_edits), 9)
 
-    def test_every_additional_fixed_check_can_be_suppressed(self):
+    def test_goods_fixed_checks_can_be_suppressed(self):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
-        self.assertEqual(len(location_edits), 9)
+        self.assertEqual(len(location_edits), 13)
 
     def test_tonsil_stone_is_refused_for_want_of_a_flag(self):
         """Lot 39000 is a Patches gift with generic_acquisition_flag -1.
@@ -161,8 +161,16 @@ class RealCorpusTests(unittest.TestCase):
         check until some other signal is found for it.
         """
         refusals = {r.item_key: r for r in self.plan.refusals}
-        self.assertEqual(set(refusals), {"tonsil_stone"})
+        self.assertEqual(set(refusals), {
+            "tonsil_stone",
+            "location:fixed_saw_spear",
+            "location:fixed_torch",
+        })
         self.assertEqual(refusals["tonsil_stone"].problem, "no_acquisition_flag")
+        self.assertTrue(all(
+            refusals[key].problem == "location_not_suppressible"
+            for key in ("location:fixed_saw_spear", "location:fixed_torch")
+        ))
 
     def test_every_pool_item_resolves_to_exactly_one_lot(self):
         lots = [e.item_lot_id for e in self.plan.edits]
