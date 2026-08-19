@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from .data import MODEL
 from .model import ItemKind, Rule
+from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
@@ -66,6 +67,35 @@ ITEM_NAME_TO_ID = {item.name: ITEM_ID_BY_KEY[item.key] for item in SHUFFLABLE_IT
 ITEM_NAME_TO_ID[FILLER_ITEM_NAME] = _assigned("item", "blood_vial")
 LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in NETWORK_LOCATIONS}
 LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS}
+
+
+def build_runtime_slot_data() -> dict[str, dict[str, dict[str, int | bool]]]:
+    """Return the address-free world/client contract for this seed.
+
+    AP ids are serialized as object keys because JSON has no integer-keyed
+    objects.  The client validates and converts them back to signed 64-bit ids.
+    """
+    locations_by_key = {location.key: location for location in MODEL.locations}
+    items_by_key = {item.key: item for item in SHUFFLABLE_ITEMS}
+    locations = {
+        str(LOCATION_ID_BY_KEY[key]): {
+            "event_flag": binding.event_flag,
+            "vanilla_award_suppressed": locations_by_key[key].vanilla_award_suppressed,
+        }
+        for key, binding in LOCATION_BINDINGS.items()
+    }
+    items = {
+        str(ITEM_ID_BY_KEY[key]): {
+            "normalized_item_id": binding.normalized_item_id,
+            "quantity": items_by_key[key].quantity,
+        }
+        for key, binding in ITEM_BINDINGS.items()
+    }
+    items[str(ITEM_NAME_TO_ID[FILLER_ITEM_NAME])] = {
+        "normalized_item_id": 0x400003E8,
+        "quantity": 1,
+    }
+    return {"runtime_locations": locations, "runtime_items": items}
 
 try:
     from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region
@@ -142,8 +172,12 @@ else:
 
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"
-            return {"version": 1, "enemizer": bool(self.options.enemizer), "enemizer_seed": seed,
-                    "runtime_locations": "manual"}
+            return {
+                "version": 2,
+                "enemizer": bool(self.options.enemizer),
+                "enemizer_seed": seed,
+                **build_runtime_slot_data(),
+            }
 
         def generate_output(self, output_directory: str) -> None:
             if not self.options.enemizer:

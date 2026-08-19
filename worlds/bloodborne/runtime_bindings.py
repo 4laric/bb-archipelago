@@ -8,6 +8,8 @@ accessor has been validated.
 
 from dataclasses import dataclass
 
+from .fixed_locations import FIXED_LOCATIONS
+
 
 @dataclass(frozen=True)
 class RuntimeItemBinding:
@@ -89,6 +91,19 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         53500630, "MSB treasure m35_00_00_00 + ItemLotParam 3500630 acquisition flag",
         3500630, "treasure", "m35_00_00_00", 4, 3020),
 }
+
+for location in FIXED_LOCATIONS:
+    if location.key in LOCATION_BINDINGS:
+        raise ValueError(f"duplicate runtime location binding: {location.key}")
+    LOCATION_BINDINGS[location.key] = RuntimeLocationBinding(
+        location.event_flag,
+        f"fixed location catalog + ItemLotParam {location.item_lot_id} acquisition flag",
+        location.item_lot_id,
+        location.source_kind,
+        location.source_ref,
+        location.item_category,
+        location.item_id,
+    )
 
 # Known delivery fixtures, not currently part of the randomized design pool.
 DELIVERY_FIXTURES: dict[str, RuntimeItemBinding] = {

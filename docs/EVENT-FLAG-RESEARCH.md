@@ -179,3 +179,103 @@ Success for this experiment is not merely finding a changed address. It is one
 repeatable bit transition plus the code path that writes it. That code path is the
 starting point for locating the event-flag manager and converting later mappings
 into manager-relative flag queries.
+
+### Iosefka courtyard Bullet trial
+
+The ten Quicksilver Bullets outside Iosefka's Clinic resolve to item lot
+`2410800` and acquisition flag `52410800`. A first whole-process byte scan used
+unknown-initial, repeated unchanged controls, one increased scan around only the
+pickup, and further unchanged controls. A DS3-layout heuristic ranked addresses
+whose byte was `0x80` at word offset `+3`; this heuristic was used only for
+candidate ranking and is not yet a Bloodborne layout claim.
+
+Candidate `0x23369541F` in shadPS4 process `0x6C70` was changed from `0x80` to
+zero under an exact-value and PID guard. It remained zero across a Hunter's Mark
+area reload, but the Bullet lot did not return, disproving it as the acquisition
+flag. Restoring the stale byte to `0x80` after the reload caused an access
+violation at `0x077759C7`. The associated write tables are retired. Remaining
+candidates must be tested by replaying the backed-up pre-pickup transition and
+read-only comparison or write breakpoints, not sequential speculative writes.
+
+#### Resolved live manager path (CUSA03173 01.09, shadPS4 v0.18.0)
+
+The verified pre-pickup save was restored and the Bullet lot returned. A
+read-only before/after replay over the preserved scan addresses produced three
+unique exact `0x00 -> 0x80` transitions. Two candidates changed again without
+another pickup and lived in repeating transient structures. The remaining byte,
+`0x20803170A` in process 16592, stayed `0x80` in an otherwise zeroed region.
+Restoring the pre-pickup save while retaining the same shad process returned that
+byte to `0x00` and returned the lot.
+
+A one-shot hardware write breakpoint on `0x20803170A` fired when the lot was
+collected and resumed the game safely. The captured write sequence was:
+
+```text
+44 89 F0          mov eax,r14d
+C1 E8 03          shr eax,3
+41 F7 D6          not r14d
+41 80 E6 07       and r14b,7
+BE 01 00 00 00    mov esi,1
+44 88 F1          mov cl,r14b
+D3 E6             shl esi,cl
+0F B6 0C 02       movzx ecx,byte ptr [rdx+rax]
+09 F1             or ecx,esi
+88 0C 02          mov byte ptr [rdx+rax],cl
+```
+
+At the write, `RAX=100`, `RSI=0x80`, `RDX=0x2080316A6`, and the resulting byte
+was `0x80`. This proves Bloodborne uses MSB-first bits within each group bank:
+
+```text
+byte_offset = suffix / 8
+mask        = 1 << (7 - (suffix % 8))
+```
+
+The live function resolves the full flag ID through a manager at eboot-relative
+pointer slot `RVA 0x553B100`. For this launch, eboot was at `0x05660000`, making
+the slot `0x0AB9B100`; it pointed to manager `0x20802EEB0`. The observed manager
+and tree layout is:
+
+| Field | Offset | Observed meaning |
+| --- | ---: | --- |
+| group divisor | `+0x1C` | `1000` |
+| packed-bank stride | `+0x20` | `125` bytes |
+| packed-bank base | `+0x28` | base for type-1 groups |
+| group-tree sentinel | `+0x38` | red-black-tree header/sentinel |
+| node nil marker | `+0x19` | terminates lookup |
+| node group key | `+0x20` | `flag_id / 1000` |
+| node storage type | `+0x28` | `1` packed, `2` direct pointer |
+| node storage value | `+0x30` | packed index or direct bank pointer |
+
+The inlined setter write is at eboot `RVA 0x17D6EFA` and begins with signature
+`88 0C 02`. A read-only generic resolver then independently produced:
+
+```text
+flag_id=52410800
+divisor=1000
+group=52410
+suffix=800
+storage_type=1
+bank_base=0x2080316A6
+byte_offset=100
+bit_index=7
+mask=0x80
+resolved_address=0x20803170A
+value=0x80
+is_set=true
+address_match=true
+```
+
+This closes the live event-flag-manager read-path unknown for the tested 01.09
+build. The client must resolve the randomized eboot base per launch, verify the
+setter signature, and fail closed on mismatch. Evidence is preserved in
+`work/event-flag-manager-resolution.txt`,
+`work/iosefka-bullet-flag-write-breakpoint.txt`, and
+`work/live-event-flag-setter-code.bin`.
+
+The standalone Rust client reader was then tested outside Cheat Engine after a
+new shadPS4 launch. In process 31676, eboot moved from the discovery launch's
+`0x05660000` to `0x057C0000`. The elevated reader parsed the new base from
+`shad_log`, passed the setter signature gate, resolved the new manager and bank
+addresses, and returned `event_flag=52410800 set=true`. This validates the
+manager-relative implementation across two independently randomized launches.
