@@ -1,6 +1,7 @@
 # Suppressing the vanilla item award
 
-Status: mechanism decided and planned; nothing written to game files yet.
+Status: native binder writer implemented and round-tripped; installation and
+in-game canary validation remain pending.
 
 ## The problem
 
@@ -93,10 +94,43 @@ Refusal cases, each with a test that fires it:
 | `flag_not_unique` | the edit would make the detection target ambiguous |
 | `multi_item_lot` | the row awards other things too; the edit has to be per-slot |
 
+## Native binder writer
+
+`tools/bb_suppression_writer` consumes the planner JSON and edits the real
+`gameparam.parambnd.dcx` through SoulsFormatsNEXT. It applies the matching
+Bloodborne PARAMDEF, finds the exact category-4 slot named by each plan row,
+changes only that item ID, serializes the binder, reopens it, and then proves:
+
+- the binder file count, order, IDs and names are unchanged;
+- every unrelated embedded file is byte-identical;
+- the ItemLotParam row count and order are unchanged (including duplicate IDs
+  present in the retail table);
+- every unplanned row and every protected field are semantically identical;
+- each planned item field became the placeholder; and
+- every row ID, item category and acquisition flag survived.
+
+It preflights all plan rows before creating output, refuses in-place writes,
+refuses to overwrite an existing output, and requires an explicit `--apply`.
+The wrapper adds the same guard and never installs anything:
+
+```powershell
+.\tools\build_vanilla_suppression.ps1 `
+  -SoulsFormatsNextRoot C:\path\to\SoulsFormatsNEXT `
+  -OutputRoot .\work\vanilla-suppression-build `
+  -Apply
+```
+
+The output directory contains the separate binder, the exact plan, and a hash
+manifest whose `installed` field is false. Installation remains a deliberate
+later step after backup and canary review.
+
 ## Current result
 
-**Eighteen rows plan cleanly: nine shuffled-key awards and nine additional
-fixed checks. One pool item is refused.**
+On the pre-catalog vertical slice, **eighteen rows plan cleanly: nine
+shuffled-key awards and nine additional fixed checks. One pool item is
+refused.** Generated catalog slices may add clean category-4 rows and explicit
+refusals for weapon/armor rows until the placeholder policy covers those
+categories.
 
 `tonsil_stone` resolves to lot 39000 — a Patches gift — whose
 `generic_acquisition_flag` is `-1`. That is "no flag", not flag −1; 2,778 rows in

@@ -9,6 +9,7 @@ have been runtime validated.
 """
 
 from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
+from .fixed_locations import FIXED_LOCATIONS
 
 P = ItemKind.PROGRESSION
 E = ItemKind.EVENT
@@ -140,6 +141,15 @@ LOCATIONS = (
              "Upper Cathedral Ward", Rule.all("orphanage_key")),
     Location("boss_laurence", "Laurence, the First Vicar", "Nightmare Grand Cathedral",
              Rule.all("laurences_skull"), locked_item="event_laurence_defeated"),
+) + tuple(
+    Location(
+        location.key,
+        location.name,
+        location.region,
+        classification=location.classification,
+        vanilla_award_suppressed=location.vanilla_award_suppressed,
+    )
+    for location in FIXED_LOCATIONS
 )
 
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
