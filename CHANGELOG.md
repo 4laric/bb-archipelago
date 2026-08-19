@@ -13,13 +13,13 @@ under `Unreleased` and move into a dated version section when released.
   grouping with MSB-first bit packing; a manager-relative resolver rediscovers the
   randomized eboot base, gates on the setter signature, fails closed on a
   mismatch, and returns live flag state without Cheat Engine. The apworld's own
-  client still reports checks manually. The separate r4 native client now has
+  client still reports checks manually. The separate r5 native client now has
   save-identity, gameplay-state and debounce gates, and deliberately leaves
   live check sends disarmed until its backend can supply the first two.
-- One runtime build string, `bb-0.1.0-r4`, now spans the apworld, the client, the
+- One runtime build string, `bb-0.1.0-r5`, now spans the apworld, the client, the
   Cheat Engine table and the grant helper. The client prints it on connect and
   refuses a harness reporting a different or missing version; the wire contract is
-  `BBGRANT1` and the table identifies itself as `bb-native-grant-v4`.
+  `BBGRANT1` and the table identifies itself as `bb-native-grant-v5`.
 - A repeatable event-flag playtest kit records hashed session manifests, captures
   four-stage snapshots, intersects candidates across trials, and logs the
   instruction that writes a surviving candidate.
@@ -34,12 +34,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Fixed
 
-- Items the player does not already hold are granted correctly again under
-  shadPS4 v0.18. The 24-byte descriptor is now built inside the consumable
-  function's own retiring stack frame rather than below `rsp`, where the source
-  object was zeroed before the assignment helper copied it and insertion returned
-  `-1`. Absent-stack, existing-stack and restart-replay recovery are all
-  validated live.
+- Items the player does not already hold are granted correctly under shadPS4
+  v0.18. Category-4 goods use the 24-byte descriptor in the consumable
+  function's retiring stack frame; category-0 equipment uses a persistent
+  24-byte descriptor. A native Saw Spear grant was verified in inventory while
+  the game remained responsive. Absent-stack, existing-stack, equipment, and
+  restart-replay recovery paths are validated live.
 - Runtime location bindings now distinguish MSB treasures from EMEVD item-lot
   awards and carry source-specific provenance.
 

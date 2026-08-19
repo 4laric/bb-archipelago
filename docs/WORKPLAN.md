@@ -12,7 +12,7 @@ closed; Phase 1's remaining work is the client half, not the discovery half.
 | Piece | State |
 | --- | --- |
 | World generation | **Works.** AP 0.6.7 / Python 3.11, clean at `full`, `minimal`, enemizer on and off. |
-| Item delivery | **Absent-stack, existing-stack, and replay recovery work** through the v4 Cheat Engine bridge. A 24-byte in-frame descriptor restored absent Pebble insertion on shadPS4 v0.18; failed verification is bounded, and a retained completed command survives a full restart without double-granting. |
+| Item delivery | **Absent-stack, existing-stack, equipment insertion, and replay recovery work** through the v5 Cheat Engine bridge. Category-4 goods use the validated 24-byte in-frame descriptor; category-0 equipment uses the persistent 24-byte descriptor. A Saw Spear grant completed through native `ItemGrant` and was confirmed in inventory. Failed verification is bounded, and a retained completed command survives a full restart without double-granting. |
 | The AP client | **Crashes on every launch path** (#17). Whatever exercised delivery end to end did not go through `launch()`. |
 | Item *randomisation* | **Does not exist.** Nothing suppresses the vanilla award, so shuffled keys gate nothing (#14). |
 | Location detection | **Read path validated; live sends fail closed.** The manager-relative resolver returns live flag state from an eboot-relative pointer slot, signature-gated, across two randomized launches and outside Cheat Engine. The r4 Rust client has a debounced poller, but refuses live `LocationChecks` until its backend can prove gameplay state and the bound save identity. This repo's Python client still reports by hand (#15). |
@@ -99,9 +99,9 @@ writes its own version into the state file so the client can refuse a mismatch. 
 change — the state-file handshake in #7 *is* #8's mechanism — and both belong before the first
 external tester.
 
-**Done 2026-08-19 across both repositories.** `bb-0.1.0-r4` is stamped across the apworld, both
+**Done 2026-08-19 across both repositories.** `bb-0.1.0-r5` is stamped across the apworld, both
 clients, the Cheat Engine table and the PS1 helper; the harness identifies itself as
-`bb-native-grant-v4` over the `BBGRANT1` wire contract, and either client refuses a different or
+`bb-native-grant-v5` over the `BBGRANT1` wire contract, and either client refuses a different or
 missing version. `tests/test_grant_harness_contract.py` asserts this repository's stamps, and the
 Rust bridge tests assert the native client's expected build, protocol and harness. Release work
 must still update both repositories together because neither CI checkout contains the other.

@@ -9,7 +9,7 @@ from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
-RUNTIME_BUILD = "bb-0.1.0-r4"
+RUNTIME_BUILD = "bb-0.1.0-r5"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
 SUPPRESSION_PLAN_SHA256 = "6666eb68b3ad5123e3e08b571d060dc8fe63c5b5f9cc63d34eb8d01790ced4a7"
 ID_BASE = 0xBB0000
