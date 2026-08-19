@@ -245,8 +245,8 @@ local function poll()
           state("verify_pending",string.format("tag=%s expected_after=%d actual=%s attempt=%d/%d",active.tag,wanted,tostring(actual),active.verifyPolls,maxVerifyPolls))
           return
         end
-        append(string.format("AUTO FAILED tag=%s expected_after=%d actual=%s; retry budget exhausted",active.tag,wanted,tostring(actual)))
-        state("failed",string.format("tag=%s expected_after=%d actual=%s retry_budget=%d",active.tag,wanted,tostring(actual),maxVerifyPolls))
+        append(string.format("AUTO FAILED tag=%s expected_after=%d actual=%s native_result=%s; retry budget exhausted",active.tag,wanted,tostring(actual),tostring(nativeResult)))
+        state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d",active.tag,wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls))
         os.remove(commandPath)
         active=nil
         return

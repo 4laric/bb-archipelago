@@ -288,6 +288,29 @@ After a full shadPS4 shutdown and relaunch of the same save, the inventory still
 contained two Pebbles. This confirms durable save persistence for the combined
 absent-then-existing delivery sequence on v0.18, not merely live-memory success.
 
+### Versioned bridge failure and replay canaries
+
+On 2026-08-19, the `bb-0.1.0-r3` / `BBGRANT1` /
+`bb-native-grant-v3` bridge was exercised against shadPS4 v0.18.0 and
+CUSA03173 01.09. The first process mapped eboot at `0x05740000`. After one
+Bullet consumption captured the inventory pointer, an absent-stack Pebble
+command sampled zero and targeted one. Native execution completed but the
+inventory remained zero through all 20 verification polls. The harness wrote
+terminal `failed` state, removed the command, left the game responsive, and did
+not acknowledge the item. This validates the bounded-failure behavior while
+leaving the absent-item regression unresolved.
+
+An existing-stack Blood Vial command then sampled three, wrote four, reread
+four, persisted `completed`, and removed its command. The player confirmed four
+in the inventory UI. A completed Vial state with expected counts four and five
+was subsequently paired with its retained command while Cheat Engine was
+stopped. After a full emulator restart, the new process mapped eboot at
+`0x05750000`. Reloading the v3 harness and consuming one Bullet produced
+`recovered_complete` at quantity five and removed the retained command without
+performing another grant; the player confirmed the UI remained at five. This
+validates the crash window from durable completion through command cleanup
+across both a new process and a changed eboot base.
+
 On 2026-08-16, shadPS4 0.17.0 mapped the European `CUSA03173` 01.09 eboot at
 `0x800000000`. Read-only process-memory inspection reproduced all six published
 `CUSA00900` hook-site sequences at the same eboot-relative offsets. Sixteen bytes
