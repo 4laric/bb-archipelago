@@ -1,0 +1,35 @@
+table	disposition	successor	reason
+Bloodborne-capture-hp-pointer.CT	archive	from-software-archipelago-clients#289	One-shot HP pointer capture; native client owns current process attachment.
+Bloodborne-capture-inventory-simple.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Early inventory capture superseded by the current harness.
+Bloodborne-capture-inventory.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Early inventory capture superseded by the current harness.
+Bloodborne-capture-native-updater-call.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Updater-call experiment incorporated into the current harness design.
+Bloodborne-ce-harness.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Original combined harness superseded by the current grant harness.
+Bloodborne-dump-heartbeat-code-v2.CT	archive	-	One-shot code dump retained only as reverse-engineering evidence.
+Bloodborne-dump-inventory-code.CT	archive	-	One-shot code dump retained only as reverse-engineering evidence.
+Bloodborne-existing-stack-direct-quantity-trigger.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Manual existing-stack trigger superseded by automatic delivery.
+Bloodborne-existing-stack-stamina-trigger.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Rejected stamina trigger experiment.
+Bloodborne-hp-validated.CT	archive	from-software-archipelago-clients#289	Validated HP research artifact, not a player-facing table.
+Bloodborne-inventory-harness-v2.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Inventory research harness superseded by automatic delivery.
+Bloodborne-native-grant-existing-stack-upgrade.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Incremental grant upgrade folded into the current harness.
+Bloodborne-native-grant-read-status.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Status reader superseded by the versioned command/state bridge.
+Bloodborne-native-grant-rearm-manual-trigger.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Manual rearm experiment superseded by automatic delivery.
+Bloodborne-native-item-grant-auto-v2-upgrade.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Patch-on-patch upgrade; never load independently.
+Bloodborne-native-item-grant-trigger-harness-v3.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Manual trigger generation superseded by the automatic harness.
+Bloodborne-probe-heartbeat-hooks.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Heartbeat candidate probe whose result is incorporated into the harness.
+Bloodborne-probe-native-thread-contexts.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Thread-context experiment retained only as evidence.
+Bloodborne-queue-one-augur-native.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	One-item grant proof superseded by the command bridge.
+Bloodborne-queue-one-pebble-native.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	One-item grant proof superseded by the command bridge.
+Bloodborne-read-code-cave-candidates.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	One-shot cave survey whose selected caves are in the current harness.
+Bloodborne-rearm-direct-quantity-trigger.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Manual rearm experiment superseded by automatic delivery.
+Bloodborne-remove-temporary-thread-probes.CT	retire	-	One-shot cleanup script for hooks that must no longer be installed.
+Bloodborne-restore-grant-hook-original.CT	retire	-	One-shot recovery script for an obsolete hook layout.
+Bloodborne-shadPS4-readonly.CT	archive	from-software-archipelago-clients#289	Static-address inspection replaced by native launch-relative verification.
+Bloodborne-test-game-thread-vial-grant-v4-diagnostic.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Diagnostic generation superseded by the validated automatic path.
+Bloodborne-test-game-thread-vial-grant-v5.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Diagnostic generation superseded by the validated automatic path.
+Bloodborne-test-native-vial-grant-v2.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	One-item proof superseded by the command bridge.
+ExceptionAutoSave_Bloodborne-capture-hp-pointer.CT	retire	Bloodborne-capture-hp-pointer.CT	Duplicate editor autosave artifact.
+SAFE-READ-ONLY-auto-grant-context.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Snapshot of an obsolete fixed cave layout.
+SAFE-READ-ONLY-grant-hook-bytes-v2.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Fixed-address hook probe replaced by guarded launch-relative setup.
+SAFE-READ-ONLY-heartbeat-cave-space.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Fixed-address cave probe whose result is incorporated into the harness.
+SAFE-READ-ONLY-idle-hook-bytes.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Fixed-address candidate probe retained only as evidence.
+SAFE-READ-ONLY-native-thread-ids.CT	archive	Bloodborne-native-item-grant-auto-v2.CT	Snapshot reader for obsolete fixed cave data.
