@@ -43,6 +43,7 @@ GOLDEN_ITEMS = {
     "astral_clocktower_key": 0xBB0008,
     "celestial_dial": 0xBB0009,
     "laurences_skull": 0xBB000A,
+    "saw_spear": 0xBB000B,
     "blood_vial": 0xBB0100,
 }
 GOLDEN_LOCATIONS = {
@@ -190,6 +191,13 @@ class RuntimeItemContractTests(unittest.TestCase):
         runtime_items = build_runtime_slot_data()["runtime_items"]
         self.assertEqual(set(runtime_items), {str(value) for value in ITEM_NAME_TO_ID.values()})
         for binding in runtime_items.values():
+            self.assertIn("raw_descriptor", binding)
+            self.assertIn("item_category", binding)
+            self.assertIn("descriptor_evidence", binding)
+            self.assertIn(binding["item_category"], {0, 4})
+            self.assertIn(binding["descriptor_evidence"], {
+                "goods_formula_observed", "live_grant_inventory_ui",
+            })
             self.assertIn("feed_effect", binding)
             self.assertIn("reinforcement_level", binding)
             self.assertIn(binding["feed_effect"], {
@@ -200,10 +208,53 @@ class RuntimeItemContractTests(unittest.TestCase):
             level = binding["reinforcement_level"]
             self.assertTrue(level is None or 0 <= level <= 10)
 
-    def test_current_goods_pool_is_explicitly_non_equippable(self):
+    def test_only_allowlisted_equipment_enters_the_pool(self):
+        runtime_items = build_runtime_slot_data()["runtime_items"]
+        equipment = {
+            key: binding for key, binding in runtime_items.items()
+            if binding["item_category"] == 0
+        }
+        saw_spear = equipment[str(ITEM_ID_BY_KEY["saw_spear"])]
+        self.assertEqual(set(equipment), {str(ITEM_ID_BY_KEY["saw_spear"])})
+        self.assertEqual(saw_spear["raw_descriptor"], 0x806C5660)
+        self.assertEqual(saw_spear["normalized_item_id"], 0x006C5660)
+        self.assertEqual(saw_spear["feed_effect"], "right_hand_weapon")
+        self.assertEqual(saw_spear["reinforcement_level"], 0)
+
+    def test_goods_keep_the_observed_category_four_descriptor_pair(self):
         for binding in build_runtime_slot_data()["runtime_items"].values():
+            if binding["item_category"] != 4:
+                continue
+            self.assertEqual(
+                binding["raw_descriptor"],
+                (binding["normalized_item_id"] & 0x0FFFFFFF) | 0xB0000000,
+            )
             self.assertEqual(binding["feed_effect"], "not_equippable")
             self.assertIsNone(binding["reinforcement_level"])
+
+    def test_rejected_torch_inference_is_not_a_runtime_item(self):
+        from worlds.bloodborne.runtime_bindings import (
+            EQUIPMENT_EXCLUSIONS,
+            RuntimeItemBinding,
+            validate_runtime_item_binding,
+        )
+
+        exclusion = EQUIPMENT_EXCLUSIONS["torch"]
+        self.assertEqual(exclusion.item_lot_id, 2410520)
+        self.assertEqual(exclusion.catalog_item_id, 20100000)
+        self.assertEqual(exclusion.attempted_raw_descriptor, 0x8132B3A0)
+        self.assertNotIn("torch", ITEM_ID_BY_KEY)
+        inferred = RuntimeItemBinding(
+            0x0132B3A0,
+            0x8132B3A0,
+            "ItemLot inference only",
+            item_category=0,
+            descriptor_evidence="item_lot_inferred",
+            feed_effect="right_hand_weapon",
+            reinforcement_level=0,
+        )
+        with self.assertRaisesRegex(ValueError, "not live-validated"):
+            validate_runtime_item_binding("torch", inferred, 1)
 
 
 if __name__ == "__main__":

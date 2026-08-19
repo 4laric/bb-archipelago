@@ -353,7 +353,10 @@ lot ID `10000000` produced `raw=0x80989680` with normalized ID `0xFFFFFFFF`.
 Both native calls returned a slot, but neither item appeared in the UI. Those
 records were confined to a discarded throwaway save. Equipment delivery must
 therefore remain allowlisted to separately live-validated runtime descriptors;
-the current evidence validates Saw Spear only.
+the current evidence validates Saw Spear only. The shipping runtime table now
+records that distinction directly: Saw Spear is an explicit category-0 row,
+while Torch is an executable exclusion and cannot be regenerated from its
+ItemLot weapon ID.
 
 An existing-stack Blood Vial command then sampled three, wrote four, reread
 four, persisted `completed`, and removed its command. The player confirmed four

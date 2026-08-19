@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 from worlds.bloodborne.data import MODEL
-from worlds.bloodborne.model import Rule
+from worlds.bloodborne.model import ItemKind, Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 from worlds.bloodborne import ITEM_ID_BY_KEY, ITEM_NAME_TO_ID, LOCATION_ID_BY_KEY
 
@@ -80,7 +80,10 @@ class BloodborneModelTests(unittest.TestCase):
     def test_progression_validation_covers_every_pool_item(self):
         from tools.validate_progression_items import EXPECTED
         validated_names = {name for name, _, _ in EXPECTED}
-        pool_names = {item.name for item in MODEL.items if item.kind.value != "event"}
+        pool_names = {
+            item.name for item in MODEL.items
+            if item.kind is ItemKind.PROGRESSION
+        }
         self.assertEqual(set(), pool_names - validated_names)
 
     def test_hunter_chief_emblem_catalog_review_is_resolved(self):
