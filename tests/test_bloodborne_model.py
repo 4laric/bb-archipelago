@@ -51,13 +51,29 @@ class BloodborneModelTests(unittest.TestCase):
         with (ROOT / "research/validation/progression_items.tsv").open(
                 encoding="utf-8", newline="") as handle:
             rows_by_name = {row["item_name"]: row for row in csv.DictReader(handle, delimiter="\t")}
+        with (ROOT / "research/catalog/fixed_location_items.tsv").open(
+                encoding="utf-8", newline="") as handle:
+            catalog_items = list(csv.DictReader(handle, delimiter="\t"))
+        with (ROOT / "research/catalog/fixed_location_catalog.tsv").open(
+                encoding="utf-8", newline="") as handle:
+            catalog_locations = {row["location_flag"]: row
+                                 for row in csv.DictReader(handle, delimiter="\t")}
 
         for key, binding in LOCATION_BINDINGS.items():
-            row = rows_by_name[names_by_key[key]]
-            self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
-            self.assertIn(str(binding.event_flag), row["acquisition_flags"], key)
-            self.assertIn(binding.source_kind, row["observed_sources"].split(";"), key)
-            expected_ref = row["script_awards"] if binding.source_kind == "script_award" else row["msb_maps"]
+            if binding.source_kind == "script_award":
+                row = rows_by_name[names_by_key[key]]
+                self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
+                self.assertIn(str(binding.event_flag), row["acquisition_flags"], key)
+                self.assertIn(binding.source_kind, row["observed_sources"].split(";"), key)
+                expected_ref = row["script_awards"]
+            else:
+                matches = [row for row in catalog_items
+                           if row["location_flag"] == str(binding.event_flag)
+                           and row["item_lot_id"] == str(binding.item_lot_id)
+                           and row["category"] == str(binding.item_category)
+                           and row["item_param_id"] == str(binding.item_id)]
+                self.assertEqual(1, len(matches), key)
+                expected_ref = catalog_locations[str(binding.event_flag)]["map_variants"]
             self.assertEqual(expected_ref, binding.source_ref, key)
             self.assertIn(str(binding.item_lot_id), binding.evidence, key)
 
@@ -101,6 +117,10 @@ class BloodborneModelTests(unittest.TestCase):
 
         for region in MODEL.regions:
             visit(region)
+
+    def test_every_playable_region_contributes_a_location(self):
+        populated = {location.region for location in MODEL.locations}
+        self.assertEqual({"Menu"}, set(MODEL.regions) - populated)
 
 
 if __name__ == "__main__":

@@ -65,6 +65,15 @@ GOLDEN_LOCATIONS = {
     "boss_orphan_of_kos": 0xBB1012,
     "pickup_laurences_skull": 0xBB1013,
     "boss_laurence": 0xBB1014,
+    "treasure_radiant_sword_hunter_badge": 0xBB1015,
+    "treasure_old_hunter_bone": 0xBB1016,
+    "treasure_rune_workshop_tool": 0xBB1017,
+    "treasure_augur_of_ebrietas": 0xBB1018,
+    "treasure_lecture_theatre_key": 0xBB1019,
+    "treasure_messengers_gift": 0xBB101A,
+    "treasure_executioners_gloves": 0xBB101B,
+    "treasure_cosmic_eye_watcher_badge": 0xBB101C,
+    "treasure_underground_jail_chunk": 0xBB101D,
 }
 
 

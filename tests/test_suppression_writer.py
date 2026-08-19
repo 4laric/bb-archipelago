@@ -206,9 +206,8 @@ class EndToEndTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from tools.plan_vanilla_suppression import build_plan, load_item_goods
-        p = build_plan(load_item_goods(), REPO / "research",
-                       {"goods_id": "1000", "name": "Blood Vial"})
+        from tools.plan_vanilla_suppression import build_complete_plan
+        p = build_complete_plan(REPO / "research", {"goods_id": "1000", "name": "Blood Vial"})
         cls.plan = json.loads(json.dumps({
             "format": "bb-vanilla-suppression-plan-v1",
             "placeholder": p.placeholder,

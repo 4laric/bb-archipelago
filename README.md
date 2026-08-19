@@ -46,8 +46,8 @@ then apply it with the guarded writer as documented in `docs/ENEMIZER.md`.
 
 ## Current boundary
 
-Checks are reported **manually** with `/check <exact location name>` in the client. The six fixed
-pickup acquisition flags are mapped statically, but no live flag-manager accessor has been
+Checks are reported **manually** with `/check <exact location name>` in the client. Fifteen fixed
+location acquisition flags are mapped statically, but no live flag-manager accessor has been
 validated, so nothing is automatic yet. `docs/EVENT-FLAG-RESEARCH.md` Lane B is the path out.
 
 Item delivery is real: the client queues received items into the Cheat Engine harness one at a

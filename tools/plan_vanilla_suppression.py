@@ -209,6 +209,46 @@ def load_item_goods() -> dict[str, str]:
     return out
 
 
+def build_complete_plan(research: Path, placeholder: dict[str, str]) -> Plan:
+    """Plan both shuffled-key awards and the vanilla awards at AP checks."""
+    plan = build_plan(load_item_goods(), research, placeholder)
+    occupied_lots = {edit.item_lot_id for edit in plan.edits}
+    facts = collect_lot_facts(research)
+    rows = read_tsv(research / "joined" / "lot_items.tsv")
+
+    sys.path.insert(0, str(REPO))
+    from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
+
+    for key, binding in sorted(LOCATION_BINDINGS.items()):
+        lot = str(binding.item_lot_id)
+        if lot in occupied_lots:
+            continue
+        matching = [row for row in rows if row["item_lot_id"] == lot
+                    and row["item_category"] == str(binding.item_category)
+                    and row["item_id"] == str(binding.item_id)]
+        fact = facts.get(lot)
+        problem = None
+        if binding.item_category != 4:
+            problem = "the suppression writer currently replaces goods only"
+        elif len(matching) != 1:
+            problem = f"expected one matching item row, found {len(matching)}"
+        elif fact is None or fact.item_rows != 1:
+            problem = f"lot awards {fact.item_rows if fact else 0} item rows"
+        elif fact.acquisition_flags != [str(binding.event_flag)]:
+            problem = (f"lot flags {fact.acquisition_flags} do not match runtime binding "
+                       f"{binding.event_flag}")
+        if problem:
+            plan.refusals.append(Refusal(
+                f"location:{key}", str(binding.item_id), "location_not_suppressible", problem))
+            continue
+        plan.edits.append(PlannedEdit(
+            f"location:{key}", str(binding.item_id), lot, fact.lot_name,
+            str(binding.event_flag), fact.placements,
+            "randomized Archipelago check; replace its vanilla award while preserving its flag"))
+        occupied_lots.add(lot)
+    return plan
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -225,14 +265,17 @@ def main(argv: list[str] | None = None) -> int:
                         help="emit a partial plan instead of failing")
     args = parser.parse_args(argv)
 
-    plan = build_plan(load_item_goods(), args.research,
-                      {"goods_id": args.placeholder_goods, "name": args.placeholder_name})
+    plan = build_complete_plan(
+        args.research, {"goods_id": args.placeholder_goods, "name": args.placeholder_name})
 
     print(f"planned {len(plan.edits)} lot edit(s), refused {len(plan.refusals)}")
     for edit in plan.edits:
         shared = f"  [{edit.placements} placements]" if edit.placements > 1 else ""
-        print(f"  {edit.item_key:<32} lot {edit.item_lot_id:<8} flag {edit.acquisition_flag:<9}"
-              f" {edit.lot_name}{shared}")
+        # Lot names come from the Japanese param table and Windows' legacy
+        # console encoding cannot necessarily print them. The stable key, row,
+        # and flag are the actionable console summary; JSON retains the name.
+        print(f"  {edit.item_key:<48} lot {edit.item_lot_id:<8} "
+              f"flag {edit.acquisition_flag:<9}{shared}")
     for refusal in plan.refusals:
         print(f"  REFUSED {refusal.item_key:<24} [{refusal.problem}] {refusal.detail}",
               file=sys.stderr)

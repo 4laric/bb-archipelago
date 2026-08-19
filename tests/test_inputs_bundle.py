@@ -25,6 +25,7 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 from tools.bb_inputs import (  # noqa: E402
+    NON_PARAM_CSVS,
     PARAM_ALLOWLIST,
     SOURCES,
     check_coverage,
@@ -127,6 +128,17 @@ class CoverageGateTests(unittest.TestCase):
             path = Path(tmp) / "b.db"
             make_bundle(path, {"params/EquipParamGoods.csv": b"ID\n1\n"})
             self.assertEqual(check_coverage(path), 1)
+
+    def test_excluded_names_are_tool_outputs_not_params(self):
+        """The exclusion list is how this gate stops meaning anything. Keep it honest."""
+        db = __import__("sqlite3").connect(BUNDLE) if BUNDLE.exists() else None
+        if db is not None:
+            packed = {p.split("/", 1)[1] for (p,) in db.execute("SELECT path FROM files")}
+            db.close()
+            self.assertEqual(NON_PARAM_CSVS & packed, set(),
+                             "an excluded name is actually in the bundle, so it is a param")
+        self.assertLessEqual(len(NON_PARAM_CSVS), 4, "the exclusion list is growing; "
+                             "widen the gate deliberately, not by accretion")
 
     def test_the_gate_reads_the_tools_rather_than_a_hardcoded_list(self):
         """It has to notice a new param, so it must derive the set from source."""
