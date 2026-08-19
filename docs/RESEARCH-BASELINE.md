@@ -233,6 +233,62 @@ item-class and cap/overflow testing.
 
 ## First cross-serial reproduction: CUSA03173 01.09
 
+## shadPS4 v0.18.0 regression
+
+On 2026-08-18, BBLauncher updated the emulator from shadPS4 v0.17.0 to the
+official v0.18.0 release while retaining v0.17.0 as a rollback build. The
+installed `CUSA03173` 01.09 `eboot.bin` remained byte-identical (SHA-256
+`d65f0b4f01d59166aed16f8604196d8b7dd805abbf0758b356e8f1354c9429f9`).
+
+With every BBLauncher patch disabled and Cheat Engine closed, a fresh character
+still crashed immediately when struck by the Iosefka clinic wolf, reproducing
+the v0.17.0 failure. Enabling only the Intel SFX workaround and fully restarting
+the game made the same damage test stable. shadPS4 v0.18.0's experimental
+Windows red-zone protection therefore does not replace that Bloodborne-specific
+workaround on this machine.
+
+`tables/SAFE-READ-ONLY-shad-0.18-regression.CT` records the next compatibility
+layer without installing hooks: established guest hook prefixes, native routine
+entries, and the three in-image cave/data regions used by the grant harness.
+
+The first probe incorrectly treated `0x400000` as a fixed eboot address and could
+not read the HP site. The live shad log showed that Windows had instead mapped
+`eboot.bin` at `0x05700000` (process 28392). After changing the probe to resolve
+the latest eboot `base_virtual_addr` from `shad_log.txt`, every checked site
+matched its v0.17-relative bytes: HP, inventory quantity write, consumable return,
+native item grant, native slot updater, idle heartbeat, and stamina. The three
+established eboot-relative cave/data regions were also still readable and zeroed.
+The complete capture is `work/shad-0.18-regression.txt`.
+
+This establishes that the tested Bloodborne 01.09 RVAs and instruction signatures
+survived the emulator update. What changed is shadPS4's guest placement contract:
+v0.18 loads the eboot below 4 GiB at a launch-dependent address. Future tables and
+the live backend must resolve the base for each process and add version-independent
+Bloodborne RVAs; v0.17 absolute addresses such as `0x8014DA0A0` are no longer a
+portable runtime binding.
+
+The first relocated absent-Pebble grant exposed a second compatibility boundary.
+Both the automatic idle trigger and a genuine Bullet-consumption trigger reached
+native `ItemGrant`, but it returned `-1`; the cached inventory pointer and the
+four descriptor words were correct. Windows guest red-zone static protection was
+disabled, excluding that experimental mode. Under v0.17 the descriptor had lived
+in the eboot cave above 4 GiB. Under v0.18 the relocated cave—and therefore the
+descriptor pointer—was below 4 GiB. Rebuilding the identical descriptor on the
+game thread stack made the next Bullet-triggered call succeed: the native result
+was slot/index 79, Pebbles changed from zero to one, the game remained stable,
+and the durable command was acknowledged and removed. The consolidated harness
+now keeps request/result state in the relocatable cave but materializes the
+descriptor on the stack for `ItemGrant`.
+
+The existing-stack branch was then exercised in the same v0.18 process. A guarded
+Pebble command required quantity one, resolved the canonical inventory record,
+wrote quantity two at `0x208067C08`, reread two, acknowledged the command, and
+removed it. Thus both delivery branches—native insertion for an absent record and
+guarded quantity adjustment for an existing record—passed under v0.18.
+After a full shadPS4 shutdown and relaunch of the same save, the inventory still
+contained two Pebbles. This confirms durable save persistence for the combined
+absent-then-existing delivery sequence on v0.18, not merely live-memory success.
+
 On 2026-08-16, shadPS4 0.17.0 mapped the European `CUSA03173` 01.09 eboot at
 `0x800000000`. Read-only process-memory inspection reproduced all six published
 `CUSA00900` hook-site sequences at the same eboot-relative offsets. Sixteen bytes

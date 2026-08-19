@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reads guest code/cave bytes only. It installs no hooks or breakpoints. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output=[[C:\Users\alari\bb-archipelago\work\shad-0.18-regression.txt]]
+-- shadPS4 v0.18 maps eboot below 4 GiB at a launch-dependent address.
+-- Resolve the address that shad itself recorded instead of assuming its
+-- preferred 0x400000 mapping or the v0.17 fixed 0x800000000 mapping.
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local function readEbootBase()
+  local f=io.open(shadLog,"r")
+  if not f then return nil,"Could not open shad log: "..shadLog end
+  local pending=false
+  local found=nil
+  for line in f:lines() do
+    if line:find("Loading module eboot.bin",1,true) then
+      pending=true
+    elseif pending then
+      local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+      if hex then found=tonumber(hex,16); pending=false end
+    end
+  end
+  f:close()
+  if not found then return nil,"Could not find eboot base in shad log" end
+  return found
+end
+local base,baseError=readEbootBase()
+if not base then error(baseError) end
+local sites={
+  {name="hp",address=base+0x1BFC5F7,length=16},
+  {name="inventory_write",address=base+0x14D9559,length=16},
+  {name="consume_return",address=base+0x14D9575,length=16,expected={0x44,0x89,0xE0,0x48,0x83,0xC4,0x28}},
+  {name="native_item_grant",address=base+0x14DA0A0,length=16,expected={0x55,0x48,0x89,0xE5}},
+  {name="native_slot_update",address=base+0x14D94A0,length=16,expected={0x55,0x48,0x89,0xE5,0x41,0x57,0x41,0x56,0x41,0x55,0x41,0x54,0x53}},
+  {name="heartbeat",address=base+0x1BFE882,length=16,expected={0x48,0x81,0xC4,0xE8,0x07,0x00,0x00}},
+  {name="stamina",address=base+0x18F78DB,length=16,expected={0x8B,0x80,0x34,0x01,0x00,0x00}},
+  {name="cave_consume",address=base+0x50DBA00,length=16,zero=true},
+  {name="cave_heartbeat",address=base+0x50DBC00,length=16,zero=true},
+  {name="cave_data",address=base+0x50DBE00,length=16,zero=true},
+}
+local function bytesText(bytes)
+  local parts={}
+  for i=1,#bytes do parts[#parts+1]=string.format("%02X",bytes[i]) end
+  return table.concat(parts," ")
+end
+local function prefixMatches(bytes,expected)
+  if not expected then return true end
+  for i=1,#expected do if bytes[i]~=expected[i] then return false end end
+  return true
+end
+openProcess("shadPS4.exe")
+local pid=getOpenedProcessID()
+local lines={string.format("pid=%s",tostring(pid)),string.format("eboot_base=0x%X",base),"probe=shadPS4-v0.18-read-only"}
+local all=true
+for _,site in ipairs(sites) do
+  local bytes=readBytes(site.address,site.length,true)
+  if not bytes or #bytes~=site.length then error("Could not read "..site.name) end
+  local ok=prefixMatches(bytes,site.expected)
+  if site.zero then
+    for i=1,#bytes do if bytes[i]~=0 then ok=false break end end
+  end
+  all=all and ok
+  lines[#lines+1]=string.format("%s address=0x%X result=%s bytes=%s",site.name,site.address,ok and "match" or "MISMATCH",bytesText(bytes))
+end
+lines[#lines+1]="overall="..(all and "match" or "MISMATCH")
+local f=assert(io.open(output,"w")); f:write(table.concat(lines,"\n").."\n"); f:close()
+showMessage("Read-only shadPS4 v0.18 regression capture: "..(all and "MATCH" or "MISMATCH"))
+]]></LuaScript>
+</CheatTable>

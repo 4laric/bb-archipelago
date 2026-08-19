@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Signature scan only. Installs no hooks or breakpoints. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output=[[C:\Users\alari\bb-archipelago\work\shad-0.18-eboot-base.txt]]
+local consumeRva=0x14D9575
+openProcess("shadPS4.exe")
+local lines={string.format("pid=%s",tostring(getOpenedProcessID()))}
+local signatures={
+  {name="consume_full",bytes="44 89 E0 48 83 C4 28 5B 41 5C 41 5D 41 5E 41 5F"},
+  {name="consume_short",bytes="44 89 E0 48 83 C4 28 5B"},
+  {name="slot_update_entry",bytes="55 48 89 E5 41 57 41 56 41 55 41 54 53 48 83 EC"},
+}
+for _,signature in ipairs(signatures) do
+  local matches=AOBScan(signature.bytes)
+  lines[#lines+1]=signature.name.."_matches="..tostring(matches and matches.Count or 0)
+  if matches then
+    for i=0,matches.Count-1 do
+      local address=tonumber(matches[i],16)
+      if signature.name~="slot_update_entry" then
+        local base=address-consumeRva
+        lines[#lines+1]=string.format("%s_match_%d=0x%X candidate_eboot_base=0x%X",signature.name,i,address,base)
+      else
+        lines[#lines+1]=string.format("%s_match_%d=0x%X",signature.name,i,address)
+      end
+    end
+    matches.destroy()
+  end
+end
+local f=assert(io.open(output,"w")); f:write(table.concat(lines,"\n").."\n"); f:close()
+showMessage("Read-only eboot signature scan completed")
+]]></LuaScript>
+</CheatTable>
