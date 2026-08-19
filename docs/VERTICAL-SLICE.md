@@ -1,42 +1,92 @@
-# Bloodborne vertical slice
+# Central Yharnam vertical slice
 
-The slice now has one generation contract across all three pieces.
+The first Bloodborne Archipelago game is deliberately bounded to Central
+Yharnam through Father Gascoigne. The broader model in `data.py` remains
+research scaffolding; it is not emitted into this slice's multidata.
 
-1. Generate a Bloodborne player with Archipelago. The world writes the usual
-   multidata plus `*.bbenemizer.json`; both contain the same `enemizer_seed`.
-2. Turn that request into the deterministic enemy plan:
+## Seed contents
 
-   `python -m tools.bb_enemizer.cli --ap-request <request> --output work/enemizer/ap-plan.json`
-3. Apply the plan with the guarded writer as documented in `ENEMIZER.md` and
-   install its package-shaped map output.
-4. Load `tables/Bloodborne-native-item-grant-auto-v2.CT`, then launch the
-   Bloodborne Client installed with the apworld. It queues received items into
-   the harness one at a time and advances its durable receipt only after the
-   harness reports completion. The cross-artifact runtime build is
-   `bb-0.1.0-r5`; it is emitted in slot data, printed by the client, and written
-   by the harness. The wire contract is `BBGRANT1` and the table
-   identifies itself as `bb-native-grant-v5`; either client refuses a different
-   or missing version. The bridge uses the harness's `AUTO` expected-count mode.
-   Before any write, the harness persists the sampled count, target count, and
-   receipt-index tag. A restart can therefore distinguish a command that never
-   ran from one that already changed inventory. Completion is persisted before
-   the command is removed, verification has a finite retry budget, and a stuck
-   command becomes a surfaced error after 30 seconds instead of wedging the AP
-   connection. The durable AP receipt remains the final replay guard.
-5. Fifteen pickup acquisition-flag IDs are statically mapped and the live
-   event-flag manager read path is validated, but this client does not poll it,
-   so checks remain manual. Use
-   `/check <exact location name>` in the client; `/missing` lists the names.
-   Successful manual checks are appended to `manual-checks.jsonl` in the client
-   work directory with their UTC time, resolved name and ID, and world version.
-   Misspelled names receive up to three nearby suggestions.
+- **51 physical fixed pickups** from canonical map `m24_01_00_00` and its
+  `_01` / `_11` runtime variants.
+- **2 boss checks:** Cleric Beast and Father Gascoigne.
+- **53 network locations total.**
+- **Goal:** Father Gascoigne.
+- **Item pool:** the live-validated Saw Spear plus Blood Vial filler. Torch,
+  Hunter attire, auto-upgrade, and auto-equip remain outside the receive pool.
 
-The manual check boundary is now a live-context boundary rather than a research one.
-Reading a flag's live state is solved and recorded in `EVENT-FLAG-RESEARCH.md`;
-sending a `LocationChecks` that cannot be retracted is not, and needs pointer
-revalidation, gameplay-state gating, debounce and save-identity binding first.
-The r4 native Rust client in `from-software-archipelago-clients` implements
-those gates and a three-read debounce. Its current live backend cannot yet
-prove gameplay state or loaded-save identity, so it fails closed before a flag
-read; mock mode supplies the context and exercises generation, delivery,
-reconnect-safe receipts and check reporting without risking a false live send.
+The pickup manifest is generated from
+`research/catalog/fixed_location_catalog.tsv` by
+`tools/build_central_yharnam_slice.py`. Two mutually exclusive later-cycle
+replacement rows are collapsed onto their first-cycle physical chests, so they
+cannot become phantom checks. Existing published keys retain their permanent
+AP IDs; every new ID is append-only in `worlds/bloodborne/ids.tsv`.
+
+The catalog describes flag `52410610` as Hunter Hat, but the source corpus
+shows a four-row Hunter Set award group (`2410610` through `2410613`) sharing
+that flag. It is one physical check and four suppression edits.
+
+## Runtime flags
+
+Every pickup keeps the acquisition flag derived from its ItemLotParam row.
+The two boss-completion flags come directly from Central Yharnam EMEVD:
+
+| Check | Event flag | Static evidence |
+| --- | ---: | --- |
+| Cleric Beast | `12411700` | paired boss completion state in `m24_01_00_00` |
+| Father Gascoigne | `12411800` | gates arena cleanup, key award, and downstream world state |
+
+The slot-data contract exposes all 53 flag bindings and identifies Gascoigne's
+AP location ID as `goal_location`. The native client sends `CLIENT_GOAL` when
+that debounced check is reported, and resends it after reconnect if the server
+already knows the goal location is checked.
+
+## Vanilla-award suppression
+
+All 51 fixed pickups declare suppression required. The v2 suppression plan
+contains **54 guarded ItemLotParam edits**:
+
+- one edit per physical pickup;
+- three continuation edits for the Hunter Set award group;
+- no refusals.
+
+The writer now matches the original category and item ID, then replaces the
+slot with one Blood Vial while preserving the row ID and acquisition flag. This
+covers goods, weapons, attire, and the category-8 blood-gem row without deriving
+unsupported runtime grant descriptors from ItemLot IDs.
+
+The native writer has built and reopened this complete binder successfully.
+Installation and one in-game canary remain deliberate playtest steps. The seed
+requires the installed-binder hash witness before the native client will arm.
+
+## Runtime sequence
+
+1. Generate a Bloodborne player with Archipelago.
+2. Build the seed-matching suppression binder and install it through the
+   documented BBLauncher path.
+3. Load `tables/Bloodborne-native-item-grant-auto-v2.CT` and launch the native
+   Bloodborne client.
+4. The client verifies runtime build `bb-0.1.0-r5`, suppression manifest, and
+   installed binder before constructing the runtime loop.
+5. Pickup and boss flags require three consecutive true reads before a
+   `LocationChecks` send.
+6. Received items are processed in AP index order and acknowledged only after
+   the native harness reports durable completion.
+7. Gascoigne's check also sends the Archipelago goal status.
+
+## Remaining live boundary
+
+The event-flag accessor is validated, but automatic live sends remain fail
+closed until the backend can prove both `gameplay_ready` and the stable loaded
+save identity. The same identity must ultimately be witnessed again at actual
+game-thread grant execution so a queued command cannot cross a save switch.
+
+Mock mode exercises the complete 53-location slot-data contract, debounce,
+delivery ledger, reconnect behavior, and goal selection without weakening that
+boundary.
+
+The final playtest is therefore specific and finite:
+
+1. validate one suppressed pickup still sets its acquisition flag;
+2. validate both boss flags through the live reader;
+3. complete a generated seed through Gascoigne;
+4. restart/reconnect and confirm no location or item is replayed.

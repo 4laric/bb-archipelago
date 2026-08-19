@@ -20,8 +20,9 @@ wrong one, for two measured reasons.
 2. **A lot is reached by several different mechanisms.** MSB treasures, NpcParam
    drop tables and EMEVD `AwardItemLot` calls all end at the same row. Editing
    the row covers every route at once; editing placements would need three
-   separate tools, and of the six pickups randomized today only one is an MSB
-   treasure at all.
+   separate tools. The Central Yharnam slice is deliberately bounded to the
+   51 canonical fixed treasures whose award route and acquisition flag are
+   both present in the committed corpus.
 
 So: rewrite the `ItemLotParam` row to award a placeholder, keep the row id, keep
 the flag. The pickup still exists, the player still interacts with it, the flag
@@ -48,6 +49,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 GOODS_CATEGORY = "4"
+PLAN_FORMAT = "bb-vanilla-suppression-plan-v2"
+Placeholder = dict[str, str | int]
 
 
 @dataclass
@@ -63,6 +66,7 @@ class LotFacts:
 @dataclass
 class PlannedEdit:
     item_key: str
+    item_category: str
     goods_id: str
     item_lot_id: str
     lot_name: str
@@ -74,6 +78,7 @@ class PlannedEdit:
 @dataclass
 class Refusal:
     item_key: str
+    item_category: str
     goods_id: str
     problem: str
     detail: str
@@ -81,7 +86,7 @@ class Refusal:
 
 @dataclass
 class Plan:
-    placeholder: dict[str, str]
+    placeholder: Placeholder
     edits: list[PlannedEdit] = field(default_factory=list)
     refusals: list[Refusal] = field(default_factory=list)
 
@@ -140,8 +145,8 @@ def lots_awarding(research: Path, goods_id: str) -> list[str]:
     })
 
 
-def build_plan(item_goods: dict[str, str], research: Path,
-               placeholder: dict[str, str]) -> Plan:
+def build_plan(item_goods: dict[str, str | tuple[str, str]], research: Path,
+               placeholder: Placeholder) -> Plan:
     """Resolve each randomized item to the one row that awards it.
 
     Every branch that gives up is deliberate. A plan that guesses which of two
@@ -150,22 +155,27 @@ def build_plan(item_goods: dict[str, str], research: Path,
     """
     facts = collect_lot_facts(research)
     items = read_tsv(research / "joined" / "lot_items.tsv")
-    by_goods: dict[str, list[str]] = defaultdict(list)
+    by_item: dict[tuple[str, str], list[str]] = defaultdict(list)
     for row in items:
-        if row["item_category"] == GOODS_CATEGORY and row["item_id"]:
-            by_goods[row["item_id"]].append(row["item_lot_id"])
+        if row["item_id"]:
+            by_item[(row["item_category"], row["item_id"])].append(row["item_lot_id"])
 
-    plan = Plan(placeholder=placeholder)
-    for key, goods_id in sorted(item_goods.items()):
-        lots = sorted(set(by_goods.get(goods_id, ())))
+    plan = Plan(placeholder={
+        **placeholder,
+        "quantity": int(placeholder.get("quantity", 1)),
+    })
+    for key, raw_spec in sorted(item_goods.items()):
+        category, goods_id = ((GOODS_CATEGORY, raw_spec)
+                              if isinstance(raw_spec, str) else raw_spec)
+        lots = sorted(set(by_item.get((category, goods_id), ())))
         if not lots:
-            plan.refusals.append(Refusal(key, goods_id, "no_lot",
+            plan.refusals.append(Refusal(key, category, goods_id, "no_lot",
                 "no ItemLotParam row awards this item. It may be shop-sourced, "
                 "granted by a covenant or engine side effect, or absent from the "
                 "extracted corpus. Suppressing it needs a different mechanism."))
             continue
         if len(lots) > 1:
-            plan.refusals.append(Refusal(key, goods_id, "multiple_lots",
+            plan.refusals.append(Refusal(key, category, goods_id, "multiple_lots",
                 f"awarded by {len(lots)} rows ({', '.join(lots)}). Editing one "
                 "leaves the others reachable, so the vanilla item still satisfies "
                 "its own gate. Decide which are in scope before planning."))
@@ -173,43 +183,46 @@ def build_plan(item_goods: dict[str, str], research: Path,
         lot = lots[0]
         fact = facts[lot]
         if not fact.acquisition_flags:
-            plan.refusals.append(Refusal(key, goods_id, "no_acquisition_flag",
+            plan.refusals.append(Refusal(key, category, goods_id, "no_acquisition_flag",
                 f"lot {lot} ({fact.lot_name}) has no acquisition flag. Suppressing it "
                 "is possible, but the location can never be detected, so it cannot be "
                 "a check until a different signal is found for it."))
             continue
         if len(fact.acquisition_flags) > 1:
-            plan.refusals.append(Refusal(key, goods_id, "flag_not_unique",
+            plan.refusals.append(Refusal(key, category, goods_id, "flag_not_unique",
                 f"lot {lot} carries {len(fact.acquisition_flags)} acquisition flags "
                 f"({fact.acquisition_flags}). The flag is the detection target; an "
                 "edit must not make it ambiguous."))
             continue
         if fact.item_rows > 1:
-            plan.refusals.append(Refusal(key, goods_id, "multi_item_lot",
+            plan.refusals.append(Refusal(key, category, goods_id, "multi_item_lot",
                 f"lot {lot} awards {fact.item_rows} item rows. Replacing the whole "
                 "row would also suppress the others; the edit has to be per-slot."))
             continue
-        plan.edits.append(PlannedEdit(key, goods_id, lot, fact.lot_name,
+        plan.edits.append(PlannedEdit(key, category, goods_id, lot, fact.lot_name,
                                       fact.acquisition_flags[0], fact.placements))
     return plan
 
 
-def load_item_goods() -> dict[str, str]:
-    """Map each randomized item key to its goods id, from the world's own bindings."""
+def load_item_goods() -> dict[str, tuple[str, str]]:
+    """Map each randomized item key to its param category/id pair."""
     sys.path.insert(0, str(REPO))
     from worlds.bloodborne import SHUFFLABLE_ITEMS
     from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS
 
-    out: dict[str, str] = {}
+    out: dict[str, tuple[str, str]] = {}
     for item in SHUFFLABLE_ITEMS:
         binding = ITEM_BINDINGS.get(item.key)
         if binding is None or binding.normalized_item_id is None:
             continue
-        out[item.key] = str(binding.normalized_item_id & 0x0FFFFFFF)
+        out[item.key] = (
+            str(binding.item_category),
+            str(binding.normalized_item_id & 0x0FFFFFFF),
+        )
     return out
 
 
-def build_complete_plan(research: Path, placeholder: dict[str, str]) -> Plan:
+def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
     """Plan both shuffled-key awards and the vanilla awards at AP checks."""
     plan = build_plan(load_item_goods(), research, placeholder)
     occupied_lots = {edit.item_lot_id for edit in plan.edits}
@@ -217,9 +230,14 @@ def build_complete_plan(research: Path, placeholder: dict[str, str]) -> Plan:
     rows = read_tsv(research / "joined" / "lot_items.tsv")
 
     sys.path.insert(0, str(REPO))
+    from worlds.bloodborne import NETWORK_LOCATIONS
     from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
 
-    for key, binding in sorted(LOCATION_BINDINGS.items()):
+    active_keys = {location.key for location in NETWORK_LOCATIONS}
+    for key in sorted(active_keys):
+        binding = LOCATION_BINDINGS[key]
+        if binding.item_lot_id is None:
+            continue
         lot = str(binding.item_lot_id)
         if lot in occupied_lots:
             continue
@@ -228,9 +246,7 @@ def build_complete_plan(research: Path, placeholder: dict[str, str]) -> Plan:
                     and row["item_id"] == str(binding.item_id)]
         fact = facts.get(lot)
         problem = None
-        if binding.item_category != 4:
-            problem = "the suppression writer currently replaces goods only"
-        elif len(matching) != 1:
+        if len(matching) != 1:
             problem = f"expected one matching item row, found {len(matching)}"
         elif fact is None or fact.item_rows != 1:
             problem = f"lot awards {fact.item_rows if fact else 0} item rows"
@@ -239,13 +255,41 @@ def build_complete_plan(research: Path, placeholder: dict[str, str]) -> Plan:
                        f"{binding.event_flag}")
         if problem:
             plan.refusals.append(Refusal(
-                f"location:{key}", str(binding.item_id), "location_not_suppressible", problem))
+                f"location:{key}", str(binding.item_category), str(binding.item_id),
+                "location_not_suppressible", problem))
             continue
         plan.edits.append(PlannedEdit(
-            f"location:{key}", str(binding.item_id), lot, fact.lot_name,
+            f"location:{key}", str(binding.item_category), str(binding.item_id),
+            lot, fact.lot_name,
             str(binding.event_flag), fact.placements,
             "randomized Archipelago check; replace its vanilla award while preserving its flag"))
         occupied_lots.add(lot)
+
+        # A single MSB treasure can name the first row of a consecutive award
+        # group. The Hunter Set is the observed slice case: 2410610-2410613
+        # all carry the same acquisition flag, while only 2410610 appears on
+        # the placement. Suppress every single-item row in that flag group or
+        # the pickup can still leak the remaining vanilla pieces.
+        related = sorted([
+            row for row in rows
+            if row["item_lot_id"] not in occupied_lots
+            and facts[row["item_lot_id"]].acquisition_flags == [str(binding.event_flag)]
+        ], key=lambda row: int(row["item_lot_id"]))
+        for row in related:
+            related_lot = row["item_lot_id"]
+            related_fact = facts[related_lot]
+            if related_fact.item_rows != 1:
+                plan.refusals.append(Refusal(
+                    f"location:{key}:related_lot_{related_lot}", row["item_category"],
+                    row["item_id"], "location_not_suppressible",
+                    f"related acquisition-flag lot awards {related_fact.item_rows} item rows"))
+                continue
+            plan.edits.append(PlannedEdit(
+                f"location:{key}:related_lot_{related_lot}", row["item_category"],
+                row["item_id"], related_lot, related_fact.lot_name,
+                str(binding.event_flag), related_fact.placements,
+                "same acquisition-flag award group as the randomized physical check"))
+            occupied_lots.add(related_lot)
     return plan
 
 
@@ -292,10 +336,10 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def serialize_plan(plan: SuppressionPlan) -> str:
+def serialize_plan(plan: Plan) -> str:
     """Canonical bytes hashed by the world/client installation contract."""
     return json.dumps({
-        "format": "bb-vanilla-suppression-plan-v1",
+        "format": PLAN_FORMAT,
         "placeholder": plan.placeholder,
         "edits": [asdict(e) for e in plan.edits],
         "refusals": [asdict(r) for r in plan.refusals],

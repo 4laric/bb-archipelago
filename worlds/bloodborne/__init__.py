@@ -3,7 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
-from .data import MODEL
+from .data import (
+    CENTRAL_YHARNAM_SLICE_ENTRANCES,
+    CENTRAL_YHARNAM_SLICE_ITEM_KEYS,
+    CENTRAL_YHARNAM_SLICE_LOCATION_KEYS,
+    CENTRAL_YHARNAM_SLICE_REGIONS,
+    MODEL,
+)
 from .model import ItemKind, Rule
 from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime_item_binding
 
@@ -11,12 +17,19 @@ GAME = "Bloodborne"
 WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r5"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
-SUPPRESSION_PLAN_SHA256 = "95abe11693c8825ad695d82c7264b5b67cc30299ed89adf0720b48b1ab2c7d69"
+SUPPRESSION_PLAN_SHA256 = "d044bdb5b02eeedf049718b69630866cf5eb89d98067445d772dd6ac486c6c73"
 ID_BASE = 0xBB0000
-NETWORK_LOCATIONS = tuple(MODEL.locations)
-SHUFFLABLE_ITEMS = tuple(item for item in MODEL.items if item.kind is not ItemKind.EVENT)
+NETWORK_LOCATIONS = tuple(
+    location for location in MODEL.locations
+    if location.key in CENTRAL_YHARNAM_SLICE_LOCATION_KEYS
+)
+SHUFFLABLE_ITEMS = tuple(
+    item for item in MODEL.items
+    if item.key in CENTRAL_YHARNAM_SLICE_ITEM_KEYS
+)
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
 FILLER_ITEM_NAME = "Blood Vial"
+GOAL_LOCATION_KEY = "boss_father_gascoigne"
 
 
 class IdRegistryError(RuntimeError):
@@ -78,16 +91,22 @@ def build_runtime_slot_data() -> dict[str, Any]:
     AP ids are serialized as object keys because JSON has no integer-keyed
     objects.  The client validates and converts them back to signed 64-bit ids.
     """
-    locations_by_key = {location.key: location for location in MODEL.locations}
+    locations_by_key = {location.key: location for location in NETWORK_LOCATIONS}
     items_by_key = {item.key: item for item in SHUFFLABLE_ITEMS}
-    for key, binding in ITEM_BINDINGS.items():
+    active_item_bindings = {
+        key: ITEM_BINDINGS[key] for key in items_by_key
+    }
+    active_location_bindings = {
+        key: LOCATION_BINDINGS[key] for key in locations_by_key
+    }
+    for key, binding in active_item_bindings.items():
         validate_runtime_item_binding(key, binding, items_by_key[key].quantity)
     locations = {
         str(LOCATION_ID_BY_KEY[key]): {
             "event_flag": binding.event_flag,
             "vanilla_award_suppressed": locations_by_key[key].vanilla_award_suppressed,
         }
-        for key, binding in LOCATION_BINDINGS.items()
+        for key, binding in active_location_bindings.items()
     }
     items = {
         str(ITEM_ID_BY_KEY[key]): {
@@ -99,7 +118,7 @@ def build_runtime_slot_data() -> dict[str, Any]:
             "reinforcement_level": binding.reinforcement_level,
             "feed_effect": binding.feed_effect,
         }
-        for key, binding in ITEM_BINDINGS.items()
+        for key, binding in active_item_bindings.items()
     }
     items[str(ITEM_NAME_TO_ID[FILLER_ITEM_NAME])] = {
         "normalized_item_id": 0x400003E8,
@@ -121,6 +140,7 @@ def build_runtime_slot_data() -> dict[str, Any]:
             "manifest_format": SUPPRESSION_MANIFEST_FORMAT,
             "plan_sha256": SUPPRESSION_PLAN_SHA256,
         },
+        "goal_location": LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
     }
 
 try:
@@ -192,19 +212,16 @@ else:
             return BloodborneItem(name, classification, ITEM_NAME_TO_ID[name], self.player)
 
         def create_regions(self) -> None:
-            regions = {name: Region(name, self.player, self.multiworld) for name in MODEL.regions}
+            regions = {
+                name: Region(name, self.player, self.multiworld)
+                for name in CENTRAL_YHARNAM_SLICE_REGIONS
+            }
             self.multiworld.regions.extend(regions.values())
             for data in NETWORK_LOCATIONS:
                 location = BloodborneLocation(self.player, data.name, LOCATION_ID_BY_KEY[data.key], regions[data.region])
                 location.access_rule = _rule(data.rule, self.player)
                 regions[data.region].locations.append(location)
-                if data.locked_item:
-                    event = next(item for item in EVENT_ITEMS if item.key == data.locked_item)
-                    event_location = BloodborneLocation(self.player, f"{data.name} Event", None, regions[data.region])
-                    event_location.access_rule = _rule(data.rule, self.player)
-                    event_location.place_locked_item(BloodborneItem(event.name, ItemClassification.progression, None, self.player))
-                    regions[data.region].locations.append(event_location)
-            for data in MODEL.entrances:
+            for data in CENTRAL_YHARNAM_SLICE_ENTRANCES:
                 entrance = regions[data.source].create_exit(data.name)
                 entrance.access_rule = _rule(data.rule, self.player)
                 entrance.connect(regions[data.target])
@@ -215,7 +232,11 @@ else:
             self.multiworld.itempool.extend(self.create_item(name) for name in names)
 
         def set_rules(self) -> None:
-            self.multiworld.completion_condition[self.player] = lambda state: state.has("Mergo's Wet Nurse Defeated", self.player)
+            # Runtime completion is authoritative: the client sends CLIENT_GOAL
+            # when the debounced Gascoigne location flag is reported.  The
+            # slice has no item-logic gate before either boss, so generation's
+            # reachability condition is intentionally unconditional.
+            self.multiworld.completion_condition[self.player] = lambda state: True
 
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"

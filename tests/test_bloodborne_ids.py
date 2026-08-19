@@ -21,6 +21,8 @@ from worlds.bloodborne import (
     ITEM_NAME_TO_ID,
     LOCATION_ID_BY_KEY,
     LOCATION_NAME_TO_ID,
+    NETWORK_LOCATIONS,
+    SHUFFLABLE_ITEMS,
     FILLER_ITEM_NAME,
     IdRegistryError,
     _assigned,
@@ -87,37 +89,53 @@ GOLDEN_LOCATIONS = {
 
 class GoldenIdTests(unittest.TestCase):
     def test_item_ids_match_the_golden_snapshot(self):
+        for key, value in GOLDEN_ITEMS.items():
+            self.assertEqual(value, _assigned("item", key), key)
         actual = dict(ITEM_ID_BY_KEY)
         actual["blood_vial"] = ITEM_NAME_TO_ID[FILLER_ITEM_NAME]
-        self.assertEqual(actual, GOLDEN_ITEMS)
+        self.assertEqual(
+            actual,
+            {key: GOLDEN_ITEMS[key] for key in ("saw_spear", "blood_vial")},
+        )
 
     def test_location_ids_match_the_golden_snapshot(self):
-        self.assertEqual(dict(LOCATION_ID_BY_KEY), GOLDEN_LOCATIONS)
+        for key, value in GOLDEN_LOCATIONS.items():
+            self.assertEqual(value, _assigned("location", key), key)
+
+        from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
+        published = set(GOLDEN_LOCATIONS)
+        added = [row.key for row in FIXED_LOCATIONS if row.key not in published]
+        expected = {
+            key: 0xBB1025 + index for index, key in enumerate(added)
+        }
+        expected["boss_cleric_beast"] = 0xBB1052
+        self.assertEqual(
+            {key: LOCATION_ID_BY_KEY[key] for key in expected},
+            expected,
+        )
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""
-        shufflable = [i for i in MODEL.items if i.kind is not ItemKind.EVENT]
+        shufflable = list(SHUFFLABLE_ITEMS)
         forwards = {i.key: _assigned("item", i.key) for i in shufflable}
         backwards = {i.key: _assigned("item", i.key) for i in reversed(shufflable)}
         self.assertEqual(forwards, backwards)
-        self.assertEqual(forwards, {k: v for k, v in GOLDEN_ITEMS.items() if k != "blood_vial"})
+        self.assertEqual(forwards, {"saw_spear": GOLDEN_ITEMS["saw_spear"]})
 
     def test_ids_are_stable_under_insertion(self):
         """Inserting a key must not move any existing key's id."""
-        before = {i.key: _assigned("item", i.key) for i in MODEL.items
-                  if i.kind is not ItemKind.EVENT}
+        before = {i.key: _assigned("item", i.key) for i in SHUFFLABLE_ITEMS}
         # a new key would be appended to ids.tsv, not renumber the others
-        self.assertEqual(before, {k: v for k, v in GOLDEN_ITEMS.items() if k != "blood_vial"})
+        self.assertEqual(before, {"saw_spear": GOLDEN_ITEMS["saw_spear"]})
 
 
 class RegistryCoverageTests(unittest.TestCase):
     def test_every_shufflable_item_has_an_assignment(self):
-        for item in MODEL.items:
-            if item.kind is not ItemKind.EVENT:
-                self.assertIn(item.key, ITEM_ID_BY_KEY, item.key)
+        for item in SHUFFLABLE_ITEMS:
+            self.assertIn(item.key, ITEM_ID_BY_KEY, item.key)
 
     def test_every_location_has_an_assignment(self):
-        for location in MODEL.locations:
+        for location in NETWORK_LOCATIONS:
             self.assertIn(location.key, LOCATION_ID_BY_KEY, location.key)
 
     def test_event_items_are_not_assigned_network_ids(self):
@@ -132,7 +150,7 @@ class RegistryCoverageTests(unittest.TestCase):
     def test_display_names_are_unique(self):
         """Two items sharing a name would silently collapse in item_name_to_id."""
         self.assertEqual(len(ITEM_NAME_TO_ID), len(set(ITEM_NAME_TO_ID)))
-        self.assertEqual(len(LOCATION_NAME_TO_ID), len(MODEL.locations))
+        self.assertEqual(len(LOCATION_NAME_TO_ID), len(NETWORK_LOCATIONS))
 
 
 class RegistryFailureTests(unittest.TestCase):

@@ -1,9 +1,10 @@
-# Bloodborne MVP progression DAG
+# Bloodborne research progression DAG
 
-This is the current base-game reachability graph. It models requirements, not a prescribed
-walkthrough order. Return shortcuts and travel edges are omitted so the graph remains acyclic.
-Chalice Dungeons are outside MVP scope. Old Hunters is an optional branch and is not required for
-the default Wet Nurse goal.
+This is the post-Gascoigne research scaffold, not the currently generated
+vertical slice. The playable slice ends at Father Gascoigne and is specified in
+`VERTICAL-SLICE.md`. This graph models candidate later requirements, not a
+prescribed walkthrough order. Return shortcuts and travel edges are omitted so
+the graph remains acyclic. Chalice Dungeons remain out of scope.
 
 ```mermaid
 flowchart LR

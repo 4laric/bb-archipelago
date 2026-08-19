@@ -1,5 +1,13 @@
 # Work plan
 
+> **2026-08-19 slice update:** the generated world is now bounded to 51
+> Central Yharnam pickups plus Cleric Beast and Father Gascoigne. The complete
+> 54-row suppression binder builds with zero refusals, and Gascoigne is the
+> seed's goal location. Historical phase text below explains how the project
+> reached this point; the remaining critical path is live gameplay/save
+> identity, execution-time identity containment, suppression canary validation,
+> and the final end-to-end slice run. See `VERTICAL-SLICE.md` for current truth.
+
 Written 2026-08-18, after an audit of the 08-16/17 working tree and a subsequent adversarial
 review. Every state claim below was verified by running the thing, not by reading it.
 

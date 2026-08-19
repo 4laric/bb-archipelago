@@ -22,10 +22,12 @@ if (File.Exists(outputPath))
 
 Plan plan = JsonSerializer.Deserialize<Plan>(File.ReadAllText(planPath))
     ?? throw new InvalidDataException("plan is empty");
-if (plan.Format != "bb-vanilla-suppression-plan-v1")
+if (plan.Format != "bb-vanilla-suppression-plan-v2")
     throw new InvalidDataException($"unsupported plan format {plan.Format}");
 if (!Int32.TryParse(plan.Placeholder.GoodsId, out int placeholderGoods))
     throw new InvalidDataException("placeholder goods id is not a 32-bit integer");
+if (plan.Placeholder.Quantity < 1)
+    throw new InvalidDataException("placeholder quantity must be positive");
 if (plan.Edits.Count == 0)
     throw new InvalidDataException("plan contains no edits");
 
@@ -46,6 +48,7 @@ var changes = new List<Applied>();
 foreach (Edit edit in plan.Edits)
 {
     if (!Int32.TryParse(edit.ItemLotId, out int lotId)
+        || !Int32.TryParse(edit.ItemCategory, out int itemCategory)
         || !Int32.TryParse(edit.GoodsId, out int goodsId)
         || !Int32.TryParse(edit.AcquisitionFlag, out int expectedFlag))
         throw new InvalidDataException($"{edit.ItemKey}: plan contains a non-integer field");
@@ -59,30 +62,39 @@ foreach (Edit edit in plan.Edits)
         throw new InvalidDataException(
             $"{edit.ItemKey}: row {lotId} flag is {actualFlag}, plan says {expectedFlag}");
     var matchingSlots = Enumerable.Range(1, 8).Where(slot =>
-        Convert.ToInt32(RequireCell(row, $"lotItemCategory{slot:00}").Value) == 4
+        Convert.ToInt32(RequireCell(row, $"lotItemCategory{slot:00}").Value) == itemCategory
         && Convert.ToInt32(RequireCell(row, $"lotItemId{slot:00}").Value) == goodsId).ToList();
     if (matchingSlots.Count != 1)
         throw new InvalidDataException(
-            $"{edit.ItemKey}: row {lotId} has {matchingSlots.Count} matching goods slots");
-    changes.Add(new Applied(edit.ItemKey, lotId, matchingSlots[0], goodsId, expectedFlag));
+            $"{edit.ItemKey}: row {lotId} has {matchingSlots.Count} matching "
+            + $"category {itemCategory} item slots");
+    changes.Add(new Applied(
+        edit.ItemKey, lotId, matchingSlots[0], itemCategory, goodsId, expectedFlag));
 }
 if (changes.Select(change => change.LotId).Distinct().Count() != changes.Count)
     throw new InvalidDataException("plan edits the same ItemLotParam row more than once");
 
 foreach (Applied change in changes)
-    RequireCell(itemLots.Rows.Single(row => row.ID == change.LotId),
-        $"lotItemId{change.Slot:00}").Value = placeholderGoods;
+{
+    PARAM.Row row = itemLots.Rows.Single(row => row.ID == change.LotId);
+    RequireCell(row, $"lotItemCategory{change.Slot:00}").Value = 4;
+    RequireCell(row, $"lotItemId{change.Slot:00}").Value = placeholderGoods;
+    RequireCell(row, $"lotItemNum{change.Slot:00}").Value = plan.Placeholder.Quantity;
+}
 
 itemLotFile.Bytes = itemLots.Write();
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 game.Write(outputPath);
 
-VerifyOutput(outputPath, definition, originalFiles, originalRows, changes, placeholderGoods);
+VerifyOutput(
+    outputPath, definition, originalFiles, originalRows, changes,
+    placeholderGoods, plan.Placeholder.Quantity);
 Console.WriteLine(
     $"suppressed={changes.Count} placeholder_goods={placeholderGoods} output={outputPath}");
 foreach (Applied change in changes)
     Console.WriteLine(
-        $"  lot={change.LotId} slot={change.Slot:00} goods={change.GoodsId}->{placeholderGoods} "
+        $"  lot={change.LotId} slot={change.Slot:00} "
+        + $"category:item={change.ItemCategory}:{change.GoodsId}->4:{placeholderGoods} "
         + $"flag={change.AcquisitionFlag} unchanged key={change.ItemKey}");
 return 0;
 
@@ -123,7 +135,8 @@ static void VerifyOutput(
     List<FileState> originalFiles,
     List<RowState> originalRows,
     List<Applied> changes,
-    int placeholderGoods)
+    int placeholderGoods,
+    int placeholderQuantity)
 {
     BND4 output = BND4.Read(outputPath);
     if (output.Files.Count != originalFiles.Count)
@@ -155,9 +168,17 @@ static void VerifyOutput(
             continue;
         }
         string field = $"lotItemId{change.Slot:00}";
-        before.RequireEqualExcept(after, field, $"planned row {row.ID}");
+        string categoryField = $"lotItemCategory{change.Slot:00}";
+        string quantityField = $"lotItemNum{change.Slot:00}";
+        before.RequireEqualExcept(
+            after, new HashSet<string> { field, categoryField, quantityField },
+            $"planned row {row.ID}");
         if (Convert.ToInt32(RequireCell(row, field).Value) != placeholderGoods)
             throw new InvalidDataException($"row {row.ID}: placeholder was not written");
+        if (Convert.ToInt32(RequireCell(row, categoryField).Value) != 4)
+            throw new InvalidDataException($"row {row.ID}: placeholder category was not written");
+        if (Convert.ToInt32(RequireCell(row, quantityField).Value) != placeholderQuantity)
+            throw new InvalidDataException($"row {row.ID}: placeholder quantity was not written");
         if (Convert.ToInt32(RequireCell(row, "getItemFlagId").Value) != change.AcquisitionFlag)
             throw new InvalidDataException($"row {row.ID}: acquisition flag changed");
     }
@@ -169,13 +190,16 @@ sealed record Plan(
     [property: JsonPropertyName("edits")] List<Edit> Edits);
 sealed record Placeholder(
     [property: JsonPropertyName("goods_id")] string GoodsId,
-    [property: JsonPropertyName("name")] string Name);
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("quantity")] int Quantity);
 sealed record Edit(
     [property: JsonPropertyName("item_key")] string ItemKey,
+    [property: JsonPropertyName("item_category")] string ItemCategory,
     [property: JsonPropertyName("goods_id")] string GoodsId,
     [property: JsonPropertyName("item_lot_id")] string ItemLotId,
     [property: JsonPropertyName("acquisition_flag")] string AcquisitionFlag);
-sealed record Applied(string ItemKey, int LotId, int Slot, int GoodsId, int AcquisitionFlag);
+sealed record Applied(
+    string ItemKey, int LotId, int Slot, int ItemCategory, int GoodsId, int AcquisitionFlag);
 sealed record FileState(int Id, string Name, byte[] Bytes);
 
 sealed record RowState(int Id, string Name, Dictionary<string, object> Cells)
@@ -189,15 +213,16 @@ sealed record RowState(int Id, string Name, Dictionary<string, object> Cells)
         value is byte[] bytes ? (byte[])bytes.Clone() : value;
 
     public void RequireEqual(RowState after, string context) =>
-        RequireEqualExcept(after, null, context);
+        RequireEqualExcept(after, new HashSet<string>(), context);
 
-    public void RequireEqualExcept(RowState after, string? allowedField, string context)
+    public void RequireEqualExcept(
+        RowState after, IReadOnlySet<string> allowedFields, string context)
     {
         if (Id != after.Id || Name != after.Name || !Cells.Keys.ToHashSet().SetEquals(after.Cells.Keys))
             throw new InvalidDataException($"{context}: row identity or field set changed");
         foreach ((string field, object before) in Cells)
         {
-            if (field == allowedField)
+            if (allowedFields.Contains(field))
                 continue;
             object value = after.Cells[field];
             bool same = before is byte[] left && value is byte[] right

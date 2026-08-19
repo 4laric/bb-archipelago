@@ -72,11 +72,11 @@ def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantit
 class RuntimeLocationBinding:
     event_flag: int | None
     evidence: str
-    item_lot_id: int
+    item_lot_id: int | None
     source_kind: str
     source_ref: str
-    item_category: int
-    item_id: int
+    item_category: int | None
+    item_id: int | None
 
 
 ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
@@ -122,6 +122,24 @@ EQUIPMENT_EXCLUSIONS: dict[str, RuntimeEquipmentExclusion] = {
 }
 
 LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
+    "boss_cleric_beast": RuntimeLocationBinding(
+        12411700,
+        "EMEVD boss-completion flag; m24_01_00_00 event 12411700 is paired with 12411800",
+        None,
+        "boss_defeat",
+        "m24_01_00_00.emevd.dcx.js:1047",
+        None,
+        None,
+    ),
+    "boss_father_gascoigne": RuntimeLocationBinding(
+        12411800,
+        "EMEVD boss-completion flag; event 12411800 gates the arena, key award, and world state",
+        None,
+        "boss_defeat",
+        "m24_01_00_00.emevd.dcx.js:1394-1417",
+        None,
+        None,
+    ),
     "pickup_cainhurst_summons": RuntimeLocationBinding(
         52410990, "EMEVD award m24_01_00_00:2310 + ItemLotParam 2410990 acquisition flag",
         2410990, "script_award", "m24_01_00_00.emevd.dcx.js:2310", 4, 4003),

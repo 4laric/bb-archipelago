@@ -35,15 +35,20 @@ BUNDLE = REPO / "research" / "bb_inputs.db"
 COLUMNS = (["ID", "Name"]
            + [f"lotItemId{n:02d}" for n in range(1, 9)]
            + [f"lotItemCategory{n:02d}" for n in range(1, 9)]
+           + [f"lotItemNum{n:02d}" for n in range(1, 9)]
            + ["getItemFlagId", ""])
 FLAG_AT = COLUMNS.index("getItemFlagId")
 
 
 def row(lot: str, name: str, items: dict[int, tuple[str, str]], flag: str) -> str:
-    fields = [lot, name] + ["0"] * 16 + [flag]
+    fields = ["0"] * (len(COLUMNS) - 1)
+    fields[COLUMNS.index("ID")] = lot
+    fields[COLUMNS.index("Name")] = name
+    fields[COLUMNS.index("getItemFlagId")] = flag
     for slot, (goods, category) in items.items():
-        fields[1 + slot] = goods
-        fields[9 + slot] = category
+        fields[COLUMNS.index(f"lotItemId{slot:02d}")] = goods
+        fields[COLUMNS.index(f"lotItemCategory{slot:02d}")] = category
+        fields[COLUMNS.index(f"lotItemNum{slot:02d}")] = "2"
     return ",".join(fields)
 
 
@@ -52,13 +57,13 @@ def table(*rows: str) -> Table:
 
 
 def plan(*edits: dict, placeholder: str = "1000") -> dict:
-    return {"format": "bb-vanilla-suppression-plan-v1",
-            "placeholder": {"goods_id": placeholder, "name": "Blood Vial"},
+    return {"format": "bb-vanilla-suppression-plan-v2",
+            "placeholder": {"goods_id": placeholder, "name": "Blood Vial", "quantity": 1},
             "edits": list(edits)}
 
 
-def edit(key: str, lot: str, goods: str, flag: str) -> dict:
-    return {"item_key": key, "goods_id": goods, "item_lot_id": lot,
+def edit(key: str, lot: str, goods: str, flag: str, category: str = "4") -> dict:
+    return {"item_key": key, "item_category": category, "goods_id": goods, "item_lot_id": lot,
             "lot_name": "n", "acquisition_flag": flag, "placements": 1}
 
 
@@ -92,6 +97,7 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual(t.field(t.row_by_id["100"], "lotItemId01"), "1000")
         self.assertEqual(t.field(t.row_by_id["100"], "getItemFlagId"), "50000001")
         self.assertEqual(t.field(t.row_by_id["100"], "lotItemCategory01"), "4")
+        self.assertEqual(t.field(t.row_by_id["100"], "lotItemNum01"), "1")
 
     def test_it_finds_the_right_slot_rather_than_assuming_the_first(self):
         t = table(row("100", "lot", {1: ("9999", "4"), 3: ("4001", "4")}, "50000001"))
@@ -99,6 +105,15 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual(applied[0].slot, "03")
         self.assertEqual(t.field(t.row_by_id["100"], "lotItemId01"), "9999")
         self.assertEqual(t.field(t.row_by_id["100"], "lotItemId03"), "1000")
+
+    def test_equipment_is_replaced_by_a_goods_placeholder(self):
+        t = table(row("100", "lot", {2: ("7100000", "0")}, "50000001"))
+        applied = apply_plan(
+            t, plan(edit("saw_spear", "100", "7100000", "50000001", category="0"))
+        )
+        self.assertEqual(applied[0].was_category, "0")
+        self.assertEqual(t.field(t.row_by_id["100"], "lotItemId02"), "1000")
+        self.assertEqual(t.field(t.row_by_id["100"], "lotItemCategory02"), "4")
 
     def test_untouched_rows_are_byte_identical(self):
         t = table(row("100", "a", {1: ("4001", "4")}, "1"),
@@ -145,7 +160,7 @@ class RefusalTests(unittest.TestCase):
     def test_a_foreign_plan_format(self):
         t = table(row("100", "a", {1: ("4001", "4")}, "1"))
         bad = plan(edit("k", "100", "4001", "1")); bad["format"] = "something-else"
-        self.assertIn("expected a bb-vanilla-suppression-plan-v1", self.apply(t, bad))
+        self.assertIn("expected a bb-vanilla-suppression-plan-v2", self.apply(t, bad))
 
     def test_a_non_numeric_placeholder(self):
         t = table(row("100", "a", {1: ("4001", "4")}, "1"))
@@ -209,7 +224,7 @@ class EndToEndTests(unittest.TestCase):
         from tools.plan_vanilla_suppression import build_complete_plan
         p = build_complete_plan(REPO / "research", {"goods_id": "1000", "name": "Blood Vial"})
         cls.plan = json.loads(json.dumps({
-            "format": "bb-vanilla-suppression-plan-v1",
+            "format": "bb-vanilla-suppression-plan-v2",
             "placeholder": p.placeholder,
             "edits": [e.__dict__ for e in p.edits]}))
         cls.text = read_params(BUNDLE)
