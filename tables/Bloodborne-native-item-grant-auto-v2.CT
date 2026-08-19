@@ -8,9 +8,9 @@ local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
 local logPath=root..[[native-grant.log]]
 local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
-local build=[[bb-0.1.0-r3]]
+local build=[[bb-0.1.0-r4]]
 local protocol=[[BBGRANT1]]
-local harness=[[bb-native-grant-v3]]
+local harness=[[bb-native-grant-v4]]
 local maxVerifyPolls=20
 local maxManualWaitPolls=240
 local function readStateFile()
@@ -126,18 +126,17 @@ label(bbAutoManualTrigger)
   cmp dword ptr [bbAutoRequest],2
   je bbAutoExisting
   mov dword ptr [bbAutoRequest],0
-  sub rsp,20
   mov eax,[bbAutoDescriptor]
   mov [rsp],eax
-  mov eax,[bbAutoDescriptor+4]
-  mov [rsp+4],eax
   mov qword ptr [rsp+8],0
+  mov eax,[bbAutoDescriptor+4]
+  mov [rsp+10],eax
+  mov dword ptr [rsp+14],0
   mov rdi,r13
   mov rsi,rsp
   mov edx,[bbAutoQuantity]
   mov rax,8014DA0A0
   call rax
-  add rsp,20
   jmp bbAutoFinish
 
 bbAutoExisting:
@@ -370,6 +369,6 @@ else
   stateTag=""; stateExpectedBefore=""; stateExpectedAfter=""
   state("awaiting_inventory","Use one bullet once after launch")
 end
-append(string.format("AUTO V3 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
+append(string.format("AUTO V4 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
 ]]></LuaScript>
 </CheatTable>

@@ -6,9 +6,9 @@ param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$Tag,
     [ValidateSet('AUTO','MANUAL')][string]$Trigger='AUTO'
 )
-$build='bb-0.1.0-r3'
+$build='bb-0.1.0-r4'
 $protocol='BBGRANT1'
-$harness='bb-native-grant-v3'
+$harness='bb-native-grant-v4'
 $work='C:\Users\alari\bb-archipelago\work'
 $command=Join-Path $work 'native-grant-command.txt'
 $state=Join-Path $work 'native-grant-state.txt'

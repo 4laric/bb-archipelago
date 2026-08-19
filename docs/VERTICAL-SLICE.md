@@ -13,9 +13,9 @@ The slice now has one generation contract across all three pieces.
    Bloodborne Client installed with the apworld. It queues received items into
    the harness one at a time and advances its durable receipt only after the
    harness reports completion. The cross-artifact runtime build is
-   `bb-0.1.0-r3`; it is emitted in slot data, printed by the client, and written
+   `bb-0.1.0-r4`; it is emitted in slot data, printed by the client, and written
    by the harness. The wire contract is `BBGRANT1` and the table
-   identifies itself as `bb-native-grant-v3`; either client refuses a different
+   identifies itself as `bb-native-grant-v4`; either client refuses a different
    or missing version. The bridge uses the harness's `AUTO` expected-count mode.
    Before any write, the harness persists the sampled count, target count, and
    receipt-index tag. A restart can therefore distinguish a command that never

@@ -8,7 +8,7 @@ review. Every state claim below was verified by running the thing, not by readin
 | Piece | State |
 | --- | --- |
 | World generation | **Works.** AP 0.6.7 / Python 3.11, clean at `full`, `minimal`, enemizer on and off. |
-| Item delivery | **Existing-stack and replay recovery work** through the v3 Cheat Engine bridge. Failed verification is bounded and a retained completed command survives a full restart without double-granting. The latest absent-stack Pebble canary failed safely and remains under investigation. |
+| Item delivery | **Absent-stack, existing-stack, and replay recovery work** through the v4 Cheat Engine bridge. A 24-byte in-frame descriptor restored absent Pebble insertion on shadPS4 v0.18; failed verification is bounded, and a retained completed command survives a full restart without double-granting. |
 | The AP client | **Crashes on every launch path** (#17). Whatever exercised delivery end to end did not go through `launch()`. |
 | Item *randomisation* | **Does not exist.** Nothing suppresses the vanilla award, so shuffled keys gate nothing (#14). |
 | Location detection | **Does not exist.** No flag-manager accessor. Checks are typed by hand (#15). |
