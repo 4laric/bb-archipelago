@@ -4,7 +4,12 @@ import csv
 import unittest
 from pathlib import Path
 
-from worlds.bloodborne import LOCATION_ID_BY_KEY, build_runtime_slot_data
+from worlds.bloodborne import (
+    LOCATION_ID_BY_KEY,
+    SUPPRESSION_MANIFEST_FORMAT,
+    SUPPRESSION_PLAN_SHA256,
+    build_runtime_slot_data,
+)
 from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
 
 
@@ -70,6 +75,20 @@ class FixedLocationCatalogTests(unittest.TestCase):
     def test_selected_location_names_and_flags_are_unique(self):
         self.assertEqual(len(FIXED_LOCATIONS), len({row.name for row in FIXED_LOCATIONS}))
         self.assertEqual(len(FIXED_LOCATIONS), len({row.event_flag for row in FIXED_LOCATIONS}))
+
+    def test_suppression_claim_has_a_seed_owned_install_witness_contract(self):
+        slot_data = build_runtime_slot_data()
+        requirement = slot_data["suppression"]
+        self.assertEqual(requirement["manifest_format"], SUPPRESSION_MANIFEST_FORMAT)
+        self.assertEqual(requirement["plan_sha256"], SUPPRESSION_PLAN_SHA256)
+        self.assertRegex(requirement["plan_sha256"], r"^[0-9a-f]{64}$")
+        self.assertEqual(
+            requirement["required"],
+            any(
+                row["vanilla_award_suppressed"]
+                for row in slot_data["runtime_locations"].values()
+            ),
+        )
 
 
 if __name__ == "__main__":

@@ -52,10 +52,14 @@ location acquisition flags are mapped statically, and as of 2026-08-18 the live 
 state from an eboot-relative pointer slot, gated on the setter signature, across two independently
 randomized process launches and without Cheat Engine.
 
-Nothing is automatic yet all the same. What is missing is the client half — a poller, and the
-false-positive containment an irreversible `LocationChecks` send requires. See
-`docs/EVENT-FLAG-RESEARCH.md` for the layout and evidence, and `docs/WORKPLAN.md` Phase 1 for the
-remaining work.
+Nothing is automatic in *this* client. The apworld's Python client still reports manually.
+
+A second client exists in `from-software-archipelago-clients`. Its r4 Rust backend reads flags
+directly, but live `LocationChecks` now fail closed before any flag read unless the backend can
+prove both a stable gameplay state and the explicitly bound save identity. The current v0.18
+backend cannot prove those facts, so only the diagnostic reader is live. Mock mode supplies the
+validated context and requires three consecutive true reads, which lets the complete AP loop run
+without arming irreversible live sends. See `docs/WORKPLAN.md` Phase 1.
 
 Item delivery is real: the client queues received items into the Cheat Engine harness one at a
 time and advances a durable receipt only after the harness confirms completion. Absent-item

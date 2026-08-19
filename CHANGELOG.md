@@ -12,8 +12,10 @@ under `Unreleased` and move into a dated version section when released.
   save-restored pickup replay and a one-shot write breakpoint proved divisor-1000
   grouping with MSB-first bit packing; a manager-relative resolver rediscovers the
   randomized eboot base, gates on the setter signature, fails closed on a
-  mismatch, and returns live flag state without Cheat Engine. Checks are still
-  reported manually — nothing polls this yet.
+  mismatch, and returns live flag state without Cheat Engine. The apworld's own
+  client still reports checks manually. The separate r4 native client now has
+  save-identity, gameplay-state and debounce gates, and deliberately leaves
+  live check sends disarmed until its backend can supply the first two.
 - One runtime build string, `bb-0.1.0-r4`, now spans the apworld, the client, the
   Cheat Engine table and the grant helper. The client prints it on connect and
   refuses a harness reporting a different or missing version; the wire contract is

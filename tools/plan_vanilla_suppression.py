@@ -282,12 +282,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps({
-            "format": "bb-vanilla-suppression-plan-v1",
-            "placeholder": plan.placeholder,
-            "edits": [asdict(e) for e in plan.edits],
-            "refusals": [asdict(r) for r in plan.refusals],
-        }, indent=2) + "\n", encoding="utf-8")
+        args.output.write_bytes(serialize_plan(plan).encode("utf-8"))
         print(f"wrote {args.output}")
 
     if plan.refusals and not args.allow_refusals:
@@ -295,6 +290,16 @@ def main(argv: list[str] | None = None) -> int:
               "to record what is known and what is not.", file=sys.stderr)
         return 1
     return 0
+
+
+def serialize_plan(plan: SuppressionPlan) -> str:
+    """Canonical bytes hashed by the world/client installation contract."""
+    return json.dumps({
+        "format": "bb-vanilla-suppression-plan-v1",
+        "placeholder": plan.placeholder,
+        "edits": [asdict(e) for e in plan.edits],
+        "refusals": [asdict(r) for r in plan.refusals],
+    }, indent=2) + "\n"
 
 
 if __name__ == "__main__":
