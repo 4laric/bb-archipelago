@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory=$true)][string]$NormalizedId,
     [Parameter(Mandatory=$true)][ValidateRange(1,99)][int]$Quantity,
     [ValidatePattern('^(AUTO|[0-9]+)$')][string]$Expected='AUTO',
-    [Parameter(Mandatory=$true)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$Tag
+    [Parameter(Mandatory=$true)][ValidatePattern('^[A-Za-z0-9_.-]+$')][string]$Tag,
+    [ValidateSet('AUTO','MANUAL')][string]$Trigger='AUTO'
 )
 $build='bb-0.1.0-r3'
 $protocol='BBGRANT1'
@@ -22,7 +23,7 @@ if(Test-Path -LiteralPath $state){
 if($current.build -ne $build -or $current.protocol -ne $protocol -or $current.harness -ne $harness){
     throw "Grant bridge mismatch: expected $build / $protocol / $harness"
 }
-$line="$protocol GRANT $RawId $NormalizedId $Quantity $Expected $Tag"
+$line="$protocol GRANT $RawId $NormalizedId $Quantity $Expected $Tag $Trigger"
 $stream=[IO.File]::Open($command,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::Read)
 try {
     $bytes=[Text.Encoding]::ASCII.GetBytes($line)

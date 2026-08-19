@@ -53,6 +53,7 @@ local inventoryPointer=request+0x10
 local descriptor=request+0x20
 local slotIndex=request+0x34
 local itemQuantityPointer=request+0x38
+local manualTrigger=request+0x50
 local active=nil
 local pid=nil
 
@@ -70,11 +71,12 @@ end
 local function parse(line)
   local t={}; for word in string.gmatch(line or "","%S+") do t[#t+1]=word end
   if t[1]~=protocol then return nil,"Unsupported grant protocol; expected "..protocol end
-  if string.upper(t[2] or "")~="GRANT" then return nil,"Usage: "..protocol.." GRANT raw-id normalized-id quantity expected-before tag" end
+  if string.upper(t[2] or "")~="GRANT" then return nil,"Usage: "..protocol.." GRANT raw-id normalized-id quantity expected-before tag [AUTO|MANUAL]" end
   local raw,normalized,count,expected=tonumber(t[3] or ""),tonumber(t[4] or ""),tonumber(t[5] or ""),tonumber(t[6] or "")
   local autoExpected=string.upper(t[6] or "")=="AUTO"
-  if not raw or not normalized or not count or (not expected and not autoExpected) or count<1 or count>99 or (expected and expected<0) then return nil,"Invalid IDs, quantity, or expected count" end
-  return {line=line,raw=raw,normalized=normalized,count=count,expected=expected,autoExpected=autoExpected,tag=t[7] or "untagged",verifyPolls=0}
+  local trigger=string.upper(t[8] or "AUTO")
+  if not raw or not normalized or not count or (not expected and not autoExpected) or count<1 or count>99 or (expected and expected<0) or (trigger~="AUTO" and trigger~="MANUAL") then return nil,"Invalid IDs, quantity, expected count, or trigger mode" end
+  return {line=line,raw=raw,normalized=normalized,count=count,expected=expected,autoExpected=autoExpected,tag=t[7] or "untagged",manualTrigger=trigger=="MANUAL",verifyPolls=0}
 end
 local function findItem(itemId)
   local inventory=readQword(inventoryPointer)
@@ -114,6 +116,7 @@ label(bbAutoDescriptor)
 label(bbAutoOverflow)
 label(bbAutoSlotIndex)
 label(bbAutoItemQuantityPointer)
+label(bbAutoManualTrigger)
 
 8050DBA00:
   mov [bbAutoInventory],r13
@@ -183,9 +186,15 @@ bbAutoItemQuantityPointer:
   dd B0000384
   dd 40000384
   dd 0
+
+8050DBE50:
+bbAutoManualTrigger:
+  dd 0
   dd 0
 
 8050DBC00:
+  cmp dword ptr [bbAutoManualTrigger],0
+  jne bbAutoHeartbeatOriginal
   cmp dword ptr [bbAutoRequest],0
   je bbAutoHeartbeatOriginal
   cmp qword ptr [bbAutoInventory],0
@@ -226,6 +235,7 @@ local relocated={
   ["8050DBE00"]=base+0x50DBE00,
   ["8050DBE40"]=base+0x50DBE40,
   ["8050DBE4C"]=base+0x50DBE4C,
+  ["8050DBE50"]=base+0x50DBE50,
 }
 for old,address in pairs(relocated) do
   install=install:gsub(old,string.format("%X",address))
@@ -331,11 +341,12 @@ local function poll()
   writeInteger(descriptor+8,0); writeInteger(descriptor+12,0)
   writeInteger(slotIndex,slot or 0xFFFFFFFF)
   writeQword(itemQuantityPointer,quantityPointer or 0)
+  writeInteger(manualTrigger,command.manualTrigger and 1 or 0)
   writeInteger(quantity,command.count); writeInteger(result,0xFFFFFFFF); writeInteger(done,0)
   state("executing",string.format("tag=%s expected_before=%d expected_after=%d",command.tag,command.expected,wanted))
   writeInteger(request,1); active=command
   append(string.format("AUTO QUEUED tag=%s raw=0x%08X normalized=0x%08X quantity=%d expected_before=%d",command.tag,command.raw,command.normalized,command.count,command.expected))
-  state("queued",string.format("tag=%s heartbeat will execute automatically",command.tag))
+  state("queued",string.format("tag=%s trigger=%s",command.tag,command.manualTrigger and "manual_consumable" or "automatic_heartbeat"))
 end
 
 if bbNativeGrantHarnessTimer then bbNativeGrantHarnessTimer.destroy() end
