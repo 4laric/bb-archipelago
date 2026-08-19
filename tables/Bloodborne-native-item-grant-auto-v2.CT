@@ -8,11 +8,11 @@ local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
 local logPath=root..[[native-grant.log]]
 local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
-local build=[[bb-0.1.0-r4]]
+local build=[[bb-0.1.0-r5]]
 local protocol=[[BBGRANT1]]
-local harness=[[bb-native-grant-v4]]
+local harness=[[bb-native-grant-v5]]
 local maxVerifyPolls=20
-local maxManualWaitPolls=240
+local maxManualWaitPolls=1200
 local function readStateFile()
   local values={}
   local f=io.open(statePath,"r")
@@ -51,7 +51,7 @@ local quantity=request+4
 local result=request+8
 local done=request+0xC
 local inventoryPointer=request+0x10
-local descriptor=request+0x20
+local descriptor=request+0x60
 local slotIndex=request+0x34
 local itemQuantityPointer=request+0x38
 local manualTrigger=request+0x50
@@ -104,10 +104,12 @@ assert(801BFE882,48 81 C4 E8 07 00 00)
 assert(8050DBA00,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
 assert(8050DBC00,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
 assert(8050DBE00,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+assert(8050DBE60,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
 label(bbAutoConsumeOriginal)
 label(bbAutoHeartbeatOriginal)
 label(bbAutoExisting)
 label(bbAutoFinish)
+label(bbAutoDescriptorReady)
 label(bbAutoRequest)
 label(bbAutoQuantity)
 label(bbAutoResult)
@@ -129,11 +131,17 @@ label(bbAutoManualTrigger)
   mov eax,[bbAutoDescriptor]
   mov [rsp],eax
   mov qword ptr [rsp+8],0
-  mov eax,[bbAutoDescriptor+4]
+  mov eax,[bbAutoDescriptor+10]
   mov [rsp+10],eax
   mov dword ptr [rsp+14],0
   mov rdi,r13
   mov rsi,rsp
+  mov eax,[bbAutoDescriptor]
+  and eax,F0000000
+  cmp eax,80000000
+  jne bbAutoDescriptorReady
+  lea rsi,[bbAutoDescriptor]
+bbAutoDescriptorReady:
   mov edx,[bbAutoQuantity]
   mov rax,8014DA0A0
   call rax
@@ -169,12 +177,8 @@ bbAutoDone:
   dd 0
 bbAutoInventory:
   dq 0
-bbAutoDescriptor:
-  dd 0
-  dd 0
-  dd 0
-  dd 0
 
+8050DBE30:
 bbAutoOverflow:
   dd 0
 bbAutoSlotIndex:
@@ -189,6 +193,14 @@ bbAutoItemQuantityPointer:
 
 8050DBE50:
 bbAutoManualTrigger:
+  dd 0
+  dd 0
+
+8050DBE60:
+bbAutoDescriptor:
+  dd 0
+  dd 0
+  dq 0
   dd 0
   dd 0
 
@@ -233,9 +245,11 @@ local relocated={
   ["8050DBA00"]=base+0x50DBA00,
   ["8050DBC00"]=base+0x50DBC00,
   ["8050DBE00"]=base+0x50DBE00,
+  ["8050DBE30"]=base+0x50DBE30,
   ["8050DBE40"]=base+0x50DBE40,
   ["8050DBE4C"]=base+0x50DBE4C,
   ["8050DBE50"]=base+0x50DBE50,
+  ["8050DBE60"]=base+0x50DBE60,
 }
 for old,address in pairs(relocated) do
   install=install:gsub(old,string.format("%X",address))
@@ -345,8 +359,9 @@ local function poll()
     return
   end
   if readInteger(request)~=0 then state("busy","Native request already pending") return end
-  writeInteger(descriptor+0,command.raw); writeInteger(descriptor+4,command.normalized)
-  writeInteger(descriptor+8,0); writeInteger(descriptor+12,0)
+  writeInteger(descriptor+0,command.raw); writeInteger(descriptor+4,0)
+  writeQword(descriptor+8,0); writeInteger(descriptor+0x10,command.normalized)
+  writeInteger(descriptor+0x14,0)
   writeInteger(slotIndex,slot or 0xFFFFFFFF)
   writeQword(itemQuantityPointer,quantityPointer or 0)
   writeInteger(manualTrigger,command.manualTrigger and 1 or 0)
@@ -369,6 +384,6 @@ else
   stateTag=""; stateExpectedBefore=""; stateExpectedAfter=""
   state("awaiting_inventory","Use one bullet once after launch")
 end
-append(string.format("AUTO V4 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
+append(string.format("AUTO V5 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
 ]]></LuaScript>
 </CheatTable>

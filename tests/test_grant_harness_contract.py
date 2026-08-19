@@ -19,20 +19,27 @@ class GrantHarnessContractTests(unittest.TestCase):
         cls.helper = HELPER.read_text(encoding="utf-8")
 
     def test_wire_and_harness_versions_are_visible_in_state(self):
-        self.assertIn("local build=[[bb-0.1.0-r4]]", self.text)
+        self.assertIn("local build=[[bb-0.1.0-r5]]", self.text)
         self.assertIn("local protocol=[[BBGRANT1]]", self.text)
-        self.assertIn("local harness=[[bb-native-grant-v4]]", self.text)
+        self.assertIn("local harness=[[bb-native-grant-v5]]", self.text)
         self.assertIn('"build=",build', self.text)
         self.assertIn('"\\nprotocol=",protocol', self.text)
         self.assertIn('"\\nharness=",harness', self.text)
-        self.assertIn("$build='bb-0.1.0-r4'", self.helper)
+        self.assertIn("$build='bb-0.1.0-r5'", self.helper)
         self.assertIn("$protocol='BBGRANT1'", self.helper)
-        self.assertIn("$harness='bb-native-grant-v4'", self.helper)
+        self.assertIn("$harness='bb-native-grant-v5'", self.helper)
 
-    def test_native_descriptor_uses_the_retiring_24_byte_caller_frame(self):
+    def test_native_descriptor_selects_the_validated_source_by_item_category(self):
         self.assertIn("mov qword ptr [rsp+8],0", self.text)
         self.assertIn("mov [rsp+10],eax", self.text)
         self.assertIn("mov dword ptr [rsp+14],0", self.text)
+        self.assertIn("mov eax,[bbAutoDescriptor+10]", self.text)
+        self.assertIn("and eax,F0000000", self.text)
+        self.assertIn("cmp eax,80000000", self.text)
+        self.assertIn("lea rsi,[bbAutoDescriptor]", self.text)
+        self.assertIn("local descriptor=request+0x60", self.text)
+        self.assertIn("writeInteger(descriptor+0x10,command.normalized)", self.text)
+        self.assertIn('["8050DBE30"]=base+0x50DBE30', self.text)
         self.assertNotIn("sub rsp,20", self.text)
         self.assertNotIn("add rsp,20", self.text)
 
@@ -50,7 +57,7 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn("cmp dword ptr [bbAutoManualTrigger],0", self.text)
         self.assertIn('command.manualTrigger and "manual_consumable"', self.text)
         self.assertIn("[ValidateSet('AUTO','MANUAL')]", self.helper)
-        self.assertIn("local maxManualWaitPolls=240", self.text)
+        self.assertIn("local maxManualWaitPolls=1200", self.text)
         self.assertIn("manual trigger timed out after %d polls", self.text)
         self.assertIn("active=nil", self.text)
 

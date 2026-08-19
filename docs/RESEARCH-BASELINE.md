@@ -329,6 +329,32 @@ the probe cave (`eboot+0x50DBF79`); its command remained merely queued and was
 archived before restart. The clean reproduction distinguishes that diagnostic
 cave overrun from the validated grant path.
 
+Category-0 equipment exposed a distinct source-object requirement. A guarded
+Saw Spear request staged raw descriptor `0x806C5660`, but the in-frame copy
+arrived at the `ItemGrant` entry as zero and returned `-1`. Pointing category-0
+calls at a persistent 24-byte descriptor instead took the native success path;
+without the unsafe return diagnostic installed, the harness verified normalized
+ID `7100000` at quantity one, removed the command, and the player confirmed the
+Saw Spear in inventory while the game remained responsive. Category-4 goods
+retain the validated in-frame source. The category-aware bridge is versioned as
+`bb-0.1.0-r5` / `bb-native-grant-v5`.
+
+The consolidated r5 table was then revalidated in a clean emulator session.
+An absent Pebble used the category-4 in-frame source, returned native slot 78,
+verified quantity one, and left the game responsive. After starting a clean
+save, the catalog-backed Saw Spear descriptor `0x806C5660` used the category-0
+persistent source, returned native slot 77, verified normalized ID `7100000`,
+and appeared in the inventory UI. This is the shipping equipment canary.
+
+Two negative canaries establish that ItemLot weapon IDs are not themselves a
+general runtime-descriptor formula. Torch lot ID `20100000` produced an
+invisible record (`raw=0x8132B3A0`, `normalized=0x0032B3A0`), while Rifle Spear
+lot ID `10000000` produced `raw=0x80989680` with normalized ID `0xFFFFFFFF`.
+Both native calls returned a slot, but neither item appeared in the UI. Those
+records were confined to a discarded throwaway save. Equipment delivery must
+therefore remain allowlisted to separately live-validated runtime descriptors;
+the current evidence validates Saw Spear only.
+
 An existing-stack Blood Vial command then sampled three, wrote four, reread
 four, persisted `completed`, and removed its command. The player confirmed four
 in the inventory UI. A completed Vial state with expected counts four and five

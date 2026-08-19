@@ -18,7 +18,7 @@ LOCATION_BY_NAME = {loc.name.casefold(): LOCATION_ID_BY_KEY[loc.key] for loc in 
 LOCATION_NAME_BY_ID = {LOCATION_ID_BY_KEY[loc.key]: loc.name for loc in MODEL.locations}
 CHECK_JOURNAL = "manual-checks.jsonl"
 BRIDGE_PROTOCOL = "BBGRANT1"
-HARNESS_VERSION = "bb-native-grant-v4"
+HARNESS_VERSION = "bb-native-grant-v5"
 BRIDGE_TIMEOUT_SECONDS = 30
 TERMINAL_GRANT_STATES = {"failed", "command_rejected", "quantity_mismatch", "setup_error", "write_error"}
 
