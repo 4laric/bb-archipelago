@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reads the leading Iosefka bullet acquisition-flag candidate. No process writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local expectedPid=16592
+local address=0x20803170A
+local output=[[C:\Users\alari\bb-archipelago\work\iosefka-bullet-flag-probe.txt]]
+
+local pid=getOpenedProcessID()
+if not pid or pid==0 then error("Attach Cheat Engine to shadPS4.exe first") end
+if pid~=expectedPid then
+  error(string.format("Wrong shad process: expected PID %d, current PID %d",expectedPid,pid))
+end
+
+local value=readBytes(address,1,false)
+if value==nil then error(string.format("Candidate 0x%X is unreadable",address)) end
+
+local file=assert(io.open(output,"a"))
+file:write(string.format("%s\tpid=%d\taddress=0x%X\tvalue=0x%02X\n",
+  os.date("!%Y-%m-%dT%H:%M:%SZ"),pid,address,value))
+file:close()
+
+showMessage(string.format(
+  "Read-only candidate probe\n0x%X = 0x%02X (%d)",address,value,value))
+]]></LuaScript>
+</CheatTable>

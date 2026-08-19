@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read-only local diagnostic. Reports the last staged descriptor, captured
+     stack descriptor, and selected target record after the insert-exit probe. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local output=[[C:\Users\alari\bb-archipelago\work\bb-last-insert-capture.txt]]
+local f=assert(io.open(shadLog,"r"))
+local pending,base=false,nil
+for line in f:lines() do
+  if line:find("Loading module eboot.bin",1,true) then pending=true
+  elseif pending then
+    local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+    if hex then base=tonumber(hex,16); pending=false end
+  end
+end
+f:close()
+if not base then error("Could not resolve the current eboot base") end
+openProcess("shadPS4.exe")
+
+local staged=base+0x50DBE20
+local capture=base+0x50DBF80
+local descriptor=readQword(capture+0x10)
+local bank=readQword(capture+0x18)
+local offset=readQword(capture+0x08)
+local target=(bank or 0)+(offset or 0)
+local function dword(address) return readInteger(address) or 0 end
+local function qword(address) return readQword(address) or 0 end
+local out=assert(io.open(output,"w"))
+out:write(string.format("eboot_base=0x%X\n",base))
+out:write(string.format("staged=0x%X raw=0x%08X plus4=0x%08X plus8=0x%X plus10=0x%08X\n",
+  staged,dword(staged),dword(staged+4),qword(staged+8),dword(staged+0x10)))
+out:write(string.format("descriptor=0x%X raw=0x%08X plus4=0x%08X plus8=0x%X plus10=0x%08X\n",
+  descriptor or 0,dword(descriptor),dword(descriptor+4),qword(descriptor+8),dword(descriptor+0x10)))
+out:write(string.format("target=0x%X raw=0x%08X normalized=0x%08X quantity=%d flags=0x%08X\n",
+  target,dword(target),dword(target+4),dword(target+8),dword(target+0xC)))
+out:close()
+showMessage("Read-only last-insert snapshot complete.")
+]]></LuaScript>
+</CheatTable>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Guarded live diagnostic. Hooks the common exit of the native absent-item
+     insertion routine and records register/stack state for one grant attempt. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local output=[[C:\Users\alari\bb-archipelago\work\bb-native-insert-exit.txt]]
+
+local f=assert(io.open(shadLog,"r"))
+local pending,base=false,nil
+for line in f:lines() do
+  if line:find("Loading module eboot.bin",1,true) then
+    pending=true
+  elseif pending then
+    local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+    if hex then base=tonumber(hex,16); pending=false end
+  end
+end
+f:close()
+if not base then error("Could not resolve the current eboot base") end
+
+openProcess("shadPS4.exe")
+local insertExit=base+0x14DA720
+local cave=base+0x50DBF00
+local data=base+0x50DBF80
+
+local script=string.format([[
+assert(%X,48 8B 02 48 3B 45 D0)
+assert(%X,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+assert(%X,00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00)
+label(bbInsertExitCapture)
+
+%X:
+bbInsertExitCapture:
+  mov [%X],ecx
+  mov [%X],r15d
+  mov [%X],rbx
+  mov [%X],r13
+  mov [%X],r14
+  mov [%X],r12
+  mov [%X],rbp
+  mov eax,[rbp-78]
+  mov [%X],eax
+  mov rax,[rbp-50]
+  mov [%X],rax
+  mov eax,[rbp-AC]
+  mov [%X],eax
+  inc dword ptr [%X]
+  mov rax,[rdx]
+  cmp rax,[rbp-30]
+  jmp %X
+
+%X:
+  jmp %X
+  nop 2
+]],
+  insertExit,cave,data,
+  cave,
+  data+0x00,data+0x04,data+0x08,data+0x10,data+0x18,data+0x20,data+0x28,
+  data+0x30,data+0x38,data+0x40,data+0x44,
+  insertExit+7,
+  insertExit,cave)
+local ok,why=autoAssemble(script)
+if not ok then error("Insert-exit diagnostic install failed: "..tostring(why)) end
+
+if bbInsertExitDiagnosticTimer then bbInsertExitDiagnosticTimer.destroy() end
+bbInsertExitDiagnosticTimer=createTimer(nil)
+bbInsertExitDiagnosticTimer.Interval=100
+bbInsertExitDiagnosticTimer.OnTimer=function(timer)
+  local hits=readInteger(data+0x44) or 0
+  if hits==0 then return end
+  local out=assert(io.open(output,"w"))
+  out:write(string.format(
+    "eboot_base=0x%X\nhits=%d\nresult_ecx=%d\nslot_or_record_r15=0x%X\nrbx=0x%X\ndescriptor_r13=0x%X\nbank_r14=0x%X\ninventory_r12=0x%X\nrbp=0x%X\nresolved_local=0x%08X\nmetadata_ptr=0x%X\nquantity=%d\n",
+    base,hits,readInteger(data+0x00) or 0,readInteger(data+0x04) or 0,
+    readQword(data+0x08) or 0,readQword(data+0x10) or 0,readQword(data+0x18) or 0,
+    readQword(data+0x20) or 0,readQword(data+0x28) or 0,readInteger(data+0x30) or 0,
+    readQword(data+0x38) or 0,readInteger(data+0x40) or 0))
+  out:close()
+  timer.destroy(); bbInsertExitDiagnosticTimer=nil
+end
+showMessage("Insert-exit diagnostic armed. Queue one manual absent-Pebble grant, then fire one Bullet.")
+]]></LuaScript>
+</CheatTable>

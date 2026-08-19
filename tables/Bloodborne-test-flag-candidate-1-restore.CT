@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Restores candidate 1 only when the same process still contains our zero. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+error("RETIRED: candidate 1 was disproven and writing it destabilized the game")
+local expectedPid=0x6C70
+local address=0x23369541F
+openProcess("shadPS4.exe")
+local pid=getOpenedProcessID()
+if pid~=expectedPid then error(string.format("PID guard refused restore: expected %X, found %X",expectedPid,pid or 0)) end
+local before=readBytes(address,1,false)
+if before~=0 then error(string.format("Restore guard refused write at 0x%X: expected 00, found %s",address,tostring(before))) end
+if not writeBytes(address,0x80) then error("Candidate restore write failed") end
+local after=readBytes(address,1,false)
+if after~=0x80 then error(string.format("Candidate restore verification failed: found %s",tostring(after))) end
+showMessage("Candidate 1 restored 0x00 -> 0x80")
+]]></LuaScript>
+</CheatTable>

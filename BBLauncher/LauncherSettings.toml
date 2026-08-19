@@ -1,0 +1,26 @@
+[Launcher]
+installPath = ""
+shadPath-New = ""
+Theme = "Dark"
+AutoUpdateEnabled = false
+SoundFixEnabled = true
+CustomUserFolder = ""
+UserFolderLocation = 0
+ApiKey = ""
+
+[Backups]
+BackupSaveEnabled = true
+BackupNumber = 2
+BackupInterval = 10
+
+[Trophy]
+ShowEarned = true
+ShowHidden = false
+ShowUnearned = true
+
+[shadUpdater]
+DefaultFolder = ""
+ClearCacheAfterUpdate = false
+AutoUpdateVersionsEnabled = true
+AutoUpdateShadEnabled = false
+

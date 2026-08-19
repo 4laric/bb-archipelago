@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read-only local diagnostic. Dumps a narrow live, decrypted code window for
+     offline control-flow analysis. It does not install hooks or write game memory. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local output=[[C:\Users\alari\bb-archipelago\work\bb-live-inventory-code.bin]]
+local metadata=[[C:\Users\alari\bb-archipelago\work\bb-live-inventory-code.txt]]
+
+local f=assert(io.open(shadLog,"r"))
+local pending,base=false,nil
+for line in f:lines() do
+  if line:find("Loading module eboot.bin",1,true) then
+    pending=true
+  elseif pending then
+    local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+    if hex then base=tonumber(hex,16); pending=false end
+  end
+end
+f:close()
+if not base then error("Could not resolve the current eboot base") end
+
+openProcess("shadPS4.exe")
+local itemGrant=base+0x14DA0A0
+local prefix=readBytes(itemGrant,4,true)
+local expected={0x55,0x48,0x89,0xE5}
+for i=1,#expected do
+  if not prefix or prefix[i]~=expected[i] then
+    error(string.format("ItemGrant signature mismatch at 0x%X",itemGrant))
+  end
+end
+
+local startRva=0x14D8000
+local length=0x10000
+local bytes=readBytes(base+startRva,length,true)
+if not bytes or #bytes~=length then
+  error(string.format("Could not read full code window: expected %d bytes, got %s",length,bytes and #bytes or "nil"))
+end
+
+local out=assert(io.open(output,"wb"))
+local block={}
+for i=1,#bytes do
+  block[#block+1]=string.char(bytes[i])
+  if #block==4096 then out:write(table.concat(block)); block={} end
+end
+if #block>0 then out:write(table.concat(block)) end
+out:close()
+
+local meta=assert(io.open(metadata,"w"))
+meta:write(string.format("eboot_base=0x%X\nstart_rva=0x%X\nlength=0x%X\nitem_grant_rva=0x14DA0A0\n",base,startRva,length))
+meta:close()
+showMessage("Read-only native inventory code dump complete.")
+]]></LuaScript>
+</CheatTable>

@@ -23,13 +23,17 @@ The slice now has one generation contract across all three pieces.
    the command is removed, verification has a finite retry budget, and a stuck
    command becomes a surfaced error after 30 seconds instead of wedging the AP
    connection. The durable AP receipt remains the final replay guard.
-5. The six pickup acquisition-flag IDs are statically mapped, but the live
-   flag-manager accessor is not yet validated, so checks remain manual. Use
+5. Fifteen pickup acquisition-flag IDs are statically mapped and the live
+   event-flag manager read path is validated, but nothing polls it yet, so
+   checks remain manual. Use
    `/check <exact location name>` in the client; `/missing` lists the names.
    Successful manual checks are appended to `manual-checks.jsonl` in the client
    work directory with their UTC time, resolved name and ID, and world version.
    Misspelled names receive up to three nearby suggestions.
 
-The manual check boundary is deliberate. Static flag IDs alone do not reveal
-their live memory state. Generation, delivery, reconnect-safe receipts, and
-enemizer seed identity are exercised end to end without inventing an accessor.
+The manual check boundary is now an integration gap rather than a research one.
+Reading a flag's live state is solved and recorded in `EVENT-FLAG-RESEARCH.md`;
+sending a `LocationChecks` that cannot be retracted is not, and needs pointer
+revalidation, gameplay-state gating, debounce and save-identity binding first.
+Until those exist, generation, delivery, reconnect-safe receipts and enemizer
+seed identity are exercised end to end without risking a false check.

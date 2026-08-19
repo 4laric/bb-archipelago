@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Read-only local diagnostic. Dumps narrow live code windows containing the
+     descriptor resolver/copy helper and goods metadata lookup. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local root=[[C:\Users\alari\bb-archipelago\work\]]
+
+local f=assert(io.open(shadLog,"r"))
+local pending,base=false,nil
+for line in f:lines() do
+  if line:find("Loading module eboot.bin",1,true) then
+    pending=true
+  elseif pending then
+    local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+    if hex then base=tonumber(hex,16); pending=false end
+  end
+end
+f:close()
+if not base then error("Could not resolve the current eboot base") end
+openProcess("shadPS4.exe")
+
+local function dump(name,startRva,length)
+  local bytes=readBytes(base+startRva,length,true)
+  if not bytes or #bytes~=length then
+    error(string.format("Could not read %s: expected %d bytes, got %s",name,length,bytes and #bytes or "nil"))
+  end
+  local out=assert(io.open(root..name,"wb"))
+  local block={}
+  for i=1,#bytes do
+    block[#block+1]=string.char(bytes[i])
+    if #block==4096 then out:write(table.concat(block)); block={} end
+  end
+  if #block>0 then out:write(table.concat(block)) end
+  out:close()
+end
+
+dump("bb-live-descriptor-helpers.bin",0x1A88000,0x8000)
+dump("bb-live-goods-metadata.bin",0x1F1D000,0x4000)
+local meta=assert(io.open(root.."bb-live-inventory-helpers.txt","w"))
+meta:write(string.format("eboot_base=0x%X\ndescriptor_helpers_start_rva=0x1A88000\ngoods_metadata_start_rva=0x1F1D000\n",base))
+meta:close()
+showMessage("Read-only native inventory helper dump complete.")
+]]></LuaScript>
+</CheatTable>
