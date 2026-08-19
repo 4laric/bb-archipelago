@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Guarded upgrade for the already-installed insert-exit hook. Rewrites only
+     its validated cave and captures source/target bytes before stack unwind. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local output=[[C:\Users\alari\bb-archipelago\work\bb-native-insert-exit-v2.txt]]
+local f=assert(io.open(shadLog,"r"))
+local pending,base=false,nil
+for line in f:lines() do
+  if line:find("Loading module eboot.bin",1,true) then pending=true
+  elseif pending then
+    local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+    if hex then base=tonumber(hex,16); pending=false end
+  end
+end
+f:close()
+if not base then error("Could not resolve the current eboot base") end
+openProcess("shadPS4.exe")
+
+local insertExit=base+0x14DA720
+local cave=base+0x50DBF00
+local data=nil
+for candidate=base+0x50DC000,base+0x50DFFF0,0x10 do
+  local bytes=readBytes(candidate,0x80,true)
+  local empty=bytes and #bytes==0x80
+  if empty then
+    for i=1,#bytes do if bytes[i]~=0 then empty=false; break end end
+  end
+  if empty then data=candidate; break end
+end
+if not data then error("Could not find an empty diagnostic data block") end
+local jump=readBytes(insertExit,7,true)
+if not jump or jump[1]~=0xE9 then error("Expected insert-exit diagnostic detour is not installed") end
+local displacement=(jump[2] or 0)+(jump[3] or 0)*0x100+(jump[4] or 0)*0x10000+(jump[5] or 0)*0x1000000
+if displacement>=0x80000000 then displacement=displacement-0x100000000 end
+if insertExit+5+displacement~=cave then error("Insert-exit detour target differs; refusing upgrade") end
+
+local script=string.format([[
+%X:
+  mov [%X],ecx
+  mov [%X],r15d
+  mov [%X],rbx
+  mov [%X],r13
+  mov [%X],r14
+  mov [%X],r12
+  mov [%X],rbp
+  mov eax,[rbp-78]
+  mov [%X],eax
+  mov rax,[rbp-50]
+  mov [%X],rax
+  mov eax,[rbp-AC]
+  mov [%X],eax
+  mov eax,[r13]
+  mov [%X],eax
+  mov eax,[r13+4]
+  mov [%X],eax
+  mov rax,[r13+8]
+  mov [%X],rax
+  mov eax,[r13+10]
+  mov [%X],eax
+  mov eax,[r14+rbx]
+  mov [%X],eax
+  mov eax,[r14+rbx+4]
+  mov [%X],eax
+  mov eax,[r14+rbx+8]
+  mov [%X],eax
+  mov eax,[r14+rbx+C]
+  mov [%X],eax
+  inc dword ptr [%X]
+  mov rax,[rdx]
+  cmp rax,[rbp-30]
+  jmp %X
+]],
+  cave,
+  data+0x00,data+0x04,data+0x08,data+0x10,data+0x18,data+0x20,data+0x28,
+  data+0x30,data+0x38,data+0x40,
+  data+0x44,data+0x48,data+0x4C,data+0x54,
+  data+0x58,data+0x5C,data+0x60,data+0x64,data+0x68,
+  insertExit+7)
+local ok,why=autoAssemble(script)
+if not ok then error("Insert-exit capture upgrade failed: "..tostring(why)) end
+
+if bbInsertExitDiagnosticTimer then bbInsertExitDiagnosticTimer.destroy() end
+bbInsertExitDiagnosticTimer=createTimer(nil)
+bbInsertExitDiagnosticTimer.Interval=100
+bbInsertExitDiagnosticTimer.OnTimer=function(timer)
+  local hits=readInteger(data+0x68) or 0
+  if hits==0 then return end
+  local out=assert(io.open(output,"w"))
+  out:write(string.format(
+    "eboot_base=0x%X\nhits=%d\nresult_ecx=%d\nslot_r15=%d\noffset_rbx=0x%X\ndescriptor_r13=0x%X\nbank_r14=0x%X\ninventory_r12=0x%X\nresolved_local=0x%08X\nmetadata_ptr=0x%X\nquantity=%d\nsource_raw=0x%08X\nsource_plus4=0x%08X\nsource_plus8=0x%X\nsource_plus10=0x%08X\ntarget_raw=0x%08X\ntarget_normalized=0x%08X\ntarget_quantity=%d\ntarget_flags=0x%08X\n",
+    base,hits,readInteger(data+0x00) or 0,readInteger(data+0x04) or 0,readQword(data+0x08) or 0,
+    readQword(data+0x10) or 0,readQword(data+0x18) or 0,readQword(data+0x20) or 0,
+    readInteger(data+0x30) or 0,readQword(data+0x38) or 0,readInteger(data+0x40) or 0,
+    readInteger(data+0x44) or 0,readInteger(data+0x48) or 0,readQword(data+0x4C) or 0,
+    readInteger(data+0x54) or 0,readInteger(data+0x58) or 0,readInteger(data+0x5C) or 0,
+    readInteger(data+0x60) or 0,readInteger(data+0x64) or 0))
+  out:close(); timer.destroy(); bbInsertExitDiagnosticTimer=nil
+end
+showMessage("Upgraded insert-exit capture armed. Queue one manual absent-Pebble grant, then fire one Bullet.")
+]]></LuaScript>
+</CheatTable>

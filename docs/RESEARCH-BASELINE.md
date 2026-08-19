@@ -288,6 +288,58 @@ After a full shadPS4 shutdown and relaunch of the same save, the inventory still
 contained two Pebbles. This confirms durable save persistence for the combined
 absent-then-existing delivery sequence on v0.18, not merely live-memory success.
 
+### Versioned bridge failure and replay canaries
+
+On 2026-08-19, the `bb-0.1.0-r3` / `BBGRANT1` /
+`bb-native-grant-v3` bridge was exercised against shadPS4 v0.18.0 and
+CUSA03173 01.09. The first process mapped eboot at `0x05740000`. After one
+Bullet consumption captured the inventory pointer, an absent-stack Pebble
+command sampled zero and targeted one. Native execution completed but the
+inventory remained zero through all 20 verification polls. The harness wrote
+terminal `failed` state, removed the command, left the game responsive, and did
+not acknowledge the item. This validates the bounded-failure behavior while
+leaving the absent-item regression unresolved.
+
+The failed call was repeated in a fresh process with the automatic heartbeat
+disabled for that request. A genuine Bullet consumption entered the same
+game-thread hook and invoked `ItemGrant` with the stack descriptor, but the
+native routine again returned `-1` (`0xFFFFFFFF`) and Pebbles remained zero.
+The bounded verifier again reached terminal `failed` without destabilizing the
+game. This falsifies synthetic heartbeat context as the cause of the current
+regression; the remaining investigation is the native call contract and its
+inventory-state preconditions.
+
+A live read-only dump of the decrypted inventory code then exposed the full
+descriptor object: raw descriptor at `+0x00`, an internal pointer at `+0x08`,
+and normalized ID at `+0x10`, for 24 bytes total. Instrumenting the absent-item
+insertion exit showed that both inventory banks had ample vacancies and that
+the routine selected secondary slot 14, but the source object below the
+consumable function's current `rsp` had already become all zero. The assignment
+helper therefore copied zero, and insertion returned `-1` before changing the
+slot.
+
+The clean follow-up built the 24-byte object in the consumable function's
+retiring 0x28-byte local frame instead of extending the stack below `rsp`. With
+no insertion diagnostic hook installed, a genuine Bullet trigger returned
+native slot 78, changed Pebbles from zero to one, completed verification, and
+removed the durable command; the player confirmed one Pebble and a responsive
+game. This fix is versioned as `bb-0.1.0-r4` / `bb-native-grant-v4`. An earlier
+attempt to combine the in-frame change with an expanded exit probe crashed at
+the probe cave (`eboot+0x50DBF79`); its command remained merely queued and was
+archived before restart. The clean reproduction distinguishes that diagnostic
+cave overrun from the validated grant path.
+
+An existing-stack Blood Vial command then sampled three, wrote four, reread
+four, persisted `completed`, and removed its command. The player confirmed four
+in the inventory UI. A completed Vial state with expected counts four and five
+was subsequently paired with its retained command while Cheat Engine was
+stopped. After a full emulator restart, the new process mapped eboot at
+`0x05750000`. Reloading the v3 harness and consuming one Bullet produced
+`recovered_complete` at quantity five and removed the retained command without
+performing another grant; the player confirmed the UI remained at five. This
+validates the crash window from durable completion through command cleanup
+across both a new process and a changed eboot base.
+
 On 2026-08-16, shadPS4 0.17.0 mapped the European `CUSA03173` 01.09 eboot at
 `0x800000000`. Read-only process-memory inspection reproduced all six published
 `CUSA00900` hook-site sequences at the same eboot-relative offsets. Sixteen bytes

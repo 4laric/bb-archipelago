@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Compares current bytes with the before snapshot. Performs no process writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local input=[[C:\Users\alari\bb-archipelago\work\event-flag-replay-before.tsv]]
+local output=[[C:\Users\alari\bb-archipelago\work\event-flag-replay-changed.tsv]]
+
+local pid=getOpenedProcessID()
+if not pid or pid==0 then error("Attach Cheat Engine to shadPS4.exe first") end
+
+local source=assert(io.open(input,"r"))
+local first=source:read("*l")
+local beforePid=first and tonumber(first:match("^#pid\t(%d+)$")) or nil
+if not beforePid then source:close(); error("BEFORE snapshot is missing or invalid") end
+if beforePid~=pid then
+  source:close()
+  error(string.format("Process changed: BEFORE PID %d, current PID %d. Recapture BEFORE.",beforePid,pid))
+end
+
+local changed={}
+local checked=0
+local unreadable=0
+for line in source:lines() do
+  local addressText,beforeText=line:match("^([0-9A-Fa-f]+)\t(%d+)$")
+  if addressText then
+    local address=tonumber(addressText,16)
+    local before=tonumber(beforeText)
+    local after=address and readBytes(address,1,false) or nil
+    checked=checked+1
+    if after==nil then
+      unreadable=unreadable+1
+    elseif after~=before then
+      table.insert(changed,{address=address,before=before,after=after})
+    end
+  end
+end
+source:close()
+
+table.sort(changed,function(a,b)
+  local aExact=(a.before==0 and a.after==128) and 0 or 1
+  local bExact=(b.before==0 and b.after==128) and 0 or 1
+  if aExact~=bExact then return aExact<bExact end
+  local aHigh=((a.before & 0x80)==0 and (a.after & 0x80)~=0) and 0 or 1
+  local bHigh=((b.before & 0x80)==0 and (b.after & 0x80)~=0) and 0 or 1
+  if aHigh~=bHigh then return aHigh<bHigh end
+  return a.address<b.address
+end)
+
+local result=assert(io.open(output,"w"))
+result:write("address\tbefore\tafter\txor\texact_00_to_80\thigh_bit_set\n")
+local exact=0
+local high=0
+for _,row in ipairs(changed) do
+  local xorValue=row.before ~ row.after
+  local isExact=(row.before==0 and row.after==128)
+  local highSet=((row.before & 0x80)==0 and (row.after & 0x80)~=0)
+  if isExact then exact=exact+1 end
+  if highSet then high=high+1 end
+  result:write(string.format("%X\t%d\t%d\t%02X\t%s\t%s\n",
+    row.address,row.before,row.after,xorValue,tostring(isExact),tostring(highSet)))
+end
+result:close()
+
+showMessage(string.format(
+  "AFTER comparison complete (read-only)\nChanged: %d / %d\nExact 00 -> 80: %d\nHigh-bit transitions: %d\nUnreadable: %d",
+  #changed,checked,exact,high,unreadable))
+]]></LuaScript>
+</CheatTable>

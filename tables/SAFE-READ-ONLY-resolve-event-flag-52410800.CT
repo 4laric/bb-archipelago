@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resolves event flag 52410800 through the captured manager data structure. No process writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local expectedPid=16592
+local flagId=52410800
+local knownWrite=0x6E36EFA
+local expectedAddress=0x20803170A
+local outputPath=[[C:\Users\alari\bb-archipelago\work\event-flag-manager-resolution.txt]]
+
+local function fail(message) error("Read-only flag resolver: "..message) end
+local function byte(address)
+  local value=readBytes(address,1,false)
+  if value==nil then fail(string.format("unreadable byte at 0x%X",address)) end
+  return value
+end
+local function dword(address)
+  local value=readInteger(address)
+  if value==nil then fail(string.format("unreadable dword at 0x%X",address)) end
+  if value<0 then value=value+0x100000000 end
+  return value
+end
+local function qword(address)
+  local value=readQword(address)
+  if value==nil then fail(string.format("unreadable qword at 0x%X",address)) end
+  return value
+end
+local function requireBytes(address,expected)
+  for i,value in ipairs(expected) do
+    local actual=byte(address+i-1)
+    if actual~=value then
+      fail(string.format("code signature mismatch at 0x%X: expected %02X, found %02X",
+        address+i-1,value,actual))
+    end
+  end
+end
+
+local pid=getOpenedProcessID()
+if not pid or pid==0 then fail("attach Cheat Engine to shadPS4.exe first") end
+if pid~=expectedPid then
+  fail(string.format("wrong process: expected PID %d, current PID %d",expectedPid,pid))
+end
+
+requireBytes(knownWrite,{0x88,0x0C,0x02})
+
+-- This inlined setter path loads its manager-root slot with
+-- LEA R13,[RIP+disp32]. The relationship was captured from live code.
+local managerRootLea=knownWrite-0x319
+requireBytes(managerRootLea,{0x4C,0x8D,0x2D})
+local displacement=dword(managerRootLea+3)
+if displacement>=0x80000000 then displacement=displacement-0x100000000 end
+local managerRoot=managerRootLea+7+displacement
+local manager=qword(managerRoot)
+if manager==0 then fail(string.format("manager root 0x%X is null",managerRoot)) end
+
+local divisor=dword(manager+0x1C)
+if divisor==0 then fail("manager divisor is zero") end
+local group=math.floor(flagId/divisor)
+local groupStart=group*divisor
+local suffix=flagId-groupStart
+
+local stride=dword(manager+0x20)
+local packedBase=qword(manager+0x28)
+local sentinel=qword(manager+0x38)
+if sentinel==0 then fail("manager tree sentinel is null") end
+
+-- Reproduce the setter's lower-bound search over the group map.
+local candidate=sentinel
+local link=sentinel+0x08
+local iterations=0
+while true do
+  iterations=iterations+1
+  if iterations>512 then fail("group-tree traversal exceeded 512 nodes") end
+  local node=qword(link)
+  if byte(node+0x19)~=0 then break end
+  local key=dword(node+0x20)
+  if key<group then
+    link=node+0x10
+  else
+    candidate=node
+    link=node
+  end
+end
+
+if candidate==sentinel or dword(candidate+0x20)~=group then
+  fail(string.format("event-flag group %d was not found",group))
+end
+
+local storageType=dword(candidate+0x28)
+local bankBase
+if storageType==2 then
+  bankBase=qword(candidate+0x30)
+elseif storageType==1 then
+  local bankIndex=dword(candidate+0x30)
+  bankBase=packedBase+(bankIndex*stride)
+else
+  fail(string.format("unsupported group storage type %d",storageType))
+end
+
+local byteOffset=math.floor(suffix/8)
+local bitIndex=7-(suffix % 8)
+local mask=1 << bitIndex
+local flagAddress=bankBase+byteOffset
+local value=byte(flagAddress)
+local isSet=(value & mask)~=0
+
+local file=assert(io.open(outputPath,"w"))
+file:write(string.format(
+  "pid=%d\nflag_id=%d\nmanager_root=0x%X\nmanager=0x%X\n" ..
+  "divisor=%d\ngroup=%d\nsuffix=%d\nstride=%d\nsentinel=0x%X\n" ..
+  "node=0x%X\nstorage_type=%d\nbank_base=0x%X\nbyte_offset=%d\n" ..
+  "bit_index=%d\nmask=0x%02X\nresolved_address=0x%X\nvalue=0x%02X\n" ..
+  "is_set=%s\nexpected_address=0x%X\naddress_match=%s\n",
+  pid,flagId,managerRoot,manager,divisor,group,suffix,stride,sentinel,
+  candidate,storageType,bankBase,byteOffset,bitIndex,mask,flagAddress,value,
+  tostring(isSet),expectedAddress,tostring(flagAddress==expectedAddress)))
+file:close()
+
+showMessage(string.format(
+  "Generic event-flag resolver succeeded (read-only)\n\nFlag: %d\nAddress: 0x%X\nValue: 0x%02X\nSet: %s\nMatches observed address: %s",
+  flagId,flagAddress,value,tostring(isSet),tostring(flagAddress==expectedAddress)))
+]]></LuaScript>
+</CheatTable>

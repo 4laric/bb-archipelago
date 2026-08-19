@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dumps bytes surrounding exact 00-to-80 candidates from the latest A/B comparison. No process writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local beforePath=[[C:\Users\alari\bb-archipelago\work\event-flag-replay-before.tsv]]
+local changedPath=[[C:\Users\alari\bb-archipelago\work\event-flag-replay-changed.tsv]]
+local outputPath=[[C:\Users\alari\bb-archipelago\work\event-flag-candidate-neighborhoods.txt]]
+
+local pid=getOpenedProcessID()
+if not pid or pid==0 then error("Attach Cheat Engine to shadPS4.exe first") end
+
+local before=assert(io.open(beforePath,"r"))
+local first=before:read("*l")
+before:close()
+local beforePid=first and tonumber(first:match("^#pid\t(%d+)$")) or nil
+if beforePid~=pid then
+  error(string.format("Process changed: snapshot PID %s, current PID %d",
+    tostring(beforePid),pid))
+end
+
+local candidates={}
+local seen={}
+local changed=assert(io.open(changedPath,"r"))
+for line in changed:lines() do
+  local addressText,beforeText,afterText=line:match("^([0-9A-Fa-f]+)\t(%d+)\t(%d+)")
+  if addressText and tonumber(beforeText)==0 and tonumber(afterText)==128 then
+    local address=tonumber(addressText,16)
+    if address and not seen[address] then
+      seen[address]=true
+      table.insert(candidates,address)
+    end
+  end
+end
+changed:close()
+table.sort(candidates)
+if #candidates==0 then error("No exact 00-to-80 candidates found") end
+
+local output=assert(io.open(outputPath,"w"))
+output:write(string.format("pid=%d candidates=%d\n",pid,#candidates))
+for _,address in ipairs(candidates) do
+  output:write(string.format("\nCandidate %X (mod4=%d)\n",address,address % 4))
+  local start=address-0x40
+  for offset=0,0x80,0x10 do
+    output:write(string.format("%X  ",start+offset))
+    for column=0,0x0F do
+      local byteAddress=start+offset+column
+      local value=readBytes(byteAddress,1,false)
+      local marker=(byteAddress==address) and "[" or " "
+      local closer=(byteAddress==address) and "]" or " "
+      if value==nil then
+        output:write(marker,"??",closer)
+      else
+        output:write(string.format("%s%02X%s",marker,value,closer))
+      end
+    end
+    output:write("\n")
+  end
+end
+output:close()
+showMessage(string.format("Read-only neighborhood capture complete\nCandidates: %d",#candidates))
+]]></LuaScript>
+</CheatTable>

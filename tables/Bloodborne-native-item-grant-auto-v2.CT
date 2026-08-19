@@ -8,6 +8,25 @@ local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
 local logPath=root..[[native-grant.log]]
 local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local build=[[bb-0.1.0-r4]]
+local protocol=[[BBGRANT1]]
+local harness=[[bb-native-grant-v4]]
+local maxVerifyPolls=20
+local maxManualWaitPolls=240
+local function readStateFile()
+  local values={}
+  local f=io.open(statePath,"r")
+  if not f then return values end
+  for line in f:lines() do
+    local key,value=line:match("^([^=]+)=(.*)$")
+    if key then values[key]=value end
+  end
+  f:close(); return values
+end
+local prior=readStateFile()
+local stateTag=prior.tag or ""
+local stateExpectedBefore=prior.expected_before or ""
+local stateExpectedAfter=prior.expected_after or ""
 local function readEbootBase()
   local f=io.open(shadLog,"r")
   if not f then return nil,"Could not open shad log" end
@@ -35,6 +54,7 @@ local inventoryPointer=request+0x10
 local descriptor=request+0x20
 local slotIndex=request+0x34
 local itemQuantityPointer=request+0x38
+local manualTrigger=request+0x50
 local active=nil
 local pid=nil
 
@@ -42,15 +62,22 @@ local function append(message)
   local f=io.open(logPath,"a"); if f then f:write(os.date("!%Y-%m-%dT%H:%M:%SZ")," ",message,"\n"); f:close() end
 end
 local function state(status,detail)
-  local f=assert(io.open(statePath,"w")); f:write("status=",status,"\npid=",tostring(pid or ""),"\ndetail=",tostring(detail or ""),"\n"); f:close()
+  local f=assert(io.open(statePath,"w")); f:write(
+    "build=",build,"\nprotocol=",protocol,"\nharness=",harness,"\nstatus=",status,
+    "\npid=",tostring(pid or ""),"\ntag=",tostring(stateTag),
+    "\nexpected_before=",tostring(stateExpectedBefore),
+    "\nexpected_after=",tostring(stateExpectedAfter),
+    "\ndetail=",tostring(detail or ""),"\n"); f:close()
 end
 local function parse(line)
   local t={}; for word in string.gmatch(line or "","%S+") do t[#t+1]=word end
-  if string.upper(t[1] or "")~="GRANT" then return nil,"Usage: GRANT raw-id normalized-id quantity expected-before|AUTO tag" end
-  local raw,normalized,count,expected=tonumber(t[2] or ""),tonumber(t[3] or ""),tonumber(t[4] or ""),tonumber(t[5] or "")
-  local autoExpected=string.upper(t[5] or "")=="AUTO"
-  if not raw or not normalized or not count or (expected==nil and not autoExpected) or count<1 or count>99 or (expected and expected<0) then return nil,"Invalid IDs, quantity, or expected count" end
-  return {line=line,raw=raw,normalized=normalized,count=count,expected=expected,autoExpected=autoExpected,tag=t[6] or "untagged"}
+  if t[1]~=protocol then return nil,"Unsupported grant protocol; expected "..protocol end
+  if string.upper(t[2] or "")~="GRANT" then return nil,"Usage: "..protocol.." GRANT raw-id normalized-id quantity expected-before tag [AUTO|MANUAL]" end
+  local raw,normalized,count,expected=tonumber(t[3] or ""),tonumber(t[4] or ""),tonumber(t[5] or ""),tonumber(t[6] or "")
+  local autoExpected=string.upper(t[6] or "")=="AUTO"
+  local trigger=string.upper(t[8] or "AUTO")
+  if not raw or not normalized or not count or (not expected and not autoExpected) or count<1 or count>99 or (expected and expected<0) or (trigger~="AUTO" and trigger~="MANUAL") then return nil,"Invalid IDs, quantity, expected count, or trigger mode" end
+  return {line=line,raw=raw,normalized=normalized,count=count,expected=expected,autoExpected=autoExpected,tag=t[7] or "untagged",manualTrigger=trigger=="MANUAL",verifyPolls=0,waitPolls=0}
 end
 local function findItem(itemId)
   local inventory=readQword(inventoryPointer)
@@ -90,6 +117,7 @@ label(bbAutoDescriptor)
 label(bbAutoOverflow)
 label(bbAutoSlotIndex)
 label(bbAutoItemQuantityPointer)
+label(bbAutoManualTrigger)
 
 8050DBA00:
   mov [bbAutoInventory],r13
@@ -98,18 +126,17 @@ label(bbAutoItemQuantityPointer)
   cmp dword ptr [bbAutoRequest],2
   je bbAutoExisting
   mov dword ptr [bbAutoRequest],0
-  sub rsp,20
   mov eax,[bbAutoDescriptor]
   mov [rsp],eax
-  mov eax,[bbAutoDescriptor+4]
-  mov [rsp+4],eax
   mov qword ptr [rsp+8],0
+  mov eax,[bbAutoDescriptor+4]
+  mov [rsp+10],eax
+  mov dword ptr [rsp+14],0
   mov rdi,r13
   mov rsi,rsp
   mov edx,[bbAutoQuantity]
   mov rax,8014DA0A0
   call rax
-  add rsp,20
   jmp bbAutoFinish
 
 bbAutoExisting:
@@ -159,9 +186,15 @@ bbAutoItemQuantityPointer:
   dd B0000384
   dd 40000384
   dd 0
+
+8050DBE50:
+bbAutoManualTrigger:
+  dd 0
   dd 0
 
 8050DBC00:
+  cmp dword ptr [bbAutoManualTrigger],0
+  jne bbAutoHeartbeatOriginal
   cmp dword ptr [bbAutoRequest],0
   je bbAutoHeartbeatOriginal
   cmp qword ptr [bbAutoInventory],0
@@ -202,6 +235,7 @@ local relocated={
   ["8050DBE00"]=base+0x50DBE00,
   ["8050DBE40"]=base+0x50DBE40,
   ["8050DBE4C"]=base+0x50DBE4C,
+  ["8050DBE50"]=base+0x50DBE50,
 }
 for old,address in pairs(relocated) do
   install=install:gsub(old,string.format("%X",address))
@@ -216,14 +250,30 @@ local function poll()
       local actual=findItem(active.normalized)
       local wanted=active.expected+active.count
       if actual~=wanted then
-        state("verify_pending",string.format("tag=%s expected_after=%d actual=%s",active.tag,wanted,tostring(actual)))
+        active.verifyPolls=(active.verifyPolls or 0)+1
+        if active.verifyPolls<maxVerifyPolls then
+          state("verify_pending",string.format("tag=%s expected_after=%d actual=%s attempt=%d/%d",active.tag,wanted,tostring(actual),active.verifyPolls,maxVerifyPolls))
+          return
+        end
+        append(string.format("AUTO FAILED tag=%s expected_after=%d actual=%s native_result=%s; retry budget exhausted",active.tag,wanted,tostring(actual),tostring(nativeResult)))
+        state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d",active.tag,wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls))
+        os.remove(commandPath)
+        active=nil
         return
       end
       append(string.format("AUTO COMPLETED tag=%s raw=0x%08X normalized=0x%08X quantity=%d native_result=%s",
         active.tag,active.raw,active.normalized,active.count,tostring(nativeResult)))
-      os.remove(commandPath)
       state("completed",string.format("tag=%s native_result=%s",active.tag,tostring(nativeResult)))
+      os.remove(commandPath)
       active=nil
+    elseif active.manualTrigger then
+      active.waitPolls=(active.waitPolls or 0)+1
+      if active.waitPolls>=maxManualWaitPolls then
+        writeInteger(request,0)
+        state("failed",string.format("tag=%s manual trigger timed out after %d polls",active.tag,maxManualWaitPolls))
+        os.remove(commandPath)
+        active=nil
+      end
     end
     return
   end
@@ -234,44 +284,64 @@ local function poll()
   end
   local line=f:read("*l") or ""; f:close()
   local command,why=parse(line)
-  if not command then state("command_rejected",why); return end
+  if not command then state("command_rejected",why); os.remove(commandPath); return end
   if readQword(inventoryPointer)==0 then state("awaiting_inventory","Command retained; use one bullet once") return end
   local actual,exists,slot,quantityPointer=findItem(command.normalized)
-  if command.autoExpected then command.expected=actual end
+  if command.autoExpected then
+    local priorBefore,priorAfter=tonumber(prior.expected_before or ""),tonumber(prior.expected_after or "")
+    local recoverable=prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag==command.tag
+      and priorBefore~=nil and priorAfter==priorBefore+command.count
+      and (prior.status=="executing" or prior.status=="queued" or prior.status=="verify_pending"
+        or prior.status=="recovery_pending" or prior.status=="completed" or prior.status=="recovered_complete")
+    if recoverable then
+      command.expected=priorBefore
+    else
+      command.expected=actual
+    end
+  end
   local wanted=command.expected+command.count
+  stateTag=command.tag
+  stateExpectedBefore=command.expected
+  stateExpectedAfter=wanted
   if actual==wanted then
     append(string.format("AUTO RECOVERED tag=%s quantity=%d; command already applied",command.tag,actual))
-    os.remove(commandPath)
     state("recovered_complete",string.format("tag=%s quantity=%d",command.tag,actual))
+    os.remove(commandPath)
     return
   end
   if actual~=command.expected then
     state("quantity_mismatch",string.format("tag=%s expected_before=%d actual=%s",command.tag,command.expected,tostring(actual)))
+    os.remove(commandPath)
     return
   end
   if exists then
     if not quantityPointer or quantityPointer==0 then
       state("write_error",string.format("tag=%s quantity pointer missing",command.tag))
+      os.remove(commandPath)
       return
     end
     local before=readInteger(quantityPointer)
     if before~=command.expected then
       state("write_error",string.format("tag=%s pointer quantity changed expected=%d actual=%s",command.tag,command.expected,tostring(before)))
+      os.remove(commandPath)
       return
     end
+    state("executing",string.format("tag=%s direct expected_before=%d expected_after=%d",command.tag,command.expected,wanted))
     if not writeInteger(quantityPointer,wanted) then
       state("write_error",string.format("tag=%s quantity write failed",command.tag))
+      os.remove(commandPath)
       return
     end
     local after=readInteger(quantityPointer)
     if after~=wanted then
-      state("verify_pending",string.format("tag=%s expected_after=%d actual=%s",command.tag,wanted,tostring(after)))
+      state("failed",string.format("tag=%s direct expected_after=%d actual=%s",command.tag,wanted,tostring(after)))
+      os.remove(commandPath)
       return
     end
     append(string.format("DIRECT COMPLETED tag=%s normalized=0x%08X before=%d after=%d address=0x%X",
       command.tag,command.normalized,before,after,quantityPointer))
-    os.remove(commandPath)
     state("completed",string.format("tag=%s direct before=%d after=%d",command.tag,before,after))
+    os.remove(commandPath)
     return
   end
   if readInteger(request)~=0 then state("busy","Native request already pending") return end
@@ -279,17 +349,26 @@ local function poll()
   writeInteger(descriptor+8,0); writeInteger(descriptor+12,0)
   writeInteger(slotIndex,slot or 0xFFFFFFFF)
   writeQword(itemQuantityPointer,quantityPointer or 0)
+  writeInteger(manualTrigger,command.manualTrigger and 1 or 0)
   writeInteger(quantity,command.count); writeInteger(result,0xFFFFFFFF); writeInteger(done,0)
+  state("executing",string.format("tag=%s expected_before=%d expected_after=%d",command.tag,command.expected,wanted))
   writeInteger(request,1); active=command
   append(string.format("AUTO QUEUED tag=%s raw=0x%08X normalized=0x%08X quantity=%d expected_before=%d",command.tag,command.raw,command.normalized,command.count,command.expected))
-  state("queued",string.format("tag=%s; heartbeat will execute automatically",command.tag))
+  state("queued",string.format("tag=%s trigger=%s",command.tag,command.manualTrigger and "manual_consumable" or "automatic_heartbeat"))
 end
 
 if bbNativeGrantHarnessTimer then bbNativeGrantHarnessTimer.destroy() end
 bbNativeGrantHarnessTimer=createTimer(nil); bbNativeGrantHarnessTimer.Interval=250
 bbNativeGrantHarnessTimer.OnTimer=poll; bbNativeGrantHarnessTimer.Enabled=true
 bbNativeGrantHarnessPid=pid
-state("awaiting_inventory","Use one bullet once after launch")
-append(string.format("AUTO V2 READY pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",pid,base,consumeHook,heartbeatHook))
+local pendingCommand=io.open(commandPath,"r")
+if pendingCommand then pendingCommand:close() end
+if pendingCommand and prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag~="" then
+  state("recovery_pending","Retained command and durable expected counts will be reconciled")
+else
+  stateTag=""; stateExpectedBefore=""; stateExpectedAfter=""
+  state("awaiting_inventory","Use one bullet once after launch")
+end
+append(string.format("AUTO V4 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
 ]]></LuaScript>
 </CheatTable>

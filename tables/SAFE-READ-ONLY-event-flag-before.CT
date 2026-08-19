@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reads the preserved scan addresses before the known pickup. Performs no process writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local input=[[C:\Users\alari\bb-archipelago\work\event-flag-scan-6010.tsv]]
+local output=[[C:\Users\alari\bb-archipelago\work\event-flag-replay-before.tsv]]
+
+local pid=getOpenedProcessID()
+if not pid or pid==0 then error("Attach Cheat Engine to shadPS4.exe first") end
+
+local source=assert(io.open(input,"r"))
+local snapshot=assert(io.open(output,"w"))
+snapshot:write("#pid\t",tostring(pid),"\n")
+snapshot:write("address\tvalue\n")
+
+local total=0
+local readable=0
+for line in source:lines() do
+  local addressText=line:match("^([0-9A-Fa-f]+)\t")
+  if addressText and addressText:lower()~="add" then
+    total=total+1
+    local address=tonumber(addressText,16)
+    local value=address and readBytes(address,1,false) or nil
+    if value~=nil then
+      readable=readable+1
+      snapshot:write(string.format("%X\t%d\n",address,value))
+    end
+  end
+end
+
+source:close()
+snapshot:close()
+showMessage(string.format(
+  "BEFORE snapshot captured (read-only)\nPID: %d\nReadable: %d / %d\n\nNow pick up the 10 bullets, then use the AFTER table.",
+  pid,readable,total))
+]]></LuaScript>
+</CheatTable>

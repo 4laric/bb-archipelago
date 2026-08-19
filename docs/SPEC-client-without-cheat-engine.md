@@ -12,22 +12,28 @@ been treating them as one problem.
 | | mechanism | needs code injection? | blocked on |
 | --- | --- | --- | --- |
 | Item delivery | native call on the game thread | **yes** | nothing — it works |
-| Check detection | read the event-flag state | **probably not** | #15 |
+| Check detection | read the event-flag state | **no** | #15's client half |
 
 Delivery is hard because a write has to land in a legal execution context. Detection is a read.
 
-🛑 **"Probably not" is doing real work in that table, and an earlier draft of this spec wrote
-"no".** The claim rests on the flag manager being reachable from a static root. The one
-comparable hunt this project has actually run says otherwise: the harness gets the inventory
-pointer by hooking (`mov [bbAutoInventory],r13` at the consume hook) and needs the player to use
-one bullet after launch before it caches. That is what finding a heap structure looks like when
-nobody found a static chain to it.
+**Resolved 2026-08-18 — the assumption held.** Earlier drafts hedged this cell to "probably not",
+because the claim rested on the flag manager being reachable from a static root and the one
+comparable hunt this project had run said otherwise: the harness gets the inventory pointer by
+hooking (`mov [bbAutoInventory],r13` at the consume hook) and needs the player to use one bullet
+after launch before it caches. That is what finding a heap structure looks like when nobody found a
+static chain to it.
 
-FromSoft engines of this lineage do historically keep a statically reachable event-flag-manager
-pointer — EMEVD execution has to find it somehow — so the static root probably exists. But that
-is `inferred` in this project's own evidence vocabulary, not `validated`. **If #15 terminates in a
-register capture rather than a global, stage 2 inherits a cave, a detour and a bootstrap action,
-and this table's middle column becomes "yes".** Plan for it; don't be surprised by it.
+The flag manager is not that. It hangs off eboot-relative pointer slot `RVA 0x553B100` on
+CUSA03173 `01.09`, and a standalone reader running outside Cheat Engine rediscovered the base after
+it moved between launches, passed the setter-signature gate at `RVA 0x17D6EFA`, and returned live
+flag state. That is `validated` in this project's evidence vocabulary, across two independently
+randomized launches — no cave, no detour, no bootstrap action. Detection is a plain
+`ReadProcessMemory` traversal.
+
+Two caveats survive. The validation covers CUSA03173 only; **CUSA00900 is untested**, and the
+signature gate must fail closed there rather than guess. And "detection needs no injection" is a
+claim about the *read*, not about the send — the containment work in `WORKPLAN.md` Phase 1 is
+what stands between a correct read and an irreversible `LocationChecks`.
 
 ## What Cheat Engine is actually providing
 
@@ -44,6 +50,14 @@ and this table's middle column becomes "yes".** Plan for it; don't be surprised 
 Only the last looks hard, and it is not: the payload is static. Every operand in the cave assembly
 is a constant or a label — verified by inspection. Assemble once, capture the bytes, ship them as a
 constant blob. Cheat Engine becomes a developer's build tool, not a player's runtime dependency.
+
+The native `ItemGrant` argument is a 24-byte object, not the earlier inferred
+16-byte pair: raw descriptor at `+0x00`, internal pointer at `+0x08`, and
+normalized ID at `+0x10`. On shadPS4 v0.18, placing that object below the
+consumable callback's current `rsp` allowed it to become zero before the nested
+insertion helper used it. The validated payload materializes all 24 bytes in
+the callback's retiring 0x28-byte local frame and calls `ItemGrant` before the
+original epilogue releases that frame.
 
 ## The payload is position-dependent
 

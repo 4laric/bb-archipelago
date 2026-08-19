@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One-shot hardware write breakpoint for the validated Iosefka bullet flag candidate. No game-memory writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local expectedPid=16592
+local watched=0x20803170A
+local outputPath=[[C:\Users\alari\bb-archipelago\work\iosefka-bullet-flag-write-breakpoint.txt]]
+
+local function hex(value)
+  if type(value)~="number" then return tostring(value) end
+  return string.format("0x%X",value)
+end
+
+local function bytesAt(address,count)
+  if type(address)~="number" then return "UNAVAILABLE" end
+  local values=readBytes(address,count,true)
+  if not values then return "UNREADABLE" end
+  local result={}
+  for i=1,#values do result[#result+1]=string.format("%02X",values[i]) end
+  return table.concat(result," ")
+end
+
+local pid=getOpenedProcessID()
+if not pid or pid==0 then error("Attach Cheat Engine to shadPS4.exe first") end
+if pid~=expectedPid then
+  error(string.format("Wrong shad process: expected PID %d, current PID %d",expectedPid,pid))
+end
+
+local initial=readBytes(watched,1,false)
+if initial~=0 then
+  error(string.format("Guard refused breakpoint: expected candidate value 0x00, found %s",hex(initial)))
+end
+
+local armed=assert(io.open(outputPath,"w"))
+armed:write(string.format("armed_utc=%s\npid=%d\nwatched=%s\ninitial=%s\n",
+  os.date("!%Y-%m-%dT%H:%M:%SZ"),pid,hex(watched),hex(initial)))
+armed:close()
+
+debugProcess(2)
+debug_setBreakpoint(watched,1,bptWrite,bpmDebugRegister,function()
+  local ok,detail=pcall(function()
+    local after=readBytes(watched,1,false)
+    local file=assert(io.open(outputPath,"a"))
+    file:write(string.format(
+      "hit_utc=%s\nvalue_after=%s\nRIP=%s\n" ..
+      "RAX=%s\nRBX=%s\nRCX=%s\nRDX=%s\nRSI=%s\nRDI=%s\n" ..
+      "RBP=%s\nRSP=%s\nR8=%s\nR9=%s\nR10=%s\nR11=%s\n" ..
+      "R12=%s\nR13=%s\nR14=%s\nR15=%s\n" ..
+      "code_rip_minus_32=%s\nwatched_neighborhood=%s\nstack=%s\n",
+      os.date("!%Y-%m-%dT%H:%M:%SZ"),hex(after),hex(RIP),
+      hex(RAX),hex(RBX),hex(RCX),hex(RDX),hex(RSI),hex(RDI),
+      hex(RBP),hex(RSP),hex(R8),hex(R9),hex(R10),hex(R11),
+      hex(R12),hex(R13),hex(R14),hex(R15),
+      bytesAt(RIP-32,96),bytesAt(watched-32,65),bytesAt(RSP,128)))
+    file:close()
+  end)
+  if not ok then
+    local file=io.open(outputPath,"a")
+    if file then file:write("capture_error="..tostring(detail).."\n"); file:close() end
+  end
+  debug_removeBreakpoint(watched)
+  debug_continueFromBreakpoint(co_run)
+  return 1
+end)
+
+showMessage(string.format(
+  "One-shot write breakpoint armed at %s\n\nPick up the 10 bullets now.",hex(watched)))
+]]></LuaScript>
+</CheatTable>

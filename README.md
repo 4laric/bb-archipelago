@@ -47,8 +47,15 @@ then apply it with the guarded writer as documented in `docs/ENEMIZER.md`.
 ## Current boundary
 
 Checks are reported **manually** with `/check <exact location name>` in the client. Fifteen fixed
-location acquisition flags are mapped statically, but no live flag-manager accessor has been
-validated, so nothing is automatic yet. `docs/EVENT-FLAG-RESEARCH.md` Lane B is the path out.
+location acquisition flags are mapped statically, and as of 2026-08-18 the live event-flag manager
+**read path is validated** for CUSA03173 `01.09`: a manager-relative resolver returns a flag's live
+state from an eboot-relative pointer slot, gated on the setter signature, across two independently
+randomized process launches and without Cheat Engine.
+
+Nothing is automatic yet all the same. What is missing is the client half — a poller, and the
+false-positive containment an irreversible `LocationChecks` send requires. See
+`docs/EVENT-FLAG-RESEARCH.md` for the layout and evidence, and `docs/WORKPLAN.md` Phase 1 for the
+remaining work.
 
 Item delivery is real: the client queues received items into the Cheat Engine harness one at a
 time and advances a durable receipt only after the harness confirms completion. Absent-item

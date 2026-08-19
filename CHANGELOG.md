@@ -8,6 +8,16 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- The live event-flag manager read path is validated on CUSA03173 `01.09`. A
+  save-restored pickup replay and a one-shot write breakpoint proved divisor-1000
+  grouping with MSB-first bit packing; a manager-relative resolver rediscovers the
+  randomized eboot base, gates on the setter signature, fails closed on a
+  mismatch, and returns live flag state without Cheat Engine. Checks are still
+  reported manually — nothing polls this yet.
+- One runtime build string, `bb-0.1.0-r4`, now spans the apworld, the client, the
+  Cheat Engine table and the grant helper. The client prints it on connect and
+  refuses a harness reporting a different or missing version; the wire contract is
+  `BBGRANT1` and the table identifies itself as `bb-native-grant-v4`.
 - A repeatable event-flag playtest kit records hashed session manifests, captures
   four-stage snapshots, intersects candidates across trials, and logs the
   instruction that writes a surviving candidate.
@@ -22,6 +32,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Fixed
 
+- Items the player does not already hold are granted correctly again under
+  shadPS4 v0.18. The 24-byte descriptor is now built inside the consumable
+  function's own retiring stack frame rather than below `rsp`, where the source
+  object was zeroed before the assignment helper copied it and insertion returned
+  `-1`. Absent-stack, existing-stack and restart-replay recovery are all
+  validated live.
 - Runtime location bindings now distinguish MSB treasures from EMEVD item-lot
   awards and carry source-specific provenance.
 

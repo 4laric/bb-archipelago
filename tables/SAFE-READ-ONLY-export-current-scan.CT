@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Exports Cheat Engine's current scan result list. Performs no process writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local output=[[C:\Users\alari\bb-archipelago\work\event-flag-scan-51.tsv]]
+local scan=getCurrentMemscan()
+if not scan then error("No current Cheat Engine scan") end
+local found=createFoundList(scan)
+found.initialize()
+local count=found.getCount()
+if count==0 then found.destroy(); error("Current scan has no results") end
+local f=assert(io.open(output,"w"))
+f:write("address\tvalue\n")
+for i=0,count-1 do
+  f:write(tostring(found.Address[i]),"\t",tostring(found.Value[i]),"\n")
+end
+f:close()
+found.destroy()
+showMessage(string.format("Exported %d current scan results",count))
+]]></LuaScript>
+</CheatTable>

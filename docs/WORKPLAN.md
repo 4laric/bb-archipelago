@@ -3,24 +3,31 @@
 Written 2026-08-18, after an audit of the 08-16/17 working tree and a subsequent adversarial
 review. Every state claim below was verified by running the thing, not by reading it.
 
+Updated 2026-08-19 for the overnight session: the event-flag manager read path is validated, the
+absent-item grant is fixed, and one build string now spans every artifact. Phase 0.2 and 0.5 are
+closed; Phase 1's remaining work is the client half, not the discovery half.
+
 ## Where the project actually is
 
 | Piece | State |
 | --- | --- |
 | World generation | **Works.** AP 0.6.7 / Python 3.11, clean at `full`, `minimal`, enemizer on and off. |
-| Item delivery | **Works**, through Cheat Engine. Native game-thread grant, absent-item insertion, persistence across a full emulator restart. Wedges on a failed verify (#19) and can double-grant on restart (#20). |
+| Item delivery | **Absent-stack, existing-stack, and replay recovery work** through the v4 Cheat Engine bridge. A 24-byte in-frame descriptor restored absent Pebble insertion on shadPS4 v0.18; failed verification is bounded, and a retained completed command survives a full restart without double-granting. |
 | The AP client | **Crashes on every launch path** (#17). Whatever exercised delivery end to end did not go through `launch()`. |
 | Item *randomisation* | **Does not exist.** Nothing suppresses the vanilla award, so shuffled keys gate nothing (#14). |
-| Location detection | **Does not exist.** No flag-manager accessor. Checks are typed by hand (#15). |
+| Location detection | **Read path validated, nothing wired to it.** The manager-relative resolver returns live flag state from an eboot-relative pointer slot, signature-gated, across two randomized launches and outside Cheat Engine. There is no poller and no false-positive containment, so checks are still typed by hand (#15). |
 | Enemizer planning | **Works.** 308 swaps of 4186 slots, deterministic across 25 seeds. |
 | Enemizer writing | Guarded writer + packaging entrypoint exist. **Not playtested.** |
 
 ## The two blockers
 
 An Archipelago game has to do two things: report what the player found, and make what it hands
-back matter. Bloodborne currently does neither.
+back matter. Bloodborne currently does neither automatically.
 
-**#15 — detection.** Until the flag-manager accessor exists, checks are typed by hand.
+**#15 — detection.** The accessor now exists: a validated, signature-gated, manager-relative read
+path that survives a randomized eboot base. What does not exist is anything between that read and
+a `LocationChecks` send — no poll loop, no gameplay-state gating, no containment. Checks are still
+typed by hand. The blocker moved from research to integration; it did not close.
 
 **#14 — vanilla award suppression.** There is no `ItemLotParam` edit, no MSB treasure edit and no
 runtime lot interception anywhere in the project. The player who walks to Iosefka's Clinic picks
@@ -49,6 +56,14 @@ is Phase 0 work and it is the highest-leverage schedulable item in the project.
 The owner's game time is also the contended resource: #15, the enemizer writer playtest, broader
 item-class delivery validation, and the "does a native grant set acquisition flags" test all queue
 on the same machine and the same person. #15 preempts.
+
+**Settled 2026-08-19.** The discovery session ran on 08-18 and cost gameplay minutes, as predicted.
+All four activities happened: candidates narrowed statically, a save-restored before/after replay
+captured, the diff intersected, and the write breakpoint scripted in Cheat Engine Lua. The write
+proved divisor-1000 grouping with MSB-first packing, and the manager turned out to hang off a
+static eboot-relative slot rather than a hooked register. The owner's queue is therefore free for
+the enemizer writer playtest and the native-grant-sets-flags test; #15 no longer preempts, because
+what remains of it needs no game running.
 
 ---
 
@@ -81,6 +96,12 @@ writes its own version into the state file so the client can refuse a mismatch. 
 change — the state-file handshake in #7 *is* #8's mechanism — and both belong before the first
 external tester.
 
+**Done 2026-08-19.** `bb-0.1.0-r4` is stamped across the apworld, the client, the Cheat Engine
+table and the PS1 helper; the harness identifies itself as `bb-native-grant-v4` over the
+`BBGRANT1` wire contract, and either side refuses a different or missing version.
+`tests/test_grant_harness_contract.py` asserts each stamp, so the four artifacts cannot drift
+apart silently.
+
 ### 0.3 CI that asserts what it collected (#9)
 
 No CI today. When it lands it must assert the **collected test count**, not just exit green.
@@ -100,6 +121,10 @@ ranking them needed a bespoke tracing probe. A ceiling at 14 costs nothing.
 Per the note above: candidate narrowing, an instrumented capture package, diff tooling, a scripted
 breakpoint. Nothing here needs the game; all of it shortens the sessions that do.
 
+**Done, and it paid.** The kit went in on 08-18 and the session it was built for closed the read
+path the same night. Keep the pattern for DeathLink's send signal and the boss-flag hunt, which are
+the same shape of problem.
+
 ### 0.6 CONTRIBUTING.md (#22)
 
 Elden Ring's exists as an **external legibility asset** — a way to show someone why the bar is
@@ -116,28 +141,36 @@ rising until it was always tomorrow's job.
 
 ## Phase 1 — detection (#15)
 
-`docs/EVENT-FLAG-RESEARCH.md` specifies the method well. Three things to hold onto:
+**The discovery half is done (2026-08-18).** `docs/EVENT-FLAG-RESEARCH.md` records the layout:
+flag ID divided by 1000 selects the group, the remainder indexes a bank with MSB-first bit packing,
+the manager hangs off eboot `RVA 0x553B100` on CUSA03173 `01.09`, and the inlined setter write at
+`RVA 0x17D6EFA` is the version gate. Three things that shaped it, kept because the next hunt needs
+them:
 
 - **The deliverable is the code path, not the bit.** One repeatable transition plus the instruction
-  that writes it. A bit alone is a session that has to be redone.
+  that writes it. A bit alone is a session that has to be redone. This is what made the resolver
+  generic instead of a hardcoded address for one Bullet lot.
 - **A coincidence is not evidence.** A flag that changes *only* when you do the thing, survives
   reload, and has an identifiable writer is a finding. Skipping the control pair is how this goes
   wrong; Elden Ring lost a filed issue and a parked branch to exactly that.
-- **The pointer trap.** The harness captures the inventory pointer at a hook (`mov
-  [bbAutoInventory],r13`) and needs "use one bullet once after launch" to bootstrap — which is a
-  confession that no static chain was ever found. If the flag manager lands the same way, automatic
-  checks inherit a cave and a detour. EVENT-FLAG-RESEARCH requirement 6 is an acceptance criterion,
-  not a finding.
+- **The pointer trap did not spring.** The harness captures the inventory pointer at a hook (`mov
+  [bbAutoInventory],r13`) and needs "use one bullet once after launch" to bootstrap, so the fear was
+  that the flag manager would land the same way and drag a cave and a detour behind it. It did not:
+  the manager is reachable from a static eboot-relative slot, and a reader outside Cheat Engine
+  resolved it after the base moved from `0x05660000` to `0x057C0000`. EVENT-FLAG-RESEARCH
+  requirement 6 wants manager-relative addressing on **both** supported builds; CUSA03173 `01.09`
+  has it, CUSA00900 is untested. Do not let the second serial go unclaimed by default.
 
-**Detection has a second half that nothing currently owns: false-positive containment.**
-`LocationChecks` cannot be retracted. A stale pointer after a save reload, a read during a loading
+**Detection's second half is now the whole of the phase, and nothing owns it yet: false-positive
+containment.** `LocationChecks` cannot be retracted. A stale pointer after a save reload, a read during a loading
 screen while the flag block is repopulating, or a read against the wrong character slot can each
 mint irreversible false checks across an entire multiworld. Pointer revalidation per poll,
 gameplay-state gating, N-consecutive-poll debounce and save-identity binding are part of this
 phase, not an afterthought.
 
-Also one live test to schedule while the debugger is out: **can the native grant path itself set
-acquisition flags?** If it can, Archipelago deliveries self-report as checks.
+Also one live test, now cheap: **can the native grant path itself set acquisition flags?** If it
+can, Archipelago deliveries self-report as checks. The validated reader answers this in one
+grant — read the item's acquisition flag before and after — with no debugger session required.
 
 ## Phase 2 — make the randomiser a randomiser
 
@@ -179,8 +212,8 @@ not safety.
 
 | Lesson | Where it bites here |
 | --- | --- |
-| A version number cannot identify a build | 43 unversioned `.CT` files (#7) |
-| If the contract changes, the version changes | The `GRANT` command wire (#8) |
+| A version number cannot identify a build | Was 43 unversioned `.CT` files; the grant table now self-identifies (#7 closed). The research and debug tables still do not. |
+| If the contract changes, the version changes | The `GRANT` command wire, now `BBGRANT1` and refused on mismatch (#8 closed) |
 | A gate can pass while examining nothing | No CI yet; assert the collected count (#9) |
 | A guard its subject cannot witness | #2's coverage test (#10) |
 | A gate that greps reads comments too | The enemizer's EMEVD protection rule (#3) |

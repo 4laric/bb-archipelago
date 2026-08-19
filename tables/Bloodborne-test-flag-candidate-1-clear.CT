@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Controlled write probe for the current shadPS4 process only. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+error("RETIRED: candidate 1 was disproven and writing it destabilized the game")
+local expectedPid=0x6C70
+local address=0x23369541F
+local logPath=[[C:\Users\alari\bb-archipelago\work\event-flag-candidate-1-write.txt]]
+openProcess("shadPS4.exe")
+local pid=getOpenedProcessID()
+if pid~=expectedPid then error(string.format("PID guard refused write: expected %X, found %X",expectedPid,pid or 0)) end
+local before=readBytes(address,1,false)
+if before~=0x80 then error(string.format("Value guard refused write at 0x%X: expected 80, found %s",address,tostring(before))) end
+local surrounding=readBytes(address-32,65,true)
+if not surrounding or #surrounding~=65 then error("Could not capture surrounding bytes") end
+local parts={}
+for i=1,#surrounding do parts[#parts+1]=string.format("%02X",surrounding[i]) end
+local f=assert(io.open(logPath,"w"))
+f:write(string.format("pid=0x%X\naddress=0x%X\nbefore=0x%02X\nsurrounding=%s\n",pid,address,before,table.concat(parts," ")))
+f:close()
+if not writeBytes(address,0x00) then error("Candidate clear write failed") end
+local after=readBytes(address,1,false)
+if after~=0 then error(string.format("Candidate clear verification failed: found %s",tostring(after))) end
+showMessage("Candidate 1 changed 0x80 -> 0x00. Use Hunter's Mark to reload the area.")
+]]></LuaScript>
+</CheatTable>

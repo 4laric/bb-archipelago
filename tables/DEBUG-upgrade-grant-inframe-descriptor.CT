@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Guarded live diagnostic. Rewrites the already-installed consumable cave to
+     materialize the 24-byte item descriptor in the retiring caller frame. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local f=assert(io.open(shadLog,"r"))
+local pending,base=false,nil
+for line in f:lines() do
+  if line:find("Loading module eboot.bin",1,true) then pending=true
+  elseif pending then
+    local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+    if hex then base=tonumber(hex,16); pending=false end
+  end
+end
+f:close()
+if not base then error("Could not resolve the current eboot base") end
+openProcess("shadPS4.exe")
+
+local consume=base+0x14D9575
+local cave=base+0x50DBA00
+local data=base+0x50DBE00
+local jump=readBytes(consume,7,true)
+if not jump or jump[1]~=0xE9 then error("Expected v3 consumable detour is not installed") end
+local displacement=(jump[2] or 0)+(jump[3] or 0)*0x100+(jump[4] or 0)*0x10000+(jump[5] or 0)*0x1000000
+if displacement>=0x80000000 then displacement=displacement-0x100000000 end
+if consume+5+displacement~=cave then error("Consumable detour target differs; refusing upgrade") end
+
+local request=data+0x00
+local quantity=data+0x04
+local result=data+0x08
+local done=data+0x0C
+local inventory=data+0x10
+local staged=data+0x20
+local overflow=data+0x30
+local slotIndex=data+0x34
+local quantityPointer=data+0x38
+local script=string.format([[
+label(bbInFrameOriginal)
+label(bbInFrameExisting)
+label(bbInFrameFinish)
+%X:
+  mov [%X],r13
+  cmp dword ptr [%X],0
+  je bbInFrameOriginal
+  cmp dword ptr [%X],2
+  je bbInFrameExisting
+  mov dword ptr [%X],0
+  mov eax,[%X]
+  mov [rsp],eax
+  mov qword ptr [rsp+8],0
+  mov eax,[%X]
+  mov [rsp+10],eax
+  mov dword ptr [rsp+14],0
+  mov rdi,r13
+  mov rsi,rsp
+  mov edx,[%X]
+  mov rax,%X
+  call rax
+  jmp bbInFrameFinish
+
+bbInFrameExisting:
+  mov dword ptr [%X],0
+  mov rdi,r13
+  mov esi,[%X]
+  mov edx,[%X]
+  lea rcx,[%X]
+  mov r8,[%X]
+  xor r9d,r9d
+  mov rax,%X
+  call rax
+
+bbInFrameFinish:
+  mov [%X],eax
+  mov dword ptr [%X],1
+bbInFrameOriginal:
+  mov eax,r12d
+  add rsp,28
+  jmp %X
+]],
+  cave,
+  inventory,request,request,request,
+  staged,staged+4,quantity,base+0x14DA0A0,
+  request,slotIndex,quantity,overflow,quantityPointer,base+0x14D94A0,
+  result,done,base+0x14D957C)
+local ok,why=autoAssemble(script)
+if not ok then error("In-frame descriptor cave upgrade failed: "..tostring(why)) end
+showMessage("24-byte in-frame descriptor upgrade installed. Re-arm the insert-exit capture before testing.")
+]]></LuaScript>
+</CheatTable>

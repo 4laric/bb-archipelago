@@ -9,6 +9,7 @@ from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
+RUNTIME_BUILD = "bb-0.1.0-r4"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(MODEL.locations)
 SHUFFLABLE_ITEMS = tuple(item for item in MODEL.items if item.kind is not ItemKind.EVENT)
@@ -174,6 +175,7 @@ else:
             seed = f"{self.multiworld.seed_name}:{self.player}"
             return {
                 "version": 2,
+                "runtime_build": RUNTIME_BUILD,
                 "enemizer": bool(self.options.enemizer),
                 "enemizer_seed": seed,
                 **build_runtime_slot_data(),

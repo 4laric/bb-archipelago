@@ -37,9 +37,10 @@ randomized fixed locations in the vertical slice. Of the original six, Upper
 Cathedral Key is the only MSB treasure and the other five are EMEVD item-lot
 awards; the nine expansion checks are MSB treasures. Their source kind, source
 location, item-lot ID, item identity, and acquisition flag are recorded in
-`worlds/bloodborne/runtime_bindings.py`. This completes the static mapping only;
-automatic client reporting remains disabled until Lane B identifies and validates
-the live flag-manager accessor.
+`worlds/bloodborne/runtime_bindings.py`. This completes the static mapping only.
+Lane B has since validated the live read path for these IDs — see "Resolved live
+manager path" below — but automatic client reporting remains disabled until a
+poller and its false-positive containment exist.
 
 Eye Pendant's flag `9470` is intentionally short. A full `lot_items.tsv` audit
 finds it on exactly one lot, `3401810`; the other short progression flags `6670`
@@ -162,6 +163,12 @@ may require a reward flag rather than the NPC's quest phase. Lamps/areas should 
 treated as optional checks until their semantics and logic value are established.
 
 ## Next live experiment
+
+⚠️ **Superseded as a discovery procedure by the Iosefka trial below**, which
+resolved the manager path on 2026-08-18. Its remaining value is as a *second
+witness*: run the resolver against `52110000` before and after the pickup and it
+should flip without a scan, a breakpoint or a candidate list. If it does not, the
+manager path generalises worse than one trial suggests.
 
 Use `Healing Church Workshop - Old Hunter Bone`, the fixed treasure whose
 catalog-backed acquisition flag is `52110000`:

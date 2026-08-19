@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dumps live code around the validated flag-setter write. No process writes. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local expectedPid=16592
+local writeAddress=0x6E36EFA
+local start=writeAddress-0x1000
+local size=0x2000
+local outputPath=[[C:\Users\alari\bb-archipelago\work\live-event-flag-setter-code.bin]]
+local metadataPath=[[C:\Users\alari\bb-archipelago\work\live-event-flag-setter-code.txt]]
+
+local function byte(address)
+  return readBytes(address,1,false)
+end
+
+local pid=getOpenedProcessID()
+if not pid or pid==0 then error("Attach Cheat Engine to shadPS4.exe first") end
+if pid~=expectedPid then
+  error(string.format("Wrong shad process: expected PID %d, current PID %d",expectedPid,pid))
+end
+if byte(writeAddress)~=0x88 or byte(writeAddress+1)~=0x0C or byte(writeAddress+2)~=0x02 then
+  error(string.format("Validated setter write signature is absent at 0x%X",writeAddress))
+end
+
+local output=assert(io.open(outputPath,"wb"))
+local offset=0
+while offset<size do
+  local count=math.min(256,size-offset)
+  local values=readBytes(start+offset,count,true)
+  if not values or #values~=count then
+    output:close()
+    error(string.format("Live code read failed at 0x%X",start+offset))
+  end
+  output:write(string.char(table.unpack(values)))
+  offset=offset+count
+end
+output:close()
+
+local metadata=assert(io.open(metadataPath,"w"))
+metadata:write(string.format(
+  "pid=%d\nstart=0x%X\nsize=0x%X\nwrite_address=0x%X\nwrite_offset=0x%X\n",
+  pid,start,size,writeAddress,writeAddress-start))
+metadata:close()
+
+showMessage(string.format(
+  "Live setter code captured (read-only)\nStart: 0x%X\nSize: 0x%X",
+  start,size))
+]]></LuaScript>
+</CheatTable>
