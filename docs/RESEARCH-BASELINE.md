@@ -300,6 +300,15 @@ terminal `failed` state, removed the command, left the game responsive, and did
 not acknowledge the item. This validates the bounded-failure behavior while
 leaving the absent-item regression unresolved.
 
+The failed call was repeated in a fresh process with the automatic heartbeat
+disabled for that request. A genuine Bullet consumption entered the same
+game-thread hook and invoked `ItemGrant` with the stack descriptor, but the
+native routine again returned `-1` (`0xFFFFFFFF`) and Pebbles remained zero.
+The bounded verifier again reached terminal `failed` without destabilizing the
+game. This falsifies synthetic heartbeat context as the cause of the current
+regression; the remaining investigation is the native call contract and its
+inventory-state preconditions.
+
 An existing-stack Blood Vial command then sampled three, wrote four, reread
 four, persisted `completed`, and removed its command. The player confirmed four
 in the inventory UI. A completed Vial state with expected counts four and five
