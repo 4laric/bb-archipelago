@@ -57,9 +57,14 @@ emits disabled-by-default `auto_upgrade` and `auto_equip` options. The
 standalone client consumes these seed-owned tables; it does not bake world ids,
 flags or equipment policy classifications into its executable.
 
-All six checks currently advertise `vanilla_award_suppressed: false`. They are
+All selected checks currently advertise `vanilla_award_suppressed: false`. They are
 valid check signals, but still award their vanilla contents until the offline
 ItemLotParam transformation in issue #14 is installed and playtested.
+
+Slot data also emits the suppression manifest format and canonical plan
+SHA-256. If any row is changed to `vanilla_award_suppressed: true`, the seed
+requires an installation witness: the runtime hashes the binder actually loaded
+by the game and compares it with the matching build manifest before arming.
 
 ## Expansion procedure
 

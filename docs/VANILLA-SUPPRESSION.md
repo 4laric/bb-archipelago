@@ -1,7 +1,7 @@
 # Suppressing the vanilla item award
 
-Status: native binder writer implemented and round-tripped; installation and
-in-game canary validation remain pending.
+Status: native binder writer and install witness contract implemented;
+installation and in-game canary validation remain pending.
 
 ## The problem
 
@@ -124,13 +124,34 @@ The output directory contains the separate binder, the exact plan, and a hash
 manifest whose `installed` field is false. Installation remains a deliberate
 later step after backup and canary review.
 
+## Installation witness
+
+The manifest is not treated as proof that anything was installed. Slot data
+carries `suppression.required`, the manifest format, and the SHA-256 of the
+canonical suppression plan. When a seed claims any fixed vanilla award is
+suppressed, the standalone Rust client requires two local paths:
+
+- `suppression_manifest`: the build manifest produced above; and
+- `installed_gameparam`: the `gameparam.parambnd.dcx` actually loaded by the
+  game installation.
+
+The client verifies the manifest format and plan digest against the seed,
+validates the manifest's expected binder path, independently hashes the
+installed binder, and requires that hash to equal the manifest's output hash.
+Missing paths, malformed digests, a different plan, a build artifact that was
+never installed, or a later overwrite all fail before the AP runtime arms.
+
+All shipped location rows still declare `vanilla_award_suppressed: false`, so
+the witness is not required yet. Tests couple the boolean claim to the witness
+requirement and pin the canonical plan digest; flipping a row without activating
+the guard is rejected.
+
 ## Current result
 
-On the pre-catalog vertical slice, **eighteen rows plan cleanly: nine
-shuffled-key awards and nine additional fixed checks. One pool item is
-refused.** Generated catalog slices may add clean category-4 rows and explicit
-refusals for weapon/armor rows until the placeholder policy covers those
-categories.
+On the current catalog slice, **twenty-two rows plan cleanly: nine shuffled-key
+awards and thirteen additional fixed checks. Three rows are refused.** Tonsil
+Stone lacks a detectable acquisition flag; Saw Spear and Torch are weapon rows,
+while the current writer deliberately replaces category-4 goods only.
 
 `tonsil_stone` resolves to lot 39000 — a Patches gift — whose
 `generic_acquisition_flag` is `-1`. That is "no flag", not flag −1; 2,778 rows in

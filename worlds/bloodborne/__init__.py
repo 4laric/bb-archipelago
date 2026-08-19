@@ -10,6 +10,8 @@ from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r4"
+SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
+SUPPRESSION_PLAN_SHA256 = "6666eb68b3ad5123e3e08b571d060dc8fe63c5b5f9cc63d34eb8d01790ced4a7"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(MODEL.locations)
 SHUFFLABLE_ITEMS = tuple(item for item in MODEL.items if item.kind is not ItemKind.EVENT)
@@ -100,7 +102,18 @@ def build_runtime_slot_data() -> dict[str, Any]:
         "reinforcement_level": None,
         "feed_effect": "not_equippable",
     }
-    return {"runtime_locations": locations, "runtime_items": items}
+    suppression_required = any(
+        row["vanilla_award_suppressed"] for row in locations.values()
+    )
+    return {
+        "runtime_locations": locations,
+        "runtime_items": items,
+        "suppression": {
+            "required": suppression_required,
+            "manifest_format": SUPPRESSION_MANIFEST_FORMAT,
+            "plan_sha256": SUPPRESSION_PLAN_SHA256,
+        },
+    }
 
 try:
     from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region

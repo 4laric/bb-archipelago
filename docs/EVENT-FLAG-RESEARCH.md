@@ -1,6 +1,6 @@
 # Bloodborne location-signal research
 
-Status: fifteen fixed-location acquisition flags mapped statically; live accessor not yet mapped
+Status: fifteen fixed-location acquisition flags mapped statically; live accessor validated for CUSA03173 01.09; automatic reporting gated on live gameplay/save identity
 Target builds: `CUSA00900` and `CUSA03173`, AppVer `01.09`
 
 ## Scope and evidence boundary

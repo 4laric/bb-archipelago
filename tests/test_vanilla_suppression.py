@@ -10,6 +10,7 @@ currently says, including the one item it refuses.
 
 from __future__ import annotations
 
+import hashlib
 import sys
 import tempfile
 import unittest
@@ -189,6 +190,16 @@ class RealCorpusTests(unittest.TestCase):
             self.assertEqual(int(by_item[item_key]), binding.event_flag,
                              f"{location_key}: planner and runtime_bindings disagree")
         self.assertGreaterEqual(checked, 5, "the cross-check examined almost nothing")
+
+    def test_canonical_plan_digest_matches_the_runtime_contract(self):
+        from tools.plan_vanilla_suppression import build_complete_plan, serialize_plan
+        from worlds.bloodborne import SUPPRESSION_PLAN_SHA256
+
+        plan = build_complete_plan(
+            REPO / "research", {"goods_id": "1000", "name": "Blood Vial"}
+        )
+        digest = hashlib.sha256(serialize_plan(plan).encode("utf-8")).hexdigest()
+        self.assertEqual(digest, SUPPRESSION_PLAN_SHA256)
 
 
 if __name__ == "__main__":
