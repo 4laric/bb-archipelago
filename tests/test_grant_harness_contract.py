@@ -43,6 +43,8 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn("cmp dword ptr [bbAutoManualTrigger],0", self.text)
         self.assertIn('command.manualTrigger and "manual_consumable"', self.text)
         self.assertIn("[ValidateSet('AUTO','MANUAL')]", self.helper)
+        self.assertIn("local maxManualWaitPolls=240", self.text)
+        self.assertIn("manual trigger timed out after %d polls", self.text)
         self.assertIn("active=nil", self.text)
 
     def test_auto_expected_count_is_persisted_before_the_write(self):
