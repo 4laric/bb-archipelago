@@ -8,7 +8,7 @@ from CommonClient import (ClientCommandProcessor, CommonContext, get_base_parser
                           handle_url_arg, server_loop)
 from NetUtils import ClientStatus
 from Utils import async_start
-from . import GAME, ITEM_ID_BY_KEY, LOCATION_ID_BY_KEY, WORLD_VERSION
+from . import GAME, ITEM_ID_BY_KEY, LOCATION_ID_BY_KEY, RUNTIME_BUILD, WORLD_VERSION
 from .data import MODEL
 from .runtime_bindings import DELIVERY_FIXTURES, ITEM_BINDINGS
 
@@ -17,6 +17,10 @@ ITEM_KEY_BY_AP_ID = {value: key for key, value in ITEM_ID_BY_KEY.items()}
 LOCATION_BY_NAME = {loc.name.casefold(): LOCATION_ID_BY_KEY[loc.key] for loc in MODEL.locations}
 LOCATION_NAME_BY_ID = {LOCATION_ID_BY_KEY[loc.key]: loc.name for loc in MODEL.locations}
 CHECK_JOURNAL = "manual-checks.jsonl"
+BRIDGE_PROTOCOL = "BBGRANT1"
+HARNESS_VERSION = "bb-native-grant-v3"
+BRIDGE_TIMEOUT_SECONDS = 30
+TERMINAL_GRANT_STATES = {"failed", "command_rejected", "quantity_mismatch", "setup_error", "write_error"}
 
 
 def location_suggestions(query: str, limit: int = 3) -> list[str]:
@@ -95,14 +99,33 @@ def read_state(path: Path) -> dict[str, str]:
     if not path.exists(): return {}
     return dict(line.split("=", 1) for line in path.read_text(encoding="utf-8").splitlines() if "=" in line)
 
-def grant_command(item_id: int) -> str | None:
+def grant_command(item_id: int, tag: str | None = None) -> str | None:
     key = ITEM_KEY_BY_AP_ID.get(item_id)
     binding = ITEM_BINDINGS.get(key) if key else None
     if item_id == 0xBB0100:
         key, binding = "blood_vial", DELIVERY_FIXTURES["blood_vial"]
     if not key or not binding or binding.normalized_item_id is None or binding.raw_descriptor is None:
         return None
-    return f"GRANT 0x{binding.raw_descriptor:08X} 0x{binding.normalized_item_id:08X} 1 AUTO {key}\n"
+    command_tag = tag or key
+    if not command_tag or any(character.isspace() for character in command_tag):
+        raise ValueError("grant tag must be one non-empty token")
+    return (f"{BRIDGE_PROTOCOL} GRANT 0x{binding.raw_descriptor:08X} "
+            f"0x{binding.normalized_item_id:08X} 1 AUTO {command_tag}\n")
+
+
+def grant_state_outcome(state: dict[str, str], tag: str) -> str:
+    """Classify only a state written by this protocol for this receipt tag."""
+    if (state.get("build") != RUNTIME_BUILD
+            or state.get("protocol") != BRIDGE_PROTOCOL
+            or state.get("harness") != HARNESS_VERSION):
+        return "incompatible"
+    if state.get("tag") != tag:
+        return "pending"
+    if state.get("status") in {"completed", "recovered_complete"}:
+        return "success"
+    if state.get("status") in TERMINAL_GRANT_STATES:
+        return "failure"
+    return "pending"
 
 async def bridge_loop(ctx: BloodborneContext) -> None:
     ctx.work_dir.mkdir(parents=True, exist_ok=True)
@@ -117,17 +140,43 @@ async def bridge_loop(ctx: BloodborneContext) -> None:
             delivered = int(saved.get("delivered", 0)) if saved.get("slot_key") == receipt_key else 0
         except (ValueError, OSError, json.JSONDecodeError): logger.warning("Ignoring invalid receipt")
     while not ctx.exit_event.is_set():
-        if delivered < len(ctx.items_received) and not command.exists():
-            line = grant_command(ctx.items_received[delivered].item)
+        if delivered < len(ctx.items_received):
+            tag = f"received_{delivered}"
+            line = grant_command(ctx.items_received[delivered].item, tag)
             if line is None:
                 logger.error("Unsupported item; delivery paused")
                 await asyncio.sleep(1); continue
-            command.write_text(line, encoding="ascii")
-            while command.exists() and not ctx.exit_event.is_set(): await asyncio.sleep(.25)
             state = read_state(state_path)
-            if state.get("status") not in {"completed", "recovered_complete"}:
+            outcome = grant_state_outcome(state, tag)
+            if outcome == "incompatible":
+                logger.error("Grant bridge mismatch: expected %s / %s / %s, found %s / %s / %s",
+                             RUNTIME_BUILD, BRIDGE_PROTOCOL, HARNESS_VERSION,
+                             state.get("build", "missing"), state.get("protocol", "missing"),
+                             state.get("harness", "missing"))
+                await asyncio.sleep(1); continue
+            if outcome == "failure":
                 logger.error("Grant failed: %s", state.get("detail", state.get("status")))
                 await asyncio.sleep(1); continue
+            if outcome != "success" and not command.exists():
+                command.write_text(line, encoding="ascii")
+            deadline = asyncio.get_running_loop().time() + BRIDGE_TIMEOUT_SECONDS
+            while outcome == "pending" and not ctx.exit_event.is_set():
+                if asyncio.get_running_loop().time() >= deadline:
+                    break
+                await asyncio.sleep(.25)
+                state = read_state(state_path)
+                outcome = grant_state_outcome(state, tag)
+            if outcome == "incompatible":
+                logger.error("Grant bridge changed version while processing %s", tag)
+                await asyncio.sleep(1); continue
+            if outcome == "failure":
+                logger.error("Grant failed: %s", state.get("detail", state.get("status")))
+                await asyncio.sleep(1); continue
+            if outcome != "success":
+                logger.error("Grant bridge timed out after %s seconds; command retained for diagnosis",
+                             BRIDGE_TIMEOUT_SECONDS)
+                await asyncio.sleep(1); continue
+            command.unlink(missing_ok=True)
             delivered += 1
             receipt.write_text(json.dumps({"slot_key": receipt_key, "delivered": delivered}, indent=2) + "\n", encoding="utf-8")
         await asyncio.sleep(.25)
@@ -135,7 +184,11 @@ async def bridge_loop(ctx: BloodborneContext) -> None:
 async def main(args) -> None:
     ctx = BloodborneContext(args.connect, args.password, Path(args.work_dir).resolve())
     ctx.auth = args.name
-    logger.info("Bloodborne Client, world version %s", WORLD_VERSION)
+    harness_state = read_state(ctx.work_dir / "native-grant-state.txt")
+    logger.info("Bloodborne Client build %s, world version %s; bridge reports build %s, "
+                "protocol %s, harness %s", RUNTIME_BUILD, WORLD_VERSION,
+                harness_state.get("build", "missing"), harness_state.get("protocol", "missing"),
+                harness_state.get("harness", "missing"))
     for line in attach_report_lines():
         logger.info("%s", line)
     ctx.server_task = asyncio.create_task(server_loop(ctx))
