@@ -7,16 +7,34 @@ local root=[[C:\Users\alari\bb-archipelago\work\]]
 local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
 local logPath=root..[[native-grant.log]]
-local consumeHook=0x8014D9575
-local heartbeatHook=0x801BFE882
-local request=0x8050DBE00
-local quantity=0x8050DBE04
-local result=0x8050DBE08
-local done=0x8050DBE0C
-local inventoryPointer=0x8050DBE10
-local descriptor=0x8050DBE20
-local slotIndex=0x8050DBE34
-local itemQuantityPointer=0x8050DBE38
+local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local function readEbootBase()
+  local f=io.open(shadLog,"r")
+  if not f then return nil,"Could not open shad log" end
+  local pending,found=false,nil
+  for line in f:lines() do
+    if line:find("Loading module eboot.bin",1,true) then pending=true
+    elseif pending then
+      local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+      if hex then found=tonumber(hex,16); pending=false end
+    end
+  end
+  f:close()
+  if not found then return nil,"Could not find eboot base in shad log" end
+  return found
+end
+local base,baseError=readEbootBase()
+if not base then error(baseError) end
+local consumeHook=base+0x14D9575
+local heartbeatHook=base+0x1BFE882
+local request=base+0x50DBE00
+local quantity=request+4
+local result=request+8
+local done=request+0xC
+local inventoryPointer=request+0x10
+local descriptor=request+0x20
+local slotIndex=request+0x34
+local itemQuantityPointer=request+0x38
 local active=nil
 local pid=nil
 
@@ -80,11 +98,18 @@ label(bbAutoItemQuantityPointer)
   cmp dword ptr [bbAutoRequest],2
   je bbAutoExisting
   mov dword ptr [bbAutoRequest],0
+  sub rsp,20
+  mov eax,[bbAutoDescriptor]
+  mov [rsp],eax
+  mov eax,[bbAutoDescriptor+4]
+  mov [rsp+4],eax
+  mov qword ptr [rsp+8],0
   mov rdi,r13
-  lea rsi,[bbAutoDescriptor]
+  mov rsi,rsp
   mov edx,[bbAutoQuantity]
   mov rax,8014DA0A0
   call rax
+  add rsp,20
   jmp bbAutoFinish
 
 bbAutoExisting:
@@ -164,6 +189,23 @@ bbAutoHeartbeatOriginal:
   jmp 8050DBC00
   nop 2
 ]]
+local relocated={
+  ["8014D9575"]=base+0x14D9575,
+  ["8014D957C"]=base+0x14D957C,
+  ["8014D94A0"]=base+0x14D94A0,
+  ["8014DA0A0"]=base+0x14DA0A0,
+  ["8014DA2C0"]=base+0x14DA2C0,
+  ["801BFE882"]=base+0x1BFE882,
+  ["801BFE889"]=base+0x1BFE889,
+  ["8050DBA00"]=base+0x50DBA00,
+  ["8050DBC00"]=base+0x50DBC00,
+  ["8050DBE00"]=base+0x50DBE00,
+  ["8050DBE40"]=base+0x50DBE40,
+  ["8050DBE4C"]=base+0x50DBE4C,
+}
+for old,address in pairs(relocated) do
+  install=install:gsub(old,string.format("%X",address))
+end
 local ok,detail=autoAssemble(install)
 if not ok then state("setup_error",detail); error("Automatic grant harness install failed: "..tostring(detail)) end
 
@@ -248,6 +290,6 @@ bbNativeGrantHarnessTimer=createTimer(nil); bbNativeGrantHarnessTimer.Interval=2
 bbNativeGrantHarnessTimer.OnTimer=poll; bbNativeGrantHarnessTimer.Enabled=true
 bbNativeGrantHarnessPid=pid
 state("awaiting_inventory","Use one bullet once after launch")
-append(string.format("AUTO V2 READY pid=%d consumeHook=0x%X heartbeatHook=0x%X",pid,consumeHook,heartbeatHook))
+append(string.format("AUTO V2 READY pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",pid,base,consumeHook,heartbeatHook))
 ]]></LuaScript>
 </CheatTable>
