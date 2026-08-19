@@ -104,9 +104,17 @@ $session = .\tools\event_flag_session.ps1 -Mode Initialize `
 ```
 
 `tables/Bloodborne-event-flag-snapshot.CT` asks once for the candidate memory
-region and the current trial directory. Its four hotkeys write identically sized
-`idle-a`, `idle-b`, `before`, and `after` dumps and append capture timestamps.
-Restore the same pre-action save and reload the table for each trial.
+region and the current trial directory. Its five hotkeys write identically sized
+`idle-a`, `idle-b`, `before`, `after`, and `reload` dumps and append capture
+timestamps. `reload` is taken after quitting to title and loading the save again,
+and it is what requirement 4 above is tested with; without it `Analyze` can only
+report leads. Restore the same pre-action save and reload the table for each trial.
+
+Unreadable chunks inside the window are zero-filled rather than aborting the dump,
+and the filled byte count is recorded per stage in `capture-state.txt`. A constant
+fill cannot manufacture a candidate, because the comparator reports only positions
+that changed. A fill count that differs between stages of one trial means the
+region moved, and that trial is not comparable.
 
 If the inputs are save files or dumps made by another tool, copy them into the
 same layout with `-Mode Capture`. Once all trials are present, run:

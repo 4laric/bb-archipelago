@@ -15,32 +15,54 @@ local size = tonumber(sizeText:gsub("^0[xX]", ""), 16)
 if not base or not size or size < 1 then error("Invalid base or size") end
 if size > 0x40000000 then error("Refusing a snapshot larger than 1 GiB") end
 
+-- An unreadable chunk used to abort the whole dump, which meant one unmapped page
+-- anywhere in the window cost the trial. Holes are filled with a constant instead:
+-- the comparator only reports positions that CHANGED between before and after, so a
+-- deterministic fill produces no candidates rather than a false one. The count is
+-- recorded per stage precisely so a hole that MOVES between stages is visible.
+local HOLE = string.rep("\0", 256)
+
 local function dump(stage)
     local path = outputDir .. "\\" .. stage .. ".bin"
+    if io.open(path, "rb") then
+        showMessage("Overwriting an existing " .. stage .. ".bin in this directory.")
+    end
     local file = assert(io.open(path, "wb"))
     local offset = 0
+    local unreadable = 0
     while offset < size do
         local count = math.min(256, size - offset)
         local bytes = readBytes(base + offset, count, true)
-        if not bytes or #bytes ~= count then
-            file:close()
-            error(string.format("Read failed at 0x%X", base + offset))
+        if bytes and #bytes == count then
+            file:write(string.char(table.unpack(bytes)))
+        else
+            file:write(HOLE:sub(1, count))
+            unreadable = unreadable + count
         end
-        file:write(string.char(table.unpack(bytes)))
         offset = offset + count
     end
     file:close()
     local state = assert(io.open(outputDir .. "\\capture-state.txt", "a"))
-    state:write(string.format("%s stage=%s base=0x%X size=0x%X path=%s\n",
-        os.date("!%Y-%m-%dT%H:%M:%SZ"), stage, base, size, path))
+    state:write(string.format("%s stage=%s base=0x%X size=0x%X unreadable=0x%X path=%s\n",
+        os.date("!%Y-%m-%dT%H:%M:%SZ"), stage, base, size, unreadable, path))
     state:close()
-    showMessage(stage .. " captured")
+    if unreadable > 0 then
+        showMessage(string.format("%s captured, but 0x%X of 0x%X bytes were unreadable and " ..
+            "were zero-filled. If this count differs between stages of one trial, the region " ..
+            "moved and the trial is not comparable.", stage, unreadable, size))
+    else
+        showMessage(stage .. " captured")
+    end
 end
 
 createHotkey(function() dump("idle-a") end, VK_F5)
 createHotkey(function() dump("idle-b") end, VK_F6)
 createHotkey(function() dump("before") end, VK_F7)
 createHotkey(function() dump("after") end, VK_F8)
-showMessage("Snapshot capture armed:\nF5 idle-a\nF6 idle-b\nF7 before\nF8 after")
+-- Requirement 4 of docs/EVENT-FLAG-RESEARCH.md: the bit must survive a reload.
+-- Without this stage Analyze can only report leads, never flags.
+createHotkey(function() dump("reload") end, VK_F9)
+showMessage("Snapshot capture armed:\nF5 idle-a\nF6 idle-b\nF7 before\nF8 after\n" ..
+    "F9 reload (after quitting to title and loading the save again)")
 ]]></LuaScript>
 </CheatTable>
