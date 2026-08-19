@@ -37,6 +37,12 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn("local maxVerifyPolls=20", self.text)
         self.assertIn('state("failed",string.format("tag=%s expected_after=', self.text)
         self.assertIn("native_result=%s retry_budget=%d", self.text)
+
+    def test_manual_diagnostic_waits_for_a_real_consumable_trigger(self):
+        self.assertIn('trigger~="AUTO" and trigger~="MANUAL"', self.text)
+        self.assertIn("cmp dword ptr [bbAutoManualTrigger],0", self.text)
+        self.assertIn('command.manualTrigger and "manual_consumable"', self.text)
+        self.assertIn("[ValidateSet('AUTO','MANUAL')]", self.helper)
         self.assertIn("active=nil", self.text)
 
     def test_auto_expected_count_is_persisted_before_the_write(self):
