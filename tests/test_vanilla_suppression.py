@@ -147,7 +147,7 @@ class RealCorpusTests(unittest.TestCase):
         from tools.plan_vanilla_suppression import build_complete_plan
         cls.plan = build_complete_plan(REPO / "research", PLACEHOLDER)
 
-    def test_nine_of_the_ten_pool_items_can_be_suppressed(self):
+    def test_nine_pool_goods_can_be_suppressed(self):
         item_edits = [edit for edit in self.plan.edits if not edit.item_key.startswith("location:")]
         self.assertEqual(len(item_edits), 9)
 
@@ -164,6 +164,7 @@ class RealCorpusTests(unittest.TestCase):
         refusals = {r.item_key: r for r in self.plan.refusals}
         self.assertEqual(set(refusals), {
             "tonsil_stone",
+            "saw_spear",
             "location:fixed_saw_spear",
             "location:fixed_torch",
         })
@@ -172,6 +173,7 @@ class RealCorpusTests(unittest.TestCase):
             refusals[key].problem == "location_not_suppressible"
             for key in ("location:fixed_saw_spear", "location:fixed_torch")
         ))
+        self.assertEqual(refusals["saw_spear"].problem, "no_lot")
 
     def test_every_pool_item_resolves_to_exactly_one_lot(self):
         lots = [e.item_lot_id for e in self.plan.edits]

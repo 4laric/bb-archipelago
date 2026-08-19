@@ -5,13 +5,13 @@ from pathlib import Path
 from typing import Any
 from .data import MODEL
 from .model import ItemKind, Rule
-from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
+from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime_item_binding
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r5"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
-SUPPRESSION_PLAN_SHA256 = "6666eb68b3ad5123e3e08b571d060dc8fe63c5b5f9cc63d34eb8d01790ced4a7"
+SUPPRESSION_PLAN_SHA256 = "95abe11693c8825ad695d82c7264b5b67cc30299ed89adf0720b48b1ab2c7d69"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(MODEL.locations)
 SHUFFLABLE_ITEMS = tuple(item for item in MODEL.items if item.kind is not ItemKind.EVENT)
@@ -80,6 +80,8 @@ def build_runtime_slot_data() -> dict[str, Any]:
     """
     locations_by_key = {location.key: location for location in MODEL.locations}
     items_by_key = {item.key: item for item in SHUFFLABLE_ITEMS}
+    for key, binding in ITEM_BINDINGS.items():
+        validate_runtime_item_binding(key, binding, items_by_key[key].quantity)
     locations = {
         str(LOCATION_ID_BY_KEY[key]): {
             "event_flag": binding.event_flag,
@@ -90,6 +92,9 @@ def build_runtime_slot_data() -> dict[str, Any]:
     items = {
         str(ITEM_ID_BY_KEY[key]): {
             "normalized_item_id": binding.normalized_item_id,
+            "raw_descriptor": binding.raw_descriptor,
+            "item_category": binding.item_category,
+            "descriptor_evidence": binding.descriptor_evidence,
             "quantity": items_by_key[key].quantity,
             "reinforcement_level": binding.reinforcement_level,
             "feed_effect": binding.feed_effect,
@@ -98,6 +103,9 @@ def build_runtime_slot_data() -> dict[str, Any]:
     }
     items[str(ITEM_NAME_TO_ID[FILLER_ITEM_NAME])] = {
         "normalized_item_id": 0x400003E8,
+        "raw_descriptor": 0xB00003E8,
+        "item_category": 4,
+        "descriptor_evidence": "goods_formula_observed",
         "quantity": 1,
         "reinforcement_level": None,
         "feed_effect": "not_equippable",
@@ -171,8 +179,17 @@ else:
             return FILLER_ITEM_NAME
 
         def create_item(self, name: str) -> BloodborneItem:
-            kind = ItemClassification.filler if name == FILLER_ITEM_NAME else ItemClassification.progression
-            return BloodborneItem(name, kind, ITEM_NAME_TO_ID[name], self.player)
+            if name == FILLER_ITEM_NAME:
+                classification = ItemClassification.filler
+            else:
+                item = next(item for item in SHUFFLABLE_ITEMS if item.name == name)
+                classification = {
+                    ItemKind.PROGRESSION: ItemClassification.progression,
+                    ItemKind.USEFUL: ItemClassification.useful,
+                    ItemKind.FILLER: ItemClassification.filler,
+                    ItemKind.TRAP: ItemClassification.trap,
+                }[item.kind]
+            return BloodborneItem(name, classification, ITEM_NAME_TO_ID[name], self.player)
 
         def create_regions(self) -> None:
             regions = {name: Region(name, self.player, self.multiworld) for name in MODEL.regions}
@@ -203,7 +220,7 @@ else:
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"
             return {
-                "version": 3,
+                "version": 4,
                 "runtime_build": RUNTIME_BUILD,
                 "enemizer": bool(self.options.enemizer),
                 "auto_upgrade": bool(self.options.auto_upgrade),

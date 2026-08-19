@@ -48,12 +48,16 @@ identity guard.
 }
 ```
 
-It also emits `runtime_items`, mapping AP item ids to normalized category-4
-goods ids, quantities, reinforcement levels and feed effects. The current pool
-declares every goods row as `not_equippable` with no reinforcement level;
-future weapon, attire, rune and workshop-tool rows must opt into a semantic
-class explicitly rather than relying on client-side ID inference. The seed also
-emits disabled-by-default `auto_upgrade` and `auto_equip` options. The
+It also emits `runtime_items`, mapping AP item ids to validated raw descriptors,
+normalized ids, item categories, evidence classes, quantities, reinforcement
+levels and feed effects. Category-4 goods use the observed goods formula. Saw
+Spear is the first explicit category-0 allowlist entry (`raw=0x806C5660`,
+`normalized=0x006C5660`, right-hand weapon, +0); it was granted on a clean save
+and confirmed in the inventory UI. Torch is deliberately excluded: the rejected
+ItemLot-derived descriptor allocated an invisible record. Future weapon, attire,
+rune and workshop-tool rows must carry equivalent live evidence rather than
+relying on client-side or ItemLot-ID inference. The seed also emits
+disabled-by-default `auto_upgrade` and `auto_equip` options. The
 standalone client consumes these seed-owned tables; it does not bake world ids,
 flags or equipment policy classifications into its executable.
 

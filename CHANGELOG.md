@@ -31,6 +31,11 @@ under `Unreleased` and move into a dated version section when released.
 - The vanilla-award suppression tool can replace nine planned key-item awards
   while preserving their acquisition flags. Its output still requires repacking
   and in-game validation before it is part of the playable install.
+- Saw Spear is the first equipment item admitted to the randomized pool. Slot
+  data carries its separately validated raw and normalized descriptors, category,
+  +0 reinforcement level, right-hand receive policy and evidence class. Torch
+  remains explicitly excluded after its inferred descriptor produced no visible
+  inventory item.
 
 ### Fixed
 

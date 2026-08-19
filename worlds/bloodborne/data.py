@@ -12,6 +12,7 @@ from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
 from .fixed_locations import FIXED_LOCATIONS
 
 P = ItemKind.PROGRESSION
+U = ItemKind.USEFUL
 E = ItemKind.EVENT
 
 ITEMS = (
@@ -26,6 +27,10 @@ ITEMS = (
     Item("astral_clocktower_key", "Astral Clocktower Key", P),
     Item("celestial_dial", "Celestial Dial", P),
     Item("laurences_skull", "Laurence's Skull", P),
+    # Equipment is admitted only after its runtime descriptor has been
+    # observed through the native grant path and allowlisted separately from
+    # the ItemLot identity. Torch deliberately remains excluded.
+    Item("saw_spear", "Saw Spear", U),
     # Locked local events. These are never placed in the random item pool.
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
     Item("event_blood_starved_beast_defeated", "Blood-starved Beast Defeated", E),

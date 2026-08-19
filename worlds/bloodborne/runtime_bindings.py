@@ -16,12 +16,56 @@ class RuntimeItemBinding:
     normalized_item_id: int | None
     raw_descriptor: int | None
     evidence: str
-    # Address-free receive policy. The current vertical-slice pool is category-4
-    # goods, so every shipping row is a no-op for auto-equip and has no weapon
-    # reinforcement level. Future weapon/attire/rune rows must declare these
+    item_category: int = 4
+    descriptor_evidence: str = "goods_formula_observed"
+    # Address-free receive policy. Every equipment row must declare these
     # fields rather than asking the client to infer semantics from an ID.
     feed_effect: str = "not_equippable"
     reinforcement_level: int | None = None
+
+
+@dataclass(frozen=True)
+class RuntimeEquipmentExclusion:
+    item_lot_id: int
+    catalog_item_id: int
+    attempted_raw_descriptor: int
+    observed_normalized_item_id: int
+    evidence: str
+
+
+def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantity: int) -> None:
+    """Reject runtime rows that do not carry the evidence their category needs."""
+    if binding.normalized_item_id is None or binding.raw_descriptor is None:
+        raise ValueError(f"{key}: runtime descriptor is not mapped")
+    if not 1 <= quantity <= 99:
+        raise ValueError(f"{key}: quantity {quantity} is outside the grant contract")
+    if binding.item_category == 4:
+        compatible = (
+            binding.normalized_item_id & 0xF0000000 == 0x40000000
+            and binding.raw_descriptor & 0xF0000000 == 0xB0000000
+            and binding.normalized_item_id & 0x0FFFFFFF
+            == binding.raw_descriptor & 0x0FFFFFFF
+        )
+        if not compatible or binding.descriptor_evidence != "goods_formula_observed":
+            raise ValueError(f"{key}: category-4 descriptor lacks observed formula evidence")
+        if binding.reinforcement_level is not None:
+            raise ValueError(f"{key}: category-4 goods cannot have a reinforcement level")
+        return
+    if binding.item_category == 0:
+        compatible = (
+            binding.normalized_item_id & 0xF0000000 == 0
+            and binding.raw_descriptor & 0xF0000000 == 0x80000000
+            and binding.normalized_item_id & 0x0FFFFFFF
+            == binding.raw_descriptor & 0x0FFFFFFF
+        )
+        if not compatible or binding.descriptor_evidence != "live_grant_inventory_ui":
+            raise ValueError(f"{key}: category-0 descriptor is not live-validated")
+        if quantity != 1 or binding.reinforcement_level is None:
+            raise ValueError(f"{key}: category-0 weapon policy is incomplete")
+        if binding.feed_effect not in {"right_hand_weapon", "left_hand_weapon"}:
+            raise ValueError(f"{key}: category-0 weapon has incompatible feed policy")
+        return
+    raise ValueError(f"{key}: unsupported item category {binding.item_category}")
 
 
 @dataclass(frozen=True)
@@ -48,6 +92,33 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "astral_clocktower_key": RuntimeItemBinding(0x40000FB4, 0xB0000FB4, "FMG/param + validated goods formula"),
     "celestial_dial": RuntimeItemBinding(0x40000FB5, 0xB0000FB5, "FMG/param + validated goods formula"),
     "laurences_skull": RuntimeItemBinding(0x40000FAE, 0xB0000FAE, "FMG/param + validated goods formula"),
+    # Category-0 equipment has no ItemLot-to-runtime formula. Each row here is
+    # a live canary, not a derivation from fixed_locations.tsv.
+    "saw_spear": RuntimeItemBinding(
+        0x006C5660,
+        0x806C5660,
+        "clean-save native grant returned slot 77 and appeared in inventory UI",
+        item_category=0,
+        descriptor_evidence="live_grant_inventory_ui",
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+}
+
+# Negative canaries are executable exclusions. Keeping them next to the
+# allowlist makes it impossible for generation code to quietly reintroduce the
+# rejected ItemLot-ID inference.
+EQUIPMENT_EXCLUSIONS: dict[str, RuntimeEquipmentExclusion] = {
+    "torch": RuntimeEquipmentExclusion(
+        item_lot_id=2410520,
+        catalog_item_id=20100000,
+        attempted_raw_descriptor=0x8132B3A0,
+        observed_normalized_item_id=0x0032B3A0,
+        evidence=(
+            "r5 native call allocated a record but no Torch appeared in the UI; "
+            "the throwaway save was discarded"
+        ),
+    ),
 }
 
 LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
