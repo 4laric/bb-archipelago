@@ -45,6 +45,14 @@ Only the last looks hard, and it is not: the payload is static. Every operand in
 is a constant or a label — verified by inspection. Assemble once, capture the bytes, ship them as a
 constant blob. Cheat Engine becomes a developer's build tool, not a player's runtime dependency.
 
+The native `ItemGrant` argument is a 24-byte object, not the earlier inferred
+16-byte pair: raw descriptor at `+0x00`, internal pointer at `+0x08`, and
+normalized ID at `+0x10`. On shadPS4 v0.18, placing that object below the
+consumable callback's current `rsp` allowed it to become zero before the nested
+insertion helper used it. The validated payload materializes all 24 bytes in
+the callback's retiring 0x28-byte local frame and calls `ItemGrant` before the
+original epilogue releases that frame.
+
 ## The payload is position-dependent
 
 The cave embeds absolute addresses:

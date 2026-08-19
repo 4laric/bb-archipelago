@@ -309,6 +309,26 @@ game. This falsifies synthetic heartbeat context as the cause of the current
 regression; the remaining investigation is the native call contract and its
 inventory-state preconditions.
 
+A live read-only dump of the decrypted inventory code then exposed the full
+descriptor object: raw descriptor at `+0x00`, an internal pointer at `+0x08`,
+and normalized ID at `+0x10`, for 24 bytes total. Instrumenting the absent-item
+insertion exit showed that both inventory banks had ample vacancies and that
+the routine selected secondary slot 14, but the source object below the
+consumable function's current `rsp` had already become all zero. The assignment
+helper therefore copied zero, and insertion returned `-1` before changing the
+slot.
+
+The clean follow-up built the 24-byte object in the consumable function's
+retiring 0x28-byte local frame instead of extending the stack below `rsp`. With
+no insertion diagnostic hook installed, a genuine Bullet trigger returned
+native slot 78, changed Pebbles from zero to one, completed verification, and
+removed the durable command; the player confirmed one Pebble and a responsive
+game. This fix is versioned as `bb-0.1.0-r4` / `bb-native-grant-v4`. An earlier
+attempt to combine the in-frame change with an expanded exit probe crashed at
+the probe cave (`eboot+0x50DBF79`); its command remained merely queued and was
+archived before restart. The clean reproduction distinguishes that diagnostic
+cave overrun from the validated grant path.
+
 An existing-stack Blood Vial command then sampled three, wrote four, reread
 four, persisted `completed`, and removed its command. The player confirmed four
 in the inventory UI. A completed Vial state with expected counts four and five

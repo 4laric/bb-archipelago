@@ -19,15 +19,22 @@ class GrantHarnessContractTests(unittest.TestCase):
         cls.helper = HELPER.read_text(encoding="utf-8")
 
     def test_wire_and_harness_versions_are_visible_in_state(self):
-        self.assertIn("local build=[[bb-0.1.0-r3]]", self.text)
+        self.assertIn("local build=[[bb-0.1.0-r4]]", self.text)
         self.assertIn("local protocol=[[BBGRANT1]]", self.text)
-        self.assertIn("local harness=[[bb-native-grant-v3]]", self.text)
+        self.assertIn("local harness=[[bb-native-grant-v4]]", self.text)
         self.assertIn('"build=",build', self.text)
         self.assertIn('"\\nprotocol=",protocol', self.text)
         self.assertIn('"\\nharness=",harness', self.text)
-        self.assertIn("$build='bb-0.1.0-r3'", self.helper)
+        self.assertIn("$build='bb-0.1.0-r4'", self.helper)
         self.assertIn("$protocol='BBGRANT1'", self.helper)
-        self.assertIn("$harness='bb-native-grant-v3'", self.helper)
+        self.assertIn("$harness='bb-native-grant-v4'", self.helper)
+
+    def test_native_descriptor_uses_the_retiring_24_byte_caller_frame(self):
+        self.assertIn("mov qword ptr [rsp+8],0", self.text)
+        self.assertIn("mov [rsp+10],eax", self.text)
+        self.assertIn("mov dword ptr [rsp+14],0", self.text)
+        self.assertNotIn("sub rsp,20", self.text)
+        self.assertNotIn("add rsp,20", self.text)
 
     def test_unversioned_commands_are_rejected_and_removed(self):
         self.assertIn('if t[1]~=protocol then return nil,"Unsupported grant protocol;', self.text)
