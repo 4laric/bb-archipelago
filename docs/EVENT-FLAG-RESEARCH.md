@@ -39,8 +39,11 @@ awards; the nine expansion checks are MSB treasures. Their source kind, source
 location, item-lot ID, item identity, and acquisition flag are recorded in
 `worlds/bloodborne/runtime_bindings.py`. This completes the static mapping only.
 Lane B has since validated the live read path for these IDs — see "Resolved live
-manager path" below — but automatic client reporting remains disabled until a
-poller and its false-positive containment exist.
+manager path" below. Automatic reporting remains disabled *in this repo's
+client*. The native client in `from-software-archipelago-clients` has a
+debounced poller behind gameplay-state and save-identity gates; its current
+v0.18 backend supplies neither live fact, so it abstains before reading or
+sending against a real multiworld.
 
 Eye Pendant's flag `9470` is intentionally short. A full `lot_items.tsv` audit
 finds it on exactly one lot, `3401810`; the other short progression flags `6670`
@@ -272,8 +275,9 @@ setter signature, and fail closed on mismatch. Evidence is preserved in
 `work/iosefka-bullet-flag-write-breakpoint.txt`, and
 `work/live-event-flag-setter-code.bin`.
 
-The standalone Rust client reader was then tested outside Cheat Engine after a
-new shadPS4 launch. In process 31676, eboot moved from the discovery launch's
+The standalone Rust client reader — `crates/bb-archipelago/src/event_flags.rs`
+in the `from-software-archipelago-clients` repository, not this one — was then
+tested outside Cheat Engine after a new shadPS4 launch. In process 31676, eboot moved from the discovery launch's
 `0x05660000` to `0x057C0000`. The elevated reader parsed the new base from
 `shad_log`, passed the setter signature gate, resolved the new manager and bank
 addresses, and returned `event_flag=52410800 set=true`. This validates the

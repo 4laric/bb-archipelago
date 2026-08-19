@@ -379,6 +379,13 @@ process moved eboot from `0x05660000` to `0x057C0000`. It rediscovered the base,
 passed the signature gate, and returned `52410800=true` without Cheat Engine,
 validating the manager-relative path across two launches.
 
+That reader is **not in this repository**. It lives in
+`from-software-archipelago-clients` as `crates/bb-archipelago/src/event_flags.rs`,
+with the one-shot probe binary at `src/bin/bb-flag-probe.rs`. The RVAs, manager
+offsets and signature bytes recorded above are duplicated there as constants, so
+this document and that crate are two copies of one contract with nothing
+asserting they agree.
+
 ## Evidence discipline
 
 Every future address or semantic claim should be labelled as one of:

@@ -15,7 +15,7 @@ closed; Phase 1's remaining work is the client half, not the discovery half.
 | Item delivery | **Absent-stack, existing-stack, and replay recovery work** through the v4 Cheat Engine bridge. A 24-byte in-frame descriptor restored absent Pebble insertion on shadPS4 v0.18; failed verification is bounded, and a retained completed command survives a full restart without double-granting. |
 | The AP client | **Crashes on every launch path** (#17). Whatever exercised delivery end to end did not go through `launch()`. |
 | Item *randomisation* | **Does not exist.** Nothing suppresses the vanilla award, so shuffled keys gate nothing (#14). |
-| Location detection | **Read path validated, nothing wired to it.** The manager-relative resolver returns live flag state from an eboot-relative pointer slot, signature-gated, across two randomized launches and outside Cheat Engine. There is no poller and no false-positive containment, so checks are still typed by hand (#15). |
+| Location detection | **Read path validated; live sends fail closed.** The manager-relative resolver returns live flag state from an eboot-relative pointer slot, signature-gated, across two randomized launches and outside Cheat Engine. The r4 Rust client has a debounced poller, but refuses live `LocationChecks` until its backend can prove gameplay state and the bound save identity. This repo's Python client still reports by hand (#15). |
 | Enemizer planning | **Works.** 308 swaps of 4186 slots, deterministic across 25 seeds. |
 | Enemizer writing | Guarded writer + packaging entrypoint exist. **Not playtested.** |
 
@@ -25,9 +25,12 @@ An Archipelago game has to do two things: report what the player found, and make
 back matter. Bloodborne currently does neither automatically.
 
 **#15 — detection.** The accessor now exists: a validated, signature-gated, manager-relative read
-path that survives a randomized eboot base. What does not exist is anything between that read and
-a `LocationChecks` send — no poll loop, no gameplay-state gating, no containment. Checks are still
-typed by hand. The blocker moved from research to integration; it did not close.
+path that survives a randomized eboot base. The poll loop exists too — in
+`from-software-archipelago-clients`, `crates/bb-archipelago/src/client_loop.rs`. It now requires a
+backend-provided gameplay/save context, matches that identity to explicit configuration and
+debounces true reads. The live backend deliberately returns no context, so automatic checks
+abstain until gameplay state and save identity are resolved on v0.18. The blocker is now that live
+context accessor, not containment architecture.
 
 **#14 — vanilla award suppression.** There is no `ItemLotParam` edit, no MSB treasure edit and no
 runtime lot interception anywhere in the project. The player who walks to Iosefka's Clinic picks
@@ -96,11 +99,12 @@ writes its own version into the state file so the client can refuse a mismatch. 
 change — the state-file handshake in #7 *is* #8's mechanism — and both belong before the first
 external tester.
 
-**Done 2026-08-19.** `bb-0.1.0-r4` is stamped across the apworld, the client, the Cheat Engine
-table and the PS1 helper; the harness identifies itself as `bb-native-grant-v4` over the
-`BBGRANT1` wire contract, and either side refuses a different or missing version.
-`tests/test_grant_harness_contract.py` asserts each stamp, so the four artifacts cannot drift
-apart silently.
+**Done 2026-08-19 across both repositories.** `bb-0.1.0-r4` is stamped across the apworld, both
+clients, the Cheat Engine table and the PS1 helper; the harness identifies itself as
+`bb-native-grant-v4` over the `BBGRANT1` wire contract, and either client refuses a different or
+missing version. `tests/test_grant_harness_contract.py` asserts this repository's stamps, and the
+Rust bridge tests assert the native client's expected build, protocol and harness. Release work
+must still update both repositories together because neither CI checkout contains the other.
 
 ### 0.3 CI that asserts what it collected (#9)
 
@@ -161,12 +165,26 @@ them:
   requirement 6 wants manager-relative addressing on **both** supported builds; CUSA03173 `01.09`
   has it, CUSA00900 is untested. Do not let the second serial go unclaimed by default.
 
-**Detection's second half is now the whole of the phase, and nothing owns it yet: false-positive
-containment.** `LocationChecks` cannot be retracted. A stale pointer after a save reload, a read during a loading
+**Detection's second half is now the whole of the phase: validated live context.**
+`LocationChecks` cannot be retracted. A stale pointer after a save reload, a read during a loading
 screen while the flag block is repopulating, or a read against the wrong character slot can each
 mint irreversible false checks across an entire multiworld. Pointer revalidation per poll,
 gameplay-state gating, N-consecutive-poll debounce and save-identity binding are part of this
 phase, not an afterthought.
+
+Audited against `crates/bb-archipelago` as it stands, of those four:
+
+| Guard | State in the Rust client |
+| --- | --- |
+| Pointer revalidation per poll | **Present.** `read()` re-reads the manager pointer every call rather than caching it, and `read_resilient` reattaches on error. |
+| Gameplay-state gating | **Contract present, live source absent.** `poll_locations` abstains unless `gameplay_ready`; the v0.18 backend returns no context, so live sends remain disarmed. |
+| N-consecutive-poll debounce | **Present.** The default is three consecutive true reads and false/unavailable reads reset the streak. |
+| Save-identity binding | **Contract present, live source absent.** The polled identity must equal `expected_save_identity`; the v0.18 backend cannot resolve one yet and therefore abstains. |
+
+`read_resilient` stays behind that context gate. Reattaching and retrying converts a failed read
+into a fresh read; that is right for a restarted emulator and wrong for a read that failed because
+the game is mid-transition. The live backend therefore abstains before calling it until gameplay
+state can be proven. Abstaining is always safe here; guessing is never.
 
 Also one live test, now cheap: **can the native grant path itself set acquisition flags?** If it
 can, Archipelago deliveries self-report as checks. The validated reader answers this in one

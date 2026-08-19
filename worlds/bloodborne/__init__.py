@@ -70,7 +70,7 @@ LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in NETWORK
 LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS}
 
 
-def build_runtime_slot_data() -> dict[str, dict[str, dict[str, int | bool]]]:
+def build_runtime_slot_data() -> dict[str, Any]:
     """Return the address-free world/client contract for this seed.
 
     AP ids are serialized as object keys because JSON has no integer-keyed
@@ -89,12 +89,16 @@ def build_runtime_slot_data() -> dict[str, dict[str, dict[str, int | bool]]]:
         str(ITEM_ID_BY_KEY[key]): {
             "normalized_item_id": binding.normalized_item_id,
             "quantity": items_by_key[key].quantity,
+            "reinforcement_level": binding.reinforcement_level,
+            "feed_effect": binding.feed_effect,
         }
         for key, binding in ITEM_BINDINGS.items()
     }
     items[str(ITEM_NAME_TO_ID[FILLER_ITEM_NAME])] = {
         "normalized_item_id": 0x400003E8,
         "quantity": 1,
+        "reinforcement_level": None,
+        "feed_effect": "not_equippable",
     }
     return {"runtime_locations": locations, "runtime_items": items}
 
@@ -112,9 +116,21 @@ else:
         display_name = "Enemy Randomizer"
         default = 1
 
+    class AutoUpgrade(Toggle):
+        """Raise received weapons to the player's validated reinforcement target."""
+        display_name = "Auto Upgrade Received Weapons"
+        default = 0
+
+    class AutoEquip(Toggle):
+        """Equip received gear in deterministic Archipelago feed order."""
+        display_name = "Auto Equip Received Gear"
+        default = 0
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         enemizer: Enemizer
+        auto_upgrade: AutoUpgrade
+        auto_equip: AutoEquip
 
     class BloodborneItem(APItem):
         game = GAME
@@ -174,9 +190,11 @@ else:
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"
             return {
-                "version": 2,
+                "version": 3,
                 "runtime_build": RUNTIME_BUILD,
                 "enemizer": bool(self.options.enemizer),
+                "auto_upgrade": bool(self.options.auto_upgrade),
+                "auto_equip": bool(self.options.auto_equip),
                 "enemizer_seed": seed,
                 **build_runtime_slot_data(),
             }

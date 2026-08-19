@@ -25,6 +25,7 @@ from worlds.bloodborne import (
     IdRegistryError,
     _assigned,
     _load_id_registry,
+    build_runtime_slot_data,
 )
 from worlds.bloodborne.data import MODEL
 from worlds.bloodborne.model import ItemKind
@@ -182,6 +183,27 @@ class FillerTests(unittest.TestCase):
     def test_the_filler_name_is_not_a_shufflable_key(self):
         """It is deliberately outside the pool, which is why it needs its own row."""
         self.assertNotIn(FILLER_ITEM_NAME, {i.name for i in MODEL.items})
+
+
+class RuntimeItemContractTests(unittest.TestCase):
+    def test_every_runtime_item_declares_receive_policy_metadata(self):
+        runtime_items = build_runtime_slot_data()["runtime_items"]
+        self.assertEqual(set(runtime_items), {str(value) for value in ITEM_NAME_TO_ID.values()})
+        for binding in runtime_items.values():
+            self.assertIn("feed_effect", binding)
+            self.assertIn("reinforcement_level", binding)
+            self.assertIn(binding["feed_effect"], {
+                "right_hand_weapon", "left_hand_weapon", "attire_head", "attire_chest",
+                "attire_hands", "attire_legs", "caryll_rune", "oath_rune",
+                "rune_workshop_tool", "not_equippable",
+            })
+            level = binding["reinforcement_level"]
+            self.assertTrue(level is None or 0 <= level <= 10)
+
+    def test_current_goods_pool_is_explicitly_non_equippable(self):
+        for binding in build_runtime_slot_data()["runtime_items"].values():
+            self.assertEqual(binding["feed_effect"], "not_equippable")
+            self.assertIsNone(binding["reinforcement_level"])
 
 
 if __name__ == "__main__":

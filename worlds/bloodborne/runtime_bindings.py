@@ -16,6 +16,12 @@ class RuntimeItemBinding:
     normalized_item_id: int | None
     raw_descriptor: int | None
     evidence: str
+    # Address-free receive policy. The current vertical-slice pool is category-4
+    # goods, so every shipping row is a no-op for auto-equip and has no weapon
+    # reinforcement level. Future weapon/attire/rune rows must declare these
+    # fields rather than asking the client to infer semantics from an ID.
+    feed_effect: str = "not_equippable"
+    reinforcement_level: int | None = None
 
 
 @dataclass(frozen=True)

@@ -49,8 +49,13 @@ identity guard.
 ```
 
 It also emits `runtime_items`, mapping AP item ids to normalized category-4
-goods ids and quantities. The standalone client consumes these seed-owned
-tables; it does not bake world ids or flags into its executable.
+goods ids, quantities, reinforcement levels and feed effects. The current pool
+declares every goods row as `not_equippable` with no reinforcement level;
+future weapon, attire, rune and workshop-tool rows must opt into a semantic
+class explicitly rather than relying on client-side ID inference. The seed also
+emits disabled-by-default `auto_upgrade` and `auto_equip` options. The
+standalone client consumes these seed-owned tables; it does not bake world ids,
+flags or equipment policy classifications into its executable.
 
 All six checks currently advertise `vanilla_award_suppressed: false`. They are
 valid check signals, but still award their vanilla contents until the offline

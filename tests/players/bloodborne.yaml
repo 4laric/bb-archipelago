@@ -5,3 +5,5 @@ Bloodborne:
   progression_balancing: 50
   accessibility: items
   enemizer: true
+  auto_upgrade: false
+  auto_equip: false
