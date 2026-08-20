@@ -1,0 +1,9 @@
+description: Bloodborne Central Yharnam varied-grant playtest
+name: VarietyTester
+game: Bloodborne
+Bloodborne:
+  progression_balancing: 50
+  accessibility: items
+  enemizer: false
+  auto_upgrade: false
+  auto_equip: false

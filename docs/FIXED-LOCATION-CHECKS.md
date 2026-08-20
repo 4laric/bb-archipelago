@@ -1,6 +1,7 @@
 # Generated fixed-location checks
 
-Status: first Central Yharnam slice generated; live end-to-end AP check pending.
+Status: all first-cycle Central Yharnam fixed pickups generated; suppression,
+automatic AP reporting, and ordered reward delivery validated live on three lots.
 
 ## Source contract
 
@@ -17,14 +18,10 @@ client owns those version-specific facts.
 
 ## Included slice
 
-The first slice contains six Central Yharnam checks:
-
-- White Messenger Ribbon
-- Saw Spear
-- Saw Hunter Badge
-- Torch
-- Iosefka courtyard Quicksilver Bullets x10
-- Blood Gem Workshop Tool
+The first slice contains all 51 physical first-cycle Central Yharnam pickups,
+plus Cleric Beast and Father Gascoigne. `worlds/bloodborne/fixed_locations.tsv`
+is the complete reviewed pickup manifest; mutually exclusive later-cycle map
+copies do not become duplicate network checks.
 
 The bullet pickup is the canary: ItemLotParam `2410800`, acquisition flag
 `52410800`. That exact flag was observed false before pickup and true after
@@ -61,9 +58,10 @@ disabled-by-default `auto_upgrade` and `auto_equip` options. The
 standalone client consumes these seed-owned tables; it does not bake world ids,
 flags or equipment policy classifications into its executable.
 
-All selected checks currently advertise `vanilla_award_suppressed: false`. They are
-valid check signals, but still award their vanilla contents until the offline
-ItemLotParam transformation in issue #14 is installed and playtested.
+All selected pickup checks advertise `vanilla_award_suppressed: true`. The
+54-edit binder is installed and playtested; each physical pickup awards one
+placeholder Blood Vial while preserving the acquisition flag used for AP
+reporting.
 
 Slot data also emits the suppression manifest format and canonical plan
 SHA-256. If any row is changed to `vanilla_award_suppressed: true`, the seed

@@ -47,6 +47,11 @@ GOLDEN_ITEMS = {
     "laurences_skull": 0xBB000A,
     "saw_spear": 0xBB000B,
     "blood_vial": 0xBB0100,
+    "quicksilver_bullets": 0xBB0101,
+    "pebbles": 0xBB0102,
+    "molotov_cocktails": 0xBB0103,
+    "blood_stone_shards": 0xBB0104,
+    "augur_of_ebrietas": 0xBB0105,
 }
 GOLDEN_LOCATIONS = {
     "boss_father_gascoigne": 0xBB1001,
@@ -95,7 +100,10 @@ class GoldenIdTests(unittest.TestCase):
         actual["blood_vial"] = ITEM_NAME_TO_ID[FILLER_ITEM_NAME]
         self.assertEqual(
             actual,
-            {key: GOLDEN_ITEMS[key] for key in ("saw_spear", "blood_vial")},
+            {key: GOLDEN_ITEMS[key] for key in (
+                "saw_spear", "blood_vial", "quicksilver_bullets", "pebbles",
+                "molotov_cocktails", "blood_stone_shards", "augur_of_ebrietas",
+            )},
         )
 
     def test_location_ids_match_the_golden_snapshot(self):
@@ -120,13 +128,25 @@ class GoldenIdTests(unittest.TestCase):
         forwards = {i.key: _assigned("item", i.key) for i in shufflable}
         backwards = {i.key: _assigned("item", i.key) for i in reversed(shufflable)}
         self.assertEqual(forwards, backwards)
-        self.assertEqual(forwards, {"saw_spear": GOLDEN_ITEMS["saw_spear"]})
+        self.assertEqual(
+            forwards,
+            {key: GOLDEN_ITEMS[key] for key in (
+                "saw_spear", "quicksilver_bullets", "pebbles",
+                "molotov_cocktails", "blood_stone_shards", "augur_of_ebrietas",
+            )},
+        )
 
     def test_ids_are_stable_under_insertion(self):
         """Inserting a key must not move any existing key's id."""
         before = {i.key: _assigned("item", i.key) for i in SHUFFLABLE_ITEMS}
         # a new key would be appended to ids.tsv, not renumber the others
-        self.assertEqual(before, {"saw_spear": GOLDEN_ITEMS["saw_spear"]})
+        self.assertEqual(
+            before,
+            {key: GOLDEN_ITEMS[key] for key in (
+                "saw_spear", "quicksilver_bullets", "pebbles",
+                "molotov_cocktails", "blood_stone_shards", "augur_of_ebrietas",
+            )},
+        )
 
 
 class RegistryCoverageTests(unittest.TestCase):

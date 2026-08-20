@@ -207,11 +207,13 @@ def build_plan(item_goods: dict[str, str | tuple[str, str]], research: Path,
 def load_item_goods() -> dict[str, tuple[str, str]]:
     """Map each randomized item key to its param category/id pair."""
     sys.path.insert(0, str(REPO))
-    from worlds.bloodborne import SHUFFLABLE_ITEMS
+    from worlds.bloodborne import POOL_SUPPRESSION_ITEM_KEYS, SHUFFLABLE_ITEMS
     from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS
 
     out: dict[str, tuple[str, str]] = {}
     for item in SHUFFLABLE_ITEMS:
+        if item.key not in POOL_SUPPRESSION_ITEM_KEYS:
+            continue
         binding = ITEM_BINDINGS.get(item.key)
         if binding is None or binding.normalized_item_id is None:
             continue

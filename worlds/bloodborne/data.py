@@ -13,6 +13,7 @@ from .fixed_locations import FIXED_LOCATIONS
 
 P = ItemKind.PROGRESSION
 U = ItemKind.USEFUL
+F = ItemKind.FILLER
 E = ItemKind.EVENT
 
 ITEMS = (
@@ -31,6 +32,13 @@ ITEMS = (
     # observed through the native grant path and allowlisted separately from
     # the ItemLot identity. Torch deliberately remains excluded.
     Item("saw_spear", "Saw Spear", U),
+    # Live category-4 grant canaries promoted into the vertical-slice pool.
+    # Quantities are part of the AP item contract and are granted atomically.
+    Item("augur_of_ebrietas", "Augur of Ebrietas", U),
+    Item("quicksilver_bullets", "Quicksilver Bullets x3", F, 3),
+    Item("pebbles", "Pebbles x3", F, 3),
+    Item("molotov_cocktails", "Molotov Cocktails x2", F, 2),
+    Item("blood_stone_shards", "Blood Stone Shards x2", F, 2),
     # Locked local events. These are never placed in the random item pool.
     Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
@@ -167,7 +175,18 @@ MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 # later regions enter multidata until their runtime contracts are ready.
 CENTRAL_YHARNAM_SLICE_REGIONS = ("Menu", "Hunter's Dream", "Central Yharnam")
 CENTRAL_YHARNAM_SLICE_ENTRANCES = ENTRANCES[:2]
-CENTRAL_YHARNAM_SLICE_ITEM_KEYS = frozenset({"saw_spear"})
+CENTRAL_YHARNAM_SLICE_ITEM_KEYS = frozenset({
+    "saw_spear",
+    "augur_of_ebrietas",
+    "quicksilver_bullets",
+    "pebbles",
+    "molotov_cocktails",
+    "blood_stone_shards",
+})
+# Pool membership and global vanilla-item suppression are different contracts.
+# Repeatable consumables may remain elsewhere in the game; the Saw Spear's
+# in-slice vanilla copy must not coexist with its randomized AP copy.
+CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
 CENTRAL_YHARNAM_SLICE_LOCATION_KEYS = frozenset({
     "boss_cleric_beast",
     "boss_father_gascoigne",
