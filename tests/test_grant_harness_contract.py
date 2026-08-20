@@ -54,9 +54,11 @@ class GrantHarnessContractTests(unittest.TestCase):
 
     def test_bootstrap_is_visible_and_never_inserts_an_absent_vial(self):
         self.assertIn("local bootstrapVialPending=true", self.text)
-        self.assertIn("local bootstrapVialNormalized=0xB00003E8", self.text)
+        self.assertIn("local bootstrapVialNormalized=0x400003E8", self.text)
         self.assertIn("local bootstrapVialHeldCap=20", self.text)
-        self.assertIn("local bootstrapBulletNormalized=0xB0000384", self.text)
+        self.assertIn("local bootstrapBulletNormalized=0x40000384", self.text)
+        self.assertNotIn("local bootstrapVialNormalized=0xB00003E8", self.text)
+        self.assertNotIn("local bootstrapBulletNormalized=0xB0000384", self.text)
         self.assertIn("local function findUniqueItemByLowId(lowId)", self.text)
         self.assertIn("runtimeId%0x10000000==lowId", self.text)
         self.assertIn("if tryBootstrapVial() then return end", self.text)

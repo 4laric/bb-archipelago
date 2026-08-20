@@ -22,9 +22,9 @@ local harness=[[bb-native-grant-v5]]
 local maxVerifyPolls=20
 local maxManualWaitPolls=1200
 local bootstrapVialPending=true
-local bootstrapVialNormalized=0xB00003E8
+local bootstrapVialNormalized=0x400003E8
 local bootstrapVialHeldCap=20
-local bootstrapBulletNormalized=0xB0000384
+local bootstrapBulletNormalized=0x40000384
 local function readStateFile()
   local values={}
   local f=io.open(statePath,"r")
