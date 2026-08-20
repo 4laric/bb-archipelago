@@ -8,6 +8,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- A UI-independent Bloodborne AP launcher core now discovers and validates
+  CUSA03173 `01.09`, caches seed overlays by every build/source/options input,
+  activates only owned param/map replacements transactionally, recovers an
+  interrupted swap, restores the previous seed, bypasses owned overlays for a
+  vanilla launch, and preflights coordinated shadPS4/client/CE startup. Fake
+  game-tree tests prove conflict refusal and zero base/update mutation. The
+  desktop UI, bundled native tools, and real-game overlay canaries remain open.
 - The generated world is now the bounded Central Yharnam vertical slice: 51
   physical pickups, Cleric Beast, and Father Gascoigne. Two later-cycle
   replacement lots are collapsed onto their physical chests, both boss flags

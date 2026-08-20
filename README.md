@@ -17,6 +17,7 @@ Player-visible changes and known release limitations are recorded in `CHANGELOG.
 | Path | What |
 | --- | --- |
 | `worlds/bloodborne/` | The apworld. `data.py` is design, `runtime_bindings.py` is runtime IDs, and the two must not mix. |
+| `bb_launcher/` | Hash-addressed seed cache, transactional shadPS4 overlay activation/recovery, vanilla bypass, and coordinated launch core. |
 | `docs/` | Research baseline, logic model, progression DAG, event-flag lanes, enemizer, vertical slice. |
 | `research/` | Mined and joined game data plus the catalogs the enemizer and validation run against. |
 | `tools/` | Python miners and planners; `msbb_miner` and `bb_enemizer_writer` are C# over SoulsFormatsNEXT. |
@@ -28,6 +29,10 @@ Player-visible changes and known release limitations are recorded in `CHANGELOG.
 `Archipelago/` (pin upstream instead of vendoring), `research/mined/` (raw extractions from your
 own game files — regenerate with `tools/msbb_miner` and `tools/mine_*.py`), build outputs, and
 anything under `work/`, `saves/`, or the game dump itself.
+
+The first product-launcher slice is documented in `docs/LAUNCHER.md`. Its
+headless core refuses unowned mods, never mutates base/update trees, and can be
+exercised with `python -m bb_launcher --help`.
 
 ## Generate
 
