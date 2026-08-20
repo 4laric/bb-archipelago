@@ -3,9 +3,10 @@ using System.Numerics;
 using System.Text;
 using SoulsFormats;
 
-if (args.Length != 2)
+if (args.Length is < 2 or > 3 || (args.Length == 3 && args[2] != "--fixed-maps-only"))
 {
-    Console.Error.WriteLine("usage: MSBBMiner <mapstudio-root> <output-directory>");
+    Console.Error.WriteLine(
+        "usage: MSBBMiner <mapstudio-root> <output-directory> [--fixed-maps-only]");
     return 2;
 }
 
@@ -13,7 +14,11 @@ string root = Path.GetFullPath(args[0]);
 string output = Path.GetFullPath(args[1]);
 Directory.CreateDirectory(output);
 
-string[] files = Directory.GetFiles(root, "*.msb", SearchOption.AllDirectories);
+SearchOption search = args.Length == 3 ? SearchOption.TopDirectoryOnly : SearchOption.AllDirectories;
+string[] files = Directory.EnumerateFiles(root, "*", search)
+    .Where(path => path.EndsWith(".msb", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".msb.dcx", StringComparison.OrdinalIgnoreCase))
+    .ToArray();
 Array.Sort(files, StringComparer.OrdinalIgnoreCase);
 
 using var treasures = Tsv("msb_treasures.tsv",

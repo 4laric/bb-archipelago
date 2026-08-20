@@ -259,6 +259,7 @@ else:
             seed = f"{self.multiworld.seed_name}:{self.player}"
             return {
                 "version": 4,
+                "world_version": WORLD_VERSION,
                 "runtime_build": RUNTIME_BUILD,
                 "enemizer": bool(self.options.enemizer),
                 "auto_upgrade": bool(self.options.auto_upgrade),

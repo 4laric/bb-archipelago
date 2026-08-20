@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from bb_launcher.resources import application_root, resource_root
+from bb_launcher.workflow import EnemizerToolchain, ValidationError
+
+
+class LauncherPackageTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        self.repo = Path(__file__).resolve().parents[1]
+        self.app = self.root / "app"
+        tools = self.app / "tools"
+        tools.mkdir(parents=True)
+        for name in ("BBEnemizerPlanner.exe", "BBEnemizerWriter.exe", "MSBBMiner.exe"):
+            (tools / name).write_bytes(b"fake executable")
+        self.maps = self.root / "MapStudio"
+        self.maps.mkdir()
+        (self.maps / "m24_01_00_00.msb.dcx").write_bytes(b"compressed map")
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def test_checkout_resource_roots_are_the_repository(self):
+        self.assertEqual(resource_root(), self.repo)
+        self.assertEqual(application_root(), self.repo)
+
+    def test_bundled_toolchain_mines_plans_and_writes_without_python_or_dotnet(self):
+        commands: list[list[str]] = []
+
+        def runner(command, _cwd, _progress):
+            command = [str(item) for item in command]
+            commands.append(command)
+            executable = Path(command[0]).name
+            if executable == "MSBBMiner.exe":
+                output = Path(command[2])
+                output.mkdir()
+                (output / "msb_enemies.tsv").write_text("map_path\tmap_name\n", encoding="utf-8")
+            elif executable == "BBEnemizerPlanner.exe":
+                output = Path(command[command.index("--output") + 1])
+                output.write_text(
+                    json.dumps(
+                        {
+                            "format": "bb-enemizer-plan-v2",
+                            "seed": "package-seed",
+                            "dry_run": True,
+                            "swaps": [{"logical_key": "one"}],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+            elif executable == "BBEnemizerWriter.exe":
+                output = Path(command[3])
+                output.mkdir()
+                (output / "m24_01_00_00.msb.dcx").write_bytes(b"randomized")
+
+        toolchain = EnemizerToolchain(self.repo, app_root=self.app, runner=runner)
+        self.assertTrue(toolchain.is_bundled)
+        result = toolchain.build(
+            seed="package-seed",
+            inventory=None,
+            map_studio_source=self.maps,
+            soulsformats_next=None,
+            output_root=self.root / "output",
+            allow_tier_mixing=False,
+            preserve_locomotion=False,
+            progress=lambda _message: None,
+        )
+        self.assertEqual(
+            [Path(command[0]).name for command in commands],
+            ["MSBBMiner.exe", "BBEnemizerPlanner.exe", "BBEnemizerWriter.exe"],
+        )
+        self.assertEqual(commands[0][-1], "--fixed-maps-only")
+        self.assertEqual(result.map_studio.name, "MapStudio")
+        self.assertNotIn("dotnet", " ".join(" ".join(command) for command in commands).lower())
+        self.assertNotIn("tools.bb_enemizer.cli", " ".join(" ".join(command) for command in commands))
+
+    def test_partial_package_does_not_claim_to_be_bundled(self):
+        (self.app / "tools" / "MSBBMiner.exe").unlink()
+        toolchain = EnemizerToolchain(self.repo, app_root=self.app)
+        self.assertFalse(toolchain.is_bundled)
+        with self.assertRaisesRegex(ValidationError, "enemy inventory is required"):
+            toolchain.build(
+                seed="seed",
+                inventory=None,
+                map_studio_source=self.maps,
+                soulsformats_next=None,
+                output_root=self.root / "partial",
+                allow_tier_mixing=False,
+                preserve_locomotion=False,
+                progress=lambda _message: None,
+            )
+
+    def test_package_contract_is_self_contained_and_excludes_game_files(self):
+        script = (self.repo / "packaging" / "build_launcher.ps1").read_text(encoding="utf-8")
+        self.assertIn("--self-contained true", script)
+        self.assertIn("-p:PublishSingleFile=true", script)
+        self.assertIn('includes_game_files = $false', script)
+        self.assertIn("package-manifest.json", script)
+        miner = (self.repo / "tools" / "msbb_miner" / "Program.cs").read_text(encoding="utf-8")
+        self.assertIn('.EndsWith(".msb.dcx"', miner)
+
+
+if __name__ == "__main__":
+    unittest.main()
