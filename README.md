@@ -34,6 +34,11 @@ The first product-launcher slice is documented in `docs/LAUNCHER.md`. Its
 headless core refuses unowned mods, never mutates base/update trees, and can be
 exercised with `python -m bb_launcher --help`.
 
+The desktop surface is available with `python -m bb_launcher ui`. Its
+**Randomize Enemies** option runs the deterministic planner and guarded MSBB
+writer, includes the verified map outputs in the seed cache, activates the
+overlay, and starts the configured shadPS4/client/bridge processes.
+
 ## Generate
 
 ```bash

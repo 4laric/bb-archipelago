@@ -1,9 +1,9 @@
 # Bloodborne AP launcher core
 
-Status: the repository now carries the UI-independent cache, activation,
-recovery, vanilla, and process-launch layer from issue #65. The desktop player
-surface, bundled writers/client, and live overlay canaries remain separate
-follow-up slices.
+Status: the repository carries both the UI-independent cache/activation core
+and a desktop **Randomize & Launch** surface. The UI can run the deterministic
+enemy planner and guarded MSBB writer before it activates the verified overlay.
+Bundled writers/client and live overlay canaries remain follow-up slices.
 
 ## Safety model
 
@@ -63,6 +63,53 @@ python -m bb_launcher discover `
   --shad-root C:\path\to\shad
 python -m bb_launcher status --game-root C:\path\to\shad-games
 ```
+
+## Desktop Randomize & Launch
+
+Open the player-facing surface with:
+
+```powershell
+python -m bb_launcher ui
+```
+
+The setup panel remembers paths under
+`%LOCALAPPDATA%\BloodborneArchipelago\launcher-settings.json`. Select:
+
+- the seed's `.bbenemizer.json` request;
+- the validated shadPS4 game root;
+- the generated suppression binder and its `build-manifest.json`;
+- the player's source `MapStudio` and `msb_enemies.tsv` extraction;
+- the pinned SoulsFormatsNEXT checkout;
+- the hash-pinned process plan and external seed-cache directory.
+
+**Randomize Enemies** is enabled by default. Its enemy seed comes from the AP
+request but can be overridden explicitly. **Allow tier mixing** and **Preserve
+locomotion class** map directly to the planner's guarded policy switches.
+
+When the player chooses **Randomize & Launch**, the workflow:
+
+1. validates CUSA03173 `01.09`, the AP request's world/runtime builds,
+   suppression source/plan/output hashes, shad build, and every process
+   executable hash;
+2. hashes the source gameparam and every source map into the cache identity;
+3. runs `tools.bb_enemizer.cli` with the selected enemy seed and policy;
+4. refuses zero safe swaps, then runs `BBEnemizerWriter` with `--apply` into an
+   isolated temporary output;
+5. requires compressed `*.msb.dcx` output, composes or reuses the verified seed
+   cache, and activates it transactionally;
+6. starts the configured shadPS4, CE bridge, and native AP client as direct
+   children of the launcher.
+
+Planner/writer output streams into the on-screen log. A failed enemizer build
+is retained under the cache root and its path is printed for diagnostics. A
+successful temporary build is removed after its files enter the verified
+cache. Turning **Randomize Enemies** off skips the inventory, map, SoulsFormats,
+planner, and writer stages and builds a suppression-only overlay.
+
+This slice intentionally still uses the repository Python planner, `dotnet`, a
+pinned SoulsFormatsNEXT checkout, and the player's extracted enemy inventory.
+Packaging those into a no-toolchain player distribution is the next release
+slice; the checkbox is functional now, but setup is not yet consumer-simple.
 
 A seed identity file has this shape:
 
@@ -161,8 +208,7 @@ base/update mutation.
 
 Those tests do not prove shadPS4 consumed an overlay. The issue's live canaries
 still need the real game: suppression alone, suppression plus seed-12345 maps,
-and overlay removal back to vanilla. The eventual UI must also generate the
-derived outputs, create the native-client runtime configuration with
-`installed_gameparam` pointing at the active overlay binder, display bridge and
-ledger readiness, and package the prebuilt writers/client so a player needs no
-repository checkout.
+and overlay removal back to vanilla. The launcher must still create the native
+client runtime configuration with `installed_gameparam` pointing at the active
+overlay binder, display bridge and ledger readiness, and package the prebuilt
+writers/client so a player needs no repository checkout.

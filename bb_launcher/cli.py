@@ -13,7 +13,6 @@ from .core import (
     ConflictError,
     GameInstall,
     LauncherError,
-    ProcessSpec,
     SeedCache,
     SeedIdentity,
     ValidationError,
@@ -27,9 +26,7 @@ from .core import (
     restore_previous_build,
     validate_processes,
 )
-
-
-PROCESS_PLAN_FORMAT = "bb-launcher-process-plan-v1"
+from .workflow import load_process_plan
 
 
 def _json_file(path: str | Path, label: str) -> dict[str, Any]:
@@ -45,51 +42,6 @@ def _json_file(path: str | Path, label: str) -> dict[str, Any]:
 
 def _install(path: str) -> GameInstall:
     return GameInstall.from_root(path)
-
-
-def _process_plan(path: str | Path) -> tuple[str, str, list[ProcessSpec]]:
-    source = Path(path).expanduser().resolve()
-    value = _json_file(source, "process plan")
-    if value.get("format") != PROCESS_PLAN_FORMAT:
-        raise ValidationError(f"unsupported process plan format in {source}")
-    shad_build = value.get("shad_build")
-    runtime_build = value.get("runtime_build")
-    if not isinstance(shad_build, str) or not shad_build.strip():
-        raise ValidationError("process plan requires a non-empty shad_build")
-    if not isinstance(runtime_build, str) or not runtime_build.strip():
-        raise ValidationError("process plan requires a non-empty runtime_build")
-    records = value.get("processes")
-    if not isinstance(records, list) or not records:
-        raise ValidationError("process plan must carry a non-empty processes list")
-    result: list[ProcessSpec] = []
-    for index, record in enumerate(records):
-        if not isinstance(record, dict):
-            raise ValidationError(f"process plan record {index} is not an object")
-        name = record.get("name")
-        executable = record.get("executable")
-        arguments = record.get("arguments", [])
-        if not isinstance(name, str) or not name.strip():
-            raise ValidationError(f"process plan record {index} has no name")
-        if not isinstance(executable, str) or not executable.strip():
-            raise ValidationError(f"process plan record {index} has no executable")
-        if not isinstance(arguments, list) or not all(isinstance(item, str) for item in arguments):
-            raise ValidationError(f"process plan {name} arguments must be strings")
-        executable_path = Path(executable).expanduser()
-        if not executable_path.is_absolute():
-            executable_path = source.parent / executable_path
-        raw_working = record.get("working_directory")
-        raw_hash = record.get("sha256")
-        if not isinstance(raw_hash, str) or not raw_hash:
-            raise ValidationError(f"process plan {name} requires a sha256")
-        working = None
-        if raw_working is not None:
-            if not isinstance(raw_working, str) or not raw_working:
-                raise ValidationError(f"process plan {name} has an invalid working_directory")
-            working = Path(raw_working).expanduser()
-            if not working.is_absolute():
-                working = source.parent / working
-        result.append(ProcessSpec(name, executable_path, tuple(arguments), working, raw_hash))
-    return shad_build, runtime_build, result
 
 
 def _print(value: Any) -> None:
@@ -148,6 +100,9 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--build")
     mode.add_argument("--vanilla", action="store_true")
     run.add_argument("--process-plan", required=True)
+
+    ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
+    ui.add_argument("--settings")
 
     return parser
 
@@ -252,7 +207,8 @@ def main(argv: list[str] | None = None) -> int:
             _print(status_value)
         elif args.command == "run":
             install = _install(args.game_root)
-            shad_build, runtime_build, processes = _process_plan(args.process_plan)
+            process_plan = load_process_plan(args.process_plan)
+            processes = process_plan.processes
             validate_processes(processes)
             if args.vanilla:
                 deactivate_overlay(install)
@@ -260,15 +216,15 @@ def main(argv: list[str] | None = None) -> int:
                 build_path = Path(args.build).expanduser().resolve()
                 build = SeedCache(build_path.parent).verify(build_path)
                 build_identity = build.manifest["identity"]
-                if build_identity["shad_build"] != shad_build:
+                if build_identity["shad_build"] != process_plan.shad_build:
                     raise ValidationError(
                         f"seed requires shadPS4 {build_identity['shad_build']}, "
-                        f"process plan supplies {shad_build}"
+                        f"process plan supplies {process_plan.shad_build}"
                     )
-                if build_identity["runtime_build"] != runtime_build:
+                if build_identity["runtime_build"] != process_plan.runtime_build:
                     raise ValidationError(
                         f"seed requires runtime {build_identity['runtime_build']}, "
-                        f"process plan supplies {runtime_build}"
+                        f"process plan supplies {process_plan.runtime_build}"
                     )
                 activate_build(install, args.build)
             started = launch_processes(processes)
@@ -281,6 +237,11 @@ def main(argv: list[str] | None = None) -> int:
                     ],
                 }
             )
+        elif args.command == "ui":
+            from .ui import main as ui_main
+
+            ui_arguments = [] if args.settings is None else ["--settings", args.settings]
+            return ui_main(ui_arguments)
         else:
             parser.error(f"unknown command {args.command}")
         return 0

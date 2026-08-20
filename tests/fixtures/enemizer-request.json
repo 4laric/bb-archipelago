@@ -3,6 +3,13 @@
   "version": 1,
   "enemizer": true,
   "enemizer_seed": "vertical-slice-test:1",
+  "world_version": "0.1.0",
+  "runtime_build": "bb-0.1.0-r5",
+  "suppression": {
+    "required": true,
+    "manifest_format": "bb-vanilla-suppression-build-v1",
+    "plan_sha256": "d044bdb5b02eeedf049718b69630866cf5eb89d98067445d772dd6ac486c6c73"
+  },
   "runtime_locations": "manual",
   "player": 1,
   "player_name": "Tester"

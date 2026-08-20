@@ -15,6 +15,13 @@ under `Unreleased` and move into a dated version section when released.
   vanilla launch, and preflights coordinated shadPS4/client/CE startup. Fake
   game-tree tests prove conflict refusal and zero base/update mutation. The
   desktop UI, bundled native tools, and real-game overlay canaries remain open.
+- The desktop launcher now exposes a real **Randomize Enemies** toggle, enemy
+  seed, tier-mixing, and locomotion controls. **Randomize & Launch** invokes the
+  deterministic planner and guarded MSBB writer, verifies the suppression
+  witness and generated maps, composes the seed cache, activates it through the
+  transactional core, and starts the pinned launch components. Tool output and
+  actionable failures are streamed into the UI; failed build diagnostics are
+  preserved. Bundling the native tools remains a packaging follow-up.
 - The generated world is now the bounded Central Yharnam vertical slice: 51
   physical pickups, Cleric Beast, and Father Gascoigne. Two later-cycle
   replacement lots are collapsed onto their physical chests, both boss flags
