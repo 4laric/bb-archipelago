@@ -6,6 +6,19 @@ guarded assembly template before installation. The tables with `shad-0.18` in
 their names are bounded diagnostics from the emulator-update revalidation, not
 parts of the normal client path.
 
+The current harness uses portable temporary/AppData paths, respects the process
+already attached in Cheat Engine, validates any eboot base read from the shad
+log, and falls back to a live signature scan. It visibly reports setup and
+bootstrap outcomes. Re-executing it in the same process is ignored as
+`already_ready`; restart Cheat Engine before loading a replacement table after
+hooks have already been installed.
+
+Absent-stack Blood Vial insertion is deliberately refused. Cross-machine
+testing returned a native slot while creating invalid raw descriptor
+`0xF00003E8` (`?ItemInfo?`) rather than the expected `0xB00003E8`. Existing Vial
+stack increments and the previously validated absent Pebble path are distinct
+code paths and remain supported. See issue #70.
+
 `legacy-v017.tsv` is the reviewed inventory of fixed-address tables that must
 not be loaded on current shadPS4. `archive` means the file remains useful as
 reverse-engineering evidence; `retire` means it was a duplicate or one-shot

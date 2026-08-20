@@ -29,7 +29,54 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn("$protocol='BBGRANT1'", self.helper)
         self.assertIn("$harness='bb-native-grant-v5'", self.helper)
 
+    def test_table_paths_are_portable_and_setup_failures_are_actionable(self):
+        self.assertNotIn(r"C:\Users\alari", self.text)
+        self.assertIn('local roamingAppData=os.getenv("APPDATA")', self.text)
+        self.assertIn("local root=getTempFolder()", self.text)
+        self.assertNotIn("directoryExists", self.text)
+        self.assertNotIn("createDirectory", self.text)
+        self.assertIn(r'local shadLog=roamingAppData..[[\shadPS4\log\shad_log.txt]]', self.text)
+        self.assertIn('showMessage("Bloodborne AP table setup failed:', self.text)
+        self.assertIn("local function startBloodborneHarness()", self.text)
+        self.assertIn("local started,startError=pcall(startBloodborneHarness)", self.text)
+        self.assertIn("tostring(startError)", self.text)
+
+    def test_stale_log_base_falls_back_to_live_signature_resolution(self):
+        self.assertIn('AOBScan("44 89 E0 48 83 C4 28 5B 41 5C 41 5D 41 5E 41 5F")', self.text)
+        self.assertIn("local candidate=consume-consumeRva", self.text)
+        self.assertIn("matchBytes(candidate+heartbeatRva,heartbeatOriginal)", self.text)
+        self.assertIn("if #candidates~=1 then", self.text)
+        self.assertIn('"Logged eboot base "..logged.." was stale or invalid;', self.text)
+        self.assertNotIn('openProcess("shadPS4.exe")', self.text)
+        self.assertIn("local attachedPid=getOpenedProcessID()", self.text)
+        self.assertIn("local pid=attachedPid", self.text)
+        self.assertLess(self.text.index("local attachedPid=getOpenedProcessID()"), self.text.index("local base,baseError=readEbootBase()"))
+
+    def test_bootstrap_is_visible_and_never_inserts_an_absent_vial(self):
+        self.assertIn("local bootstrapVialPending=true", self.text)
+        self.assertIn("local bootstrapVialNormalized=0xB00003E8", self.text)
+        self.assertIn("local bootstrapVialHeldCap=20", self.text)
+        self.assertIn("local bootstrapBulletNormalized=0xB0000384", self.text)
+        self.assertIn("local function findUniqueItemByLowId(lowId)", self.text)
+        self.assertIn("runtimeId%0x10000000==lowId", self.text)
+        self.assertIn("if tryBootstrapVial() then return end", self.text)
+        self.assertIn('finishBootstrap("bootstrap_complete"', self.text)
+        self.assertIn('finishBootstrap("bootstrap_skipped"', self.text)
+        self.assertIn('showMessage("Bloodborne AP bootstrap "..outcome', self.text)
+        self.assertIn('status=="bootstrap_complete" and "SUCCESS"', self.text)
+        self.assertIn('status=="bootstrap_skipped" and "SKIPPED"', self.text)
+        self.assertIn("BOOTSTRAP BULLET REFUNDED", self.text)
+        self.assertIn("absent Blood Vial insertion is disabled", self.text)
+        self.assertNotIn("BOOTSTRAP VIAL QUEUED", self.text)
+        self.assertNotIn('os.remove(commandPath)\n        active=nil\n        return\n      end\n      append', self.text)
+
+    def test_intel_sfx_workaround_is_verified_in_live_memory(self):
+        self.assertIn("local intelSfxRva=0x28F83E0", self.text)
+        self.assertIn("local intelSfxByte=readBytes(base+intelSfxRva,1,true)", self.text)
+        self.assertIn("Intel SFX workaround is not active in the attached Bloodborne process", self.text)
+
     def test_native_descriptor_selects_the_validated_source_by_item_category(self):
+        self.assertNotIn("mov dword ptr [rsp+4],0", self.text)
         self.assertIn("mov qword ptr [rsp+8],0", self.text)
         self.assertIn("mov [rsp+10],eax", self.text)
         self.assertIn("mov dword ptr [rsp+14],0", self.text)

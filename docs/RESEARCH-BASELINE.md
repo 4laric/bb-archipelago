@@ -369,6 +369,29 @@ performing another grant; the player confirmed the UI remained at five. This
 validates the crash window from durable completion through command cleanup
 across both a new process and a changed eboot base.
 
+### Cross-machine absent Blood Vial regression
+
+On 2026-08-20, the consolidated r5 table was exercised on a second Windows
+machine against stable shadPS4 0.18. The portability work was necessary in
+practice: user-specific paths failed, a stale v0.17 log base had to be rejected
+in favor of live signature discovery, and name-based process opening could
+replace a correct manual CE attachment when multiple shad processes existed.
+The current table therefore uses portable paths, respects the attached PID,
+validates logged bases, and falls back to live discovery.
+
+The test also disproved that every category-4 descriptor accepted by the native
+call produces a valid absent inventory record. With no Blood Vial stack, the
+expected raw descriptor was `0xB00003E8`; the native call returned slot 76 (and
+78 in an earlier attempt), but the created record contained `0xF00003E8`,
+quantity one, and appeared as `?ItemInfo?`. The result repeated on stable 0.18.
+Changing the staged descriptor's `+4` field did not correct it. The affected
+throwaway saves must be discarded or restored.
+
+This does not invalidate the verified existing-stack Vial increment or the
+absent Pebble/Augur/Saw Spear canaries. It establishes a specific fail-closed
+boundary: the shipping harness must refuse an absent Blood Vial until the
+category/descriptor transformation is understood and independently verified.
+
 On 2026-08-16, shadPS4 0.17.0 mapped the European `CUSA03173` 01.09 eboot at
 `0x800000000`. Read-only process-memory inspection reproduced all six published
 `CUSA00900` hook-site sequences at the same eboot-relative offsets. Sixteen bytes
