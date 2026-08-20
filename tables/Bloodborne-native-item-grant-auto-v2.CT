@@ -3,16 +3,28 @@
   <CheatEntries/>
   <UserdefinedSymbols/>
   <LuaScript><![CDATA[
-local root=[[C:\Users\alari\bb-archipelago\work\]]
+local function startBloodborneHarness()
+local roamingAppData=os.getenv("APPDATA")
+if not roamingAppData or roamingAppData=="" then
+  showMessage("Bloodborne AP table setup failed: APPDATA is not set")
+  return
+end
+local root=getTempFolder()
+if not root or root=="" then error("Cheat Engine did not provide a temporary directory") end
+if root:sub(-1)~=[[\]] then root=root..[[\]] end
 local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
 local logPath=root..[[native-grant.log]]
-local shadLog=[[C:\Users\alari\AppData\Roaming\shadPS4\log\shad_log.txt]]
+local shadLog=roamingAppData..[[\shadPS4\log\shad_log.txt]]
 local build=[[bb-0.1.0-r5]]
 local protocol=[[BBGRANT1]]
 local harness=[[bb-native-grant-v5]]
 local maxVerifyPolls=20
 local maxManualWaitPolls=1200
+local bootstrapVialPending=true
+local bootstrapVialNormalized=0xB00003E8
+local bootstrapVialHeldCap=20
+local bootstrapBulletNormalized=0xB0000384
 local function readStateFile()
   local values={}
   local f=io.open(statePath,"r")
@@ -27,25 +39,70 @@ local prior=readStateFile()
 local stateTag=prior.tag or ""
 local stateExpectedBefore=prior.expected_before or ""
 local stateExpectedAfter=prior.expected_after or ""
-local function readEbootBase()
-  local f=io.open(shadLog,"r")
-  if not f then return nil,"Could not open shad log" end
-  local pending,found=false,nil
-  for line in f:lines() do
-    if line:find("Loading module eboot.bin",1,true) then pending=true
-    elseif pending then
-      local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
-      if hex then found=tonumber(hex,16); pending=false end
+local consumeRva=0x14D9575
+local heartbeatRva=0x1BFE882
+local intelSfxRva=0x28F83E0
+local consumeOriginal={0x44,0x89,0xE0,0x48,0x83,0xC4,0x28}
+local heartbeatOriginal={0x48,0x81,0xC4,0xE8,0x07,0x00,0x00}
+local function matchBytes(address,expected)
+  local actual=readBytes(address,#expected,true)
+  if not actual then return false end
+  for i=1,#expected do if actual[i]~=expected[i] then return false end end
+  return true
+end
+local function scanEbootBase()
+  local matches=AOBScan("44 89 E0 48 83 C4 28 5B 41 5C 41 5D 41 5E 41 5F")
+  if not matches then return nil,"live signature scan found no consume-return candidates" end
+  local candidates={}
+  for i=0,matches.Count-1 do
+    local consume=tonumber(matches[i],16)
+    local candidate=consume-consumeRva
+    if matchBytes(candidate+heartbeatRva,heartbeatOriginal) then
+      candidates[#candidates+1]=candidate
     end
   end
-  f:close()
-  if not found then return nil,"Could not find eboot base in shad log" end
-  return found
+  matches.destroy()
+  if #candidates~=1 then
+    return nil,string.format("live signature scan found %d validated eboot candidates",#candidates)
+  end
+  return candidates[1]
+end
+local function readEbootBase()
+  local f=io.open(shadLog,"r")
+  local pending,found=false,nil
+  if f then
+    for line in f:lines() do
+      if line:find("Loading module eboot.bin",1,true) then pending=true
+      elseif pending then
+        local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+        if hex then found=tonumber(hex,16); pending=false end
+      end
+    end
+    f:close()
+  end
+  if found and matchBytes(found+consumeRva,consumeOriginal)
+      and matchBytes(found+heartbeatRva,heartbeatOriginal) then return found end
+  local scanned,scanError=scanEbootBase()
+  if scanned then return scanned end
+  local logged=found and string.format("0x%X",found) or "missing"
+  return nil,"Logged eboot base "..logged.." was stale or invalid; "..scanError..".\nLog checked: "..shadLog
+end
+local attachedPid=getOpenedProcessID()
+if not attachedPid or attachedPid==0 then
+  error("Attach Cheat Engine to the Bloodborne shadPS4.exe process before loading this table")
 end
 local base,baseError=readEbootBase()
-if not base then error(baseError) end
-local consumeHook=base+0x14D9575
-local heartbeatHook=base+0x1BFE882
+if not base then
+  showMessage("Bloodborne AP table setup failed:\n"..baseError)
+  return
+end
+local intelSfxByte=readBytes(base+intelSfxRva,1,true)
+if not intelSfxByte or intelSfxByte[1]~=0xC3 then
+  local found=intelSfxByte and string.format("0x%02X",intelSfxByte[1]) or "unreadable"
+  error("Intel SFX workaround is not active in the attached Bloodborne process (expected 0xC3, found "..found.."). Enable/apply it and fully restart shadPS4")
+end
+local consumeHook=base+consumeRva
+local heartbeatHook=base+heartbeatRva
 local request=base+0x50DBE00
 local quantity=request+4
 local result=request+8
@@ -56,7 +113,7 @@ local slotIndex=request+0x34
 local itemQuantityPointer=request+0x38
 local manualTrigger=request+0x50
 local active=nil
-local pid=nil
+local pid=attachedPid
 
 local function append(message)
   local f=io.open(logPath,"a"); if f then f:write(os.date("!%Y-%m-%dT%H:%M:%SZ")," ",message,"\n"); f:close() end
@@ -92,8 +149,35 @@ local function findItem(itemId)
   return 0,false
 end
 
-openProcess("shadPS4.exe")
-pid=getOpenedProcessID()
+local function findUniqueItemByLowId(lowId)
+  local inventory=readQword(inventoryPointer)
+  if not inventory or inventory==0 then return nil end
+  local split,last=readInteger(inventory+0x24),readInteger(inventory+0x88)
+  local primary,secondary=readQword(inventory+0x58),readQword(inventory+0x48)
+  if not split or not last or not primary or not secondary or last>=4096 then return nil end
+  local match=nil
+  for slot=0,last do
+    local entry=slot<split and (primary+slot*0x10) or (secondary+(slot-split)*0x10)
+    local runtimeId=readInteger(entry+4)
+    if runtimeId and runtimeId%0x10000000==lowId then
+      if match then return nil,nil,nil,nil,"ambiguous" end
+      match={quantity=readInteger(entry+8) or 0,slot=slot,pointer=entry+8,runtimeId=runtimeId}
+    end
+  end
+  if not match then return 0,false end
+  return match.quantity,true,match.slot,match.pointer,match.runtimeId
+end
+
+local function readSlotRecord(slot)
+  local inventory=readQword(inventoryPointer)
+  if not inventory or inventory==0 or not slot or slot<0 then return nil end
+  local split,last=readInteger(inventory+0x24),readInteger(inventory+0x88)
+  local primary,secondary=readQword(inventory+0x58),readQword(inventory+0x48)
+  if not split or not last or not primary or not secondary or last>=4096 or slot>last then return nil end
+  local entry=slot<split and (primary+slot*0x10) or (secondary+(slot-split)*0x10)
+  return readInteger(entry+4),readInteger(entry+8),entry
+end
+
 if bbNativeGrantHarnessPid==pid and bbNativeGrantHarnessTimer then
   state("already_ready","Duplicate table execution ignored")
   return
@@ -257,6 +341,74 @@ end
 local ok,detail=autoAssemble(install)
 if not ok then state("setup_error",detail); error("Automatic grant harness install failed: "..tostring(detail)) end
 
+local function finishBootstrap(status,detail)
+  bootstrapVialPending=false
+  stateTag="bootstrap_vial"
+  state(status,detail)
+  local outcome=status=="bootstrap_complete" and "SUCCESS"
+    or status=="bootstrap_skipped" and "SKIPPED"
+    or "FAILED"
+  showMessage("Bloodborne AP bootstrap "..outcome..":\n"..tostring(detail or ""))
+end
+
+local function tryBootstrapVial()
+  if not bootstrapVialPending then return false end
+  if readQword(inventoryPointer)==0 then return false end
+  local actual,exists,slot,quantityPointer=findItem(bootstrapVialNormalized)
+  if actual==nil then return false end
+  if actual>=bootstrapVialHeldCap then
+    append(string.format("BOOTSTRAP VIAL SKIPPED held=%d cap=%d",actual,bootstrapVialHeldCap))
+    finishBootstrap("bootstrap_skipped",string.format("Blood Vials already at held cap (%d)",actual))
+    return true
+  end
+  stateTag="bootstrap_vial"
+  stateExpectedBefore=actual
+  stateExpectedAfter=actual+1
+  if exists then
+    if not quantityPointer or quantityPointer==0 then
+      finishBootstrap("bootstrap_failed","Existing Blood Vial quantity pointer is missing")
+      return true
+    end
+    local before=readInteger(quantityPointer)
+    if before~=actual or not writeInteger(quantityPointer,before+1) then
+      finishBootstrap("bootstrap_failed",string.format("Could not increment Blood Vials from %s",tostring(before)))
+      return true
+    end
+    local after=readInteger(quantityPointer)
+    if after~=before+1 then
+      finishBootstrap("bootstrap_failed",string.format("Blood Vial verification expected=%d actual=%s",before+1,tostring(after)))
+      return true
+    end
+    append(string.format("BOOTSTRAP VIAL COMPLETED direct before=%d after=%d",before,after))
+    finishBootstrap("bootstrap_complete",string.format("Blood Vials %d -> %d; harness is ready",before,after))
+    return true
+  end
+  local bulletActual,bulletExists,_,bulletQuantityPointer=findItem(bootstrapBulletNormalized)
+  local bulletRuntimeId=bootstrapBulletNormalized
+  if not bulletExists then
+    bulletActual,bulletExists,_,bulletQuantityPointer,bulletRuntimeId=findUniqueItemByLowId(0x384)
+  end
+  if not bulletExists or not bulletQuantityPointer or bulletQuantityPointer==0 then
+    finishBootstrap("bootstrap_skipped","No Blood Vial stack exists and the spent bootstrap Bullet could not be refunded; no item was created")
+    return true
+  end
+  local bulletBefore=readInteger(bulletQuantityPointer)
+  if bulletBefore~=bulletActual or not writeInteger(bulletQuantityPointer,bulletBefore+1) then
+    finishBootstrap("bootstrap_failed",string.format("Could not refund bootstrap Bullet from %s",tostring(bulletBefore)))
+    return true
+  end
+  local bulletAfter=readInteger(bulletQuantityPointer)
+  if bulletAfter~=bulletBefore+1 then
+    finishBootstrap("bootstrap_failed",string.format("Bullet refund verification expected=%d actual=%s",bulletBefore+1,tostring(bulletAfter)))
+    return true
+  end
+  stateExpectedBefore=bulletBefore
+  stateExpectedAfter=bulletAfter
+  append(string.format("BOOTSTRAP BULLET REFUNDED runtime_id=0x%08X before=%d after=%d; absent Vial insertion intentionally skipped",bulletRuntimeId,bulletBefore,bulletAfter))
+  finishBootstrap("bootstrap_complete",string.format("No Blood Vial stack existed; bootstrap Bullet 0x%08X refunded %d -> %d; harness is ready",bulletRuntimeId,bulletBefore,bulletAfter))
+  return true
+end
+
 local function poll()
   if active then
     if readInteger(done)==1 then
@@ -270,16 +422,32 @@ local function poll()
           return
         end
         append(string.format("AUTO FAILED tag=%s expected_after=%d actual=%s native_result=%s; retry budget exhausted",active.tag,wanted,tostring(actual),tostring(nativeResult)))
-        state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d",active.tag,wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls))
-        os.remove(commandPath)
-        active=nil
+        if active.bootstrap then
+          local slotId,slotQuantity,slotAddress=readSlotRecord(nativeResult)
+          local slotDetail=slotId and string.format(" slot=%d slot_id=0x%08X slot_quantity=%s slot_address=0x%X",
+            nativeResult,slotId,tostring(slotQuantity),slotAddress) or " result_slot_unreadable"
+          local failureDetail=string.format("expected_after=%d actual=%s native_result=%s retry_budget=%d%s",
+            wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls,slotDetail)
+          active=nil
+          finishBootstrap("bootstrap_failed",failureDetail)
+        else
+          state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d",active.tag,wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls))
+          os.remove(commandPath)
+          active=nil
+        end
         return
       end
       append(string.format("AUTO COMPLETED tag=%s raw=0x%08X normalized=0x%08X quantity=%d native_result=%s",
         active.tag,active.raw,active.normalized,active.count,tostring(nativeResult)))
-      state("completed",string.format("tag=%s native_result=%s",active.tag,tostring(nativeResult)))
-      os.remove(commandPath)
-      active=nil
+      if active.bootstrap then
+        local before=active.expected
+        active=nil
+        finishBootstrap("bootstrap_complete",string.format("Blood Vials %d -> %d; native_result=%s; harness is ready",before,wanted,tostring(nativeResult)))
+      else
+        state("completed",string.format("tag=%s native_result=%s",active.tag,tostring(nativeResult)))
+        os.remove(commandPath)
+        active=nil
+      end
     elseif active.manualTrigger then
       active.waitPolls=(active.waitPolls or 0)+1
       if active.waitPolls>=maxManualWaitPolls then
@@ -291,6 +459,7 @@ local function poll()
     end
     return
   end
+  if tryBootstrapVial() then return end
   local f=io.open(commandPath,"r")
   if not f then
     if readQword(inventoryPointer)==0 then state("awaiting_inventory","Use one bullet once after launch") end
@@ -358,6 +527,11 @@ local function poll()
     os.remove(commandPath)
     return
   end
+  if command.normalized==bootstrapVialNormalized then
+    state("failed",string.format("tag=%s absent Blood Vial insertion is disabled after live invalid-record reproduction; acquire one Vial before delivery",command.tag))
+    os.remove(commandPath)
+    return
+  end
   if readInteger(request)~=0 then state("busy","Native request already pending") return end
   writeInteger(descriptor+0,command.raw); writeInteger(descriptor+4,0)
   writeQword(descriptor+8,0); writeInteger(descriptor+0x10,command.normalized)
@@ -385,5 +559,11 @@ else
   state("awaiting_inventory","Use one bullet once after launch")
 end
 append(string.format("AUTO V5 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
+end
+
+local started,startError=pcall(startBloodborneHarness)
+if not started then
+  showMessage("Bloodborne AP table setup failed:\n"..tostring(startError))
+end
 ]]></LuaScript>
 </CheatTable>

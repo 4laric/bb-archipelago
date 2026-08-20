@@ -61,6 +61,15 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Fixed
 
+- The CE harness is portable across Windows accounts, respects the process
+  manually attached in Cheat Engine, rejects stale logged eboot bases, falls
+  back to live signature discovery, and reports setup/bootstrap outcomes
+  visibly without duplicate-execution popup spam.
+- Absent Blood Vial delivery now fails closed. A second-machine shadPS4 0.18
+  test showed native insertion could create an invalid `0xF00003E8`
+  `?ItemInfo?` record instead of a Vial. Existing-stack Vial delivery remains
+  supported while the absent-stack regression is tracked separately.
+
 - Items the player does not already hold are granted correctly under shadPS4
   v0.18. Category-4 goods use the 24-byte descriptor in the consumable
   function's retiring stack frame; category-0 equipment uses a persistent

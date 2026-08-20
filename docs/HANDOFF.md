@@ -31,6 +31,12 @@ only code, reviewed derived facts, and reproducible fixtures.
   Vials 1 -> 2; the last observed grant changed 5 -> 6.
 - Earlier focused canaries validated existing-stack goods, absent-stack Pebble,
   persistent Augur of Ebrietas, and category-0 Saw Spear insertion.
+- A second-machine test exposed a narrower unsafe case: inserting a Blood Vial
+  when no Vial stack exists returned a native slot but created an invalid
+  `0xF00003E8` / `?ItemInfo?` record instead of the expected category-4
+  `0xB00003E8` record. Discard or restore any save containing that record. The
+  current table fails closed for absent Vials; existing Vial stacks remain the
+  validated path.
 
 ## Build and generate
 
@@ -81,7 +87,8 @@ is not fatal.
    `VANILLA-SUPPRESSION.md`; the client independently hashes the installed
    binder before arming.
 2. Enable the Intel SFX patch in BBLauncher.
-3. Run Cheat Engine 7.7 elevated, attach to `shadPS4.exe`, and load
+3. Run Cheat Engine 7.7 elevated, attach to the shadPS4 process that is actually
+   running Bloodborne, and load
    `tables/Bloodborne-native-item-grant-auto-v2.CT`.
 4. Fire one bullet after each game launch to capture the inventory pointer.
    Leave CE and the r5 table running afterward.
@@ -103,6 +110,8 @@ loaded-save identity accessor is implemented.
 ## Known limitations
 
 - Cheat Engine remains required for writes; checks themselves are direct.
+- Automatic Blood Vial delivery is supported only when a valid Vial stack
+  already exists. Absent-stack Vial insertion is blocked pending #70.
 - Every suppressed physical pickup gives one placeholder Vial in addition to
   its randomized AP reward. This is deliberate for the current writer but is a
   balance distortion.
@@ -118,8 +127,23 @@ loaded-save identity accessor is implemented.
 
 ## Best next session
 
-Use a fresh character with the varied seed. Confirm one reward of each goods
-shape, Augur, and Saw Spear; defeat both bosses; verify the server receives
+Use a fresh character with the varied seed and ensure it already has a valid
+Blood Vial stack. Confirm each currently safe goods shape, Augur, and Saw Spear;
+defeat both bosses; verify the server receives
 Gascoigne goal status; then restart shad, CE, and the client and confirm no
 acknowledged item or location is replayed. Record exact inventory before/after
 counts and retain any terminal `native-grant-state.txt` failure before retrying.
+
+## Cross-machine CE onboarding notes
+
+- Use stable shadPS4 0.18 for the current table. The Qt launcher catalog may lag
+  the downloadable stable SDL build; the latter can be launched with
+  `shadPS4.exe CUSA03173` or an explicit `eboot.bin` path.
+- Loading the table twice in the same CE/game session reports `already_ready`;
+  restart CE before replacing or reloading a table that already installed hooks.
+- More than one shadPS4 process can make name-based attachment select the wrong
+  process. The table now respects CE's manual process attachment, validates a
+  logged eboot base, and falls back to a live signature scan.
+- Table diagnostics and log paths are portable. Setup success, failure, and
+  bootstrap outcome are shown explicitly rather than relying on an invisible
+  side effect.
