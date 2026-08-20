@@ -222,6 +222,27 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         map_root = self.install.mods / "dvdroot_ps4" / "map" / "MapStudio"
         self.assertFalse(map_root.exists())
 
+    def test_packaged_toolchain_discovers_installed_maps_and_needs_no_dev_inputs(self):
+        installed_maps = self.install.base / "dvdroot_ps4" / "map" / "MapStudio"
+        installed_maps.mkdir(parents=True)
+        (installed_maps / "m24_01_00_00.msb.dcx").write_bytes(b"installed-source-map")
+        toolchain = FakeToolchain()
+        toolchain.is_bundled = True
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(5), Process(6)],
+        )
+        result = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=True),
+            process_is_running=lambda: False,
+        )
+        self.assertTrue(result.enemizer_enabled)
+        self.assertEqual(toolchain.calls[0]["map_studio_source"], installed_maps)
+        self.assertIsNone(toolchain.calls[0]["inventory"])
+        self.assertIsNone(toolchain.calls[0]["soulsformats_next"])
+
     def test_runtime_mismatch_refuses_before_toolchain_or_activation(self):
         value = json.loads(self.process_plan.read_text(encoding="utf-8"))
         value["runtime_build"] = "wrong-runtime"

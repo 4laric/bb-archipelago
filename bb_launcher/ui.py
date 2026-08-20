@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from .core import LauncherError, ValidationError
+from .resources import resource_root
 from .workflow import (
     SETTINGS_FORMAT,
     EnemizerOptions,
@@ -29,6 +30,7 @@ FIELD_DEFINITIONS = (
     ("process_plan", "Launch plan", "file"),
     ("cache_root", "Seed cache", "directory"),
 )
+DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
 
 
 def default_settings_path() -> Path:
@@ -71,6 +73,7 @@ class LauncherApp:
         self.repo_root = repo_root.resolve()
         self.settings_path = settings_path.expanduser().resolve()
         self.workflow = LauncherWorkflow(self.repo_root)
+        self.packaged_toolchain = self.workflow.toolchain.is_bundled
         self.fields = {name: tk.StringVar() for name, _label, _kind in FIELD_DEFINITIONS}
         self.randomize_enemies = tk.BooleanVar(value=True)
         self.enemy_seed = tk.StringVar()
@@ -106,6 +109,8 @@ class LauncherApp:
         setup.grid(row=2, column=0, sticky="ew")
         setup.columnconfigure(1, weight=1)
         for row, (name, label, kind) in enumerate(FIELD_DEFINITIONS):
+            if self.packaged_toolchain and name in DEVELOPMENT_FIELDS:
+                continue
             ttk.Label(setup, text=label).grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
             entry = ttk.Entry(setup, textvariable=self.fields[name])
             entry.grid(row=row, column=1, sticky="ew", pady=3)
@@ -316,7 +321,7 @@ def main(argv: list[str] | None = None) -> int:
     root = tk.Tk()
     LauncherApp(
         root,
-        repo_root=Path(__file__).resolve().parents[1],
+        repo_root=resource_root(),
         settings_path=args.settings,
     )
     root.mainloop()

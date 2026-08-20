@@ -35,6 +35,36 @@ jobs:
           -p:SoulsFormatsNextRoot=$PWD\_soulsformats
           -v:minimal
 
+  launcher-package:
+    name: Windows launcher package
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Fetch the pinned SoulsFormatsNEXT packaging dependency
+        shell: pwsh
+        run: |
+          git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
+          git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+      - name: Install the pinned Windows packager
+        run: python -m pip install --disable-pip-version-check -r packaging/requirements-build.txt
+      - name: Build the tools-only CI distribution
+        shell: pwsh
+        run: >-
+          ./packaging/build_launcher.ps1
+          -SoulsFormatsNextRoot $PWD\_soulsformats
+          -SkipClient
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BloodborneAPLauncher-win-x64
+          path: build/BloodborneAPLauncher-win-x64.zip
+          if-no-files-found: error
+
   # Everything that does not need Archipelago. Most of the suite lives here.
   unit:
     name: unit (no Archipelago)

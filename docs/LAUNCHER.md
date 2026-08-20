@@ -1,9 +1,10 @@
 # Bloodborne AP launcher core
 
 Status: the repository carries both the UI-independent cache/activation core
-and a desktop **Randomize & Launch** surface. The UI can run the deterministic
-enemy planner and guarded MSBB writer before it activates the verified overlay.
-Bundled writers/client and live overlay canaries remain follow-up slices.
+and a desktop **Randomize & Launch** surface. The Windows package bundles the
+deterministic planner, compressed-map miner, and guarded native writers before
+it activates the verified overlay. A prebuilt client can be added at package
+time; live overlay canaries remain a follow-up slice.
 
 ## Safety model
 
@@ -66,7 +67,7 @@ python -m bb_launcher status --game-root C:\path\to\shad-games
 
 ## Desktop Randomize & Launch
 
-Open the player-facing surface with:
+Open the player-facing surface from a checkout with:
 
 ```powershell
 python -m bb_launcher ui
@@ -78,8 +79,9 @@ The setup panel remembers paths under
 - the seed's `.bbenemizer.json` request;
 - the validated shadPS4 game root;
 - the generated suppression binder and its `build-manifest.json`;
-- the player's source `MapStudio` and `msb_enemies.tsv` extraction;
-- the pinned SoulsFormatsNEXT checkout;
+- the player's source `MapStudio` (automatically discovered in the Windows package);
+- for checkout-only development, an `msb_enemies.tsv` extraction and pinned
+  SoulsFormatsNEXT checkout;
 - the hash-pinned process plan and external seed-cache directory.
 
 **Randomize Enemies** is enabled by default. Its enemy seed comes from the AP
@@ -106,10 +108,27 @@ successful temporary build is removed after its files enter the verified
 cache. Turning **Randomize Enemies** off skips the inventory, map, SoulsFormats,
 planner, and writer stages and builds a suppression-only overlay.
 
-This slice intentionally still uses the repository Python planner, `dotnet`, a
-pinned SoulsFormatsNEXT checkout, and the player's extracted enemy inventory.
-Packaging those into a no-toolchain player distribution is the next release
-slice; the checkbox is functional now, but setup is not yet consumer-simple.
+The packaged path calls `BBEnemizerPlanner.exe`, `MSBBMiner.exe`, and
+`BBEnemizerWriter.exe` directly. It needs no Python, .NET SDK, SoulsFormats
+checkout, repository checkout, or pre-extracted enemy inventory. The checkout
+path retains the original Python/`dotnet` fallback for development.
+
+## Windows package
+
+Build a Windows x64 folder and zip from PowerShell after installing
+`packaging/requirements-build.txt`:
+
+```powershell
+./packaging/build_launcher.ps1 `
+  -SoulsFormatsNextRoot C:\path\to\SoulsFormatsNEXT `
+  -ClientPath C:\path\to\bb-ap-client.exe
+```
+
+The package uses a PyInstaller one-folder launcher and one-file planner, plus
+self-contained single-file .NET publishes for the native tools. It includes the
+CE table and documentation, writes a SHA-256 `package-manifest.json`, and emits
+`build/BloodborneAPLauncher-win-x64.zip`. It never includes game or emulator
+files. `-SkipClient` exists for CI artifacts and is deliberately explicit.
 
 A seed identity file has this shape:
 
@@ -210,5 +229,6 @@ Those tests do not prove shadPS4 consumed an overlay. The issue's live canaries
 still need the real game: suppression alone, suppression plus seed-12345 maps,
 and overlay removal back to vanilla. The launcher must still create the native
 client runtime configuration with `installed_gameparam` pointing at the active
-overlay binder, display bridge and ledger readiness, and package the prebuilt
-writers/client so a player needs no repository checkout.
+overlay binder and display bridge/ledger readiness. A release package must
+still be given the prebuilt native client; CI uses the explicitly labeled
+tools-only mode.

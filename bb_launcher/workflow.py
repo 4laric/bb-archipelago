@@ -24,6 +24,7 @@ from .core import (
     sha256_file,
     validate_processes,
 )
+from .resources import application_root
 
 
 SETTINGS_FORMAT = "bb-launcher-ui-settings-v1"
@@ -236,29 +237,46 @@ class EnemizerToolchain:
         runner: CommandRunner = run_command,
         python: str | Path = sys.executable,
         dotnet: str | Path = "dotnet",
+        app_root: Path | str | None = None,
     ):
         self.repo_root = Path(repo_root).expanduser().resolve()
+        self.app_root = Path(app_root or application_root()).expanduser().resolve()
         self.runner = runner
         self.python = str(python)
         self.dotnet = str(dotnet)
+
+    @property
+    def planner_executable(self) -> Path:
+        return self.app_root / "tools" / "BBEnemizerPlanner.exe"
+
+    @property
+    def writer_executable(self) -> Path:
+        return self.app_root / "tools" / "BBEnemizerWriter.exe"
+
+    @property
+    def miner_executable(self) -> Path:
+        return self.app_root / "tools" / "MSBBMiner.exe"
+
+    @property
+    def is_bundled(self) -> bool:
+        return all(
+            path.is_file()
+            for path in (self.planner_executable, self.writer_executable, self.miner_executable)
+        )
 
     def build(
         self,
         *,
         seed: str,
-        inventory: Path,
+        inventory: Path | None,
         map_studio_source: Path,
-        soulsformats_next: Path,
+        soulsformats_next: Path | None,
         output_root: Path,
         allow_tier_mixing: bool,
         preserve_locomotion: bool,
         progress: Progress,
     ) -> EnemizerBuild:
-        for path, label, kind in (
-            (inventory, "enemy inventory", "file"),
-            (map_studio_source, "source MapStudio", "directory"),
-            (soulsformats_next, "SoulsFormatsNEXT", "directory"),
-        ):
+        for path, label, kind in ((map_studio_source, "source MapStudio", "directory"),):
             exists = path.is_file() if kind == "file" else path.is_dir()
             if not exists:
                 raise ValidationError(f"{label} {kind} does not exist: {path}")
@@ -267,10 +285,26 @@ class EnemizerToolchain:
         output_root.mkdir(parents=True)
         plan_path = output_root / "bb-enemizer-plan.json"
         map_output = output_root / "MapStudio"
-        planner = [
-            self.python,
-            "-m",
-            "tools.bb_enemizer.cli",
+        if inventory is None:
+            if not self.miner_executable.is_file():
+                raise ValidationError(
+                    "enemy inventory is required when the packaged MSBB miner is unavailable"
+                )
+            mined = output_root / "mined"
+            progress("Reading enemy slots from the installed maps...")
+            self.runner(
+                [self.miner_executable, map_studio_source, mined, "--fixed-maps-only"],
+                self.repo_root,
+                progress,
+            )
+            inventory = mined / "msb_enemies.tsv"
+        if not inventory.is_file():
+            raise ValidationError(f"enemy inventory file does not exist: {inventory}")
+        planner = (
+            [str(self.planner_executable)]
+            if self.planner_executable.is_file()
+            else [self.python, "-m", "tools.bb_enemizer.cli"]
+        ) + [
             "--seed",
             seed,
             "--inventory",
@@ -296,21 +330,34 @@ class EnemizerToolchain:
         swaps = plan.get("swaps")
         if not isinstance(swaps, list) or not swaps:
             raise ValidationError("enemy randomization produced zero safe swaps")
-        writer_project = self.repo_root / "tools" / "bb_enemizer_writer" / "BBEnemizerWriter.csproj"
-        writer = [
-            self.dotnet,
-            "run",
-            "--project",
-            str(writer_project),
-            "-c",
-            "Release",
-            f"-p:SoulsFormatsNextRoot={soulsformats_next}",
-            "--",
-            str(plan_path),
-            str(map_studio_source),
-            str(map_output),
-            "--apply",
-        ]
+        if self.writer_executable.is_file():
+            writer = [
+                str(self.writer_executable),
+                str(plan_path),
+                str(map_studio_source),
+                str(map_output),
+                "--apply",
+            ]
+        else:
+            if soulsformats_next is None or not soulsformats_next.is_dir():
+                raise ValidationError(
+                    "SoulsFormatsNEXT is required when the packaged enemizer writer is unavailable"
+                )
+            writer_project = self.repo_root / "tools" / "bb_enemizer_writer" / "BBEnemizerWriter.csproj"
+            writer = [
+                self.dotnet,
+                "run",
+                "--project",
+                str(writer_project),
+                "-c",
+                "Release",
+                f"-p:SoulsFormatsNextRoot={soulsformats_next}",
+                "--",
+                str(plan_path),
+                str(map_studio_source),
+                str(map_output),
+                "--apply",
+            ]
         progress(f"Writing and reopening {len(swaps)} planned enemy swaps...")
         self.runner(writer, self.repo_root, progress)
         outputs = sorted(map_output.glob("*.msb.dcx")) if map_output.is_dir() else []
@@ -445,6 +492,21 @@ class LauncherWorkflow:
 
         enemy_seed = options.seed.strip() if options.seed else request["enemizer_seed"]
         map_root = settings.map_studio_source if options.enabled else None
+        if options.enabled and map_root is None:
+            relative_maps = Path("dvdroot_ps4") / "map" / "MapStudio"
+            candidates = [
+                candidate
+                for candidate in (install.patch / relative_maps, install.base / relative_maps)
+                if candidate.is_dir()
+            ]
+            if candidates:
+                def map_count(candidate: Path) -> int:
+                    return sum(
+                        path.is_file() and path.name.lower().endswith((".msb", ".msb.dcx"))
+                        for path in candidate.iterdir()
+                    )
+
+                map_root = max(candidates, key=map_count)
         sources = _source_hashes(install, map_root)
         identity = SeedIdentity(
             seed=request["seed"],
@@ -474,21 +536,25 @@ class LauncherWorkflow:
             completed = False
             try:
                 if options.enabled:
-                    for path, label in (
-                        (settings.enemy_inventory, "enemy inventory"),
-                        (settings.map_studio_source, "source MapStudio"),
-                        (settings.soulsformats_next, "SoulsFormatsNEXT"),
-                    ):
-                        if path is None:
-                            raise ValidationError(f"Randomize Enemies requires {label}")
+                    if map_root is None:
+                        raise ValidationError(
+                            "Randomize Enemies could not find MapStudio in the game; select it explicitly"
+                        )
+                    if not getattr(self.toolchain, "is_bundled", False):
+                        for path, label in (
+                            (settings.enemy_inventory, "enemy inventory"),
+                            (settings.soulsformats_next, "SoulsFormatsNEXT"),
+                        ):
+                            if path is None:
+                                raise ValidationError(f"Randomize Enemies requires {label}")
                     settings.cache_root.mkdir(parents=True, exist_ok=True)
                     temporary = Path(tempfile.mkdtemp(prefix=".enemizer-build-", dir=settings.cache_root))
                     progress("Planning deterministic enemy swaps...")
                     enemizer = self.toolchain.build(
                         seed=enemy_seed,
-                        inventory=settings.enemy_inventory,  # type: ignore[arg-type]
-                        map_studio_source=settings.map_studio_source,  # type: ignore[arg-type]
-                        soulsformats_next=settings.soulsformats_next,  # type: ignore[arg-type]
+                        inventory=settings.enemy_inventory,
+                        map_studio_source=map_root,
+                        soulsformats_next=settings.soulsformats_next,
                         output_root=temporary,
                         allow_tier_mixing=options.allow_tier_mixing,
                         preserve_locomotion=options.preserve_locomotion,
