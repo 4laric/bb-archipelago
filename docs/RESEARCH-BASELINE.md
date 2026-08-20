@@ -392,6 +392,19 @@ absent Pebble/Augur/Saw Spear canaries. It establishes a specific fail-closed
 boundary: the shipping harness must refuse an absent Blood Vial until the
 category/descriptor transformation is understood and independently verified.
 
+A follow-up bootstrap canary exposed and corrected a raw-versus-normalized ID
+mix-up in the guard itself. The native source descriptor is `0xB00003E8`, but
+the canonical inventory record's `+4` runtime ID is `0x400003E8`; the equivalent
+Bullet runtime ID is `0x40000384`. A read-only inventory census found the held
+Vial stack at slot 78 with runtime ID `0x400003E8` and quantity 12. With the
+corrected lookup, bootstrap incremented it from 12 to 13 and reported success.
+After the player consumed every Vial and restarted the game and CE, bootstrap
+reported a strong negative: no Vial stack, no refund-capable Bullet record, and
+no item created. The inventory remained free of `?ItemInfo?`. This validates
+both the existing-stack success path and the absent-stack fail-closed path; a
+Bullet refund is best-effort because consuming the last Bullet can remove its
+record before the table observes it.
+
 On 2026-08-16, shadPS4 0.17.0 mapped the European `CUSA03173` 01.09 eboot at
 `0x800000000`. Read-only process-memory inspection reproduced all six published
 `CUSA00900` hook-site sequences at the same eboot-relative offsets. Sixteen bytes

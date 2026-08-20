@@ -54,7 +54,10 @@ under `Unreleased` and move into a dated version section when released.
 - Absent Blood Vial delivery now fails closed. A second-machine shadPS4 0.18
   test showed native insertion could create an invalid `0xF00003E8`
   `?ItemInfo?` record instead of a Vial. Existing-stack Vial delivery remains
-  supported while the absent-stack regression is tracked separately.
+  supported while the absent-stack regression is tracked separately. The
+  bootstrap lookup now correctly distinguishes native raw descriptors
+  (`0xB...`) from canonical inventory runtime IDs (`0x400...`); live canaries
+  proved a 12-to-13 Vial increment and a zero-Vial no-item-created refusal.
 
 - Items the player does not already hold are granted correctly under shadPS4
   v0.18. Category-4 goods use the 24-byte descriptor in the consumable
