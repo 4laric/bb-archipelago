@@ -103,6 +103,21 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
         feed_effect="right_hand_weapon",
         reinforcement_level=0,
     ),
+    "quicksilver_bullets": RuntimeItemBinding(
+        0x40000384, 0xB0000384, "live grant and decrement observed"
+    ),
+    "pebbles": RuntimeItemBinding(
+        0x400004CE, 0xB00004CE, "live grant and inventory persistence observed"
+    ),
+    "molotov_cocktails": RuntimeItemBinding(
+        0x400004B0, 0xB00004B0, "catalog id + validated category-4 goods formula"
+    ),
+    "blood_stone_shards": RuntimeItemBinding(
+        0x40000BB8, 0xB0000BB8, "catalog id + validated category-4 goods formula"
+    ),
+    "augur_of_ebrietas": RuntimeItemBinding(
+        0x400007D0, 0xB00007D0, "live grant and inventory persistence observed"
+    ),
 }
 
 # Negative canaries are executable exclusions. Keeping them next to the
@@ -202,8 +217,8 @@ for location in FIXED_LOCATIONS:
 
 # Known delivery fixtures, not currently part of the randomized design pool.
 DELIVERY_FIXTURES: dict[str, RuntimeItemBinding] = {
-    "quicksilver_bullet": RuntimeItemBinding(0x40000384, 0xB0000384, "validated/observed"),
+    "quicksilver_bullet": ITEM_BINDINGS["quicksilver_bullets"],
     "blood_vial": RuntimeItemBinding(0x400003E8, 0xB00003E8, "inferred/observed"),
-    "pebble": RuntimeItemBinding(0x400004CE, 0xB00004CE, "observed"),
-    "augur_of_ebrietas": RuntimeItemBinding(0x400007D0, 0xB00007D0, "observed"),
+    "pebble": ITEM_BINDINGS["pebbles"],
+    "augur_of_ebrietas": ITEM_BINDINGS["augur_of_ebrietas"],
 }

@@ -11,8 +11,10 @@ research scaffolding; it is not emitted into this slice's multidata.
 - **2 boss checks:** Cleric Beast and Father Gascoigne.
 - **53 network locations total.**
 - **Goal:** Father Gascoigne.
-- **Item pool:** the live-validated Saw Spear plus Blood Vial filler. Torch,
-  Hunter attire, auto-upgrade, and auto-equip remain outside the receive pool.
+- **Item pool:** Saw Spear and Augur of Ebrietas once each, then a deliberate
+  cycle of Blood Vials, Quicksilver Bullets x3, Pebbles x3, Molotov Cocktails
+  x2, and Blood Stone Shards x2. Torch, Hunter attire, auto-upgrade, and
+  auto-equip remain outside the receive pool.
 
 The pickup manifest is generated from
 `research/catalog/fixed_location_catalog.tsv` by
@@ -54,9 +56,11 @@ slot with one Blood Vial while preserving the row ID and acquisition flag. This
 covers goods, weapons, attire, and the category-8 blood-gem row without deriving
 unsupported runtime grant descriptors from ItemLot IDs.
 
-The native writer has built and reopened this complete binder successfully.
-Installation and one in-game canary remain deliberate playtest steps. The seed
-requires the installed-binder hash witness before the native client will arm.
+The native writer built and reopened this complete binder successfully. The
+binder was then installed on shadPS4 0.18.0 and live-tested: a suppressed pickup
+gave the one-Vial placeholder, set its acquisition flag, stayed collected after
+restart, and retained the placeholder reward. The seed requires this installed
+binder's hash witness before the native client will arm.
 
 ## Runtime sequence
 
@@ -75,18 +79,21 @@ requires the installed-binder hash witness before the native client will arm.
 
 ## Remaining live boundary
 
-The event-flag accessor is validated, but automatic live sends remain fail
-closed until the backend can prove both `gameplay_ready` and the stable loaded
-save identity. The same identity must ultimately be witnessed again at actual
-game-thread grant execution so a queued command cannot cross a save switch.
+The event-flag accessor and automatic location sends are live-validated. For
+the bounded MVP, `--assume-correct-save` makes the operator attest that the
+loaded character belongs to the connected AP slot. Three stable manager reads
+arm gameplay; losing that manager immediately disarms and clears debounce
+streaks. This is intentionally less safe than real save identification: checks
+sent from the wrong character are irreversible, and a reward delivered there
+still advances the AP ledger.
 
-Mock mode exercises the complete 53-location slot-data contract, debounce,
-delivery ledger, reconnect behavior, and goal selection without weakening that
-boundary.
+The live run automatically reported the already-collected Iosefka courtyard
+lot plus two newly collected lots. AP returned three Vials; the r5 CE bridge
+granted and durably acknowledged indices 0 through 2 without manual `/check`.
 
-The final playtest is therefore specific and finite:
+The remaining finite playtest is:
 
-1. validate one suppressed pickup still sets its acquisition flag;
-2. validate both boss flags through the live reader;
-3. complete a generated seed through Gascoigne;
-4. restart/reconnect and confirm no location or item is replayed.
+1. exercise every varied goods shape and the Saw Spear through the automatic path;
+2. validate Cleric Beast and Gascoigne flags, including `CLIENT_GOAL`;
+3. restart/reconnect and confirm no location or item is replayed;
+4. replace operator attestation with a real loaded-save identity before general release.

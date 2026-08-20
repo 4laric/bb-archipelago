@@ -2,11 +2,13 @@
 from __future__ import annotations
 import json
 from pathlib import Path
+from itertools import cycle, islice
 from typing import Any
 from .data import (
     CENTRAL_YHARNAM_SLICE_ENTRANCES,
     CENTRAL_YHARNAM_SLICE_ITEM_KEYS,
     CENTRAL_YHARNAM_SLICE_LOCATION_KEYS,
+    CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS,
     CENTRAL_YHARNAM_SLICE_REGIONS,
     MODEL,
 )
@@ -27,9 +29,24 @@ SHUFFLABLE_ITEMS = tuple(
     item for item in MODEL.items
     if item.key in CENTRAL_YHARNAM_SLICE_ITEM_KEYS
 )
+POOL_SUPPRESSION_ITEM_KEYS = CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
 FILLER_ITEM_NAME = "Blood Vial"
 GOAL_LOCATION_KEY = "boss_father_gascoigne"
+
+
+def build_slice_item_pool_names() -> list[str]:
+    """Build the exact 53-item varied-grant pool for the live slice."""
+    names = [
+        item.name for item in SHUFFLABLE_ITEMS
+        if item.kind is not ItemKind.FILLER
+    ]
+    filler_names = [FILLER_ITEM_NAME, *(
+        item.name for item in SHUFFLABLE_ITEMS
+        if item.kind is ItemKind.FILLER
+    )]
+    names.extend(islice(cycle(filler_names), len(NETWORK_LOCATIONS) - len(names)))
+    return names
 
 
 class IdRegistryError(RuntimeError):
@@ -227,9 +244,9 @@ else:
                 entrance.connect(regions[data.target])
 
         def create_items(self) -> None:
-            names = [item.name for item in SHUFFLABLE_ITEMS]
-            names.extend([FILLER_ITEM_NAME] * (len(NETWORK_LOCATIONS) - len(names)))
-            self.multiworld.itempool.extend(self.create_item(name) for name in names)
+            self.multiworld.itempool.extend(
+                self.create_item(name) for name in build_slice_item_pool_names()
+            )
 
         def set_rules(self) -> None:
             # Runtime completion is authoritative: the client sends CLIENT_GOAL

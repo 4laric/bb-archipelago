@@ -92,3 +92,8 @@ location	fixed_central_yharnam_lot_2410640	0xBB104F
 location	fixed_central_yharnam_lot_2410650	0xBB1050
 location	fixed_central_yharnam_lot_2410920	0xBB1051
 location	boss_cleric_beast	0xBB1052
+item	quicksilver_bullets	0xBB0101
+item	pebbles	0xBB0102
+item	molotov_cocktails	0xBB0103
+item	blood_stone_shards	0xBB0104
+item	augur_of_ebrietas	0xBB0105

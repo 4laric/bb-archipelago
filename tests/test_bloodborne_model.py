@@ -1,5 +1,6 @@
 import csv
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from worlds.bloodborne.data import MODEL
@@ -13,6 +14,7 @@ from worlds.bloodborne import (
     NETWORK_LOCATIONS,
     SHUFFLABLE_ITEMS,
     build_runtime_slot_data,
+    build_slice_item_pool_names,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,6 +48,20 @@ class BloodborneModelTests(unittest.TestCase):
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
             build_runtime_slot_data()["goal_location"],
         )
+
+    def test_slice_pool_deliberately_exercises_every_live_grant_shape(self):
+        counts = Counter(build_slice_item_pool_names())
+        self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
+        self.assertEqual(counts["Saw Spear"], 1)
+        self.assertEqual(counts["Augur of Ebrietas"], 1)
+        self.assertEqual(counts["Blood Vial"], 11)
+        for name in (
+            "Quicksilver Bullets x3",
+            "Pebbles x3",
+            "Molotov Cocktails x2",
+            "Blood Stone Shards x2",
+        ):
+            self.assertEqual(counts[name], 10, name)
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""

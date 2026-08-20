@@ -44,6 +44,11 @@ python -m tools.bb_enemizer.cli --ap-request <request> --output work/enemizer/ap
 
 then apply it with the guarded writer as documented in `docs/ENEMIZER.md`.
 
+For the reproducible varied-grant playtest, copy
+`examples/central-yharnam-variety.yaml` into Archipelago's player directory and
+generate with seed `52100005`. See `docs/HANDOFF.md` for the complete two-repo
+build and live-test procedure.
+
 ## Current boundary
 
 Generation now emits the bounded Central Yharnam slice: 51 physical pickups,
@@ -53,17 +58,16 @@ manifest is regenerated from the canonical map catalog, and the two boss flags
 
 The complete suppression plan rewrites 54 ItemLotParam rows with zero refusals,
 including Saw Spear, Torch, the Hunter Set award group, and the category-8
-blood-gem pickup. The native writer has built and reopened that binder; it has
-not been installed or playtested. Seeds require the matching installed-binder
-hash witness before the native client arms.
+blood-gem pickup. Its binder was installed and playtested on shadPS4 0.18.0: a
+suppressed pickup awarded the one-Vial placeholder, retained its acquisition
+flag, and remained collected after restart. Seeds require the matching
+installed-binder hash witness before the native client arms.
 
 The apworld's Python client remains a manual-check fallback. The native client
 in `from-software-archipelago-clients` consumes all 53 runtime flag bindings,
-debounces true reads three times, delivers the validated Saw Spear and goods
+debounces true reads three times, delivers the Saw Spear and category-4 goods
 through the durable r5 grant bridge, and sends Archipelago goal status for the
-Gascoigne check.
-
-Automatic live checks and mutation still fail closed until the backend can
-prove a stable gameplay state and explicitly bound loaded-save identity. Mock
-mode exercises the complete AP loop without weakening that safety boundary.
-See `docs/VERTICAL-SLICE.md` for the exact slice and remaining live tests.
+Gascoigne check. Its explicit `--assume-correct-save` MVP mode has reported
+three pickups automatically and acknowledged their AP rewards in order during
+a live run. This mode is operator-attested, not real save identification: never
+switch characters while connected. Normal live mode remains fail closed.

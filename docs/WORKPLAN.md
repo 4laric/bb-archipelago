@@ -1,12 +1,13 @@
 # Work plan
 
-> **2026-08-19 slice update:** the generated world is now bounded to 51
+> **2026-08-20 handoff update:** the generated world is bounded to 51
 > Central Yharnam pickups plus Cleric Beast and Father Gascoigne. The complete
-> 54-row suppression binder builds with zero refusals, and Gascoigne is the
-> seed's goal location. Historical phase text below explains how the project
-> reached this point; the remaining critical path is live gameplay/save
-> identity, execution-time identity containment, suppression canary validation,
-> and the final end-to-end slice run. See `VERTICAL-SLICE.md` for current truth.
+> 54-row suppression binder is installed and live-tested. The unsafe MVP client
+> automatically reported three pickups and delivered their rewards in AP index
+> order. The varied pool now covers five goods shapes, Augur, and Saw Spear.
+> Historical phase text below explains how the project reached this point and
+> is not a current blocker list. See `HANDOFF.md` and `VERTICAL-SLICE.md` for
+> current truth.
 
 Written 2026-08-18, after an audit of the 08-16/17 working tree and a subsequent adversarial
 review. Every state claim below was verified by running the thing, not by reading it.
@@ -19,31 +20,31 @@ closed; Phase 1's remaining work is the client half, not the discovery half.
 
 | Piece | State |
 | --- | --- |
-| World generation | **Works.** AP 0.6.7 / Python 3.11, clean at `full`, `minimal`, enemizer on and off. |
+| World generation | **Works.** AP 0.6.7; 53 locations and a seven-item-type varied pool generate successfully. |
 | Item delivery | **Absent-stack, existing-stack, equipment insertion, and replay recovery work** through the v5 Cheat Engine bridge. Category-4 goods use the validated 24-byte in-frame descriptor; category-0 equipment uses the persistent 24-byte descriptor. A Saw Spear grant completed through native `ItemGrant` and was confirmed in inventory. Failed verification is bounded, and a retained completed command survives a full restart without double-granting. |
-| The AP client | **Crashes on every launch path** (#17). Whatever exercised delivery end to end did not go through `launch()`. |
-| Item *randomisation* | **Does not exist.** Nothing suppresses the vanilla award, so shuffled keys gate nothing (#14). |
-| Location detection | **Read path validated; live sends fail closed.** The manager-relative resolver returns live flag state from an eboot-relative pointer slot, signature-gated, across two randomized launches and outside Cheat Engine. The r4 Rust client has a debounced poller, but refuses live `LocationChecks` until its backend can prove gameplay state and the bound save identity. This repo's Python client still reports by hand (#15). |
+| The AP client | **Works in bounded unsafe MVP mode.** `--assume-correct-save` connected, reported three live pickups automatically, and drove ordered reward delivery. Normal live mode still fails closed without real save identity. |
+| Item *randomisation* | **Works for the slice.** The installed 54-edit binder replaces each pickup's vanilla award with one Vial while retaining its check flag. |
+| Location detection | **Automatic pickup reporting works.** The manager-relative reader, three-read gameplay gate, debounce, and `LocationChecks` send are live-validated. Boss flags and `CLIENT_GOAL` still need the completion run. |
 | Enemizer planning | **Works.** 308 swaps of 4186 slots, deterministic across 25 seeds. |
 | Enemizer writing | Guarded writer + packaging entrypoint exist. **Not playtested.** |
 
-## The two blockers
+## Historical blockers (now retired or mitigated)
 
-An Archipelago game has to do two things: report what the player found, and make what it hands
-back matter. Bloodborne currently does neither automatically.
+An Archipelago game has to report what the player found and make received items
+matter. The slice now does both; this section records the investigation that
+produced the current implementation.
 
 **#15 — detection.** The accessor now exists: a validated, signature-gated, manager-relative read
 path that survives a randomized eboot base. The poll loop exists too — in
 `from-software-archipelago-clients`, `crates/bb-archipelago/src/client_loop.rs`. It now requires a
 backend-provided gameplay/save context, matches that identity to explicit configuration and
-debounces true reads. The live backend deliberately returns no context, so automatic checks
-abstain until gameplay state and save identity are resolved on v0.18. The blocker is now that live
-context accessor, not containment architecture.
+debounces true reads. The unsafe MVP backend now substitutes explicit operator attestation and a
+three-read manager-health gate. Real save identity remains a release-safety task, not a vertical-
+slice blocker.
 
-**#14 — vanilla award suppression.** There is no `ItemLotParam` edit, no MSB treasure edit and no
-runtime lot interception anywhere in the project. The player who walks to Iosefka's Clinic picks
-up the real Cainhurst Summons, so every gate in `data.py` is satisfied by the vanilla copy no
-matter where Archipelago put the shuffled one. Item placement is decorative.
+**#14 — vanilla award suppression.** Retired for the slice. The guarded 54-edit
+ItemLotParam binder is installed and live-tested; physical checks retain their
+flags and award the one-Vial placeholder instead of their original contents.
 
 These are independent, and only one of them needs the game running.
 
