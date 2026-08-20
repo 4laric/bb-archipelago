@@ -76,7 +76,7 @@ jobs:
         run: |
           rm -rf _ap/worlds/bloodborne
           cp -r worlds/bloodborne _ap/worlds/bloodborne
-          cp -r tools tests research _ap/
+          cp -r bb_launcher tools tests research _ap/
 
       - name: Run the suite inside Archipelago
         working-directory: _ap
