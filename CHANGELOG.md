@@ -64,7 +64,11 @@ under `Unreleased` and move into a dated version section when released.
 - The CE harness is portable across Windows accounts, respects the process
   manually attached in Cheat Engine, rejects stale logged eboot bases, falls
   back to live signature discovery, and reports setup/bootstrap outcomes
-  visibly without duplicate-execution popup spam.
+  visibly. It no longer treats emulator-specific Intel SFX patch bytes as an
+  item-grant prerequisite. Bootstrap also waits for the inventory list to
+  hydrate before declaring a Vial absent; this fixes a live second-machine race
+  where a valid stack appeared at logical slot 78 after the first scan ended at
+  slot 76.
 - Absent Blood Vial delivery now fails closed. A second-machine shadPS4 0.18
   test showed native insertion could create an invalid `0xF00003E8`
   `?ItemInfo?` record instead of a Vial. Existing-stack Vial delivery remains

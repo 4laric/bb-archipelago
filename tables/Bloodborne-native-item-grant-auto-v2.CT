@@ -22,6 +22,8 @@ local harness=[[bb-native-grant-v5]]
 local maxVerifyPolls=20
 local maxManualWaitPolls=1200
 local bootstrapVialPending=true
+local bootstrapAbsentPolls=0
+local minBootstrapAbsentPolls=40
 local bootstrapVialNormalized=0x400003E8
 local bootstrapVialHeldCap=20
 local bootstrapBulletNormalized=0x40000384
@@ -41,7 +43,6 @@ local stateExpectedBefore=prior.expected_before or ""
 local stateExpectedAfter=prior.expected_after or ""
 local consumeRva=0x14D9575
 local heartbeatRva=0x1BFE882
-local intelSfxRva=0x28F83E0
 local consumeOriginal={0x44,0x89,0xE0,0x48,0x83,0xC4,0x28}
 local heartbeatOriginal={0x48,0x81,0xC4,0xE8,0x07,0x00,0x00}
 local function matchBytes(address,expected)
@@ -95,11 +96,6 @@ local base,baseError=readEbootBase()
 if not base then
   showMessage("Bloodborne AP table setup failed:\n"..baseError)
   return
-end
-local intelSfxByte=readBytes(base+intelSfxRva,1,true)
-if not intelSfxByte or intelSfxByte[1]~=0xC3 then
-  local found=intelSfxByte and string.format("0x%02X",intelSfxByte[1]) or "unreadable"
-  error("Intel SFX workaround is not active in the attached Bloodborne process (expected 0xC3, found "..found.."). Enable/apply it and fully restart shadPS4")
 end
 local consumeHook=base+consumeRva
 local heartbeatHook=base+heartbeatRva
@@ -180,6 +176,7 @@ end
 
 if bbNativeGrantHarnessPid==pid and bbNativeGrantHarnessTimer then
   state("already_ready","Duplicate table execution ignored")
+  showMessage("Bloodborne AP table is already installed for this process.\nFire one Bullet only if bootstrap has not already completed.")
   return
 end
 local install=[[
@@ -356,6 +353,12 @@ local function tryBootstrapVial()
   if readQword(inventoryPointer)==0 then return false end
   local actual,exists,slot,quantityPointer=findItem(bootstrapVialNormalized)
   if actual==nil then return false end
+  if not exists and bootstrapAbsentPolls<minBootstrapAbsentPolls then
+    bootstrapAbsentPolls=bootstrapAbsentPolls+1
+    stateTag="bootstrap_vial"
+    state("bootstrap_waiting",string.format("Waiting for inventory hydration before declaring the Vial stack absent (%d/%d)",bootstrapAbsentPolls,minBootstrapAbsentPolls))
+    return false
+  end
   if actual>=bootstrapVialHeldCap then
     append(string.format("BOOTSTRAP VIAL SKIPPED held=%d cap=%d",actual,bootstrapVialHeldCap))
     finishBootstrap("bootstrap_skipped",string.format("Blood Vials already at held cap (%d)",actual))
@@ -470,6 +473,10 @@ local function poll()
   if not command then state("command_rejected",why); os.remove(commandPath); return end
   if readQword(inventoryPointer)==0 then state("awaiting_inventory","Command retained; use one bullet once") return end
   local actual,exists,slot,quantityPointer=findItem(command.normalized)
+  if actual==nil then
+    state("awaiting_inventory","Command retained; inventory geometry is not hydrated yet")
+    return
+  end
   if command.autoExpected then
     local priorBefore,priorAfter=tonumber(prior.expected_before or ""),tonumber(prior.expected_after or "")
     local recoverable=prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag==command.tag
@@ -559,6 +566,11 @@ else
   state("awaiting_inventory","Use one bullet once after launch")
 end
 append(string.format("AUTO V5 READY build=%s protocol=%s harness=%s pid=%d ebootBase=0x%X consumeHook=0x%X heartbeatHook=0x%X",build,protocol,harness,pid,base,consumeHook,heartbeatHook))
+if pendingCommand and prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag~="" then
+  showMessage("Bloodborne AP table setup SUCCESS.\nA retained command is awaiting reconciliation; follow the client recovery instructions.")
+else
+  showMessage("Bloodborne AP table setup SUCCESS.\nThe grant harness is installed. If no bootstrap result appears, fire one Bullet.")
+end
 end
 
 local started,startError=pcall(startBloodborneHarness)

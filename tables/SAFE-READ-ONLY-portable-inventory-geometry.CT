@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Portable, read-only cross-machine inventory diagnostic. Requires the
+     player-facing grant table to be loaded and one Bullet to have been fired. -->
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+local ok,detail=xpcall(function()
+local pid=getOpenedProcessID()
+if not pid or pid==0 then
+  error("Attach Cheat Engine to the Bloodborne shadPS4 process first")
+end
+
+local appdata=os.getenv("APPDATA")
+local temp=os.getenv("TEMP") or os.getenv("TMP")
+if not appdata or not temp then error("APPDATA or TEMP is unavailable") end
+local shadLog=appdata..[[\shadPS4\log\shad_log.txt]]
+local output=temp..[[\bb-inventory-geometry.txt]]
+local grantLog=temp..[[\native-grant.log]]
+
+local f=assert(io.open(shadLog,"r"),"Could not open "..shadLog)
+local pending,loggedBase=false,nil
+for line in f:lines() do
+  if line:find("Loading module eboot.bin",1,true) then
+    pending=true
+  elseif pending then
+    local hex=line:match("base_virtual_addr%s+%.+:%s+0x([0-9A-Fa-f]+)")
+    if hex then loggedBase=tonumber(hex,16); pending=false end
+  end
+end
+f:close()
+if not loggedBase then error("Could not resolve the current eboot base from "..shadLog) end
+
+local function validBase(candidate)
+  if not candidate then return false end
+  local bytes=readBytes(candidate+0x14D9575,7,true)
+  if not bytes or #bytes~=7 then return false end
+  -- The grant table replaces this epilogue with E9 rel32 followed by a
+  -- two-byte NOP. CE may encode that NOP as 66 90 rather than 90 90.
+  return bytes[1]==0xE9
+end
+
+-- The shad log can retain a later stale launch record. Prefer the grant
+-- harness's READY record for CE's currently attached PID.
+local harnessBase=nil
+local grant=io.open(grantLog,"r")
+if grant then
+  for line in grant:lines() do
+    local linePid=line:match("AUTO V5 READY.-pid=(%d+)")
+    local hex=line:match("AUTO V5 READY.-ebootBase=0x([0-9A-Fa-f]+)")
+    if linePid and hex and tonumber(linePid)==pid then
+      harnessBase=tonumber(hex,16)
+    end
+  end
+  grant:close()
+end
+
+local base=validBase(harnessBase) and harnessBase
+  or (validBase(loggedBase) and loggedBase or nil)
+if not base then
+  local harnessText=harnessBase and string.format("0x%X",harnessBase) or "missing"
+  error(string.format("No live hooked eboot base matched PID %d (harness=%s shad=0x%X)",
+    pid,harnessText,loggedBase))
+end
+
+local inventory=readQword(base+0x50DBE10)
+if not inventory or inventory==0 then
+  error("Grant harness has not captured an inventory pointer; fire one Bullet first")
+end
+
+local capacityA=readInteger(inventory+0x10)
+local capacityB=readInteger(inventory+0x14)
+local split=readInteger(inventory+0x24)
+local last=readInteger(inventory+0x88)
+local primary=readQword(inventory+0x58)
+local secondary=readQword(inventory+0x48)
+if not capacityA or not capacityB or not split or not last or not primary or not secondary
+   or capacityA<0 or capacityA>4096 or capacityB<0 or capacityB>4096
+   or split<0 or split>4096 or last<0 or last>4096 then
+  error("Inventory geometry was unreadable or outside safe bounds")
+end
+
+local out=assert(io.open(output,"w"))
+out:write(string.format("pid=%d\neboot_base=0x%X\ninventory=0x%X\ncapacity_a=%d\ncapacity_b=%d\nsplit=%d\nlast=%d\nprimary=0x%X\nsecondary=0x%X\n",
+  pid,base,inventory,capacityA,capacityB,split,last,primary,secondary))
+
+local targets=0
+local collisions=0
+local function dumpBank(name,address,count)
+  out:write("[",name,"]\n")
+  for slot=0,count-1 do
+    local entry=address+slot*0x10
+    local raw=readInteger(entry) or 0
+    local normalized=readInteger(entry+4) or 0
+    local quantity=readInteger(entry+8) or 0
+    local flags=readInteger(entry+0xC) or 0
+    local low=normalized%0x10000000
+    if raw~=0 then
+      out:write(string.format("%s[%d]=entry:0x%X raw:0x%08X normalized:0x%08X quantity:%d flags:0x%08X\n",
+        name,slot,entry,raw,normalized,quantity,flags))
+    end
+    if normalized==0x400003E8 or normalized==0x40000384 then
+      targets=targets+1
+      out:write(string.format("CANONICAL_TARGET %s[%d] low_id=0x%03X normalized=0x%08X quantity=%d\n",
+        name,slot,low,normalized,quantity))
+    elseif low==0x3E8 or low==0x384 then
+      collisions=collisions+1
+      out:write(string.format("LOW_ID_COLLISION %s[%d] raw=0x%08X normalized=0x%08X quantity=%d\n",
+        name,slot,raw,normalized,quantity))
+    end
+  end
+end
+
+-- Scan each bank by its own bounded capacity, deliberately independent of the
+-- current harness's split/last traversal.
+dumpBank("primary",primary,split)
+local secondaryActive=last-split+1
+if secondaryActive<0 then secondaryActive=0 end
+local secondaryProbe=math.min(capacityB,math.max(secondaryActive,32))
+dumpBank("secondary",secondary,secondaryProbe)
+out:write("target_count=",tostring(targets),"\n")
+out:write("low_id_collision_count=",tostring(collisions),"\n")
+out:close()
+showMessage(string.format("Read-only inventory report complete: %d canonical targets, %d low-ID collisions\n%s",targets,collisions,output))
+end,debug.traceback)
+if not ok then
+  showMessage("Bloodborne read-only inventory diagnostic failed:\n"..tostring(detail))
+end
+]]></LuaScript>
+</CheatTable>

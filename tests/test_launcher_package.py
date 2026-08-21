@@ -102,6 +102,15 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn("-p:PublishSingleFile=true", script)
         self.assertIn('includes_game_files = $false', script)
         self.assertIn("package-manifest.json", script)
+        self.assertIn("[Text.UTF8Encoding]::new($false)", script)
+        suppression_builder = (self.repo / "tools" / "build_vanilla_suppression.ps1").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("[Text.UTF8Encoding]::new($false)", suppression_builder)
+        self.assertNotIn(
+            "ConvertTo-Json | Set-Content -LiteralPath $Manifest -Encoding utf8",
+            suppression_builder,
+        )
         miner = (self.repo / "tools" / "msbb_miner" / "Program.cs").read_text(encoding="utf-8")
         self.assertIn('.EndsWith(".msb.dcx"', miner)
 
