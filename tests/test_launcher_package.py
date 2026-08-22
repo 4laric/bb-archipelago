@@ -105,6 +105,11 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn('Join-Path $tools "bb-ap-client.exe"', script)
         self.assertIn('path = "tools/bb-ap-client.exe"', script)
         self.assertIn("$clientRecord", script)
+        driver = (self.repo / "build.ps1").read_text(encoding="utf-8")
+        self.assertIn("[switch]$Package", driver)
+        self.assertIn("build_vanilla_suppression.ps1", driver)
+        self.assertIn("build_launcher.ps1", driver)
+        self.assertIn("cargo build --release -p bb-archipelago", driver)
         self.assertIn("[Text.UTF8Encoding]::new($false)", script)
         suppression_builder = (self.repo / "tools" / "build_vanilla_suppression.ps1").read_text(
             encoding="utf-8"

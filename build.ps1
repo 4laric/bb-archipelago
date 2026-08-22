@@ -7,6 +7,9 @@
 #   .\build.ps1 -Apworld       # package worlds\bloodborne -> build\bloodborne.apworld
 #   .\build.ps1 -All           # Data + Test + Preflight + Apworld
 #   .\build.ps1 -Clean         # remove only build\ outputs
+#   .\build.ps1 -Package -SoulsFormatsNextRoot C:\path\to\SoulsFormatsNEXT -ClientRepo C:\path\to\from-software-archipelago-clients
+#                              # full player build: AP client + suppression binder + apworld + launcher package
+#                              # (-ClientPath skips the cargo build; an existing suppression binder is kept)
 #
 # The large extracted game tree is a research/build input and is never included in the apworld.
 
@@ -18,6 +21,10 @@ param(
     [switch]$Apworld,
     [switch]$Clean,
     [switch]$All,
+    [switch]$Package,
+    [string]$SoulsFormatsNextRoot = $env:SOULSFORMATS_NEXT,
+    [string]$ClientRepo,
+    [string]$ClientPath,
     [string]$Python = "python"
 )
 
@@ -68,8 +75,12 @@ if ($All) {
     $Apworld = $true
 }
 
-if (-not ($Test -or $Data -or $Preflight -or $Apworld -or $Clean)) {
-    Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 9 |
+if ($Package) {
+    $Apworld = $true
+}
+
+if (-not ($Test -or $Data -or $Preflight -or $Apworld -or $Clean -or $Package)) {
+    Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 12 |
         ForEach-Object { $_ -replace '^#\s?', '' }
     return
 }
@@ -201,4 +212,41 @@ if ($Apworld) {
         $zip.Dispose()
     }
     Write-Host "  -> $outFile ($($files.Count) files)" -ForegroundColor Green
+}
+
+if ($Package) {
+    Step "Player package: resolving inputs"
+    if (-not $SoulsFormatsNextRoot) {
+        throw "Pass -SoulsFormatsNextRoot or set SOULSFORMATS_NEXT."
+    }
+    Require-File (Join-Path $SoulsFormatsNextRoot "SoulsFormats\SoulsFormats.csproj") "SoulsFormatsNEXT checkout"
+
+    if (-not $ClientPath) {
+        if (-not $ClientRepo) {
+            throw "Pass -ClientRepo (a from-software-archipelago-clients checkout) or -ClientPath (a built bb-ap-client.exe)."
+        }
+        Require-File (Join-Path $ClientRepo "Cargo.toml") "from-software-archipelago-clients checkout"
+        Step "Player package: building the AP client (cargo release)"
+        & cargo build --release -p bb-archipelago --manifest-path (Join-Path $ClientRepo "Cargo.toml")
+        if ($LASTEXITCODE -ne 0) { throw "cargo build failed (exit $LASTEXITCODE)" }
+        $ClientPath = Join-Path $ClientRepo "target\release\bb-ap-client.exe"
+    }
+    Require-File $ClientPath "build the client with -ClientRepo or pass -ClientPath"
+
+    Step "Player package: installing packaging requirements"
+    Invoke-Python @("-m", "pip", "install", "-q", "-r", (Join-Path $Repo "packaging\requirements-build.txt"))
+
+    $suppressionOut = Join-Path $Repo "work\vanilla-suppression-build"
+    if (Test-Path -LiteralPath (Join-Path $suppressionOut "build-manifest.json") -PathType Leaf) {
+        Write-Host "  suppression binder kept: $suppressionOut (remove it to rebuild)" -ForegroundColor Green
+    } else {
+        Step "Player package: building the vanilla suppression binder"
+        & (Join-Path $Repo "tools\build_vanilla_suppression.ps1") `
+            -SoulsFormatsNextRoot $SoulsFormatsNextRoot -OutputRoot $suppressionOut -Apply
+    }
+
+    Step "Player package: building the launcher package"
+    & (Join-Path $Repo "packaging\build_launcher.ps1") `
+        -SoulsFormatsNextRoot $SoulsFormatsNextRoot -ClientPath $ClientPath
+    Write-Host "  player build complete: $BuildDir" -ForegroundColor Green
 }

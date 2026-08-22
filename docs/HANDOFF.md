@@ -49,7 +49,20 @@ only code, reviewed derived facts, and reproducible fixtures.
 
 ## Build and generate
 
-World repository:
+World repository — one command builds everything a player machine needs
+(AP client via cargo, vanilla suppression binder, `bloodborne.apworld`, and
+the launcher package):
+
+```powershell
+.\build.ps1 -Package -SoulsFormatsNextRoot C:\path\to\SoulsFormatsNEXT `
+  -ClientRepo C:\path\to\from-software-archipelago-clients
+```
+
+`-ClientPath C:\path\to\bb-ap-client.exe` skips the cargo build. An existing
+`work\vanilla-suppression-build` is kept (remove it to rebuild the binder);
+`SOULSFORMATS_NEXT` works instead of the switch. Outputs land in `build\`:
+`bloodborne.apworld` and `BloodborneAPLauncher-win-x64.zip`. For development
+iteration, the individual stages remain available:
 
 ```powershell
 python -m unittest discover -s tests -v
