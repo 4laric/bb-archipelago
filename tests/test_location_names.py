@@ -24,8 +24,45 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
+TOTAL_TABLE_ROWS = 658  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 51
+
+# Non-catalog checks the table names: boss defeats and EMEVD script awards
+# whose check flag is committed in runtime_bindings.py. Bosses whose defeat
+# flag is not yet mapped stay named inline in data.py — no invented keys.
+SCRIPTED_CHECK_FLAGS = {
+    "12411700",   # boss_cleric_beast
+    "12411800",   # boss_father_gascoigne
+    "52410990",   # pickup_cainhurst_summons
+    "52420900",   # script_award_orphanage_key
+    "50000100",   # pickup_eye_of_blood_drunk_hunter
+    "9470",       # pickup_eye_pendant
+    "53502000",   # pickup_laurences_skull
+}
+
+# data.py checks that draw their name from the table: key -> the flag its
+# location_name(...) call must resolve to. The join is witnessed both ways:
+# the name must agree byte-for-byte, and the committed runtime binding for
+# the key must carry the same flag.
+DATA_PY_TABLED_CHECKS = {
+    "boss_cleric_beast": 12411700,
+    "boss_father_gascoigne": 12411800,
+    "pickup_cainhurst_summons": 52410990,
+    "pickup_upper_cathedral_key": 52800290,
+    "script_award_orphanage_key": 52420900,
+    "pickup_eye_of_blood_drunk_hunter": 50000100,
+    "pickup_eye_pendant": 9470,
+    "pickup_laurences_skull": 53502000,
+    "treasure_radiant_sword_hunter_badge": 52400480,
+    "treasure_old_hunter_bone": 52110000,
+    "treasure_rune_workshop_tool": 52200360,
+    "treasure_augur_of_ebrietas": 53200600,
+    "treasure_lecture_theatre_key": 53200720,
+    "treasure_messengers_gift": 53300330,
+    "treasure_executioners_gloves": 52500250,
+    "treasure_cosmic_eye_watcher_badge": 52420270,
+}
 
 # Published slice names that still carry a "(Lot NNN)" research placeholder.
 # The #75 rename landed: every placeholder row now publishes its table name.
@@ -75,12 +112,42 @@ class LocationNameTableTests(unittest.TestCase):
         catalog_flags = sorted(int(row["location_flag"]) for row in rows(CATALOG))
         self.assertEqual(TOTAL_CATALOG_ROWS, len(catalog_flags))
         named = sorted(int(row["location_flag"]) for row in rows(NAMES))
-        self.assertEqual(catalog_flags, named)
+        self.assertEqual(TOTAL_TABLE_ROWS, len(named))
+        # The table is exactly the catalog plus the witnessed scripted checks.
+        self.assertEqual(
+            sorted(catalog_flags + [int(flag) for flag in SCRIPTED_CHECK_FLAGS]),
+            named,
+        )
+
+    def test_data_py_tabled_names_agree(self):
+        from worlds.bloodborne.data import LOCATIONS
+        from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
+
+        names_by_flag = {int(row["location_flag"]): row["name"] for row in rows(NAMES)}
+        regions_by_flag = {int(row["location_flag"]): row["region"] for row in rows(NAMES)}
+        locations = {location.key: location for location in LOCATIONS}
+        mismatched = sorted(
+            f"{key}: {locations[key].name!r} != {names_by_flag.get(flag)!r}"
+            for key, flag in DATA_PY_TABLED_CHECKS.items()
+            if key not in locations
+            or locations[key].name != names_by_flag.get(flag)
+            or locations[key].region != regions_by_flag.get(flag)
+        )
+        self.assertEqual("", "; ".join(mismatched))
+        # The key -> flag join must match the committed runtime binding, or a
+        # rename in the table would silently pin to the wrong check.
+        bad_bindings = sorted(
+            f"{key}: binding {LOCATION_BINDINGS[key].event_flag} != {flag}"
+            for key, flag in DATA_PY_TABLED_CHECKS.items()
+            if key not in LOCATION_BINDINGS
+            or LOCATION_BINDINGS[key].event_flag != flag
+        )
+        self.assertEqual("", "; ".join(bad_bindings))
 
     def test_names_are_unique_nonempty_ascii(self):
         table = rows(NAMES)
         names = [row["name"].strip() for row in table]
-        self.assertEqual(TOTAL_CATALOG_ROWS, len(names))
+        self.assertEqual(TOTAL_TABLE_ROWS, len(names))
         self.assertEqual(len(names), len(set(names)))
         for name in names:
             self.assertTrue(name, "empty location name")

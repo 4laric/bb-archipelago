@@ -650,3 +650,10 @@ location_flag	region	name	basis
 53600570	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #6	map m36_00; category-8 blood gem (gem param 136006); specific gem name not in committed data; unestablished
 53600600	Underground Corpse Pile	Underground Corpse Pile - Blood Rock	map m36_00
 53600610	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #7	map m36_00; category-8 blood gem (gem param 136005); specific gem name not in committed data; unestablished
+12411700	Central Yharnam	Cleric Beast	published (data.py boss_cleric_beast); boss-defeat event flag committed in runtime_bindings.py
+12411800	Central Yharnam	Father Gascoigne	published (data.py boss_father_gascoigne); boss-defeat event flag committed in runtime_bindings.py
+52410990	Iosefka's Clinic	Iosefka's Clinic - Cainhurst Summons	published (data.py pickup_cainhurst_summons); EMEVD script-award flag committed in runtime_bindings.py
+52420900	Upper Cathedral Ward	Upper Cathedral Ward - Orphanage Key	published (data.py script_award_orphanage_key); EMEVD script-award flag committed in runtime_bindings.py
+50000100	Hunter's Dream	Hunter's Dream - Eye of a Blood-drunk Hunter	published (data.py pickup_eye_of_blood_drunk_hunter); EMEVD script-award flag committed in runtime_bindings.py
+9470	Hunter's Nightmare	Hunter's Nightmare - Eye Pendant	published (data.py pickup_eye_pendant); EMEVD script-award flag committed in runtime_bindings.py
+53502000	Research Hall	Research Hall - Laurence's Skull	published (data.py pickup_laurences_skull); EMEVD script-award flag committed in runtime_bindings.py
