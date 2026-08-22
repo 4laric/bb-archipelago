@@ -194,6 +194,7 @@ if ($Apworld) {
     if (Test-Path -LiteralPath $outFile) {
         Remove-Item -LiteralPath $outFile -Force
     }
+    Add-Type -AssemblyName System.IO.Compression | Out-Null
     Add-Type -AssemblyName System.IO.Compression.FileSystem | Out-Null
     $source = (Resolve-Path -LiteralPath $WorldDir).Path.TrimEnd('\')
     $files = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object {
