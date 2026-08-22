@@ -7,7 +7,13 @@ import unittest
 from pathlib import Path
 
 from bb_launcher.core import OWNER_NAME, SUPPRESSION_PATH, ValidationError
-from bb_launcher.ui import FIELD_DEFINITIONS, request_enemy_seed, settings_from_fields
+from bb_launcher.ui import (
+    FIELD_DEFINITIONS,
+    default_field_values,
+    derive_game_root_for_shad,
+    request_enemy_seed,
+    settings_from_fields,
+)
 from bb_launcher.workflow import (
     EnemizerBuild,
     EnemizerOptions,
@@ -385,6 +391,53 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("ap_server", source)
         self.assertIn("generate_process_plan", source)
         self.assertIn('application_root() / "tools" / "bb-ap-client.exe"', source)
+
+    def test_ui_contract_has_a_bloodborne_theme(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn("_apply_theme", source)
+        self.assertIn('theme_use("clam")', source)
+        self.assertIn('#8f1d24', source)  # blood accent
+        self.assertIn('#c2a14d', source)  # lamp-light gold
+        self.assertIn('#0d1117', source)  # night background
+
+    def test_default_field_values_fill_only_verified_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            build = root / "work" / "vanilla-suppression-build"
+            build.mkdir(parents=True)
+            binder = build / "gameparam.parambnd.dcx"
+            manifest = build / "build-manifest.json"
+            binder.write_bytes(b"binder")
+            manifest.write_bytes(b"{}")
+
+            values = default_field_values(
+                state_root=root / "state", package_roots=(root,)
+            )
+            self.assertEqual(values["cache_root"], str(root / "state" / "seeds"))
+            self.assertEqual(values["suppression_binder"], str(binder))
+            self.assertEqual(values["suppression_manifest"], str(manifest))
+
+            empty = root / "elsewhere"
+            empty.mkdir()
+            values = default_field_values(
+                state_root=root / "state", package_roots=(empty,)
+            )
+            self.assertEqual(values["cache_root"], str(root / "state" / "seeds"))
+            self.assertNotIn("suppression_binder", values)
+            self.assertNotIn("suppression_manifest", values)
+
+    def test_derive_game_root_from_the_shad_executable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shad = root / "shadPS4.exe"
+            shad.write_bytes(b"shad")
+            install = make_install(root / "games" / "bb")
+            derived = derive_game_root_for_shad(shad)
+            self.assertEqual(derived, install.root)
+
+            empty = root / "empty"
+            empty.mkdir()
+            self.assertIsNone(derive_game_root_for_shad(empty / "shadPS4.exe"))
 
     def test_launch_vanilla_resolves_before_moving_the_overlay(self):
         toolchain = FakeToolchain()
