@@ -20,18 +20,29 @@ NAMES = ROOT / "worlds" / "bloodborne" / "location_names.tsv"
 SHIPPED = ROOT / "worlds" / "bloodborne" / "fixed_locations.tsv"
 DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 
-# Witnessed populations, not targets. If the catalog gains or loses MVP
-# candidates, or the slice ships another named MVP row, these numbers move in
+# Witnessed populations, not targets. If the catalog gains or loses rows or
+# MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
+TOTAL_CATALOG_ROWS = 651
 MVP_CANDIDATES = 83
-SHIPPED_MVP_ROWS = 6
+SHIPPED_NAMED_ROWS = 51
 
 # Published slice names that still carry a "(Lot NNN)" research placeholder.
 # The table name for these flags is the proposed replacement; the swap itself
 # is the rename decision in #75. A flag may only sit here while its published
 # name is lot-suffixed — once the rename lands or is rejected, the row leaves
-# this set and ordinary agreement applies.
-PENDING_PLACEHOLDER_RENAMES = {"52410610"}  # Central Yharnam - Hunter Set
+# this set and ordinary agreement applies. This is the complete inventory:
+# every shipped placeholder row, now that the table covers the full catalog.
+PENDING_PLACEHOLDER_RENAMES = {
+    "52410110", "52410120", "52410130", "52410140", "52410150", "52410160",
+    "52410170", "52410180", "52410190", "52410200", "52410210", "52410220",
+    "52410240", "52410250", "52410260", "52410270", "52410280", "52410295",
+    "52410310", "52410330", "52410340", "52410360", "52410370", "52410380",
+    "52410390", "52410400", "52410430", "52410440", "52410450", "52410470",
+    "52410480", "52410490", "52410510", "52410530", "52410540", "52410560",
+    "52410570", "52410590", "52410600", "52410610", "52410620", "52410630",
+    "52410640", "52410650", "52410920",
+}
 
 
 def rows(path: Path) -> list[dict[str, str]]:
@@ -65,13 +76,20 @@ class LocationNameTableTests(unittest.TestCase):
 
     def test_every_mvp_candidate_is_named_exactly_once(self):
         named = [int(row["location_flag"]) for row in rows(NAMES)]
-        self.assertEqual(sorted(mvp_flags()), sorted(named))
         self.assertEqual(len(named), len(set(named)))
+        missing = sorted(set(mvp_flags()) - set(named))
+        self.assertEqual("", "; ".join(str(flag) for flag in missing))
+
+    def test_every_catalog_row_is_named(self):
+        catalog_flags = sorted(int(row["location_flag"]) for row in rows(CATALOG))
+        self.assertEqual(TOTAL_CATALOG_ROWS, len(catalog_flags))
+        named = sorted(int(row["location_flag"]) for row in rows(NAMES))
+        self.assertEqual(catalog_flags, named)
 
     def test_names_are_unique_nonempty_ascii(self):
         table = rows(NAMES)
         names = [row["name"].strip() for row in table]
-        self.assertEqual(MVP_CANDIDATES, len(names))
+        self.assertEqual(TOTAL_CATALOG_ROWS, len(names))
         self.assertEqual(len(names), len(set(names)))
         for name in names:
             self.assertTrue(name, "empty location name")
@@ -98,7 +116,7 @@ class LocationNameTableTests(unittest.TestCase):
         shipped = [
             row for row in rows(SHIPPED) if row["location_flag"] in names_by_flag
         ]
-        self.assertEqual(SHIPPED_MVP_ROWS, len(shipped))
+        self.assertEqual(SHIPPED_NAMED_ROWS, len(shipped))
         mismatched = sorted(
             f"{row['key']}: {row['name']!r} != {names_by_flag[row['location_flag']]!r}"
             for row in shipped
@@ -121,6 +139,14 @@ class LocationNameTableTests(unittest.TestCase):
         for flag in pending:
             self.assertIn("(Lot ", shipped_by_flag[flag])
             self.assertNotIn("(Lot ", names_by_flag[flag])
+        # And the other direction: every shipped placeholder that the table
+        # names must be listed here, so the #75 inventory cannot drift.
+        lot_suffixed = sorted(
+            flag
+            for flag, name in shipped_by_flag.items()
+            if "(Lot " in name and flag in names_by_flag
+        )
+        self.assertEqual(lot_suffixed, sorted(PENDING_PLACEHOLDER_RENAMES))
 
 
 if __name__ == "__main__":

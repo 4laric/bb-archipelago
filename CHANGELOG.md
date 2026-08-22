@@ -17,6 +17,16 @@ under `Unreleased` and move into a dated version section when released.
   "death", and classifies survivors as reload-persistent counters or transient
   edges. A write-breakpoint skeleton attributes the writer. No candidate is
   claimed as the signal until the live session validates it.
+- The location-name table now covers the full fixed-treasure catalog: all 651
+  rows of `research/catalog/fixed_location_catalog.tsv` are named in
+  `worlds/bloodborne/location_names.tsv`, and tests enforce full-catalog
+  completeness, so a new catalog row fails CI until it is named. Names past the
+  MVP set rest on the committed map, event-tag, coordinate, and item-category
+  data; spots the catalog cannot distinguish carry `#N` ordinals marked
+  `unestablished`, and 60 rows whose items have no committed English name
+  (category-8 blood gems and two nameless goods) are named at category level
+  with the gap recorded in `basis`. Wiring the table into generation remains
+  follow-up scope (#82).
 - Location names are now a declared contract ahead of the first numbered
   release that freezes them: `worlds/bloodborne/location_names.tsv` names all
   83 MVP-candidate fixed treasures, `docs/LOCATION-NAMING.md` defines the
