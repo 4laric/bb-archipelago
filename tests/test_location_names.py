@@ -86,6 +86,8 @@ DATA_PY_TABLED_CHECKS = {
     "treasure_lecture_theatre_key": 53200720,
     "treasure_messengers_gift": 53300330,
     "treasure_executioners_gloves": 52500250,
+    "treasure_underground_jail_chunk": 53500630,
+    "treasure_underground_cell_inner_chamber_key": 50002360,
     "treasure_cosmic_eye_watcher_badge": 52420270,
 }
 

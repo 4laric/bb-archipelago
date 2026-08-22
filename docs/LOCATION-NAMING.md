@@ -91,10 +91,11 @@ rather than runtime evidence. The `basis` column says which:
 - #75 is decided and landed: the 45 shipped `(Lot NNN)` placeholders publish
   their table names, and this table feeds `tools/build_central_yharnam_slice.py`.
   Quantities follow the owner ruling: `x1` is dropped, `xN` for N > 1 stays.
-- #82 tracks the rest: the boss-defeat flags are mapped and the twelve boss
-  names are table rows now, so what remains is the `53500630` divergence —
-  data.py names that check "Underground Corpse Pile - Underground Jail Blood
-  Stone Chunk" while the catalog places it on m35_00 (Research Hall, event
-  tag 地下牢03). Fixing it touches the logic region, which is owner-decision
-  scope, not a naming edit. `interaction_laurences_skull` also stays inline:
-  it is not a boss-defeat check and its trigger flag is not yet evidenced.
+- #82 is decided and landed: the boss-defeat flags are mapped (#86) and the
+  `53500630` divergence is resolved by owner ruling — the check is Research
+  Hall's cell block (event tag 地下牢03, same 地下牢NN family as the Fist of
+  Gratia row), renamed "Research Hall - Blood Stone Chunk (underground cell)"
+  and moved to the Research Hall region; the Inner Chamber Key treasure
+  (50002360) keeps the Underground Corpse Pile contributing a check. Only
+  `interaction_laurences_skull` stays inline: it is not a boss-defeat check
+  and its trigger flag is not yet evidenced.

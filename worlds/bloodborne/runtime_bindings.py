@@ -314,6 +314,9 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "treasure_underground_jail_chunk": RuntimeLocationBinding(
         53500630, "MSB treasure m35_00_00_00 + ItemLotParam 3500630 acquisition flag",
         3500630, "treasure", "m35_00_00_00", 4, 3020),
+    "treasure_underground_cell_inner_chamber_key": RuntimeLocationBinding(
+        50002360, "MSB treasure m36_00_00_00 + ItemLotParam 43221 acquisition flag",
+        43221, "treasure", "m36_00_00_00", 4, 4015),
 }
 
 for location in FIXED_LOCATIONS:

@@ -93,6 +93,16 @@ under `Unreleased` and move into a dated version section when released.
   name to Iosefka's Clinic on the MSB warp-anchor evidence; keys and network
   IDs are unchanged. `location_names.tsv` now feeds the slice builder, so the
   table is the single source for those names.
+- The check published as "Underground Corpse Pile - Underground Jail Blood
+  Stone Chunk" is renamed "Research Hall - Blood Stone Chunk (underground
+  cell)" and moves to the Research Hall region (#82 ruling): the flag 53500630
+  sits in m35_00 and its event tag 地下牢03 is the Research Hall cell block,
+  the same 地下牢NN family as the Fist of Gratia row. There is no Blood Stone
+  Chunk treasure in the Underground Corpse Pile; the chunk near Ludwig's arena
+  is a titanite-lizard drop, a different thing. The Underground Corpse Pile
+  region keeps a check through the newly authored Inner Chamber Key treasure
+  (50002360, event tag 宝死体_地下牢の鍵), which joins the unpublished model
+  pool — the Central Yharnam network slice is unchanged.
 
 ### Fixed
 

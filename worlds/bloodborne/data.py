@@ -130,8 +130,7 @@ LOCATIONS = (
     # Scripted checks with committed award flags (runtime_bindings.py); names
     # come from the location-name table (docs/LOCATION-NAMING.md). Boss checks
     # above do the same, keyed by their mapped boss-defeat flags. Only
-    # interaction_laurences_skull (no committed flag) and
-    # treasure_underground_jail_chunk (name/region divergence, #82) stay inline.
+    # interaction_laurences_skull (no committed flag) stays inline.
     Location("pickup_cainhurst_summons", location_name(52410990), "Iosefka's Clinic"),
     Location("pickup_upper_cathedral_key", location_name(52800290), "Yahar'gul"),
     Location("script_award_orphanage_key", location_name(52420900), "Upper Cathedral Ward"),
@@ -156,7 +155,11 @@ LOCATIONS = (
     Location("treasure_lecture_theatre_key", location_name(53200720), "Lecture Building 2F"),
     Location("treasure_messengers_gift", location_name(53300330), "Nightmare Frontier"),
     Location("treasure_executioners_gloves", location_name(52500250), "Castle Cainhurst"),
-    Location("treasure_underground_jail_chunk", "Underground Corpse Pile - Underground Jail Blood Stone Chunk",
+    Location("treasure_underground_jail_chunk", location_name(53500630), "Research Hall"),
+    # Keeps the Underground Corpse Pile contributing a check now that the jail
+    # chunk is ruled Research Hall (#82); the Inner Chamber Key is the pile's
+    # evidenced key-item treasure (event tag 宝死体_地下牢の鍵).
+    Location("treasure_underground_cell_inner_chamber_key", location_name(50002360),
              "Underground Corpse Pile"),
     Location("treasure_cosmic_eye_watcher_badge", location_name(52420270),
              "Upper Cathedral Ward", Rule.all("orphanage_key")),
