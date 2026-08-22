@@ -20,7 +20,9 @@ from .core import (
     SeedIdentity,
     ValidationError,
     activate_build,
+    deactivate_overlay,
     launch_processes,
+    restore_previous_build,
     sha256_file,
     validate_processes,
 )
@@ -504,6 +506,7 @@ class LauncherWorkflow:
         settings: LauncherSettings,
         options: EnemizerOptions,
         *,
+        force_rebuild: bool = False,
         progress: Progress = lambda _message: None,
         process_is_running: Callable[[], bool] | None = None,
     ) -> WorkflowResult:
@@ -559,6 +562,18 @@ class LauncherWorkflow:
         )
         cache = SeedCache(settings.cache_root)
         existing = cache.path_for(identity.cache_key)
+        if force_rebuild and existing.exists():
+            # Rebuild Seed evicts only the exact hash-addressed directory for
+            # this identity: it must sit directly beneath the cache root and
+            # be named by the key, the same guard shape as temp-build cleanup.
+            resolved_existing = existing.resolve()
+            if (
+                resolved_existing.parent != cache.root
+                or resolved_existing.name != identity.cache_key
+            ):
+                raise WorkflowError(f"refusing to evict unexpected cache path: {resolved_existing}")
+            progress("Rebuilding: evicting the verified cache for this seed...")
+            shutil.rmtree(resolved_existing)
         enemizer: EnemizerBuild | None = None
         temporary: Path | None = None
         if existing.exists():
@@ -646,3 +661,56 @@ class LauncherWorkflow:
             client_config=paths.config,
             ledger=paths.ledger,
         )
+
+    def launch_vanilla(
+        self,
+        settings: LauncherSettings,
+        *,
+        progress: Progress = lambda _message: None,
+        process_is_running: Callable[[], bool] | None = None,
+    ) -> tuple[int | None, ...]:
+        """Bypass the overlay and launch the plan without any AP component.
+
+        Deactivates only a verified launcher-owned overlay (cached builds stay
+        available) and launches the process plan under the vanilla rule: any
+        client placeholder in the plan fails closed, because a vanilla launch
+        has no client runtime configuration to substitute.
+        """
+
+        progress("Validating CUSA03173 01.09 and launch components...")
+        install = GameInstall.from_root(settings.game_root)
+        plan = load_process_plan(settings.process_plan)
+        validate_processes(plan.processes)
+        # Resolve before any mutation: a plan that still carries client
+        # placeholders must fail closed with the overlay untouched.
+        resolved = resolve_process_plan(plan, None)
+        progress("Moving the launcher-owned overlay out of the search path...")
+        disabled = deactivate_overlay(install, process_is_running=process_is_running)
+        if disabled is None:
+            progress("No launcher-owned overlay was active; launching vanilla.")
+        else:
+            progress(f"Overlay preserved at {disabled}")
+        progress("Starting configured processes...")
+        started = self.process_launcher(resolved.processes)
+        progress("Vanilla Bloodborne launch started.")
+        return tuple(getattr(process, "pid", None) for process in started)
+
+    def restore_previous(
+        self,
+        settings: LauncherSettings,
+        *,
+        progress: Progress = lambda _message: None,
+        process_is_running: Callable[[], bool] | None = None,
+    ) -> str:
+        """Reactivate the previous cached seed through a full transaction."""
+
+        progress("Validating CUSA03173 01.09...")
+        install = GameInstall.from_root(settings.game_root)
+        owner = restore_previous_build(
+            install,
+            SeedCache(settings.cache_root),
+            process_is_running=process_is_running,
+        )
+        key = str(owner["cache_key"])
+        progress(f"Previous seed {key[:12]} is active again.")
+        return key
