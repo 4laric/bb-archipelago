@@ -27,7 +27,8 @@ from .core import (
     validate_processes,
 )
 from .client_config import default_shad_log, default_state_root, write_client_runtime_config
-from .workflow import load_process_plan, resolve_process_plan
+from .plan import DEFAULT_SERVER, DEFAULT_SHAD_BUILD, generate_process_plan, write_process_plan
+from .workflow import _request_identity, load_process_plan, resolve_process_plan
 
 
 def _json_file(path: str | Path, label: str) -> dict[str, Any]:
@@ -110,6 +111,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="build-manifest.json of the seed's suppression binder (recorded in the client config)",
     )
     run.add_argument("--shad-log", help="shadPS4 log path recorded in the client config")
+
+    plan = commands.add_parser("plan", help="generate a hash-pinned process plan (#65)")
+    plan.add_argument("--output", required=True, help="where to write the process plan JSON")
+    plan.add_argument("--shad", required=True, help="shadPS4 executable to pin")
+    plan.add_argument("--client", required=True, help="AP client executable to pin")
+    plan.add_argument("--ce", help="Cheat Engine executable for the optional bridge")
+    plan.add_argument("--ce-table", help="CE grant table; required when --ce is given")
+    plan.add_argument("--server", default=DEFAULT_SERVER, help="Archipelago server address")
+    plan.add_argument("--shad-build", default=DEFAULT_SHAD_BUILD, help="shadPS4 build string")
+    plan.add_argument("--slot", help="AP slot name (defaults to the AP request's player_name)")
+    plan.add_argument("--runtime-build", help="runtime build string (defaults to the AP request's)")
+    plan.add_argument(
+        "--ap-request", help="AP enemizer request to derive the slot and runtime build from"
+    )
+    plan.add_argument("--force", action="store_true", help="overwrite an existing plan")
 
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
@@ -257,6 +273,48 @@ def main(argv: list[str] | None = None) -> int:
                         {"name": spec.name, "pid": getattr(process, "pid", None)}
                         for spec, process in zip(processes, started)
                     ],
+                }
+            )
+        elif args.command == "plan":
+            slot = args.slot
+            runtime_build = args.runtime_build
+            if args.ap_request is not None:
+                request = _request_identity(
+                    Path(args.ap_request).expanduser().resolve()
+                )
+                if slot is not None and slot != request["slot"]:
+                    raise ValidationError(
+                        f"--slot {slot!r} disagrees with the AP request "
+                        f"({request['slot']!r})"
+                    )
+                if runtime_build is not None and runtime_build != request["runtime_build"]:
+                    raise ValidationError(
+                        f"--runtime-build {runtime_build!r} disagrees with the AP request "
+                        f"({request['runtime_build']!r})"
+                    )
+                slot = slot or request["slot"]
+                runtime_build = runtime_build or request["runtime_build"]
+            if slot is None:
+                raise ValidationError("plan requires --slot or --ap-request")
+            if runtime_build is None:
+                raise ValidationError("plan requires --runtime-build or --ap-request")
+            if args.ce_table is not None and args.ce is None:
+                raise ValidationError("--ce-table requires --ce")
+            document = generate_process_plan(
+                shad_executable=args.shad,
+                client_executable=args.client,
+                ce_executable=args.ce,
+                ce_table=args.ce_table,
+                server=args.server,
+                shad_build=args.shad_build,
+                slot=slot,
+                runtime_build=runtime_build,
+            )
+            destination = write_process_plan(args.output, document, force=args.force)
+            _print(
+                {
+                    "path": str(destination),
+                    "processes": [record["name"] for record in document["processes"]],
                 }
             )
         elif args.command == "ui":

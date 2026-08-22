@@ -377,6 +377,15 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         for method in ("launch_vanilla", "restore_previous", "force_rebuild"):
             self.assertIn(method, source)
 
+    def test_ui_contract_can_generate_the_launch_plan(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn('text="Generate Launch Plan"', source)
+        self.assertIn('"shad_executable"', source)
+        self.assertIn('"ce_executable"', source)
+        self.assertIn("ap_server", source)
+        self.assertIn("generate_process_plan", source)
+        self.assertIn('application_root() / "tools" / "bb-ap-client.exe"', source)
+
     def test_launch_vanilla_resolves_before_moving_the_overlay(self):
         toolchain = FakeToolchain()
         launched: list[tuple[str, ...]] = []

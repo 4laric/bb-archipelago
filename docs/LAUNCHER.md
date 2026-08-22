@@ -67,6 +67,26 @@ python -m bb_launcher discover `
 python -m bb_launcher status --game-root C:\path\to\shad-games
 ```
 
+A process plan is generated, not hand-written. `python -m bb_launcher plan`
+pins each selected executable by SHA-256, derives the slot and runtime build
+from the seed's `.bbenemizer.json` request (`--ap-request`), and writes a
+`bb-launcher-process-plan-v1` document whose client arguments carry the
+`{runtime_config}` / `{ledger}` placeholders the launcher substitutes at
+launch — so the plan is portable across machines and sessions:
+
+```powershell
+python -m bb_launcher plan `
+  --output plan.json `
+  --shad C:\path\to\shadPS4.exe `
+  --client C:\path\to\bb-ap-client.exe `
+  --ap-request seed.bbenemizer.json
+```
+
+The client entry carries `--assume-correct-save`, the explicitly unsafe MVP
+mode, because real save identity is still #56 — generating the plan does not
+change that boundary. An existing plan is never overwritten without
+`--force`.
+
 ## Desktop Randomize & Launch
 
 Open the player-facing surface from a checkout with:
@@ -139,6 +159,14 @@ core operations as the CLI:
   again; without it, a matching cache is reused.
 - **Open Diagnostics** opens the launcher state root (client configs,
   per-session ledgers, bridge directory).
+- **Generate Launch Plan** writes a fresh hash-pinned process plan into the
+  launcher state root and selects it. It reads the slot and runtime build from
+  the selected AP request, pins the chosen `shadPS4.exe` and the packaged
+  `tools/bb-ap-client.exe` (plus the bundled CE grant table when a Cheat
+  Engine executable is selected), and uses the **Archipelago server** field
+  (default `localhost:38282`). Packaged players never hand-write the launch
+  plan; from a checkout, where no client is bundled, the CLI `plan` command
+  does the same job with `--client`.
 
 ## Windows package
 
@@ -156,6 +184,11 @@ self-contained single-file .NET publishes for the native tools. It includes the
 CE table and documentation, writes a SHA-256 `package-manifest.json`, and emits
 `build/BloodborneAPLauncher-win-x64.zip`. It never includes game or emulator
 files. `-SkipClient` exists for CI artifacts and is deliberately explicit.
+
+The manifest records the client explicitly: a `client` object naming
+`tools/bb-ap-client.exe` and its SHA-256 (`null` under `-SkipClient`), so a
+player or a support script can verify the exact client the package shipped
+without scanning the per-file list.
 
 A seed identity file has this shape:
 

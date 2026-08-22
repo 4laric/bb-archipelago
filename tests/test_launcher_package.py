@@ -102,6 +102,9 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn("-p:PublishSingleFile=true", script)
         self.assertIn('includes_game_files = $false', script)
         self.assertIn("package-manifest.json", script)
+        self.assertIn('Join-Path $tools "bb-ap-client.exe"', script)
+        self.assertIn('path = "tools/bb-ap-client.exe"', script)
+        self.assertIn("$clientRecord", script)
         self.assertIn("[Text.UTF8Encoding]::new($false)", script)
         suppression_builder = (self.repo / "tools" / "build_vanilla_suppression.ps1").read_text(
             encoding="utf-8"

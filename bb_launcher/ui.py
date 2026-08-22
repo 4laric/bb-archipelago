@@ -11,8 +11,9 @@ from typing import Any, Mapping
 
 from .client_config import default_state_root
 from .core import GameInstall, LauncherError, ValidationError
+from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from .readiness import format_readiness, gather_readiness
-from .resources import resource_root
+from .resources import application_root, resource_root
 from .workflow import (
     SETTINGS_FORMAT,
     EnemizerOptions,
@@ -31,6 +32,8 @@ FIELD_DEFINITIONS = (
     ("enemy_inventory", "Enemy inventory", "file"),
     ("soulsformats_next", "SoulsFormatsNEXT", "directory"),
     ("process_plan", "Launch plan", "file"),
+    ("shad_executable", "shadPS4.exe", "file"),
+    ("ce_executable", "Cheat Engine (optional)", "file"),
     ("cache_root", "Seed cache", "directory"),
     ("state_root", "Launcher state (optional)", "directory"),
     ("shad_log", "shadPS4 log (optional)", "file"),
@@ -82,6 +85,7 @@ class LauncherApp:
         self.fields = {name: tk.StringVar() for name, _label, _kind in FIELD_DEFINITIONS}
         self.randomize_enemies = tk.BooleanVar(value=True)
         self.enemy_seed = tk.StringVar()
+        self.ap_server = tk.StringVar()
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
@@ -128,6 +132,14 @@ class LauncherApp:
             button.grid(row=row, column=2, padx=(8, 0), pady=3)
             if name in {"map_studio_source", "enemy_inventory", "soulsformats_next"}:
                 self._enemy_widgets.extend((entry, button))
+        server_row = len(FIELD_DEFINITIONS)
+        ttk.Label(setup, text="Archipelago server").grid(
+            row=server_row, column=0, sticky="w", padx=(0, 8), pady=3
+        )
+        ttk.Entry(setup, textvariable=self.ap_server).grid(row=server_row, column=1, sticky="ew", pady=3)
+        ttk.Label(setup, text=f"default {DEFAULT_SERVER}").grid(
+            row=server_row, column=2, sticky="w", padx=(8, 0), pady=3
+        )
 
         options = ttk.LabelFrame(outer, text="Enemy randomization", padding=10)
         options.grid(row=3, column=0, sticky="nsew", pady=(12, 0))
@@ -202,6 +214,10 @@ class LauncherApp:
             actions, text="Open Diagnostics", command=self._open_diagnostics
         )
         self.diagnostics_button.grid(row=0, column=3)
+        self.plan_button = ttk.Button(
+            actions, text="Generate Launch Plan", command=self._generate_plan
+        )
+        self.plan_button.grid(row=0, column=4, padx=(8, 0))
         self._action_buttons = (
             self.vanilla_button,
             self.restore_button,
@@ -245,6 +261,9 @@ class LauncherApp:
                 **settings.as_dict(),
                 "randomize_enemies": self.randomize_enemies.get(),
                 "enemy_seed": self.enemy_seed.get().strip(),
+                "ap_server": self.ap_server.get().strip(),
+                "shad_executable": self.fields["shad_executable"].get().strip(),
+                "ce_executable": self.fields["ce_executable"].get().strip(),
                 "allow_tier_mixing": self.allow_tier_mixing.get(),
                 "preserve_locomotion": self.preserve_locomotion.get(),
             }
@@ -270,10 +289,51 @@ class LauncherApp:
                     self.fields[name].set(raw)
             self.randomize_enemies.set(bool(value.get("randomize_enemies", True)))
             self.enemy_seed.set(str(value.get("enemy_seed", "")))
+            self.ap_server.set(str(value.get("ap_server", "")))
             self.allow_tier_mixing.set(bool(value.get("allow_tier_mixing", False)))
             self.preserve_locomotion.set(bool(value.get("preserve_locomotion", False)))
         except (OSError, UnicodeError, json.JSONDecodeError, LauncherError) as exc:
             self.messagebox.showwarning("Saved setup ignored", str(exc), parent=self.root)
+
+    def _generate_plan(self) -> None:
+        try:
+            request_raw = self.fields["ap_request"].get().strip()
+            if not request_raw:
+                raise ValidationError("select the AP seed request first")
+            request = _request_identity(Path(request_raw).expanduser())
+            shad_raw = self.fields["shad_executable"].get().strip()
+            if not shad_raw:
+                raise ValidationError("select the shadPS4 executable")
+            client = application_root() / "tools" / "bb-ap-client.exe"
+            if not client.is_file():
+                raise ValidationError(
+                    f"the packaged AP client is missing: {client} "
+                    "(from a checkout, use: python -m bb_launcher plan --client ...)"
+                )
+            ce_raw = self.fields["ce_executable"].get().strip()
+            ce_table = None
+            if ce_raw:
+                table = application_root() / "tools" / "Bloodborne-native-item-grant-auto-v2.CT"
+                if not table.is_file():
+                    raise ValidationError(f"the bundled CE grant table is missing: {table}")
+                ce_table = table
+            state_raw = self.fields["state_root"].get().strip()
+            state_root = Path(state_raw).expanduser() if state_raw else default_state_root()
+            output = state_root / "process-plan.json"
+            document = generate_process_plan(
+                shad_executable=shad_raw,
+                client_executable=client,
+                ce_executable=ce_raw or None,
+                ce_table=ce_table,
+                server=self.ap_server.get().strip() or DEFAULT_SERVER,
+                slot=request["slot"],
+                runtime_build=request["runtime_build"],
+            )
+            write_process_plan(output, document, force=True)
+            self.fields["process_plan"].set(str(output))
+            self.status.set(f"Launch plan generated at {output}")
+        except (OSError, LauncherError) as exc:
+            self.messagebox.showerror("Could not generate launch plan", str(exc), parent=self.root)
 
     def _append_log(self, message: str) -> None:
         self.log.configure(state="normal")
