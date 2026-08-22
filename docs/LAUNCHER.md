@@ -84,7 +84,18 @@ The setup panel remembers paths under
 - the player's source `MapStudio` (automatically discovered in the Windows package);
 - for checkout-only development, an `msb_enemies.tsv` extraction and pinned
   SoulsFormatsNEXT checkout;
-- the hash-pinned process plan and external seed-cache directory.
+- the hash-pinned process plan and external seed-cache directory;
+- optionally, the launcher state root and shadPS4 log path (the portable
+  `%LOCALAPPDATA%`/`%APPDATA%` defaults fit a standard install).
+
+A **Session status** panel below the setup shows, read-only and on demand: the
+active overlay's seed/slot, cache key, suppression hash, and enemizer state;
+the session's client config and ledger paths with delivery progress (cursor,
+acknowledged count, watermark mode); and the CE bridge's reported
+harness/protocol/status. Missing pieces are normal states ("no state yet"), and
+conflicts or unreadable files appear as notes rather than errors. After every
+launch the panel refreshes and the log names the written config and ledger
+paths.
 
 **Randomize Enemies** is enabled by default. Its enemy seed comes from the AP
 request but can be overridden explicitly. **Allow tier mixing** and **Preserve
@@ -273,7 +284,8 @@ paths to the launched client.
 
 Those tests do not prove shadPS4 consumed an overlay. The issue's live canaries
 still need the real game: suppression alone, suppression plus seed-12345 maps,
-and overlay removal back to vanilla. The desktop UI must still surface the
-generated config/ledger paths and bridge/ledger readiness. A release package
+and overlay removal back to vanilla. The status panel reads overlay, ledger,
+and bridge state from disk; live AP connection state is still only visible in
+the client's own output. A release package
 must still be given the prebuilt native client; CI uses the explicitly labeled
 tools-only mode.

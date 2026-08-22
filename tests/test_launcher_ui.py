@@ -139,6 +139,8 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             map_studio_source=self.maps if enemy_inputs else None,
             enemy_inventory=self.inventory if enemy_inputs else None,
             soulsformats_next=self.souls if enemy_inputs else None,
+            state_root=self.root / "state",
+            shad_log=self.root / "shad_log.txt",
         )
 
     def test_process_plan_resolves_paths_and_pins_component_hashes(self):
@@ -359,6 +361,14 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn('text="Randomize & Launch"', source)
         self.assertIn("tools.bb_enemizer.cli", (self.repo / "bb_launcher" / "workflow.py").read_text())
         self.assertIn("BBEnemizerWriter.csproj", (self.repo / "bb_launcher" / "workflow.py").read_text())
+
+    def test_ui_contract_exposes_a_session_status_panel(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn('text="Session status"', source)
+        self.assertIn('text="Refresh"', source)
+        self.assertIn("gather_readiness", source)
+        self.assertIn("result.client_config", source)
+        self.assertIn("result.ledger", source)
 
 
 if __name__ == "__main__":
