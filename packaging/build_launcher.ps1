@@ -33,13 +33,32 @@ if (-not $SkipClient) {
 
 $package = Join-Path $resolvedOutput "BloodborneAPLauncher"
 $work = Join-Path $resolvedOutput "launcher-package-work"
+
+# A running launcher locks its bundled DLLs; deleting the old package then
+# fails with a bare access-denied. Name the culprit process instead.
+$running = @(Get-Process | Where-Object {
+    try {
+        $_.Path -and $_.Path.StartsWith($package, [StringComparison]::OrdinalIgnoreCase)
+    } catch {
+        $false
+    }
+})
+if ($running.Count) {
+    $names = ($running | ForEach-Object { "$($_.Name) (pid $($_.Id))" }) -join ", "
+    throw "Cannot rebuild the package while it is running: $names. Close the launcher and re-run."
+}
+
 foreach ($target in @($package, $work)) {
     $full = [IO.Path]::GetFullPath($target)
     if (-not ($full + [IO.Path]::DirectorySeparatorChar).StartsWith($allowedPrefix, [StringComparison]::OrdinalIgnoreCase)) {
         throw "Refusing to clean unexpected build path: $full"
     }
     if (Test-Path -LiteralPath $full) {
-        Remove-Item -LiteralPath $full -Recurse -Force
+        try {
+            Remove-Item -LiteralPath $full -Recurse -Force
+        } catch [UnauthorizedAccessException] {
+            throw "A file under $full is locked by another process (often a still-running launcher or a shell/console sitting in that directory). Close it and re-run. $($_.Exception.Message)"
+        }
     }
 }
 New-Item -ItemType Directory -Path $resolvedOutput -Force | Out-Null
