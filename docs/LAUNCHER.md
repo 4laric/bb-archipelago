@@ -96,7 +96,13 @@ python -m bb_launcher ui
 ```
 
 The setup panel remembers paths under
-`%LOCALAPPDATA%\BloodborneArchipelago\launcher-settings.json`. Select:
+`%LOCALAPPDATA%\BloodborneArchipelago\launcher-settings.json`. Fields the
+launcher can derive are filled automatically on empty: the seed cache
+defaults to a `seeds` directory under the launcher state root, the
+suppression binder/manifest pair is offered when
+`work\vanilla-suppression-build` exists beside the package or checkout, and
+choosing a `shadPS4.exe` derives the game root from its `games` sibling when
+that discovery is unambiguous. Select:
 
 - the seed's `.bbenemizer.json` request;
 - the validated shadPS4 game root;

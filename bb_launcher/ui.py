@@ -7,10 +7,10 @@ import json
 import os
 import threading
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Iterable, Mapping
 
 from .client_config import default_state_root
-from .core import GameInstall, LauncherError, ValidationError
+from .core import GameInstall, LauncherError, ValidationError, discover_game_install
 from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from .readiness import format_readiness, gather_readiness
 from .resources import application_root, resource_root
@@ -39,6 +39,52 @@ FIELD_DEFINITIONS = (
     ("shad_log", "shadPS4 log (optional)", "file"),
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
+
+# Bloodborne palette: hunter's-dream night blues, bone parchment text,
+# blood-red accents, lamp-light gold headers.
+THEME_BACKGROUND = "#0d1117"
+THEME_PANEL = "#161b24"
+THEME_BORDER = "#2a3140"
+THEME_FOREGROUND = "#d6d0bd"
+THEME_MUTED = "#8590a0"
+THEME_BLOOD = "#8f1d24"
+THEME_BLOOD_ACTIVE = "#b3242c"
+THEME_GOLD = "#c2a14d"
+
+
+def default_field_values(
+    *, state_root: Path, package_roots: Iterable[Path]
+) -> dict[str, str]:
+    """Values the launcher can derive for empty setup fields.
+
+    Only launcher-owned or verified-on-disk paths are offered: the seed cache
+    is always the state root's seeds directory, and the suppression pair is
+    offered only when `work/vanilla-suppression-build` actually exists beside
+    the package or the checkout. Anything else stays for the player to choose.
+    """
+    values = {"cache_root": str(state_root / "seeds")}
+    for root in package_roots:
+        build = root / "work" / "vanilla-suppression-build"
+        binder = build / "gameparam.parambnd.dcx"
+        manifest = build / "build-manifest.json"
+        if binder.is_file():
+            values.setdefault("suppression_binder", str(binder))
+        if manifest.is_file():
+            values.setdefault("suppression_manifest", str(manifest))
+    return values
+
+
+def derive_game_root_for_shad(shad_executable: Path | str) -> Path | None:
+    """Best-effort game install discovery from a chosen shadPS4.exe.
+
+    Looks in the executable's directory and its games/ sibling. Ambiguity and
+    absence both yield None: a wrong guess is worse than an empty field.
+    """
+    parent = Path(shad_executable).expanduser().resolve().parent
+    try:
+        return discover_game_install([parent / "games", parent]).root
+    except LauncherError:
+        return None
 
 
 def default_settings_path() -> Path:
@@ -96,10 +142,80 @@ class LauncherApp:
         root.minsize(820, 680)
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
+        self._apply_theme()
         self._build()
         self._load_settings_if_present()
+        self._apply_default_fields()
         self._toggle_enemy_fields()
         self.root.after(0, self._refresh_status)
+
+    def _apply_theme(self) -> None:
+        ttk = self.ttk
+        style = ttk.Style(self.root)
+        try:
+            style.theme_use("clam")
+        except self.tk.TclError:
+            pass
+        self.root.configure(bg=THEME_BACKGROUND)
+        style.configure(
+            ".",
+            background=THEME_BACKGROUND,
+            foreground=THEME_FOREGROUND,
+            fieldbackground=THEME_PANEL,
+            bordercolor=THEME_BORDER,
+            darkcolor=THEME_BACKGROUND,
+            lightcolor=THEME_BACKGROUND,
+        )
+        style.configure("TFrame", background=THEME_BACKGROUND)
+        style.configure("TLabel", background=THEME_BACKGROUND, foreground=THEME_FOREGROUND)
+        style.configure(
+            "Title.TLabel", background=THEME_BACKGROUND, foreground=THEME_GOLD
+        )
+        style.configure(
+            "Muted.TLabel", background=THEME_BACKGROUND, foreground=THEME_MUTED
+        )
+        style.configure(
+            "TLabelframe", background=THEME_BACKGROUND, foreground=THEME_GOLD,
+            bordercolor=THEME_BORDER,
+        )
+        style.configure(
+            "TLabelframe.Label", background=THEME_BACKGROUND, foreground=THEME_GOLD
+        )
+        style.configure(
+            "TEntry", fieldbackground=THEME_PANEL, foreground=THEME_FOREGROUND,
+            insertcolor=THEME_FOREGROUND, bordercolor=THEME_BORDER,
+        )
+        style.configure(
+            "TButton", background=THEME_PANEL, foreground=THEME_FOREGROUND,
+            bordercolor=THEME_BORDER, padding=(10, 4),
+        )
+        style.map(
+            "TButton",
+            background=[("active", "#1f2733"), ("disabled", THEME_BACKGROUND)],
+            foreground=[("disabled", THEME_MUTED)],
+        )
+        style.configure("Accent.TButton", background=THEME_BLOOD, foreground="#f5f0e1")
+        style.map(
+            "Accent.TButton",
+            background=[("active", THEME_BLOOD_ACTIVE), ("disabled", THEME_BACKGROUND)],
+            foreground=[("disabled", THEME_MUTED)],
+        )
+        style.configure("TCheckbutton", background=THEME_BACKGROUND, foreground=THEME_FOREGROUND)
+        style.map("TCheckbutton", background=[("active", THEME_BACKGROUND)])
+        style.configure(
+            "Horizontal.TProgressbar", background=THEME_BLOOD,
+            troughcolor=THEME_PANEL, bordercolor=THEME_PANEL,
+        )
+
+    def _apply_default_fields(self) -> None:
+        """Fill empty fields the launcher can derive; saved/user values win."""
+        derived = default_field_values(
+            state_root=default_state_root(),
+            package_roots=(application_root(), resource_root()),
+        )
+        for name, value in derived.items():
+            if not self.fields[name].get().strip():
+                self.fields[name].set(value)
 
     def _build(self) -> None:
         ttk = self.ttk
@@ -108,7 +224,10 @@ class LauncherApp:
         outer.columnconfigure(0, weight=1)
         outer.rowconfigure(3, weight=1)
 
-        title = ttk.Label(outer, text="Bloodborne Archipelago", font=("Segoe UI", 18, "bold"))
+        title = ttk.Label(
+            outer, text="Bloodborne Archipelago",
+            font=("Segoe UI", 18, "bold"), style="Title.TLabel",
+        )
         title.grid(row=0, column=0, sticky="w")
         ttk.Label(
             outer,
@@ -168,7 +287,11 @@ class LauncherApp:
         locomotion.grid(row=2, column=1, sticky="w")
         self._enemy_widgets.extend((seed_entry, tier, locomotion))
 
-        self.log = self.tk.Text(options, height=10, wrap="word", state="disabled")
+        self.log = self.tk.Text(
+            options, height=10, wrap="word", state="disabled",
+            bg=THEME_PANEL, fg=THEME_FOREGROUND, insertbackground=THEME_FOREGROUND,
+            relief="flat",
+        )
         self.log.grid(row=3, column=0, columnspan=2, sticky="nsew", pady=(10, 0))
         scrollbar = ttk.Scrollbar(options, orient="vertical", command=self.log.yview)
         scrollbar.grid(row=3, column=2, sticky="ns", pady=(10, 0))
@@ -177,7 +300,11 @@ class LauncherApp:
         status_frame = ttk.LabelFrame(outer, text="Session status", padding=10)
         status_frame.grid(row=4, column=0, sticky="ew", pady=(12, 0))
         status_frame.columnconfigure(0, weight=1)
-        self.status_text = self.tk.Text(status_frame, height=6, wrap="word", state="disabled")
+        self.status_text = self.tk.Text(
+            status_frame, height=6, wrap="word", state="disabled",
+            bg=THEME_PANEL, fg=THEME_FOREGROUND, insertbackground=THEME_FOREGROUND,
+            relief="flat",
+        )
         self.status_text.grid(row=0, column=0, sticky="ew")
         status_scroll = ttk.Scrollbar(status_frame, orient="vertical", command=self.status_text.yview)
         status_scroll.grid(row=0, column=1, sticky="ns")
@@ -224,7 +351,9 @@ class LauncherApp:
             self.rebuild_button,
             self.diagnostics_button,
         )
-        ttk.Label(outer, textvariable=self.status).grid(row=6, column=0, sticky="w", pady=(8, 0))
+        ttk.Label(outer, textvariable=self.status, style="Muted.TLabel").grid(
+            row=6, column=0, sticky="w", pady=(8, 0)
+        )
 
     def _browse(self, name: str, selector: str) -> None:
         current = self.fields[name].get().strip()
@@ -236,6 +365,10 @@ class LauncherApp:
         if not selected:
             return
         self.fields[name].set(selected)
+        if name == "shad_executable" and not self.fields["game_root"].get().strip():
+            derived = derive_game_root_for_shad(selected)
+            if derived is not None:
+                self.fields["game_root"].set(str(derived))
         if name == "ap_request":
             try:
                 self.enemy_seed.set(request_enemy_seed(selected))
