@@ -30,6 +30,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Repo = $PSScriptRoot
+# The suppression writer's round-trip verification depends on SoulsFormatsNEXT
+# behavior; keep this in sync with the pin in .github/workflows/tests.yaml.
+$SoulsFormatsNextPin = "7cef52a7366678448d85930eeb8e94093b179d24"
 $WorldDir = Join-Path $Repo "worlds\bloodborne"
 $BuildDir = Join-Path $Repo "build"
 $ArtifactRoot = Join-Path $Repo "Bloodborne.Game.of.the.Year.Edition.PS4-PRELUDE"
@@ -221,6 +224,19 @@ if ($Package) {
         throw "Pass -SoulsFormatsNextRoot or set SOULSFORMATS_NEXT."
     }
     Require-File (Join-Path $SoulsFormatsNextRoot "SoulsFormats\SoulsFormats.csproj") "SoulsFormatsNEXT checkout"
+
+    # The suppression writer verifies a byte-faithful round-trip through
+    # SoulsFormatsNEXT; an unpinned checkout can change that behavior.
+    $sfnHead = $null
+    try {
+        $sfnHead = (& git -C $SoulsFormatsNextRoot rev-parse HEAD 2>$null)
+        if ($LASTEXITCODE -ne 0) { $sfnHead = $null }
+    } catch { $sfnHead = $null }
+    if ($null -eq $sfnHead) {
+        Write-Host "  WARNING: $SoulsFormatsNextRoot is not a git checkout; cannot verify the pinned SoulsFormatsNEXT $SoulsFormatsNextPin" -ForegroundColor Yellow
+    } elseif ($sfnHead.Trim() -ne $SoulsFormatsNextPin) {
+        throw "SoulsFormatsNEXT is at $($sfnHead.Trim()), not the pinned $SoulsFormatsNextPin -- run: git -C $SoulsFormatsNextRoot fetch; git -C $SoulsFormatsNextRoot checkout $SoulsFormatsNextPin"
+    }
 
     if (-not $ClientPath) {
         if (-not $ClientRepo) {
