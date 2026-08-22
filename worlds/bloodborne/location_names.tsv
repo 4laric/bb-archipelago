@@ -657,3 +657,15 @@ location_flag	region	name	basis
 50000100	Hunter's Dream	Hunter's Dream - Eye of a Blood-drunk Hunter	published (data.py pickup_eye_of_blood_drunk_hunter); EMEVD script-award flag committed in runtime_bindings.py
 9470	Hunter's Nightmare	Hunter's Nightmare - Eye Pendant	published (data.py pickup_eye_pendant); EMEVD script-award flag committed in runtime_bindings.py
 53502000	Research Hall	Research Hall - Laurence's Skull	published (data.py pickup_laurences_skull); EMEVD script-award flag committed in runtime_bindings.py
+12301800	Old Yharnam	Blood-starved Beast	published (data.py boss_blood_starved_beast); boss-defeat event flag committed in runtime_bindings.py
+12401800	Grand Cathedral	Vicar Amelia	published (data.py boss_vicar_amelia); boss-defeat event flag committed in runtime_bindings.py
+12701800	Forbidden Woods	Shadows of Yharnam	published (data.py boss_shadows_of_yharnam); boss-defeat event flag committed in runtime_bindings.py
+13201800	Byrgenwerth	Rom, the Vacuous Spider	published (data.py boss_rom); boss-defeat event flag committed in runtime_bindings.py
+12801800	Yahar'gul	The One Reborn	published (data.py boss_the_one_reborn); boss-defeat event flag committed in runtime_bindings.py
+12601850	Nightmare of Mensis	Micolash, Host of the Nightmare	published (data.py boss_micolash); boss-defeat event flag committed in runtime_bindings.py
+12601800	Nightmare of Mensis	Mergo's Wet Nurse	published (data.py boss_mergos_wet_nurse); boss-defeat event flag committed in runtime_bindings.py
+13401800	Hunter's Nightmare	Ludwig, the Holy Blade	published (data.py boss_ludwig); boss-defeat event flag committed in runtime_bindings.py
+13501850	Lumenwood Garden	Living Failures	published (data.py boss_living_failures); boss-defeat event flag committed in runtime_bindings.py
+13501800	Astral Clocktower	Lady Maria of the Astral Clocktower	published (data.py boss_lady_maria); boss-defeat event flag committed in runtime_bindings.py
+13601800	Fishing Hamlet	Orphan of Kos	published (data.py boss_orphan_of_kos); boss-defeat event flag committed in runtime_bindings.py
+13401850	Nightmare Grand Cathedral	Laurence, the First Vicar	published (data.py boss_laurence); boss-defeat event flag committed in runtime_bindings.py

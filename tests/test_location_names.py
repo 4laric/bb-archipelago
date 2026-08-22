@@ -24,16 +24,29 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 658  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 670  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 51
 
 # Non-catalog checks the table names: boss defeats and EMEVD script awards
-# whose check flag is committed in runtime_bindings.py. Bosses whose defeat
-# flag is not yet mapped stay named inline in data.py — no invented keys.
+# whose check flag is committed in runtime_bindings.py. Every boss in the
+# model is now keyed by its mapped defeat flag; checks without a committed
+# flag (e.g. interaction_laurences_skull) stay named inline in data.py.
 SCRIPTED_CHECK_FLAGS = {
     "12411700",   # boss_cleric_beast
     "12411800",   # boss_father_gascoigne
+    "12301800",   # boss_blood_starved_beast
+    "12401800",   # boss_vicar_amelia
+    "12701800",   # boss_shadows_of_yharnam
+    "13201800",   # boss_rom
+    "12801800",   # boss_the_one_reborn
+    "12601850",   # boss_micolash
+    "12601800",   # boss_mergos_wet_nurse
+    "13401800",   # boss_ludwig
+    "13501850",   # boss_living_failures
+    "13501800",   # boss_lady_maria
+    "13601800",   # boss_orphan_of_kos
+    "13401850",   # boss_laurence
     "52410990",   # pickup_cainhurst_summons
     "52420900",   # script_award_orphanage_key
     "50000100",   # pickup_eye_of_blood_drunk_hunter
@@ -48,6 +61,18 @@ SCRIPTED_CHECK_FLAGS = {
 DATA_PY_TABLED_CHECKS = {
     "boss_cleric_beast": 12411700,
     "boss_father_gascoigne": 12411800,
+    "boss_blood_starved_beast": 12301800,
+    "boss_vicar_amelia": 12401800,
+    "boss_shadows_of_yharnam": 12701800,
+    "boss_rom": 13201800,
+    "boss_the_one_reborn": 12801800,
+    "boss_micolash": 12601850,
+    "boss_mergos_wet_nurse": 12601800,
+    "boss_ludwig": 13401800,
+    "boss_living_failures": 13501850,
+    "boss_lady_maria": 13501800,
+    "boss_orphan_of_kos": 13601800,
+    "boss_laurence": 13401850,
     "pickup_cainhurst_summons": 52410990,
     "pickup_upper_cathedral_key": 52800290,
     "script_award_orphanage_key": 52420900,

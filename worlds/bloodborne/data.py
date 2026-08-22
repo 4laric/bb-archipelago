@@ -117,31 +117,34 @@ LOCATIONS = (
     Location("boss_cleric_beast", location_name(12411700), "Central Yharnam",
              locked_item="event_cleric_beast_defeated"),
     Location("boss_father_gascoigne", location_name(12411800), "Central Yharnam", locked_item="event_gascoigne_defeated"),
-    Location("boss_blood_starved_beast", "Blood-starved Beast", "Old Yharnam",
+    Location("boss_blood_starved_beast", location_name(12301800), "Old Yharnam",
              locked_item="event_blood_starved_beast_defeated"),
-    Location("boss_vicar_amelia", "Vicar Amelia", "Grand Cathedral", locked_item="event_amelia_defeated"),
+    Location("boss_vicar_amelia", location_name(12401800), "Grand Cathedral", locked_item="event_amelia_defeated"),
     Location("interaction_laurences_skull", "Grand Cathedral - Laurence's Skull", "Grand Cathedral",
              Rule.all("event_amelia_defeated"), locked_item="event_forbidden_woods_password"),
-    Location("boss_shadows_of_yharnam", "Shadows of Yharnam", "Forbidden Woods", locked_item="event_shadows_defeated"),
-    Location("boss_rom", "Rom, the Vacuous Spider", "Byrgenwerth", locked_item="event_rom_defeated"),
-    Location("boss_the_one_reborn", "The One Reborn", "Yahar'gul", locked_item="event_one_reborn_defeated"),
-    Location("boss_micolash", "Micolash, Host of the Nightmare", "Nightmare of Mensis", locked_item="event_micolash_defeated"),
-    Location("boss_mergos_wet_nurse", "Mergo's Wet Nurse", "Nightmare of Mensis", Rule.all("event_micolash_defeated"), locked_item="event_mergos_wet_nurse_defeated"),
+    Location("boss_shadows_of_yharnam", location_name(12701800), "Forbidden Woods", locked_item="event_shadows_defeated"),
+    Location("boss_rom", location_name(13201800), "Byrgenwerth", locked_item="event_rom_defeated"),
+    Location("boss_the_one_reborn", location_name(12801800), "Yahar'gul", locked_item="event_one_reborn_defeated"),
+    Location("boss_micolash", location_name(12601850), "Nightmare of Mensis", locked_item="event_micolash_defeated"),
+    Location("boss_mergos_wet_nurse", location_name(12601800), "Nightmare of Mensis", Rule.all("event_micolash_defeated"), locked_item="event_mergos_wet_nurse_defeated"),
     # Scripted checks with committed award flags (runtime_bindings.py); names
-    # come from the location-name table (docs/LOCATION-NAMING.md).
+    # come from the location-name table (docs/LOCATION-NAMING.md). Boss checks
+    # above do the same, keyed by their mapped boss-defeat flags. Only
+    # interaction_laurences_skull (no committed flag) and
+    # treasure_underground_jail_chunk (name/region divergence, #82) stay inline.
     Location("pickup_cainhurst_summons", location_name(52410990), "Iosefka's Clinic"),
     Location("pickup_upper_cathedral_key", location_name(52800290), "Yahar'gul"),
     Location("script_award_orphanage_key", location_name(52420900), "Upper Cathedral Ward"),
     Location("pickup_eye_of_blood_drunk_hunter", location_name(50000100), "Hunter's Dream",
              Rule.all("event_forbidden_woods_password")),
     Location("pickup_eye_pendant", location_name(9470), "Hunter's Nightmare"),
-    Location("boss_ludwig", "Ludwig, the Holy Blade", "Hunter's Nightmare",
+    Location("boss_ludwig", location_name(13401800), "Hunter's Nightmare",
              locked_item="event_ludwig_defeated"),
-    Location("boss_living_failures", "Living Failures", "Lumenwood Garden",
+    Location("boss_living_failures", location_name(13501850), "Lumenwood Garden",
              locked_item="event_living_failures_defeated"),
-    Location("boss_lady_maria", "Lady Maria of the Astral Clocktower", "Astral Clocktower",
+    Location("boss_lady_maria", location_name(13501800), "Astral Clocktower",
              locked_item="event_lady_maria_defeated"),
-    Location("boss_orphan_of_kos", "Orphan of Kos", "Fishing Hamlet",
+    Location("boss_orphan_of_kos", location_name(13601800), "Fishing Hamlet",
              locked_item="event_orphan_of_kos_defeated"),
     Location("pickup_laurences_skull", location_name(53502000), "Research Hall"),
     # Catalog-backed fixed treasures. These make the previously empty optional
@@ -157,7 +160,7 @@ LOCATIONS = (
              "Underground Corpse Pile"),
     Location("treasure_cosmic_eye_watcher_badge", location_name(52420270),
              "Upper Cathedral Ward", Rule.all("orphanage_key")),
-    Location("boss_laurence", "Laurence, the First Vicar", "Nightmare Grand Cathedral",
+    Location("boss_laurence", location_name(13401850), "Nightmare Grand Cathedral",
              Rule.all("laurences_skull"), locked_item="event_laurence_defeated"),
 ) + tuple(
     Location(
