@@ -257,6 +257,13 @@ if ($Package) {
     if (Test-Path -LiteralPath (Join-Path $suppressionOut "build-manifest.json") -PathType Leaf) {
         Write-Host "  suppression binder kept: $suppressionOut (remove it to rebuild)" -ForegroundColor Green
     } else {
+        # The writer verifies AFTER writing, so a failed build leaves a binder
+        # without a manifest; the inner script then refuses to overwrite it.
+        # A manifest-less output is provably incomplete, never deliberate.
+        if (Test-Path -LiteralPath (Join-Path $suppressionOut "gameparam.parambnd.dcx") -PathType Leaf) {
+            Write-Host "  clearing incomplete suppression build (no build-manifest.json): $suppressionOut" -ForegroundColor Yellow
+            Remove-Item -LiteralPath $suppressionOut -Recurse -Force
+        }
         Step "Player package: building the vanilla suppression binder"
         & (Join-Path $Repo "tools\build_vanilla_suppression.ps1") `
             -SoulsFormatsNextRoot $SoulsFormatsNextRoot -OutputRoot $suppressionOut -Apply
