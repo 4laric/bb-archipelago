@@ -168,6 +168,36 @@ jobs:
             fi
           done
 
+      # The shipped artifact is the zipped apworld, and folder installs cannot
+      # catch zip-import-only failures (resource reads via filesystem paths).
+      # The player's install path is the zip: exercise it directly.
+      - name: The zipped apworld imports and generates
+        working-directory: _ap
+        env:
+          AP_NONINTERACTIVE: "1"
+          SKIP_REQUIREMENTS_UPDATE: "1"
+        run: |
+          python - <<'PY'
+          import pathlib, zipfile
+          source = pathlib.Path("worlds/bloodborne")
+          pathlib.Path("custom_worlds").mkdir(exist_ok=True)
+          with zipfile.ZipFile("custom_worlds/bloodborne.apworld", "w") as archive:
+              for path in sorted(source.rglob("*")):
+                  if path.is_file() and "__pycache__" not in path.parts:
+                      archive.write(path, f"bloodborne/{path.relative_to(source)}")
+          PY
+          rm -rf worlds/bloodborne
+          set -o pipefail
+          python Generate.py --player_files_path Players --outputpath out-zip \
+            --seed 424242 --spoiler 0 < /dev/null 2>&1 | tee gen-zip.log
+          grep -q "^Done\." gen-zip.log \
+            || { echo "zipped apworld did not generate"; exit 1; }
+          if grep -q "WorldSource(bloodborne" gen-zip.log; then
+            echo "zipped apworld failed to import"
+            grep -n -B2 -A15 "WorldSource(bloodborne" gen-zip.log | head -30
+            exit 1
+          fi
+
       # The seam between the two halves of the project: the world emits a
       # request and the planner is supposed to consume it.
       - name: The enemizer request is emitted and well formed

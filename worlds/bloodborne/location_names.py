@@ -9,13 +9,15 @@ data, read once at import; the naming contract's tests own the ratchets.
 from __future__ import annotations
 
 import csv
-from pathlib import Path
+import io
+
+from .resource_data import read_resource_text
 
 
 def _load() -> dict[int, str]:
-    path = Path(__file__).with_name("location_names.tsv")
-    with path.open(encoding="utf-8", newline="") as handle:
-        return {int(row["location_flag"]): row["name"] for row in csv.DictReader(handle, delimiter="\t")}
+    text = read_resource_text("location_names.tsv")
+    handle = io.StringIO(text, newline="")
+    return {int(row["location_flag"]): row["name"] for row in csv.DictReader(handle, delimiter="\t")}
 
 
 NAMES_BY_FLAG = _load()

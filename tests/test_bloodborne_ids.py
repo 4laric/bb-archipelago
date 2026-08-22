@@ -12,7 +12,6 @@ has to be argued for rather than noticed later.
 
 from __future__ import annotations
 
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -146,6 +145,18 @@ class RegistryCoverageTests(unittest.TestCase):
             if item.kind is ItemKind.EVENT:
                 self.assertNotIn(item.key, ITEM_ID_BY_KEY, item.key)
 
+    def test_world_resources_are_read_zip_safely(self):
+        """The apworld is a zip: filesystem paths to package data do not exist
+        once Archipelago imports the world through zipimport. Every resource
+        read must go through resource_data.read_resource_text."""
+        world_dir = Path(__file__).resolve().parents[1] / "worlds" / "bloodborne"
+        checked = 0
+        for source in world_dir.glob("*.py"):
+            text = source.read_text(encoding="utf-8")
+            self.assertNotIn("__file__", text, source.name)
+            checked += 1
+        self.assertGreaterEqual(checked, 8)  # witness: the package is real, not an empty glob
+
     def test_all_ids_are_globally_disjoint(self):
         values = list(ITEM_NAME_TO_ID.values()) + list(LOCATION_NAME_TO_ID.values())
         self.assertEqual(len(values), len(set(values)))
@@ -160,10 +171,7 @@ class RegistryFailureTests(unittest.TestCase):
     """A registry that cannot answer must fail, not answer."""
 
     def _registry(self, text: str):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "ids.tsv"
-            path.write_text(text, encoding="utf-8")
-            return _load_id_registry(path)
+        return _load_id_registry(text)
 
     def test_an_unassigned_key_raises_with_an_actionable_message(self):
         with self.assertRaises(IdRegistryError) as caught:
