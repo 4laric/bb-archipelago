@@ -35,7 +35,9 @@ rows say so in `basis` rather than inventing gem names.
 - **Core** is the vanilla contents (`Saw Spear`, `Hunter Set`). In a randomized
   seed the contents are not what is actually there; they are the stable,
   recognizable handle for the spot, and they match every name the slice
-  already publishes.
+  already publishes. Quantities follow the #75 ruling: a bare `x1` is dropped,
+  while `xN` for N > 1 stays (`Pebble x8`) — it is part of what tells two
+  same-item spots apart.
 - **Place hint** is optional and always parenthesized: a short landmark
   (`(rooftop)`, `(Headmaster's Room chest)`) that separates the spot from
   same-region lookalikes.
@@ -55,9 +57,10 @@ rather than runtime evidence. The `basis` column says which:
   clean name. The table must agree with these byte-for-byte;
   `tests/test_location_names.py` enforces it.
 - `proposed rename` — the slice publishes this flag under a `(Lot NNN)`
-  placeholder name and the table name is its proposed replacement. Every such
-  row is listed in `PENDING_PLACEHOLDER_RENAMES` in the test module, which is
-  the complete inventory of renames awaiting the owner decision in #75.
+  placeholder name and the table name is its proposed replacement. Such rows
+  are listed in `PENDING_PLACEHOLDER_RENAMES` in the test module, the complete
+  inventory of renames awaiting an owner decision. (The set is currently
+  empty: the #75 rename landed all 45.)
 - `event tag ...` — the hint translates this flag's committed Japanese event
   tag. Reviewer-confirmable in game.
 - `map mNN...` — the name follows from the map and item identity alone; no
@@ -76,8 +79,9 @@ rather than runtime evidence. The `basis` column says which:
 
 ## Follow-ups
 
-- #75 tracks the owner decision on replacing the shipped `(Lot NNN)`
-  placeholder names, which is when this table starts feeding
-  `tools/build_central_yharnam_slice.py`.
-- #82 tracks wiring the table into generation and unifying the inline names
-  in `data.py` so the table becomes the single source.
+- #75 is decided and landed: the 45 shipped `(Lot NNN)` placeholders publish
+  their table names, and this table feeds `tools/build_central_yharnam_slice.py`.
+  Quantities follow the owner ruling: `x1` is dropped, `xN` for N > 1 stays.
+- #82 tracks unifying the inline names in `data.py` (boss, interaction, and
+  EMEVD-award checks) so the table becomes the single source, and extending
+  generation wiring past the Central Yharnam slice.

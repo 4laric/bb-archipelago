@@ -28,21 +28,12 @@ MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 51
 
 # Published slice names that still carry a "(Lot NNN)" research placeholder.
-# The table name for these flags is the proposed replacement; the swap itself
-# is the rename decision in #75. A flag may only sit here while its published
-# name is lot-suffixed — once the rename lands or is rejected, the row leaves
-# this set and ordinary agreement applies. This is the complete inventory:
-# every shipped placeholder row, now that the table covers the full catalog.
-PENDING_PLACEHOLDER_RENAMES = {
-    "52410110", "52410120", "52410130", "52410140", "52410150", "52410160",
-    "52410170", "52410180", "52410190", "52410200", "52410210", "52410220",
-    "52410240", "52410250", "52410260", "52410270", "52410280", "52410295",
-    "52410310", "52410330", "52410340", "52410360", "52410370", "52410380",
-    "52410390", "52410400", "52410430", "52410440", "52410450", "52410470",
-    "52410480", "52410490", "52410510", "52410530", "52410540", "52410560",
-    "52410570", "52410590", "52410600", "52410610", "52410620", "52410630",
-    "52410640", "52410650", "52410920",
-}
+# The #75 rename landed: every placeholder row now publishes its table name.
+# The set is empty on purpose — the gate below stays so a future lot-suffixed
+# publish fails loudly instead of slipping in unnamed. A flag may only sit
+# here while its published name is lot-suffixed — once the rename lands or is
+# rejected, the row leaves this set and ordinary agreement applies.
+PENDING_PLACEHOLDER_RENAMES: set[str] = set()
 
 
 def rows(path: Path) -> list[dict[str, str]]:

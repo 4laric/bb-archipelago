@@ -85,6 +85,15 @@ under `Unreleased` and move into a dated version section when released.
   remains explicitly excluded after its inferred descriptor produced no visible
   inventory item.
 
+### Changed
+
+- The 45 shipped `(Lot NNN)` placeholder location names in the Central Yharnam
+  slice are renamed to their contract names (#75 ruling: the lot suffix is
+  dropped, `x1` is dropped, `xN` for N > 1 is kept). Two checks move region
+  name to Iosefka's Clinic on the MSB warp-anchor evidence; keys and network
+  IDs are unchanged. `location_names.tsv` now feeds the slice builder, so the
+  table is the single source for those names.
+
 ### Fixed
 
 - The CE harness is portable across Windows accounts, respects the process

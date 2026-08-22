@@ -17,7 +17,7 @@ location_flag	region	name	basis
 52410100	Central Yharnam	Central Yharnam - Saw Spear	published (fixed_locations.tsv)
 52410290	Central Yharnam	Central Yharnam - Saw Hunter Badge	published (fixed_locations.tsv)
 52410520	Central Yharnam	Central Yharnam - Torch	published (fixed_locations.tsv)
-52410610	Central Yharnam	Central Yharnam - Hunter Set	proposed rename of the published placeholder "Central Yharnam - Hunter Set (Lot 2410610)" (#75)
+52410610	Central Yharnam	Central Yharnam - Hunter Set	published (fixed_locations.tsv); replaced the "(Lot 2410610)" placeholder under the #75 rename
 52411000	Central Yharnam	Central Yharnam - Blood Gem Workshop Tool	published (fixed_locations.tsv)
 52420150	Upper Cathedral Ward	Upper Cathedral Ward - Choir Garb	map m24_02
 52420190	Upper Cathedral Ward	Upper Cathedral Ward - Blindfold Cap	map m24_02
@@ -83,114 +83,114 @@ location_flag	region	name	basis
 53500870	Research Hall	Research Hall - Decorative Old Hunter Garb	event tag 時計塔_2F右四足部屋ハンター
 53600700	Underground Corpse Pile	Underground Corpse Pile - Harrowed Hood	event tag 宝死体_ハンター
 52100000	Hunter's Dream	Hunter's Dream - Pebble	map m21_00; MSB NPC anchors 拠点老人/人形のヒロイン (Gehrman and the Doll) place m21_00 as the Hunter's Dream hub; lot name アイテム使用チュートリアル
-52200100	Hemwick Charnel Lane	Hemwick Charnel Lane - Pebble #1	map m22_00; unestablished
-52200110	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards #1	map m22_00; unestablished
-52200120	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards #2	map m22_00; unestablished
+52200100	Hemwick Charnel Lane	Hemwick Charnel Lane - Pebble x4 #1	map m22_00; unestablished
+52200110	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards	map m22_00
+52200120	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #1	map m22_00; unestablished
 52200130	Hemwick Charnel Lane	Hemwick Charnel Lane - Thick Coldblood (4) #1	map m22_00; unestablished
-52200140	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards #3	map m22_00; unestablished
-52200150	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Vial #1	map m22_00; unestablished
-52200160	Hemwick Charnel Lane	Hemwick Charnel Lane - Bone Marrow Ash #1	map m22_00; unestablished
-52200170	Hemwick Charnel Lane	Hemwick Charnel Lane - Bone Marrow Ash #2	map m22_00; unestablished
+52200140	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #2	map m22_00; unestablished
+52200150	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Vial x2 #1	map m22_00; unestablished
+52200160	Hemwick Charnel Lane	Hemwick Charnel Lane - Bone Marrow Ash x8 #1	map m22_00; unestablished
+52200170	Hemwick Charnel Lane	Hemwick Charnel Lane - Bone Marrow Ash x8 #2	map m22_00; unestablished
 52200180	Hemwick Charnel Lane	Hemwick Charnel Lane - Bloodshot Eyeball #1	map m22_00; unestablished
 52200190	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Gem #1	map m22_00; category-8 blood gem (gem param 122000); specific gem name not in committed data; unestablished
 52200200	Hemwick Charnel Lane	Hemwick Charnel Lane - Madman's Knowledge #1	map m22_00; unestablished
 52200210	Hemwick Charnel Lane	Hemwick Charnel Lane - Coldblood Dew (3)	map m22_00
-52200220	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards #4	map m22_00; unestablished
-52200230	Hemwick Charnel Lane	Hemwick Charnel Lane - Quicksilver Bullets #1	map m22_00; unestablished
+52200220	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #3	map m22_00; unestablished
+52200230	Hemwick Charnel Lane	Hemwick Charnel Lane - Quicksilver Bullets x4 #1	map m22_00; unestablished
 52200240	Hemwick Charnel Lane	Hemwick Charnel Lane - Thick Coldblood (4) #2	map m22_00; unestablished
-52200250	Hemwick Charnel Lane	Hemwick Charnel Lane - Quicksilver Bullets #2	map m22_00; unestablished
-52200260	Hemwick Charnel Lane	Hemwick Charnel Lane - Throwing Knife	map m22_00
+52200250	Hemwick Charnel Lane	Hemwick Charnel Lane - Quicksilver Bullets x4 #2	map m22_00; unestablished
+52200260	Hemwick Charnel Lane	Hemwick Charnel Lane - Throwing Knife x3	map m22_00
 52200270	Hemwick Charnel Lane	Hemwick Charnel Lane - Thick Coldblood (4) #3	map m22_00; unestablished
 52200280	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Gem #2	map m22_00; category-8 blood gem (gem param 122001); specific gem name not in committed data; unestablished
 52200290	Hemwick Charnel Lane	Hemwick Charnel Lane - Madman's Knowledge #2	map m22_00; unestablished
-52200300	Hemwick Charnel Lane	Hemwick Charnel Lane - Pebble #2	map m22_00; unestablished
-52200310	Hemwick Charnel Lane	Hemwick Charnel Lane - Quicksilver Bullets #3	map m22_00; unestablished
+52200300	Hemwick Charnel Lane	Hemwick Charnel Lane - Pebble x4 #2	map m22_00; unestablished
+52200310	Hemwick Charnel Lane	Hemwick Charnel Lane - Quicksilver Bullets x4 #3	map m22_00; unestablished
 52200320	Hemwick Charnel Lane	Hemwick Charnel Lane - Thick Coldblood (4) #4	map m22_00; unestablished
-52200330	Hemwick Charnel Lane	Hemwick Charnel Lane - Bone Marrow Ash #3	map m22_00; unestablished
+52200330	Hemwick Charnel Lane	Hemwick Charnel Lane - Bone Marrow Ash x9	map m22_00
 52200340	Hemwick Charnel Lane	Hemwick Charnel Lane - Thick Coldblood (4) #5	map m22_00; unestablished
-52200350	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Vial #2	map m22_00; unestablished
+52200350	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Vial x2 #2	map m22_00; unestablished
 52200365	Hemwick Charnel Lane	Hemwick Charnel Lane - Kin Coldblood (12)	map m22_00
 52200370	Hemwick Charnel Lane	Hemwick Charnel Lane - Bloodshot Eyeball #2	map m22_00; unestablished
 52200380	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Gem #3	map m22_00; category-8 blood gem (gem param 101701); specific gem name not in committed data; unestablished
 52200385	Hemwick Charnel Lane	Hemwick Charnel Lane - Madman's Knowledge #3	map m22_00; unestablished
 52200390	Hemwick Charnel Lane	Hemwick Charnel Lane - Madman's Knowledge #4	map m22_00; unestablished
-52200400	Hemwick Charnel Lane	Hemwick Charnel Lane - Molotov Cocktail	map m22_00
+52200400	Hemwick Charnel Lane	Hemwick Charnel Lane - Molotov Cocktail x5	map m22_00
 52300000	Old Yharnam	Old Yharnam - Antidote #1	map m23_00; unestablished
-52300010	Old Yharnam	Old Yharnam - Blood Stone Shard #1	map m23_00; unestablished
-52300020	Old Yharnam	Old Yharnam - Blood Stone Shard #2	map m23_00; unestablished
-52300030	Old Yharnam	Old Yharnam - Fire Paper #1	map m23_00; unestablished
+52300010	Old Yharnam	Old Yharnam - Blood Stone Shard x2 #1	map m23_00; unestablished
+52300020	Old Yharnam	Old Yharnam - Blood Stone Shard #1	map m23_00; unestablished
+52300030	Old Yharnam	Old Yharnam - Fire Paper x2 #1	map m23_00; unestablished
 52300040	Old Yharnam	Old Yharnam - Blood Gem (corpse)	map m23_00; category-8 blood gem (gem param 123000); specific gem name not in committed data; event tag 宝死体
 52300050	Old Yharnam	Old Yharnam - Coldblood Dew (3) #1	map m23_00; unestablished
-52300060	Old Yharnam	Old Yharnam - Blood Stone Shard #3	map m23_00; unestablished
+52300060	Old Yharnam	Old Yharnam - Blood Stone Shard x2 #2	map m23_00; unestablished
 52300080	Old Yharnam	Old Yharnam - Coldblood Dew (2) #1	map m23_00; unestablished
 52300090	Old Yharnam	Old Yharnam - Blood Vial #1	map m23_00; unestablished
 52300100	Old Yharnam	Old Yharnam - Blood Vial #2	map m23_00; unestablished
 52300110	Old Yharnam	Old Yharnam - Blood Vial #3	map m23_00; unestablished
-52300120	Old Yharnam	Old Yharnam - Beast Blood Pellet	map m23_00
+52300120	Old Yharnam	Old Yharnam - Beast Blood Pellet x6	map m23_00
 52300130	Old Yharnam	Old Yharnam - Coldblood Dew (3) #2	map m23_00; unestablished
-52300140	Old Yharnam	Old Yharnam - Blood Stone Shard #4	map m23_00; unestablished
-52300150	Old Yharnam	Old Yharnam - Blood Stone Shard #5	map m23_00; unestablished
+52300140	Old Yharnam	Old Yharnam - Blood Stone Shard x2 #3	map m23_00; unestablished
+52300150	Old Yharnam	Old Yharnam - Blood Stone Shard x2 #4	map m23_00; unestablished
 52300160	Old Yharnam	Old Yharnam - Madman's Knowledge #1	map m23_00; unestablished
-52300170	Old Yharnam	Old Yharnam - Ritual Blood (1)	map m23_00
-52300180	Old Yharnam	Old Yharnam - Pungent Blood Cocktail #1	map m23_00; unestablished
-52300190	Old Yharnam	Old Yharnam - Fire Paper #2	map m23_00; unestablished
+52300170	Old Yharnam	Old Yharnam - Ritual Blood (1) x2	map m23_00
+52300180	Old Yharnam	Old Yharnam - Pungent Blood Cocktail x3	map m23_00
+52300190	Old Yharnam	Old Yharnam - Fire Paper x2 #2	map m23_00; unestablished
 52300210	Old Yharnam	Old Yharnam - Antidote #2	map m23_00; unestablished
-52300220	Old Yharnam	Old Yharnam - Molotov Cocktail #1	map m23_00; unestablished
-52300230	Old Yharnam	Old Yharnam - Blood Stone Shard #6	map m23_00; unestablished
-52300240	Old Yharnam	Old Yharnam - Blood Vial #4	map m23_00; unestablished
-52300250	Old Yharnam	Old Yharnam - Pebble	map m23_00
-52300260	Old Yharnam	Old Yharnam - Molotov Cocktail #2	map m23_00; unestablished
+52300220	Old Yharnam	Old Yharnam - Molotov Cocktail x4	map m23_00
+52300230	Old Yharnam	Old Yharnam - Blood Stone Shard x2 #5	map m23_00; unestablished
+52300240	Old Yharnam	Old Yharnam - Blood Vial x6 #1	map m23_00; unestablished
+52300250	Old Yharnam	Old Yharnam - Pebble x3	map m23_00
+52300260	Old Yharnam	Old Yharnam - Molotov Cocktail x3	map m23_00
 52300270	Old Yharnam	Old Yharnam - Corpse Pickup	map m23_00; goods param 6000 has no English name in committed data; named by placement until FMG extraction
-52300280	Old Yharnam	Old Yharnam - Antidote #3	map m23_00; unestablished
+52300280	Old Yharnam	Old Yharnam - Antidote x4	map m23_00
 52300290	Old Yharnam	Old Yharnam - Coldblood Dew (2) #2	map m23_00; unestablished
 52300300	Old Yharnam	Old Yharnam - Blood Gem (chest)	map m23_00; category-8 blood gem (gem param 123001); specific gem name not in committed data; event tag 宝箱
-52300310	Old Yharnam	Old Yharnam - Antidote #4	map m23_00; unestablished
-52300320	Old Yharnam	Old Yharnam - Antidote #5	map m23_00; unestablished
-52300330	Old Yharnam	Old Yharnam - Quicksilver Bullets	map m23_00
+52300310	Old Yharnam	Old Yharnam - Antidote x3 #1	map m23_00; unestablished
+52300320	Old Yharnam	Old Yharnam - Antidote x3 #2	map m23_00; unestablished
+52300330	Old Yharnam	Old Yharnam - Quicksilver Bullets x10	map m23_00
 52300340	Old Yharnam	Old Yharnam - Coldblood Dew (3) #3	map m23_00; unestablished
-52300350	Old Yharnam	Old Yharnam - Blood Stone Shard #7	map m23_00; unestablished
+52300350	Old Yharnam	Old Yharnam - Blood Stone Shard #2	map m23_00; unestablished
 52300360	Old Yharnam	Old Yharnam - Madman's Knowledge #2	map m23_00; unestablished
 52300370	Old Yharnam	Old Yharnam - Coldblood Dew (2) #3	map m23_00; unestablished
-52300380	Old Yharnam	Old Yharnam - Blood Vial #5	map m23_00; unestablished
-52300410	Old Yharnam	Old Yharnam - Molotov Cocktail #3	map m23_00; unestablished
-52300420	Old Yharnam	Old Yharnam - Antidote #6	map m23_00; unestablished
-52300430	Old Yharnam	Old Yharnam - Antidote #7	map m23_00; unestablished
-52300440	Old Yharnam	Old Yharnam - Pungent Blood Cocktail #2	map m23_00; unestablished
-52300450	Old Yharnam	Old Yharnam - Antidote #8	map m23_00; unestablished
-52300460	Old Yharnam	Old Yharnam - Bold Hunter's Mark	map m23_00
+52300380	Old Yharnam	Old Yharnam - Blood Vial x6 #2	map m23_00; unestablished
+52300410	Old Yharnam	Old Yharnam - Molotov Cocktail x5	map m23_00
+52300420	Old Yharnam	Old Yharnam - Antidote x2	map m23_00
+52300430	Old Yharnam	Old Yharnam - Antidote x3 #3	map m23_00; unestablished
+52300440	Old Yharnam	Old Yharnam - Pungent Blood Cocktail x2	map m23_00
+52300450	Old Yharnam	Old Yharnam - Antidote #3	map m23_00; unestablished
+52300460	Old Yharnam	Old Yharnam - Bold Hunter's Mark x2	map m23_00
 52300470	Old Yharnam	Old Yharnam - Coldblood Dew (2) #4	map m23_00; unestablished
-52300480	Old Yharnam	Old Yharnam - Blood Vial #6	map m23_00; unestablished
-52300490	Old Yharnam	Old Yharnam - Antidote #9	map m23_00; unestablished
+52300480	Old Yharnam	Old Yharnam - Blood Vial x6 #3	map m23_00; unestablished
+52300490	Old Yharnam	Old Yharnam - Antidote x3 #4	map m23_00; unestablished
 52300500	Old Yharnam	Old Yharnam - Coldblood Dew (2) #5	map m23_00; unestablished
-52300510	Old Yharnam	Old Yharnam - Blood Stone Shard #8	map m23_00; unestablished
+52300510	Old Yharnam	Old Yharnam - Blood Stone Shard x2 #6	map m23_00; unestablished
 52300520	Old Yharnam	Old Yharnam - Coldblood Dew (3) #4	map m23_00; unestablished
-52300530	Old Yharnam	Old Yharnam - Antidote #10	map m23_00; unestablished
-52400100	Cathedral Ward	Cathedral Ward - Pungent Blood Cocktail	map m24_00
-52400130	Cathedral Ward	Cathedral Ward - Blood Stone Shard #1	map m24_00; unestablished
+52300530	Old Yharnam	Old Yharnam - Antidote x3 #5	map m23_00; unestablished
+52400100	Cathedral Ward	Cathedral Ward - Pungent Blood Cocktail x2	map m24_00
+52400130	Cathedral Ward	Cathedral Ward - Blood Stone Shard x2	map m24_00
 52400140	Cathedral Ward	Cathedral Ward - Madman's Knowledge #1	map m24_00; unestablished
 52400150	Cathedral Ward	Cathedral Ward - Thick Coldblood (5) #1	map m24_00; unestablished
-52400160	Cathedral Ward	Cathedral Ward - Quicksilver Bullets #1	map m24_00; unestablished
+52400160	Cathedral Ward	Cathedral Ward - Quicksilver Bullets x2	map m24_00
 52400170	Cathedral Ward	Cathedral Ward - Madman's Knowledge #2	map m24_00; unestablished
 52400180	Cathedral Ward	Cathedral Ward - Bloodshot Eyeball	map m24_00
-52400190	Cathedral Ward	Cathedral Ward - Blood Vial #1	map m24_00; unestablished
+52400190	Cathedral Ward	Cathedral Ward - Blood Vial	map m24_00
 52400200	Cathedral Ward	Cathedral Ward - Madman's Knowledge #3	map m24_00; unestablished
-52400210	Cathedral Ward	Cathedral Ward - Poison Knife #1	map m24_00; unestablished
+52400210	Cathedral Ward	Cathedral Ward - Poison Knife x12	map m24_00
 52400220	Cathedral Ward	Cathedral Ward - Madman's Knowledge #4	map m24_00; unestablished
-52400230	Cathedral Ward	Cathedral Ward - Blood Vial #2	map m24_00; unestablished
+52400230	Cathedral Ward	Cathedral Ward - Blood Vial x6 #1	map m24_00; unestablished
 52400240	Cathedral Ward	Cathedral Ward - Monocular	map m24_00
 52400250	Cathedral Ward	Cathedral Ward - Pebble	map m24_00
-52400260	Cathedral Ward	Cathedral Ward - Blood Vial #3	map m24_00; unestablished
-52400280	Cathedral Ward	Cathedral Ward - Numbing Mist	map m24_00
+52400260	Cathedral Ward	Cathedral Ward - Blood Vial x2	map m24_00
+52400280	Cathedral Ward	Cathedral Ward - Numbing Mist x6	map m24_00
 52400300	Cathedral Ward	Cathedral Ward - Blood Gem #1	map m24_00; category-8 blood gem (gem param 124002); specific gem name not in committed data; unestablished
-52400310	Cathedral Ward	Cathedral Ward - Shining Coins	map m24_00
-52400320	Cathedral Ward	Cathedral Ward - Blood Vial #4	map m24_00; unestablished
-52400330	Cathedral Ward	Cathedral Ward - Blood Stone Shard #2	map m24_00; unestablished
-52400340	Cathedral Ward	Cathedral Ward - Quicksilver Bullets #2	map m24_00; unestablished
+52400310	Cathedral Ward	Cathedral Ward - Shining Coins x12	map m24_00
+52400320	Cathedral Ward	Cathedral Ward - Blood Vial x6 #2	map m24_00; unestablished
+52400330	Cathedral Ward	Cathedral Ward - Blood Stone Shard x3	map m24_00
+52400340	Cathedral Ward	Cathedral Ward - Quicksilver Bullets x10	map m24_00
 52400350	Cathedral Ward	Cathedral Ward - Thick Coldblood (4) #1	map m24_00; unestablished
 52400360	Cathedral Ward	Cathedral Ward - Madman's Knowledge #5	map m24_00; unestablished
 52400370	Cathedral Ward	Cathedral Ward - Thick Coldblood (6) #1	map m24_00; unestablished
-52400380	Cathedral Ward	Cathedral Ward - Throwing Knife	map m24_00
-52400390	Cathedral Ward	Cathedral Ward - Molotov Cocktail	map m24_00
+52400380	Cathedral Ward	Cathedral Ward - Throwing Knife x3	map m24_00
+52400390	Cathedral Ward	Cathedral Ward - Molotov Cocktail x4	map m24_00
 52400400	Cathedral Ward	Cathedral Ward - Coldblood Dew (2)	map m24_00
 52400410	Cathedral Ward	Cathedral Ward - Madman's Knowledge #6	map m24_00; unestablished
 52400420	Cathedral Ward	Cathedral Ward - Thick Coldblood (6) #2	map m24_00; unestablished
@@ -198,79 +198,79 @@ location_flag	region	name	basis
 52400440	Cathedral Ward	Cathedral Ward - Thick Coldblood (6) #3	map m24_00; unestablished
 52400460	Cathedral Ward	Cathedral Ward - Thick Coldblood (5) #2	map m24_00; unestablished
 52400470	Cathedral Ward	Cathedral Ward - Thick Coldblood (4) #2	map m24_00; unestablished
-52400485	Cathedral Ward	Cathedral Ward - Bold Hunter's Mark (chest)	map m24_00; event tag 宝箱
-52410110	Central Yharnam	Central Yharnam - Blood Stone Shard #1	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x2 (Lot 2410110)" (#75); map m24_01; unestablished
-52410120	Central Yharnam	Central Yharnam - Blood Vial #1	proposed rename of the published placeholder "Central Yharnam - Blood Vial x2 (Lot 2410120)" (#75); map m24_01; unestablished
-52410130	Central Yharnam	Central Yharnam - Coldblood Dew (1) #1	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410130)" (#75); map m24_01; unestablished
-52410140	Iosefka's Clinic	Iosefka's Clinic - Madman's Knowledge (corpse)	proposed rename of the published placeholder "Central Yharnam - Madman's Knowledge x1 (Lot 2410140)" (#75); map m24_01; coordinates (-211,-54,184) at the MSB 診療所外 (outside the clinic) warp anchor; event tag 宝死体
-52410150	Central Yharnam	Central Yharnam - Coldblood Dew (1) #2	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410150)" (#75); map m24_01; unestablished
-52410160	Central Yharnam	Central Yharnam - Pebble #1	proposed rename of the published placeholder "Central Yharnam - Pebble x8 (Lot 2410160)" (#75); map m24_01; unestablished
-52410170	Central Yharnam	Central Yharnam - Blood Stone Shard #2	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410170)" (#75); map m24_01; unestablished
-52410180	Central Yharnam	Central Yharnam - Blood Stone Shard #3	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410180)" (#75); map m24_01; unestablished
-52410190	Central Yharnam	Central Yharnam - Blood Vial #2	proposed rename of the published placeholder "Central Yharnam - Blood Vial x2 (Lot 2410190)" (#75); map m24_01; unestablished
-52410200	Central Yharnam	Central Yharnam - Molotov Cocktail #1	proposed rename of the published placeholder "Central Yharnam - Molotov Cocktail x4 (Lot 2410200)" (#75); map m24_01; unestablished
-52410210	Central Yharnam	Central Yharnam - Blood Stone Shard #4	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410210)" (#75); map m24_01; unestablished
-52410220	Central Yharnam	Central Yharnam - Pungent Blood Cocktail	proposed rename of the published placeholder "Central Yharnam - Pungent Blood Cocktail x2 (Lot 2410220)" (#75); map m24_01
-52410240	Central Yharnam	Central Yharnam - Coldblood Dew (3)	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (3) x1 (Lot 2410240)" (#75); map m24_01
-52410250	Central Yharnam	Central Yharnam - Madman's Knowledge #1	proposed rename of the published placeholder "Central Yharnam - Madman's Knowledge x1 (Lot 2410250)" (#75); map m24_01; unestablished
-52410260	Central Yharnam	Central Yharnam - Coldblood Dew (1) #3	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410260)" (#75); map m24_01; unestablished
-52410270	Central Yharnam	Central Yharnam - Quicksilver Bullets #1	proposed rename of the published placeholder "Central Yharnam - Quicksilver Bullets x10 (Lot 2410270)" (#75); map m24_01; unestablished
-52410280	Central Yharnam	Central Yharnam - Coldblood Dew (2)	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (2) x1 (Lot 2410280)" (#75); map m24_01
-52410295	Central Yharnam	Central Yharnam - Bold Hunter's Mark #1	proposed rename of the published placeholder "Central Yharnam - Bold Hunter's Mark x1 (Lot 2410295)" (#75); map m24_01; unestablished
-52410310	Central Yharnam	Central Yharnam - Pebble #2	proposed rename of the published placeholder "Central Yharnam - Pebble x10 (Lot 2410310)" (#75); map m24_01; unestablished
-52410330	Central Yharnam	Central Yharnam - Blood Stone Shard #5	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410330)" (#75); map m24_01; unestablished
-52410340	Central Yharnam	Central Yharnam - Blood Vial #3	proposed rename of the published placeholder "Central Yharnam - Blood Vial x4 (Lot 2410340)" (#75); map m24_01; unestablished
-52410360	Central Yharnam	Central Yharnam - Blood Vial #4	proposed rename of the published placeholder "Central Yharnam - Blood Vial x2 (Lot 2410360)" (#75); map m24_01; unestablished
-52410370	Central Yharnam	Central Yharnam - Oil Urn #1	proposed rename of the published placeholder "Central Yharnam - Oil Urn x2 (Lot 2410370)" (#75); map m24_01; unestablished
-52410380	Central Yharnam	Central Yharnam - Blood Vial #5	proposed rename of the published placeholder "Central Yharnam - Blood Vial x2 (Lot 2410380)" (#75); map m24_01; unestablished
-52410390	Central Yharnam	Central Yharnam - Blood Vial #6	proposed rename of the published placeholder "Central Yharnam - Blood Vial x6 (Lot 2410390)" (#75); map m24_01; unestablished
-52410400	Central Yharnam	Central Yharnam - Blood Stone Shard #6	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410400)" (#75); map m24_01; unestablished
-52410430	Central Yharnam	Central Yharnam - Quicksilver Bullets #2	proposed rename of the published placeholder "Central Yharnam - Quicksilver Bullets x10 (Lot 2410430)" (#75); map m24_01; unestablished
-52410440	Central Yharnam	Central Yharnam - Coldblood Dew (1) #4	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410440)" (#75); map m24_01; unestablished
-52410450	Central Yharnam	Central Yharnam - Coldblood Dew (1) #5	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410450)" (#75); map m24_01; unestablished
-52410470	Central Yharnam	Central Yharnam - Oil Urn #2	proposed rename of the published placeholder "Central Yharnam - Oil Urn x2 (Lot 2410470)" (#75); map m24_01; unestablished
-52410480	Central Yharnam	Central Yharnam - Madman's Knowledge #2	proposed rename of the published placeholder "Central Yharnam - Madman's Knowledge x1 (Lot 2410480)" (#75); map m24_01; unestablished
-52410490	Central Yharnam	Central Yharnam - Blood Stone Shard #7	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410490)" (#75); map m24_01; unestablished
-52410510	Central Yharnam	Central Yharnam - Bold Hunter's Mark #2	proposed rename of the published placeholder "Central Yharnam - Bold Hunter's Mark x2 (Lot 2410510)" (#75); map m24_01; unestablished
-52410530	Central Yharnam	Central Yharnam - Coldblood Dew (1) #6	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410530)" (#75); map m24_01; unestablished
-52410540	Central Yharnam	Central Yharnam - Blood Stone Shard #8	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410540)" (#75); map m24_01; unestablished
-52410560	Central Yharnam	Central Yharnam - Quicksilver Bullets #3	proposed rename of the published placeholder "Central Yharnam - Quicksilver Bullets x5 (Lot 2410560)" (#75); map m24_01; unestablished
-52410570	Central Yharnam	Central Yharnam - Molotov Cocktail #2	proposed rename of the published placeholder "Central Yharnam - Molotov Cocktail x4 (Lot 2410570)" (#75); map m24_01; unestablished
+52400485	Cathedral Ward	Cathedral Ward - Bold Hunter's Mark	map m24_00
+52410110	Central Yharnam	Central Yharnam - Blood Stone Shard x2	published (fixed_locations.tsv); replaced the "(Lot 2410110)" placeholder under the #75 rename; map m24_01
+52410120	Central Yharnam	Central Yharnam - Blood Vial x2 #1	published (fixed_locations.tsv); replaced the "(Lot 2410120)" placeholder under the #75 rename; map m24_01; unestablished
+52410130	Central Yharnam	Central Yharnam - Coldblood Dew (1) #1	published (fixed_locations.tsv); replaced the "(Lot 2410130)" placeholder under the #75 rename; map m24_01; unestablished
+52410140	Iosefka's Clinic	Iosefka's Clinic - Madman's Knowledge (corpse)	published (fixed_locations.tsv); replaced the "(Lot 2410140)" placeholder under the #75 rename; map m24_01; coordinates (-211,-54,184) at the MSB 診療所外 (outside the clinic) warp anchor; event tag 宝死体
+52410150	Central Yharnam	Central Yharnam - Coldblood Dew (1) #2	published (fixed_locations.tsv); replaced the "(Lot 2410150)" placeholder under the #75 rename; map m24_01; unestablished
+52410160	Central Yharnam	Central Yharnam - Pebble x8	published (fixed_locations.tsv); replaced the "(Lot 2410160)" placeholder under the #75 rename; map m24_01
+52410170	Central Yharnam	Central Yharnam - Blood Stone Shard #1	published (fixed_locations.tsv); replaced the "(Lot 2410170)" placeholder under the #75 rename; map m24_01; unestablished
+52410180	Central Yharnam	Central Yharnam - Blood Stone Shard #2	published (fixed_locations.tsv); replaced the "(Lot 2410180)" placeholder under the #75 rename; map m24_01; unestablished
+52410190	Central Yharnam	Central Yharnam - Blood Vial x2 #2	published (fixed_locations.tsv); replaced the "(Lot 2410190)" placeholder under the #75 rename; map m24_01; unestablished
+52410200	Central Yharnam	Central Yharnam - Molotov Cocktail x4 #1	published (fixed_locations.tsv); replaced the "(Lot 2410200)" placeholder under the #75 rename; map m24_01; unestablished
+52410210	Central Yharnam	Central Yharnam - Blood Stone Shard #3	published (fixed_locations.tsv); replaced the "(Lot 2410210)" placeholder under the #75 rename; map m24_01; unestablished
+52410220	Central Yharnam	Central Yharnam - Pungent Blood Cocktail x2	published (fixed_locations.tsv); replaced the "(Lot 2410220)" placeholder under the #75 rename; map m24_01
+52410240	Central Yharnam	Central Yharnam - Coldblood Dew (3)	published (fixed_locations.tsv); replaced the "(Lot 2410240)" placeholder under the #75 rename; map m24_01
+52410250	Central Yharnam	Central Yharnam - Madman's Knowledge #1	published (fixed_locations.tsv); replaced the "(Lot 2410250)" placeholder under the #75 rename; map m24_01; unestablished
+52410260	Central Yharnam	Central Yharnam - Coldblood Dew (1) #3	published (fixed_locations.tsv); replaced the "(Lot 2410260)" placeholder under the #75 rename; map m24_01; unestablished
+52410270	Central Yharnam	Central Yharnam - Quicksilver Bullets x10 #1	published (fixed_locations.tsv); replaced the "(Lot 2410270)" placeholder under the #75 rename; map m24_01; unestablished
+52410280	Central Yharnam	Central Yharnam - Coldblood Dew (2)	published (fixed_locations.tsv); replaced the "(Lot 2410280)" placeholder under the #75 rename; map m24_01
+52410295	Central Yharnam	Central Yharnam - Bold Hunter's Mark	published (fixed_locations.tsv); replaced the "(Lot 2410295)" placeholder under the #75 rename; map m24_01
+52410310	Central Yharnam	Central Yharnam - Pebble x10	published (fixed_locations.tsv); replaced the "(Lot 2410310)" placeholder under the #75 rename; map m24_01
+52410330	Central Yharnam	Central Yharnam - Blood Stone Shard #4	published (fixed_locations.tsv); replaced the "(Lot 2410330)" placeholder under the #75 rename; map m24_01; unestablished
+52410340	Central Yharnam	Central Yharnam - Blood Vial x4	published (fixed_locations.tsv); replaced the "(Lot 2410340)" placeholder under the #75 rename; map m24_01
+52410360	Central Yharnam	Central Yharnam - Blood Vial x2 #3	published (fixed_locations.tsv); replaced the "(Lot 2410360)" placeholder under the #75 rename; map m24_01; unestablished
+52410370	Central Yharnam	Central Yharnam - Oil Urn x2 #1	published (fixed_locations.tsv); replaced the "(Lot 2410370)" placeholder under the #75 rename; map m24_01; unestablished
+52410380	Central Yharnam	Central Yharnam - Blood Vial x2 #4	published (fixed_locations.tsv); replaced the "(Lot 2410380)" placeholder under the #75 rename; map m24_01; unestablished
+52410390	Central Yharnam	Central Yharnam - Blood Vial x6	published (fixed_locations.tsv); replaced the "(Lot 2410390)" placeholder under the #75 rename; map m24_01
+52410400	Central Yharnam	Central Yharnam - Blood Stone Shard #5	published (fixed_locations.tsv); replaced the "(Lot 2410400)" placeholder under the #75 rename; map m24_01; unestablished
+52410430	Central Yharnam	Central Yharnam - Quicksilver Bullets x10 #2	published (fixed_locations.tsv); replaced the "(Lot 2410430)" placeholder under the #75 rename; map m24_01; unestablished
+52410440	Central Yharnam	Central Yharnam - Coldblood Dew (1) #4	published (fixed_locations.tsv); replaced the "(Lot 2410440)" placeholder under the #75 rename; map m24_01; unestablished
+52410450	Central Yharnam	Central Yharnam - Coldblood Dew (1) #5	published (fixed_locations.tsv); replaced the "(Lot 2410450)" placeholder under the #75 rename; map m24_01; unestablished
+52410470	Central Yharnam	Central Yharnam - Oil Urn x2 #2	published (fixed_locations.tsv); replaced the "(Lot 2410470)" placeholder under the #75 rename; map m24_01; unestablished
+52410480	Central Yharnam	Central Yharnam - Madman's Knowledge #2	published (fixed_locations.tsv); replaced the "(Lot 2410480)" placeholder under the #75 rename; map m24_01; unestablished
+52410490	Central Yharnam	Central Yharnam - Blood Stone Shard #6	published (fixed_locations.tsv); replaced the "(Lot 2410490)" placeholder under the #75 rename; map m24_01; unestablished
+52410510	Central Yharnam	Central Yharnam - Bold Hunter's Mark x2	published (fixed_locations.tsv); replaced the "(Lot 2410510)" placeholder under the #75 rename; map m24_01
+52410530	Central Yharnam	Central Yharnam - Coldblood Dew (1) #6	published (fixed_locations.tsv); replaced the "(Lot 2410530)" placeholder under the #75 rename; map m24_01; unestablished
+52410540	Central Yharnam	Central Yharnam - Blood Stone Shard #7	published (fixed_locations.tsv); replaced the "(Lot 2410540)" placeholder under the #75 rename; map m24_01; unestablished
+52410560	Central Yharnam	Central Yharnam - Quicksilver Bullets x5	published (fixed_locations.tsv); replaced the "(Lot 2410560)" placeholder under the #75 rename; map m24_01
+52410570	Central Yharnam	Central Yharnam - Molotov Cocktail x4 #2	published (fixed_locations.tsv); replaced the "(Lot 2410570)" placeholder under the #75 rename; map m24_01; unestablished
 52410580	Cathedral Ward	Cathedral Ward - Blood Gem #3	map m24_00; category-8 blood gem (gem param 124001); specific gem name not in committed data; unestablished
-52410590	Central Yharnam	Central Yharnam - Molotov Cocktail #3	proposed rename of the published placeholder "Central Yharnam - Molotov Cocktail x6 (Lot 2410590)" (#75); map m24_01; unestablished
-52410600	Central Yharnam	Central Yharnam - Coldblood Dew (1) #7	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410600)" (#75); map m24_01; unestablished
-52410620	Central Yharnam	Central Yharnam - Thick Coldblood (5)	proposed rename of the published placeholder "Central Yharnam - Thick Coldblood (5) x1 (Lot 2410620)" (#75); map m24_01
-52410630	Central Yharnam	Central Yharnam - Coldblood Dew (1) #8	proposed rename of the published placeholder "Central Yharnam - Coldblood Dew (1) x1 (Lot 2410630)" (#75); map m24_01; unestablished
-52410640	Iosefka's Clinic	Iosefka's Clinic - Blood Gem	proposed rename of the published placeholder "Central Yharnam - Generated Blood Gem (Lot 2410640)" (#75); map m24_01; coordinates (-244,-41,190) at the MSB 診療所外 (outside the clinic) warp anchor; category-8 blood gem (gem param 102903); specific gem name not in committed data
+52410590	Central Yharnam	Central Yharnam - Molotov Cocktail x6	published (fixed_locations.tsv); replaced the "(Lot 2410590)" placeholder under the #75 rename; map m24_01
+52410600	Central Yharnam	Central Yharnam - Coldblood Dew (1) #7	published (fixed_locations.tsv); replaced the "(Lot 2410600)" placeholder under the #75 rename; map m24_01; unestablished
+52410620	Central Yharnam	Central Yharnam - Thick Coldblood (5)	published (fixed_locations.tsv); replaced the "(Lot 2410620)" placeholder under the #75 rename; map m24_01
+52410630	Central Yharnam	Central Yharnam - Coldblood Dew (1) #8	published (fixed_locations.tsv); replaced the "(Lot 2410630)" placeholder under the #75 rename; map m24_01; unestablished
+52410640	Iosefka's Clinic	Iosefka's Clinic - Blood Gem	published (fixed_locations.tsv); replaced the "(Lot 2410640)" placeholder under the #75 rename; map m24_01; coordinates (-244,-41,190) at the MSB 診療所外 (outside the clinic) warp anchor; category-8 blood gem (gem param 102903); specific gem name not in committed data
 52410645	Iosefka's Clinic	Iosefka's Clinic - Madman's Knowledge (chest)	map m24_01; coordinates (-244,-41,190) at the MSB 診療所外 (outside the clinic) warp anchor; event tag 宝箱
-52410650	Central Yharnam	Central Yharnam - Blood Stone Shard #9	proposed rename of the published placeholder "Central Yharnam - Blood Stone Shard x1 (Lot 2410650)" (#75); map m24_01; unestablished
+52410650	Central Yharnam	Central Yharnam - Blood Stone Shard #8	published (fixed_locations.tsv); replaced the "(Lot 2410650)" placeholder under the #75 rename; map m24_01; unestablished
 52410800	Central Yharnam	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10	published (fixed_locations.tsv)
-52410920	Central Yharnam	Central Yharnam - Red Jeweled Brooch	proposed rename of the published placeholder "Central Yharnam - Red Jeweled Brooch x1 (Lot 2410920)" (#75); map m24_01
+52410920	Central Yharnam	Central Yharnam - Red Jeweled Brooch	published (fixed_locations.tsv); replaced the "(Lot 2410920)" placeholder under the #75 rename; map m24_01
 52411005	Central Yharnam	Central Yharnam - Kin Coldblood (12)	map m24_01
 52420110	Upper Cathedral Ward	Upper Cathedral Ward - Thick Coldblood (5)	map m24_02
 52420120	Upper Cathedral Ward	Upper Cathedral Ward - Blood Gem	map m24_02; category-8 blood gem (gem param 101802); specific gem name not in committed data
 52420125	Upper Cathedral Ward	Upper Cathedral Ward - Madman's Knowledge #1	map m24_02; unestablished
 52420130	Upper Cathedral Ward	Upper Cathedral Ward - Frenzied Coldblood (9) #1	map m24_02; unestablished
-52420140	Upper Cathedral Ward	Upper Cathedral Ward - Quicksilver Bullets	map m24_02
+52420140	Upper Cathedral Ward	Upper Cathedral Ward - Quicksilver Bullets x3	map m24_02
 52420160	Upper Cathedral Ward	Upper Cathedral Ward - Twin Blood Stone Shards	map m24_02
 52420170	Upper Cathedral Ward	Upper Cathedral Ward - Madman's Knowledge #2	map m24_02; unestablished
 52420180	Upper Cathedral Ward	Upper Cathedral Ward - Blue Elixir #1	map m24_02; unestablished
 52420200	Upper Cathedral Ward	Upper Cathedral Ward - Madman's Knowledge #3	map m24_02; unestablished
 52420210	Upper Cathedral Ward	Upper Cathedral Ward - Madman's Knowledge #4	map m24_02; unestablished
-52420220	Upper Cathedral Ward	Upper Cathedral Ward - Pearl Slug	map m24_02
-52420240	Upper Cathedral Ward	Upper Cathedral Ward - Ritual Blood (5)	map m24_02
+52420220	Upper Cathedral Ward	Upper Cathedral Ward - Pearl Slug x2	map m24_02
+52420240	Upper Cathedral Ward	Upper Cathedral Ward - Ritual Blood (5) x3	map m24_02
 52420260	Upper Cathedral Ward	Upper Cathedral Ward - Tomb Mold (4)	map m24_02
 52420285	Upper Cathedral Ward	Upper Cathedral Ward - Bold Hunter's Mark	map m24_02
 52420300	Upper Cathedral Ward	Upper Cathedral Ward - Frenzied Coldblood (9) #2	map m24_02; unestablished
 52420310	Upper Cathedral Ward	Upper Cathedral Ward - Blue Elixir #2	map m24_02; unestablished
-52420560	Cathedral Ward	Cathedral Ward - Blood Stone Shard #3	map m24_00; unestablished
+52420560	Cathedral Ward	Cathedral Ward - Blood Stone Shard x5	map m24_00
 52420570	Cathedral Ward	Cathedral Ward - Thick Coldblood (5) #3	map m24_00; unestablished
 52420580	Cathedral Ward	Cathedral Ward - Thick Coldblood (5) #4	map m24_00; unestablished
 52420590	Cathedral Ward	Cathedral Ward - Madman's Knowledge #7	map m24_00; unestablished
-52420600	Cathedral Ward	Cathedral Ward - Twin Blood Stone Shards #1	map m24_00; unestablished
+52420600	Cathedral Ward	Cathedral Ward - Twin Blood Stone Shards x2	map m24_00
 52420610	Cathedral Ward	Cathedral Ward - Antidote	map m24_00
 52420620	Cathedral Ward	Cathedral Ward - Madman's Knowledge #8	map m24_00; unestablished
-52420630	Cathedral Ward	Cathedral Ward - Poison Knife #2	map m24_00; unestablished
+52420630	Cathedral Ward	Cathedral Ward - Poison Knife x18	map m24_00
 52420640	Cathedral Ward	Cathedral Ward - Blood Gem #4	map m24_00; category-8 blood gem (gem param 102901); specific gem name not in committed data; unestablished
 52420645	Cathedral Ward	Cathedral Ward - Madman's Knowledge #9	map m24_00; unestablished
 52420650	Cathedral Ward	Cathedral Ward - Blood Gem #5	map m24_00; category-8 blood gem (gem param 124004); specific gem name not in committed data; unestablished
@@ -278,30 +278,30 @@ location_flag	region	name	basis
 52420690	Cathedral Ward	Cathedral Ward - Blood Gem #6	map m24_00; category-8 blood gem (gem param 103104); specific gem name not in committed data; unestablished
 52420695	Cathedral Ward	Cathedral Ward - Madman's Knowledge #11	map m24_00; unestablished
 52420700	Cathedral Ward	Cathedral Ward - Frenzied Coldblood (7)	map m24_00
-52420710	Cathedral Ward	Cathedral Ward - Twin Blood Stone Shards #2	map m24_00; unestablished
+52420710	Cathedral Ward	Cathedral Ward - Twin Blood Stone Shards	map m24_00
 52420720	Cathedral Ward	Cathedral Ward - Madman's Knowledge #12	map m24_00; unestablished
 52420740	Cathedral Ward	Cathedral Ward - Blood Gem #7	map m24_00; category-8 blood gem (gem param 124000); specific gem name not in committed data; unestablished
-52420750	Cathedral Ward	Cathedral Ward - Bold Hunter's Mark (corpse)	map m24_00; event tag 宝死体
+52420750	Cathedral Ward	Cathedral Ward - Bold Hunter's Mark x3	map m24_00
 52500100	Castle Cainhurst	Castle Cainhurst - Frenzied Coldblood (9) #1	map m25_00; unestablished
-52500110	Castle Cainhurst	Castle Cainhurst - Numbing Mist #1	map m25_00; unestablished
-52500120	Castle Cainhurst	Castle Cainhurst - Numbing Mist #2	map m25_00; unestablished
-52500130	Castle Cainhurst	Castle Cainhurst - Numbing Mist #3	map m25_00; unestablished
+52500110	Castle Cainhurst	Castle Cainhurst - Numbing Mist x2	map m25_00
+52500120	Castle Cainhurst	Castle Cainhurst - Numbing Mist x4 #1	map m25_00; unestablished
+52500130	Castle Cainhurst	Castle Cainhurst - Numbing Mist x4 #2	map m25_00; unestablished
 52500140	Castle Cainhurst	Castle Cainhurst - Frenzied Coldblood (8)	map m25_00
 52500150	Castle Cainhurst	Castle Cainhurst - Frenzied Coldblood (9) #2	map m25_00; unestablished
-52500180	Castle Cainhurst	Castle Cainhurst - Quicksilver Bullets #1	map m25_00; unestablished
+52500180	Castle Cainhurst	Castle Cainhurst - Quicksilver Bullets x6 #1	map m25_00; unestablished
 52500190	Castle Cainhurst	Castle Cainhurst - Kin Coldblood (10) #1	map m25_00; unestablished
-52500200	Castle Cainhurst	Castle Cainhurst - Quicksilver Bullets #2	map m25_00; unestablished
+52500200	Castle Cainhurst	Castle Cainhurst - Quicksilver Bullets x6 #2	map m25_00; unestablished
 52500210	Castle Cainhurst	Castle Cainhurst - Madman's Knowledge #1	map m25_00; unestablished
 52500220	Castle Cainhurst	Castle Cainhurst - Madman's Knowledge #2	map m25_00; unestablished
 52500230	Castle Cainhurst	Castle Cainhurst - Blood Stone Chunk #1	map m25_00; unestablished
-52500240	Castle Cainhurst	Castle Cainhurst - Quicksilver Bullets #3	map m25_00; unestablished
+52500240	Castle Cainhurst	Castle Cainhurst - Quicksilver Bullets x4	map m25_00
 52500260	Castle Cainhurst	Castle Cainhurst - Kin Coldblood (10) #2	map m25_00; unestablished
-52500270	Castle Cainhurst	Castle Cainhurst - Bold Hunter's Mark	map m25_00
+52500270	Castle Cainhurst	Castle Cainhurst - Bold Hunter's Mark x2	map m25_00
 52501010	Castle Cainhurst	Castle Cainhurst - Blood Stone Chunk #2	map m25_00; unestablished
 52501030	Castle Cainhurst	Castle Cainhurst - Blood Stone Chunk #3	map m25_00; unestablished
 52501040	Castle Cainhurst	Castle Cainhurst - Blood Gem #1	map m25_00; category-8 blood gem (gem param 125000); specific gem name not in committed data; unestablished
 52501060	Castle Cainhurst	Castle Cainhurst - Blood Gem #2	map m25_00; category-8 blood gem (gem param 125001); specific gem name not in committed data; unestablished
-52600100	Nightmare of Mensis	Nightmare of Mensis - Shaman Bone Blade	map m26_00
+52600100	Nightmare of Mensis	Nightmare of Mensis - Shaman Bone Blade x6	map m26_00
 52600110	Nightmare of Mensis	Nightmare of Mensis - Madman's Knowledge #1	map m26_00; unestablished
 52600120	Nightmare of Mensis	Nightmare of Mensis - Great One's Wisdom #1	map m26_00; unestablished
 52600130	Nightmare of Mensis	Nightmare of Mensis - Great One's Wisdom #2	map m26_00; unestablished
@@ -310,15 +310,15 @@ location_flag	region	name	basis
 52600160	Nightmare of Mensis	Nightmare of Mensis - Great One's Wisdom #4	map m26_00; unestablished
 52600170	Nightmare of Mensis	Nightmare of Mensis - Frenzied Coldblood (9) #1	map m26_00; unestablished
 52600180	Nightmare of Mensis	Nightmare of Mensis - Frenzied Coldblood (9) #2	map m26_00; unestablished
-52600190	Nightmare of Mensis	Nightmare of Mensis - Blood Vial #1	map m26_00; unestablished
+52600190	Nightmare of Mensis	Nightmare of Mensis - Blood Vial x8 #1	map m26_00; unestablished
 52600200	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #2	map m26_00; category-8 blood gem (gem param 126003); specific gem name not in committed data; unestablished
 52600210	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #1	map m26_00; unestablished
 52600220	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #3	map m26_00; category-8 blood gem (gem param 126000); specific gem name not in committed data; unestablished
-52600230	Nightmare of Mensis	Nightmare of Mensis - Quicksilver Bullets #1	map m26_00; unestablished
+52600230	Nightmare of Mensis	Nightmare of Mensis - Quicksilver Bullets x6 #1	map m26_00; unestablished
 52600240	Nightmare of Mensis	Nightmare of Mensis - Madman's Knowledge #2	map m26_00; unestablished
-52600250	Nightmare of Mensis	Nightmare of Mensis - Lead Elixir	map m26_00
+52600250	Nightmare of Mensis	Nightmare of Mensis - Lead Elixir x2	map m26_00
 52600260	Nightmare of Mensis	Nightmare of Mensis - Frenzied Coldblood (8) #1	map m26_00; unestablished
-52600270	Nightmare of Mensis	Nightmare of Mensis - Quicksilver Bullets #2	map m26_00; unestablished
+52600270	Nightmare of Mensis	Nightmare of Mensis - Quicksilver Bullets x6 #2	map m26_00; unestablished
 52600280	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #2	map m26_00; unestablished
 52600290	Nightmare of Mensis	Nightmare of Mensis - Frenzied Coldblood (9) #3	map m26_00; unestablished
 52600300	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #4	map m26_00; category-8 blood gem (gem param 100201); specific gem name not in committed data; unestablished
@@ -326,147 +326,147 @@ location_flag	region	name	basis
 52600310	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #3	map m26_00; unestablished
 52600320	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (10) #1	map m26_00; unestablished
 52600330	Nightmare of Mensis	Nightmare of Mensis - Frenzied Coldblood (9) #4	map m26_00; unestablished
-52600340	Nightmare of Mensis	Nightmare of Mensis - Blue Elixir	map m26_00
-52600350	Nightmare of Mensis	Nightmare of Mensis - Twin Blood Stone Shards	map m26_00
+52600340	Nightmare of Mensis	Nightmare of Mensis - Blue Elixir x2	map m26_00
+52600350	Nightmare of Mensis	Nightmare of Mensis - Twin Blood Stone Shards x3	map m26_00
 52600360	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (10) #2	map m26_00; unestablished
-52600370	Nightmare of Mensis	Nightmare of Mensis - Blood Vial #2	map m26_00; unestablished
-52600380	Nightmare of Mensis	Nightmare of Mensis - Sedative	map m26_00
+52600370	Nightmare of Mensis	Nightmare of Mensis - Blood Vial x4	map m26_00
+52600380	Nightmare of Mensis	Nightmare of Mensis - Sedative x3	map m26_00
 52600390	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #5	map m26_00; category-8 blood gem (gem param 100002); specific gem name not in committed data; unestablished
 52600395	Nightmare of Mensis	Nightmare of Mensis - Madman's Knowledge #4	map m26_00; unestablished
-52600400	Nightmare of Mensis	Nightmare of Mensis - Blood Vial #3	map m26_00; unestablished
+52600400	Nightmare of Mensis	Nightmare of Mensis - Blood Vial x3	map m26_00
 52600410	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (10) #3	map m26_00; unestablished
-52600420	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #4	map m26_00; unestablished
+52600420	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk x2 #1	map m26_00; unestablished
 52600430	Nightmare of Mensis	Nightmare of Mensis - Frenzied Coldblood (8) #2	map m26_00; unestablished
 52600440	Nightmare of Mensis	Nightmare of Mensis - Madman's Knowledge #5	map m26_00; unestablished
-52600450	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #5	map m26_00; unestablished
+52600450	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk x2 #2	map m26_00; unestablished
 52600460	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (11) #1	map m26_00; unestablished
 52600470	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (11) #2	map m26_00; unestablished
 52600480	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #6	map m26_00; category-8 blood gem (gem param 126004); specific gem name not in committed data; unestablished
-52600490	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #6	map m26_00; unestablished
+52600490	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk x2 #3	map m26_00; unestablished
 52600500	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (11) #3	map m26_00; unestablished
 52600510	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #7	map m26_00; category-8 blood gem (gem param 126001); specific gem name not in committed data; unestablished
-52600520	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #7	map m26_00; unestablished
+52600520	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk x2 #4	map m26_00; unestablished
 52600530	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #8	map m26_00; category-8 blood gem (gem param 126000); specific gem name not in committed data; unestablished
 52600540	Nightmare of Mensis	Nightmare of Mensis - Blood Rock	map m26_00
-52600560	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #8	map m26_00; unestablished
-52600580	Nightmare of Mensis	Nightmare of Mensis - Blood Vial #4	map m26_00; unestablished
+52600560	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #4	map m26_00; unestablished
+52600580	Nightmare of Mensis	Nightmare of Mensis - Blood Vial x8 #2	map m26_00; unestablished
 52600590	Nightmare of Mensis	Nightmare of Mensis - Inflicted Organ	map m26_00
-52601010	Nightmare of Mensis	Nightmare of Mensis - Yellow Backbone	map m26_00
-52700100	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #1	map m27_00; unestablished
-52700110	Forbidden Woods	Forbidden Woods - Poison Knife #1	map m27_00; unestablished
+52601010	Nightmare of Mensis	Nightmare of Mensis - Yellow Backbone x2	map m26_00
+52700100	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards x3	map m27_00
+52700110	Forbidden Woods	Forbidden Woods - Poison Knife x8	map m27_00
 52700130	Forbidden Woods	Forbidden Woods - Madman's Knowledge #1	map m27_00; unestablished
-52700140	Forbidden Woods	Forbidden Woods - Molotov Cocktail	map m27_00
+52700140	Forbidden Woods	Forbidden Woods - Molotov Cocktail x11	map m27_00
 52700170	Forbidden Woods	Forbidden Woods - Thick Coldblood (6) #1	map m27_00; unestablished
 52700180	Forbidden Woods	Forbidden Woods - Blood Gem #1	map m27_00; category-8 blood gem (gem param 102001); specific gem name not in committed data; unestablished
 52700185	Forbidden Woods	Forbidden Woods - Madman's Knowledge #2	map m27_00; unestablished
-52700190	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #2	map m27_00; unestablished
+52700190	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #1	map m27_00; unestablished
 52700200	Forbidden Woods	Forbidden Woods - Blood Gem #2	map m27_00; category-8 blood gem (gem param 101601); specific gem name not in committed data; unestablished
 52700205	Forbidden Woods	Forbidden Woods - Madman's Knowledge #3	map m27_00; unestablished
 52700210	Forbidden Woods	Forbidden Woods - Madman's Knowledge #4	map m27_00; unestablished
-52700220	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #3	map m27_00; unestablished
+52700220	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #2	map m27_00; unestablished
 52700230	Forbidden Woods	Forbidden Woods - Frenzied Coldblood (8)	map m27_00
-52700240	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #4	map m27_00; unestablished
+52700240	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #3	map m27_00; unestablished
 52700250	Forbidden Woods	Forbidden Woods - Madman's Knowledge #5	map m27_00; unestablished
 52700260	Forbidden Woods	Forbidden Woods - Madman's Knowledge #6	map m27_00; unestablished
 52700270	Forbidden Woods	Forbidden Woods - Madman's Knowledge #7	map m27_00; unestablished
 52700290	Forbidden Woods	Forbidden Woods - Madman's Knowledge #8	map m27_00; unestablished
 52700300	Forbidden Woods	Forbidden Woods - Blood Gem #3	map m27_00; category-8 blood gem (gem param 127001); specific gem name not in committed data; unestablished
 52700310	Forbidden Woods	Forbidden Woods - Frenzied Coldblood (7) #1	map m27_00; unestablished
-52700320	Forbidden Woods	Forbidden Woods - Blood Vial #1	map m27_00; unestablished
-52700330	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #5	map m27_00; unestablished
-52700340	Forbidden Woods	Forbidden Woods - Antidote #1	map m27_00; unestablished
-52700350	Forbidden Woods	Forbidden Woods - Antidote #2	map m27_00; unestablished
-52700360	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #6	map m27_00; unestablished
+52700320	Forbidden Woods	Forbidden Woods - Blood Vial x6 #1	map m27_00; unestablished
+52700330	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #4	map m27_00; unestablished
+52700340	Forbidden Woods	Forbidden Woods - Antidote x3	map m27_00
+52700350	Forbidden Woods	Forbidden Woods - Antidote x4 #1	map m27_00; unestablished
+52700360	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards x2 #1	map m27_00; unestablished
 52700370	Forbidden Woods	Forbidden Woods - Blood Stone Chunk	map m27_00
 52700380	Forbidden Woods	Forbidden Woods - Blood Gem #4	map m27_00; category-8 blood gem (gem param 100401); specific gem name not in committed data; unestablished
 52700385	Forbidden Woods	Forbidden Woods - Madman's Knowledge #9	map m27_00; unestablished
-52700390	Forbidden Woods	Forbidden Woods - Poison Knife #2	map m27_00; unestablished
-52700400	Forbidden Woods	Forbidden Woods - Beast Blood Pellet #1	map m27_00; unestablished
-52700420	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #7	map m27_00; unestablished
-52700430	Forbidden Woods	Forbidden Woods - Shining Coins #1	map m27_00; unestablished
-52700440	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #8	map m27_00; unestablished
-52700450	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #9	map m27_00; unestablished
-52700460	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #10	map m27_00; unestablished
-52700470	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #11	map m27_00; unestablished
-52700490	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #12	map m27_00; unestablished
+52700390	Forbidden Woods	Forbidden Woods - Poison Knife x3	map m27_00
+52700400	Forbidden Woods	Forbidden Woods - Beast Blood Pellet x6	map m27_00
+52700420	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards x2 #2	map m27_00; unestablished
+52700430	Forbidden Woods	Forbidden Woods - Shining Coins x5	map m27_00
+52700440	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #5	map m27_00; unestablished
+52700450	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #6	map m27_00; unestablished
+52700460	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards x2 #3	map m27_00; unestablished
+52700470	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #7	map m27_00; unestablished
+52700490	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards x2 #4	map m27_00; unestablished
 52700500	Forbidden Woods	Forbidden Woods - Frenzied Coldblood (7) #2	map m27_00; unestablished
-52700510	Forbidden Woods	Forbidden Woods - Quicksilver Bullets #1	map m27_00; unestablished
-52700520	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #13	map m27_00; unestablished
+52700510	Forbidden Woods	Forbidden Woods - Quicksilver Bullets x6	map m27_00
+52700520	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #8	map m27_00; unestablished
 52700540	Forbidden Woods	Forbidden Woods - Blood Gem #5	map m27_00; category-8 blood gem (gem param 102202); specific gem name not in committed data; unestablished
 52700545	Forbidden Woods	Forbidden Woods - Madman's Knowledge #10	map m27_00; unestablished
-52700550	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #14	map m27_00; unestablished
+52700550	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #9	map m27_00; unestablished
 52700570	Forbidden Woods	Forbidden Woods - Blood Gem #6	map m27_00; category-8 blood gem (gem param 100301); specific gem name not in committed data; unestablished
 52700575	Forbidden Woods	Forbidden Woods - Madman's Knowledge #11	map m27_00; unestablished
-52700580	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #15	map m27_00; unestablished
-52700590	Forbidden Woods	Forbidden Woods - Beast Blood Pellet #2	map m27_00; unestablished
+52700580	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #10	map m27_00; unestablished
+52700590	Forbidden Woods	Forbidden Woods - Beast Blood Pellet x3	map m27_00
 52700600	Forbidden Woods	Forbidden Woods - Thick Coldblood (6) #2	map m27_00; unestablished
-52700610	Forbidden Woods	Forbidden Woods - Blood Vial #2	map m27_00; unestablished
-52700640	Forbidden Woods	Forbidden Woods - Blood Vial #3	map m27_00; unestablished
+52700610	Forbidden Woods	Forbidden Woods - Blood Vial x2	map m27_00
+52700640	Forbidden Woods	Forbidden Woods - Blood Vial x6 #2	map m27_00; unestablished
 52700650	Forbidden Woods	Forbidden Woods - Blood Gem #7	map m27_00; category-8 blood gem (gem param 127003); specific gem name not in committed data; unestablished
 52700660	Forbidden Woods	Forbidden Woods - Blood Gem #8	map m27_00; category-8 blood gem (gem param 127004); specific gem name not in committed data; unestablished
 52700670	Forbidden Woods	Forbidden Woods - Frenzied Coldblood (7) #3	map m27_00; unestablished
 52700690	Forbidden Woods	Forbidden Woods - Blood Gem #9	map m27_00; category-8 blood gem (gem param 127002); specific gem name not in committed data; unestablished
 52700700	Forbidden Woods	Forbidden Woods - Blood Gem #10	map m27_00; category-8 blood gem (gem param 127000); specific gem name not in committed data; unestablished
-52700720	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #16	map m27_00; unestablished
+52700720	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #11	map m27_00; unestablished
 52700740	Forbidden Woods	Forbidden Woods - Frenzied Coldblood (7) #4	map m27_00; unestablished
-52700750	Forbidden Woods	Forbidden Woods - Shining Coins #2	map m27_00; unestablished
-52700760	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #17	map m27_00; unestablished
+52700750	Forbidden Woods	Forbidden Woods - Shining Coins x6	map m27_00
+52700760	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #12	map m27_00; unestablished
 52700770	Forbidden Woods	Forbidden Woods - Thick Coldblood (6) #3	map m27_00; unestablished
-52700780	Forbidden Woods	Forbidden Woods - Antidote #3	map m27_00; unestablished
-52700790	Forbidden Woods	Forbidden Woods - Quicksilver Bullets #2	map m27_00; unestablished
-52700810	Forbidden Woods	Forbidden Woods - Pebble	map m27_00
-52700860	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #18	map m27_00; unestablished
+52700780	Forbidden Woods	Forbidden Woods - Antidote x4 #2	map m27_00; unestablished
+52700790	Forbidden Woods	Forbidden Woods - Quicksilver Bullets x10	map m27_00
+52700810	Forbidden Woods	Forbidden Woods - Pebble x2	map m27_00
+52700860	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #13	map m27_00; unestablished
 52700870	Forbidden Woods	Forbidden Woods - Thick Coldblood (6) #4	map m27_00; unestablished
-52700880	Forbidden Woods	Forbidden Woods - Blood Vial #4	map m27_00; unestablished
-52700890	Forbidden Woods	Forbidden Woods - Blue Elixir	map m27_00
-52700900	Forbidden Woods	Forbidden Woods - Pungent Blood Cocktail #1	map m27_00; unestablished
-52700910	Forbidden Woods	Forbidden Woods - Pungent Blood Cocktail #2	map m27_00; unestablished
-52700920	Forbidden Woods	Forbidden Woods - Beast Blood Pellet #3	map m27_00; unestablished
+52700880	Forbidden Woods	Forbidden Woods - Blood Vial x5	map m27_00
+52700890	Forbidden Woods	Forbidden Woods - Blue Elixir x4	map m27_00
+52700900	Forbidden Woods	Forbidden Woods - Pungent Blood Cocktail x3	map m27_00
+52700910	Forbidden Woods	Forbidden Woods - Pungent Blood Cocktail x4	map m27_00
+52700920	Forbidden Woods	Forbidden Woods - Beast Blood Pellet x4	map m27_00
 52700930	Forbidden Woods	Forbidden Woods - Frenzied Coldblood (7) #5	map m27_00; unestablished
 52700940	Forbidden Woods	Forbidden Woods - Madman's Knowledge #12	map m27_00; unestablished
-52700945	Forbidden Woods	Forbidden Woods - Antidote #4	map m27_00; unestablished
-52700960	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #19	map m27_00; unestablished
+52700945	Forbidden Woods	Forbidden Woods - Antidote x2	map m27_00
+52700960	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards x2 #5	map m27_00; unestablished
 52800000	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #1	map m28_00; unestablished
 52800010	Yahar'gul	Yahar'gul - Blood Stone Chunk #1	map m28_00; unestablished
 52800020	Yahar'gul	Yahar'gul - Blood Gem #1	map m28_00; category-8 blood gem (gem param 128000); specific gem name not in committed data; unestablished
-52800030	Yahar'gul	Yahar'gul - Bolt Paper #1	map m28_00; unestablished
+52800030	Yahar'gul	Yahar'gul - Bolt Paper x3	map m28_00
 52800040	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #2	map m28_00; unestablished
 52800050	Yahar'gul	Yahar'gul - Blood Gem #2	map m28_00; category-8 blood gem (gem param 100802); specific gem name not in committed data; unestablished
 52800055	Yahar'gul	Yahar'gul - Madman's Knowledge #1	map m28_00; unestablished
 52800060	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #3	map m28_00; unestablished
 52800070	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #4	map m28_00; unestablished
-52800080	Yahar'gul	Yahar'gul - Blood Vial #1	map m28_00; unestablished
+52800080	Yahar'gul	Yahar'gul - Blood Vial x8	map m28_00
 52800090	Yahar'gul	Yahar'gul - Frenzied Coldblood (9)	map m28_00
 52800110	Yahar'gul	Yahar'gul - Blood Stone Chunk #2	map m28_00; unestablished
 52800120	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #5	map m28_00; unestablished
-52800130	Yahar'gul	Yahar'gul - Blood Vial #2	map m28_00; unestablished
+52800130	Yahar'gul	Yahar'gul - Blood Vial x6 #1	map m28_00; unestablished
 52800140	Yahar'gul	Yahar'gul - Blood Gem #3	map m28_00; category-8 blood gem (gem param 101301); specific gem name not in committed data; unestablished
 52800145	Yahar'gul	Yahar'gul - Madman's Knowledge #2	map m28_00; unestablished
 52800150	Yahar'gul	Yahar'gul - Madman's Knowledge #3	map m28_00; unestablished
 52800160	Yahar'gul	Yahar'gul - Madman's Knowledge #4	map m28_00; unestablished
-52800170	Yahar'gul	Yahar'gul - Quicksilver Bullets and Frenzied Coldblood (7)	map m28_00
-52800180	Yahar'gul	Yahar'gul - Quicksilver Bullets #1	map m28_00; unestablished
+52800170	Yahar'gul	Yahar'gul - Quicksilver Bullets x10 and Frenzied Coldblood (7)	map m28_00
+52800180	Yahar'gul	Yahar'gul - Quicksilver Bullets x10 #1	map m28_00; unestablished
 52800210	Yahar'gul	Yahar'gul - Blood Stone Chunk #3	map m28_00; unestablished
-52800300	Yahar'gul	Yahar'gul - Pungent Blood Cocktail #1	map m28_00; unestablished
+52800300	Yahar'gul	Yahar'gul - Pungent Blood Cocktail	map m28_00
 52800310	Yahar'gul	Yahar'gul - Twin Blood Stone Shards	map m28_00
-52800340	Yahar'gul	Yahar'gul - Bolt Paper #2	map m28_00; unestablished
+52800340	Yahar'gul	Yahar'gul - Bolt Paper x5	map m28_00
 52800350	Yahar'gul	Yahar'gul - Blood Gem #4	map m28_00; category-8 blood gem (gem param 100001); specific gem name not in committed data; unestablished
 52800355	Yahar'gul	Yahar'gul - Madman's Knowledge #5	map m28_00; unestablished
-52800360	Yahar'gul	Yahar'gul - Pungent Blood Cocktail #2	map m28_00; unestablished
+52800360	Yahar'gul	Yahar'gul - Pungent Blood Cocktail x3	map m28_00
 52800380	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #6	map m28_00; unestablished
-52800400	Yahar'gul	Yahar'gul - Blood Stone Chunk #4	map m28_00; unestablished
-52800410	Yahar'gul	Yahar'gul - Blood Stone Chunk #5	map m28_00; unestablished
+52800400	Yahar'gul	Yahar'gul - Blood Stone Chunk x2 #1	map m28_00; unestablished
+52800410	Yahar'gul	Yahar'gul - Blood Stone Chunk x2 #2	map m28_00; unestablished
 52800420	Yahar'gul	Yahar'gul - Frenzied Coldblood (7) #1	map m28_00; unestablished
 52800430	Yahar'gul	Yahar'gul - Frenzied Coldblood (7) #2	map m28_00; unestablished
-52800440	Yahar'gul	Yahar'gul - Blood Stone Chunk #6	map m28_00; unestablished
-52800450	Yahar'gul	Yahar'gul - Blood Stone Chunk #7	map m28_00; unestablished
+52800440	Yahar'gul	Yahar'gul - Blood Stone Chunk x2 #3	map m28_00; unestablished
+52800450	Yahar'gul	Yahar'gul - Blood Stone Chunk x2 #4	map m28_00; unestablished
 52800530	Yahar'gul	Yahar'gul - Blood Gem #5	map m28_00; category-8 blood gem (gem param 228001); specific gem name not in committed data; unestablished
 52800620	Yahar'gul	Yahar'gul - Madman's Knowledge #6	map m28_00; unestablished
 52800630	Yahar'gul	Yahar'gul - Frenzied Coldblood (7) #3	map m28_00; unestablished
 52800640	Yahar'gul	Yahar'gul - Thick Coldblood (6)	map m28_00
-52800650	Yahar'gul	Yahar'gul - Blood Vial #3	map m28_00; unestablished
-52800660	Yahar'gul	Yahar'gul - Quicksilver Bullets #2	map m28_00; unestablished
-52800670	Yahar'gul	Yahar'gul - Lead Elixir	map m28_00
+52800650	Yahar'gul	Yahar'gul - Blood Vial x6 #2	map m28_00; unestablished
+52800660	Yahar'gul	Yahar'gul - Quicksilver Bullets x10 #2	map m28_00; unestablished
+52800670	Yahar'gul	Yahar'gul - Lead Elixir x3	map m28_00
 52800680	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #7	map m28_00; unestablished
 52800690	Yahar'gul	Yahar'gul - Madman's Knowledge #7	map m28_00; unestablished
 52800700	Yahar'gul	Yahar'gul - Madman's Knowledge #8	map m28_00; unestablished
@@ -476,10 +476,10 @@ location_flag	region	name	basis
 53200015	Lecture Building 2F	Lecture Building 2F - Madman's Knowledge (corpse)	map m32_00; floor from Y coordinate -179.19 (tagged 2F rows sit at -176.2..-177.3); no floor in event tag; event tag 宝死体
 53200020	Lecture Building 1F	Lecture Building 1F - Madman's Knowledge #2	map m32_00; floor from Y coordinate -186.93 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag; unestablished
 53200030	Lecture Building 1F	Lecture Building 1F - Great One's Wisdom	map m32_00; floor from Y coordinate -186.96 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag
-53200040	Lecture Building 1F	Lecture Building 1F - Sedative	map m32_00; floor from Y coordinate -187.16 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag
+53200040	Lecture Building 1F	Lecture Building 1F - Sedative x5	map m32_00; floor from Y coordinate -187.16 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag
 53200100	Lecture Building 1F	Lecture Building 1F - Madman's Knowledge #3	map m32_00; event tag names 1F; unestablished
-53200110	Lecture Building 2F	Lecture Building 2F - Sedative	map m32_00; event tag names 2F
-53200620	Lecture Building 1F	Lecture Building 1F - Red Jelly	map m32_00; event tag names 1F
+53200110	Lecture Building 2F	Lecture Building 2F - Sedative x6	map m32_00; event tag names 2F
+53200620	Lecture Building 1F	Lecture Building 1F - Red Jelly x2	map m32_00; event tag names 1F
 53200640	Lecture Building 2F	Lecture Building 2F - Blood Gem (chest)	map m32_00; event tag names 2F; category-8 blood gem (gem param 102902); specific gem name not in committed data; event tag 宝箱
 53200645	Lecture Building 2F	Lecture Building 2F - Madman's Knowledge (chest)	map m32_00; event tag names 2F; event tag 宝箱
 53200700	Lecture Building 1F	Lecture Building 1F - Pearl Slug	map m32_00; floor from Y coordinate -183.75 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag
@@ -488,135 +488,135 @@ location_flag	region	name	basis
 53300100	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #1	map m33_00; unestablished
 53300110	Nightmare Frontier	Nightmare Frontier - Blood Gem #1	map m33_00; category-8 blood gem (gem param 101401); specific gem name not in committed data; unestablished
 53300115	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #2	map m33_00; unestablished
-53300120	Nightmare Frontier	Nightmare Frontier - Bolt Paper	map m33_00
-53300130	Nightmare Frontier	Nightmare Frontier - Lead Elixir #1	map m33_00; unestablished
-53300140	Nightmare Frontier	Nightmare Frontier - Blood Vial #1	map m33_00; unestablished
+53300120	Nightmare Frontier	Nightmare Frontier - Bolt Paper x2	map m33_00
+53300130	Nightmare Frontier	Nightmare Frontier - Lead Elixir x2 #1	map m33_00; unestablished
+53300140	Nightmare Frontier	Nightmare Frontier - Blood Vial x3 #1	map m33_00; unestablished
 53300150	Nightmare Frontier	Nightmare Frontier - Blood Gem #2	map m33_00; category-8 blood gem (gem param 102302); specific gem name not in committed data; unestablished
 53300155	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #3	map m33_00; unestablished
 53300160	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (9) #1	map m33_00; unestablished
-53300170	Nightmare Frontier	Nightmare Frontier - Quicksilver Bullets	map m33_00
+53300170	Nightmare Frontier	Nightmare Frontier - Quicksilver Bullets x5	map m33_00
 53300180	Nightmare Frontier	Nightmare Frontier - Thick Coldblood (4) #1	map m33_00; unestablished
-53300190	Nightmare Frontier	Nightmare Frontier - Antidote #1	map m33_00; unestablished
+53300190	Nightmare Frontier	Nightmare Frontier - Antidote x2 #1	map m33_00; unestablished
 53300200	Nightmare Frontier	Nightmare Frontier - Corpse Pickup	map m33_00; goods param 6008 has no English name in committed data; named by placement until FMG extraction
 53300210	Nightmare Frontier	Nightmare Frontier - Thick Coldblood (4) #2	map m33_00; unestablished
 53300220	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #4	map m33_00; unestablished
 53300230	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #5	map m33_00; unestablished
 53300240	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (9) #2	map m33_00; unestablished
-53300250	Nightmare Frontier	Nightmare Frontier - Blood Vial #2	map m33_00; unestablished
-53300260	Nightmare Frontier	Nightmare Frontier - Lead Elixir #2	map m33_00; unestablished
+53300250	Nightmare Frontier	Nightmare Frontier - Blood Vial x2 #1	map m33_00; unestablished
+53300260	Nightmare Frontier	Nightmare Frontier - Lead Elixir x2 #2	map m33_00; unestablished
 53300270	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #6	map m33_00; unestablished
 53300280	Nightmare Frontier	Nightmare Frontier - Coldblood Flowerbud #1	map m33_00; unestablished
-53300290	Nightmare Frontier	Nightmare Frontier - Antidote #2	map m33_00; unestablished
+53300290	Nightmare Frontier	Nightmare Frontier - Antidote x2 #2	map m33_00; unestablished
 53300300	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (8) #1	map m33_00; unestablished
-53300310	Nightmare Frontier	Nightmare Frontier - Antidote #3	map m33_00; unestablished
+53300310	Nightmare Frontier	Nightmare Frontier - Antidote x4	map m33_00
 53300320	Nightmare Frontier	Nightmare Frontier - Blood Gem #3	map m33_00; category-8 blood gem (gem param 102002); specific gem name not in committed data; unestablished
 53300325	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #7	map m33_00; unestablished
 53300340	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (8) #2	map m33_00; unestablished
-53300350	Nightmare Frontier	Nightmare Frontier - Lead Elixir #3	map m33_00; unestablished
+53300350	Nightmare Frontier	Nightmare Frontier - Lead Elixir x3	map m33_00
 53300360	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #8	map m33_00; unestablished
-53300370	Nightmare Frontier	Nightmare Frontier - Blood Vial #3	map m33_00; unestablished
+53300370	Nightmare Frontier	Nightmare Frontier - Blood Vial x3 #2	map m33_00; unestablished
 53300380	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #9	map m33_00; unestablished
 53300390	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (9) #3	map m33_00; unestablished
 53300400	Nightmare Frontier	Nightmare Frontier - Kin Coldblood (10)	map m33_00
-53300410	Nightmare Frontier	Nightmare Frontier - Bold Hunter's Mark	map m33_00
+53300410	Nightmare Frontier	Nightmare Frontier - Bold Hunter's Mark x3	map m33_00
 53300420	Nightmare Frontier	Nightmare Frontier - Blood Gem #4	map m33_00; category-8 blood gem (gem param 100302); specific gem name not in committed data; unestablished
 53300425	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #10	map m33_00; unestablished
-53300430	Nightmare Frontier	Nightmare Frontier - Coldblood Flowerbud #2	map m33_00; unestablished
-53300440	Nightmare Frontier	Nightmare Frontier - Lead Elixir #4	map m33_00; unestablished
-53300450	Nightmare Frontier	Nightmare Frontier - Antidote #4	map m33_00; unestablished
-53300460	Nightmare Frontier	Nightmare Frontier - Coldblood Flowerbud #3	map m33_00; unestablished
-53300470	Nightmare Frontier	Nightmare Frontier - Blood Vial #4	map m33_00; unestablished
+53300430	Nightmare Frontier	Nightmare Frontier - Coldblood Flowerbud x2	map m33_00
+53300440	Nightmare Frontier	Nightmare Frontier - Lead Elixir x2 #3	map m33_00; unestablished
+53300450	Nightmare Frontier	Nightmare Frontier - Antidote x3	map m33_00
+53300460	Nightmare Frontier	Nightmare Frontier - Coldblood Flowerbud #2	map m33_00; unestablished
+53300470	Nightmare Frontier	Nightmare Frontier - Blood Vial x2 #2	map m33_00; unestablished
 53300480	Nightmare Frontier	Nightmare Frontier - Blood Gem #5	map m33_00; category-8 blood gem (gem param 102102); specific gem name not in committed data; unestablished
 53300485	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #11	map m33_00; unestablished
 53300490	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #12	map m33_00; unestablished
 53400000	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #1	map m34_00; unestablished
 53400010	Hunter's Nightmare	Hunter's Nightmare - Frenzied Coldblood (9) #1	map m34_00; unestablished
-53400030	Hunter's Nightmare	Hunter's Nightmare - Molotov Cocktail #1	map m34_00; unestablished
-53400050	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #1	map m34_00; unestablished
+53400030	Hunter's Nightmare	Hunter's Nightmare - Molotov Cocktail x4	map m34_00
+53400050	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x3 #1	map m34_00; unestablished
 53400070	Hunter's Nightmare	Hunter's Nightmare - Madman's Knowledge #1	map m34_00; unestablished
-53400080	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #2	map m34_00; unestablished
-53400090	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #3	map m34_00; unestablished
-53400100	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #4	map m34_00; unestablished
-53400110	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #5	map m34_00; unestablished
-53400120	Hunter's Nightmare	Hunter's Nightmare - Delayed Molotov #1	map m34_00; unestablished
-53400140	Hunter's Nightmare	Hunter's Nightmare - Beast Blood Pellet	map m34_00
-53400150	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #6	map m34_00; unestablished
+53400080	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x6 #1	map m34_00; unestablished
+53400090	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #1	map m34_00; unestablished
+53400100	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x6 #2	map m34_00; unestablished
+53400110	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #2	map m34_00; unestablished
+53400120	Hunter's Nightmare	Hunter's Nightmare - Delayed Molotov x5 #1	map m34_00; unestablished
+53400140	Hunter's Nightmare	Hunter's Nightmare - Beast Blood Pellet x3	map m34_00
+53400150	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #3	map m34_00; unestablished
 53400170	Hunter's Nightmare	Hunter's Nightmare - Blood Stone Chunk #1	map m34_00; unestablished
 53400180	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #2	map m34_00; unestablished
 53400190	Hunter's Nightmare	Hunter's Nightmare - Blood Stone Chunk #2	map m34_00; unestablished
-53400200	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #3	map m34_00; unestablished
-53400210	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #4	map m34_00; unestablished
+53400200	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards x2 #1	map m34_00; unestablished
+53400210	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards x2 #2	map m34_00; unestablished
 53400230	Hunter's Nightmare	Hunter's Nightmare - Frenzied Coldblood (8) #1	map m34_00; unestablished
-53400240	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets #1	map m34_00; unestablished
-53400250	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #7	map m34_00; unestablished
-53400260	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #8	map m34_00; unestablished
-53400330	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #9	map m34_00; unestablished
+53400240	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets x6	map m34_00
+53400250	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #4	map m34_00; unestablished
+53400260	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #5	map m34_00; unestablished
+53400330	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #6	map m34_00; unestablished
 53400370	Hunter's Nightmare	Hunter's Nightmare - Madman's Knowledge #2	map m34_00; unestablished
-53400380	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #10	map m34_00; unestablished
-53400390	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #5	map m34_00; unestablished
-53400400	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #6	map m34_00; unestablished
-53400410	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #11	map m34_00; unestablished
-53400420	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #12	map m34_00; unestablished
+53400380	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x3 #2	map m34_00; unestablished
+53400390	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards x3 #1	map m34_00; unestablished
+53400400	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #3	map m34_00; unestablished
+53400410	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x3 #3	map m34_00; unestablished
+53400420	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x3 #4	map m34_00; unestablished
 53400430	Hunter's Nightmare	Hunter's Nightmare - Frenzied Coldblood (9) #2	map m34_00; unestablished
 53400450	Hunter's Nightmare	Hunter's Nightmare - Madman's Knowledge #3	map m34_00; unestablished
-53400460	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #13	map m34_00; unestablished
+53400460	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x6 #3	map m34_00; unestablished
 53400470	Hunter's Nightmare	Hunter's Nightmare - Pebble #1	map m34_00; unestablished
-53400480	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #7	map m34_00; unestablished
-53400490	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #14	map m34_00; unestablished
-53400500	Hunter's Nightmare	Hunter's Nightmare - Oil Urn #1	map m34_00; unestablished
-53400520	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets #2	map m34_00; unestablished
+53400480	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards x2 #3	map m34_00; unestablished
+53400490	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x2 #1	map m34_00; unestablished
+53400500	Hunter's Nightmare	Hunter's Nightmare - Oil Urn x3 #1	map m34_00; unestablished
+53400520	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets x4	map m34_00
 53400530	Hunter's Nightmare	Hunter's Nightmare - Frenzied Coldblood (8) #2	map m34_00; unestablished
-53400540	Hunter's Nightmare	Hunter's Nightmare - Molotov Cocktail #2	map m34_00; unestablished
-53400590	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #8	map m34_00; unestablished
-53401000	Hunter's Nightmare	Hunter's Nightmare - Delayed Molotov #2	map m34_00; unestablished
-53401010	Hunter's Nightmare	Hunter's Nightmare - Oil Urn #2	map m34_00; unestablished
-53401020	Hunter's Nightmare	Hunter's Nightmare - Bone Marrow Ash	map m34_00
-53401030	Hunter's Nightmare	Hunter's Nightmare - Fire Paper #1	map m34_00; unestablished
-53401040	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #15	map m34_00; unestablished
-53401050	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #16	map m34_00; unestablished
-53401060	Hunter's Nightmare	Hunter's Nightmare - Oil Urn #3	map m34_00; unestablished
-53401070	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets #3	map m34_00; unestablished
-53401080	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets #4	map m34_00; unestablished
-53401090	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #17	map m34_00; unestablished
-53401100	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #18	map m34_00; unestablished
+53400540	Hunter's Nightmare	Hunter's Nightmare - Molotov Cocktail x3	map m34_00
+53400590	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards x3 #2	map m34_00; unestablished
+53401000	Hunter's Nightmare	Hunter's Nightmare - Delayed Molotov x5 #2	map m34_00; unestablished
+53401010	Hunter's Nightmare	Hunter's Nightmare - Oil Urn x3 #2	map m34_00; unestablished
+53401020	Hunter's Nightmare	Hunter's Nightmare - Bone Marrow Ash x3	map m34_00
+53401030	Hunter's Nightmare	Hunter's Nightmare - Fire Paper x3	map m34_00
+53401040	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x2 #2	map m34_00; unestablished
+53401050	Hunter's Nightmare	Hunter's Nightmare - Blood Vial #7	map m34_00; unestablished
+53401060	Hunter's Nightmare	Hunter's Nightmare - Oil Urn x4	map m34_00
+53401070	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets x8	map m34_00
+53401080	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets x10 #1	map m34_00; unestablished
+53401090	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x10	map m34_00
+53401100	Hunter's Nightmare	Hunter's Nightmare - Blood Vial x4	map m34_00
 53401110	Hunter's Nightmare	Hunter's Nightmare - Pebble #2	map m34_00; unestablished
-53401120	Hunter's Nightmare	Hunter's Nightmare - Fire Paper #2	map m34_00; unestablished
-53401130	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets #5	map m34_00; unestablished
+53401120	Hunter's Nightmare	Hunter's Nightmare - Fire Paper	map m34_00
+53401130	Hunter's Nightmare	Hunter's Nightmare - Quicksilver Bullets x10 #2	map m34_00; unestablished
 53500000	Research Hall	Research Hall - Kin Coldblood (10) #1	map m35_00; unestablished
-53500110	Research Hall	Research Hall - Blood Vial #1	map m35_00; unestablished
-53500120	Research Hall	Research Hall - Blue Elixir #1	map m35_00; unestablished
+53500110	Research Hall	Research Hall - Blood Vial x2 #1	map m35_00; unestablished
+53500120	Research Hall	Research Hall - Blue Elixir x2	map m35_00
 53500130	Research Hall	Research Hall - Frenzied Coldblood (9) #1	map m35_00; unestablished
 53500140	Research Hall	Research Hall - Blood Stone Chunk #1	map m35_00; unestablished
-53500150	Research Hall	Research Hall - Blue Elixir #2	map m35_00; unestablished
+53500150	Research Hall	Research Hall - Blue Elixir #1	map m35_00; unestablished
 53500160	Research Hall	Research Hall - Blood Gem #1	map m35_00; category-8 blood gem (gem param 135000); specific gem name not in committed data; unestablished
-53500180	Research Hall	Research Hall - Blue Elixir #3	map m35_00; unestablished
+53500180	Research Hall	Research Hall - Blue Elixir #2	map m35_00; unestablished
 53500190	Research Hall	Research Hall - Blood Gem #2	map m35_00; category-8 blood gem (gem param 135004); specific gem name not in committed data; unestablished
 53500200	Research Hall	Research Hall - Kin Coldblood (10) #2	map m35_00; unestablished
 53500210	Research Hall	Research Hall - Frenzied Coldblood (9) #2	map m35_00; unestablished
-53500220	Research Hall	Research Hall - Sedative	map m35_00
+53500220	Research Hall	Research Hall - Sedative x3	map m35_00
 53500230	Research Hall	Research Hall - Madman's Knowledge	map m35_00
-53500250	Research Hall	Research Hall - Beast Blood Pellet	map m35_00
-53500260	Research Hall	Research Hall - Quicksilver Bullets #1	map m35_00; unestablished
-53500270	Research Hall	Research Hall - Blood Vial #2	map m35_00; unestablished
-53500280	Research Hall	Research Hall - Blood Vial #3	map m35_00; unestablished
+53500250	Research Hall	Research Hall - Beast Blood Pellet x6	map m35_00
+53500260	Research Hall	Research Hall - Quicksilver Bullets x3	map m35_00
+53500270	Research Hall	Research Hall - Blood Vial x5	map m35_00
+53500280	Research Hall	Research Hall - Blood Vial x2 #2	map m35_00; unestablished
 53500290	Research Hall	Research Hall - Frenzied Coldblood (9) #3	map m35_00; unestablished
-53500300	Research Hall	Research Hall - Antidote	map m35_00
-53500310	Research Hall	Research Hall - Quicksilver Bullets #2	map m35_00; unestablished
+53500300	Research Hall	Research Hall - Antidote x2	map m35_00
+53500310	Research Hall	Research Hall - Quicksilver Bullets x4	map m35_00
 53500500	Research Hall	Research Hall - Kin Coldblood (10) #3	map m35_00; unestablished
 53500530	Research Hall	Research Hall - Blood Stone Chunk #2	map m35_00; unestablished
 53500540	Research Hall	Research Hall - Great One's Wisdom #1	map m35_00; unestablished
 53500600	Research Hall	Research Hall - Frenzied Coldblood (9) #4	map m35_00; unestablished
-53500620	Research Hall	Research Hall - Blue Elixir #4	map m35_00; unestablished
+53500620	Research Hall	Research Hall - Blue Elixir x4	map m35_00
 53500630	Research Hall	Research Hall - Blood Stone Chunk #3	map m35_00; unestablished
 53500840	Research Hall	Research Hall - Great One's Wisdom #2	map m35_00; unestablished
 53501100	Research Hall	Research Hall - Blood Gem #3	map m35_00; category-8 blood gem (gem param 134000); specific gem name not in committed data; unestablished
 53501500	Research Hall	Research Hall - Blood Gem #4	map m35_00; category-8 blood gem (gem param 135005); specific gem name not in committed data; unestablished
 53600000	Underground Corpse Pile	Underground Corpse Pile - Lead Elixir #1	map m36_00; unestablished
 53600010	Underground Corpse Pile	Underground Corpse Pile - Madman's Knowledge #1	map m36_00; unestablished
-53600100	Underground Corpse Pile	Underground Corpse Pile - Blood Vial #1	map m36_00; unestablished
-53600110	Underground Corpse Pile	Underground Corpse Pile - Lead Elixir #2	map m36_00; unestablished
+53600100	Underground Corpse Pile	Underground Corpse Pile - Blood Vial x3 #1	map m36_00; unestablished
+53600110	Underground Corpse Pile	Underground Corpse Pile - Lead Elixir x2 #1	map m36_00; unestablished
 53600120	Underground Corpse Pile	Underground Corpse Pile - Kin Coldblood (10) #1	map m36_00; unestablished
-53600130	Underground Corpse Pile	Underground Corpse Pile - Oil Urn #1	map m36_00; unestablished
+53600130	Underground Corpse Pile	Underground Corpse Pile - Oil Urn x4 #1	map m36_00; unestablished
 53600140	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #1	map m36_00; category-8 blood gem (gem param 134001); specific gem name not in committed data; unestablished
 53600150	Underground Corpse Pile	Underground Corpse Pile - Great One's Wisdom #1	map m36_00; unestablished
 53600160	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #2	map m36_00; category-8 blood gem (gem param 136002); specific gem name not in committed data; unestablished
@@ -625,26 +625,26 @@ location_flag	region	name	basis
 53600210	Underground Corpse Pile	Underground Corpse Pile - Great One's Wisdom #2	map m36_00; unestablished
 53600220	Underground Corpse Pile	Underground Corpse Pile - Kin Coldblood (10) #2	map m36_00; unestablished
 53600230	Underground Corpse Pile	Underground Corpse Pile - Kin Coldblood (10) #3	map m36_00; unestablished
-53600300	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #3	map m36_00; unestablished
-53600310	Underground Corpse Pile	Underground Corpse Pile - Blood Vial #2	map m36_00; unestablished
-53600320	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #4	map m36_00; unestablished
-53600330	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #5	map m36_00; unestablished
+53600300	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk x2	map m36_00
+53600310	Underground Corpse Pile	Underground Corpse Pile - Blood Vial x3 #2	map m36_00; unestablished
+53600320	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #3	map m36_00; unestablished
+53600330	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #4	map m36_00; unestablished
 53600340	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #3	map m36_00; category-8 blood gem (gem param 136001); specific gem name not in committed data; unestablished
 53600350	Underground Corpse Pile	Underground Corpse Pile - Kin Coldblood (10) #4	map m36_00; unestablished
 53600360	Underground Corpse Pile	Underground Corpse Pile - Kin Coldblood (10) #5	map m36_00; unestablished
-53600400	Underground Corpse Pile	Underground Corpse Pile - Oil Urn #2	map m36_00; unestablished
-53600410	Underground Corpse Pile	Underground Corpse Pile - Blood Vial #3	map m36_00; unestablished
+53600400	Underground Corpse Pile	Underground Corpse Pile - Oil Urn x4 #2	map m36_00; unestablished
+53600410	Underground Corpse Pile	Underground Corpse Pile - Blood Vial x6	map m36_00
 53600420	Underground Corpse Pile	Underground Corpse Pile - Madman's Knowledge #2	map m36_00; unestablished
 53600430	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #4	map m36_00; category-8 blood gem (gem param 136004); specific gem name not in committed data; unestablished
-53600440	Underground Corpse Pile	Underground Corpse Pile - Twin Blood Stone Shards	map m36_00
-53600450	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #6	map m36_00; unestablished
-53600460	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #7	map m36_00; unestablished
-53600470	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #8	map m36_00; unestablished
-53600500	Underground Corpse Pile	Underground Corpse Pile - Lead Elixir #3	map m36_00; unestablished
+53600440	Underground Corpse Pile	Underground Corpse Pile - Twin Blood Stone Shards x3	map m36_00
+53600450	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #5	map m36_00; unestablished
+53600460	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #6	map m36_00; unestablished
+53600470	Underground Corpse Pile	Underground Corpse Pile - Blood Stone Chunk #7	map m36_00; unestablished
+53600500	Underground Corpse Pile	Underground Corpse Pile - Lead Elixir #2	map m36_00; unestablished
 53600510	Underground Corpse Pile	Underground Corpse Pile - Kin Coldblood (11) #1	map m36_00; unestablished
 53600520	Underground Corpse Pile	Underground Corpse Pile - Madman's Knowledge #3	map m36_00; unestablished
 53600530	Underground Corpse Pile	Underground Corpse Pile - Great One's Wisdom #3	map m36_00; unestablished
-53600540	Underground Corpse Pile	Underground Corpse Pile - Lead Elixir #4	map m36_00; unestablished
+53600540	Underground Corpse Pile	Underground Corpse Pile - Lead Elixir x2 #2	map m36_00; unestablished
 53600550	Underground Corpse Pile	Underground Corpse Pile - Kin Coldblood (11) #2	map m36_00; unestablished
 53600560	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #5	map m36_00; category-8 blood gem (gem param 136003); specific gem name not in committed data; unestablished
 53600570	Underground Corpse Pile	Underground Corpse Pile - Blood Gem #6	map m36_00; category-8 blood gem (gem param 136006); specific gem name not in committed data; unestablished
