@@ -3,8 +3,10 @@
 Status: the repository carries both the UI-independent cache/activation core
 and a desktop **Randomize & Launch** surface. The Windows package bundles the
 deterministic planner, compressed-map miner, and guarded native writers before
-it activates the verified overlay. A prebuilt client can be added at package
-time; live overlay canaries remain a follow-up slice.
+it activates the verified overlay. At launch the launcher also writes the
+native client's runtime configuration and names its per-session ledger, so no
+tester-authored JSON remains in the flow. A prebuilt client can be added at
+package time; live overlay canaries remain a follow-up slice.
 
 ## Safety model
 
@@ -168,8 +170,20 @@ python -m bb_launcher activate `
 
 The `run` command activates a cached build, or selects vanilla, then starts all
 configured components directly from the same launcher process. Direct children
-inherit the same Windows privilege token. The plan deliberately carries exact
-arguments instead of guessing a shadPS4 or third-party launcher command line:
+inherit the same Windows privilege token. Before starting anything, `run`
+writes the native client's runtime configuration into the launcher state root
+(see "Client runtime state" below) and substitutes its paths into the process
+plan. The plan deliberately carries exact arguments instead of guessing a
+shadPS4 or third-party launcher command line, and it stays portable across
+machines by naming placeholders instead of per-machine paths:
+
+- `{runtime_config}` — the runtime config the launcher just wrote;
+- `{ledger}` — the session's durable receive ledger (never reused across
+  seed/slot pairs, never wiped by a rebuild of the same pair);
+- `{bridge_root}` — the launcher-managed CE bridge directory.
+
+Any other `{...}` token, or any placeholder at all in a `run --vanilla` plan,
+is refused before launch.
 
 ```json
 {
@@ -196,8 +210,8 @@ arguments instead of guessing a shadPS4 or third-party launcher command line:
       "arguments": [
         "localhost:38282",
         "VarietyTester",
-        "C:\\path\\to\\runtime-config.json",
-        "C:\\path\\to\\live-ledger.json",
+        "{runtime_config}",
+        "{ledger}",
         "--assume-correct-save"
       ]
     }
@@ -209,7 +223,8 @@ arguments instead of guessing a shadPS4 or third-party launcher command line:
 python -m bb_launcher run `
   --game-root C:\path\to\shad-games `
   --build $env:LOCALAPPDATA\BloodborneArchipelago\seeds\<identity-sha256> `
-  --process-plan .\process-plan.json
+  --process-plan .\process-plan.json `
+  --suppression-manifest .\generated\build-manifest.json
 
 python -m bb_launcher run `
   --game-root C:\path\to\shad-games `
@@ -217,18 +232,48 @@ python -m bb_launcher run `
   --process-plan .\process-plan.json
 ```
 
+## Client runtime state
+
+The launcher owns one state root (`%LOCALAPPDATA%\BloodborneArchipelago` by
+default; `--state-root` or the optional `state_root`/`shad_log` settings keys
+override it) with this layout:
+
+```text
+<state>/
+├── bridge/                                  CE bridge working directory
+└── sessions/<seed\x1fslot sha256>/
+    ├── runtime-config.json                  written at every randomized launch
+    └── ledger.json                          the client's durable receive ledger
+```
+
+The runtime config is emitted as BOM-free UTF-8 (the native client rejects a
+BOM at line 1 column 1) and points `installed_gameparam` at the *active
+overlay's* binder, which is re-verified against the activation ownership
+manifest before the path is written. Locations, items, and the seed-owned
+suppression requirement stay empty in this file: the client replaces them from
+slot_data when it connects, and local configuration cannot weaken the seed's
+terms. The ledger file itself is never pre-created; the client treats a
+missing ledger as an empty one.
+
+Session state is keyed by AP seed and slot only, so rebuilding or re-caching
+the same seed and slot reuses the same ledger, while a different seed or slot
+can never touch it.
+
 ## Proven offline and remaining live gates
 
 `tests/test_launcher_core.py` uses temporary legal fake game trees. It proves
 backend precedence, strict serial/version validation, deterministic cache
 identity, cache reuse, path allowlisting, ownership refusal, interruption
 recovery, previous-seed restore, vanilla fallback, process preflight, and zero
-base/update mutation.
+base/update mutation. `tests/test_launcher_client_config.py` proves the
+launch-time half: the written config points at the verified active overlay
+binder, sessions isolate ledgers by seed and slot, plan placeholders
+substitute or fail closed, and the one-click workflow hands the substituted
+paths to the launched client.
 
 Those tests do not prove shadPS4 consumed an overlay. The issue's live canaries
 still need the real game: suppression alone, suppression plus seed-12345 maps,
-and overlay removal back to vanilla. The launcher must still create the native
-client runtime configuration with `installed_gameparam` pointing at the active
-overlay binder and display bridge/ledger readiness. A release package must
-still be given the prebuilt native client; CI uses the explicitly labeled
+and overlay removal back to vanilla. The desktop UI must still surface the
+generated config/ledger paths and bridge/ledger readiness. A release package
+must still be given the prebuilt native client; CI uses the explicitly labeled
 tools-only mode.

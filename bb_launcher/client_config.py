@@ -1,0 +1,193 @@
+"""Launcher-authored native client runtime configuration (bb-archipelago#65).
+
+The native AP client takes its runtime config and durable ledger as command
+line paths.  Until now both were tester-authored JSON, which is exactly the
+cross-machine onboarding failure the launcher exists to retire: a hand-copied
+config can embed a developer's paths, point ``installed_gameparam`` at a build
+artifact instead of the binder the game actually loads, or reuse another
+seed's ledger.
+
+This module derives all three launch-time paths from verified launcher state:
+
+- the session directory is keyed by AP seed and slot, so switching cached
+  seeds can never reuse the wrong ledger, while rebuilding the same seed and
+  slot reuses the same one;
+- ``installed_gameparam`` names the *active overlay's* binder, re-hashed
+  against the activation ownership manifest before it is written;
+- the file is emitted as BOM-free UTF-8 (the native client rejects a BOM at
+  line 1 column 1) through the same atomic write the manifests use.
+
+Process plans stay portable by naming placeholders (``{runtime_config}``,
+``{ledger}``, ``{bridge_root}``) instead of per-machine paths; the launcher
+substitutes them at launch and refuses any placeholder it cannot satisfy.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import os
+import re
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
+from typing import Any, Mapping, Sequence
+
+from .core import (
+    SUPPRESSION_PATH,
+    GameInstall,
+    ValidationError,
+    _load_owner,
+    _require_sha256,
+    _write_json_atomic,
+    sha256_file,
+)
+
+
+# Same separator the client's receive ledger uses for its seed/slot key, so
+# the launcher's session naming and the ledger's slot namespacing agree about
+# what "one AP session" means.
+SESSION_KEY_SEPARATOR = "\x1f"
+
+KNOWN_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root")
+_PLACEHOLDER_PATTERN = re.compile(r"\{([a-z_]+)\}")
+
+
+@dataclass(frozen=True)
+class ClientRuntimePaths:
+    """The three launch-time paths the native client and bridge consume."""
+
+    session: Path
+    config: Path
+    ledger: Path
+    bridge_root: Path
+
+
+def default_state_root() -> Path:
+    base = os.environ.get("LOCALAPPDATA")
+    root = Path(base) if base else Path.home() / ".local" / "share"
+    return root / "BloodborneArchipelago"
+
+
+def default_shad_log() -> Path:
+    base = os.environ.get("APPDATA")
+    root = Path(base) if base else Path.home() / ".roaming"
+    return root / "shadPS4" / "log" / "shad_log.txt"
+
+
+def session_key(seed: str, slot: str) -> str:
+    if not seed.strip() or not slot.strip():
+        raise ValidationError("client session requires a non-empty seed and slot")
+    return hashlib.sha256(f"{seed}{SESSION_KEY_SEPARATOR}{slot}".encode("utf-8")).hexdigest()
+
+
+def session_paths(state_root: Path | str, *, seed: str, slot: str) -> ClientRuntimePaths:
+    root = Path(state_root).expanduser().resolve()
+    session = root / "sessions" / session_key(seed, slot)
+    return ClientRuntimePaths(
+        session=session,
+        config=session / "runtime-config.json",
+        ledger=session / "ledger.json",
+        bridge_root=root / "bridge",
+    )
+
+
+def write_client_runtime_config(
+    state_root: Path | str,
+    *,
+    seed: str,
+    slot: str,
+    install: GameInstall,
+    owner: Mapping[str, Any],
+    suppression_manifest: Path | None,
+    shad_log: Path | None,
+) -> ClientRuntimePaths:
+    """Write the native client's runtime config for the *active* overlay.
+
+    ``owner`` must be the ownership manifest returned by the activation that
+    just completed; the active overlay is re-verified against it before any
+    path is written, so the config can never point the client at an overlay
+    the launcher did not just prove.
+    """
+
+    owner_key = _require_sha256(str(owner.get("cache_key", "")), "activated overlay cache_key")
+    active = _load_owner(install.mods, expected_key=owner_key)
+    installed = install.mods.joinpath(*PurePosixPath(SUPPRESSION_PATH).parts)
+    expected_hash = _require_sha256(
+        str(active["suppression"]["sha256"]), "active overlay suppression witness"
+    )
+    if sha256_file(installed) != expected_hash:
+        raise ValidationError(
+            f"active overlay binder {installed} does not match its ownership manifest"
+        )
+    manifest_path = None
+    if suppression_manifest is not None:
+        manifest_path = Path(suppression_manifest).expanduser().resolve()
+        if not manifest_path.is_file() or manifest_path.is_symlink():
+            raise ValidationError(f"suppression manifest is not a regular file: {manifest_path}")
+    log_path = None
+    if shad_log is not None:
+        log_path = str(Path(shad_log).expanduser().resolve())
+
+    paths = session_paths(state_root, seed=seed, slot=slot)
+    # Exactly the native client's RuntimeConfig shape.  Locations, items, and
+    # the seed-owned suppression requirement are deliberately empty/default:
+    # the client replaces them from slot_data when it connects, and local
+    # configuration cannot weaken the seed's terms.  expected_save_identity
+    # stays unset here; --assume-correct-save overrides it explicitly.
+    config = {
+        "bridge_root": str(paths.bridge_root),
+        "shad_log": log_path,
+        "locations": [],
+        "items": {},
+        "auto_upgrade": False,
+        "auto_equip": False,
+        "expected_save_identity": None,
+        "suppression_manifest": None if manifest_path is None else str(manifest_path),
+        "installed_gameparam": str(installed),
+        "location_check_debounce": 3,
+        "mock_set_flags": [],
+        "goal_location": None,
+    }
+    # BOM-free UTF-8, atomically published: the native client rejects a BOM.
+    _write_json_atomic(paths.config, config)
+    # The ledger file itself is intentionally not created: the client treats a
+    # missing ledger as an empty one, and an empty file would not parse.
+    return paths
+
+
+def substitute_plan_arguments(
+    arguments: Sequence[str],
+    paths: ClientRuntimePaths | None,
+) -> tuple[str, ...]:
+    """Resolve launch-time placeholders in one process argument list.
+
+    With ``paths=None`` (a vanilla launch) no client placeholder can be
+    satisfied, so any placeholder at all fails closed.  Otherwise the three
+    known placeholders are substituted and anything unrecognized is refused --
+    a typo'd token must never reach the client as a literal path.
+    """
+
+    tokens = {}
+    if paths is not None:
+        tokens = {
+            "runtime_config": str(paths.config),
+            "ledger": str(paths.ledger),
+            "bridge_root": str(paths.bridge_root),
+        }
+    resolved: list[str] = []
+    for argument in arguments:
+        for name, value in tokens.items():
+            argument = argument.replace("{" + name + "}", value)
+        remaining = sorted(set(_PLACEHOLDER_PATTERN.findall(argument)))
+        if remaining:
+            if paths is None and all(name in KNOWN_PLACEHOLDERS for name in remaining):
+                raise ValidationError(
+                    "a vanilla launch has no client runtime configuration; remove the "
+                    + ", ".join(f"{{{name}}}" for name in remaining)
+                    + " placeholder(s) or the client process from this plan"
+                )
+            raise ValidationError(
+                "process plan argument uses unknown placeholder(s): "
+                + ", ".join(f"{{{name}}}" for name in remaining)
+            )
+        resolved.append(argument)
+    return tuple(resolved)

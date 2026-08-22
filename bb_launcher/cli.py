@@ -26,7 +26,8 @@ from .core import (
     restore_previous_build,
     validate_processes,
 )
-from .workflow import load_process_plan
+from .client_config import default_shad_log, default_state_root, write_client_runtime_config
+from .workflow import load_process_plan, resolve_process_plan
 
 
 def _json_file(path: str | Path, label: str) -> dict[str, Any]:
@@ -100,6 +101,15 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--build")
     mode.add_argument("--vanilla", action="store_true")
     run.add_argument("--process-plan", required=True)
+    run.add_argument(
+        "--state-root",
+        help="launcher state root for the generated client runtime config and per-session ledgers",
+    )
+    run.add_argument(
+        "--suppression-manifest",
+        help="build-manifest.json of the seed's suppression binder (recorded in the client config)",
+    )
+    run.add_argument("--shad-log", help="shadPS4 log path recorded in the client config")
 
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
@@ -210,6 +220,7 @@ def main(argv: list[str] | None = None) -> int:
             process_plan = load_process_plan(args.process_plan)
             processes = process_plan.processes
             validate_processes(processes)
+            paths = None
             if args.vanilla:
                 deactivate_overlay(install)
             else:
@@ -226,11 +237,22 @@ def main(argv: list[str] | None = None) -> int:
                         f"seed requires runtime {build_identity['runtime_build']}, "
                         f"process plan supplies {process_plan.runtime_build}"
                     )
-                activate_build(install, args.build)
-            started = launch_processes(processes)
+                owner = activate_build(install, args.build)
+                paths = write_client_runtime_config(
+                    args.state_root or default_state_root(),
+                    seed=build_identity["seed"],
+                    slot=build_identity["slot"],
+                    install=install,
+                    owner=owner,
+                    suppression_manifest=args.suppression_manifest,
+                    shad_log=args.shad_log or default_shad_log(),
+                )
+            started = launch_processes(resolve_process_plan(process_plan, paths).processes)
             _print(
                 {
                     "mode": "vanilla" if args.vanilla else "randomized",
+                    "client_config": None if paths is None else str(paths.config),
+                    "ledger": None if paths is None else str(paths.ledger),
                     "started": [
                         {"name": spec.name, "pid": getattr(process, "pid", None)}
                         for spec, process in zip(processes, started)
