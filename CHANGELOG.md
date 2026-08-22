@@ -8,6 +8,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- A **Full Item Pool** world option (default on): the seed now places every
+  validated item — Saw Spear, Augur of Ebrietas, and the ten progression keys
+  (Hunter Chief Emblem, Cainhurst Summons, Tonsil Stone, Upper Cathedral Key,
+  Orphanage Key, Eye of a Blood-drunk Hunter, Eye Pendant, Astral Clocktower
+  Key, Celestial Dial, Laurence's Skull) — across the same 53 Central Yharnam
+  locations, with filler cycling over the rest. The playable area is
+  unchanged; the progression keys are forward unlocks whose vanilla homes sit
+  outside the slice, so no new suppression is needed. Turning the option off
+  restores the original six-item slice pool exactly. The client slot data now
+  carries `full_item_pool` and only ever lists bindings for items the seed
+  can grant.
 - A DeathLink send-signal session kit now narrows the hunt from the committed
   corpus before any live gameplay minutes are spent: tests pin that no event
   flag fires on every player death (all three `CharacterDead(10000)` sites are

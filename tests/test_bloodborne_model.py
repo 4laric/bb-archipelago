@@ -3,18 +3,19 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
-from worlds.bloodborne.data import MODEL
+from worlds.bloodborne.data import CENTRAL_YHARNAM_SLICE_ITEM_KEYS, MODEL
 from worlds.bloodborne.model import ItemKind, Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 from worlds.bloodborne import (
+    FULL_POOL_ITEM_KEYS,
     GOAL_LOCATION_KEY,
     ITEM_ID_BY_KEY,
     ITEM_NAME_TO_ID,
     LOCATION_ID_BY_KEY,
     NETWORK_LOCATIONS,
     SHUFFLABLE_ITEMS,
+    build_item_pool_names,
     build_runtime_slot_data,
-    build_slice_item_pool_names,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,8 +50,36 @@ class BloodborneModelTests(unittest.TestCase):
             build_runtime_slot_data()["goal_location"],
         )
 
-    def test_slice_pool_deliberately_exercises_every_live_grant_shape(self):
-        counts = Counter(build_slice_item_pool_names())
+    def test_full_pool_places_every_validated_item_once_then_filler(self):
+        counts = Counter(build_item_pool_names(FULL_POOL_ITEM_KEYS))
+        self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
+        for name in (
+            "Hunter Chief Emblem",
+            "Cainhurst Summons",
+            "Tonsil Stone",
+            "Upper Cathedral Key",
+            "Orphanage Key",
+            "Eye of a Blood-drunk Hunter",
+            "Eye Pendant",
+            "Astral Clocktower Key",
+            "Celestial Dial",
+            "Laurence's Skull",
+            "Saw Spear",
+            "Augur of Ebrietas",
+        ):
+            self.assertEqual(counts[name], 1, name)
+        self.assertEqual(counts["Blood Vial"], 9)
+        for name in (
+            "Quicksilver Bullets x3",
+            "Pebbles x3",
+            "Molotov Cocktails x2",
+            "Blood Stone Shards x2",
+        ):
+            self.assertEqual(counts[name], 8, name)
+
+    def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
+        """The slice pool the first live sessions validated is unchanged."""
+        counts = Counter(build_item_pool_names(CENTRAL_YHARNAM_SLICE_ITEM_KEYS))
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
         self.assertEqual(counts["Saw Spear"], 1)
         self.assertEqual(counts["Augur of Ebrietas"], 1)
@@ -62,6 +91,8 @@ class BloodborneModelTests(unittest.TestCase):
             "Blood Stone Shards x2",
         ):
             self.assertEqual(counts[name], 10, name)
+        slot_data = build_runtime_slot_data(CENTRAL_YHARNAM_SLICE_ITEM_KEYS)
+        self.assertEqual(len(slot_data["runtime_items"]), 7)  # six slice items + Blood Vial
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
