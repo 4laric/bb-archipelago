@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+
+local baseText = inputQuery("Death-signal snapshot", "Region base address (hex)", "")
+local sizeText = inputQuery("Death-signal snapshot", "Region size in bytes (hex)", "")
+local outputDir = selectDirectory("Choose this trial's output directory")
+if not baseText or not sizeText or not outputDir then error("Capture cancelled") end
+
+local base = tonumber(baseText:gsub("^0[xX]", ""), 16)
+local size = tonumber(sizeText:gsub("^0[xX]", ""), 16)
+if not base or not size or size < 1 then error("Invalid base or size") end
+if size > 0x40000000 then error("Refusing a snapshot larger than 1 GiB") end
+
+-- Same hole policy as Bloodborne-event-flag-snapshot.CT: an unreadable chunk is
+-- zero-filled rather than aborting the dump, because the comparator only reports
+-- positions that CHANGED, so a deterministic fill produces no false candidates.
+-- The per-stage count makes a hole that MOVES between stages visible.
+local HOLE = string.rep("\0", 256)
+
+local function dump(stage)
+    local path = outputDir .. "\\" .. stage .. ".bin"
+    if io.open(path, "rb") then
+        showMessage("Overwriting an existing " .. stage .. ".bin in this directory.")
+    end
+    local file = assert(io.open(path, "wb"))
+    local offset = 0
+    local unreadable = 0
+    while offset < size do
+        local count = math.min(256, size - offset)
+        local bytes = readBytes(base + offset, count, true)
+        if bytes and #bytes == count then
+            file:write(string.char(table.unpack(bytes)))
+        else
+            file:write(HOLE:sub(1, count))
+            unreadable = unreadable + count
+        end
+        offset = offset + count
+    end
+    file:close()
+    local state = assert(io.open(outputDir .. "\\capture-state.txt", "a"))
+    state:write(string.format("%s stage=%s base=0x%X size=0x%X unreadable=0x%X path=%s\n",
+        os.date("!%Y-%m-%dT%H:%M:%SZ"), stage, base, size, unreadable, path))
+    state:close()
+    if unreadable > 0 then
+        showMessage(string.format("%s captured, but 0x%X of 0x%X bytes were unreadable and " ..
+            "were zero-filled. If this count differs between stages of one trial, the region " ..
+            "moved and the trial is not comparable.", stage, unreadable, size))
+    else
+        showMessage(stage .. " captured")
+    end
+end
+
+-- Stage meaning depends on the trial KIND (see docs/SESSION-death-signal.md):
+--   death trial:   before = alive at the hazard, primary = YOU DIED screen,
+--                  secondary = respawned at the lamp
+--   control trial: before = at the lamp, primary = warp arrival settled,
+--                  secondary = ten idle seconds later
+-- reload is after quitting to title and loading the save again, in both kinds.
+-- Unlike the flag hunt, reload CLASSIFIES rather than filters: a death signal
+-- is allowed to be transient.
+createHotkey(function() dump("idle-a") end, VK_F5)
+createHotkey(function() dump("idle-b") end, VK_F6)
+createHotkey(function() dump("before") end, VK_F7)
+createHotkey(function() dump("primary") end, VK_F8)
+createHotkey(function() dump("secondary") end, VK_F9)
+createHotkey(function() dump("reload") end, VK_F10)
+showMessage("Death-signal capture armed:\nF5 idle-a\nF6 idle-b\nF7 before\n" ..
+    "F8 primary (YOU DIED / warp arrival)\nF9 secondary (respawned / idle)\n" ..
+    "F10 reload (after quitting to title and loading the save again)")
+]]></LuaScript>
+</CheatTable>

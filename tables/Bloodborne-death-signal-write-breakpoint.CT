@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="46">
+  <CheatEntries/>
+  <UserdefinedSymbols/>
+  <LuaScript><![CDATA[
+openProcess("shadPS4.exe")
+
+-- Issue #78: one-shot write breakpoint for a death-signal candidate byte from a
+-- death_signal_session.ps1 intersection.csv. Mirrors the table that closed #15,
+-- plus a 16-byte neighborhood dump: a counter-class candidate sits next to other
+-- small integers, a flag-class candidate inside a packed byte, and the writer's
+-- RIP says which system owns it. Arm it, restore the backup save, die once.
+
+local addressText = inputQuery("Death-signal breakpoint", "Candidate byte address (hex)", "")
+local output = createSaveDialog()
+output.Title = "Save breakpoint evidence"
+output.DefaultExt = "txt"
+if not addressText or not output.execute() then error("Breakpoint cancelled") end
+local watched = tonumber(addressText:gsub("^0[xX]", ""), 16)
+if not watched then error("Invalid candidate address") end
+local outputPath = output.FileName
+output.destroy()
+
+local function bytesAt(address, count)
+    local values = readBytes(address, count, true) or {}
+    local result = {}
+    for _, value in ipairs(values) do result[#result + 1] = string.format("%02X", value) end
+    return table.concat(result, " ")
+end
+
+debugProcess(2)
+debug_setBreakpoint(watched, 1, bptWrite, bpmDebugRegister, function()
+    local ok, detail = pcall(function()
+        local file = assert(io.open(outputPath, "w"))
+        file:write(string.format(
+            "captured_utc=%s\nwatched=0x%X\nvalue_after=0x%02X\n" ..
+            "neighborhood=%s\nRIP=0x%X\n" ..
+            "RAX=0x%X\nRBX=0x%X\nRCX=0x%X\nRDX=0x%X\nRSI=0x%X\nRDI=0x%X\n" ..
+            "RBP=0x%X\nRSP=0x%X\nR8=0x%X\nR9=0x%X\nR10=0x%X\nR11=0x%X\n" ..
+            "R12=0x%X\nR13=0x%X\nR14=0x%X\nR15=0x%X\ncode=%s\n",
+            os.date("!%Y-%m-%dT%H:%M:%SZ"), watched, readBytes(watched, 1),
+            bytesAt(watched - 8, 16), RIP,
+            RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP, R8, R9, R10, R11,
+            R12, R13, R14, R15, bytesAt(RIP - 16, 48)))
+        file:close()
+    end)
+    if not ok then
+        local file = io.open(outputPath, "w")
+        if file then file:write("capture_error=" .. tostring(detail) .. "\n"); file:close() end
+    end
+    debug_removeBreakpoint(watched)
+    debug_continueFromBreakpoint(co_run)
+    return 1
+end)
+showMessage(string.format("Death-signal write breakpoint armed at 0x%X", watched))
+]]></LuaScript>
+</CheatTable>

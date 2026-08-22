@@ -8,6 +8,15 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- A DeathLink send-signal session kit now narrows the hunt from the committed
+  corpus before any live gameplay minutes are spent: tests pin that no event
+  flag fires on every player death (all three `CharacterDead(10000)` sites are
+  quest-specific), seven player death-state SpEffect rows and the validated HP
+  path are the live leads, and a death-vs-lamp-warp capture harness intersects
+  trials, subtracts the no-death control so "changed" is not mistaken for
+  "death", and classifies survivors as reload-persistent counters or transient
+  edges. A write-breakpoint skeleton attributes the writer. No candidate is
+  claimed as the signal until the live session validates it.
 - Location names are now a declared contract ahead of the first numbered
   release that freezes them: `worlds/bloodborne/location_names.tsv` names all
   83 MVP-candidate fixed treasures, `docs/LOCATION-NAMING.md` defines the
