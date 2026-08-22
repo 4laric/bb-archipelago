@@ -14,14 +14,19 @@ per named location:
 
 | column | rule |
 | --- | --- |
-| `location_flag` | The canonical acquisition flag from `research/catalog/fixed_location_catalog.tsv`. This is the key: an existing game identifier, never an invented one. |
+| `location_flag` | The canonical acquisition flag from `research/catalog/fixed_location_catalog.tsv`, or — for scripted checks outside the catalog — the boss-defeat / script-award event flag committed in `runtime_bindings.py`. This is the key: an existing game identifier, never an invented one. |
 | `region` | Exactly one entry of `REGIONS` in `worlds/bloodborne/data.py`. |
 | `name` | The player-facing English name. Unique across the table, ASCII, never a research placeholder. |
 | `basis` | What the name rests on (vocabulary below). |
 
-The table covers all 651 rows of the fixed-treasure catalog. Boss,
-interaction, and EMEVD script-award checks are named where they are defined
-in `data.py`; folding them into the table is follow-up scope. Rows past the
+The table covers all 651 rows of the fixed-treasure catalog plus the seven
+scripted checks whose flags are committed (two boss defeats, five EMEVD
+script awards). `data.py` draws those names from the table through
+`worlds/bloodborne/location_names.py`; boss-defeat checks keep the
+established bare boss name (`Cleric Beast`) rather than the
+`Region - Core` shape. Bosses whose defeat flag is not yet mapped, and the
+one interaction check without a committed flag, stay named inline in
+`data.py` until a flag exists to key a row — no invented keys. Rows past the
 83 `mvp_candidate` treasures rest on the committed map, event-tag, coordinate,
 and item-category data; 60 of them name items whose English text is not in
 the committed data (category-8 blood gems, plus two nameless goods), and those
@@ -82,6 +87,9 @@ rather than runtime evidence. The `basis` column says which:
 - #75 is decided and landed: the 45 shipped `(Lot NNN)` placeholders publish
   their table names, and this table feeds `tools/build_central_yharnam_slice.py`.
   Quantities follow the owner ruling: `x1` is dropped, `xN` for N > 1 stays.
-- #82 tracks unifying the inline names in `data.py` (boss, interaction, and
-  EMEVD-award checks) so the table becomes the single source, and extending
-  generation wiring past the Central Yharnam slice.
+- #82 tracks the rest: mapping the remaining boss-defeat flags so the twelve
+  inline boss names can join the table, and the `53500630` divergence —
+  data.py names that check "Underground Corpse Pile - Underground Jail Blood
+  Stone Chunk" while the catalog places it on m35_00 (Research Hall, event
+  tag 地下牢03). Fixing it touches the logic region, which is owner-decision
+  scope, not a naming edit.

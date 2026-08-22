@@ -10,6 +10,7 @@ have been runtime validated.
 
 from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
 from .fixed_locations import FIXED_LOCATIONS
+from .location_names import location_name
 
 P = ItemKind.PROGRESSION
 U = ItemKind.USEFUL
@@ -113,9 +114,9 @@ ENTRANCES = (
 )
 
 LOCATIONS = (
-    Location("boss_cleric_beast", "Cleric Beast", "Central Yharnam",
+    Location("boss_cleric_beast", location_name(12411700), "Central Yharnam",
              locked_item="event_cleric_beast_defeated"),
-    Location("boss_father_gascoigne", "Father Gascoigne", "Central Yharnam", locked_item="event_gascoigne_defeated"),
+    Location("boss_father_gascoigne", location_name(12411800), "Central Yharnam", locked_item="event_gascoigne_defeated"),
     Location("boss_blood_starved_beast", "Blood-starved Beast", "Old Yharnam",
              locked_item="event_blood_starved_beast_defeated"),
     Location("boss_vicar_amelia", "Vicar Amelia", "Grand Cathedral", locked_item="event_amelia_defeated"),
@@ -126,13 +127,14 @@ LOCATIONS = (
     Location("boss_the_one_reborn", "The One Reborn", "Yahar'gul", locked_item="event_one_reborn_defeated"),
     Location("boss_micolash", "Micolash, Host of the Nightmare", "Nightmare of Mensis", locked_item="event_micolash_defeated"),
     Location("boss_mergos_wet_nurse", "Mergo's Wet Nurse", "Nightmare of Mensis", Rule.all("event_micolash_defeated"), locked_item="event_mergos_wet_nurse_defeated"),
-    # Candidate randomized checks; source acquisition/event flags need mapping.
-    Location("pickup_cainhurst_summons", "Iosefka's Clinic - Cainhurst Summons", "Iosefka's Clinic"),
-    Location("pickup_upper_cathedral_key", "Yahar'gul - Upper Cathedral Key", "Yahar'gul"),
-    Location("script_award_orphanage_key", "Upper Cathedral Ward - Orphanage Key", "Upper Cathedral Ward"),
-    Location("pickup_eye_of_blood_drunk_hunter", "Hunter's Dream - Eye of a Blood-drunk Hunter", "Hunter's Dream",
+    # Scripted checks with committed award flags (runtime_bindings.py); names
+    # come from the location-name table (docs/LOCATION-NAMING.md).
+    Location("pickup_cainhurst_summons", location_name(52410990), "Iosefka's Clinic"),
+    Location("pickup_upper_cathedral_key", location_name(52800290), "Yahar'gul"),
+    Location("script_award_orphanage_key", location_name(52420900), "Upper Cathedral Ward"),
+    Location("pickup_eye_of_blood_drunk_hunter", location_name(50000100), "Hunter's Dream",
              Rule.all("event_forbidden_woods_password")),
-    Location("pickup_eye_pendant", "Hunter's Nightmare - Eye Pendant", "Hunter's Nightmare"),
+    Location("pickup_eye_pendant", location_name(9470), "Hunter's Nightmare"),
     Location("boss_ludwig", "Ludwig, the Holy Blade", "Hunter's Nightmare",
              locked_item="event_ludwig_defeated"),
     Location("boss_living_failures", "Living Failures", "Lumenwood Garden",
@@ -141,19 +143,19 @@ LOCATIONS = (
              locked_item="event_lady_maria_defeated"),
     Location("boss_orphan_of_kos", "Orphan of Kos", "Fishing Hamlet",
              locked_item="event_orphan_of_kos_defeated"),
-    Location("pickup_laurences_skull", "Research Hall - Laurence's Skull", "Research Hall"),
+    Location("pickup_laurences_skull", location_name(53502000), "Research Hall"),
     # Catalog-backed fixed treasures. These make the previously empty optional
     # regions contribute checks without inventing placement or flag IDs.
-    Location("treasure_radiant_sword_hunter_badge", "Cathedral Ward - Radiant Sword Hunter Badge", "Cathedral Ward"),
-    Location("treasure_old_hunter_bone", "Healing Church Workshop - Old Hunter Bone", "Healing Church Workshop"),
-    Location("treasure_rune_workshop_tool", "Hemwick Charnel Lane - Rune Workshop Tool", "Hemwick Charnel Lane"),
-    Location("treasure_augur_of_ebrietas", "Lecture Building 1F - Augur of Ebrietas", "Lecture Building 1F"),
-    Location("treasure_lecture_theatre_key", "Lecture Building 2F - Lecture Theatre Key", "Lecture Building 2F"),
-    Location("treasure_messengers_gift", "Nightmare Frontier - Messenger's Gift", "Nightmare Frontier"),
-    Location("treasure_executioners_gloves", "Castle Cainhurst - Executioner's Gloves", "Castle Cainhurst"),
+    Location("treasure_radiant_sword_hunter_badge", location_name(52400480), "Cathedral Ward"),
+    Location("treasure_old_hunter_bone", location_name(52110000), "Healing Church Workshop"),
+    Location("treasure_rune_workshop_tool", location_name(52200360), "Hemwick Charnel Lane"),
+    Location("treasure_augur_of_ebrietas", location_name(53200600), "Lecture Building 1F"),
+    Location("treasure_lecture_theatre_key", location_name(53200720), "Lecture Building 2F"),
+    Location("treasure_messengers_gift", location_name(53300330), "Nightmare Frontier"),
+    Location("treasure_executioners_gloves", location_name(52500250), "Castle Cainhurst"),
     Location("treasure_underground_jail_chunk", "Underground Corpse Pile - Underground Jail Blood Stone Chunk",
              "Underground Corpse Pile"),
-    Location("treasure_cosmic_eye_watcher_badge", "Upper Cathedral Ward - Cosmic Eye Watcher Badge",
+    Location("treasure_cosmic_eye_watcher_badge", location_name(52420270),
              "Upper Cathedral Ward", Rule.all("orphanage_key")),
     Location("boss_laurence", "Laurence, the First Vicar", "Nightmare Grand Cathedral",
              Rule.all("laurences_skull"), locked_item="event_laurence_defeated"),
