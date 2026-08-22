@@ -126,6 +126,20 @@ The packaged path calls `BBEnemizerPlanner.exe`, `MSBBMiner.exe`, and
 checkout, repository checkout, or pre-extracted enemy inventory. The checkout
 path retains the original Python/`dotnet` fallback for development.
 
+Secondary actions sit beside the main button, each running the same guarded
+core operations as the CLI:
+
+- **Launch Vanilla** resolves the plan first (a plan still carrying client
+  placeholders refuses before anything moves), then deactivates only the
+  verified launcher-owned overlay and launches. Cached seeds stay available.
+- **Restore Previous** reactivates the previous cached seed through a full
+  transactional activation and reports the restored cache key.
+- **Rebuild Seed** (with a confirmation) evicts exactly this seed's
+  hash-addressed cache directory and runs the full build/activate/launch
+  again; without it, a matching cache is reused.
+- **Open Diagnostics** opens the launcher state root (client configs,
+  per-session ledgers, bridge directory).
+
 ## Windows package
 
 Build a Windows x64 folder and zip from PowerShell after installing

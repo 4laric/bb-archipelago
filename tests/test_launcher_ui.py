@@ -370,6 +370,105 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("result.client_config", source)
         self.assertIn("result.ledger", source)
 
+    def test_ui_contract_wires_the_secondary_actions(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        for label in ("Launch Vanilla", "Restore Previous", "Rebuild Seed", "Open Diagnostics"):
+            self.assertIn(f'text="{label}"', source)
+        for method in ("launch_vanilla", "restore_previous", "force_rebuild"):
+            self.assertIn(method, source)
+
+    def test_launch_vanilla_resolves_before_moving_the_overlay(self):
+        toolchain = FakeToolchain()
+        launched: list[tuple[str, ...]] = []
+
+        def launch(processes):
+            launched.extend(tuple(spec.arguments) for spec in processes)
+            return [Process(10), Process(11)]
+
+        workflow = LauncherWorkflow(self.repo, toolchain=toolchain, process_launcher=launch)
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertTrue(self.install.mods.is_dir())
+
+        # A plan still carrying a client placeholder refuses BEFORE the active
+        # overlay is touched.
+        value = json.loads(self.process_plan.read_text(encoding="utf-8"))
+        value["processes"][1]["arguments"] = ["{runtime_config}", "{ledger}"]
+        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "vanilla launch"):
+            workflow.launch_vanilla(self.settings(), process_is_running=lambda: False)
+        self.assertTrue(self.install.mods.is_dir())
+
+        value["processes"][1]["arguments"] = []
+        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
+        pids = workflow.launch_vanilla(self.settings(), process_is_running=lambda: False)
+        self.assertEqual(pids, (10, 11))
+        self.assertFalse(self.install.mods.exists())
+        self.assertEqual(launched[-2:], [("--game", "CUSA03173"), ()])
+        preserved = [
+            path for path in self.root.glob("game/.*") if "bb-ap-disabled" in path.name
+        ]
+        self.assertEqual(len(preserved), 1)
+
+    def test_restore_previous_reactivates_the_prior_seed(self):
+        toolchain = FakeToolchain()
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(1), Process(2)],
+        )
+        first = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        request = json.loads(self.request.read_text(encoding="utf-8"))
+        request["seed_name"] = "other-seed"
+        self.request.write_text(json.dumps(request), encoding="utf-8")
+        second = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertNotEqual(first.cache_key, second.cache_key)
+        active = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
+        self.assertEqual(active["cache_key"], second.cache_key)
+
+        restored = workflow.restore_previous(
+            self.settings(enemy_inputs=False), process_is_running=lambda: False
+        )
+        self.assertEqual(restored, first.cache_key)
+        active = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
+        self.assertEqual(active["cache_key"], first.cache_key)
+
+    def test_force_rebuild_evicts_the_cache_and_replans(self):
+        toolchain = FakeToolchain()
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(1), Process(2)],
+        )
+        options = EnemizerOptions(enabled=False)
+        first = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False), options, process_is_running=lambda: False
+        )
+        second = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False), options, process_is_running=lambda: False
+        )
+        self.assertFalse(first.reused)
+        self.assertTrue(second.reused)
+        rebuilt = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            options,
+            force_rebuild=True,
+            process_is_running=lambda: False,
+        )
+        self.assertFalse(rebuilt.reused)
+        self.assertEqual(rebuilt.cache_key, first.cache_key)
+
 
 if __name__ == "__main__":
     unittest.main()

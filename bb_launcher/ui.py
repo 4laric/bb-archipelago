@@ -187,6 +187,27 @@ class LauncherApp:
             style="Accent.TButton",
         )
         self.launch_button.grid(row=0, column=2, sticky="e")
+
+        actions = ttk.Frame(controls)
+        actions.grid(row=1, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        self.vanilla_button = ttk.Button(actions, text="Launch Vanilla", command=self._start_vanilla)
+        self.vanilla_button.grid(row=0, column=0, padx=(0, 8))
+        self.restore_button = ttk.Button(
+            actions, text="Restore Previous", command=self._start_restore
+        )
+        self.restore_button.grid(row=0, column=1, padx=(0, 8))
+        self.rebuild_button = ttk.Button(actions, text="Rebuild Seed", command=self._start_rebuild)
+        self.rebuild_button.grid(row=0, column=2, padx=(0, 8))
+        self.diagnostics_button = ttk.Button(
+            actions, text="Open Diagnostics", command=self._open_diagnostics
+        )
+        self.diagnostics_button.grid(row=0, column=3)
+        self._action_buttons = (
+            self.vanilla_button,
+            self.restore_button,
+            self.rebuild_button,
+            self.diagnostics_button,
+        )
         ttk.Label(outer, textvariable=self.status).grid(row=6, column=0, sticky="w", pady=(8, 0))
 
     def _browse(self, name: str, selector: str) -> None:
@@ -294,6 +315,8 @@ class LauncherApp:
         self._busy = busy
         self.launch_button.configure(state="disabled" if busy else "normal")
         self.save_button.configure(state="disabled" if busy else "normal")
+        for button in self._action_buttons:
+            button.configure(state="disabled" if busy else "normal")
         if busy:
             self.progress.start(12)
         else:
@@ -324,6 +347,127 @@ class LauncherApp:
             daemon=True,
             name="bloodborne-randomize-launch",
         ).start()
+
+    def _setup_for_action(self, label: str) -> LauncherSettings | None:
+        try:
+            settings = self._settings()
+            self._save_settings()
+        except LauncherError as exc:
+            self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
+            return None
+        self._set_busy(True)
+        self._append_log(f"Starting {label}...")
+        return settings
+
+    def _run_action(self, label: str, action: Any) -> None:
+        try:
+            outcome = action()
+        except Exception as exc:
+            self.root.after(0, self._action_failed, label, exc)
+        else:
+            self.root.after(0, self._action_finished, label, outcome)
+
+    def _action_failed(self, label: str, exc: Exception) -> None:
+        self._set_busy(False)
+        self._append_log(f"REFUSED: {exc}")
+        self.messagebox.showerror(f"{label} refused", str(exc), parent=self.root)
+
+    def _action_finished(self, label: str, outcome: Any) -> None:
+        self._set_busy(False)
+        detail = "" if outcome is None else f": {outcome}"
+        self._append_log(f"{label} complete{detail}")
+        self._refresh_status()
+
+    def _start_vanilla(self) -> None:
+        if self._busy:
+            return
+        settings = self._setup_for_action("Launch Vanilla")
+        if settings is None:
+            return
+        threading.Thread(
+            target=self._run_action,
+            args=(
+                "Launch Vanilla",
+                lambda: self.workflow.launch_vanilla(settings, progress=self._progress_message),
+            ),
+            daemon=True,
+            name="bloodborne-launch-vanilla",
+        ).start()
+
+    def _start_restore(self) -> None:
+        if self._busy:
+            return
+        settings = self._setup_for_action("Restore Previous")
+        if settings is None:
+            return
+        threading.Thread(
+            target=self._run_action,
+            args=(
+                "Restore Previous",
+                lambda: self.workflow.restore_previous(settings, progress=self._progress_message),
+            ),
+            daemon=True,
+            name="bloodborne-restore-previous",
+        ).start()
+
+    def _start_rebuild(self) -> None:
+        if self._busy:
+            return
+        if not self.messagebox.askyesno(
+            "Rebuild Seed",
+            "Evict the verified cache for this seed and build it again from the game files?",
+            parent=self.root,
+        ):
+            return
+        try:
+            settings = self._settings()
+            if not self.enemy_seed.get().strip():
+                self.enemy_seed.set(request_enemy_seed(settings.ap_request))
+            options = EnemizerOptions(
+                enabled=self.randomize_enemies.get(),
+                seed=self.enemy_seed.get().strip() or None,
+                allow_tier_mixing=self.allow_tier_mixing.get(),
+                preserve_locomotion=self.preserve_locomotion.get(),
+            )
+            self._save_settings()
+        except LauncherError as exc:
+            self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
+            return
+        self._set_busy(True)
+        self._append_log("Starting Rebuild Seed...")
+        threading.Thread(
+            target=self._run_rebuild,
+            args=(settings, options),
+            daemon=True,
+            name="bloodborne-rebuild-seed",
+        ).start()
+
+    def _run_rebuild(self, settings: LauncherSettings, options: EnemizerOptions) -> None:
+        try:
+            result = self.workflow.randomize_and_launch(
+                settings,
+                options,
+                force_rebuild=True,
+                progress=self._progress_message,
+            )
+        except Exception as exc:
+            self.root.after(0, self._failed, exc)
+        else:
+            self.root.after(0, self._finished, result)
+
+    def _open_diagnostics(self) -> None:
+        raw = self.fields["state_root"].get().strip()
+        root = Path(raw).expanduser() if raw else default_state_root()
+        try:
+            root.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            self.messagebox.showerror("Could not open diagnostics", str(exc), parent=self.root)
+            return
+        startfile = getattr(os, "startfile", None)
+        if startfile is not None:
+            startfile(root)
+        else:
+            self.status.set(f"Diagnostics folder: {root}")
 
     def _run(self, settings: LauncherSettings, options: EnemizerOptions) -> None:
         try:
