@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from itertools import cycle, islice
-from typing import Any
+from typing import Any, Iterable
 from .data import (
     CENTRAL_YHARNAM_SLICE_ENTRANCES,
     CENTRAL_YHARNAM_SLICE_ITEM_KEYS,
@@ -25,24 +25,35 @@ NETWORK_LOCATIONS = tuple(
     location for location in MODEL.locations
     if location.key in CENTRAL_YHARNAM_SLICE_LOCATION_KEYS
 )
+# Everything that can enter the pool: every non-event item has a permanent
+# network id and a validated runtime binding. The Yharnam slice option below
+# restricts which of them a seed actually places.
 SHUFFLABLE_ITEMS = tuple(
     item for item in MODEL.items
-    if item.key in CENTRAL_YHARNAM_SLICE_ITEM_KEYS
+    if item.kind is not ItemKind.EVENT
 )
+FULL_POOL_ITEM_KEYS = frozenset(item.key for item in SHUFFLABLE_ITEMS)
 POOL_SUPPRESSION_ITEM_KEYS = CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
 FILLER_ITEM_NAME = "Blood Vial"
 GOAL_LOCATION_KEY = "boss_father_gascoigne"
 
 
-def build_slice_item_pool_names() -> list[str]:
-    """Build the exact 53-item varied-grant pool for the live slice."""
+def build_item_pool_names(item_keys: Iterable[str]) -> list[str]:
+    """Build the varied-grant pool for the live slice's 53 locations.
+
+    `item_keys` selects which validated items are placed once each; filler
+    cycles up to the location count either way. The full pool places all ten
+    progression keys plus the two useful items; the slice pool places only the
+    six items whose live grant shapes the slice set out to exercise.
+    """
+    selected = tuple(item for item in SHUFFLABLE_ITEMS if item.key in item_keys)
     names = [
-        item.name for item in SHUFFLABLE_ITEMS
+        item.name for item in selected
         if item.kind is not ItemKind.FILLER
     ]
     filler_names = [FILLER_ITEM_NAME, *(
-        item.name for item in SHUFFLABLE_ITEMS
+        item.name for item in selected
         if item.kind is ItemKind.FILLER
     )]
     names.extend(islice(cycle(filler_names), len(NETWORK_LOCATIONS) - len(names)))
@@ -102,14 +113,20 @@ LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in NETWORK
 LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS}
 
 
-def build_runtime_slot_data() -> dict[str, Any]:
+def build_runtime_slot_data(item_keys: Iterable[str] | None = None) -> dict[str, Any]:
     """Return the address-free world/client contract for this seed.
+
+    `item_keys` is the pool actually placed (the full validated pool by
+    default, matching the option's default; the Yharnam slice set when the
+    option is off). The client only ever receives bindings for items the
+    seed can grant.
 
     AP ids are serialized as object keys because JSON has no integer-keyed
     objects.  The client validates and converts them back to signed 64-bit ids.
     """
+    active_keys = FULL_POOL_ITEM_KEYS if item_keys is None else frozenset(item_keys)
     locations_by_key = {location.key: location for location in NETWORK_LOCATIONS}
-    items_by_key = {item.key: item for item in SHUFFLABLE_ITEMS}
+    items_by_key = {item.key: item for item in SHUFFLABLE_ITEMS if item.key in active_keys}
     active_item_bindings = {
         key: ITEM_BINDINGS[key] for key in items_by_key
     }
@@ -184,11 +201,20 @@ else:
         display_name = "Auto Equip Received Gear"
         default = 0
 
+    class FullItemPool(Toggle):
+        """Place every validated item in the Yharnam slice, not only the six slice items.
+
+        The playable area is unchanged; progression keys whose vanilla homes
+        are outside the slice become forward unlocks found in Yharnam."""
+        display_name = "Full Item Pool"
+        default = 1
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         enemizer: Enemizer
         auto_upgrade: AutoUpgrade
         auto_equip: AutoEquip
+        full_item_pool: FullItemPool
 
     class BloodborneItem(APItem):
         game = GAME
@@ -245,8 +271,13 @@ else:
 
         def create_items(self) -> None:
             self.multiworld.itempool.extend(
-                self.create_item(name) for name in build_slice_item_pool_names()
+                self.create_item(name) for name in build_item_pool_names(self._pool_item_keys())
             )
+
+        def _pool_item_keys(self) -> frozenset[str]:
+            if self.options.full_item_pool:
+                return FULL_POOL_ITEM_KEYS
+            return CENTRAL_YHARNAM_SLICE_ITEM_KEYS
 
         def set_rules(self) -> None:
             # Runtime completion is authoritative: the client sends CLIENT_GOAL
@@ -264,8 +295,9 @@ else:
                 "enemizer": bool(self.options.enemizer),
                 "auto_upgrade": bool(self.options.auto_upgrade),
                 "auto_equip": bool(self.options.auto_equip),
+                "full_item_pool": bool(self.options.full_item_pool),
                 "enemizer_seed": seed,
-                **build_runtime_slot_data(),
+                **build_runtime_slot_data(self._pool_item_keys()),
             }
 
         def generate_output(self, output_directory: str) -> None:

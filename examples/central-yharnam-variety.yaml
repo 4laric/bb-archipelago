@@ -7,3 +7,4 @@ Bloodborne:
   enemizer: false
   auto_upgrade: false
   auto_equip: false
+  full_item_pool: true

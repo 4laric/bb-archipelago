@@ -64,9 +64,17 @@ python Generate.py --player_files_path Players --outputpath out --spoiler 3 --se
 python MultiServer.py out\<generated-seed>.zip --host localhost --port 38282
 ```
 
-The varied pool has 53 items: Saw Spear and Augur once each, eleven Vials, and
-ten each of Quicksilver Bullets x3, Pebbles x3, Molotov Cocktails x2, and Blood
-Stone Shards x2. The checked-in test pins this composition.
+With **Full Item Pool** on (the default), the pool places each of the twelve
+validated non-filler items once — Saw Spear, Augur of Ebrietas, and the ten
+progression keys (Hunter Chief Emblem, Cainhurst Summons, Tonsil Stone, Upper
+Cathedral Key, Orphanage Key, Eye of a Blood-drunk Hunter, Eye Pendant,
+Astral Clocktower Key, Celestial Dial, Laurence's Skull) — then cycles filler
+over the remaining 41 of the 53 locations. The playable area is unchanged;
+the progression keys are forward unlocks whose vanilla homes are outside the
+slice. With the option off, the pool is the original slice composition: Saw
+Spear and Augur once each, eleven Vials, and ten each of Quicksilver
+Bullets x3, Pebbles x3, Molotov Cocktails x2, and Blood Stone Shards x2. The
+checked-in tests pin both compositions.
 
 Client repository:
 

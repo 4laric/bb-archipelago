@@ -98,13 +98,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, _assigned("item", key), key)
         actual = dict(ITEM_ID_BY_KEY)
         actual["blood_vial"] = ITEM_NAME_TO_ID[FILLER_ITEM_NAME]
-        self.assertEqual(
-            actual,
-            {key: GOLDEN_ITEMS[key] for key in (
-                "saw_spear", "blood_vial", "quicksilver_bullets", "pebbles",
-                "molotov_cocktails", "blood_stone_shards", "augur_of_ebrietas",
-            )},
-        )
+        self.assertEqual(actual, dict(GOLDEN_ITEMS))
 
     def test_location_ids_match_the_golden_snapshot(self):
         for key, value in GOLDEN_LOCATIONS.items():
@@ -128,25 +122,14 @@ class GoldenIdTests(unittest.TestCase):
         forwards = {i.key: _assigned("item", i.key) for i in shufflable}
         backwards = {i.key: _assigned("item", i.key) for i in reversed(shufflable)}
         self.assertEqual(forwards, backwards)
-        self.assertEqual(
-            forwards,
-            {key: GOLDEN_ITEMS[key] for key in (
-                "saw_spear", "quicksilver_bullets", "pebbles",
-                "molotov_cocktails", "blood_stone_shards", "augur_of_ebrietas",
-            )},
-        )
+        golden = {key: GOLDEN_ITEMS[key] for key in forwards}
+        self.assertEqual(golden, forwards)
 
     def test_ids_are_stable_under_insertion(self):
         """Inserting a key must not move any existing key's id."""
         before = {i.key: _assigned("item", i.key) for i in SHUFFLABLE_ITEMS}
         # a new key would be appended to ids.tsv, not renumber the others
-        self.assertEqual(
-            before,
-            {key: GOLDEN_ITEMS[key] for key in (
-                "saw_spear", "quicksilver_bullets", "pebbles",
-                "molotov_cocktails", "blood_stone_shards", "augur_of_ebrietas",
-            )},
-        )
+        self.assertEqual(before, {key: GOLDEN_ITEMS[key] for key in before})
 
 
 class RegistryCoverageTests(unittest.TestCase):
