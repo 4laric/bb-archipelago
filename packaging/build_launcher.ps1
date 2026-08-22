@@ -90,8 +90,14 @@ foreach ($item in $projects) {
     $publish = Join-Path $native ([IO.Path]::GetFileNameWithoutExtension($item.Name))
     Copy-Item -LiteralPath (Join-Path $publish $item.Name) -Destination $tools
 }
+$clientRecord = $null
 if (-not $SkipClient) {
-    Copy-Item -LiteralPath ([IO.Path]::GetFullPath($ClientPath)) -Destination (Join-Path $tools "bb-ap-client.exe")
+    $clientDestination = Join-Path $tools "bb-ap-client.exe"
+    Copy-Item -LiteralPath ([IO.Path]::GetFullPath($ClientPath)) -Destination $clientDestination
+    $clientRecord = [ordered]@{
+        path = "tools/bb-ap-client.exe"
+        sha256 = (Get-FileHash -LiteralPath $clientDestination -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
 }
 
 New-Item -ItemType Directory -Path (Join-Path $package "docs") -Force | Out-Null
@@ -115,6 +121,7 @@ $manifest = [ordered]@{
     dirty_worktree = $dirty
     includes_client = (-not $SkipClient)
     includes_game_files = $false
+    client = $clientRecord
     files = @($records)
 }
 $manifestJson = $manifest | ConvertTo-Json -Depth 5
