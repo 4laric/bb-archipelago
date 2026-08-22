@@ -1,0 +1,84 @@
+location_flag	region	name	basis
+50002200	Central Yharnam	Central Yharnam - White Messenger Ribbon	published (fixed_locations.tsv)
+50002360	Underground Corpse Pile	Underground Corpse Pile - Underground Cell Inner Chamber Key	event tag 宝死体_地下牢の鍵
+52110000	Healing Church Workshop	Healing Church Workshop - Old Hunter Bone	published (data.py treasure_old_hunter_bone); Abandoned Old Workshop is map m21_01
+52110010	Healing Church Workshop	Healing Church Workshop - Gehrman's Hunter Cap (Abandoned Old Workshop)	map m21_01 is the workshop replica; event tag 宝01
+52110020	Healing Church Workshop	Healing Church Workshop - Doll Hat (Abandoned Old Workshop chest)	map m21_01; event tag 宝箱00
+52200360	Hemwick Charnel Lane	Hemwick Charnel Lane - Rune Workshop Tool	published (data.py treasure_rune_workshop_tool)
+52300070	Old Yharnam	Old Yharnam - Bloody Messenger Head Bandage	map m23_00
+52300200	Old Yharnam	Old Yharnam - Hunter's Torch	map m23_00
+52300390	Old Yharnam	Old Yharnam - Rifle Spear	map m23_00
+52300400	Old Yharnam	Old Yharnam - Charred Hunter Garb	map m23_00
+52400120	Cathedral Ward	Cathedral Ward - Top Hat (small plaza)	event tag A小広場邪神
+52400270	Cathedral Ward	Cathedral Ward - Black Messenger Hat (rooftop)	event tag A屋根の上
+52400290	Cathedral Ward	Cathedral Ward - Black Church Hat (back alley)	event tag A裏路地
+52400450	Cathedral Ward	Cathedral Ward - Hunter Chief Emblem (plaza entrance)	event tag A広場入口脇
+52400480	Cathedral Ward	Cathedral Ward - Radiant Sword Hunter Badge	published (data.py treasure_radiant_sword_hunter_badge); event tag C_接続塔_終点
+52410100	Central Yharnam	Central Yharnam - Saw Spear	published (fixed_locations.tsv)
+52410290	Central Yharnam	Central Yharnam - Saw Hunter Badge	published (fixed_locations.tsv)
+52410520	Central Yharnam	Central Yharnam - Torch	published (fixed_locations.tsv)
+52410610	Central Yharnam	Central Yharnam - Hunter Set	proposed rename of the published placeholder "Central Yharnam - Hunter Set (Lot 2410610)" (#75)
+52411000	Central Yharnam	Central Yharnam - Blood Gem Workshop Tool	published (fixed_locations.tsv)
+52420150	Upper Cathedral Ward	Upper Cathedral Ward - Choir Garb	map m24_02
+52420190	Upper Cathedral Ward	Upper Cathedral Ward - Blindfold Cap	map m24_02
+52420230	Upper Cathedral Ward	Upper Cathedral Ward - Gascoigne's Cap	map m24_02
+52420250	Upper Cathedral Ward	Upper Cathedral Ward - Ludwig's Rifle	map m24_02
+52420270	Upper Cathedral Ward	Upper Cathedral Ward - Cosmic Eye Watcher Badge	published (data.py treasure_cosmic_eye_watcher_badge)
+52420320	Upper Cathedral Ward	Upper Cathedral Ward - A Call Beyond	flag is shared between a m24_00 dummy corpse and the real m24_02 placement; named for the real one
+52420540	Cathedral Ward	Cathedral Ward - Rumpled Yharnam Hat (workshop-tower back alley)	event tag C_路地裏 脇道; sub-area assignment open
+52420550	Cathedral Ward	Cathedral Ward - Wooden Shield	map m24_00
+52420670	Cathedral Ward	Cathedral Ward - Messenger Top Hat	map m24_00
+52420730	Cathedral Ward	Cathedral Ward - Messenger Urn Festival	map m24_00
+52500160	Castle Cainhurst	Castle Cainhurst - Noble Dress	map m25_00
+52500170	Castle Cainhurst	Castle Cainhurst - Vileblood Register	map m25_00
+52500250	Castle Cainhurst	Castle Cainhurst - Executioner's Gloves	published (data.py treasure_executioners_gloves)
+52501000	Castle Cainhurst	Castle Cainhurst - Reiterpallasch	map m25_00; event tag 宝箱_00
+52501020	Castle Cainhurst	Castle Cainhurst - Executioner Garb	map m25_00; event tag 宝箱_02
+52501050	Castle Cainhurst	Castle Cainhurst - Knight's Wig	map m25_00; event tag 宝箱_05
+52501070	Castle Cainhurst	Castle Cainhurst - Knight's Garb	map m25_00; event tag 宝箱_07
+52501080	Castle Cainhurst	Castle Cainhurst - Evelyn	map m25_00; event tag 宝箱_08
+52600550	Nightmare of Mensis	Nightmare of Mensis - Iron Door Key (Nightmare Host corpse)	event tag 悪夢の主宝死体
+52600600	Nightmare of Mensis	Nightmare of Mensis - Choir Bell	map m26_00; event tag 宝箱_03
+52600610	Nightmare of Mensis	Nightmare of Mensis - Iron Door Key #2	unestablished — same-region duplicate of 52600550 with no distinguishing tag
+52601000	Nightmare of Mensis	Nightmare of Mensis - Iosefka's Blood Vial (Micolash arena chest)	map m26_00; event tag 宝箱_00; arena attribution is reviewer-checkable game knowledge
+52700120	Forbidden Woods	Forbidden Woods - Cannon	map m27_00
+52700150	Forbidden Woods	Forbidden Woods - White Church Hat	map m27_00
+52700410	Forbidden Woods	Forbidden Woods - Graveguard Robe	map m27_00
+52700480	Forbidden Woods	Forbidden Woods - Beast Roar	map m27_00
+52700560	Forbidden Woods	Forbidden Woods - Graveguard Mask	map m27_00
+52700800	Forbidden Woods	Forbidden Woods - Burial Blade	map m27_00; event tag 宝箱00
+52800100	Yahar'gul	Yahar'gul - Iron Yahar'gul Helm	map m28_00
+52800290	Yahar'gul	Yahar'gul - Upper Cathedral Key	published (data.py pickup_upper_cathedral_key); event tag 宝死体29_ミイラ
+52800330	Yahar'gul	Yahar'gul - Tonitrus (main street dead end)	event tag 宝死体33_初回_大通り終点
+52800500	Yahar'gul	Yahar'gul - Tiny Tonitrus	map m28_00; event tag 宝箱00
+52800510	Yahar'gul	Yahar'gul - Choir Bell	map m28_00; event tag 宝箱01
+52800520	Yahar'gul	Yahar'gul - Bone Ash Mask	map m28_00; event tag 宝箱02
+52800610	Yahar'gul	Yahar'gul - Black Hooded Iron Helm and Yahar'gul Black Garb (coachman's seat)	event tag 宝死体46_御者席; one corpse awards both lots
+53200500	Lecture Building 2F	Lecture Building 2F - Empty Phantasm Shell (observatory chest)	event tag 宝箱00_学長室天文台; floor follows the headmaster's-room tag
+53200540	Lecture Building 2F	Lecture Building 2F - Student Uniform (Headmaster's Room chest)	event tag 宝箱04_学長室2F
+53200600	Lecture Building 1F	Lecture Building 1F - Augur of Ebrietas	published (data.py treasure_augur_of_ebrietas); event tag 宝箱10_悪夢教室1F
+53200720	Lecture Building 2F	Lecture Building 2F - Lecture Theatre Key	published (data.py treasure_lecture_theatre_key)
+53200730	Lecture Building 2F	Lecture Building 2F - Student Uniform #2	unestablished — event tag 追加宝死体03; floor assignment open
+53300330	Nightmare Frontier	Nightmare Frontier - Messenger's Gift	published (data.py treasure_messengers_gift)
+53400020	Hunter's Nightmare	Hunter's Nightmare - Old Hunter Trousers	map m34_00
+53400040	Hunter's Nightmare	Hunter's Nightmare - Old Hunter Garb	map m34_00
+53400060	Hunter's Nightmare	Hunter's Nightmare - Beast Cutter	map m34_00
+53400130	Hunter's Nightmare	Hunter's Nightmare - Boom Hammer	map m34_00
+53400160	Hunter's Nightmare	Hunter's Nightmare - Old Hunter Top Hat	map m34_00
+53400220	Hunter's Nightmare	Hunter's Nightmare - Amygdalan Arm	map m34_00
+53400270	Hunter's Nightmare	Hunter's Nightmare - Constable's Garb	map m34_00
+53400280	Hunter's Nightmare	Hunter's Nightmare - Whirligig Saw	map m34_00
+53400350	Hunter's Nightmare	Hunter's Nightmare - Constable's Gloves	map m34_00
+53400360	Hunter's Nightmare	Hunter's Nightmare - Constable's Trousers	map m34_00
+53400440	Hunter's Nightmare	Hunter's Nightmare - Beasthunter Saif	map m34_00
+53400510	Hunter's Nightmare	Hunter's Nightmare - Butcher Mask	map m34_00
+53400580	Hunter's Nightmare	Hunter's Nightmare - Old Hunter Cap	map m34_00
+53400600	Hunter's Nightmare	Hunter's Nightmare - Old Hunter Gloves	two-lot row (Old Hunter Gloves plus an incidental Blood Vial); named for the unique item
+53500800	Research Hall	Research Hall - Underground Cell Key	map m35_00
+53500810	Research Hall	Research Hall - Fist of Gratia (underground cell)	event tag 地下牢04
+53500820	Research Hall	Research Hall - Enlarged Head	map m35_00
+53500830	Research Hall	Research Hall - Blacksky Eye (sunflower patient room)	event tag ひまわり畑の椅子
+53500850	Research Hall	Research Hall - Church Cannon (lower sanctum chest)	event tag 宝箱【聖堂下層】
+53500860	Research Hall	Research Hall - Loch Shield	map m35_00
+53500870	Research Hall	Research Hall - Decorative Old Hunter Garb	event tag 時計塔_2F右四足部屋ハンター
+53600700	Underground Corpse Pile	Underground Corpse Pile - Harrowed Hood	event tag 宝死体_ハンター
