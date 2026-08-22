@@ -19,18 +19,19 @@ per named location:
 | `name` | The player-facing English name. Unique across the table, ASCII, never a research placeholder. |
 | `basis` | What the name rests on (vocabulary below). |
 
-The table covers all 651 rows of the fixed-treasure catalog plus the nineteen
+The table covers all 651 rows of the fixed-treasure catalog plus the twenty
 scripted checks whose flags are committed (fourteen boss defeats, five EMEVD
-script awards). `data.py` draws those names from the table through
+script awards, one interaction). `data.py` draws those names from the table through
 `worlds/bloodborne/location_names.py`; boss-defeat checks keep the
 established bare boss name (`Cleric Beast`) rather than the
 `Region - Core` shape. The boss-defeat flags were mapped from the committed
 EMEVD decompiles: each map's boss event waits `CharacterDead` on the boss
 entity and calls `HandleBossDefeat` on it, the event ID is the flag, and the
 map's string table names the boss (internal dev names — Cleric Beast is
-教区長, Lady Maria is 女性ハンター). The one interaction check without a
-committed flag stays named inline in `data.py` until a flag exists to key a
-row — no invented keys. Rows past the
+教区長, Lady Maria is 女性ハンター). The interaction check keys on event
+12401803 (学長の記憶ポリ劇): the Grand Cathedral altar prompt that plays the
+skull memory after Amelia, a one-shot flag under the same
+event-ID-is-the-flag convention. Rows past the
 83 `mvp_candidate` treasures rest on the committed map, event-tag, coordinate,
 and item-category data; 60 of them name items whose English text is not in
 the committed data (category-8 blood gems, plus two nameless goods), and those
@@ -91,11 +92,11 @@ rather than runtime evidence. The `basis` column says which:
 - #75 is decided and landed: the 45 shipped `(Lot NNN)` placeholders publish
   their table names, and this table feeds `tools/build_central_yharnam_slice.py`.
   Quantities follow the owner ruling: `x1` is dropped, `xN` for N > 1 stays.
-- #82 is decided and landed: the boss-defeat flags are mapped (#86) and the
+- #82 is decided and landed: the boss-defeat flags are mapped (#86), the
   `53500630` divergence is resolved by owner ruling — the check is Research
   Hall's cell block (event tag 地下牢03, same 地下牢NN family as the Fist of
   Gratia row), renamed "Research Hall - Blood Stone Chunk (underground cell)"
   and moved to the Research Hall region; the Inner Chamber Key treasure
-  (50002360) keeps the Underground Corpse Pile contributing a check. Only
-  `interaction_laurences_skull` stays inline: it is not a boss-defeat check
-  and its trigger flag is not yet evidenced.
+  (50002360) keeps the Underground Corpse Pile contributing a check — and the
+  skull interaction keys on its evidenced one-shot flag 12401803. No inline
+  names remain in `data.py`.

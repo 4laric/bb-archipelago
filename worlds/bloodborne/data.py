@@ -120,17 +120,16 @@ LOCATIONS = (
     Location("boss_blood_starved_beast", location_name(12301800), "Old Yharnam",
              locked_item="event_blood_starved_beast_defeated"),
     Location("boss_vicar_amelia", location_name(12401800), "Grand Cathedral", locked_item="event_amelia_defeated"),
-    Location("interaction_laurences_skull", "Grand Cathedral - Laurence's Skull", "Grand Cathedral",
+    Location("interaction_laurences_skull", location_name(12401803), "Grand Cathedral",
              Rule.all("event_amelia_defeated"), locked_item="event_forbidden_woods_password"),
     Location("boss_shadows_of_yharnam", location_name(12701800), "Forbidden Woods", locked_item="event_shadows_defeated"),
     Location("boss_rom", location_name(13201800), "Byrgenwerth", locked_item="event_rom_defeated"),
     Location("boss_the_one_reborn", location_name(12801800), "Yahar'gul", locked_item="event_one_reborn_defeated"),
     Location("boss_micolash", location_name(12601850), "Nightmare of Mensis", locked_item="event_micolash_defeated"),
     Location("boss_mergos_wet_nurse", location_name(12601800), "Nightmare of Mensis", Rule.all("event_micolash_defeated"), locked_item="event_mergos_wet_nurse_defeated"),
-    # Scripted checks with committed award flags (runtime_bindings.py); names
-    # come from the location-name table (docs/LOCATION-NAMING.md). Boss checks
-    # above do the same, keyed by their mapped boss-defeat flags. Only
-    # interaction_laurences_skull (no committed flag) stays inline.
+    # Scripted checks and bosses with committed flags (runtime_bindings.py);
+    # every name comes from the location-name table
+    # (docs/LOCATION-NAMING.md).
     Location("pickup_cainhurst_summons", location_name(52410990), "Iosefka's Clinic"),
     Location("pickup_upper_cathedral_key", location_name(52800290), "Yahar'gul"),
     Location("script_award_orphanage_key", location_name(52420900), "Upper Cathedral Ward"),

@@ -669,3 +669,4 @@ location_flag	region	name	basis
 13501800	Astral Clocktower	Lady Maria of the Astral Clocktower	published (data.py boss_lady_maria); boss-defeat event flag committed in runtime_bindings.py
 13601800	Fishing Hamlet	Orphan of Kos	published (data.py boss_orphan_of_kos); boss-defeat event flag committed in runtime_bindings.py
 13401850	Nightmare Grand Cathedral	Laurence, the First Vicar	published (data.py boss_laurence); boss-defeat event flag committed in runtime_bindings.py
+12401803	Grand Cathedral	Grand Cathedral - Laurence's Skull	published (data.py interaction_laurences_skull); one-shot interaction flag committed in runtime_bindings.py

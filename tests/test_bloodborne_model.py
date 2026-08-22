@@ -107,7 +107,9 @@ class BloodborneModelTests(unittest.TestCase):
                                  for row in csv.DictReader(handle, delimiter="\t")}
 
         for key, binding in LOCATION_BINDINGS.items():
-            if binding.source_kind == "boss_defeat":
+            if binding.source_kind in ("boss_defeat", "interaction"):
+                # Flag-only checks: no item lot to trace; the evidence string
+                # must carry the flag itself.
                 self.assertIsNone(binding.item_lot_id)
                 self.assertIn(str(binding.event_flag), binding.evidence)
                 continue
