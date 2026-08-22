@@ -24,6 +24,13 @@ from .core import (
     sha256_file,
     validate_processes,
 )
+from .client_config import (
+    ClientRuntimePaths,
+    default_shad_log,
+    default_state_root,
+    substitute_plan_arguments,
+    write_client_runtime_config,
+)
 from .resources import application_root
 
 
@@ -57,6 +64,8 @@ class LauncherSettings:
     map_studio_source: Path | None = None
     enemy_inventory: Path | None = None
     soulsformats_next: Path | None = None
+    state_root: Path | None = None
+    shad_log: Path | None = None
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any], *, relative_to: Path | None = None) -> "LauncherSettings":
@@ -90,6 +99,8 @@ class LauncherSettings:
             map_studio_source=optional("map_studio_source"),
             enemy_inventory=optional("enemy_inventory"),
             soulsformats_next=optional("soulsformats_next"),
+            state_root=optional("state_root"),
+            shad_log=optional("shad_log"),
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -104,6 +115,8 @@ class LauncherSettings:
             "map_studio_source": None if self.map_studio_source is None else str(self.map_studio_source),
             "enemy_inventory": None if self.enemy_inventory is None else str(self.enemy_inventory),
             "soulsformats_next": None if self.soulsformats_next is None else str(self.soulsformats_next),
+            "state_root": None if self.state_root is None else str(self.state_root),
+            "shad_log": None if self.shad_log is None else str(self.shad_log),
         }
 
 
@@ -130,6 +143,8 @@ class WorkflowResult:
     enemizer_enabled: bool
     enemizer_swaps: int
     process_ids: tuple[int | None, ...]
+    client_config: Path
+    ledger: Path
 
 
 def _read_object(path: Path, label: str) -> dict[str, Any]:
@@ -193,6 +208,25 @@ def load_process_plan(path: Path | str) -> ProcessPlan:
             )
         )
     return ProcessPlan(shad_build, runtime_build, tuple(processes))
+
+
+def resolve_process_plan(plan: ProcessPlan, paths: ClientRuntimePaths | None) -> ProcessPlan:
+    """Return the plan with launch-time placeholders substituted throughout."""
+
+    return ProcessPlan(
+        shad_build=plan.shad_build,
+        runtime_build=plan.runtime_build,
+        processes=tuple(
+            ProcessSpec(
+                name=spec.name,
+                executable=spec.executable,
+                arguments=substitute_plan_arguments(spec.arguments, paths),
+                working_directory=spec.working_directory,
+                expected_sha256=spec.expected_sha256,
+            )
+            for spec in plan.processes
+        ),
+    )
 
 
 def run_command(command: Sequence[str], working_directory: Path, progress: Progress) -> None:
@@ -584,8 +618,18 @@ class LauncherWorkflow:
         )
         if owner["suppression"]["sha256"] != build.manifest["suppression"]["sha256"]:
             raise ValidationError("activated suppression witness does not match the seed build")
+        progress("Writing the native client runtime configuration...")
+        paths = write_client_runtime_config(
+            settings.state_root or default_state_root(),
+            seed=request["seed"],
+            slot=request["slot"],
+            install=install,
+            owner=owner,
+            suppression_manifest=settings.suppression_manifest.expanduser().resolve(),
+            shad_log=settings.shad_log or default_shad_log(),
+        )
         progress("Starting shadPS4, bridge, and AP client...")
-        started = self.process_launcher(plan.processes)
+        started = self.process_launcher(resolve_process_plan(plan, paths).processes)
         progress("Randomized Bloodborne launch started.")
         swaps = 0
         if enemizer is not None:
@@ -599,4 +643,6 @@ class LauncherWorkflow:
             enemizer_enabled=options.enabled,
             enemizer_swaps=swaps,
             process_ids=tuple(getattr(process, "pid", None) for process in started),
+            client_config=paths.config,
+            ledger=paths.ledger,
         )
