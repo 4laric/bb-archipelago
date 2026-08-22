@@ -9,13 +9,16 @@ import threading
 from pathlib import Path
 from typing import Any, Mapping
 
-from .core import LauncherError, ValidationError
+from .client_config import default_state_root
+from .core import GameInstall, LauncherError, ValidationError
+from .readiness import format_readiness, gather_readiness
 from .resources import resource_root
 from .workflow import (
     SETTINGS_FORMAT,
     EnemizerOptions,
     LauncherSettings,
     LauncherWorkflow,
+    _request_identity,
 )
 
 
@@ -29,6 +32,8 @@ FIELD_DEFINITIONS = (
     ("soulsformats_next", "SoulsFormatsNEXT", "directory"),
     ("process_plan", "Launch plan", "file"),
     ("cache_root", "Seed cache", "directory"),
+    ("state_root", "Launcher state (optional)", "directory"),
+    ("shad_log", "shadPS4 log (optional)", "file"),
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
 
@@ -90,6 +95,7 @@ class LauncherApp:
         self._build()
         self._load_settings_if_present()
         self._toggle_enemy_fields()
+        self.root.after(0, self._refresh_status)
 
     def _build(self) -> None:
         ttk = self.ttk
@@ -156,8 +162,19 @@ class LauncherApp:
         scrollbar.grid(row=3, column=2, sticky="ns", pady=(10, 0))
         self.log.configure(yscrollcommand=scrollbar.set)
 
+        status_frame = ttk.LabelFrame(outer, text="Session status", padding=10)
+        status_frame.grid(row=4, column=0, sticky="ew", pady=(12, 0))
+        status_frame.columnconfigure(0, weight=1)
+        self.status_text = self.tk.Text(status_frame, height=6, wrap="word", state="disabled")
+        self.status_text.grid(row=0, column=0, sticky="ew")
+        status_scroll = ttk.Scrollbar(status_frame, orient="vertical", command=self.status_text.yview)
+        status_scroll.grid(row=0, column=1, sticky="ns")
+        self.status_text.configure(yscrollcommand=status_scroll.set)
+        refresh_button = ttk.Button(status_frame, text="Refresh", command=self._refresh_status)
+        refresh_button.grid(row=0, column=2, sticky="ne", padx=(8, 0))
+
         controls = ttk.Frame(outer)
-        controls.grid(row=4, column=0, sticky="ew", pady=(12, 0))
+        controls.grid(row=5, column=0, sticky="ew", pady=(12, 0))
         controls.columnconfigure(1, weight=1)
         self.save_button = ttk.Button(controls, text="Save Setup", command=self._save_settings)
         self.save_button.grid(row=0, column=0, sticky="w")
@@ -170,7 +187,7 @@ class LauncherApp:
             style="Accent.TButton",
         )
         self.launch_button.grid(row=0, column=2, sticky="e")
-        ttk.Label(outer, textvariable=self.status).grid(row=5, column=0, sticky="w", pady=(8, 0))
+        ttk.Label(outer, textvariable=self.status).grid(row=6, column=0, sticky="w", pady=(8, 0))
 
     def _browse(self, name: str, selector: str) -> None:
         current = self.fields[name].get().strip()
@@ -244,6 +261,32 @@ class LauncherApp:
         self.log.configure(state="disabled")
         self.status.set(message.rstrip())
 
+    def _set_status_text(self, text: str) -> None:
+        self.status_text.configure(state="normal")
+        self.status_text.delete("1.0", "end")
+        self.status_text.insert("end", text.rstrip() + "\n")
+        self.status_text.configure(state="disabled")
+
+    def _refresh_status(self) -> None:
+        try:
+            settings = self._settings()
+        except LauncherError:
+            self._set_status_text("Finish the setup paths above to see session status.")
+            return
+        try:
+            install = GameInstall.from_root(settings.game_root)
+            request = _request_identity(settings.ap_request)
+            readiness = gather_readiness(
+                install,
+                settings.state_root or default_state_root(),
+                seed=request["seed"],
+                slot=request["slot"],
+            )
+        except LauncherError as exc:
+            self._set_status_text(f"Status unavailable: {exc}")
+            return
+        self._set_status_text(format_readiness(readiness))
+
     def _progress_message(self, message: str) -> None:
         self.root.after(0, self._append_log, message)
 
@@ -303,9 +346,13 @@ class LauncherApp:
         self._set_busy(False)
         mode = "enemy randomization enabled" if result.enemizer_enabled else "enemies unchanged"
         self._append_log(f"Launch started ({mode}); cache {result.cache_key[:12]}.")
+        self._append_log(f"Client runtime config: {result.client_config}")
+        self._append_log(f"Receive ledger: {result.ledger}")
+        self._refresh_status()
         self.messagebox.showinfo(
             "Bloodborne AP started",
-            f"Verified overlay {result.cache_key[:12]} is active.\n{mode.capitalize()}.",
+            f"Verified overlay {result.cache_key[:12]} is active.\n{mode.capitalize()}.\n"
+            f"Client config: {result.client_config}",
             parent=self.root,
         )
 
