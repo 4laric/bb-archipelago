@@ -26,6 +26,13 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 MVP_CANDIDATES = 83
 SHIPPED_MVP_ROWS = 6
 
+# Published slice names that still carry a "(Lot NNN)" research placeholder.
+# The table name for these flags is the proposed replacement; the swap itself
+# is the rename decision in #75. A flag may only sit here while its published
+# name is lot-suffixed — once the rename lands or is rejected, the row leaves
+# this set and ordinary agreement applies.
+PENDING_PLACEHOLDER_RENAMES = {"52410610"}  # Central Yharnam - Hunter Set
+
 
 def rows(path: Path) -> list[dict[str, str]]:
     with path.open(encoding="utf-8", newline="") as handle:
@@ -95,9 +102,25 @@ class LocationNameTableTests(unittest.TestCase):
         mismatched = sorted(
             f"{row['key']}: {row['name']!r} != {names_by_flag[row['location_flag']]!r}"
             for row in shipped
-            if row["name"] != names_by_flag[row["location_flag"]]
+            if row["location_flag"] not in PENDING_PLACEHOLDER_RENAMES
+            and row["name"] != names_by_flag[row["location_flag"]]
         )
         self.assertEqual("", "; ".join(mismatched))
+
+    def test_pending_renames_are_exactly_the_lot_suffixed_published_rows(self):
+        names_by_flag = {row["location_flag"]: row["name"] for row in rows(NAMES)}
+        shipped_by_flag = {row["location_flag"]: row["name"] for row in rows(SHIPPED)}
+        pending = sorted(
+            flag
+            for flag in PENDING_PLACEHOLDER_RENAMES
+            if flag in names_by_flag and flag in shipped_by_flag
+        )
+        # A pending entry that names nothing shipped, or that "renames" a
+        # clean published name, is a stale gate, not a decision.
+        self.assertEqual(sorted(PENDING_PLACEHOLDER_RENAMES), pending)
+        for flag in pending:
+            self.assertIn("(Lot ", shipped_by_flag[flag])
+            self.assertNotIn("(Lot ", names_by_flag[flag])
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ location_flag	region	name	basis
 52410100	Central Yharnam	Central Yharnam - Saw Spear	published (fixed_locations.tsv)
 52410290	Central Yharnam	Central Yharnam - Saw Hunter Badge	published (fixed_locations.tsv)
 52410520	Central Yharnam	Central Yharnam - Torch	published (fixed_locations.tsv)
-52410610	Central Yharnam	Central Yharnam - Hunter Set	published (fixed_locations.tsv); catalog display is the first of the four Hunter set rows
+52410610	Central Yharnam	Central Yharnam - Hunter Set	proposed rename of the published placeholder "Central Yharnam - Hunter Set (Lot 2410610)" (#75)
 52411000	Central Yharnam	Central Yharnam - Blood Gem Workshop Tool	published (fixed_locations.tsv)
 52420150	Upper Cathedral Ward	Upper Cathedral Ward - Choir Garb	map m24_02
 52420190	Upper Cathedral Ward	Upper Cathedral Ward - Blindfold Cap	map m24_02

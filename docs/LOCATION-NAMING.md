@@ -47,9 +47,13 @@ in `data.py`; folding them into the table is follow-up scope.
 Names are project choices, not game facts, so they need recorded provenance
 rather than runtime evidence. The `basis` column says which:
 
-- `published` — already shipped in `fixed_locations.tsv` or `data.py`. The
-  table must agree with these byte-for-byte; `tests/test_location_names.py`
-  enforces it.
+- `published` — already shipped in `fixed_locations.tsv` or `data.py` under a
+  clean name. The table must agree with these byte-for-byte;
+  `tests/test_location_names.py` enforces it.
+- `proposed rename` — the slice publishes this flag under a `(Lot NNN)`
+  placeholder name and the table name is its proposed replacement. Every such
+  row is listed in `PENDING_PLACEHOLDER_RENAMES` in the test module, which is
+  the complete inventory of renames awaiting the owner decision in #75.
 - `event tag ...` — the hint translates this flag's committed Japanese event
   tag. Reviewer-confirmable in game.
 - `map mNN...` — the name follows from the map and item identity alone; no
