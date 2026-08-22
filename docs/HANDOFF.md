@@ -1,6 +1,6 @@
 # Contributor handoff
 
-Status: 2026-08-20. This is the shortest path from a clean clone to the current
+Status: 2026-08-21. This is the shortest path from a clean clone to the current
 Central Yharnam vertical slice. Historical research remains in the other docs;
 this file is the operational source of truth.
 
@@ -19,7 +19,9 @@ only code, reviewed derived facts, and reproducible fixtures.
 
 ## Proven live on CUSA03173 01.09 / shadPS4 0.18.0
 
-- The Intel SFX patch prevents the known damage crash in the opening clinic.
+- The Intel SFX patch prevented the known opening-clinic damage crash on the
+  original test machine. It is an emulator/hardware workaround, not an item
+  grant prerequisite, and the CE table must not enforce its patch bytes.
 - The 54-edit suppression binder loads. A suppressed pickup gives one Blood
   Vial, still sets its acquisition flag, survives reload, and does not respawn.
 - The standalone Rust reader resolves the randomized eboot base and reads the
@@ -37,6 +39,13 @@ only code, reviewed derived facts, and reproducible fixtures.
   `0xB00003E8` record. Discard or restore any save containing that record. The
   current table fails closed for absent Vials; existing Vial stacks remain the
   validated path.
+- A fresh second-machine save exposed an inventory-hydration race: the consume
+  hook captured the inventory while `last=76`, bootstrap finalized absent, and
+  the canonical Vial appeared moments later at secondary slot 14 / logical
+  slot 78. A bounded 10-second debounce now waits for that stack. The same
+  machine then completed the existing-stack bootstrap successfully. A first
+  shop-purchased Vial updated the HUD without creating the canonical goods
+  record; an enemy/world Vial did create it.
 
 ## Build and generate
 
@@ -86,12 +95,14 @@ is not fatal.
 1. Install the seed-matching suppression binder as documented in
    `VANILLA-SUPPRESSION.md`; the client independently hashes the installed
    binder before arming.
-2. Enable the Intel SFX patch in BBLauncher.
+2. If this machine reproduces the opening-clinic damage crash, enable the
+   appropriate shadPS4 workaround independently of the item-grant table.
 3. Run Cheat Engine 7.7 elevated, attach to the shadPS4 process that is actually
    running Bloodborne, and load
    `tables/Bloodborne-native-item-grant-auto-v2.CT`.
-4. Fire one bullet after each game launch to capture the inventory pointer.
-   Leave CE and the r5 table running afterward.
+4. The table visibly reports setup success and waits briefly for inventory
+   hydration. If no bootstrap result appears, fire one bullet to capture the
+   inventory pointer. Leave CE and the r5 table running afterward.
 5. Load the character intended for this AP seed and slot before passing
    `--assume-correct-save`. Do not switch characters while connected.
 
@@ -147,3 +158,6 @@ counts and retain any terminal `native-grant-state.txt` failure before retrying.
 - Table diagnostics and log paths are portable. Setup success, failure, and
   bootstrap outcome are shown explicitly rather than relying on an invisible
   side effect.
+- The grant table does not inspect or enforce unrelated emulator patch bytes.
+  Its inventory bootstrap waits for the canonical goods list to hydrate before
+  declaring a Vial absent.

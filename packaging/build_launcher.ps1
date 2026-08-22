@@ -117,7 +117,12 @@ $manifest = [ordered]@{
     includes_game_files = $false
     files = @($records)
 }
-$manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $package "package-manifest.json") -Encoding utf8
+$manifestJson = $manifest | ConvertTo-Json -Depth 5
+[IO.File]::WriteAllText(
+    (Join-Path $package "package-manifest.json"),
+    $manifestJson,
+    [Text.UTF8Encoding]::new($false)
+)
 
 if (-not $NoArchive) {
     $archive = Join-Path $resolvedOutput "BloodborneAPLauncher-win-x64.zip"

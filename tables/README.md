@@ -13,6 +13,12 @@ bootstrap outcomes. Re-executing it in the same process is ignored as
 `already_ready`; restart Cheat Engine before loading a replacement table after
 hooks have already been installed.
 
+`SAFE-READ-ONLY-portable-inventory-geometry.CT` is the supported cross-machine
+inventory diagnostic. Run it only after the player-facing harness has installed
+in the same process. It writes `%TEMP%\bb-inventory-geometry.txt`, scans only a
+bounded active/probe window, and distinguishes canonical Vial/Bullet runtime
+IDs from low-ID collisions in equipment-shaped records.
+
 Absent-stack Blood Vial insertion is deliberately refused. Cross-machine
 testing returned a native slot while creating invalid raw descriptor
 `0xF00003E8` (`?ItemInfo?`) rather than the expected `0xB00003E8`. Existing Vial

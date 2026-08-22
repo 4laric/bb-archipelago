@@ -54,6 +54,9 @@ class GrantHarnessContractTests(unittest.TestCase):
 
     def test_bootstrap_is_visible_and_never_inserts_an_absent_vial(self):
         self.assertIn("local bootstrapVialPending=true", self.text)
+        self.assertIn("local bootstrapAbsentPolls=0", self.text)
+        self.assertIn("local minBootstrapAbsentPolls=40", self.text)
+        self.assertIn('state("bootstrap_waiting"', self.text)
         self.assertIn("local bootstrapVialNormalized=0x400003E8", self.text)
         self.assertIn("local bootstrapVialHeldCap=20", self.text)
         self.assertIn("local bootstrapBulletNormalized=0x40000384", self.text)
@@ -72,10 +75,14 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertNotIn("BOOTSTRAP VIAL QUEUED", self.text)
         self.assertNotIn('os.remove(commandPath)\n        active=nil\n        return\n      end\n      append', self.text)
 
-    def test_intel_sfx_workaround_is_verified_in_live_memory(self):
-        self.assertIn("local intelSfxRva=0x28F83E0", self.text)
-        self.assertIn("local intelSfxByte=readBytes(base+intelSfxRva,1,true)", self.text)
-        self.assertIn("Intel SFX workaround is not active in the attached Bloodborne process", self.text)
+    def test_successful_setup_and_duplicate_execution_are_visible(self):
+        self.assertIn('showMessage("Bloodborne AP table setup SUCCESS.', self.text)
+        self.assertIn("The grant harness is installed. If no bootstrap result appears, fire one Bullet", self.text)
+        self.assertIn("Bloodborne AP table is already installed for this process", self.text)
+
+    def test_unrelated_emulator_patches_are_not_setup_gates(self):
+        self.assertNotIn("intelSfxRva", self.text)
+        self.assertNotIn("Intel SFX workaround is not active", self.text)
 
     def test_native_descriptor_selects_the_validated_source_by_item_category(self):
         self.assertNotIn("mov dword ptr [rsp+4],0", self.text)
@@ -121,6 +128,11 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn('state("completed",string.format("tag=%s native_result=', self.text)
         self.assertIn('state("completed",string.format("tag=%s direct before=', self.text)
         self.assertIn('prior.status=="completed"', self.text)
+        self.assertIn('state("awaiting_inventory","Command retained; inventory geometry is not hydrated yet")', self.text)
+        self.assertLess(
+            self.text.index('if actual==nil then\n    state("awaiting_inventory","Command retained; inventory geometry is not hydrated yet")'),
+            self.text.index("local wanted=command.expected+command.count"),
+        )
 
 
 if __name__ == "__main__":

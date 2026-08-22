@@ -50,7 +50,7 @@ if ($LASTEXITCODE -ne 0) { throw "Suppression writer build failed." }
     --no-build -- $Plan $GameParam $Paramdef $OutputParam --apply
 if ($LASTEXITCODE -ne 0) { throw "Suppression writer failed." }
 
-@{
+$ManifestJson = @{
     format = "bb-vanilla-suppression-build-v1"
     source_gameparam_sha256 = (Get-FileHash -LiteralPath $GameParam -Algorithm SHA256).Hash.ToLower()
     source_paramdef_sha256 = (Get-FileHash -LiteralPath $Paramdef -Algorithm SHA256).Hash.ToLower()
@@ -58,7 +58,8 @@ if ($LASTEXITCODE -ne 0) { throw "Suppression writer failed." }
     output_gameparam_sha256 = (Get-FileHash -LiteralPath $OutputParam -Algorithm SHA256).Hash.ToLower()
     output_relative_path = "param/gameparam/gameparam.parambnd.dcx"
     installed = $false
-} | ConvertTo-Json | Set-Content -LiteralPath $Manifest -Encoding utf8
+} | ConvertTo-Json
+[IO.File]::WriteAllText($Manifest, $ManifestJson, [Text.UTF8Encoding]::new($false))
 
 Write-Host "Built and reopened the suppressed binder: $OutputParam" -ForegroundColor Green
 Write-Host "Nothing was installed. Manifest: $Manifest" -ForegroundColor Yellow
