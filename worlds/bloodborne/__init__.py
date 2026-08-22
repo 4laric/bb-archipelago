@@ -13,10 +13,11 @@ from .data import (
     MODEL,
 )
 from .model import ItemKind, Rule
+from .resource_data import read_resource_text
 from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime_item_binding
 
 GAME = "Bloodborne"
-WORLD_VERSION = json.loads((Path(__file__).parent / "archipelago.json").read_text(encoding="utf-8"))["world_version"]
+WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r5"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
 SUPPRESSION_PLAN_SHA256 = "d044bdb5b02eeedf049718b69630866cf5eb89d98067445d772dd6ac486c6c73"
@@ -64,7 +65,7 @@ class IdRegistryError(RuntimeError):
     """A key has no assigned network id, or the registry is malformed."""
 
 
-def _load_id_registry(path: Path) -> dict[str, dict[str, int]]:
+def _load_id_registry(text: str) -> dict[str, dict[str, int]]:
     """Read the append-only key -> network id registry.
 
     Network ids are a permanent contract: they travel in multidata and in the
@@ -74,26 +75,26 @@ def _load_id_registry(path: Path) -> dict[str, dict[str, int]]:
     """
     registry: dict[str, dict[str, int]] = {"item": {}, "location": {}}
     seen: dict[int, str] = {}
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for number, line in enumerate(text.splitlines(), 1):
         if not line.strip() or line.startswith("kind\t"):
             continue
         try:
             kind, key, raw = line.split("\t")
             value = int(raw, 16)
         except ValueError as exc:
-            raise IdRegistryError(f"{path.name}:{number}: malformed row: {line!r}") from exc
+            raise IdRegistryError(f"ids.tsv:{number}: malformed row: {line!r}") from exc
         if kind not in registry:
-            raise IdRegistryError(f"{path.name}:{number}: unknown kind {kind!r}")
+            raise IdRegistryError(f"ids.tsv:{number}: unknown kind {kind!r}")
         if key in registry[kind]:
-            raise IdRegistryError(f"{path.name}:{number}: duplicate {kind} key {key!r}")
+            raise IdRegistryError(f"ids.tsv:{number}: duplicate {kind} key {key!r}")
         if value in seen:
-            raise IdRegistryError(f"{path.name}:{number}: id 0x{value:X} already used by {seen[value]!r}")
+            raise IdRegistryError(f"ids.tsv:{number}: id 0x{value:X} already used by {seen[value]!r}")
         seen[value] = key
         registry[kind][key] = value
     return registry
 
 
-ID_REGISTRY = _load_id_registry(Path(__file__).parent / "ids.tsv")
+ID_REGISTRY = _load_id_registry(read_resource_text("ids.tsv"))
 
 
 def _assigned(kind: str, key: str) -> int:
