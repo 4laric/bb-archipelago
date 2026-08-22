@@ -8,6 +8,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- Location names are now a declared contract ahead of the first numbered
+  release that freezes them: `worlds/bloodborne/location_names.tsv` names all
+  83 MVP-candidate fixed treasures, `docs/LOCATION-NAMING.md` defines the
+  format and rename rules, and tests enforce completeness, uniqueness, and
+  agreement with already-published names. Generated seeds still use the
+  existing names; replacing the `(Lot NNN)` placeholders awaits the rename
+  decision tracked in #75.
 - A UI-independent Bloodborne AP launcher core now discovers and validates
   CUSA03173 `01.09`, caches seed overlays by every build/source/options input,
   activates only owned param/map replacements transactionally, recovers an
