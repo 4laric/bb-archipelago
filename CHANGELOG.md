@@ -6,6 +6,15 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+### Fixed
+
+- The world now imports correctly from the zipped `.apworld` players actually
+  install: every data table (`archipelago.json`, `ids.tsv`,
+  `fixed_locations.tsv`, `location_names.tsv`) is read through
+  `importlib.resources` instead of filesystem paths, which do not exist under
+  zipimport. CI now generates from the zipped apworld on every run, so a
+  zip-only import failure cannot reach a player again.
+
 ### Added
 
 - A **Full Item Pool** world option (default on): the seed now places every

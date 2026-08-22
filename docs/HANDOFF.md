@@ -69,8 +69,11 @@ python -m unittest discover -s tests -v
 .\build.ps1 -Apworld
 ```
 
-Install `build/bloodborne.apworld` into an Archipelago 0.6.7 checkout, copy
-`examples/central-yharnam-variety.yaml` into its player directory, then run:
+Copy `build/bloodborne.apworld` into the Archipelago 0.6.7 checkout's
+`custom_worlds/` directory (the world reads its data tables zip-safely via
+`importlib.resources`; CI generates from the zipped apworld on every run).
+Copy `examples/central-yharnam-variety.yaml` into its player directory, then
+run:
 
 ```powershell
 python Generate.py --player_files_path Players --outputpath out --spoiler 3 --seed 52100005
