@@ -607,7 +607,7 @@ location_flag	region	name	basis
 53500540	Research Hall	Research Hall - Great One's Wisdom #1	map m35_00; unestablished
 53500600	Research Hall	Research Hall - Frenzied Coldblood (9) #4	map m35_00; unestablished
 53500620	Research Hall	Research Hall - Blue Elixir x4	map m35_00
-53500630	Research Hall	Research Hall - Blood Stone Chunk #3	map m35_00; unestablished
+53500630	Research Hall	Research Hall - Blood Stone Chunk (underground cell)	event tag 地下牢03
 53500840	Research Hall	Research Hall - Great One's Wisdom #2	map m35_00; unestablished
 53501100	Research Hall	Research Hall - Blood Gem #3	map m35_00; category-8 blood gem (gem param 134000); specific gem name not in committed data; unestablished
 53501500	Research Hall	Research Hall - Blood Gem #4	map m35_00; category-8 blood gem (gem param 135005); specific gem name not in committed data; unestablished
