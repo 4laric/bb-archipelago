@@ -19,9 +19,13 @@ per named location:
 | `name` | The player-facing English name. Unique across the table, ASCII, never a research placeholder. |
 | `basis` | What the name rests on (vocabulary below). |
 
-The table currently covers the 83 `mvp_candidate` fixed treasures. Boss,
+The table covers all 651 rows of the fixed-treasure catalog. Boss,
 interaction, and EMEVD script-award checks are named where they are defined
-in `data.py`; folding them into the table is follow-up scope.
+in `data.py`; folding them into the table is follow-up scope. Rows past the
+83 `mvp_candidate` treasures rest on the committed map, event-tag, coordinate,
+and item-category data; 60 of them name items whose English text is not in
+the committed data (category-8 blood gems, plus two nameless goods), and those
+rows say so in `basis` rather than inventing gem names.
 
 ## Name format
 
@@ -67,7 +71,7 @@ rather than runtime evidence. The `basis` column says which:
 - After: a published rename needs owner sign-off and a CHANGELOG entry in the
   same commit. Keys (`location_flag` here, network IDs in `ids.tsv`) never
   change.
-- New `mvp_candidate` catalog rows fail CI until they are named. That failure
+- New catalog rows fail CI until they are named. That failure
   is the ratchet working, not a bug.
 
 ## Follow-ups
@@ -75,5 +79,5 @@ rather than runtime evidence. The `basis` column says which:
 - #75 tracks the owner decision on replacing the shipped `(Lot NNN)`
   placeholder names, which is when this table starts feeding
   `tools/build_central_yharnam_slice.py`.
-- Extend the table past the MVP candidates and unify the inline names in
-  `data.py` so the table becomes the single source.
+- #82 tracks wiring the table into generation and unifying the inline names
+  in `data.py` so the table becomes the single source.
