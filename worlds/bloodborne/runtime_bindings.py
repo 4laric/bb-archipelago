@@ -269,6 +269,16 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
         None,
     ),
+    "interaction_laurences_skull": RuntimeLocationBinding(
+        12401803,
+        "EMEVD one-shot interaction flag; event 12401803 (学長の記憶ポリ劇) gates on Amelia "
+        "(12401800) and fires on the Grand Cathedral altar action prompt, then ends",
+        None,
+        "interaction",
+        "m24_00_00_00.emevd.dcx.js:4382-4398",
+        None,
+        None,
+    ),
     "pickup_cainhurst_summons": RuntimeLocationBinding(
         52410990, "EMEVD award m24_01_00_00:2310 + ItemLotParam 2410990 acquisition flag",
         2410990, "script_award", "m24_01_00_00.emevd.dcx.js:2310", 4, 4003),

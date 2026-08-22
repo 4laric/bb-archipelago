@@ -24,19 +24,19 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 670  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 671  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 51
 
-# Non-catalog checks the table names: boss defeats and EMEVD script awards
-# whose check flag is committed in runtime_bindings.py. Every boss in the
-# model is now keyed by its mapped defeat flag; checks without a committed
-# flag (e.g. interaction_laurences_skull) stay named inline in data.py.
+# Non-catalog checks the table names: boss defeats, EMEVD script awards, and
+# the one evidenced interaction, each keyed by the check flag committed in
+# runtime_bindings.py. Every check in data.py is now table-backed.
 SCRIPTED_CHECK_FLAGS = {
     "12411700",   # boss_cleric_beast
     "12411800",   # boss_father_gascoigne
     "12301800",   # boss_blood_starved_beast
     "12401800",   # boss_vicar_amelia
+    "12401803",   # interaction_laurences_skull
     "12701800",   # boss_shadows_of_yharnam
     "13201800",   # boss_rom
     "12801800",   # boss_the_one_reborn
@@ -63,6 +63,7 @@ DATA_PY_TABLED_CHECKS = {
     "boss_father_gascoigne": 12411800,
     "boss_blood_starved_beast": 12301800,
     "boss_vicar_amelia": 12401800,
+    "interaction_laurences_skull": 12401803,
     "boss_shadows_of_yharnam": 12701800,
     "boss_rom": 13201800,
     "boss_the_one_reborn": 12801800,
