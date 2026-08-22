@@ -202,7 +202,7 @@ sealed record Applied(
     string ItemKey, int LotId, int Slot, int ItemCategory, int GoodsId, int AcquisitionFlag);
 sealed record FileState(int Id, string Name, byte[] Bytes);
 
-sealed record RowState(int Id, string Name, Dictionary<string, object> Cells)
+sealed record RowState(int Id, string? Name, Dictionary<string, object> Cells)
 {
     public static RowState Capture(PARAM.Row row) => new(
         row.ID,
@@ -218,8 +218,19 @@ sealed record RowState(int Id, string Name, Dictionary<string, object> Cells)
     public void RequireEqualExcept(
         RowState after, IReadOnlySet<string> allowedFields, string context)
     {
-        if (Id != after.Id || Name != after.Name || !Cells.Keys.ToHashSet().SetEquals(after.Cells.Keys))
-            throw new InvalidDataException($"{context}: row identity or field set changed");
+        if (Id != after.Id)
+            throw new InvalidDataException($"{context}: row id changed {Id} -> {after.Id}");
+        if (Name != after.Name)
+            throw new InvalidDataException(
+                $"{context}: row name changed '{Name ?? "<null>"}' -> '{after.Name ?? "<null>"}'");
+        if (!Cells.Keys.ToHashSet().SetEquals(after.Cells.Keys))
+        {
+            IEnumerable<string> missing = Cells.Keys.Except(after.Cells.Keys);
+            IEnumerable<string> added = after.Cells.Keys.Except(Cells.Keys);
+            throw new InvalidDataException(
+                $"{context}: field set changed (missing: {string.Join(", ", missing)}; "
+                + $"added: {string.Join(", ", added)})");
+        }
         foreach ((string field, object before) in Cells)
         {
             if (allowedFields.Contains(field))
