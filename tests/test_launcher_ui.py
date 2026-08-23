@@ -317,6 +317,42 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("--preserve-locomotion", commands[0])
         self.assertEqual(result.map_studio, output_root / "MapStudio")
 
+    def test_toolchain_accepts_precreated_output_root(self):
+        # The launch workflow stages enemizer builds in a tempfile.mkdtemp
+        # directory, so the toolchain must tolerate output_root existing.
+        def runner(command, _cwd, _progress):
+            command = list(command)
+            if "tools.bb_enemizer.cli" in command:
+                output = Path(command[command.index("--output") + 1])
+                output.write_text(
+                    json.dumps(
+                        {
+                            "format": "bb-enemizer-plan-v2",
+                            "seed": "enemy-seed",
+                            "dry_run": True,
+                            "swaps": [{"logical_key": "one"}],
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+            else:
+                output = Path(command[-2])
+                output.mkdir()
+                (output / "m24_01_00_00.msb.dcx").write_bytes(b"map")
+
+        output_root = Path(tempfile.mkdtemp(prefix=".enemizer-build-", dir=self.root))
+        result = EnemizerToolchain(self.repo, runner=runner).build(
+            seed="enemy-seed",
+            inventory=self.inventory,
+            map_studio_source=self.maps,
+            soulsformats_next=self.souls,
+            output_root=output_root,
+            allow_tier_mixing=False,
+            preserve_locomotion=False,
+            progress=lambda _message: None,
+        )
+        self.assertEqual(result.map_studio, output_root / "MapStudio")
+
     def test_toolchain_refuses_zero_safe_swaps_before_writer(self):
         calls = 0
 
