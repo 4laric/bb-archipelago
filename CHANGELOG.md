@@ -6,6 +6,31 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+### Added
+
+- **Doctor**: a one-shot preflight of the whole player chain, available as a
+  launcher button, as `python -m bb_launcher doctor --settings ...`, and as
+  `build.ps1 -Doctor`. It validates the game install, AP seed request, launch
+  plan, runtime-build agreement, suppression chain, installed gameparam
+  (naming the two tamper cases separately), MapStudio source, AP server
+  reachability, and blocking processes, printing one PASS/WARN/FAIL list with
+  a remedy per failure instead of failing one item per run.
+
+- `docs/PLAYTESTING.md`: a player-facing five-minute setup guide with the
+  session rules, the slice-1 checklist, what to send back, and a
+  troubleshooting table. The package now ships it beside the launcher, along
+  with the suppression binder and its build manifest, so the launcher
+  auto-fills the suppression pair for a packaged player.
+
+### Changed
+
+- `build.ps1 -Package` builds the suppression binder from the installed
+  patch-layer gameparam (`-GameRoot`, or the auto-discovered install tree), so
+  a fresh package's binder passes the launcher's source-hash check without a
+  manual hand-build. `-ClientRepo` auto-discovers the sibling er-archipelago
+  checkout. The launcher's source-hash error now names the file it hashed and
+  the fix.
+
 ### Fixed
 
 - Item grants no longer fail verification against the wrong inventory stack:
