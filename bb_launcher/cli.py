@@ -27,8 +27,9 @@ from .core import (
     validate_processes,
 )
 from .client_config import default_shad_log, default_state_root, write_client_runtime_config
+from .doctor import format_report, run_doctor
 from .plan import DEFAULT_SERVER, DEFAULT_SHAD_BUILD, generate_process_plan, write_process_plan
-from .workflow import _request_identity, load_process_plan, resolve_process_plan
+from .workflow import LauncherSettings, _request_identity, load_process_plan, resolve_process_plan
 
 
 def _json_file(path: str | Path, label: str) -> dict[str, Any]:
@@ -126,6 +127,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--ap-request", help="AP enemizer request to derive the slot and runtime build from"
     )
     plan.add_argument("--force", action="store_true", help="overwrite an existing plan")
+
+    doctor = commands.add_parser(
+        "doctor", help="preflight the whole player chain in one pass (#103)"
+    )
+    doctor.add_argument("--settings", required=True, help="launcher settings JSON (the UI saves one)")
+    doctor.add_argument("--server", help="override the AP server probe target")
+    doctor.add_argument(
+        "--no-enemizer", action="store_true", help="skip the enemy-randomization checks"
+    )
 
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
@@ -317,6 +327,21 @@ def main(argv: list[str] | None = None) -> int:
                     "processes": [record["name"] for record in document["processes"]],
                 }
             )
+        elif args.command == "doctor":
+            settings_path = Path(args.settings).expanduser().resolve()
+            raw = _json_file(settings_path, "launcher settings")
+            settings = LauncherSettings.from_dict(raw, relative_to=settings_path.parent)
+            server = args.server
+            randomize = not args.no_enemizer
+            # The UI saves these two alongside the settings fields; honor them
+            # unless an explicit flag overrides.
+            if server is None and isinstance(raw.get("ap_server"), str):
+                server = raw["ap_server"].strip() or None
+            if not args.no_enemizer and raw.get("randomize_enemies") is False:
+                randomize = False
+            report = run_doctor(settings, randomize_enemies=randomize, server=server)
+            print(format_report(report))
+            return 0 if report.ok else 1
         elif args.command == "ui":
             from .ui import main as ui_main
 
