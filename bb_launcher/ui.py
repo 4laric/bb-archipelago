@@ -11,6 +11,7 @@ from typing import Any, Iterable, Mapping
 
 from .client_config import default_shad_log, default_state_root
 from .core import MAP_PREFIX, GameInstall, LauncherError, ValidationError, discover_game_install
+from .doctor import format_report, run_doctor
 from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from .readiness import format_readiness, gather_readiness
 from .resources import application_root, resource_root
@@ -404,11 +405,14 @@ class LauncherApp:
             actions, text="Generate Launch Plan", command=self._generate_plan
         )
         self.plan_button.grid(row=0, column=4, padx=(8, 0))
+        self.doctor_button = ttk.Button(actions, text="Doctor", command=self._start_doctor)
+        self.doctor_button.grid(row=0, column=5, padx=(8, 0))
         self._action_buttons = (
             self.vanilla_button,
             self.restore_button,
             self.rebuild_button,
             self.diagnostics_button,
+            self.doctor_button,
         )
         ttk.Label(outer, textvariable=self.status, style="Muted.TLabel").grid(
             row=6, column=0, sticky="w", pady=(8, 0)
@@ -642,6 +646,48 @@ class LauncherApp:
         detail = "" if outcome is None else f": {outcome}"
         self._append_log(f"{label} complete{detail}")
         self._refresh_status()
+
+    def _start_doctor(self) -> None:
+        """Preflight the whole chain (bb-archipelago#103) without launching."""
+        if self._busy:
+            return
+        try:
+            settings = self._settings()
+        except LauncherError as exc:
+            self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
+            return
+        self._set_busy(True)
+        self._append_log("Doctor: checking the whole player chain...")
+        threading.Thread(
+            target=self._run_doctor,
+            args=(settings, self.randomize_enemies.get(), self.ap_server.get().strip() or None),
+            daemon=True,
+            name="bloodborne-doctor",
+        ).start()
+
+    def _run_doctor(
+        self, settings: LauncherSettings, randomize_enemies: bool, server: str | None
+    ) -> None:
+        try:
+            report = run_doctor(
+                settings, randomize_enemies=randomize_enemies, server=server
+            )
+            text = format_report(report)
+        except Exception as exc:
+            self.root.after(0, self._action_failed, "Doctor", exc)
+        else:
+            self.root.after(0, self._doctor_finished, text, report.ok)
+
+    def _doctor_finished(self, text: str, ok: bool) -> None:
+        self._set_busy(False)
+        for line in text.splitlines():
+            self._append_log(line)
+        if not ok:
+            self.messagebox.showwarning(
+                "Doctor found problems",
+                text + "\n\nFix the FAIL lines above and run Doctor again.",
+                parent=self.root,
+            )
 
     def _start_vanilla(self) -> None:
         if self._busy:

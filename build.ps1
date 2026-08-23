@@ -10,6 +10,8 @@
 #   .\build.ps1 -Package -SoulsFormatsNextRoot C:\path\to\SoulsFormatsNEXT -ClientRepo C:\path\to\from-software-archipelago-clients
 #                              # full player build: AP client + suppression binder + apworld + launcher package
 #                              # (-ClientPath skips the cargo build; an existing suppression binder is kept)
+#   .\build.ps1 -Doctor [-LauncherSettings C:\path\to\launcher-settings.json]
+#                              # preflight the build-side and (with -LauncherSettings) player-side chains (#103)
 #
 # The large extracted game tree is a research/build input and is never included in the apworld.
 
@@ -22,6 +24,8 @@ param(
     [switch]$Clean,
     [switch]$All,
     [switch]$Package,
+    [switch]$Doctor,
+    [string]$LauncherSettings,
     [string]$SoulsFormatsNextRoot = $env:SOULSFORMATS_NEXT,
     [string]$ClientRepo,
     [string]$ClientPath,
@@ -82,10 +86,92 @@ if ($Package) {
     $Apworld = $true
 }
 
-if (-not ($Test -or $Data -or $Preflight -or $Apworld -or $Clean -or $Package)) {
-    Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 12 |
+if (-not ($Test -or $Data -or $Preflight -or $Apworld -or $Clean -or $Package -or $Doctor)) {
+    Get-Content -LiteralPath $PSCommandPath | Select-Object -Skip 1 -First 14 |
         ForEach-Object { $_ -replace '^#\s?', '' }
     return
+}
+
+if ($Doctor) {
+    # One-shot preflight of every input -Package and the launcher need, so the
+    # player chain fails here in one list instead of one error per run (#103).
+    # ASCII only: Windows PowerShell 5 reads this file as ANSI.
+    Step "Doctor: build-side chain"
+    $script:DoctorFailures = 0
+    function Doctor-Line([string]$Status, [string]$Name, [string]$Detail, [string]$Remedy = "") {
+        $color = @{ PASS = "Green"; WARN = "Yellow"; FAIL = "Red" }[$Status]
+        Write-Host "  [$Status] ${Name}: $Detail" -ForegroundColor $color
+        if ($Remedy) { Write-Host "         -> $Remedy" -ForegroundColor $color }
+        if ($Status -eq "FAIL") { $script:DoctorFailures++ }
+    }
+
+    if (-not $SoulsFormatsNextRoot) {
+        Doctor-Line FAIL "SoulsFormatsNEXT" "not provided" "pass -SoulsFormatsNextRoot or set SOULSFORMATS_NEXT"
+    } elseif (-not (Test-Path -LiteralPath (Join-Path $SoulsFormatsNextRoot "SoulsFormats\SoulsFormats.csproj") -PathType Leaf)) {
+        Doctor-Line FAIL "SoulsFormatsNEXT" "no SoulsFormats csproj under $SoulsFormatsNextRoot" "check out JKAnderson/SoulsFormatsNEXT and pass its root"
+    } else {
+        $sfnHead = $null
+        try {
+            $sfnHead = (& git -C $SoulsFormatsNextRoot rev-parse HEAD 2>$null)
+            if ($LASTEXITCODE -ne 0) { $sfnHead = $null }
+        } catch { $sfnHead = $null }
+        if ($null -eq $sfnHead) {
+            Doctor-Line WARN "SoulsFormatsNEXT" "not a git checkout; pinned $SoulsFormatsNextPin unverifiable"
+        } elseif ($sfnHead.Trim() -ne $SoulsFormatsNextPin) {
+            Doctor-Line FAIL "SoulsFormatsNEXT" "at $($sfnHead.Trim()), not the pinned $SoulsFormatsNextPin" "git -C $SoulsFormatsNextRoot fetch; git -C $SoulsFormatsNextRoot checkout $SoulsFormatsNextPin"
+        } else {
+            Doctor-Line PASS "SoulsFormatsNEXT" "checkout at the pinned $SoulsFormatsNextPin"
+        }
+    }
+
+    if ($ClientPath) {
+        if (Test-Path -LiteralPath $ClientPath -PathType Leaf) {
+            Doctor-Line PASS "AP client" "$ClientPath"
+        } else {
+            Doctor-Line FAIL "AP client" "-ClientPath $ClientPath does not exist"
+        }
+    } elseif ($ClientRepo) {
+        if (Test-Path -LiteralPath (Join-Path $ClientRepo "Cargo.toml") -PathType Leaf) {
+            Doctor-Line PASS "AP client" "client checkout at $ClientRepo (cargo build runs during -Package)"
+        } else {
+            Doctor-Line FAIL "AP client" "no Cargo.toml under $ClientRepo" "check the path letter by letter -- a typo here costs a full package cycle"
+        }
+    } else {
+        Doctor-Line FAIL "AP client" "neither -ClientRepo nor -ClientPath given"
+    }
+
+    $doctorGameparam = Join-Path $GameArtifacts "param\gameparam\gameparam.parambnd.dcx"
+    $doctorParamdef = Join-Path $GameArtifacts "paramdef\paramdef.paramdefbnd.dcx"
+    foreach ($pair in @(@("artifact gameparam", $doctorGameparam), @("artifact paramdef", $doctorParamdef))) {
+        if (Test-Path -LiteralPath $pair[1] -PathType Leaf) {
+            Doctor-Line PASS $pair[0] $pair[1]
+        } else {
+            Doctor-Line FAIL $pair[0] "missing: $($pair[1])" "extract the game files with the UMG/UXM unpack step first"
+        }
+    }
+
+    $doctorSuppression = Join-Path $Repo "work\vanilla-suppression-build\build-manifest.json"
+    if (Test-Path -LiteralPath $doctorSuppression -PathType Leaf) {
+        Doctor-Line PASS "suppression binder" "work\vanilla-suppression-build kept (remove it to rebuild)"
+    } else {
+        Doctor-Line WARN "suppression binder" "not built yet; -Package will build it"
+    }
+
+    foreach ($locker in @("BloodborneAPLauncher", "shadPS4", "cheatengine")) {
+        if (Get-Process -Name $locker -ErrorAction SilentlyContinue) {
+            Doctor-Line WARN "running process $locker" "$locker is running; it can hold package or game files during a rebuild"
+        }
+    }
+
+    if ($LauncherSettings) {
+        Step "Doctor: player-side chain"
+        Invoke-Python @("-m", "bb_launcher", "doctor", "--settings", $LauncherSettings)
+    }
+
+    if ($script:DoctorFailures -gt 0) {
+        throw "Doctor found $script:DoctorFailures build-side failure(s) -- see the FAIL lines above."
+    }
+    Write-Host "  Doctor: build-side chain clear" -ForegroundColor Green
 }
 
 if ($Clean) {
