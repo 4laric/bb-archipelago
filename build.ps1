@@ -7,9 +7,10 @@
 #   .\build.ps1 -Apworld       # package worlds\bloodborne -> build\bloodborne.apworld
 #   .\build.ps1 -All           # Data + Test + Preflight + Apworld
 #   .\build.ps1 -Clean         # remove only build\ outputs
-#   .\build.ps1 -Package -SoulsFormatsNextRoot C:\path\to\SoulsFormatsNEXT -ClientRepo C:\path\to\from-software-archipelago-clients
+#   .\build.ps1 -Package -SoulsFormatsNextRoot C:\path\to\SoulsFormatsNEXT [-ClientRepo C:\path\to\from-software-archipelago-clients] [-GameRoot D:\shadPS4\games]
 #                              # full player build: AP client + suppression binder + apworld + launcher package
-#                              # (-ClientPath skips the cargo build; an existing suppression binder is kept)
+#                              # (-ClientRepo auto-discovers the sibling er-archipelago checkout; -GameRoot makes the
+#                              #  suppression build target the installed patch-layer gameparam so the launcher check passes)
 #   .\build.ps1 -Doctor [-LauncherSettings C:\path\to\launcher-settings.json]
 #                              # preflight the build-side and (with -LauncherSettings) player-side chains (#103)
 #
@@ -29,6 +30,7 @@ param(
     [string]$SoulsFormatsNextRoot = $env:SOULSFORMATS_NEXT,
     [string]$ClientRepo,
     [string]$ClientPath,
+    [string]$GameRoot,
     [string]$Python = "python"
 )
 
@@ -73,6 +75,44 @@ function Require-Directory([string]$Path, [string]$Hint = "") {
         $suffix = if ($Hint) { " -- $Hint" } else { "" }
         throw "Required directory missing: $Path$suffix"
     }
+}
+
+# #104: -ClientRepo is only needed for nonstandard layouts. Probe the known
+# sibling checkouts before asking for the flag.
+function Resolve-ClientRepo {
+    if ($ClientRepo) { return $ClientRepo }
+    $candidates = @(
+        (Join-Path $Repo "..\er-archipelago\from-software-archipelago-clients"),
+        (Join-Path $HOME "Documents\er-archipelago\from-software-archipelago-clients")
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath (Join-Path $candidate "Cargo.toml") -PathType Leaf) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+    return $null
+}
+
+# #104: the launcher validates the suppression binder against the INSTALLED
+# gameparam, so the binder must be built from exactly those bytes -- patch
+# layer first, base as fallback. -GameRoot wins, then the extracted install
+# tree beside the artifacts; $null means fall back to the artifacts copy.
+function Resolve-SuppressionGameParam {
+    $relative = "dvdroot_ps4\param\gameparam\gameparam.parambnd.dcx"
+    $roots = @()
+    if ($GameRoot) { $roots += $GameRoot }
+    $roots += (Join-Path $ArtifactRoot "install")
+    foreach ($root in $roots) {
+        $base = $root
+        if ((Split-Path -Leaf $base) -eq "CUSA03173") { $base = Split-Path -Parent $base }
+        foreach ($layer in @("CUSA03173-patch", "CUSA03173-UPDATE", "CUSA03173")) {
+            $candidate = Join-Path $base (Join-Path $layer $relative)
+            if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+                return $candidate
+            }
+        }
+    }
+    return $null
 }
 
 if ($All) {
@@ -130,14 +170,24 @@ if ($Doctor) {
         } else {
             Doctor-Line FAIL "AP client" "-ClientPath $ClientPath does not exist"
         }
-    } elseif ($ClientRepo) {
-        if (Test-Path -LiteralPath (Join-Path $ClientRepo "Cargo.toml") -PathType Leaf) {
-            Doctor-Line PASS "AP client" "client checkout at $ClientRepo (cargo build runs during -Package)"
-        } else {
-            Doctor-Line FAIL "AP client" "no Cargo.toml under $ClientRepo" "check the path letter by letter -- a typo here costs a full package cycle"
-        }
     } else {
-        Doctor-Line FAIL "AP client" "neither -ClientRepo nor -ClientPath given"
+        $doctorClientRepo = $ClientRepo
+        if (-not $doctorClientRepo) { $doctorClientRepo = Resolve-ClientRepo }
+        $discoveryNote = if ($ClientRepo) { "" } elseif ($doctorClientRepo) { " (auto-discovered)" } else { "" }
+        if ($doctorClientRepo -and (Test-Path -LiteralPath (Join-Path $doctorClientRepo "Cargo.toml") -PathType Leaf)) {
+            Doctor-Line PASS "AP client" "client checkout at $doctorClientRepo$discoveryNote (cargo build runs during -Package)"
+        } elseif ($doctorClientRepo) {
+            Doctor-Line FAIL "AP client" "no Cargo.toml under $doctorClientRepo" "check the path letter by letter -- a typo here costs a full package cycle"
+        } else {
+            Doctor-Line FAIL "AP client" "neither -ClientRepo nor -ClientPath given, and no sibling checkout found" "expected at ..\er-archipelago\from-software-archipelago-clients or ~\Documents\er-archipelago\from-software-archipelago-clients"
+        }
+    }
+
+    $doctorSuppressionSource = Resolve-SuppressionGameParam
+    if ($null -ne $doctorSuppressionSource) {
+        Doctor-Line PASS "suppression source" "$doctorSuppressionSource (installed game layer; -Package builds the binder from these bytes)"
+    } else {
+        Doctor-Line WARN "suppression source" "no installed game found; -Package would fall back to the artifacts gameparam" "pass -GameRoot so the binder matches the installed patch layer the launcher validates"
     }
 
     $doctorGameparam = Join-Path $GameArtifacts "param\gameparam\gameparam.parambnd.dcx"
@@ -324,6 +374,12 @@ if ($Package) {
         throw "SoulsFormatsNEXT is at $($sfnHead.Trim()), not the pinned $SoulsFormatsNextPin -- run: git -C $SoulsFormatsNextRoot fetch; git -C $SoulsFormatsNextRoot checkout $SoulsFormatsNextPin"
     }
 
+    if (-not $ClientPath -and -not $ClientRepo) {
+        $ClientRepo = Resolve-ClientRepo
+        if ($ClientRepo) {
+            Write-Host "  auto-discovered client checkout: $ClientRepo" -ForegroundColor Green
+        }
+    }
     if (-not $ClientPath) {
         if (-not $ClientRepo) {
             throw "Pass -ClientRepo (a from-software-archipelago-clients checkout) or -ClientPath (a built bb-ap-client.exe)."
@@ -344,7 +400,16 @@ if ($Package) {
         Write-Host "  suppression binder kept: $suppressionOut (remove it to rebuild)" -ForegroundColor Green
     } else {
         Step "Player package: building the vanilla suppression binder"
+        $suppressionGameParam = Resolve-SuppressionGameParam
+        if ($null -eq $suppressionGameParam) {
+            $suppressionGameParam = Join-Path $GameArtifacts "param\gameparam\gameparam.parambnd.dcx"
+            Write-Host "  WARNING: no installed game found; building suppression from the artifacts gameparam." -ForegroundColor Yellow
+            Write-Host "           The launcher's source-hash check will fail if the installed patch layer differs. Pass -GameRoot to build from the installed game." -ForegroundColor Yellow
+        } else {
+            Write-Host "  suppression source: $suppressionGameParam (installed game layer)" -ForegroundColor Green
+        }
         & (Join-Path $Repo "tools\build_vanilla_suppression.ps1") `
+            -GameParam $suppressionGameParam `
             -SoulsFormatsNextRoot $SoulsFormatsNextRoot -OutputRoot $suppressionOut -Apply
     }
 

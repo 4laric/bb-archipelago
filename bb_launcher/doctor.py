@@ -268,13 +268,13 @@ def _check_installed_gameparam(settings: LauncherSettings, chain: _Chain) -> Doc
         return DoctorFinding(
             PASS,
             "installed gameparam",
-            f"{backend}-layer gameparam is the vanilla source the suppression build was made from",
+            f"{backend}-layer {source_path} is the vanilla source the suppression build was made from",
         )
     if actual == output_expected:
         return DoctorFinding(
             FAIL,
             "installed gameparam",
-            f"the {backend}-layer gameparam IS the suppressed binder -- this "
+            f"the {backend}-layer {source_path} IS the suppressed binder -- this "
             "installation was already modified outside the launcher",
             "restore the untouched 01.09 gameparam.parambnd.dcx (re-dump or "
             "re-copy the patch) before building or launching",
@@ -282,7 +282,7 @@ def _check_installed_gameparam(settings: LauncherSettings, chain: _Chain) -> Doc
     return DoctorFinding(
         FAIL,
         "installed gameparam",
-        f"the {backend}-layer gameparam matches neither the vanilla source "
+        f"the {backend}-layer {source_path} matches neither the vanilla source "
         f"nor the suppressed build (found {actual[:12]})",
         "something outside this toolchain modified the game files; restore a "
         "clean 01.09 installation before building or launching",
