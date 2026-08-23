@@ -3,7 +3,8 @@ name: release
 # Tag-triggered player prerelease: pushing v* (e.g. v0.1.0-playtest.1) builds
 # the full Windows launcher package -- launcher, native tools, CE table, and
 # the bb-ap-client built from the client repo's main -- and attaches the zip
-# to a GitHub prerelease, so a playtester needs no GitHub login to download.
+# plus bloodborne.apworld to a GitHub prerelease, so a playtester needs no
+# GitHub login to download.
 #
 # The suppression binder is licensed-game-derived and is never built in CI:
 # the host ships the playtest zip from a local `build.ps1 -Package` run (which
@@ -73,6 +74,10 @@ jobs:
           -SoulsFormatsNextRoot $PWD\_soulsformats
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
 
+      - name: Package the apworld
+        shell: pwsh
+        run: ./build.ps1 -Apworld
+
       - name: Create the prerelease with the package zip
         shell: pwsh
         run: >-
@@ -82,5 +87,6 @@ jobs:
           --notes-file packaging\PACKAGE-README.txt
           --prerelease
           build\BloodborneAPLauncher-win-x64.zip
+          build\bloodborne.apworld
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
