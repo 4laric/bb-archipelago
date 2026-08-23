@@ -9,8 +9,8 @@ import threading
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
-from .client_config import default_state_root
-from .core import GameInstall, LauncherError, ValidationError, discover_game_install
+from .client_config import default_shad_log, default_state_root
+from .core import MAP_PREFIX, GameInstall, LauncherError, ValidationError, discover_game_install
 from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from .readiness import format_readiness, gather_readiness
 from .resources import application_root, resource_root
@@ -40,6 +40,11 @@ FIELD_DEFINITIONS = (
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
 
+CE_EXECUTABLE_CANDIDATES = (
+    Path(r"C:\Program Files\Cheat Engine\cheatengine.exe"),
+    Path(r"C:\Program Files (x86)\Cheat Engine\cheatengine.exe"),
+)
+
 # Bloodborne palette: hunter's-dream night blues, bone parchment text,
 # blood-red accents, lamp-light gold headers.
 THEME_BACKGROUND = "#0d1117"
@@ -53,16 +58,29 @@ THEME_GOLD = "#c2a14d"
 
 
 def default_field_values(
-    *, state_root: Path, package_roots: Iterable[Path]
+    *, state_root: Path, package_roots: Iterable[Path], repo_root: Path | None = None
 ) -> dict[str, str]:
     """Values the launcher can derive for empty setup fields.
 
-    Only launcher-owned or verified-on-disk paths are offered: the seed cache
-    is always the state root's seeds directory, and the suppression pair is
-    offered only when `work/vanilla-suppression-build` actually exists beside
-    the package or the checkout. Anything else stays for the player to choose.
+    Launcher-owned paths are always offered (seed cache, state root, shad log,
+    the generated plan path); the suppression pair is offered only when
+    `work/vanilla-suppression-build` actually exists beside the package or the
+    checkout; Cheat Engine and the AP request are offered only when found on
+    disk. Anything else stays for the player to choose.
     """
-    values = {"cache_root": str(state_root / "seeds")}
+    values = {
+        "cache_root": str(state_root / "seeds"),
+        "state_root": str(state_root),
+        "shad_log": str(default_shad_log()),
+        "process_plan": str(state_root / "process-plan.json"),
+    }
+    ce = derive_ce_executable()
+    if ce is not None:
+        values["ce_executable"] = str(ce)
+    if repo_root is not None:
+        request = derive_ap_request((repo_root,))
+        if request is not None:
+            values["ap_request"] = str(request)
     for root in package_roots:
         build = root / "work" / "vanilla-suppression-build"
         binder = build / "gameparam.parambnd.dcx"
@@ -72,6 +90,46 @@ def default_field_values(
         if manifest.is_file():
             values.setdefault("suppression_manifest", str(manifest))
     return values
+
+
+def derive_ce_executable() -> Path | None:
+    """Best-effort Cheat Engine discovery in its two standard install dirs."""
+    for candidate in CE_EXECUTABLE_CANDIDATES:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def derive_ap_request(roots: Iterable[Path]) -> Path | None:
+    """Newest enemizer request under each root's Archipelago output directory.
+
+    Generation drops `<seed>_P<slot>_<name>.bbenemizer.json` beside the seed
+    zip in `Archipelago/out` or `Archipelago/output`; the newest one is the
+    best guess for what the player just generated.
+    """
+    candidates: list[Path] = []
+    for root in roots:
+        for name in ("out", "output"):
+            directory = root / "Archipelago" / name
+            if directory.is_dir():
+                candidates.extend(directory.rglob("*.bbenemizer.json"))
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def derive_map_studio_for_game_root(game_root: Path | str) -> Path | None:
+    """Best-effort MapStudio source from a chosen game folder: patch wins."""
+    try:
+        install = GameInstall.from_root(game_root)
+    except LauncherError:
+        return None
+    relative = Path(MAP_PREFIX)
+    for backend in (install.patch, install.base):
+        candidate = backend / relative
+        if candidate.is_dir():
+            return candidate
+    return None
 
 
 def derive_game_root_for_shad(shad_executable: Path | str) -> Path | None:
@@ -212,6 +270,7 @@ class LauncherApp:
         derived = default_field_values(
             state_root=default_state_root(),
             package_roots=(application_root(), resource_root()),
+            repo_root=self.repo_root,
         )
         for name, value in derived.items():
             if not self.fields[name].get().strip():
@@ -369,11 +428,24 @@ class LauncherApp:
             derived = derive_game_root_for_shad(selected)
             if derived is not None:
                 self.fields["game_root"].set(str(derived))
+        if name in {"shad_executable", "game_root"}:
+            self._cascade_map_studio()
         if name == "ap_request":
             try:
                 self.enemy_seed.set(request_enemy_seed(selected))
             except LauncherError as exc:
                 self.messagebox.showerror("Invalid AP request", str(exc), parent=self.root)
+
+    def _cascade_map_studio(self) -> None:
+        """Fill the MapStudio source from the game folder when unset."""
+        if self.fields["map_studio_source"].get().strip():
+            return
+        raw = self.fields["game_root"].get().strip()
+        if not raw:
+            return
+        derived = derive_map_studio_for_game_root(raw)
+        if derived is not None:
+            self.fields["map_studio_source"].set(str(derived))
 
     def _toggle_enemy_fields(self) -> None:
         state = "normal" if self.randomize_enemies.get() else "disabled"

@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 
 from bb_launcher.core import OWNER_NAME, SUPPRESSION_PATH, ValidationError
+from bb_launcher.plan import DEFAULT_SERVER
 from bb_launcher.ui import (
     FIELD_DEFINITIONS,
     default_field_values,
+    derive_ap_request,
     derive_game_root_for_shad,
+    derive_map_studio_for_game_root,
     request_enemy_seed,
     settings_from_fields,
 )
@@ -450,6 +454,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
                 state_root=root / "state", package_roots=(root,)
             )
             self.assertEqual(values["cache_root"], str(root / "state" / "seeds"))
+            self.assertEqual(values["state_root"], str(root / "state"))
+            self.assertEqual(values["process_plan"], str(root / "state" / "process-plan.json"))
+            self.assertTrue(values["shad_log"].endswith("shad_log.txt"))
             self.assertEqual(values["suppression_binder"], str(binder))
             self.assertEqual(values["suppression_manifest"], str(manifest))
 
@@ -474,6 +481,44 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             empty = root / "empty"
             empty.mkdir()
             self.assertIsNone(derive_game_root_for_shad(empty / "shadPS4.exe"))
+
+    def test_default_field_values_offer_ap_request_only_when_found(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = root / "Archipelago" / "out" / "seed1"
+            out.mkdir(parents=True)
+            older = out / "AP_1_P1_First.bbenemizer.json"
+            newer = out / "AP_2_P1_Second.bbenemizer.json"
+            older.write_bytes(b"{}")
+            newer.write_bytes(b"{}")
+            os.utime(older, (1_000_000, 1_000_000))
+            os.utime(newer, (2_000_000, 2_000_000))
+
+            values = default_field_values(
+                state_root=root / "state", package_roots=(), repo_root=root
+            )
+            self.assertEqual(values["ap_request"], str(newer))
+
+            values = default_field_values(
+                state_root=root / "state", package_roots=(), repo_root=root / "missing"
+            )
+            self.assertNotIn("ap_request", values)
+
+    def test_derive_map_studio_prefers_the_patch_layer(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            install = make_install(root / "game")
+            relative = Path("dvdroot_ps4", "map", "MapStudio")
+            base_maps = install.base / relative
+            patch_maps = install.patch / relative
+            base_maps.mkdir(parents=True)
+            self.assertEqual(derive_map_studio_for_game_root(install.root), base_maps)
+            patch_maps.mkdir(parents=True)
+            self.assertEqual(derive_map_studio_for_game_root(install.root), patch_maps)
+        self.assertIsNone(derive_map_studio_for_game_root(Path("does-not-exist")))
+
+    def test_default_server_matches_multiserver_default_port(self):
+        self.assertEqual(DEFAULT_SERVER, "localhost:38281")
 
     def test_launch_vanilla_resolves_before_moving_the_overlay(self):
         toolchain = FakeToolchain()

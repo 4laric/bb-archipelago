@@ -170,7 +170,7 @@ core operations as the CLI:
   the selected AP request, pins the chosen `shadPS4.exe` and the packaged
   `tools/bb-ap-client.exe` (plus the bundled CE grant table when a Cheat
   Engine executable is selected), and uses the **Archipelago server** field
-  (default `localhost:38282`). Packaged players never hand-write the launch
+  (default `localhost:38281`). Packaged players never hand-write the launch
   plan; from a checkout, where no client is bundled, the CLI `plan` command
   does the same job with `--client`.
 
@@ -272,7 +272,7 @@ is refused before launch.
       "executable": "C:\\path\\to\\bb-ap-client.exe",
       "sha256": "<packaged bb-ap-client executable sha256>",
       "arguments": [
-        "localhost:38282",
+        "localhost:38281",
         "VarietyTester",
         "{runtime_config}",
         "{ledger}",

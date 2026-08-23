@@ -25,7 +25,8 @@ from .workflow import PROCESS_PLAN_FORMAT, load_process_plan
 
 
 DEFAULT_SHAD_BUILD = "0.18.0"
-DEFAULT_SERVER = "localhost:38282"
+# 38281 is MultiServer's default port; 38282 only ever existed here.
+DEFAULT_SERVER = "localhost:38281"
 
 
 def _pinned_executable(raw: Path | str, label: str) -> dict[str, Any]:

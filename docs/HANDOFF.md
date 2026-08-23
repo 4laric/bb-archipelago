@@ -77,7 +77,7 @@ run:
 
 ```powershell
 python Generate.py --player_files_path Players --outputpath out --spoiler 3 --seed 52100005
-python MultiServer.py out\<generated-seed>.zip --host localhost --port 38282
+python MultiServer.py out\<generated-seed>.zip --host localhost --port 38281
 ```
 
 With **Full Item Pool** on (the default), the pool places each of the twelve
@@ -106,7 +106,7 @@ set `bridge_root`, `shad_log`, `suppression_manifest`, and
 shadPS4 is elevated:
 
 ```powershell
-bb-ap-client.exe localhost:38282 VarietyTester runtime-config.json live-ledger.json --assume-correct-save
+bb-ap-client.exe localhost:38281 VarietyTester runtime-config.json live-ledger.json --assume-correct-save
 ```
 
 The companion `crates/bb-archipelago/tools/start-bloodborne-ap.ps1` can launch
