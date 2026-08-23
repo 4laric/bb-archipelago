@@ -464,7 +464,13 @@ def _validate_suppression(
     source_path = install.resolve_file(SUPPRESSION_PATH, include_mods=False)[1]
     source_hash = sha256_file(source_path)
     if manifest.get("source_gameparam_sha256") != source_hash:
-        raise ValidationError("suppression build source hash does not match the installed game")
+        raise ValidationError(
+            f"suppression build source hash does not match the installed game: "
+            f"{source_path} hashes to {source_hash[:12]}..., but the binder was built from "
+            f"{str(manifest.get('source_gameparam_sha256'))[:12]}... -- rebuild the suppression "
+            "binder against the installed gameparam (build.ps1 -Package -GameRoot ...), or "
+            "restore a clean 01.09 installation if the game files were modified"
+        )
     output_hash = sha256_file(binder)
     if manifest.get("output_gameparam_sha256") != output_hash:
         raise ValidationError("suppression binder hash does not match its build manifest")

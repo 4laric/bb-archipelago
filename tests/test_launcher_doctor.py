@@ -202,6 +202,7 @@ class DoctorTests(unittest.TestCase):
         result = finding(report, "installed gameparam")
         self.assertEqual(result.status, FAIL)
         self.assertIn("already modified", result.detail)
+        self.assertIn(str(self.fixture.gameparam), result.detail)
         self.assertIn("restore", result.remedy.lower())
 
     def test_unknown_gameparam_modification_is_named(self):
@@ -210,6 +211,7 @@ class DoctorTests(unittest.TestCase):
         result = finding(report, "installed gameparam")
         self.assertEqual(result.status, FAIL)
         self.assertIn("neither", result.detail)
+        self.assertIn(str(self.fixture.gameparam), result.detail)
 
     def test_plan_hash_mismatch_between_seed_and_manifest(self):
         manifest = json.loads(self.fixture.manifest_path.read_text(encoding="utf-8"))
