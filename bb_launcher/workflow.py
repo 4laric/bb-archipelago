@@ -318,7 +318,9 @@ class EnemizerToolchain:
                 raise ValidationError(f"{label} {kind} does not exist: {path}")
         if not seed.strip():
             raise ValidationError("enemy randomization requires a non-empty seed")
-        output_root.mkdir(parents=True)
+        # The workflow hands us a directory tempfile.mkdtemp already created;
+        # creating it again is a bare WinError 183 on Windows.
+        output_root.mkdir(parents=True, exist_ok=True)
         plan_path = output_root / "bb-enemizer-plan.json"
         map_output = output_root / "MapStudio"
         if inventory is None:
