@@ -22,6 +22,14 @@ under `Unreleased` and move into a dated version section when released.
   with the suppression binder and its build manifest, so the launcher
   auto-fills the suppression pair for a packaged player.
 
+- Tag-triggered prereleases: pushing a `v*` tag (or running the release
+  workflow manually) builds the full Windows launcher package -- launcher,
+  native tools, CE table, and the bb-ap-client built from the client repo --
+  and attaches the zip to a GitHub prerelease, so a playtester needs no
+  GitHub account to download it. The suppression binder is licensed-game-
+  derived and stays out of CI builds; ship it via a local
+  `build.ps1 -Package` zip or send binder + manifest alongside.
+
 ### Changed
 
 - `build.ps1 -Package` builds the suppression binder from the installed
