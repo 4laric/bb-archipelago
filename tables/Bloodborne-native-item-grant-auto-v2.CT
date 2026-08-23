@@ -421,10 +421,13 @@ local function poll()
       local actual=findItem(active.normalized)
       local wanted=active.expected+active.count
       -- Verify against the slot the native insert reported, not only the
-      -- whole-inventory scan: findItem returns the FIRST matching stack, which
-      -- is the wrong evidence when the game merged into a stack that was not
-      -- visible at queue time or a second stack exists (observed live:
-      -- expected_after=2 actual=10 while the insert had landed at slot 82).
+      -- whole-inventory scan: findItem returns the FIRST matching stack, and a
+      -- stack can read as absent for a single torn scan while the game is
+      -- mutating the inventory (observed live: a stack direct-incremented at
+      -- one address for six minutes read absent for one queue poll; the game
+      -- merged the grant into it, 8 -> 10, and the scan then failed
+      -- expected_after=2 against actual=10 while the insert's own result slot
+      -- held the correct record).
       local slotId,slotQuantity,slotAddress=readSlotRecord(nativeResult)
       local slotVerified=slotId==active.normalized and slotQuantity~=nil and slotQuantity>=active.count
       if not slotVerified and actual~=wanted then
@@ -486,13 +489,14 @@ local function poll()
     return
   end
   if not exists then
-    -- Inventory hydration is incremental after a save load (the bootstrap waits
-    -- it out for Vials); a grant that declares a stack absent too early native-
-    -- inserts a duplicate stack next to one the scan could not see yet.
+    -- A stack can read as absent transiently: hydration after a load is
+    -- incremental (the bootstrap waits it out for Vials), and a live pickup
+    -- mutating the inventory can tear a single scan. Declaring absence on one
+    -- reading native-inserts a duplicate next to the stack the scan missed.
     if grantAbsentTag~=command.tag then grantAbsentTag=command.tag; grantAbsentPolls=0 end
     grantAbsentPolls=grantAbsentPolls+1
     if grantAbsentPolls<minGrantAbsentPolls then
-      state("awaiting_inventory",string.format("tag=%s waiting for inventory hydration before declaring the stack absent (%d/%d)",command.tag,grantAbsentPolls,minGrantAbsentPolls))
+      state("awaiting_inventory",string.format("tag=%s waiting for the inventory scan to settle before declaring the stack absent (%d/%d)",command.tag,grantAbsentPolls,minGrantAbsentPolls))
       return
     end
   else

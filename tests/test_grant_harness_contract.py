@@ -126,16 +126,16 @@ class GrantHarnessContractTests(unittest.TestCase):
             self.text.index("if not slotVerified and actual~=wanted then"),
         )
 
-    def test_absent_grant_waits_for_inventory_hydration_before_native_insert(self):
+    def test_absent_grant_waits_for_the_scan_to_settle_before_native_insert(self):
         self.assertIn("local grantAbsentTag=", self.text)
         self.assertIn("local grantAbsentPolls=0", self.text)
         self.assertIn("local minGrantAbsentPolls=40", self.text)
         self.assertIn("if grantAbsentTag~=command.tag then", self.text)
-        self.assertIn("waiting for inventory hydration before declaring the stack absent", self.text)
+        self.assertIn("waiting for the inventory scan to settle before declaring the stack absent", self.text)
         # The guard runs before the absent-vial refusal and the native queue
-        # write, so neither can fire on a stack that has not hydrated yet.
+        # write, so neither can fire on a stack that read absent transiently.
         self.assertLess(
-            self.text.index("waiting for inventory hydration before declaring the stack absent"),
+            self.text.index("waiting for the inventory scan to settle before declaring the stack absent"),
             self.text.index("absent Blood Vial insertion is disabled"),
         )
 
