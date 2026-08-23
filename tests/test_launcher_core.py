@@ -131,6 +131,19 @@ class LauncherCoreTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "AppVer 01.09"):
             GameInstall.from_root(wrong)
 
+    def test_game_validation_names_a_foreign_serial_install(self):
+        foreign = self.root / "eu-install"
+        (foreign / "CUSA00900").mkdir(parents=True)
+        (foreign / "CUSA00900-patch").mkdir()
+        with self.assertRaisesRegex(
+            ValidationError, r"found CUSA00900.*only CUSA03173 \(US\)"
+        ):
+            GameInstall.from_root(foreign)
+        empty = self.root / "empty"
+        empty.mkdir()
+        with self.assertRaisesRegex(ValidationError, "missing base game directory"):
+            GameInstall.from_root(empty)
+
     def test_backend_resolution_is_mods_then_patch_then_base(self):
         install = make_install(self.root / "game")
         relative = "dvdroot_ps4/test/file.bin"

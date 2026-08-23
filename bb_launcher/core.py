@@ -444,6 +444,28 @@ def read_param_sfo(path: Path | str) -> dict[str, str]:
     return result
 
 
+def _foreign_serial_dirs(candidate: Path) -> list[str]:
+    """Title-ID directories under ``candidate`` that are not the supported install.
+
+    Used to turn a generic "missing base game directory" into a diagnostic that
+    names the wrong region (e.g. an EU CUSA00900 install) when one is present.
+    """
+    if not candidate.is_dir():
+        return []
+    known = {BASE_DIR_NAME.casefold(), *(name.casefold() for name in PATCH_DIR_NAMES)}
+    try:
+        found = [
+            entry.name
+            for entry in candidate.iterdir()
+            if entry.is_dir()
+            and entry.name.upper().startswith("CUSA")
+            and entry.name.casefold() not in known
+        ]
+    except OSError:
+        return []
+    return sorted(found)
+
+
 @dataclass(frozen=True)
 class GameInstall:
     root: Path
@@ -461,6 +483,12 @@ class GameInstall:
         base = candidate / BASE_DIR_NAME
         patches = [candidate / name for name in PATCH_DIR_NAMES if (candidate / name).is_dir()]
         if not base.is_dir():
+            foreign = _foreign_serial_dirs(candidate)
+            if foreign:
+                raise ValidationError(
+                    f"found {', '.join(foreign)} but only {SERIAL} (US) AppVer "
+                    f"{APP_VERSION} is supported: {base}"
+                )
             raise ValidationError(f"missing base game directory: {base}")
         if len(patches) != 1:
             raise ValidationError(

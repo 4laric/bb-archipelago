@@ -6,8 +6,17 @@ a running randomized seed, and tells you exactly what to report back.
 ## What you need
 
 1. **A Windows PC.**
-2. **Your own Bloodborne game files** — a PS4 dump of `CUSA03173` at update
-   **01.09**, installed into shadPS4. We cannot provide game files.
+2. **Your own Bloodborne game files** — a PS4 dump of `CUSA03173` (the **US**
+   release) at update **01.09**, installed into shadPS4. We cannot provide game
+   files. Three things that trip people up:
+   - **Region matters.** The EU release (`CUSA00900`) and other regions are
+     **not** supported — the randomizer's game data is built against the US
+     version and the launcher will refuse anything else.
+   - **A `.pkg` file is not an installed game.** Install the base game and the
+     01.09 update through shadPS4 first; the launcher works with the installed
+     `CUSA03173` + `CUSA03173-patch` directories, not the packages.
+   - **"shadPS4 game folder" means the game's install directory** — the folder
+     *containing* `CUSA03173` — not the folder shadPS4 itself lives in.
 3. **shadPS4 0.18.0** — the emulator the mod runs under.
 4. **Cheat Engine** — installed from its official site. The launcher uses it to
    deliver Archipelago items into the game. You never have to operate it
