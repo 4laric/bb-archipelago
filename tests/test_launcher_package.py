@@ -124,6 +124,11 @@ class LauncherPackageTests(unittest.TestCase):
         )
         miner = (self.repo / "tools" / "msbb_miner" / "Program.cs").read_text(encoding="utf-8")
         self.assertIn('.EndsWith(".msb.dcx"', miner)
+        writer = (self.repo / "tools" / "bb_enemizer_writer" / "Program.cs").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('.EndsWith(".msb", StringComparison.OrdinalIgnoreCase)', writer)
+        self.assertIn('bare + ".msb.dcx"', writer)
 
 
 if __name__ == "__main__":
