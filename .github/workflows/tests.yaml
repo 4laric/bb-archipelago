@@ -222,11 +222,119 @@ jobs:
           print(f"{requests} enemizer request(s) verified")
           PY
 
-      # NOTE: the planner itself is deliberately NOT run here. Its default
-      # --inventory is research/mined/msb_enemies.tsv, extracted from the user's
-      # own game files and gitignored. CI can prove the request is produced and
-      # well formed; it cannot yet prove a plan comes out the far side. Closing
-      # that needs a committed derived inventory - see #3.
+      # NOTE: this leg proves the request is emitted and well formed, but the
+      # planner's real input is a mined MSB inventory, which no leg can produce
+      # from licensed game files. The synthetic end-to-end leg below closes that
+      # gap by mining forged maps instead.
+
+  # The whole format chain against forged fixtures: mine synthetic MSBs, plan
+  # from the mined inventory, write the plan back into the MSBs, re-mine to
+  # prove the swaps landed, then run the real suppression planner and apply its
+  # plan to a synthetic gameparam/paramdef pair. No licensed bytes are involved;
+  # the fixtures are generated fresh by tools/bb_fixture_forge on every run, so
+  # a format break in any tool fails this leg instead of a player's session.
+  integration:
+    name: synthetic end-to-end chain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Fetch the pinned SoulsFormatsNEXT dependency
+        run: |
+          git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
+          git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+      - name: Build the native tools
+        run: |
+          set -e
+          for project in \
+            tools/bb_fixture_forge/BBFixtureForge.csproj \
+            tools/msbb_miner/MSBBMiner.csproj \
+            tools/bb_enemizer_writer/BBEnemizerWriter.csproj \
+            tools/bb_suppression_writer/BBSuppressionWriter.csproj; do
+            dotnet build "$project" -c Release \
+              -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -v:minimal
+          done
+      - name: Forge the synthetic fixtures
+        run: |
+          python tools/plan_vanilla_suppression.py --output work/integration/suppression-plan.json
+          dotnet run --project tools/bb_fixture_forge -c Release --no-build -- \
+            work/integration/fixtures --suppression-plan work/integration/suppression-plan.json
+      - name: Mine the forged maps
+        run: >
+          dotnet run --project tools/msbb_miner -c Release --no-build
+          -p:SoulsFormatsNextRoot="$PWD/_soulsformats" --
+          work/integration/fixtures/mapstudio work/integration/mined
+      - name: The mined inventory is what the forge placed
+        run: |
+          python - <<'PY'
+          import csv
+          rows = list(csv.DictReader(open("work/integration/mined/msb_enemies.tsv", encoding="utf-8"), delimiter="\t"))
+          names = {row["part_name"] for row in rows}
+          assert len(rows) == 8, f"expected 8 enemy rows across two maps, got {len(rows)}"
+          assert {"c1000_0000", "c2000_0000", "c3000_0000", "c9000_0000"} <= names, names
+          print(f"mined {len(rows)} enemy rows from the forged maps")
+          PY
+      - name: Plan from the mined inventory
+        run: >
+          python -m tools.bb_enemizer.cli
+          --inventory work/integration/mined/msb_enemies.tsv
+          --ap-request tests/fixtures/enemizer-request.json
+          --output work/integration/enemizer-plan.json
+      - name: The plan swaps the randomizable slots and protects the rest
+        run: |
+          python - <<'PY'
+          import json
+          plan = json.load(open("work/integration/enemizer-plan.json", encoding="utf-8"))
+          assert plan["format"] == "bb-enemizer-plan-v2", plan["format"]
+          swaps = {swap["logical_key"]: swap for swap in plan["swaps"]}
+          assert set(swaps) == {"m99_00_00_00:c1000_0000", "m99_00_00_00:c2000_0000"}, swaps
+          for swap in swaps.values():
+              # one shared choice across both alternate map states
+              assert len(swap["destination_keys"]) == 2, swap
+              assert swap["source"]["model_name"] != swap["target"]["model_name"], swap
+          reasons = {rejection["reason"] for rejection in plan["rejections"]}
+          assert any("talk-bound" in reason for reason in reasons), reasons
+          assert any("dummy" in reason for reason in reasons), reasons
+          print(f"swaps={len(swaps)} rejections={len(plan['rejections'])} as forged")
+          PY
+      - name: Write the enemizer plan into the forged maps
+        run: >
+          dotnet run --project tools/bb_enemizer_writer -c Release --no-build
+          -p:SoulsFormatsNextRoot="$PWD/_soulsformats" --
+          work/integration/enemizer-plan.json work/integration/fixtures/mapstudio
+          work/integration/written-mapstudio --apply
+      - name: Re-mining the written maps shows the swaps
+        run: |
+          dotnet run --project tools/msbb_miner -c Release --no-build \
+            -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- \
+            work/integration/written-mapstudio work/integration/remined
+          python - <<'PY'
+          import csv, json
+          plan = json.load(open("work/integration/enemizer-plan.json", encoding="utf-8"))
+          rows = list(csv.DictReader(open("work/integration/remined/msb_enemies.tsv", encoding="utf-8"), delimiter="\t"))
+          by_key = {f"{row['map_name']}:{row['part_name']}": row for row in rows}
+          for swap in plan["swaps"]:
+              target = swap["target"]
+              for key in swap["destination_keys"]:
+                  row = by_key[key]
+                  actual = (row["model_name"], int(row["npc_param_id"]), int(row["think_param_id"]), int(row["chara_init_id"]))
+                  wanted = (target["model_name"], target["npc_param_id"], target["think_param_id"], target["chara_init_id"])
+                  assert actual == wanted, f"{key}: {actual} != {wanted}"
+          print("all swapped destinations carry the planned archetype after a full write/re-mine cycle")
+          PY
+      - name: Apply the suppression plan to the forged gameparam
+        run: >
+          dotnet run --project tools/bb_suppression_writer -c Release --no-build
+          -p:SoulsFormatsNextRoot="$PWD/_soulsformats" --
+          work/integration/suppression-plan.json
+          work/integration/fixtures/param/gameparam.parambnd.dcx
+          work/integration/fixtures/paramdef/paramdef.paramdefbnd.dcx
+          work/integration/gameparam.suppressed.parambnd.dcx --apply
 
   # The control that makes the inputs bundle trustworthy: extract it, re-run the
   # derivation, and require the committed research to be exactly what came out.

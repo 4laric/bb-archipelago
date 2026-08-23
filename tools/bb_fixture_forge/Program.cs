@@ -1,0 +1,173 @@
+// Forges the SYNTHETIC binary fixtures the integration CI leg runs the real
+// tool chain against. Nothing here is derived from game data: every id, name,
+// and row is invented, and the suppression plan's rows are rebuilt as a fresh
+// synthetic ItemLotParam, so no licensed bytes are needed to prove that the
+// miner, planner, and both writers actually agree on the formats.
+//
+// usage: BBFixtureForge <output-root> --suppression-plan <plan.json>
+//
+// Emits under <output-root>:
+//   mapstudio/m99_00_00_00.msb, m99_00_00_01.msb
+//     Two alternate map states carrying the same four placements: two
+//     ordinary enemies (randomizable), one talk-bound NPC (protected), one
+//     dummy/script spawn (protected). The pair exercises the planner's
+//     logical-slot grouping across alternate states.
+//   param/gameparam.parambnd.dcx
+//     A one-param binder whose ItemLotParam rows are rebuilt from the plan's
+//     edits: row id = item_lot_id, getItemFlagId = acquisition_flag, slot 01
+//     carries the edit's category/item so the writer's preflight matches
+//     exactly one slot per edit.
+//   paramdef/paramdef.paramdefbnd.dcx
+//     The matching synthetic ItemLotParam definition (s32 fields only).
+//
+// Every written file is re-read before the tool exits; a forge that cannot
+// round-trip its own output fails loudly here, not inside a later tool.
+
+using System.Numerics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using SoulsFormats;
+
+if (args.Length != 3 || args[1] != "--suppression-plan")
+{
+    Console.Error.WriteLine("usage: BBFixtureForge <output-root> --suppression-plan <plan.json>");
+    return 2;
+}
+
+string outputRoot = Path.GetFullPath(args[0]);
+string planPath = Path.GetFullPath(args[2]);
+
+Plan plan = JsonSerializer.Deserialize<Plan>(File.ReadAllText(planPath))
+    ?? throw new InvalidDataException("suppression plan is empty");
+if (plan.Format != "bb-vanilla-suppression-plan-v2")
+    throw new InvalidDataException($"unsupported plan format {plan.Format}");
+if (plan.Edits.Count == 0)
+    throw new InvalidDataException("suppression plan contains no edits");
+
+string mapStudio = Path.Combine(outputRoot, "mapstudio");
+Directory.CreateDirectory(mapStudio);
+
+// The same four placements in two alternate states. Part names repeat across
+// the pair on purpose: the planner must treat them as one logical slot.
+var placements = new[]
+{
+    // name, model, npcParam, thinkParam, talkId, charaInit, entityId, position, dummy
+    new Placement("c1000_0000", "c1000", 100000, 100001, 0, 0, 1000, new Vector3(0, 0, 0), false),
+    new Placement("c2000_0000", "c2000", 200000, 200001, 0, 0, 1001, new Vector3(10, 0, 0), false),
+    new Placement("c3000_0000", "c3000", 300000, 300001, 77, 0, 1002, new Vector3(20, 0, 0), false),
+    new Placement("c9000_0000", "c9000", 900000, 900001, 0, 0, 1003, new Vector3(30, 0, 0), true),
+};
+foreach (string mapName in new[] { "m99_00_00_00", "m99_00_00_01" })
+{
+    var msb = new MSBB();
+    foreach (Placement placement in placements)
+    {
+        if (!msb.Models.Enemies.Any(model => model.Name == placement.Model))
+            msb.Models.Enemies.Add(new MSBB.Model.Enemy { Name = placement.Model, SibPath = "" });
+        if (placement.Dummy)
+        {
+            msb.Parts.DummyEnemies.Add(new MSBB.Part.DummyEnemy {
+                Name = placement.Name, ModelName = placement.Model,
+                NPCParamID = placement.NpcParam, ThinkParamID = placement.ThinkParam,
+                EntityID = placement.EntityId, Position = placement.Position,
+            });
+        }
+        else
+        {
+            msb.Parts.Enemies.Add(new MSBB.Part.Enemy {
+                Name = placement.Name, ModelName = placement.Model,
+                NPCParamID = placement.NpcParam, ThinkParamID = placement.ThinkParam,
+                TalkID = placement.TalkId, CharaInitID = placement.CharaInit,
+                EntityID = placement.EntityId, Position = placement.Position,
+            });
+        }
+    }
+    msb.Write(Path.Combine(mapStudio, mapName + ".msb"));
+}
+
+// The synthetic ItemLotParam definition: the exact fields the suppression
+// writer resolves by name, all s32, in a layout no real paramdef shares.
+var definition = new PARAMDEF {
+    ParamType = "ItemLotParam",
+    DataVersion = 1,
+    BigEndian = false,
+    Unicode = true,
+};
+definition.Fields.Add(new PARAMDEF.Field(definition, PARAMDEF.DefType.s32, "getItemFlagId"));
+for (int slot = 1; slot <= 8; slot++)
+{
+    definition.Fields.Add(new PARAMDEF.Field(definition, PARAMDEF.DefType.s32, $"lotItemCategory{slot:00}"));
+    definition.Fields.Add(new PARAMDEF.Field(definition, PARAMDEF.DefType.s32, $"lotItemId{slot:00}"));
+    definition.Fields.Add(new PARAMDEF.Field(definition, PARAMDEF.DefType.s32, $"lotItemNum{slot:00}"));
+}
+
+var param = new PARAM { ParamType = "ItemLotParam", ParamdefDataVersion = 1 };
+param.ApplyParamdef(definition);
+foreach (Edit edit in plan.Edits)
+{
+    if (!int.TryParse(edit.ItemLotId, out int lotId)
+        || !int.TryParse(edit.ItemCategory, out int itemCategory)
+        || !int.TryParse(edit.GoodsId, out int goodsId)
+        || !int.TryParse(edit.AcquisitionFlag, out int flag))
+        throw new InvalidDataException($"{edit.ItemKey}: plan contains a non-integer field");
+    var row = new PARAM.Row(lotId, edit.LotName ?? "", definition);
+    row["getItemFlagId"].Value = flag;
+    row["lotItemCategory01"].Value = itemCategory;
+    row["lotItemId01"].Value = goodsId;
+    row["lotItemNum01"].Value = 1;
+    param.Rows.Add(row);
+}
+if (param.Rows.Select(row => row.ID).Distinct().Count() != param.Rows.Count)
+    throw new InvalidDataException("suppression plan names the same lot id twice");
+
+var game = new BND4 { Compression = DCX.Type.DCX_EDGE };
+game.Files.Add(new BinderFile(
+    Binder.FileFlags.Flag1, 0, @"N:\synthetic\param\ItemLotParam.param", param.Write()));
+string gameparamPath = Path.Combine(outputRoot, "param", "gameparam.parambnd.dcx");
+game.Write(gameparamPath);
+
+var defs = new BND4 { Compression = DCX.Type.DCX_EDGE };
+defs.Files.Add(new BinderFile(
+    Binder.FileFlags.Flag1, 0, @"N:\synthetic\paramdef\ItemLotParam.paramdef", definition.Write()));
+string paramdefPath = Path.Combine(outputRoot, "paramdef", "paramdef.paramdefbnd.dcx");
+defs.Write(paramdefPath);
+
+// Re-read everything before declaring success; the next tools in the chain
+// trust these bytes.
+int forgedEnemies = 0;
+foreach (string mapName in new[] { "m99_00_00_00", "m99_00_00_01" })
+{
+    MSBB check = MSBB.Read(Path.Combine(mapStudio, mapName + ".msb"));
+    forgedEnemies += check.Parts.Enemies.Count + check.Parts.DummyEnemies.Count;
+}
+BND4 gameCheck = BND4.Read(gameparamPath);
+BND4 defsCheck = BND4.Read(paramdefPath);
+PARAM paramCheck = PARAM.Read(gameCheck.Files.Single(file =>
+    file.Name is not null && file.Name.EndsWith("ItemLotParam.param", StringComparison.OrdinalIgnoreCase)).Bytes);
+PARAMDEF defCheck = PARAMDEF.Read(defsCheck.Files.Single(file =>
+    file.Name is not null && file.Name.EndsWith(".paramdef", StringComparison.OrdinalIgnoreCase)).Bytes);
+if (!paramCheck.ApplyParamdefCarefully(defCheck))
+    throw new InvalidDataException("forged param does not accept its forged paramdef");
+if (paramCheck.Rows.Count != plan.Edits.Count)
+    throw new InvalidDataException("forged param lost rows on round-trip");
+
+Console.WriteLine(
+    $"forge maps=2 placements_per_map={placements.Length} enemies_total={forgedEnemies} "
+    + $"suppression_rows={paramCheck.Rows.Count} output={outputRoot}");
+return 0;
+
+sealed record Placement(
+    string Name, string Model, int NpcParam, int ThinkParam, int TalkId,
+    int CharaInit, int EntityId, Vector3 Position, bool Dummy);
+
+sealed record Plan(
+    [property: JsonPropertyName("format")] string Format,
+    [property: JsonPropertyName("edits")] List<Edit> Edits);
+
+sealed record Edit(
+    [property: JsonPropertyName("item_key")] string ItemKey,
+    [property: JsonPropertyName("item_category")] string ItemCategory,
+    [property: JsonPropertyName("goods_id")] string GoodsId,
+    [property: JsonPropertyName("item_lot_id")] string ItemLotId,
+    [property: JsonPropertyName("acquisition_flag")] string AcquisitionFlag,
+    [property: JsonPropertyName("lot_name")] string? LotName);
