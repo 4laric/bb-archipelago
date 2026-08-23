@@ -49,18 +49,20 @@ SUPPRESSION_OUTPUT_RELATIVE = "param/gameparam/gameparam.parambnd.dcx"
 # shadPS4 blocks overlay activation outright; the other two are the processes
 # that held files or the wrong privilege token during the first player run.
 BLOCKING_PROCESS = "shadps4.exe"
+_BBLAUNCHER_REMEDY = (
+    "the third-party BBLauncher spawns shadPS4 elevated; if you use it, "
+    "this launcher and the AP client must also run as administrator or the "
+    "client cannot attach"
+)
+
 WARNING_PROCESSES = (
     (
         "cheatengine.exe",
         "a stray Cheat Engine instance can hold the grant table or stale "
         "bridge state; close any CE window you did not just open for this session",
     ),
-    (
-        "bb-launcher.exe",
-        "the third-party BBLauncher spawns shadPS4 elevated; if you use it, "
-        "this launcher and the AP client must also run as administrator or the "
-        "client cannot attach",
-    ),
+    ("bblauncher.exe", _BBLAUNCHER_REMEDY),
+    ("bb-launcher.exe", _BBLAUNCHER_REMEDY),  # alternate spelling of the same tool
 )
 
 

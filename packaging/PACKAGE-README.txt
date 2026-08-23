@@ -1,18 +1,27 @@
 Bloodborne Archipelago launcher (Windows x64)
 ================================================
 
-Run BloodborneAPLauncher.exe. The package contains the enemy planner, the
-compressed-map miner, and the guarded native map/param writers. It contains no
-Bloodborne or shadPS4 files.
+New here? Read docs\PLAYTESTING.md first -- it is the five-minute setup
+guide written for players, including what to send back after a session.
 
-Randomize Enemies is enabled by default. Select the shadPS4 game folder and the
-launcher will find the installed compressed MapStudio files and build its enemy
-inventory automatically. A failed build never writes to the base/update game
-trees; successful outputs enter a verified external cache before activation.
+Quick version:
 
-This release slice still asks for the seed's .bbenemizer.json, a previously
-built suppression binder and build-manifest.json, and a hash-pinned process
-plan. See docs/LAUNCHER.md for the formats and safety model.
+1. Run BloodborneAPLauncher.exe.
+2. Pick your shadPS4.exe, your AP seed request (....bbenemizer.json, from
+   whoever generated the seed), and the Archipelago server address.
+   Everything else fills itself in. Save Setup.
+3. Click Generate Launch Plan once, then Doctor -- every line should say
+   PASS before you play.
+4. Randomize & Launch.
 
-The optional native AP client is present under tools when its prebuilt
-executable was supplied to the packaging command.
+One character per session, never switch characters while connected, and if
+something looks wrong, stop and report it (see the PLAYTESTING guide).
+
+The package contains the launcher, the enemy planner, the map miner, the
+guarded native writers, the item-grant Cheat Engine table, the AP client,
+and -- when the build had one -- the vanilla-suppression binder with its
+build manifest. It contains no Bloodborne or shadPS4 files, and it never
+writes to your base or update game trees; every change lives in a verified
+overlay the launcher owns and can roll back.
+
+See docs\LAUNCHER.md for the safety model and file formats.

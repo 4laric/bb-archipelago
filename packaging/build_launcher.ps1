@@ -4,6 +4,7 @@ param(
     [string]$SoulsFormatsNextRoot,
     [string]$ClientPath,
     [string]$OutputRoot,
+    [string]$SuppressionBuild,
     [switch]$SkipClient,
     [switch]$NoArchive
 )
@@ -121,8 +122,32 @@ if (-not $SkipClient) {
 
 New-Item -ItemType Directory -Path (Join-Path $package "docs") -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo "docs\LAUNCHER.md") -Destination (Join-Path $package "docs\LAUNCHER.md")
+Copy-Item -LiteralPath (Join-Path $repo "docs\PLAYTESTING.md") -Destination (Join-Path $package "docs\PLAYTESTING.md")
 Copy-Item -LiteralPath (Join-Path $repo "packaging\PACKAGE-README.txt") -Destination (Join-Path $package "README.txt")
 Copy-Item -LiteralPath (Join-Path $repo "tables\Bloodborne-native-item-grant-auto-v2.CT") -Destination (Join-Path $package "tools")
+
+# Ship the suppression binder + manifest beside the launcher so the UI
+# auto-fills the pair from application_root()/work/vanilla-suppression-build
+# and the player never has to locate either file.
+if (-not $SuppressionBuild) {
+    $defaultSuppression = Join-Path $repo "work\vanilla-suppression-build"
+    if ((Test-Path -LiteralPath (Join-Path $defaultSuppression "gameparam.parambnd.dcx") -PathType Leaf) -and
+        (Test-Path -LiteralPath (Join-Path $defaultSuppression "build-manifest.json") -PathType Leaf)) {
+        $SuppressionBuild = $defaultSuppression
+    }
+}
+if ($SuppressionBuild) {
+    $suppressionDestination = Join-Path $package "work\vanilla-suppression-build"
+    New-Item -ItemType Directory -Path $suppressionDestination -Force | Out-Null
+    foreach ($name in @("gameparam.parambnd.dcx", "build-manifest.json")) {
+        $source = Join-Path $SuppressionBuild $name
+        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+            throw "Suppression build is missing ${name}: $source"
+        }
+        Copy-Item -LiteralPath $source -Destination (Join-Path $suppressionDestination $name)
+    }
+    Write-Host "  bundled suppression build: $SuppressionBuild"
+}
 
 $revision = (& git -C $repo rev-parse HEAD).Trim()
 $dirty = -not [string]::IsNullOrWhiteSpace((& git -C $repo status --porcelain --untracked-files=no | Out-String))
@@ -139,6 +164,7 @@ $manifest = [ordered]@{
     revision = $revision
     dirty_worktree = $dirty
     includes_client = (-not $SkipClient)
+    includes_suppression = [bool]$SuppressionBuild
     includes_game_files = $false
     client = $clientRecord
     files = @($records)
