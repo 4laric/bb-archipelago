@@ -8,6 +8,16 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Fixed
 
+- Item grants no longer fail verification against the wrong inventory stack:
+  the grant harness now verifies a native insert against the result slot the
+  game itself reported (id matches, quantity covers the grant) instead of only
+  re-scanning the whole inventory for an exact total, which latched a false
+  `failed` state (and blocked all later deliveries) whenever the game merged
+  the grant into a stack the scan could not see at queue time. Grants for
+  absent stacks also wait out incremental inventory hydration before
+  native-inserting, so a duplicate stack is not created next to one that has
+  not become visible yet.
+
 - The world now imports correctly from the zipped `.apworld` players actually
   install: every data table (`archipelago.json`, `ids.tsv`,
   `fixed_locations.tsv`, `location_names.tsv`) is read through

@@ -24,6 +24,9 @@ local maxManualWaitPolls=1200
 local bootstrapVialPending=true
 local bootstrapAbsentPolls=0
 local minBootstrapAbsentPolls=40
+local grantAbsentTag=""
+local grantAbsentPolls=0
+local minGrantAbsentPolls=40
 local bootstrapVialNormalized=0x400003E8
 local bootstrapVialHeldCap=20
 local bootstrapBulletNormalized=0x40000384
@@ -417,30 +420,36 @@ local function poll()
       local nativeResult=readInteger(result)
       local actual=findItem(active.normalized)
       local wanted=active.expected+active.count
-      if actual~=wanted then
+      -- Verify against the slot the native insert reported, not only the
+      -- whole-inventory scan: findItem returns the FIRST matching stack, which
+      -- is the wrong evidence when the game merged into a stack that was not
+      -- visible at queue time or a second stack exists (observed live:
+      -- expected_after=2 actual=10 while the insert had landed at slot 82).
+      local slotId,slotQuantity,slotAddress=readSlotRecord(nativeResult)
+      local slotVerified=slotId==active.normalized and slotQuantity~=nil and slotQuantity>=active.count
+      if not slotVerified and actual~=wanted then
         active.verifyPolls=(active.verifyPolls or 0)+1
         if active.verifyPolls<maxVerifyPolls then
           state("verify_pending",string.format("tag=%s expected_after=%d actual=%s attempt=%d/%d",active.tag,wanted,tostring(actual),active.verifyPolls,maxVerifyPolls))
           return
         end
-        append(string.format("AUTO FAILED tag=%s expected_after=%d actual=%s native_result=%s; retry budget exhausted",active.tag,wanted,tostring(actual),tostring(nativeResult)))
+        local slotDetail=slotId and string.format(" slot=%d slot_id=0x%08X slot_quantity=%s slot_address=0x%X",
+          nativeResult,slotId,tostring(slotQuantity),slotAddress) or " result_slot_unreadable"
+        append(string.format("AUTO FAILED tag=%s expected_after=%d actual=%s native_result=%s%s; retry budget exhausted",active.tag,wanted,tostring(actual),tostring(nativeResult),slotDetail))
         if active.bootstrap then
-          local slotId,slotQuantity,slotAddress=readSlotRecord(nativeResult)
-          local slotDetail=slotId and string.format(" slot=%d slot_id=0x%08X slot_quantity=%s slot_address=0x%X",
-            nativeResult,slotId,tostring(slotQuantity),slotAddress) or " result_slot_unreadable"
           local failureDetail=string.format("expected_after=%d actual=%s native_result=%s retry_budget=%d%s",
             wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls,slotDetail)
           active=nil
           finishBootstrap("bootstrap_failed",failureDetail)
         else
-          state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d",active.tag,wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls))
+          state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d%s",active.tag,wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls,slotDetail))
           os.remove(commandPath)
           active=nil
         end
         return
       end
-      append(string.format("AUTO COMPLETED tag=%s raw=0x%08X normalized=0x%08X quantity=%d native_result=%s",
-        active.tag,active.raw,active.normalized,active.count,tostring(nativeResult)))
+      append(string.format("AUTO COMPLETED tag=%s raw=0x%08X normalized=0x%08X quantity=%d native_result=%s slot_quantity=%s",
+        active.tag,active.raw,active.normalized,active.count,tostring(nativeResult),tostring(slotQuantity)))
       if active.bootstrap then
         local before=active.expected
         active=nil
@@ -475,6 +484,19 @@ local function poll()
   if actual==nil then
     state("awaiting_inventory","Command retained; inventory geometry is not hydrated yet")
     return
+  end
+  if not exists then
+    -- Inventory hydration is incremental after a save load (the bootstrap waits
+    -- it out for Vials); a grant that declares a stack absent too early native-
+    -- inserts a duplicate stack next to one the scan could not see yet.
+    if grantAbsentTag~=command.tag then grantAbsentTag=command.tag; grantAbsentPolls=0 end
+    grantAbsentPolls=grantAbsentPolls+1
+    if grantAbsentPolls<minGrantAbsentPolls then
+      state("awaiting_inventory",string.format("tag=%s waiting for inventory hydration before declaring the stack absent (%d/%d)",command.tag,grantAbsentPolls,minGrantAbsentPolls))
+      return
+    end
+  else
+    grantAbsentTag=""; grantAbsentPolls=0
   end
   if command.autoExpected then
     local priorBefore,priorAfter=tonumber(prior.expected_before or ""),tonumber(prior.expected_after or "")
