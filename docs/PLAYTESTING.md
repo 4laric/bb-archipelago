@@ -6,12 +6,16 @@ a running randomized seed, and tells you exactly what to report back.
 ## What you need
 
 1. **A Windows PC.**
-2. **Your own Bloodborne game files** — a PS4 dump of `CUSA03173` (the **US**
-   release) at update **01.09**, installed into shadPS4. We cannot provide game
-   files. Three things that trip people up:
-   - **Region matters.** The EU release (`CUSA00900`) and other regions are
-     **not** supported — the randomizer's game data is built against the US
-     version and the launcher will refuse anything else.
+2. **Your own Bloodborne game files** — a PS4 dump of `CUSA03173`
+   (Bloodborne: Game of the Year Edition) at update **01.09**, installed into
+   shadPS4. We cannot provide game files. Three things that trip people up:
+   - **The exact title ID matters.** Other releases — the US standard edition
+     `CUSA00900`, the EU standard edition `CUSA00207`, and the rest — are
+     **not** supported, even at the same 01.09 update. The randomizer's game
+     data is built against `CUSA03173` and the launcher will refuse anything
+     else. Watch out for pre-modded repacks too (anything with "Mods" in the
+     release name): their executables are often already patched and will not
+     match what the client expects.
    - **A `.pkg` file is not an installed game.** Install the base game and the
      01.09 update through shadPS4 first; the launcher works with the installed
      `CUSA03173` + `CUSA03173-patch` directories, not the packages.

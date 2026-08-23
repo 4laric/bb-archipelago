@@ -132,11 +132,11 @@ class LauncherCoreTests(unittest.TestCase):
             GameInstall.from_root(wrong)
 
     def test_game_validation_names_a_foreign_serial_install(self):
-        foreign = self.root / "eu-install"
+        foreign = self.root / "foreign-install"
         (foreign / "CUSA00900").mkdir(parents=True)
         (foreign / "CUSA00900-patch").mkdir()
         with self.assertRaisesRegex(
-            ValidationError, r"found CUSA00900.*only CUSA03173 \(US\)"
+            ValidationError, r"found CUSA00900.*only CUSA03173 AppVer 01\.09"
         ):
             GameInstall.from_root(foreign)
         empty = self.root / "empty"

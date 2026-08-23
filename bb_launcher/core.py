@@ -486,7 +486,7 @@ class GameInstall:
             foreign = _foreign_serial_dirs(candidate)
             if foreign:
                 raise ValidationError(
-                    f"found {', '.join(foreign)} but only {SERIAL} (US) AppVer "
+                    f"found {', '.join(foreign)} but only {SERIAL} AppVer "
                     f"{APP_VERSION} is supported: {base}"
                 )
             raise ValidationError(f"missing base game directory: {base}")
