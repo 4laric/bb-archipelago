@@ -1,0 +1,86 @@
+name: release
+
+# Tag-triggered player prerelease: pushing v* (e.g. v0.1.0-playtest.1) builds
+# the full Windows launcher package -- launcher, native tools, CE table, and
+# the bb-ap-client built from the client repo's main -- and attaches the zip
+# to a GitHub prerelease, so a playtester needs no GitHub login to download.
+#
+# The suppression binder is licensed-game-derived and is never built in CI:
+# the host ships the playtest zip from a local `build.ps1 -Package` run (which
+# bundles the binder automatically), or sends binder + manifest alongside this
+# zip. The launcher Doctor checks both halves either way.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create (e.g. v0.1.0-playtest.1)"
+        required: true
+      client_ref:
+        description: "from-software-archipelago-clients ref to build"
+        default: "main"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: player prerelease package
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve the release tag
+        shell: pwsh
+        run: |
+          $tag = "${{ github.event.inputs.tag }}"
+          if ("${{ github.ref_type }}" -eq "tag") { $tag = "${{ github.ref_name }}" }
+          if (-not $tag.StartsWith("v")) { throw "release tags must start with v: $tag" }
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Fetch the pinned SoulsFormatsNEXT packaging dependency
+        shell: pwsh
+        run: |
+          git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
+          git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+
+      - name: Check out the AP client
+        uses: actions/checkout@v4
+        with:
+          repository: 4laric/from-software-archipelago-clients
+          ref: ${{ github.event.inputs.client_ref || 'main' }}
+          path: _client
+
+      - name: Build the AP client (cargo release)
+        run: cargo build --release -p bb-archipelago --manifest-path _client/Cargo.toml
+
+      - name: Install the pinned Windows packager
+        run: python -m pip install --disable-pip-version-check -r packaging/requirements-build.txt
+
+      - name: Build the launcher package
+        shell: pwsh
+        run: >-
+          ./packaging/build_launcher.ps1
+          -SoulsFormatsNextRoot $PWD\_soulsformats
+          -ClientPath $PWD\_client\target\release\bb-ap-client.exe
+
+      - name: Create the prerelease with the package zip
+        shell: pwsh
+        run: >-
+          gh release create "$env:RELEASE_TAG"
+          --repo ${{ github.repository }}
+          --title "Bloodborne Archipelago $env:RELEASE_TAG"
+          --notes-file packaging\PACKAGE-README.txt
+          --prerelease
+          build\BloodborneAPLauncher-win-x64.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
