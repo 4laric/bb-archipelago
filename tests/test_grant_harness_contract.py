@@ -108,6 +108,37 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn('state("failed",string.format("tag=%s expected_after=', self.text)
         self.assertIn("native_result=%s retry_budget=%d", self.text)
 
+    def test_native_verify_targets_the_result_slot_before_the_inventory_scan(self):
+        self.assertIn("local slotId,slotQuantity,slotAddress=readSlotRecord(nativeResult)", self.text)
+        self.assertIn(
+            "slotVerified=slotId==active.normalized and slotQuantity~=nil and slotQuantity>=active.count",
+            self.text,
+        )
+        self.assertIn("if not slotVerified and actual~=wanted then", self.text)
+        # The slot evidence rides along on EVERY terminal native failure, not
+        # just bootstrap failures, so a wrong-slot verdict is diagnosable.
+        self.assertIn(
+            'state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d%s"',
+            self.text,
+        )
+        self.assertLess(
+            self.text.index("readSlotRecord(nativeResult)"),
+            self.text.index("if not slotVerified and actual~=wanted then"),
+        )
+
+    def test_absent_grant_waits_for_inventory_hydration_before_native_insert(self):
+        self.assertIn("local grantAbsentTag=", self.text)
+        self.assertIn("local grantAbsentPolls=0", self.text)
+        self.assertIn("local minGrantAbsentPolls=40", self.text)
+        self.assertIn("if grantAbsentTag~=command.tag then", self.text)
+        self.assertIn("waiting for inventory hydration before declaring the stack absent", self.text)
+        # The guard runs before the absent-vial refusal and the native queue
+        # write, so neither can fire on a stack that has not hydrated yet.
+        self.assertLess(
+            self.text.index("waiting for inventory hydration before declaring the stack absent"),
+            self.text.index("absent Blood Vial insertion is disabled"),
+        )
+
     def test_manual_diagnostic_waits_for_a_real_consumable_trigger(self):
         self.assertIn('trigger~="AUTO" and trigger~="MANUAL"', self.text)
         self.assertIn("cmp dword ptr [bbAutoManualTrigger],0", self.text)
