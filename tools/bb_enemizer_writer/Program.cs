@@ -109,11 +109,19 @@ return 0;
 
 static string ResolveMap(string root, string map)
 {
-    string compressed = Path.Combine(root, map + ".msb.dcx");
+    // Miner-derived plan keys retain the ".msb" extension because
+    // Path.GetFileNameWithoutExtension strips only ".dcx"; accept bare map
+    // ids and the miner-suffixed form alike.
+    string bare = map;
+    if (bare.EndsWith(".msb.dcx", StringComparison.OrdinalIgnoreCase))
+        bare = bare[..^".msb.dcx".Length];
+    else if (bare.EndsWith(".msb", StringComparison.OrdinalIgnoreCase))
+        bare = bare[..^".msb".Length];
+    string compressed = Path.Combine(root, bare + ".msb.dcx");
     if (File.Exists(compressed)) return compressed;
-    string plain = Path.Combine(root, map + ".msb");
+    string plain = Path.Combine(root, bare + ".msb");
     if (File.Exists(plain)) return plain;
-    throw new FileNotFoundException($"no MSBB for {map} under {root}");
+    throw new FileNotFoundException($"no MSBB for {map} under {root} (tried {compressed}, {plain})");
 }
 
 static Dictionary<string, MSBB.Part.EnemyBase> PartsByName(MSBB msb) =>
