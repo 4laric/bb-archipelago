@@ -101,7 +101,8 @@ for (int slot = 1; slot <= 8; slot++)
     definition.Fields.Add(new PARAMDEF.Field(definition, PARAMDEF.DefType.s32, $"lotItemNum{slot:00}"));
 }
 
-var param = new PARAM { ParamType = "ItemLotParam", ParamdefDataVersion = 1 };
+// Rows starts null on a fresh PARAM; ApplyParamdef iterates it.
+var param = new PARAM { ParamType = "ItemLotParam", ParamdefDataVersion = 1, Rows = [] };
 param.ApplyParamdef(definition);
 foreach (Edit edit in plan.Edits)
 {
