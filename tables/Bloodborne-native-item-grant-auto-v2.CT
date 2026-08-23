@@ -94,8 +94,7 @@ if not attachedPid or attachedPid==0 then
 end
 local base,baseError=readEbootBase()
 if not base then
-  showMessage("Bloodborne AP table setup failed:\n"..baseError)
-  return
+  error(baseError)
 end
 local consumeHook=base+consumeRva
 local heartbeatHook=base+heartbeatRva
@@ -573,9 +572,34 @@ else
 end
 end
 
-local started,startError=pcall(startBloodborneHarness)
-if not started then
-  showMessage("Bloodborne AP table setup failed:\n"..tostring(startError))
+-- Self-attach with retry: the launcher spawns CE alongside shadPS4, so the
+-- table must not require a manual attach first. Attach as soon as shadPS4.exe
+-- exists, then retry harness start once a second while the failure is the
+-- not-booted-yet race ("Logged eboot base ..."); anything else is terminal.
+local bbMaxStartAttempts=240
+if bbNativeGrantStartTimer then bbNativeGrantStartTimer.destroy() end
+bbNativeGrantStartTimer=createTimer(nil); bbNativeGrantStartTimer.Interval=1000
+bbNativeGrantStartAttempts=0
+bbNativeGrantStartTimer.OnTimer=function(t)
+  bbNativeGrantStartAttempts=bbNativeGrantStartAttempts+1
+  local attachedPid=getOpenedProcessID()
+  if attachedPid and attachedPid~=0 then
+    local started,startError=pcall(startBloodborneHarness)
+    if started then t.Enabled=false; return end
+    if not tostring(startError):find("Logged eboot base") then
+      t.Enabled=false
+      showMessage("Bloodborne AP table setup failed:\n"..tostring(startError))
+      return
+    end
+  else
+    local targetPid=getProcessIDFromName("shadPS4.exe")
+    if targetPid then openProcess(targetPid) end
+  end
+  if bbNativeGrantStartAttempts>=bbMaxStartAttempts then
+    t.Enabled=false
+    showMessage("Bloodborne AP table: shadPS4 did not become ready within 4 minutes; attach to shadPS4.exe manually and reload the table.")
+  end
 end
+bbNativeGrantStartTimer.Enabled=true
 ]]></LuaScript>
 </CheatTable>

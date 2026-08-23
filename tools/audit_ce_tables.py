@@ -58,6 +58,13 @@ def audit(root: Path = ROOT) -> list[str]:
     current_text = current.read_text(encoding="utf-8")
     if "local function readEbootBase()" not in current_text or RELOCATED_TEMPLATE not in current_text:
         errors.append(f"current table lost launch-relative relocation: {CURRENT_RELOCATED_TABLE}")
+    self_attach_markers = (
+        'getProcessIDFromName("shadPS4.exe")',
+        "bbNativeGrantStartTimer.OnTimer",
+    )
+    for marker in self_attach_markers:
+        if marker not in current_text:
+            errors.append(f"current table lost self-attach retry ({marker}): {CURRENT_RELOCATED_TABLE}")
     return errors
 
 
