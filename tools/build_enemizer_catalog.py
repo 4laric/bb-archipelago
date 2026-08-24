@@ -14,6 +14,8 @@ from bb_enemizer.inventory import load_slots
 
 NUMBER = re.compile(r"(?<!\d)\d{6,9}(?!\d)")
 
+EVENT_REASON = "entity ID referenced by area EMEVD"
+
 
 def rows(path: Path):
     with path.open(encoding="utf-8-sig", newline="") as stream:
@@ -71,6 +73,16 @@ def main() -> int:
         "dvdroot_ps4/params_dump/SpEffectParam.csv"))
     parser.add_argument("--events", type=Path, default=Path(
         "Bloodborne.Game.of.the.Year.Edition.PS4-PRELUDE/bloodborne_artifacts/event"))
+    parser.add_argument("--lot-items", type=Path, default=Path("research/joined/lot_items.tsv"))
+    parser.add_argument(
+        "--relax-non-character-emevd", action="store_true",
+        help=(
+            "OPT-IN, OFF BY DEFAULT. Narrow EMEVD protection from 'entity id "
+            "appears in area EMEVD' to 'entity id is the operand of a character "
+            "operation' (see docs/ENEMIZER-COVERAGE.md). Fails closed: a slot is "
+            "relaxed only when the reproducible census proves no character "
+            "operation touches it, and only if it then still fails no other "
+            "conservative gate. The default swap set is unchanged."))
     parser.add_argument("--output", type=Path, default=Path("research/enemizer"))
     args = parser.parse_args()
 
@@ -140,6 +152,34 @@ def main() -> int:
             }
             event_referenced += 1
 
+    relaxed_non_character = 0
+    if args.relax_non_character_emevd:
+        # Reproduce the committed EMEVD-usage census over the slot policy we
+        # just derived, then drop protection only where NO alternate-state copy
+        # of a logical placement is the operand of a character operation. This
+        # is the sharper predicate argued in docs/ENEMIZER-COVERAGE.md; it never
+        # relaxes a slot a character operation can witness, and the physical
+        # gates in classify_slot still guard talk/dummy/hunter/unapproved slots.
+        import tempfile as _tempfile
+        from build_emevd_entity_usage import build_rows, has_character_operation
+        with _tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                          encoding="utf-8") as handle:
+            json.dump(slot_policy, handle)
+            policy_snapshot = Path(handle.name)
+        try:
+            census = build_rows(args.inventory, policy_snapshot, args.events, args.lot_items)
+        finally:
+            policy_snapshot.unlink()
+        character_logical = {
+            row["logical_key"] for row in census
+            if has_character_operation(row["usage_classes"])
+        }
+        for key in list(slot_policy):
+            if (slot_policy[key].get("reason") == EVENT_REASON
+                    and key not in character_logical):
+                del slot_policy[key]
+                relaxed_non_character += 1
+
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / "enemy_tags.json").write_text(
         json.dumps(tags, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
@@ -154,6 +194,8 @@ def main() -> int:
         "scaling_hp_values": dict(sorted(Counter(
             str(tag.get("scaling_hp", 1.0)) for tag in tags.values()).items(), key=lambda x: float(x[0]))),
         "event_referenced_physical_sightings": event_referenced,
+        "relax_non_character_emevd": bool(args.relax_non_character_emevd),
+        "relaxed_non_character_logical_slots": relaxed_non_character,
         "protected_logical_slots": len(slot_policy),
         "emevd_covered_areas": sorted(covered_areas),
         "inventory_areas_without_emevd": sorted({

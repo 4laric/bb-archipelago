@@ -59,6 +59,20 @@ def operation_family(operation: str) -> str:
     return "other_operation"
 
 
+def has_character_operation(usage_classes: str) -> bool:
+    """True when a slot's folded usage-class string records a character operation.
+
+    This is the sharper protection predicate proposed in
+    ``docs/ENEMIZER-COVERAGE.md``: an entity id is a genuine scripted actor only
+    when it is the operand of a ``SetCharacter*`` / AI / boss / HP / SpEffect
+    operation, not merely a number that appears somewhere in the area EMEVD.
+    It reads the same ``usage_classes`` column this census already commits, so a
+    consumer never has to re-parse EMEVD to reproduce the classification.
+    """
+    return any(entry.split(":", 1)[0] == "character_operation"
+               for entry in usage_classes.split(";") if entry)
+
+
 def event_definitions(lines: list[str]) -> dict[int, tuple[list[str], list[str]]]:
     definitions = {}
     current = None
