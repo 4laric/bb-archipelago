@@ -119,3 +119,25 @@ up the thing by the troll and nothing happened" is a useful report.
   cleaner comparison run, untick **Randomize Enemies** before launching.
 - Deaths, chat, and multiworld sync of anything beyond items are not in this
   build.
+
+## For the host: cutting a release
+
+Playtesters download prereleases; they need no GitHub login. To cut one:
+
+```powershell
+git checkout main; git pull
+git tag -a v0.1.0-playtest.N -m "what changed"
+git push origin v0.1.0-playtest.N
+```
+
+Pushing the tag runs the `release` workflow (~3 minutes), which builds the
+Windows launcher package — launcher, native tools, CE table, and the
+`bb-ap-client` built from the client repo's current `main` — and attaches
+`BloodborneAPLauncher-win-x64.zip` plus `bloodborne.apworld` to a GitHub
+prerelease. Verify the two assets appeared before posting the link.
+
+**The suppression binder is NOT in that zip** — it is licensed-game-derived
+and never built in CI. Send playtesters `gameparam.parambnd.dcx` and
+`build-manifest.json` from your local `work\vanilla-suppression-build\`
+alongside the release link (or ship a full local `build.ps1 -Package` zip,
+which bundles them). The launcher Doctor checks both halves either way.
