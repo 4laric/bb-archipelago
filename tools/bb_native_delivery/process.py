@@ -22,6 +22,12 @@ from pathlib import Path
 
 from . import payload
 from .aob import BytePattern, parse
+from .threadcontrol import (
+    DEFAULT_ATTEMPT_BUDGET,
+    PatchWindow,
+    ThreadController,
+    install_detours_atomically,
+)
 
 #: The consume-return signature the CE table scans for when the log base is
 #: stale. ``validated`` -- it resolved the base live on two machines.
@@ -194,21 +200,58 @@ def require_validated_image(memory: ProcessMemory, base: int) -> None:
         )
 
 
-def install(memory: ProcessMemory, base: int, *, dry_run: bool = True) -> list[tuple[str, int, int]]:
+def install(
+    memory: ProcessMemory,
+    base: int,
+    *,
+    dry_run: bool = True,
+    controller: ThreadController | None = None,
+    attempt_budget: int = DEFAULT_ATTEMPT_BUDGET,
+) -> list[tuple[str, int, int]]:
     """Write the static payload. Inert unless ``dry_run=False``.
 
-    ⚠️ Install atomicity is NOT solved here. The heartbeat hook executes every
-    frame; a 5-byte E9 written by WriteProcessMemory is not atomic against a
-    guest thread mid-fetch. Suspending the guest threads and checking their
-    instruction pointers against the patch window is required before this is
-    allowed anywhere near a player, and is deliberately not implemented in a
-    prototype that cannot be tested. See docs/SPEC-client-without-cheat-engine.md.
+    Ordering is the safety contract (see docs/INSTALL-ATOMICITY.md). The state
+    region and both caves are written first; only then are the two ``E9`` detours
+    written, and they are the commit point -- nothing in the guest jumps to a cave
+    until a detour exists, so everything before the detours is harmless. The
+    structural half of this ordering is pinned by ``payload.blobs()`` and its
+    test ``test_install_order_writes_the_caves_before_the_detours``.
+
+    The heartbeat hook executes every frame, so writing its detour is not atomic
+    against a guest thread mid-fetch. When arming, the two detours are therefore
+    committed through :func:`threadcontrol.install_detours_atomically`: suspend
+    every guest thread, verify no RIP is inside either seven-byte window, write
+    both detours under that one suspend, resume. Arming requires a ``controller``;
+    without one this fails closed rather than write a detour blind. The live
+    suspend/RIP read is the only piece untested against the game (owner checklist
+    item 5a).
     """
     require_validated_image(memory, base)
-    plan = []
-    for blob in payload.blobs():
-        data = blob.relocated(base)
-        plan.append((blob.name, base + blob.rva, len(data)))
-        if not dry_run:
-            memory.write(base + blob.rva, data)
+
+    all_blobs = payload.blobs()
+    detours = [blob for blob in all_blobs if blob.name.endswith("_detour")]
+    prelude = [blob for blob in all_blobs if not blob.name.endswith("_detour")]
+
+    plan = [(blob.name, base + blob.rva, len(blob.relocated(base))) for blob in all_blobs]
+    if dry_run:
+        return plan
+
+    if controller is None:
+        raise AttachError(
+            "refusing to arm without a thread controller: writing the heartbeat "
+            "detour without suspending guest threads is the unsolved atomicity "
+            "hazard. Pass a ThreadController (see threadcontrol.py)."
+        )
+
+    # Caves and state first -- fully written before either detour (the commit point).
+    for blob in prelude:
+        memory.write(base + blob.rva, blob.relocated(base))
+
+    windows = [PatchWindow(base + blob.rva, len(blob.data)) for blob in detours]
+
+    def write_detours() -> None:
+        for blob in detours:
+            memory.write(base + blob.rva, blob.relocated(base))
+
+    install_detours_atomically(controller, windows, write_detours, attempt_budget=attempt_budget)
     return plan

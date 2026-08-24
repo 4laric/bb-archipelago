@@ -85,15 +85,30 @@ def _cmd_verify(args: argparse.Namespace) -> int:
 
 def _cmd_install(args: argparse.Namespace) -> int:
     from .process import install
+    from .threadcontrol import InstallAborted
 
     memory, base = _attach(args, writable=args.arm)
+    controller = None
+    if args.arm:
+        from .threadcontrol import WindowsThreadController
+
+        controller = WindowsThreadController(memory.pid)
     with memory:
-        plan = install(memory, base, dry_run=not args.arm)
+        try:
+            plan = install(memory, base, dry_run=not args.arm, controller=controller)
+        except InstallAborted as exc:
+            print(f"\nINSTALL ABORTED: {exc}")
+            return 1
         for name, address, size in plan:
             print(f"{'WROTE' if args.arm else 'would write'} {name:18} 0x{address:X} ({size} bytes)")
-        if not args.arm:
-            print("\nDry run. Re-run with --arm to write. Install atomicity is UNSOLVED: "
-                  "the heartbeat hook executes every frame and no thread suspension is done.")
+        if args.arm:
+            print("\nDetours were committed under a full guest-thread suspend "
+                  "(see docs/INSTALL-ATOMICITY.md). The live suspend/RIP read is "
+                  "untested against the game -- owner checklist item 5a.")
+        else:
+            print("\nDry run. Re-run with --arm to write. Arming suspends every guest "
+                  "thread and verifies no RIP is inside a detour window before writing "
+                  "(docs/INSTALL-ATOMICITY.md).")
     return 0
 
 
