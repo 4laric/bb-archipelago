@@ -15,13 +15,13 @@ socket) is injectable so the tests stay dependency-free.
 from __future__ import annotations
 
 import socket
-import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
 from .core import (
+    CE_BRIDGE_PROCESS_NAME,
+    CHEAT_ENGINE_PROCESSES,
     SUPPRESSION_PATH,
     GameInstall,
     LauncherError,
@@ -29,9 +29,13 @@ from .core import (
     ValidationError,
     elevation_risks,
     launcher_is_elevated,
+    process_is_running_by_name,
     sha256_file,
+    stray_cheat_engine_names,
     validate_processes,
 )
+from .client_config import default_state_root
+from .readiness import gather_readiness
 from .workflow import (
     LauncherSettings,
     ProcessPlan,
@@ -57,12 +61,13 @@ _BBLAUNCHER_REMEDY = (
     "client cannot attach"
 )
 
+_STRAY_CE_REMEDY = (
+    "close every Cheat Engine window and relaunch: Windows hands the grant "
+    "table to the instance that is already open, and that instance does not "
+    "arm the grant bridge, so no items can be delivered (bb-archipelago#137)"
+)
+
 WARNING_PROCESSES = (
-    (
-        "cheatengine.exe",
-        "a stray Cheat Engine instance can hold the grant table or stale "
-        "bridge state; close any CE window you did not just open for this session",
-    ),
     ("bblauncher.exe", _BBLAUNCHER_REMEDY),
     ("bb-launcher.exe", _BBLAUNCHER_REMEDY),  # alternate spelling of the same tool
 )
@@ -105,25 +110,9 @@ class _Chain:
     processes: list[ProcessSpec] | None = None
 
 
-def _process_running(name: str) -> bool:
-    if sys.platform == "win32":
-        result = subprocess.run(
-            ["tasklist", "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
-            check=False,
-            capture_output=True,
-            text=True,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
-        return name.casefold() in result.stdout.casefold()
-    proc = Path("/proc")
-    if proc.is_dir():
-        for command in proc.glob("[0-9]*/comm"):
-            try:
-                if command.read_text(encoding="utf-8").strip().casefold() == name.casefold():
-                    return True
-            except OSError:
-                pass
-    return False
+# The one process probe lives in core; doctor keeps the historical name so
+# the UI and the tests import a single implementation.
+_process_running = process_is_running_by_name
 
 
 def _probe_server(host: str, port: int) -> None:
@@ -404,12 +393,56 @@ def _check_server(
     return DoctorFinding(PASS, "AP server", f"{address} accepted a connection")
 
 
-def _check_item_grants(chain: _Chain) -> DoctorFinding:
-    names = {spec.name for spec in chain.processes or ()}
-    if "CE bridge" in names:
-        return DoctorFinding(
-            PASS, "item grants", "Cheat Engine bridge pinned: items can be delivered"
+def _bridge_reported(settings: LauncherSettings, chain: _Chain) -> bool | None:
+    """Has the grant harness ever written bridge state for this session?
+
+    None when the answer cannot be read (no install, no request, no state
+    root) -- an unknown is not a negative.
+    """
+
+    if chain.install is None or chain.request is None:
+        return None
+    try:
+        readiness = gather_readiness(
+            chain.install,
+            settings.state_root or default_state_root(),
+            seed=chain.request["seed"],
+            slot=chain.request["slot"],
         )
+    except LauncherError:
+        return None
+    return readiness.bridge is not None
+
+
+def _check_item_grants(
+    settings: LauncherSettings, chain: _Chain, process_running: Callable[[str], bool]
+) -> DoctorFinding:
+    names = {spec.name for spec in chain.processes or ()}
+    if CE_BRIDGE_PROCESS_NAME in names:
+        stray = stray_cheat_engine_names(process_running)
+        if stray:
+            return DoctorFinding(
+                FAIL,
+                "item grants",
+                "Cheat Engine bridge pinned, but Cheat Engine is already running "
+                f"({', '.join(stray)}): launching now would not arm the bridge",
+                _STRAY_CE_REMEDY,
+            )
+        reported = _bridge_reported(settings, chain)
+        if reported is True:
+            return DoctorFinding(
+                PASS,
+                "item grants",
+                "Cheat Engine bridge pinned and the grant harness has reported: "
+                "items can be delivered",
+            )
+        detail = "Cheat Engine bridge pinned: items can be delivered"
+        if reported is False:
+            detail += (
+                " once the table arms (the harness has not reported yet this "
+                "session; the launcher warns if it never does)"
+            )
+        return DoctorFinding(PASS, "item grants", detail)
     return DoctorFinding(
         WARN,
         "item grants",
@@ -443,7 +476,9 @@ def _check_elevation(chain: _Chain, process_running: Callable[[str], bool]) -> D
     return DoctorFinding(PASS, "elevation", "no elevated shadPS4 launch path detected")
 
 
-def _check_processes(process_running: Callable[[str], bool]) -> list[DoctorFinding]:
+def _check_processes(
+    process_running: Callable[[str], bool], chain: _Chain
+) -> list[DoctorFinding]:
     findings: list[DoctorFinding] = []
     if process_running(BLOCKING_PROCESS):
         findings.append(
@@ -459,6 +494,27 @@ def _check_processes(process_running: Callable[[str], bool]) -> list[DoctorFindi
     else:
         findings.append(
             DoctorFinding(PASS, "blocking processes", "shadPS4 is not running")
+        )
+    bridge_pinned = any(
+        spec.name == CE_BRIDGE_PROCESS_NAME for spec in chain.processes or ()
+    )
+    for name in CHEAT_ENGINE_PROCESSES:
+        if not process_running(name):
+            continue
+        # A pinned bridge turns the old warning into a refusal: the launch
+        # would proceed into a degraded state where checks report but nothing
+        # is delivered (bb-archipelago#137).
+        findings.append(
+            DoctorFinding(
+                FAIL if bridge_pinned else WARN,
+                f"running process {name}",
+                f"{name} is running",
+                _STRAY_CE_REMEDY
+                if bridge_pinned
+                else "a stray Cheat Engine instance can hold the grant table or "
+                "stale bridge state; close any CE window you did not just open "
+                "for this session",
+            )
         )
     for name, remedy in WARNING_PROCESSES:
         if process_running(name):
@@ -496,7 +552,7 @@ def run_doctor(
         _safely(lambda: _check_request(settings, chain)),
         _safely(lambda: _check_slot_agreement(chain, player_name)),
         _safely(lambda: _check_plan(settings, chain)),
-        _safely(lambda: _check_item_grants(chain)),
+        _safely(lambda: _check_item_grants(settings, chain, process_running)),
         _safely(lambda: _check_runtime_agreement(chain)),
         _safely(lambda: _check_suppression_chain(settings, chain)),
         _safely(lambda: _check_installed_gameparam(settings, chain)),
@@ -505,7 +561,7 @@ def run_doctor(
         _safely(lambda: _check_elevation(chain, process_running)),
     ]
     try:
-        findings.extend(_check_processes(process_running))
+        findings.extend(_check_processes(process_running, chain))
     except Exception as exc:  # noqa: BLE001
         findings.append(DoctorFinding(FAIL, "blocking processes", f"{type(exc).__name__}: {exc}"))
     return DoctorReport(tuple(findings))

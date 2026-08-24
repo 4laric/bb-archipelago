@@ -8,6 +8,22 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **The launcher refuses to start when Cheat Engine is already open (#137).**
+  A playtester found that the launch plan's Cheat Engine step did not arm the
+  grant table -- he had to start the script by hand, and until he did, his
+  checks reached the server while nothing he was owed came back. When Cheat
+  Engine is already running, Windows hands the grant table to that window
+  instead of the one the launcher starts, and that window never arms the
+  bridge. The launcher now stops before it starts anything, names the Cheat
+  Engine window it found, and tells you to close it and press Launch again;
+  the Doctor reports the same condition as a failure instead of a warning, its
+  "item grants" line now says whether the grant table has actually reported,
+  and the post-launch warning that grants never armed is written into the
+  launcher log as well as its popup, so the remedy survives dismissing it. A
+  launch plan without a Cheat Engine step is unaffected. The underlying cause
+  of the original report is still unconfirmed; this closes the degraded path
+  either way.
+
 - **The Oedon Tomb Key is shuffled, so a seed no longer opens in go-mode.**
   Vanilla hands you the key on Father Gascoigne's corpse, and the door out of
   the Tomb of Oedon is the only way into Cathedral Ward — which meant every one

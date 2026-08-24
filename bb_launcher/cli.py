@@ -22,6 +22,7 @@ from .core import (
     discover_game_install,
     discover_shad_executable,
     launch_processes,
+    require_no_stray_cheat_engine,
     recover_activation,
     restore_previous_build,
     validate_processes,
@@ -276,7 +277,9 @@ def main(argv: list[str] | None = None) -> int:
                     suppression_manifest=args.suppression_manifest,
                     shad_log=args.shad_log or default_shad_log(),
                 )
-            started = launch_processes(resolve_process_plan(process_plan, paths).processes)
+            resolved = resolve_process_plan(process_plan, paths).processes
+            require_no_stray_cheat_engine(resolved)
+            started = launch_processes(resolved)
             _print(
                 {
                     "mode": "vanilla" if args.vanilla else "randomized",
