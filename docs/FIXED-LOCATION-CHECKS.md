@@ -1,7 +1,7 @@
 # Generated fixed-location checks
 
 Status: all first-cycle Central Yharnam, Cathedral Ward and Old Yharnam fixed
-pickups generated (164 manifest rows, 162 seeded). Suppression, automatic AP
+pickups generated (164 manifest rows, 161 seeded). Suppression, automatic AP
 reporting, and ordered reward delivery are validated live on three Central
 Yharnam lots only; no Cathedral Ward or Old Yharnam flag has a runtime witness
 yet, and neither region's boss flag has been seen fire.
@@ -21,20 +21,22 @@ client owns those version-specific facts.
 
 ## Included slice
 
-Slice 3 seeds 162 of the 164 manifest rows — 47 Central Yharnam, 61 Cathedral
+Slice 3 seeds 161 of the 164 manifest rows — 46 Central Yharnam, 61 Cathedral
 Ward, 54 Old Yharnam — plus Cleric Beast, Father Gascoigne, the Blood-starved
 Beast (the goal), Vicar Amelia, the Laurence's-skull interaction, and the
 Radiant Sword Hunter Badge.
 `worlds/bloodborne/fixed_locations.tsv` is the complete reviewed pickup
 manifest; mutually exclusive later-cycle map copies do not become duplicate
-network checks. Two manifest rows — the Iosefka's Clinic back-yard pair
-(`fixed_central_yharnam_lot_2410140`, `fixed_central_yharnam_lot_2410640`) —
-carry their true region (`Iosefka's Clinic`, reached only through the
-Forbidden Woods passage past Amelia) and therefore stay out of slice seeds
-until the world grows that chain (#124); their vanilla awards remain
-suppressed. The Tomb of Oedon strip rows (Red Jeweled Brooch, Blood Gem
-Workshop Tool) seed as Cathedral Ward checks behind
-`event_gascoigne_defeated`.
+network checks. Three manifest rows stay out of slice seeds with their
+vanilla awards still suppressed: the Iosefka's Clinic back-yard pair
+(`fixed_central_yharnam_lot_2410140`, `fixed_central_yharnam_lot_2410640`),
+which carry their true region (`Iosefka's Clinic`, reached only through the
+Forbidden Woods passage past Amelia, #124), and the White Messenger Ribbon
+(`fixed_white_messenger_ribbon`), a little-girl quest reward collectible
+only after Rom's blood moon — when the full world models the quest it needs
+an `event_rom_defeated` rule, not just a region. The Tomb of Oedon strip
+rows (Red Jeweled Brooch, Blood Gem Workshop Tool) seed as Cathedral Ward
+checks behind `event_gascoigne_defeated`.
 
 The bullet pickup is the canary: ItemLotParam `2410800`, acquisition flag
 `52410800`. That exact flag was observed false before pickup and true after

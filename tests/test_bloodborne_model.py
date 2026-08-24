@@ -42,14 +42,14 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertTrue(all(LOCATION_BINDINGS[key].event_flag for key in expected))
 
     def test_slice_contains_the_three_maps_and_their_bosses(self):
-        # 162 in-slice fixed pickups + 6 scripted checks. The two clinic
-        # back-yard rows (Iosefka's Clinic region) stay out of slice seeds
-        # until the world grows the Amelia -> password chain (#124).
-        self.assertEqual(168, len(NETWORK_LOCATIONS))
+        # 161 in-slice fixed pickups + 6 scripted checks. Out of slice seeds:
+        # the two clinic back-yard rows (#124) and the White Messenger Ribbon,
+        # a post-Rom quest reward whose region IS in the slice.
+        self.assertEqual(167, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
-            {"Central Yharnam": 49, "Cathedral Ward": 62,
+            {"Central Yharnam": 48, "Cathedral Ward": 62,
              "Old Yharnam": 55, "Grand Cathedral": 2},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
@@ -65,6 +65,7 @@ class BloodborneModelTests(unittest.TestCase):
         keys = {location.key for location in NETWORK_LOCATIONS}
         self.assertNotIn("fixed_central_yharnam_lot_2410140", keys)
         self.assertNotIn("fixed_central_yharnam_lot_2410640", keys)
+        self.assertNotIn("fixed_white_messenger_ribbon", keys)
         # The post-Gascoigne strip pickups stay in as Cathedral Ward checks.
         self.assertIn("fixed_blood_gem_workshop_tool", keys)
         self.assertIn("fixed_central_yharnam_lot_2410920", keys)
@@ -87,9 +88,9 @@ class BloodborneModelTests(unittest.TestCase):
             "Augur of Ebrietas",
         ):
             self.assertEqual(counts[name], 1, name)
-        # 168 locations - 12 one-off items = 156 filler slots cycling five
-        # names: the first gets 32, the rest 31.
-        self.assertEqual(counts["Blood Vial"], 32)
+        # 167 locations - 12 one-off items = 155 filler slots cycling five
+        # names: 155 / 5 = 31 each.
+        self.assertEqual(counts["Blood Vial"], 31)
         for name in (
             "Quicksilver Bullets x3",
             "Pebbles x3",
@@ -103,8 +104,9 @@ class BloodborneModelTests(unittest.TestCase):
 
         Slice 3 adds the Hunter Chief Emblem to this pool because the plaza
         gate is emblem-only: without it the Grand Cathedral checks would be
-        unreachable with the option off. 168 - 3 one-off items = 165 filler
-        slots over five names, so each gets 33.
+        unreachable with the option off. The ribbon exclusion shrinks the
+        location count to 167: 167 - 3 one-off items = 164 filler slots over
+        five names, so the first four get 33 and the last gets 32.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
@@ -116,9 +118,9 @@ class BloodborneModelTests(unittest.TestCase):
             "Quicksilver Bullets x3",
             "Pebbles x3",
             "Molotov Cocktails x2",
-            "Blood Stone Shards x2",
         ):
             self.assertEqual(counts[name], 33, name)
+        self.assertEqual(counts["Blood Stone Shards x2"], 32)
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 8)  # seven slice items + Blood Vial
 

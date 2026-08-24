@@ -194,11 +194,12 @@ class RealCorpusTests(unittest.TestCase):
             checked += 1
             self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
-        # 162 in-slice fixed pickups plus the Radiant Sword Hunter Badge carry
-        # lots; the three bosses and the skull interaction do not, and the two
-        # out-of-slice clinic rows are suppressed but are not network
-        # locations, so they are not iterated here.
-        self.assertEqual(checked, 163)
+        # 161 in-slice fixed pickups plus the Radiant Sword Hunter Badge carry
+        # lots; the three bosses and the skull interaction do not, and the
+        # three out-of-slice rows (clinic pair, post-Rom ribbon) are
+        # suppressed but are not network locations, so they are not iterated
+        # here.
+        self.assertEqual(checked, 162)
 
     def test_canonical_plan_digest_matches_the_runtime_contract(self):
         from tools.plan_vanilla_suppression import build_complete_plan, serialize_plan

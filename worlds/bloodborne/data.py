@@ -251,8 +251,17 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
 # password chain) stay in the TSV for the full world but do not enter slice
 # seeds. Their vanilla awards remain suppressed, so they are inert pickups —
 # documented in docs/VERTICAL-SLICE.md.
+# A second exclusion class is quest-gated rows whose region IS in the slice:
+# the White Messenger Ribbon is the little-girl quest reward that can only be
+# collected after Rom's blood moon (brooch -> pig's red ribbon -> the sister),
+# which is far past the slice's goal. When the full world models the quest,
+# this row needs an event_rom_defeated rule, not just a region.
+SLICE_EXCLUDED_FIXED_KEYS = frozenset({
+    "fixed_white_messenger_ribbon",
+})
 SLICE_LOCATION_KEYS = frozenset({
     *SLICE_SCRIPTED_LOCATION_KEYS,
     *(location.key for location in FIXED_LOCATIONS
-      if location.region in SLICE_REGIONS),
+      if location.region in SLICE_REGIONS
+      and location.key not in SLICE_EXCLUDED_FIXED_KEYS),
 })
