@@ -43,6 +43,15 @@ from bb_native_delivery.descriptor import (  # noqa: E402
 )
 from bb_native_delivery.guest import entry_address  # noqa: E402
 from bb_native_delivery.process import logged_eboot_base  # noqa: E402
+from bb_native_delivery.process import install, AttachError  # noqa: E402
+from bb_native_delivery.threadcontrol import (  # noqa: E402
+    DEFAULT_ATTEMPT_BUDGET,
+    FakeThreadController,
+    InstallAborted,
+    InstallOutcome,
+    PatchWindow,
+    install_detours_atomically,
+)
 
 # The Archipelago CI tier copies tests/ and tools/ into a checkout of Archipelago
 # but not tables/, so the table sits one level up there. Same fallback as
@@ -522,6 +531,165 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(MAX_VERIFY_POLLS, policy["verify_polls"])
         self.assertEqual(MIN_ABSENT_POLLS, policy["min_absent_polls"])
         self.assertIn("Torch (ItemLot 20100000)", policy["excluded"])
+
+
+class _FakeImage:
+    """A sparse guest image: reads default to zero, writes are recorded in order.
+
+    Seeded with the two validated hook originals so require_validated_image
+    passes; every cave/state region is zero, which is exactly what the CE asserts
+    demand ("this space is still unused"). base is 0 so address == rva.
+    """
+
+    def __init__(self):
+        self.pid = 4321
+        self._bytes = {}
+        self.write_order = []
+        self._seed(payload.CONSUME_HOOK_RVA, payload.CONSUME_ORIGINAL)
+        self._seed(payload.HEARTBEAT_HOOK_RVA, payload.HEARTBEAT_ORIGINAL)
+
+    def _seed(self, address, data):
+        for index, byte in enumerate(data):
+            self._bytes[address + index] = byte
+
+    def read(self, address, size):
+        return bytes(self._bytes.get(address + index, 0) for index in range(size))
+
+    def write(self, address, data):
+        self.write_order.append(address)
+        self._seed(address, data)
+
+
+class SafeInstallProtocolTests(unittest.TestCase):
+    """The atomic-detour protocol, driven entirely by the fake thread controller.
+
+    The live suspend + RIP read is the only thing these cannot exercise; it is
+    owner checklist item 5a. Everything around it -- ordering, the nudge loop,
+    fail-closed abort, and guaranteed resume -- is tested here."""
+
+    CONSUME_HOOK = payload.CONSUME_HOOK_RVA
+    HEARTBEAT_HOOK = payload.HEARTBEAT_HOOK_RVA
+
+    def _windows(self):
+        return [PatchWindow(self.CONSUME_HOOK, 7), PatchWindow(self.HEARTBEAT_HOOK, 7)]
+
+    def test_a_rip_clear_of_both_windows_writes_on_the_first_attempt(self):
+        controller = FakeThreadController(rips={1: self.CONSUME_HOOK - 0x10, 2: 0x1000})
+        wrote = []
+        outcome = install_detours_atomically(
+            controller, self._windows(), lambda: wrote.append(True))
+        self.assertEqual([True], wrote)
+        self.assertEqual(1, outcome.attempts)
+        self.assertEqual(0, controller.net_suspended)
+
+    def test_a_rip_inside_a_window_nudges_until_it_clears(self):
+        # Thread 2 sits inside the heartbeat window for two reads, then steps out.
+        controller = FakeThreadController(rips={
+            1: self.CONSUME_HOOK - 1,  # one below the window: clear
+            2: [self.HEARTBEAT_HOOK + 3, self.HEARTBEAT_HOOK + 3, self.HEARTBEAT_HOOK + 8],
+        })
+        wrote = []
+        outcome = install_detours_atomically(
+            controller, self._windows(), lambda: wrote.append(True))
+        self.assertEqual([True], wrote, "must not write while a RIP is in the window")
+        self.assertEqual(3, outcome.attempts)
+        self.assertEqual(3, controller.enumerate_calls, "each attempt re-samples (the nudge)")
+        self.assertEqual(0, controller.net_suspended, "no thread left suspended after the nudge")
+
+    def test_the_window_boundary_is_half_open(self):
+        w = PatchWindow(self.HEARTBEAT_HOOK, 7)
+        self.assertTrue(w.contains(self.HEARTBEAT_HOOK))
+        self.assertTrue(w.contains(self.HEARTBEAT_HOOK + 6))
+        self.assertFalse(w.contains(self.HEARTBEAT_HOOK + 7))  # first byte past the detour
+        self.assertFalse(w.contains(self.HEARTBEAT_HOOK - 1))
+        self.assertFalse(w.contains(None))  # a terminated thread cannot be in the window
+
+    def test_budget_exhaustion_aborts_with_no_detour_written(self):
+        controller = FakeThreadController(rips={1: self.HEARTBEAT_HOOK + 2})  # never clears
+        wrote = []
+        with self.assertRaises(InstallAborted) as caught:
+            install_detours_atomically(
+                controller, self._windows(), lambda: wrote.append(True), attempt_budget=5)
+        self.assertFalse(wrote, "positive witness: write_detours was never called")
+        self.assertEqual(5, caught.exception.attempts)
+        self.assertEqual(5, controller.enumerate_calls)
+        self.assertEqual(0, controller.net_suspended, "every suspend was matched by a resume")
+
+    def test_both_detours_are_written_under_one_suspend(self):
+        controller = FakeThreadController(rips={1: 0x2000, 2: 0x3000})
+        observed = {}
+
+        def write_detours():
+            # At the commit point both threads are suspended and none resumed yet.
+            observed["net"] = controller.net_suspended
+            observed["enumerate_calls"] = controller.enumerate_calls
+
+        install_detours_atomically(controller, self._windows(), write_detours)
+        self.assertEqual(2, observed["net"], "both threads held under one suspend at write time")
+        self.assertEqual(1, observed["enumerate_calls"], "a single suspend round covers both detours")
+
+    def test_resume_runs_even_when_the_write_raises(self):
+        controller = FakeThreadController(rips={1: 0x2000})
+
+        def boom():
+            raise RuntimeError("write failed")
+
+        with self.assertRaises(RuntimeError):
+            install_detours_atomically(controller, self._windows(), boom)
+        self.assertEqual(0, controller.net_suspended, "no leaked suspend on the raising path")
+
+    def test_a_zero_budget_is_rejected(self):
+        controller = FakeThreadController(rips={1: 0x2000})
+        with self.assertRaises(ValueError):
+            install_detours_atomically(controller, self._windows(), lambda: None, attempt_budget=0)
+
+
+class InstallRoutingTests(unittest.TestCase):
+    """install() routes the two detours through the atomic protocol and keeps the
+    caves-before-detours ordering at write time, not just structurally."""
+
+    def _detour_addrs(self):
+        return {
+            payload.CONSUME_HOOK_RVA: payload.consume_detour().data,
+            payload.HEARTBEAT_HOOK_RVA: payload.heartbeat_detour().data,
+        }
+
+    def test_dry_run_writes_nothing_and_needs_no_controller(self):
+        image = _FakeImage()
+        plan = install(image, 0, dry_run=True)
+        self.assertEqual(5, len(plan))
+        self.assertFalse(image.write_order, "dry run wrote nothing")
+
+    def test_arming_without_a_controller_fails_closed(self):
+        image = _FakeImage()
+        with self.assertRaises(AttachError):
+            install(image, 0, dry_run=False, controller=None)
+        self.assertFalse(image.write_order, "nothing written when we refuse to arm")
+
+    def test_a_clear_arm_writes_caves_before_detours(self):
+        image = _FakeImage()
+        controller = FakeThreadController(rips={1: 0x40})  # far from both hooks
+        install(image, 0, dry_run=False, controller=controller)
+        detour_addrs = {payload.CONSUME_HOOK_RVA, payload.HEARTBEAT_HOOK_RVA}
+        first_detour = min(image.write_order.index(a) for a in detour_addrs)
+        prelude = {payload.STATE_RVA, payload.CONSUME_CAVE_RVA, payload.HEARTBEAT_CAVE_RVA}
+        last_prelude = max(image.write_order.index(a) for a in prelude)
+        self.assertLess(last_prelude, first_detour, "every cave/state write precedes any detour")
+        for address, data in self._detour_addrs().items():
+            self.assertEqual(data, image.read(address, len(data)), "detour landed")
+
+    def test_a_blocked_arm_aborts_leaving_the_original_hook_bytes(self):
+        image = _FakeImage()
+        # Thread parked inside the heartbeat window and never clearing.
+        controller = FakeThreadController(rips={1: payload.HEARTBEAT_HOOK_RVA + 1})
+        with self.assertRaises(InstallAborted):
+            install(image, 0, dry_run=False, controller=controller, attempt_budget=3)
+        # Positive witness: BOTH hook sites still hold their original bytes.
+        self.assertEqual(payload.CONSUME_ORIGINAL,
+                         image.read(payload.CONSUME_HOOK_RVA, len(payload.CONSUME_ORIGINAL)))
+        self.assertEqual(payload.HEARTBEAT_ORIGINAL,
+                         image.read(payload.HEARTBEAT_HOOK_RVA, len(payload.HEARTBEAT_ORIGINAL)))
+        self.assertEqual(0, controller.net_suspended)
 
 
 if __name__ == "__main__":

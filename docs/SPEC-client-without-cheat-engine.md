@@ -126,12 +126,15 @@ bypasses lot logic, but nobody has checked.
 The client installs the frozen, relocated blob and drives `request` / `done` / `descriptor`
 directly. The file bridge and the `.CT` are deleted.
 
-**Install atomicity is under-specified and "verify before, re-verify after" does not cover it.**
-The heartbeat hook at `0x801BFE882` executes every frame; a 5-byte `E9` written by
-`WriteProcessMemory` is not atomic against a guest thread mid-fetch, and re-verification passes
-happily after that thread has already died. The standard answer applies: suspend threads, check
-their instruction pointers against the patch window, write, resume. `VirtualProtectEx` on the RX
-code pages is also hiding inside the "trivial" `WriteProcessMemory` row above.
+**Install atomicity — now implemented; the live primitive is owner-gated.** The heartbeat hook at
+`0x801BFE882` executes every frame; a 5-byte `E9` written by `WriteProcessMemory` is not atomic
+against a guest thread mid-fetch, and re-verification passes happily after that thread has already
+died. The standard answer is implemented in `threadcontrol.py` and documented in
+`docs/INSTALL-ATOMICITY.md`: suspend all guest threads, check each RIP against the two seven-byte
+patch windows, write both detours under one suspend, resume; abort with no detour written if a
+bounded budget is exhausted. Only the live suspend/RIP read is untested against the game (checklist
+item 5a). `VirtualProtectEx` on the RX code pages is also hiding inside the "trivial"
+`WriteProcessMemory` row above.
 
 ### Stage 4 — install via shadPS4's IPC (probably not)
 
@@ -225,6 +228,7 @@ Sizes: consume cave 219 bytes, heartbeat cave 117 bytes, state region 112 bytes,
 | `aob.py` | `assert(addr, bytes)` and `AOBScan` byte-string semantics |
 | `descriptor.py` | the 24-byte `ItemGrant` source object and the category branch |
 | `process.py` | `openProcess` / `readInteger` / `writeInteger`, plus `VirtualProtectEx` |
+| `threadcontrol.py` | suspend all guest threads, check RIPs, commit both detours atomically |
 | `guest.py` | the inventory walk and the request/state cells |
 | `delivery.py` | the harness `poll()` loop — queue, bounded verify, replay recovery |
 | `contract.py` | emits and loads the contract |
@@ -236,25 +240,37 @@ The command-file bridge has no module, because in-process it does not exist.
 refuses on any assert mismatch, which is how CUSA00900 and every other build fail closed: a partial
 match is a different image, not a near-enough one.
 
+### Install atomicity — implemented, one primitive untested live
+
+The heartbeat hook executes every frame, so writing its detour is not atomic
+against a guest thread mid-fetch. This is now handled:
+`tools/bb_native_delivery/threadcontrol.py` suspends every guest thread, verifies
+no RIP is inside either seven-byte detour window, writes both detours under that
+one suspend, and resumes; the budget-exhausted path aborts having written no
+detour (the caves are harmless). `install()` routes the two detours through it
+when arming, and refuses to arm without a thread controller. The protocol,
+ordering, nudge loop, fail-closed abort, and guaranteed-resume invariant are unit
+tested against a fake controller. The **live suspend + RIP read**
+(`WindowsThreadController`) has never run against the game and is owner checklist
+item 5a below; it must not be labelled `validated` until it has. Full rationale
+in `docs/INSTALL-ATOMICITY.md`.
+
 ### What is deliberately not implemented
 
-- **Install atomicity.** The heartbeat hook executes every frame. Suspending guest threads and
-  checking their instruction pointers against the patch window is required before this goes near a
-  player. It is absent rather than half-done, because it cannot be tested here.
 - **Live AOB base discovery.** `process.py` reads the logged base and validates it against both
   hook originals; the scan fallback the CE table has is not ported. `--base` covers the gap.
 - **Everything in stage 2.** No flag polling, no `LocationChecks`, no containment.
 
 ### Tests
 
-`tests/test_native_delivery.py`, 50 tests, in the AP-free CI tier. They cover descriptor encoding
+`tests/test_native_delivery.py`, 61 tests, in the AP-free CI tier. They cover descriptor encoding
 and the category branch, AOB parse/match/scan including fail-closed on a one-byte difference,
 payload byte assembly against a frozen encoding plus structural invariants (detour covers the
 original exactly, the displaced original is replayed, no region overlaps, caves install before
 detours), the inventory bank split, log base resolution, and fourteen state-machine transitions:
 direct write, hydration grace, absent-Vial refusal, quantity mismatch, replay recovery with and
 without a matching tag, slot-verified completion, fast-budget failure, hydration-budget patience,
-and the busy request cell.
+and the busy request cell. The eleven added for install atomicity drive the safe-detour protocol against a fake thread controller: a clear RIP writes on the first attempt, a RIP inside a window nudges until it clears, budget exhaustion aborts with no detour written (a positive witness that both hook sites keep their original bytes), both detours land under one suspend, and every path resumes every thread. The live suspend/RIP read is the only untested piece (checklist item 5a).
 
 They prove nothing about whether the guest accepts any of it.
 
@@ -280,6 +296,15 @@ In order. Items 1-2 need no game running; items 3 onward need a live session and
    five planned writes and their addresses match the contract.
 5. **Armed install on a throwaway save only,** with the CE table *not* loaded. Then read back all
    five regions and diff against the plan. Do not proceed if anything differs.
+5a. **Validate the live thread-suspend primitive** (`WindowsThreadController` in
+   `tools/bb_native_delivery/threadcontrol.py`), which the armed install of item 5 now routes both
+   detours through. It is the only piece of the install-atomicity protocol untested against the
+   game: confirm that `enumerate()` returns the guest's threads, `SuspendThread`/`ResumeThread`
+   balance (the game resumes cleanly, no frozen guest), and `GetThreadContext` returns plausible
+   in-module RIPs. On a clean armed install the caves go in first, then both detours land under one
+   suspend once every RIP is clear of the two seven-byte windows; a still-running guest afterward is
+   the pass. See `docs/INSTALL-ATOMICITY.md`. Until this is done the primitive stays
+   `untested-against-game`; do not label it `validated`.
 6. **One grant, category 4:** absent Pebble (`--raw 0xB00004CE --normalized 0x400004CE`). Fire one
    Bullet first to cache the inventory pointer. Expect a native slot, quantity 1, and a responsive
    game.

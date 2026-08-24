@@ -8,6 +8,22 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **The Cheat-Engine-free installer commits its detours atomically (developer
+  tooling, not player-facing).** The native-delivery prototype installs by
+  overwriting seven live instruction bytes at each of two hook sites with an
+  `E9` detour. The heartbeat hook runs every frame, so a guest thread could be
+  mid-instruction inside the window at the moment of the write and resume into a
+  half-written detour -- a native crash no readback can catch. The installer now
+  suspends every guest thread, checks each thread's instruction pointer against
+  both seven-byte windows, writes both detours under a single suspend only when
+  every pointer is clear, and resumes; if a bounded retry budget is exhausted it
+  aborts having written no detour (the caves alone are harmless). The live
+  suspend/RIP-read primitive is isolated behind an injectable seam and remains
+  untested against the game -- it is owner validation checklist item 5a. The
+  protocol, ordering, nudge loop, fail-closed abort, and no-leaked-suspend
+  invariant are unit tested against a fake thread controller. Cheat Engine
+  remains the shipping delivery path. See `docs/INSTALL-ATOMICITY.md`.
+
 - **The launcher refuses to start when Cheat Engine is already open (#137).**
   A playtester found that the launch plan's Cheat Engine step did not arm the
   grant table -- he had to start the script by hand, and until he did, his
