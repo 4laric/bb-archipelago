@@ -168,11 +168,12 @@ tell your host what you're running when you report back.
 
 - Checks and deliveries require the three rules above; real save-file
   identification is still being built.
-- Two pickups in the Iosefka's Clinic back yard (Madman's Knowledge, Blood
-  Gem) are **inert** in this slice: reaching them needs progress far past the
-  goal, so they are not AP checks yet and their vanilla items stay
-  suppressed. They become real checks when the world grows past Cathedral
-  Ward. Everything else you can reach through Gascoigne is a live check,
+- Three pickups are **inert** in this slice: two in the Iosefka's Clinic
+  back yard (Madman's Knowledge, Blood Gem) and the White Messenger Ribbon
+  (a quest that can only finish after Rom's blood moon). Reaching them needs
+  progress far past the goal, so they are not AP checks yet and their
+  vanilla items stay suppressed. They become real checks when the world
+  grows. Everything else you can reach through Gascoigne is a live check,
   including the Red Jeweled Brooch and the Blood Gem Workshop Tool.
 - Enemy randomization is on by default. If you want vanilla enemies for a
   cleaner comparison run, untick **Randomize Enemies** before launching.

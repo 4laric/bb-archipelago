@@ -9,14 +9,16 @@ slice-1 sections below still describe the Central Yharnam half exactly.
 
 ## Seed contents
 
-- **49 in-slice physical fixed pickups** from canonical map `m24_01_00_00`
-  and its `_01` / `_11` runtime variants. Two further pickups — the Iosefka's
-  Clinic back-yard pair — stay in the manifest but out of slice seeds: they
-  are gated behind the Amelia → Laurence's-skull password chain, far past
-  the slice's goal. Their vanilla awards remain suppressed, so in slice 1
-  they are inert pickups (no vanilla item, no AP check).
+- **48 in-slice physical fixed pickups** from canonical map `m24_01_00_00`
+  and its `_01` / `_11` runtime variants. Three further pickups stay in the
+  manifest but out of slice seeds: the Iosefka's Clinic back-yard pair
+  (gated behind the Amelia → Laurence's-skull password chain) and the White
+  Messenger Ribbon (the little-girl quest reward collectible only after
+  Rom's blood moon). All three are far past the slice's goal; their vanilla
+  awards remain suppressed, so in slice 1 they are inert pickups (no vanilla
+  item, no AP check).
 - **2 boss checks:** Cleric Beast and Father Gascoigne.
-- **51 network locations total.**
+- **50 network locations total.**
 - **Goal:** Father Gascoigne.
 - **Post-goal region:** Cathedral Ward enters the slice behind
   `event_gascoigne_defeated`, which keeps the Tomb of Oedon strip pickups
@@ -47,7 +49,7 @@ The two boss-completion flags come directly from Central Yharnam EMEVD:
 | Cleric Beast | `12411700` | paired boss completion state in `m24_01_00_00` |
 | Father Gascoigne | `12411800` | gates arena cleanup, key award, and downstream world state |
 
-The slot-data contract exposes all 51 flag bindings and identifies Gascoigne's
+The slot-data contract exposes all 50 flag bindings and identifies Gascoigne's
 AP location ID as `goal_location`. The native client sends `CLIENT_GOAL` when
 that debounced check is reported, and resends it after reconnect if the server
 already knows the goal location is checked.
@@ -120,14 +122,16 @@ Ward) and `m23_00_00_00` (Old Yharnam). `SLICE_MAPS` in
 
 ### Seed contents
 
-- **164 reviewed fixed pickups** in the manifest, of which **162** are seeded:
-  47 Central Yharnam, 61 Cathedral Ward (59 from `m24_00` plus the two Tomb of
-  Oedon strip rows slice 1 already placed there), and 54 Old Yharnam. The two
-  Iosefka's Clinic back-yard rows stay out of seeds, unchanged from slice 1.
+- **164 reviewed fixed pickups** in the manifest, of which **161** are seeded:
+  46 Central Yharnam, 61 Cathedral Ward (59 from `m24_00` plus the two Tomb of
+  Oedon strip rows slice 1 already placed there), and 54 Old Yharnam. Three
+  rows stay out of seeds: the Iosefka's Clinic back-yard pair (unchanged from
+  slice 1) and the White Messenger Ribbon, a little-girl quest reward
+  collectible only after Rom's blood moon.
 - **6 scripted checks:** Cleric Beast, Father Gascoigne, Blood-starved Beast,
   Vicar Amelia, the Laurence's-skull altar interaction, and the Radiant Sword
   Hunter Badge treasure.
-- **168 network locations total.**
+- **167 network locations total.**
 - **Goal:** the Blood-starved Beast (`12301800`). The client reads the goal
   from slot data's `goal_location`, so this is a seed-owned move, not a client
   rebuild.
