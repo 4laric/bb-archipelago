@@ -28,8 +28,10 @@ from bb_launcher.core import (
     discover_shad_executable,
     launch_processes,
     recover_activation,
+    require_no_stray_cheat_engine,
     restore_previous_build,
     sha256_file,
+    stray_cheat_engine_names,
 )
 
 
@@ -408,6 +410,33 @@ class LauncherCoreTests(unittest.TestCase):
                 [ProcessSpec("shadPS4", executable, expected_sha256=wrong)],
                 popen=lambda *_args, **_kwargs: self.fail("hash mismatch started a process"),
             )
+
+
+    def test_stray_cheat_engine_guard_only_fires_for_a_pinned_bridge(self):
+        executable = self.root / "cheatengine.exe"
+        executable.write_bytes(b"ce")
+        bridge = [ProcessSpec("CE bridge", executable, ["grant.CT"])]
+        plain = [ProcessSpec("shadPS4", executable, [SERIAL])]
+        running = lambda name: name == "cheatengine-i386.exe"
+        # witness: the probe really does see the process the guard looks for
+        self.assertEqual(stray_cheat_engine_names(running), ["cheatengine-i386.exe"])
+        with self.assertRaisesRegex(ConflictError, "Cheat Engine is already running"):
+            require_no_stray_cheat_engine(bridge, running)
+        self.assertIsNone(require_no_stray_cheat_engine(plain, running))
+        self.assertIsNone(require_no_stray_cheat_engine(bridge, lambda _name: False))
+
+    def test_stray_cheat_engine_refusal_is_ascii_and_names_the_remedy(self):
+        executable = self.root / "cheatengine.exe"
+        executable.write_bytes(b"ce")
+        with self.assertRaises(ConflictError) as raised:
+            require_no_stray_cheat_engine(
+                [ProcessSpec("CE bridge", executable, ["grant.CT"])],
+                lambda name: name == "cheatengine.exe",
+            )
+        message = str(raised.exception)
+        message.encode("ascii")  # in-game and console text stays ASCII
+        self.assertIn("Close Cheat Engine and press Launch again", message)
+        self.assertIn("no items could be delivered", message)
 
 
 if __name__ == "__main__":

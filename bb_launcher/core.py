@@ -768,6 +768,92 @@ def elevation_risks(
     return reasons
 
 
+# The plan entry that opens the packaged grant table (bb_launcher/plan.py).
+CE_BRIDGE_PROCESS_NAME = "CE bridge"
+
+# Cheat Engine ships under several image names; the launcher pins one of them,
+# but any of them holding the .CT association produces the same handoff.
+CHEAT_ENGINE_PROCESSES = (
+    "cheatengine.exe",
+    "cheatengine-x86_64.exe",
+    "cheatengine-x86_64-SSE4-AVX2.exe",
+    "cheatengine-i386.exe",
+)
+
+
+def process_is_running_by_name(name: str) -> bool:
+    """Is a process with this image name running? The one process probe.
+
+    Windows uses tasklist; elsewhere (and in CI) it reads /proc, so callers
+    stay testable on Linux. Every caller can inject a replacement.
+    """
+
+    if sys.platform == "win32":
+        result = subprocess.run(
+            ["tasklist", "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
+            check=False,
+            capture_output=True,
+            text=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+        return name.casefold() in result.stdout.casefold()
+    proc = Path("/proc")
+    if proc.is_dir():
+        for command in proc.glob("[0-9]*/comm"):
+            try:
+                if command.read_text(encoding="utf-8").strip().casefold() == name.casefold():
+                    return True
+            except OSError:
+                pass
+    return False
+
+
+def stray_cheat_engine_names(
+    process_running: Callable[[str], bool] | None = None
+) -> list[str]:
+    """Cheat Engine image names already running before we spawn the bridge."""
+
+    check = process_running or process_is_running_by_name
+    return [name for name in CHEAT_ENGINE_PROCESSES if check(name)]
+
+
+def stray_cheat_engine_refusal(names: Sequence[str]) -> str:
+    """The player-facing refusal, remedy first. ASCII only for any console."""
+
+    listed = ", ".join(names)
+    elevation = (
+        "this launcher is running as administrator"
+        if launcher_is_elevated()
+        else "this launcher is NOT running as administrator, so an already-open "
+        "Cheat Engine may also hold the wrong privilege token"
+    )
+    return (
+        f"Cheat Engine is already running ({listed}). Close Cheat Engine and press "
+        "Launch again. Windows hands the grant table to the instance that is "
+        "already open instead of the one this launch pins, and that instance does "
+        "not arm the grant bridge: your checks would still reach the server, but "
+        f"no items could be delivered into your game. ({elevation}.)"
+    )
+
+
+def require_no_stray_cheat_engine(
+    processes: Sequence["ProcessSpec"],
+    process_running: Callable[[str], bool] | None = None,
+) -> None:
+    """Fail closed rather than launch a CE bridge that cannot arm (#137).
+
+    Only a plan that actually spawns the bridge is affected; a plan with no CE
+    bridge entry has nothing to hand off and is left alone.
+    """
+
+    if not any(spec.name == CE_BRIDGE_PROCESS_NAME for spec in processes):
+        return
+    names = stray_cheat_engine_names(process_running)
+    if not names:
+        return
+    raise ConflictError(stray_cheat_engine_refusal(names))
+
+
 def _transaction_path(install: GameInstall) -> Path:
     return install.root / TRANSACTION_NAME
 

@@ -7,7 +7,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from bb_launcher.core import OWNER_NAME, SUPPRESSION_PATH, ValidationError
+from bb_launcher.core import (
+    OWNER_NAME,
+    SUPPRESSION_PATH,
+    ConflictError,
+    ValidationError,
+)
 from bb_launcher.plan import DEFAULT_SERVER
 from bb_launcher.ui import (
     FIELD_DEFINITIONS,
@@ -303,6 +308,90 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             self.settings(), EnemizerOptions(enabled=True), process_is_running=lambda: False
         )
         self.assertTrue(result.grants_bridge)
+
+    def _pin_ce_bridge(self) -> None:
+        """Add the CE bridge entry the packaged plan carries for item grants."""
+        ce = self.root / "cheatengine.exe"
+        ce.write_bytes(b"ce")
+        table = self.root / "grant.CT"
+        table.write_bytes(b"table")
+        value = json.loads(self.process_plan.read_text(encoding="utf-8"))
+        value["processes"].append(
+            {
+                "name": "CE bridge",
+                "executable": ce.name,
+                "sha256": digest(b"ce"),
+                "arguments": [table.name],
+            }
+        )
+        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
+
+    def test_a_stray_cheat_engine_refuses_the_launch_with_the_remedy(self):
+        # bb-archipelago#137 (Garbo, v0.1.0-playtest.7): with CE already open,
+        # Windows hands the grant table to that instance, the bridge never
+        # arms, and the session runs with checks reporting and no item ever
+        # delivered. The launch must refuse rather than proceed degraded.
+        self._pin_ce_bridge()
+        toolchain = FakeToolchain()
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=toolchain,
+            process_launcher=lambda _processes: self.fail("a refused launch spawned processes"),
+            process_running=lambda name: name == "cheatengine.exe",
+        )
+        with self.assertRaises(ConflictError) as raised:
+            workflow.randomize_and_launch(
+                self.settings(), EnemizerOptions(enabled=True), process_is_running=lambda: False
+            )
+        message = str(raised.exception)
+        self.assertIn("Cheat Engine is already running", message)
+        self.assertIn("Close Cheat Engine and press Launch again", message)
+        self.assertIn("administrator", message)  # the elevation-mismatch note
+        self.assertEqual(len(toolchain.calls), 0)
+        self.assertFalse(self.install.mods.exists())
+
+    def test_no_stray_cheat_engine_lets_the_bridge_launch(self):
+        # The control for the refusal above: same plan, nothing running.
+        self._pin_ce_bridge()
+        launched: list = []
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda processes: launched.append(list(processes))
+            or [Process(1), Process(2), Process(3)],
+            process_running=lambda _name: False,
+        )
+        result = workflow.randomize_and_launch(
+            self.settings(), EnemizerOptions(enabled=True), process_is_running=lambda: False
+        )
+        self.assertTrue(result.grants_bridge)
+        self.assertEqual(len(launched), 1)
+        self.assertIn("CE bridge", [spec.name for spec in launched[0]])
+
+    def test_a_plan_without_a_bridge_ignores_a_running_cheat_engine(self):
+        launched: list = []
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda processes: launched.append(list(processes)) or [Process(1)],
+            process_running=lambda _name: True,
+        )
+        result = workflow.randomize_and_launch(
+            self.settings(), EnemizerOptions(enabled=True), process_is_running=lambda: False
+        )
+        self.assertFalse(result.grants_bridge)
+        self.assertEqual(len(launched), 1)
+
+    def test_vanilla_launch_also_refuses_a_stray_cheat_engine(self):
+        self._pin_ce_bridge()
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda _processes: self.fail("a refused launch spawned processes"),
+            process_running=lambda name: name == "cheatengine-x86_64.exe",
+        )
+        with self.assertRaisesRegex(ConflictError, "cheatengine-x86_64.exe"):
+            workflow.launch_vanilla(self.settings(), process_is_running=lambda: False)
 
     def test_unsuppressed_binder_refuses_before_enemy_generation(self):
         vanilla = self.install.patch.joinpath(*SUPPRESSION_PATH.split("/"))

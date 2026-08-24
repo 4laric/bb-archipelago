@@ -648,7 +648,9 @@ class LauncherApp:
             self._append_log("Item grants armed: the Cheat Engine bridge has reported.")
             self._refresh_status()
             return
+        # The popup can be dismissed and the remedy lost; the log keeps it.
         self._append_log("WARNING: item grants are NOT armed -- the CE table has not reported.")
+        self._append_log(warning)
         self._refresh_status()
         self.messagebox.showwarning("Item grants not armed", warning, parent=self.root)
 

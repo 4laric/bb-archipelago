@@ -10,7 +10,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from bb_launcher.cli import main as cli_main
+from bb_launcher.client_config import session_paths
 from bb_launcher.core import SERIAL, SUPPRESSION_PATH, GameInstall
+from bb_launcher.readiness import BRIDGE_STATE_NAME
 from bb_launcher.doctor import FAIL, PASS, SKIP, WARN, format_report, run_doctor
 from bb_launcher.workflow import PROCESS_PLAN_FORMAT, SETTINGS_FORMAT, LauncherSettings
 
@@ -144,6 +146,9 @@ class DoctorFixture:
             "suppression_binder": str(self.binder),
             "suppression_manifest": str(self.manifest_path),
             "process_plan": str(self.plan_path),
+            # Keep session state inside the fixture: the doctor now reads
+            # bridge state for its item-grants line.
+            "state_root": str(self.root / "state"),
         }
 
     def settings(self) -> LauncherSettings:
@@ -308,6 +313,59 @@ class DoctorTests(unittest.TestCase):
         self.fixture.plan_path.write_text(json.dumps(plan), encoding="utf-8")
         report = run(self.fixture)
         self.assertEqual(finding(report, "item grants").status, PASS)
+
+    def _pin_ce_bridge(self) -> None:
+        root = self.fixture.root
+        ce_exe = root / "cheatengine.exe"
+        ce_exe.write_bytes(b"ce")
+        table = root / "grant.CT"
+        table.write_bytes(b"table")
+        plan = json.loads(self.fixture.plan_path.read_text(encoding="utf-8"))
+        plan["processes"].append(
+            {
+                "name": "CE bridge",
+                "executable": str(ce_exe),
+                "sha256": sha256(b"ce"),
+                "arguments": [str(table)],
+            }
+        )
+        self.fixture.plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+    def test_a_stray_cheat_engine_fails_the_doctor_when_the_bridge_is_pinned(self):
+        # bb-archipelago#137: with a bridge in the plan this is no longer a
+        # warning -- launching now delivers nothing.
+        self._pin_ce_bridge()
+        report = run(self.fixture, process_running=lambda name: name == "cheatengine.exe")
+        stray = finding(report, "running process cheatengine.exe")
+        self.assertEqual(stray.status, FAIL)
+        self.assertIn("close every Cheat Engine window", stray.remedy)
+        grants = finding(report, "item grants")
+        self.assertEqual(grants.status, FAIL)
+        self.assertIn("already running", grants.detail)
+        self.assertFalse(report.ok)
+
+    def test_item_grants_reports_that_the_harness_has_not_reported_yet(self):
+        self._pin_ce_bridge()
+        report = run(self.fixture)
+        grants = finding(report, "item grants")
+        self.assertEqual(grants.status, PASS)
+        self.assertIn("has not reported yet", grants.detail)
+
+    def test_item_grants_reports_a_bridge_that_has_reported(self):
+        self._pin_ce_bridge()
+        paths = session_paths(
+            self.fixture.root / "state", seed="AP_test", slot="Hunter"
+        )
+        paths.bridge_root.mkdir(parents=True, exist_ok=True)
+        (paths.bridge_root / BRIDGE_STATE_NAME).write_text(
+            "build=bb-0.1.0-r5\nprotocol=BBGRANT1\nharness=bb-native-grant-v5\n"
+            "status=executing\npid=5040\n",
+            encoding="utf-8",
+        )
+        report = run(self.fixture)
+        grants = finding(report, "item grants")
+        self.assertEqual(grants.status, PASS)
+        self.assertIn("has reported", grants.detail)
 
     def test_server_probe_states(self):
         def refused(_host: str, _port: int) -> None:

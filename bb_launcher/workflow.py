@@ -22,6 +22,8 @@ from .core import (
     activate_build,
     deactivate_overlay,
     launch_processes,
+    process_is_running_by_name,
+    require_no_stray_cheat_engine,
     restore_previous_build,
     sha256_file,
     validate_processes,
@@ -507,10 +509,13 @@ class LauncherWorkflow:
         *,
         toolchain: EnemizerToolchain | None = None,
         process_launcher: Callable[[Sequence[ProcessSpec]], list[Any]] = launch_processes,
+        process_running: Callable[[str], bool] = process_is_running_by_name,
     ):
         self.repo_root = Path(repo_root).expanduser().resolve()
         self.toolchain = toolchain or EnemizerToolchain(self.repo_root)
         self.process_launcher = process_launcher
+        # Injectable so the stray-Cheat-Engine refusal is testable off Windows.
+        self.process_running = process_running
 
     def randomize_and_launch(
         self,
@@ -526,6 +531,9 @@ class LauncherWorkflow:
         request = _request_identity(settings.ap_request)
         plan = load_process_plan(settings.process_plan)
         validate_processes(plan.processes)
+        # Before the overlay is touched: a bridge that cannot arm must not
+        # cost the player a build (bb-archipelago#137).
+        require_no_stray_cheat_engine(plan.processes, self.process_running)
         if plan.runtime_build != request["runtime_build"]:
             raise ValidationError(
                 f"AP seed requires runtime {request['runtime_build']}, process plan supplies {plan.runtime_build}"
@@ -656,6 +664,9 @@ class LauncherWorkflow:
         )
         progress("Starting shadPS4, bridge, and AP client...")
         resolved = resolve_process_plan(plan, paths)
+        # Re-checked at the spawn point: Cheat Engine may have been opened
+        # while the seed was building.
+        require_no_stray_cheat_engine(resolved.processes, self.process_running)
         started = self.process_launcher(resolved.processes)
         progress("Randomized Bloodborne launch started.")
         swaps = 0
@@ -697,6 +708,7 @@ class LauncherWorkflow:
         # Resolve before any mutation: a plan that still carries client
         # placeholders must fail closed with the overlay untouched.
         resolved = resolve_process_plan(plan, None)
+        require_no_stray_cheat_engine(resolved.processes, self.process_running)
         progress("Moving the launcher-owned overlay out of the search path...")
         disabled = deactivate_overlay(install, process_is_running=process_is_running)
         if disabled is None:
