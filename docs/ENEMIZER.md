@@ -141,3 +141,9 @@ It regenerates the catalogs, runs the 25-seed release gate, creates one
 manifest, runs the guarded writer, and emits a package-shaped
 `dvdroot_ps4/map/MapStudio` tree plus its manifest, audit, and metadata. Any
 failed stage prevents a successful package result.
+
+## Scaling
+
+Enemy scaling — transplant normalization and later depth scaling — is designed
+in `docs/ENEMIZER-SCALING.md` (static overlay scaling built on the NG+
+`GameClearSpEffectID` area ladder). Design only; nothing is implemented.
