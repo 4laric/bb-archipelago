@@ -11,6 +11,7 @@ from bb_launcher.readiness import (
     BRIDGE_STATE_NAME,
     format_readiness,
     gather_readiness,
+    grants_watchdog_warning,
 )
 from tests.test_launcher_core import make_install
 from tests.test_launcher_client_config import make_build
@@ -144,6 +145,32 @@ class ReadinessTests(unittest.TestCase):
         assert ledger is not None
         self.assertEqual(ledger.acknowledged, 8)
         self.assertEqual(ledger.highest_processed_index, 7)
+
+    def test_grants_watchdog_warns_when_an_expected_bridge_never_reported(self):
+        readiness = gather_readiness(self.install, self.root / "state", seed="s", slot="Hunter")
+        self.assertIsNone(readiness.bridge)
+        warning = grants_watchdog_warning(readiness, bridge_expected=True)
+        self.assertIsNotNone(warning)
+        assert warning is not None
+        self.assertIn("NOT armed", warning)
+        self.assertIn("Cheat Engine", warning)
+
+    def test_grants_watchdog_is_quiet_once_the_bridge_reports(self):
+        paths = session_paths(self.root / "state", seed="s", slot="Hunter")
+        paths.bridge_root.mkdir(parents=True)
+        (paths.bridge_root / BRIDGE_STATE_NAME).write_text(
+            "build=bb-0.1.0-r5\nprotocol=BBGRANT1\nharness=bb-native-grant-v5\n"
+            "status=executing\npid=5040\n",
+            encoding="utf-8",
+        )
+        readiness = gather_readiness(self.install, self.root / "state", seed="s", slot="Hunter")
+        self.assertIsNotNone(readiness.bridge)
+        self.assertIsNone(grants_watchdog_warning(readiness, bridge_expected=True))
+
+    def test_grants_watchdog_is_quiet_when_no_bridge_was_expected(self):
+        readiness = gather_readiness(self.install, self.root / "state", seed="s", slot="Hunter")
+        self.assertIsNone(readiness.bridge)
+        self.assertIsNone(grants_watchdog_warning(readiness, bridge_expected=False))
 
 
 if __name__ == "__main__":

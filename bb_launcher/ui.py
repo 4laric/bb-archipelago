@@ -21,7 +21,7 @@ from .core import (
 )
 from .doctor import _process_running, format_report, run_doctor
 from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
-from .readiness import format_readiness, gather_readiness
+from .readiness import format_readiness, gather_readiness, grants_watchdog_warning
 from .resources import application_root, resource_root
 from .workflow import (
     SETTINGS_FORMAT,
@@ -30,6 +30,13 @@ from .workflow import (
     LauncherWorkflow,
     _request_identity,
 )
+
+
+# One-shot post-launch check that the CE grant harness reported in. Four
+# minutes covers slow CE start + both prompts; without this, a bridge that
+# never arms is invisible until the player notices items never arrive
+# (oz's 2026-08-23 session ran a full release with grants silently dead).
+GRANT_WATCHDOG_MS = 240_000
 
 
 FIELD_DEFINITIONS = (
@@ -585,6 +592,29 @@ class LauncherApp:
             return
         self._set_status_text(format_readiness(readiness))
 
+    def _check_grants_armed(self) -> None:
+        """One-shot watchdog: did the CE grant harness ever report in?"""
+        try:
+            settings = self._settings()
+            install = GameInstall.from_root(settings.game_root)
+            request = _request_identity(settings.ap_request)
+            readiness = gather_readiness(
+                install,
+                settings.state_root or default_state_root(),
+                seed=request["seed"],
+                slot=request["slot"],
+            )
+        except LauncherError:
+            return
+        warning = grants_watchdog_warning(readiness, bridge_expected=True)
+        if warning is None:
+            self._append_log("Item grants armed: the Cheat Engine bridge has reported.")
+            self._refresh_status()
+            return
+        self._append_log("WARNING: item grants are NOT armed -- the CE table has not reported.")
+        self._refresh_status()
+        self.messagebox.showwarning("Item grants not armed", warning, parent=self.root)
+
     def _progress_message(self, message: str) -> None:
         self.root.after(0, self._append_log, message)
 
@@ -833,6 +863,11 @@ class LauncherApp:
         self._append_log(f"Client runtime config: {result.client_config}")
         self._append_log(f"Receive ledger: {result.ledger}")
         self._refresh_status()
+        if result.grants_bridge:
+            self._append_log(
+                "Item grants expected: watching for the Cheat Engine bridge to report..."
+            )
+            self.root.after(GRANT_WATCHDOG_MS, self._check_grants_armed)
         self.messagebox.showinfo(
             "Bloodborne AP started",
             f"Verified overlay {result.cache_key[:12]} is active.\n{mode.capitalize()}.\n"

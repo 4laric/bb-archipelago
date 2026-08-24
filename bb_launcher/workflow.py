@@ -147,6 +147,9 @@ class WorkflowResult:
     process_ids: tuple[int | None, ...]
     client_config: Path
     ledger: Path
+    # True when the launch plan pinned a CE bridge, so the UI knows item
+    # grants are expected and can watch for the harness reporting in.
+    grants_bridge: bool
 
 
 def _read_object(path: Path, label: str) -> dict[str, Any]:
@@ -652,7 +655,8 @@ class LauncherWorkflow:
             shad_log=settings.shad_log or default_shad_log(),
         )
         progress("Starting shadPS4, bridge, and AP client...")
-        started = self.process_launcher(resolve_process_plan(plan, paths).processes)
+        resolved = resolve_process_plan(plan, paths)
+        started = self.process_launcher(resolved.processes)
         progress("Randomized Bloodborne launch started.")
         swaps = 0
         if enemizer is not None:
@@ -668,6 +672,7 @@ class LauncherWorkflow:
             process_ids=tuple(getattr(process, "pid", None) for process in started),
             client_config=paths.config,
             ledger=paths.ledger,
+            grants_bridge=any(spec.name == "CE bridge" for spec in resolved.processes),
         )
 
     def launch_vanilla(

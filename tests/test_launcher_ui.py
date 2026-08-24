@@ -268,6 +268,42 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(len(toolchain.calls), 0)
         self.assertFalse(self.install.mods.exists())
 
+    def test_launch_result_reports_whether_a_grants_bridge_was_pinned(self):
+        toolchain = FakeToolchain()
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(1), Process(2)],
+        )
+        result = workflow.randomize_and_launch(
+            self.settings(), EnemizerOptions(enabled=True), process_is_running=lambda: False
+        )
+        self.assertFalse(result.grants_bridge)
+
+        ce = self.root / "cheatengine.exe"
+        ce.write_bytes(b"ce")
+        table = self.root / "grant.CT"
+        table.write_bytes(b"table")
+        value = json.loads(self.process_plan.read_text(encoding="utf-8"))
+        value["processes"].append(
+            {
+                "name": "CE bridge",
+                "executable": ce.name,
+                "sha256": digest(b"ce"),
+                "arguments": [table.name],
+            }
+        )
+        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(1), Process(2), Process(3)],
+        )
+        result = workflow.randomize_and_launch(
+            self.settings(), EnemizerOptions(enabled=True), process_is_running=lambda: False
+        )
+        self.assertTrue(result.grants_bridge)
+
     def test_unsuppressed_binder_refuses_before_enemy_generation(self):
         vanilla = self.install.patch.joinpath(*SUPPRESSION_PATH.split("/"))
         self.suppression.write_bytes(vanilla.read_bytes())
