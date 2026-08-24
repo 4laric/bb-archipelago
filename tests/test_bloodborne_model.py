@@ -12,6 +12,7 @@ from worlds.bloodborne import (
     ITEM_ID_BY_KEY,
     ITEM_NAME_TO_ID,
     LOCATION_ID_BY_KEY,
+    LOCATION_NAME_TO_ID,
     NETWORK_LOCATIONS,
     SHUFFLABLE_ITEMS,
     build_item_pool_names,
@@ -41,7 +42,10 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertTrue(all(LOCATION_BINDINGS[key].event_flag for key in expected))
 
     def test_slice_contains_the_map_and_two_bosses(self):
-        self.assertEqual(53, len(NETWORK_LOCATIONS))
+        # 49 in-slice fixed pickups + 2 bosses; the two clinic back-yard rows
+        # (Iosefka's Clinic region) stay out of slice seeds until the world
+        # grows the Amelia -> password chain (#124).
+        self.assertEqual(51, len(NETWORK_LOCATIONS))
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
         self.assertEqual("boss_father_gascoigne", GOAL_LOCATION_KEY)
@@ -49,6 +53,14 @@ class BloodborneModelTests(unittest.TestCase):
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
             build_runtime_slot_data()["goal_location"],
         )
+
+    def test_slice_excludes_out_of_slice_fixed_rows(self):
+        keys = {location.key for location in NETWORK_LOCATIONS}
+        self.assertNotIn("fixed_central_yharnam_lot_2410140", keys)
+        self.assertNotIn("fixed_central_yharnam_lot_2410640", keys)
+        # The post-Gascoigne strip pickups stay in as Cathedral Ward checks.
+        self.assertIn("fixed_blood_gem_workshop_tool", keys)
+        self.assertIn("fixed_central_yharnam_lot_2410920", keys)
 
     def test_full_pool_places_every_validated_item_once_then_filler(self):
         counts = Counter(build_item_pool_names(FULL_POOL_ITEM_KEYS))
@@ -68,29 +80,36 @@ class BloodborneModelTests(unittest.TestCase):
             "Augur of Ebrietas",
         ):
             self.assertEqual(counts[name], 1, name)
-        self.assertEqual(counts["Blood Vial"], 9)
+        # 51 locations - 12 one-off items = 39 filler slots cycling five
+        # names: first four get 8, the last gets 7.
+        self.assertEqual(counts["Blood Vial"], 8)
         for name in (
             "Quicksilver Bullets x3",
             "Pebbles x3",
             "Molotov Cocktails x2",
-            "Blood Stone Shards x2",
         ):
             self.assertEqual(counts[name], 8, name)
+        self.assertEqual(counts["Blood Stone Shards x2"], 7)
 
     def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
-        """The slice pool the first live sessions validated is unchanged."""
+        """The grant shapes the first live sessions validated are unchanged.
+
+        The two out-of-slice clinic rows (#124) shrink the location count to
+        51, which only shifts the filler cycle: 51 - 2 one-off items = 49
+        slots over five names, so the first four get 10 and the last gets 9.
+        """
         counts = Counter(build_item_pool_names(CENTRAL_YHARNAM_SLICE_ITEM_KEYS))
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
         self.assertEqual(counts["Saw Spear"], 1)
         self.assertEqual(counts["Augur of Ebrietas"], 1)
-        self.assertEqual(counts["Blood Vial"], 11)
+        self.assertEqual(counts["Blood Vial"], 10)
         for name in (
             "Quicksilver Bullets x3",
             "Pebbles x3",
             "Molotov Cocktails x2",
-            "Blood Stone Shards x2",
         ):
             self.assertEqual(counts[name], 10, name)
+        self.assertEqual(counts["Blood Stone Shards x2"], 9)
         slot_data = build_runtime_slot_data(CENTRAL_YHARNAM_SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 7)  # six slice items + Blood Vial
 
@@ -181,7 +200,10 @@ class BloodborneModelTests(unittest.TestCase):
     def test_vertical_slice_ids_are_complete_and_disjoint(self):
         shufflable = {item.key for item in SHUFFLABLE_ITEMS}
         self.assertEqual(shufflable, set(ITEM_ID_BY_KEY))
-        self.assertEqual({location.key for location in NETWORK_LOCATIONS}, set(LOCATION_ID_BY_KEY))
+        # Every model location has a permanent id (ids.tsv is append-only);
+        # the datapackage map is restricted to what the slice seeds.
+        self.assertTrue({location.key for location in NETWORK_LOCATIONS} <= set(LOCATION_ID_BY_KEY))
+        self.assertEqual({location.name for location in NETWORK_LOCATIONS}, set(LOCATION_NAME_TO_ID))
         self.assertEqual(len(ITEM_NAME_TO_ID), len(shufflable) + 1)  # Blood Vial filler
         self.assertFalse(set(ITEM_NAME_TO_ID.values()) & set(LOCATION_ID_BY_KEY.values()))
 

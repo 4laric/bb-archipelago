@@ -4,7 +4,7 @@ fixed_saw_spear	Central Yharnam - Saw Spear	Central Yharnam	52410100	2410100	0	7
 fixed_central_yharnam_lot_2410110	Central Yharnam - Blood Stone Shard x2	Central Yharnam	52410110	2410110	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410120	Central Yharnam - Blood Vial x2 #1	Central Yharnam	52410120	2410120	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410130	Central Yharnam - Coldblood Dew (1) #1	Central Yharnam	52410130	2410130	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410140	Iosefka's Clinic - Madman's Knowledge (corpse)	Central Yharnam	52410140	2410140	4	1500	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410140	Iosefka's Clinic - Madman's Knowledge (corpse)	Iosefka's Clinic	52410140	2410140	4	1500	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410150	Central Yharnam - Coldblood Dew (1) #2	Central Yharnam	52410150	2410150	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410160	Central Yharnam - Pebble x8	Central Yharnam	52410160	2410160	4	1230	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410170	Central Yharnam - Blood Stone Shard #1	Central Yharnam	52410170	2410170	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
@@ -45,8 +45,8 @@ fixed_central_yharnam_lot_2410600	Central Yharnam - Coldblood Dew (1) #7	Central
 fixed_central_yharnam_lot_2410610	Central Yharnam - Hunter Set	Central Yharnam	52410610	2410610	1	70000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410620	Central Yharnam - Thick Coldblood (5)	Central Yharnam	52410620	2410620	4	1514	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410630	Central Yharnam - Coldblood Dew (1) #8	Central Yharnam	52410630	2410630	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Blood Gem	Central Yharnam	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Blood Gem	Iosefka's Clinic	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410650	Central Yharnam - Blood Stone Shard #8	Central Yharnam	52410650	2410650	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_iosefka_courtyard_bullets	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10	Central Yharnam	52410800	2410800	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410920	Central Yharnam - Red Jeweled Brooch	Central Yharnam	52410920	2410920	4	4306	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_blood_gem_workshop_tool	Central Yharnam - Blood Gem Workshop Tool	Central Yharnam	52411000	2411000	4	4103	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410920	Central Yharnam - Red Jeweled Brooch	Cathedral Ward	52410920	2410920	4	4306	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_blood_gem_workshop_tool	Central Yharnam - Blood Gem Workshop Tool	Cathedral Ward	52411000	2411000	4	4103	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True

@@ -7,7 +7,7 @@
 total		274
 
 module	test_bb_enemizer	8
-module	test_bloodborne_model	14
+module	test_bloodborne_model	15
 module	test_bloodborne_ids	23
 module	test_bloodborne_gates	9
 module	test_bloodborne_memory	20

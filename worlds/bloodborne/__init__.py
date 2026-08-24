@@ -41,7 +41,7 @@ GOAL_LOCATION_KEY = "boss_father_gascoigne"
 
 
 def build_item_pool_names(item_keys: Iterable[str]) -> list[str]:
-    """Build the varied-grant pool for the live slice's 53 locations.
+    """Build the varied-grant pool for the live slice's network locations.
 
     `item_keys` selects which validated items are placed once each; filler
     cycles up to the location count either way. The full pool places all ten
@@ -110,7 +110,10 @@ def _assigned(kind: str, key: str) -> int:
 ITEM_ID_BY_KEY = {item.key: _assigned("item", item.key) for item in SHUFFLABLE_ITEMS}
 ITEM_NAME_TO_ID = {item.name: ITEM_ID_BY_KEY[item.key] for item in SHUFFLABLE_ITEMS}
 ITEM_NAME_TO_ID[FILLER_ITEM_NAME] = _assigned("item", "blood_vial")
-LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in NETWORK_LOCATIONS}
+# Stable network ids exist for the full reviewed manifest (ids.tsv is
+# append-only), including rows the bounded slice does not seed. Only slice
+# locations enter the datapackage's name->id map.
+LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in MODEL.locations}
 LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS}
 
 
@@ -265,6 +268,17 @@ else:
                 location = BloodborneLocation(self.player, data.name, LOCATION_ID_BY_KEY[data.key], regions[data.region])
                 location.access_rule = _rule(data.rule, self.player)
                 regions[data.region].locations.append(location)
+                if data.locked_item:
+                    # Boss defeated-events live on their own address-less
+                    # event locations, mirroring the boss check's rule: the
+                    # real check keeps a pool item, the event location feeds
+                    # generation logic (Cathedral Ward behind Gascoigne).
+                    event = next(item for item in EVENT_ITEMS if item.key == data.locked_item)
+                    event_location = BloodborneLocation(self.player, event.name, None, regions[data.region])
+                    event_location.access_rule = location.access_rule
+                    event_location.place_locked_item(
+                        BloodborneItem(event.name, ItemClassification.progression, None, self.player))
+                    regions[data.region].locations.append(event_location)
             for data in CENTRAL_YHARNAM_SLICE_ENTRANCES:
                 entrance = regions[data.source].create_exit(data.name)
                 entrance.access_rule = _rule(data.rule, self.player)

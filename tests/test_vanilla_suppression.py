@@ -183,7 +183,10 @@ class RealCorpusTests(unittest.TestCase):
             checked += 1
             self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
-        self.assertEqual(checked, 51)
+        # 49 in-slice fixed pickups carry lots; the two bosses do not, and the
+        # two out-of-slice clinic rows are suppressed but not network
+        # locations, so they are not iterated here.
+        self.assertEqual(checked, 49)
 
     def test_canonical_plan_digest_matches_the_runtime_contract(self):
         from tools.plan_vanilla_suppression import build_complete_plan, serialize_plan
