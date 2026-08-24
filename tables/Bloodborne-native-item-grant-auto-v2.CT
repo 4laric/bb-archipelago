@@ -24,8 +24,33 @@ if not roamingAppData or roamingAppData=="" then
   showMessage("Bloodborne AP table setup failed: APPDATA is not set")
   return
 end
-local root=getTempFolder()
-if not root or root=="" then error("Cheat Engine did not provide a temporary directory") end
+-- The bridge directory is the contract with the AP client, which reads
+-- %LOCALAPPDATA%\BloodborneArchipelago\bridge\native-grant-state.txt.
+-- Writing to CE's temp folder instead (the previous behavior) meant a
+-- launcher-launched client never saw the harness state and every grant was
+-- blocked; writing here also works when CE is started manually. The temp
+-- folder remains a last-resort fallback, with a loud warning, if the bridge
+-- directory cannot be created. CE exposes no createDirectory Lua function;
+-- lfs (LuaFileSystem) ships with CE and is global (see CE's own
+-- autorun/andtools.lua), and lfs.mkdir creates one level per call.
+local localAppData=os.getenv("LOCALAPPDATA")
+local root
+if localAppData and localAppData~="" and lfs and lfs.mkdir then
+  local base=localAppData..[[\BloodborneArchipelago]]
+  local bridge=base..[[\bridge]]
+  local okBase=pcall(lfs.mkdir, base)
+  local okBridge=pcall(lfs.mkdir, bridge)
+  -- lfs.mkdir returns nil when the directory already exists, so success is
+  -- "the bridge directory is usable", which the first state write proves;
+  -- here we only require that the mkdir calls themselves did not raise.
+  if okBase and okBridge then root=bridge end
+end
+if not root then
+  root=getTempFolder()
+  if not root or root=="" then error("Cheat Engine did not provide a temporary directory") end
+  showMessage("Bloodborne AP table: could not create %LOCALAPPDATA%\\BloodborneArchipelago\\bridge, so bridge files are going to the TEMP folder and the AP client WILL NOT receive item grants. Create that folder manually and reopen the table.")
+end
+print("Bloodborne AP bridge directory: "..root)
 if root:sub(-1)~=[[\]] then root=root..[[\]] end
 local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
