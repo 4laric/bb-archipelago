@@ -1,10 +1,27 @@
 # Save-restore and character-slot reconciliation (#77)
 
-Status: **design, not implemented.** This document defines what the receive
-ledger must do about save restores and character switches before any of it is
-built. It depends on #56 (which supplies the live identity signal) and cites
-the client code as of `from-software-archipelago-clients` `main`; section 1 is
-verified code fact, sections 2 onward are proposal.
+Status: **implemented and mock-tested in the native client; not live-validated.**
+The scheme this document proposed (§5/§7) has landed in
+`from-software-archipelago-clients` `crates/bb-archipelago`
+(`ccf2dd8 bb: save-restore reconciliation via a save-resident receive
+watermark`, on top of the identity gating in `ef2445e`). Every restore/switch
+shape in §2 now has code and a mock fixture (§9). What is **not** done is the
+game-bound half owned by #56: the live backend's `location_context`,
+`read_save_watermark`, and `write_save_watermark` return the fail-closed
+default (`None` / attested mode), so no restore is *automatically* detected
+against a real save yet. Until those addresses are bound (§11), the shipping
+path is operator attestation via the `bb-restored` command -- the honest MVP,
+not a stub.
+
+Evidence label (per `docs/RESEARCH-BASELINE.md`): the reconciliation logic and
+state machine are **implemented and mock-tested**; they are **not `validated`**
+-- nothing here has been seen live against CUSA03173 01.09, because the live
+accessors are unresolved. Do not upgrade this to `validated` until the §11
+address binding is done under the game with a readback canary.
+
+The rest of this document is unchanged as the rationale of record: §1 is
+verified code fact, §2-§10 are the design that shipped, and §11 (new) is the
+owner game-session checklist for the remaining live facts.
 
 ## 1. What the receipts record today
 
@@ -155,3 +172,56 @@ success and silent refusal are both bugs here.
 - **O3.** Retire auto-delivery from the Python fallback once the native path
   covers the seed, or keep it as a deliberately weaker mode with the hazards
   documented in its `--help`?
+
+## 11. Owner game-session checklist (the remaining live facts)
+
+Everything in §2–§10 is implemented behind the `BloodborneBackend` boundary and
+exercised in mock mode. Three facts still need a live CUSA03173 01.09 session on
+current shadPS4 to bind; none can be guessed from static data, and each stays
+fail-closed until bound. This is the `needs-game` residue of #56 and O1/O2.
+
+Bind them in this order — each later step depends on the earlier one holding
+across death, warp, reload and NG:
+
+1. **Save identity source → `FileBackend::location_context` (`save_identity`).**
+   Resolve a value that is stable per save+character, changes on slot switch or
+   a different save, and survives process restart. Today `location_context`
+   returns `None` in normal mode (fail-closed) and the `--assume-correct-save`
+   gate substitutes an operator string. Record the address/derivation with a
+   readback in `docs/RESEARCH-BASELINE.md` before wiring it.
+   - Unblocks #56 acceptance: "mismatched character produces no checks",
+     "switching to another character that already owns the pickup does not send",
+     "a full shad restart … does not reuse stale identity".
+   - Anti-hazard: two different characters must never hash to the same identity;
+     prove distinctness live, do not assume the first field that looks unique is.
+
+2. **Gameplay-ready signal → `FileBackend::location_context` (`gameplay_ready`).**
+   A version-gated signal that is false on the main menu, during load
+   transitions, and in the no-save state, and true only in live play. The
+   attested gate approximates this with three consecutive event-flag-manager
+   health reads (`ASSUMED_CONTEXT_STABLE_READS = 3`); a real signal should be
+   something the manager-health proxy cannot spoof (e.g. a world/loaded-map
+   state field), still funnelled through the same three-consecutive-read
+   debounce so the acceptance timing is unchanged.
+   - Unblocks #56 acceptance: "main menu, loading screens, no-save state …
+     produce no flag reads and no AP checks"; the Iosefka Bullet canary sending
+     exactly once.
+
+3. **Save-resident watermark field → `read_save_watermark` / `write_save_watermark`.**
+   A writable, game-inert scratch field in the save that survives save/load, is
+   never rewritten by game systems, and passes a write→readback canary of the
+   same standard the grant descriptors are held to (the #70 lesson: a nominal
+   write can produce garbage). An existing strictly-monotonic counter is an
+   acceptable substitute **only** if its monotonicity is observed across death,
+   warp, reload and NG cycles (O2). Until this is bound, leave both methods at
+   their attested-mode defaults (`None` / `false`) and rely on `bb-restored`.
+   - Unblocks the *automatic* half of shapes B and C (§2). With it absent, the
+     semantics still hold via operator attestation; with it present and
+     canaried, restore detection becomes automatic with no re-grant hazard.
+
+Do-not-do without the game: do not invent any of these three addresses, do not
+relax the fail-closed defaults, and do not add an unsafe opt-out to seed data
+(the `--assume-correct-save` flag is the only sanctioned attestation, and it
+lives in the client, not the world/slot data). When a step is bound, flip the
+corresponding evidence label in §Status from *mock-tested* to *validated* for
+that fact only — one fact at a time, each with its own live readback.

@@ -189,6 +189,7 @@ Audited against `crates/bb-archipelago` as it stands, of those four:
 | Gameplay-state gating | **Contract present, live source absent.** `poll_locations` abstains unless `gameplay_ready`; the v0.18 backend returns no context, so live sends remain disarmed. |
 | N-consecutive-poll debounce | **Present.** The default is three consecutive true reads and false/unavailable reads reset the streak. |
 | Save-identity binding | **Contract present, live source absent.** The polled identity must equal `expected_save_identity`; the v0.18 backend cannot resolve one yet and therefore abstains. |
+| Save-restore/character-switch reconciliation (#77) | **Implemented and mock-tested, live source absent.** The `seed_name:slot` ledger now records a per-slot `save_watermark`; restore (reissue), ledger-loss (adopt), and identity-switch (refuse) each have one defined outcome and a mock fixture. The automatic restore signal waits on #56's watermark address (`docs/SAVE-RECONCILIATION.md` §11); until then the shipping path is the `bb-restored` operator attestation. |
 
 `read_resilient` stays behind that context gate. Reattaching and retrying converts a failed read
 into a fresh read; that is right for a restarted emulator and wrong for a read that failed because
@@ -255,10 +256,6 @@ not safety.
 
 Named so they stop being invisible. None of these has an issue or a phase:
 
-- **Save-restore and character-slot reconciliation.** The delivery receipt is keyed
-  `seed_name:slot` only. A restored BBLauncher backup rolls inventory back while the receipt says
-  delivered, and the items are gone. A second character in the same slot inherits the first one's
-  queue.
 - **Goal design and detection.** The goal currently fires when a human types `/check Mergo's Wet
   Nurse`. `docs/LOGIC-MODEL.md` question 5 is open, and no boss flag is in `LOCATION_BINDINGS`.
 - **DeathLink.** Receiving is already technically possible via the validated HP write. Sending
