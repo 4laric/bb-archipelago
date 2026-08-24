@@ -714,6 +714,60 @@ def _require_shad_stopped(check: Callable[[], bool] | None) -> None:
         )
 
 
+ELEVATED_SPAWNERS = ("bblauncher.exe", "bb-launcher.exe")
+
+
+def launcher_is_elevated() -> bool:
+    """False only when we positively know the launcher lacks an admin token."""
+    if sys.platform != "win32":
+        return True
+    try:
+        import ctypes
+
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:  # noqa: BLE001 -- uncertainty must never nag the player
+        return True
+
+
+def _runasadmin_flagged(executable: Path) -> bool:
+    """Windows AppCompat 'Run as administrator' marker for an executable."""
+    if sys.platform != "win32":
+        return False
+    try:
+        import winreg
+    except ImportError:
+        return False
+    layers = r"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers"
+    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        try:
+            with winreg.OpenKey(hive, layers) as key:
+                value, _kind = winreg.QueryValueEx(key, str(executable))
+        except OSError:
+            continue
+        if "RUNASADMIN" in str(value).upper():
+            return True
+    return False
+
+
+def elevation_risks(
+    shad_executable: Path | None, process_running: Callable[[str], bool]
+) -> list[str]:
+    """Reasons shadPS4 may spawn elevated while the launcher is not.
+
+    An unelevated AP client cannot open an elevated shadPS4 process, so the
+    Doctor and the launch button both surface these before the client spends
+    the session polling a process it will never attach to.
+    """
+    reasons = [
+        f"{name} is running (it starts shadPS4 elevated)"
+        for name in ELEVATED_SPAWNERS
+        if process_running(name)
+    ]
+    if shad_executable is not None and _runasadmin_flagged(shad_executable):
+        reasons.append(f"{shad_executable} has the 'Run as administrator' compatibility flag")
+    return reasons
+
+
 def _transaction_path(install: GameInstall) -> Path:
     return install.root / TRANSACTION_NAME
 

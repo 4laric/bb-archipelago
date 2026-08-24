@@ -27,6 +27,8 @@ from .core import (
     LauncherError,
     ProcessSpec,
     ValidationError,
+    elevation_risks,
+    launcher_is_elevated,
     sha256_file,
     validate_processes,
 )
@@ -374,6 +376,29 @@ def _check_server(
     return DoctorFinding(PASS, "AP server", f"{address} accepted a connection")
 
 
+def _check_elevation(chain: _Chain, process_running: Callable[[str], bool]) -> DoctorFinding:
+    if launcher_is_elevated():
+        return DoctorFinding(
+            PASS,
+            "elevation",
+            "launcher is running as administrator and can attach to an elevated shadPS4",
+        )
+    shad = None
+    for spec in chain.processes or ():
+        if spec.name == "shadPS4":
+            shad = spec.executable
+    risks = elevation_risks(shad, process_running)
+    if risks:
+        return DoctorFinding(
+            WARN,
+            "elevation",
+            "; ".join(risks),
+            "restart this launcher as administrator: an unelevated AP client "
+            "cannot attach to an elevated shadPS4 and will wait forever",
+        )
+    return DoctorFinding(PASS, "elevation", "no elevated shadPS4 launch path detected")
+
+
 def _check_processes(process_running: Callable[[str], bool]) -> list[DoctorFinding]:
     findings: list[DoctorFinding] = []
     if process_running(BLOCKING_PROCESS):
@@ -430,6 +455,7 @@ def run_doctor(
         _safely(lambda: _check_installed_gameparam(settings, chain)),
         _safely(lambda: _check_map_studio(settings, chain, randomize_enemies=randomize_enemies)),
         _safely(lambda: _check_server(chain, server, probe)),
+        _safely(lambda: _check_elevation(chain, process_running)),
     ]
     try:
         findings.extend(_check_processes(process_running))

@@ -7,6 +7,7 @@ import struct
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from bb_launcher.cli import main as cli_main
 from bb_launcher.core import SERIAL, SUPPRESSION_PATH, GameInstall
@@ -237,6 +238,25 @@ class DoctorTests(unittest.TestCase):
         result = finding(report, "AP seed request")
         self.assertEqual(result.status, FAIL)
         self.assertIn("world_version", result.detail)
+
+    def test_elevation_warns_when_a_spawner_is_running_and_launcher_unelevated(self):
+        with patch("bb_launcher.doctor.launcher_is_elevated", return_value=False):
+            report = run(
+                self.fixture,
+                process_running=lambda name: name == "bblauncher.exe",
+            )
+        result = finding(report, "elevation")
+        self.assertEqual(result.status, WARN)
+        self.assertIn("bblauncher.exe", result.detail)
+        self.assertIn("administrator", result.remedy)
+
+    def test_elevation_passes_when_the_launcher_is_elevated(self):
+        with patch("bb_launcher.doctor.launcher_is_elevated", return_value=True):
+            report = run(
+                self.fixture,
+                process_running=lambda name: name == "bblauncher.exe",
+            )
+        self.assertEqual(finding(report, "elevation").status, PASS)
 
     def test_server_probe_states(self):
         def refused(_host: str, _port: int) -> None:

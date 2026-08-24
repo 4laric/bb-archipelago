@@ -26,7 +26,7 @@ module	test_launcher_readiness	4
 module	test_launcher_ui	24
 module	test_launcher_package	4
 module	test_launcher_plan	4
-module	test_launcher_doctor	12
+module	test_launcher_doctor	14
 module	test_launcher_workflow	1
 module	test_location_names	9
 module	test_death_signal_candidates	8
