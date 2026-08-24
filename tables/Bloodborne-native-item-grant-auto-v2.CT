@@ -3,6 +3,21 @@
   <CheatEntries/>
   <UserdefinedSymbols/>
   <LuaScript><![CDATA[
+-- Compatibility shim: getProcessIDFromName is absent from some Cheat Engine
+-- builds (observed failing on a playtester's install, 2026-08-23). Provide it
+-- from getProcessList, which every supported CE version has, so the auto-run
+-- path cannot nil-call and re-raise the Lua Engine window on every load.
+if getProcessIDFromName==nil then
+  getProcessIDFromName=function(processName)
+    local wanted=processName:lower()
+    local list=getProcessList()
+    if type(list)~="table" then return nil end
+    for pid,name in pairs(list) do
+      if type(name)=="string" and name:lower()==wanted then return pid end
+    end
+    return nil
+  end
+end
 local function startBloodborneHarness()
 local roamingAppData=os.getenv("APPDATA")
 if not roamingAppData or roamingAppData=="" then

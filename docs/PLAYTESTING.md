@@ -25,9 +25,12 @@ a running randomized seed, and tells you exactly what to report back.
    - **"shadPS4 game folder" means the game's install directory** — the folder
      *containing* `CUSA03173` — not the folder shadPS4 itself lives in.
 3. **shadPS4 0.18.0** — the emulator the mod runs under.
-4. **Cheat Engine** — installed from its official site. The launcher uses it to
-   deliver Archipelago items into the game. You never have to operate it
-   yourself; the launcher opens it with the right table.
+4. **Cheat Engine** — installed from its official site. This is **required**:
+   without it your pickups still reach the server, but no items can be
+   delivered into your game. You never operate it yourself — the launcher
+   opens it with the correct grant table, which is bundled in the package (do
+   not go looking for a `.CT` file or load one by hand). Cheat Engine may ask
+   to run as administrator; let it.
 5. **The launcher package** — `BloodborneAPLauncher-win-x64.zip`, from the
    release page or sent to you directly. Unzip it anywhere.
 6. **Two things from your session host** (the person running the seed):

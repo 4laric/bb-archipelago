@@ -258,6 +258,31 @@ class DoctorTests(unittest.TestCase):
             )
         self.assertEqual(finding(report, "elevation").status, PASS)
 
+    def test_item_grants_warn_without_the_ce_bridge(self):
+        report = run(self.fixture)
+        result = finding(report, "item grants")
+        self.assertEqual(result.status, WARN)
+        self.assertIn("Generate Launch Plan", result.remedy)
+
+    def test_item_grants_pass_with_the_ce_bridge(self):
+        root = self.fixture.root
+        ce_exe = root / "cheatengine.exe"
+        ce_exe.write_bytes(b"ce")
+        table = root / "grant.CT"
+        table.write_bytes(b"table")
+        plan = json.loads(self.fixture.plan_path.read_text(encoding="utf-8"))
+        plan["processes"].append(
+            {
+                "name": "CE bridge",
+                "executable": str(ce_exe),
+                "sha256": sha256(b"ce"),
+                "arguments": [str(table)],
+            }
+        )
+        self.fixture.plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        report = run(self.fixture)
+        self.assertEqual(finding(report, "item grants").status, PASS)
+
     def test_server_probe_states(self):
         def refused(_host: str, _port: int) -> None:
             raise ConnectionRefusedError("no listener")
