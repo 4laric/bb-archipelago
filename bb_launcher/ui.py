@@ -74,7 +74,11 @@ THEME_GOLD = "#c2a14d"
 
 
 def default_field_values(
-    *, state_root: Path, package_roots: Iterable[Path], repo_root: Path | None = None
+    *,
+    state_root: Path,
+    package_roots: Iterable[Path],
+    repo_root: Path | None = None,
+    player_name: str = "",
 ) -> dict[str, str]:
     """Values the launcher can derive for empty setup fields.
 
@@ -94,7 +98,7 @@ def default_field_values(
     if ce is not None:
         values["ce_executable"] = str(ce)
     if repo_root is not None:
-        request = derive_ap_request((repo_root,))
+        request = derive_ap_request((repo_root,), player_name)
         if request is not None:
             values["ap_request"] = str(request)
     for root in package_roots:
@@ -116,12 +120,26 @@ def derive_ce_executable() -> Path | None:
     return None
 
 
-def derive_ap_request(roots: Iterable[Path]) -> Path | None:
+def _request_player_name(path: Path) -> str | None:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(value, dict) or value.get("format") != "bb-enemizer-request-v1":
+        return None
+    name = value.get("player_name")
+    return name.strip() if isinstance(name, str) and name.strip() else None
+
+
+def derive_ap_request(roots: Iterable[Path], player_name: str = "") -> Path | None:
     """Newest enemizer request under each root's Archipelago output directory.
 
     Generation drops `<seed>_P<slot>_<name>.bbenemizer.json` beside the seed
     zip in `Archipelago/out` or `Archipelago/output`; the newest one is the
-    best guess for what the player just generated.
+    best guess for what the player just generated. A multi-Bloodborne
+    multiworld drops one request per Bloodborne player, so when the player
+    name is known, only that player's own requests are considered — picking
+    another player's file connects the client as THEIR slot.
     """
     candidates: list[Path] = []
     for root in roots:
@@ -129,6 +147,11 @@ def derive_ap_request(roots: Iterable[Path]) -> Path | None:
             directory = root / "Archipelago" / name
             if directory.is_dir():
                 candidates.extend(directory.rglob("*.bbenemizer.json"))
+    wanted = player_name.strip()
+    if wanted:
+        own = [path for path in candidates if _request_player_name(path) == wanted]
+        if own:
+            candidates = own
     if not candidates:
         return None
     return max(candidates, key=lambda path: path.stat().st_mtime)
@@ -206,6 +229,7 @@ class LauncherApp:
         self.randomize_enemies = tk.BooleanVar(value=True)
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
+        self.player_name = tk.StringVar()
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
@@ -287,6 +311,7 @@ class LauncherApp:
             state_root=default_state_root(),
             package_roots=(application_root(), resource_root()),
             repo_root=self.repo_root,
+            player_name=self.player_name.get(),
         )
         for name, value in derived.items():
             if not self.fields[name].get().strip():
@@ -333,6 +358,16 @@ class LauncherApp:
         ttk.Entry(setup, textvariable=self.ap_server).grid(row=server_row, column=1, sticky="ew", pady=3)
         ttk.Label(setup, text=f"default {DEFAULT_SERVER}").grid(
             row=server_row, column=2, sticky="w", padx=(8, 0), pady=3
+        )
+        name_row = server_row + 1
+        ttk.Label(setup, text="Your AP player name").grid(
+            row=name_row, column=0, sticky="w", padx=(0, 8), pady=3
+        )
+        ttk.Entry(setup, textvariable=self.player_name).grid(
+            row=name_row, column=1, sticky="ew", pady=3
+        )
+        ttk.Label(setup, text="the slot name your host gave you").grid(
+            row=name_row, column=2, sticky="w", padx=(8, 0), pady=3
         )
 
         options = ttk.LabelFrame(outer, text="Enemy randomization", padding=10)
@@ -486,6 +521,7 @@ class LauncherApp:
                 "randomize_enemies": self.randomize_enemies.get(),
                 "enemy_seed": self.enemy_seed.get().strip(),
                 "ap_server": self.ap_server.get().strip(),
+                "player_name": self.player_name.get().strip(),
                 "shad_executable": self.fields["shad_executable"].get().strip(),
                 "ce_executable": self.fields["ce_executable"].get().strip(),
                 "allow_tier_mixing": self.allow_tier_mixing.get(),
@@ -514,6 +550,7 @@ class LauncherApp:
             self.randomize_enemies.set(bool(value.get("randomize_enemies", True)))
             self.enemy_seed.set(str(value.get("enemy_seed", "")))
             self.ap_server.set(str(value.get("ap_server", "")))
+            self.player_name.set(str(value.get("player_name", "")))
             self.allow_tier_mixing.set(bool(value.get("allow_tier_mixing", False)))
             self.preserve_locomotion.set(bool(value.get("preserve_locomotion", False)))
         except (OSError, UnicodeError, json.JSONDecodeError, LauncherError) as exc:
@@ -719,17 +756,29 @@ class LauncherApp:
         self._append_log("Doctor: checking the whole player chain...")
         threading.Thread(
             target=self._run_doctor,
-            args=(settings, self.randomize_enemies.get(), self.ap_server.get().strip() or None),
+            args=(
+                settings,
+                self.randomize_enemies.get(),
+                self.ap_server.get().strip() or None,
+                self.player_name.get().strip() or None,
+            ),
             daemon=True,
             name="bloodborne-doctor",
         ).start()
 
     def _run_doctor(
-        self, settings: LauncherSettings, randomize_enemies: bool, server: str | None
+        self,
+        settings: LauncherSettings,
+        randomize_enemies: bool,
+        server: str | None,
+        player_name: str | None = None,
     ) -> None:
         try:
             report = run_doctor(
-                settings, randomize_enemies=randomize_enemies, server=server
+                settings,
+                randomize_enemies=randomize_enemies,
+                server=server,
+                player_name=player_name,
             )
             text = format_report(report)
         except Exception as exc:

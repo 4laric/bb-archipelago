@@ -195,6 +195,32 @@ class DoctorTests(unittest.TestCase):
         ):
             self.assertEqual(finding(report, name).status, PASS, name)
 
+    def test_slot_agreement_passes_when_names_match(self):
+        report = run(self.fixture, player_name="Hunter")
+        result = finding(report, "request slot agreement")
+        self.assertEqual(result.status, PASS)
+
+    def test_slot_agreement_fails_on_another_players_request(self):
+        # Bas pointing at oz's request file: the launcher would connect him
+        # as oz and steal oz's checks.
+        report = run(self.fixture, player_name="Bas")
+        result = finding(report, "request slot agreement")
+        self.assertEqual(result.status, FAIL)
+        self.assertIn("'Hunter'", result.detail)
+        self.assertIn("'Bas'", result.detail)
+        self.assertFalse(report.ok)
+
+    def test_slot_agreement_warns_without_a_player_name(self):
+        report = run(self.fixture)
+        result = finding(report, "request slot agreement")
+        self.assertEqual(result.status, WARN)
+
+    def test_slot_agreement_skips_when_the_request_is_broken(self):
+        self.fixture.request_path.write_text("not json", encoding="utf-8")
+        report = run(self.fixture, player_name="Hunter")
+        result = finding(report, "request slot agreement")
+        self.assertEqual(result.status, SKIP)
+
     def test_tampered_patch_layer_that_is_the_suppressed_build_is_named(self):
         # The 2026-08-22 tamper case: a hand-installed suppression output in
         # the patch layer made the source hash mismatch opaque.

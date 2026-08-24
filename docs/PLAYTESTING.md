@@ -40,11 +40,15 @@ a running randomized seed, and tells you exactly what to report back.
 ## Setup (about five minutes)
 
 1. Double-click **BloodborneAPLauncher.exe**.
-2. Fill in the three fields the launcher cannot guess:
+2. Fill in the four fields the launcher cannot guess:
    - **shadPS4.exe** — pick the emulator executable. The game folder fills in
      automatically if your game is installed in the usual place.
-   - **AP seed request** — the `.bbenemizer.json` your host sent you.
+   - **AP seed request** — the `.bbenemizer.json` your host sent you. In a
+     multiworld with more than one Bloodborne player, make sure it is **yours**:
+     the file name ends with your player name, and the Doctor checks it.
    - **Archipelago server** — the address your host sent you.
+   - **Your AP player name** — exactly the slot name your host gave you. The
+     Doctor refuses to launch if the seed request belongs to a different slot.
    Everything else (seed cache, state folder, launch plan, suppressed gameparam)
    fills itself in. Click **Save Setup**.
 3. Click **Generate Launch Plan** once.

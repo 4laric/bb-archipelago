@@ -540,6 +540,41 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             )
             self.assertNotIn("ap_request", values)
 
+    def test_default_field_values_prefer_the_players_own_request(self):
+        # A multi-Bloodborne multiworld drops one request per Bloodborne
+        # player; auto-fill must not grab the other player's file.
+        import json
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out = root / "Archipelago" / "out" / "seed1"
+            out.mkdir(parents=True)
+            bas = out / "AP_1_P1_Bas.bbenemizer.json"
+            oz = out / "AP_1_P2_oz.bbenemizer.json"
+            bas.write_text(
+                json.dumps({"format": "bb-enemizer-request-v1", "player_name": "Bas"}),
+                encoding="utf-8",
+            )
+            oz.write_text(
+                json.dumps({"format": "bb-enemizer-request-v1", "player_name": "oz"}),
+                encoding="utf-8",
+            )
+            os.utime(bas, (1_000_000, 1_000_000))
+            os.utime(oz, (2_000_000, 2_000_000))  # oz's is newer
+
+            values = default_field_values(
+                state_root=root / "state", package_roots=(), repo_root=root,
+                player_name="Bas",
+            )
+            self.assertEqual(values["ap_request"], str(bas))
+
+            # No matching request: fall back to the newest overall.
+            values = default_field_values(
+                state_root=root / "state", package_roots=(), repo_root=root,
+                player_name="nobody",
+            )
+            self.assertEqual(values["ap_request"], str(oz))
+
     def test_derive_map_studio_prefers_the_patch_layer(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

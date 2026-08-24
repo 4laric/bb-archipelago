@@ -191,6 +191,34 @@ def _check_plan(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
     )
 
 
+def _check_slot_agreement(chain: _Chain, player_name: str | None) -> DoctorFinding:
+    if chain.request is None:
+        return DoctorFinding(SKIP, "request slot agreement", "upstream check failed")
+    slot = chain.request["slot"]
+    entered = (player_name or "").strip()
+    if not entered:
+        return DoctorFinding(
+            WARN,
+            "request slot agreement",
+            f"the AP seed request is for slot {slot!r}; no player name entered to verify against",
+            "enter your AP player name so the Doctor can confirm the request is "
+            "yours; in a multi-Bloodborne multiworld the launcher can auto-pick "
+            "another player's request file",
+        )
+    if entered != slot:
+        return DoctorFinding(
+            FAIL,
+            "request slot agreement",
+            f"the AP seed request is for slot {slot!r} but you entered {entered!r}",
+            "select YOUR own <seed>_P<number>_<name>.bbenemizer.json from the seed "
+            "output; launching with another player's request connects you as their "
+            "slot and steals their checks",
+        )
+    return DoctorFinding(
+        PASS, "request slot agreement", f"slot {slot!r} matches the entered player name"
+    )
+
+
 def _check_runtime_agreement(chain: _Chain) -> DoctorFinding:
     if chain.request is None or chain.plan is None:
         return DoctorFinding(SKIP, "runtime build agreement", "upstream check failed")
@@ -454,6 +482,7 @@ def run_doctor(
     *,
     randomize_enemies: bool = True,
     server: str | None = None,
+    player_name: str | None = None,
     process_running: Callable[[str], bool] | None = None,
     probe: Callable[[str, int], None] | None = None,
 ) -> DoctorReport:
@@ -465,6 +494,7 @@ def run_doctor(
     findings = [
         _safely(lambda: _check_install(settings, chain)),
         _safely(lambda: _check_request(settings, chain)),
+        _safely(lambda: _check_slot_agreement(chain, player_name)),
         _safely(lambda: _check_plan(settings, chain)),
         _safely(lambda: _check_item_grants(chain)),
         _safely(lambda: _check_runtime_agreement(chain)),

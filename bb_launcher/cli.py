@@ -134,6 +134,9 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument("--settings", required=True, help="launcher settings JSON (the UI saves one)")
     doctor.add_argument("--server", help="override the AP server probe target")
     doctor.add_argument(
+        "--player-name", help="override the AP player name the request slot is verified against"
+    )
+    doctor.add_argument(
         "--no-enemizer", action="store_true", help="skip the enemy-randomization checks"
     )
 
@@ -332,14 +335,19 @@ def main(argv: list[str] | None = None) -> int:
             raw = _json_file(settings_path, "launcher settings")
             settings = LauncherSettings.from_dict(raw, relative_to=settings_path.parent)
             server = args.server
+            player_name = args.player_name
             randomize = not args.no_enemizer
-            # The UI saves these two alongside the settings fields; honor them
+            # The UI saves these alongside the settings fields; honor them
             # unless an explicit flag overrides.
             if server is None and isinstance(raw.get("ap_server"), str):
                 server = raw["ap_server"].strip() or None
+            if player_name is None and isinstance(raw.get("player_name"), str):
+                player_name = raw["player_name"].strip() or None
             if not args.no_enemizer and raw.get("randomize_enemies") is False:
                 randomize = False
-            report = run_doctor(settings, randomize_enemies=randomize, server=server)
+            report = run_doctor(
+                settings, randomize_enemies=randomize, server=server, player_name=player_name
+            )
             print(format_report(report))
             return 0 if report.ok else 1
         elif args.command == "ui":
