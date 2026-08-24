@@ -86,12 +86,19 @@ class FixedLocationCatalogTests(unittest.TestCase):
         self.assertTrue(set(REPLACEMENT_FLAGS.values()) <= selected_flags)
 
     def test_every_selected_location_has_a_stable_id_and_wire_binding(self):
+        from worlds.bloodborne import NETWORK_LOCATIONS
         slot_data = build_runtime_slot_data()
         wire = slot_data["runtime_locations"]
+        seeded = {location.key for location in NETWORK_LOCATIONS}
         ids = []
         for location in FIXED_LOCATIONS:
             ap_id = LOCATION_ID_BY_KEY[location.key]
             ids.append(ap_id)
+            # Rows the bounded slice does not seed (today: the clinic
+            # back-yard pair, #124) keep their permanent id but get no wire
+            # binding — the client only tracks flags for checks in the seed.
+            if location.key not in seeded:
+                continue
             self.assertEqual(location.event_flag, wire[str(ap_id)]["event_flag"])
             self.assertEqual(
                 location.vanilla_award_suppressed,

@@ -6,11 +6,18 @@ research scaffolding; it is not emitted into this slice's multidata.
 
 ## Seed contents
 
-- **51 physical fixed pickups** from canonical map `m24_01_00_00` and its
-  `_01` / `_11` runtime variants.
+- **49 in-slice physical fixed pickups** from canonical map `m24_01_00_00`
+  and its `_01` / `_11` runtime variants. Two further pickups — the Iosefka's
+  Clinic back-yard pair — stay in the manifest but out of slice seeds: they
+  are gated behind the Amelia → Laurence's-skull password chain, far past
+  the slice's goal. Their vanilla awards remain suppressed, so in slice 1
+  they are inert pickups (no vanilla item, no AP check).
 - **2 boss checks:** Cleric Beast and Father Gascoigne.
-- **53 network locations total.**
+- **51 network locations total.**
 - **Goal:** Father Gascoigne.
+- **Post-goal region:** Cathedral Ward enters the slice behind
+  `event_gascoigne_defeated`, which keeps the Tomb of Oedon strip pickups
+  (Blood Gem Workshop Tool, Red Jeweled Brooch) honest as post-goal checks.
 - **Item pool:** Saw Spear and Augur of Ebrietas once each, then a deliberate
   cycle of Blood Vials, Quicksilver Bullets x3, Pebbles x3, Molotov Cocktails
   x2, and Blood Stone Shards x2. Torch, Hunter attire, auto-upgrade, and
@@ -37,7 +44,7 @@ The two boss-completion flags come directly from Central Yharnam EMEVD:
 | Cleric Beast | `12411700` | paired boss completion state in `m24_01_00_00` |
 | Father Gascoigne | `12411800` | gates arena cleanup, key award, and downstream world state |
 
-The slot-data contract exposes all 53 flag bindings and identifies Gascoigne's
+The slot-data contract exposes all 51 flag bindings and identifies Gascoigne's
 AP location ID as `goal_location`. The native client sends `CLIENT_GOAL` when
 that debounced check is reported, and resends it after reconnect if the server
 already knows the goal location is checked.

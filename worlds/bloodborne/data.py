@@ -180,8 +180,11 @@ MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 # The generated player currently exposes one honest, bounded vertical slice.
 # The broader model above remains useful research scaffolding, but none of its
 # later regions enter multidata until their runtime contracts are ready.
-CENTRAL_YHARNAM_SLICE_REGIONS = ("Menu", "Hunter's Dream", "Central Yharnam")
-CENTRAL_YHARNAM_SLICE_ENTRANCES = ENTRANCES[:2]
+# Cathedral Ward is in the slice because Gascoigne — the slice's goal — is
+# also its gate, so post-goal pickups on the Tomb of Oedon strip (the Blood
+# Gem Workshop Tool, the Red Jeweled Brooch) stay honest in-slice checks.
+CENTRAL_YHARNAM_SLICE_REGIONS = ("Menu", "Hunter's Dream", "Central Yharnam", "Cathedral Ward")
+CENTRAL_YHARNAM_SLICE_ENTRANCES = ENTRANCES[:3]
 CENTRAL_YHARNAM_SLICE_ITEM_KEYS = frozenset({
     "saw_spear",
     "augur_of_ebrietas",
@@ -194,8 +197,14 @@ CENTRAL_YHARNAM_SLICE_ITEM_KEYS = frozenset({
 # Repeatable consumables may remain elsewhere in the game; the Saw Spear's
 # in-slice vanilla copy must not coexist with its randomized AP copy.
 CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
+# Fixed rows whose region sits outside the slice (today: the two Iosefka's
+# Clinic back-yard pickups, gated behind the Amelia -> Laurence's-skull
+# password chain) stay in the TSV for the full world but do not enter slice
+# seeds. Their vanilla awards remain suppressed, so they are inert pickups in
+# slice 1 — documented in docs/VERTICAL-SLICE.md.
 CENTRAL_YHARNAM_SLICE_LOCATION_KEYS = frozenset({
     "boss_cleric_beast",
     "boss_father_gascoigne",
-    *(location.key for location in FIXED_LOCATIONS),
+    *(location.key for location in FIXED_LOCATIONS
+      if location.region in CENTRAL_YHARNAM_SLICE_REGIONS),
 })

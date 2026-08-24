@@ -233,9 +233,17 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
 
     sys.path.insert(0, str(REPO))
     from worlds.bloodborne import NETWORK_LOCATIONS
+    from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
     from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
 
+    # Suppression scope is deliberately wider than seed scope: every reviewed
+    # manifest row keeps its vanilla award replaced even when the bounded
+    # slice does not seed it as a check (today: the two Iosefka's Clinic
+    # back-yard rows, #124). An inert pickup must not hand out its vanilla
+    # item, and keeping the scope stable keeps the plan digest — and the
+    # binder playtesters already run — bit-identical.
     active_keys = {location.key for location in NETWORK_LOCATIONS}
+    active_keys |= {location.key for location in FIXED_LOCATIONS}
     for key in sorted(active_keys):
         binding = LOCATION_BINDINGS[key]
         if binding.item_lot_id is None:

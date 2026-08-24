@@ -18,10 +18,18 @@ client owns those version-specific facts.
 
 ## Included slice
 
-The first slice contains all 51 physical first-cycle Central Yharnam pickups,
-plus Cleric Beast and Father Gascoigne. `worlds/bloodborne/fixed_locations.tsv`
-is the complete reviewed pickup manifest; mutually exclusive later-cycle map
-copies do not become duplicate network checks.
+The first slice seeds 49 of the 51 physical first-cycle Central Yharnam
+pickups, plus Cleric Beast and Father Gascoigne.
+`worlds/bloodborne/fixed_locations.tsv` is the complete reviewed pickup
+manifest; mutually exclusive later-cycle map copies do not become duplicate
+network checks. Two manifest rows — the Iosefka's Clinic back-yard pair
+(`fixed_central_yharnam_lot_2410140`, `fixed_central_yharnam_lot_2410640`) —
+carry their true region (`Iosefka's Clinic`, reached only through the
+Forbidden Woods passage past Amelia) and therefore stay out of slice seeds
+until the world grows that chain (#124); their vanilla awards remain
+suppressed. The Tomb of Oedon strip rows (Red Jeweled Brooch, Blood Gem
+Workshop Tool) seed as Cathedral Ward checks behind
+`event_gascoigne_defeated`.
 
 The bullet pickup is the canary: ItemLotParam `2410800`, acquisition flag
 `52410800`. That exact flag was observed false before pickup and true after
