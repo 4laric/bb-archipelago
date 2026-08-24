@@ -24,6 +24,22 @@ under `Unreleased` and move into a dated version section when released.
   of the original report is still unconfirmed; this closes the degraded path
   either way.
 
+- **Your own mods can run alongside the randomizer, in `CUSA03173-mods-user`
+  (#134).** The launcher owns `CUSA03173-mods` outright and rebuilds it on every
+  launch, so mods put there kept vanishing into `.CUSA03173-mods.bb-ap-previous-...`
+  folders — the transaction working as designed, and indistinguishable from data
+  loss. There is now a supported folder for your content: make
+  `CUSA03173-mods-user` next to `CUSA03173`, lay your mods out inside it the way
+  they ship, and the launcher merges them into the overlay on every launch. It
+  only ever reads that folder: nothing in it is renamed, moved, or deleted by
+  launching, restoring, or Launch Vanilla. The randomizer's own files always
+  win — a mod's `gameparam.parambnd.dcx`, or a MapStudio map an enemy-randomized
+  seed also uses, is left out rather than allowed to break your checks — and
+  every left-out file is named, with its reason, on the Doctor's new `user mods`
+  line. Nothing is merged silently and nothing is dropped silently. If your mods
+  are already sitting in a quarantine folder, move them into
+  `CUSA03173-mods-user` and they come back.
+
 - **The Oedon Tomb Key is shuffled, so a seed no longer opens in go-mode.**
   Vanilla hands you the key on Father Gascoigne's corpse, and the door out of
   the Tomb of Oedon is the only way into Cathedral Ward — which meant every one

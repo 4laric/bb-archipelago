@@ -2,6 +2,13 @@
 
 Only launcher-owned files may enter ``CUSA03173-mods``.  Base and update trees
 are read-only inputs and never appear as mutation targets in this module.
+
+Player-supplied mods live in the sibling ``CUSA03173-mods-user`` directory,
+which the launcher only ever *reads*.  Activation copies its files into the
+staged overlay alongside the generated ones and records them in the ownership
+manifest, so the launcher still owns ``CUSA03173-mods`` exclusively and the
+activation transaction is unchanged.  Archipelago-owned paths always win: a
+user file that collides with one is excluded and reported, never merged.
 """
 
 from __future__ import annotations
@@ -24,6 +31,7 @@ APP_VERSION = "01.09"
 BASE_DIR_NAME = SERIAL
 PATCH_DIR_NAMES = (f"{SERIAL}-patch", f"{SERIAL}-UPDATE")
 MODS_DIR_NAME = f"{SERIAL}-mods"
+USER_MODS_DIR_NAME = f"{SERIAL}-mods-user"
 SEED_MANIFEST_NAME = "seed-manifest.json"
 SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v1"
 OWNER_NAME = ".bb-ap-owner.json"
@@ -32,6 +40,12 @@ TRANSACTION_NAME = ".bb-ap-launcher-transaction.json"
 TRANSACTION_FORMAT = "bb-launcher-activation-transaction-v1"
 SUPPRESSION_PATH = "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx"
 MAP_PREFIX = "dvdroot_ps4/map/MapStudio/"
+USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
+# Names the launcher's own transaction and ownership machinery uses inside the
+# overlay.  A user file claiming one of them is excluded, not merged.
+RESERVED_OVERLAY_PREFIX = ".bb-ap-"
+EXCLUDED_AP_OWNED = "ap-owned"
+EXCLUDED_RESERVED = "reserved"
 
 
 class LauncherError(RuntimeError):
@@ -148,6 +162,78 @@ def _tree_files(root: Path, *, ignore: Iterable[str] = ()) -> dict[str, Path]:
             raise ValidationError(f"symbolic links are not allowed in managed trees: {path}")
         if path.is_file() and relative not in ignored:
             found[relative] = path
+    return found
+
+
+@dataclass(frozen=True)
+class UserModExclusion:
+    """One user file that was not merged, and why."""
+
+    path: str
+    reason: str
+
+    def as_dict(self) -> dict[str, str]:
+        return {"path": self.path, "reason": self.reason}
+
+
+@dataclass(frozen=True)
+class UserModMerge:
+    """The decided file set for one activation: what merges, what does not.
+
+    Pure policy over path sets -- no filesystem access -- so the conflict rule
+    is testable on its own.  Archipelago-owned overlay paths always win; a user
+    file claiming one is excluded and reported rather than merged or dropped
+    silently.  Comparison is case-insensitive because the overlay is consumed
+    on case-insensitive filesystems, where two such paths are one file.
+    """
+
+    merged: Mapping[str, str]
+    excluded: tuple[UserModExclusion, ...]
+
+    @property
+    def fingerprint(self) -> str:
+        """Digest of the decision, so a changed user directory forces a rebuild."""
+
+        payload = {
+            "format": USER_MERGE_FORMAT,
+            "merged": sorted(self.merged.items()),
+            "excluded": [exclusion.as_dict() for exclusion in self.excluded],
+        }
+        return hashlib.sha256(canonical_json(payload)).hexdigest()
+
+
+def plan_user_merge(
+    user_hashes: Mapping[str, str], owned_paths: Iterable[str]
+) -> UserModMerge:
+    """Decide which user files may enter the overlay beside the owned ones."""
+
+    protected = {str(path).replace("\\", "/").casefold() for path in owned_paths}
+    merged: dict[str, str] = {}
+    excluded: list[UserModExclusion] = []
+    for relative in sorted(user_hashes):
+        normalized = _safe_relative_path(relative).as_posix()
+        digest = _require_sha256(str(user_hashes[relative]), f"user mod file {normalized!r}")
+        parts = PurePosixPath(normalized).parts
+        if any(part.startswith(RESERVED_OVERLAY_PREFIX) for part in parts):
+            excluded.append(UserModExclusion(normalized, EXCLUDED_RESERVED))
+            continue
+        if normalized.casefold() in protected:
+            excluded.append(UserModExclusion(normalized, EXCLUDED_AP_OWNED))
+            continue
+        merged[normalized] = digest
+    return UserModMerge(merged, tuple(excluded))
+
+
+def collect_user_mod_files(root: Path) -> dict[str, Path]:
+    """Read the player's mods directory. Never written, never renamed."""
+
+    if not root.exists():
+        return {}
+    if not root.is_dir() or root.is_symlink():
+        raise ConflictError(f"user mods path is not a regular directory: {root}")
+    found: dict[str, Path] = {}
+    for relative, path in _tree_files(root).items():
+        found[_safe_relative_path(relative).as_posix()] = path
     return found
 
 
@@ -452,7 +538,12 @@ def _foreign_serial_dirs(candidate: Path) -> list[str]:
     """
     if not candidate.is_dir():
         return []
-    known = {BASE_DIR_NAME.casefold(), *(name.casefold() for name in PATCH_DIR_NAMES)}
+    known = {
+        BASE_DIR_NAME.casefold(),
+        MODS_DIR_NAME.casefold(),
+        USER_MODS_DIR_NAME.casefold(),
+        *(name.casefold() for name in PATCH_DIR_NAMES),
+    }
     try:
         found = [
             entry.name
@@ -520,6 +611,12 @@ class GameInstall:
                 f"expected {SERIAL} AppVer {APP_VERSION}, {version_source} reports {version!r}"
             )
         return cls(candidate, base, patch, candidate / MODS_DIR_NAME)
+
+    @property
+    def user_mods(self) -> Path:
+        """Player-owned mods directory. Read-only to the launcher, always."""
+
+        return self.root / USER_MODS_DIR_NAME
 
     def content_backends(self) -> list[tuple[str, Path]]:
         """Patch-then-base layers holding source game content (never mods)."""
@@ -643,6 +740,37 @@ def discover_shad_executable(search_roots: Iterable[Path | str], max_depth: int 
     raise DiscoveryError("no shadPS4.exe was found in the selected search roots")
 
 
+def _user_merge_records(owner: Mapping[str, Any]) -> list[Mapping[str, Any]]:
+    section = owner.get("user_merge")
+    if section is None:
+        return []
+    if not isinstance(section, dict):
+        raise ValidationError("overlay user_merge section is not an object")
+    if section.get("format") != USER_MERGE_FORMAT:
+        raise ValidationError("overlay user_merge section has an unknown format")
+    records = section.get("files", [])
+    if not isinstance(records, list):
+        raise ValidationError("overlay user_merge files is not a list")
+    for record in records:
+        if not isinstance(record, dict):
+            raise ValidationError("overlay user_merge file record is not an object")
+    return records
+
+
+def user_merge_summary(owner: Mapping[str, Any]) -> tuple[int, tuple[UserModExclusion, ...]]:
+    """Merged-file count and reported exclusions recorded on an active overlay."""
+
+    section = owner.get("user_merge")
+    if not isinstance(section, dict):
+        return 0, ()
+    exclusions = tuple(
+        UserModExclusion(str(entry.get("path", "")), str(entry.get("reason", "")))
+        for entry in section.get("excluded", [])
+        if isinstance(entry, dict)
+    )
+    return len(_user_merge_records(owner)), exclusions
+
+
 def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any]:
     if not root.is_dir() or root.is_symlink():
         raise ConflictError(f"mods path is not a regular directory: {root}")
@@ -668,6 +796,16 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
         relative = _safe_overlay_path(str(record.get("path", "")))
         if relative in expected:
             raise ValidationError(f"duplicate owned overlay path: {relative}")
+        expected[relative] = record
+    # Merged player files are owned by the same manifest, but they are outside
+    # the param/map contract by definition, so they are validated as ordinary
+    # game-relative paths.  An overlay written before user merging existed has
+    # no such section and stays exactly as strict as it was.
+    protected = {relative.casefold() for relative in expected}
+    for record in _user_merge_records(owner):
+        relative = _safe_relative_path(str(record.get("path", ""))).as_posix()
+        if relative in expected or relative.casefold() in protected:
+            raise ValidationError(f"merged user file collides with an owned path: {relative}")
         expected[relative] = record
     actual = _tree_files(root, ignore=(OWNER_NAME,))
     if set(actual) != set(expected):
@@ -877,6 +1015,8 @@ def _stage_overlay(
     build: BuildResult,
     stage: Path,
     previous_cache_key: str | None,
+    user_sources: Mapping[str, Path] | None = None,
+    merge: UserModMerge | None = None,
 ) -> dict[str, Any]:
     stage.mkdir()
     for record in build.manifest["files"]:
@@ -887,6 +1027,23 @@ def _stage_overlay(
         shutil.copyfile(source, destination)
         if sha256_file(destination) != record["sha256"]:
             raise ValidationError(f"staged activation copy failed verification: {relative}")
+    user_records: list[dict[str, Any]] = []
+    if merge is not None and merge.merged:
+        sources = user_sources or {}
+        # Copied after the generated files and never over one of them: the
+        # merge plan already excluded every Archipelago-owned path.
+        for relative, digest in sorted(merge.merged.items()):
+            source = sources[relative]
+            destination = stage.joinpath(*PurePosixPath(relative).parts)
+            if destination.exists():
+                raise ValidationError(f"user mod file would overwrite an owned path: {relative}")
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, destination)
+            if sha256_file(destination) != digest:
+                raise ValidationError(f"staged user mod copy failed verification: {relative}")
+            user_records.append(
+                {"path": relative, "size": destination.stat().st_size, "sha256": digest}
+            )
     owner = {
         "format": OWNER_FORMAT,
         "launcher": "bloodborne-archipelago",
@@ -899,10 +1056,31 @@ def _stage_overlay(
         "files": build.manifest["files"],
         "suppression": build.manifest["suppression"],
         "enemizer": build.manifest["enemizer"],
+        "user_merge": {
+            "format": USER_MERGE_FORMAT,
+            "source": USER_MODS_DIR_NAME,
+            "fingerprint": (merge or UserModMerge({}, ())).fingerprint,
+            "files": user_records,
+            "excluded": [
+                exclusion.as_dict() for exclusion in (merge.excluded if merge else ())
+            ],
+        },
     }
     _write_json_atomic(stage / OWNER_NAME, owner)
     _load_owner(stage, expected_key=build.cache_key)
     return owner
+
+
+def plan_activation_merge(
+    install: GameInstall, build: "BuildResult"
+) -> tuple[dict[str, Path], UserModMerge]:
+    """Read the player's mods directory and decide the merge for this build."""
+
+    sources = collect_user_mod_files(install.user_mods)
+    hashes = {relative: sha256_file(path) for relative, path in sources.items()}
+    owned = [_safe_overlay_path(str(record["path"])) for record in build.manifest["files"]]
+    merge = plan_user_merge(hashes, owned)
+    return {relative: sources[relative] for relative in merge.merged}, merge
 
 
 def activate_build(
@@ -917,10 +1095,23 @@ def activate_build(
     _require_shad_stopped(process_is_running)
     recover_activation(install, process_is_running=process_is_running)
     build = SeedCache(Path(build_path).resolve().parent).verify(build_path)
+    user_sources, merge = plan_activation_merge(install, build)
     previous_owner = None
     if install.mods.exists():
         previous_owner = _load_owner(install.mods)
-        if previous_owner["cache_key"] == build.cache_key:
+        active_fingerprint = ""
+        section = previous_owner.get("user_merge")
+        if isinstance(section, dict):
+            active_fingerprint = str(section.get("fingerprint", ""))
+        elif not merge.merged and not merge.excluded:
+            # Pre-merge overlay with nothing to merge: unchanged by definition.
+            active_fingerprint = merge.fingerprint
+        # A changed user mods directory changes the overlay even when the seed
+        # build is identical, so it must run a full transaction, not short out.
+        if (
+            previous_owner["cache_key"] == build.cache_key
+            and active_fingerprint == merge.fingerprint
+        ):
             return previous_owner
     transaction_id = uuid.uuid4().hex
     stage = install.root / f".{MODS_DIR_NAME}.bb-ap-stage-{transaction_id}"
@@ -937,6 +1128,8 @@ def activate_build(
             build,
             stage,
             None if previous_owner is None else str(previous_owner["cache_key"]),
+            user_sources,
+            merge,
         )
     except Exception:
         if stage.exists():

@@ -9,11 +9,14 @@ from pathlib import Path
 
 from bb_launcher.core import (
     APP_VERSION,
+    EXCLUDED_AP_OWNED,
+    EXCLUDED_RESERVED,
     MAP_PREFIX,
     MODS_DIR_NAME,
     OWNER_NAME,
     SERIAL,
     SUPPRESSION_PATH,
+    USER_MODS_DIR_NAME,
     ConflictError,
     DiscoveryError,
     GameInstall,
@@ -23,15 +26,18 @@ from bb_launcher.core import (
     SeedIdentity,
     ValidationError,
     activate_build,
+    collect_user_mod_files,
     deactivate_overlay,
     discover_game_install,
     discover_shad_executable,
     launch_processes,
+    plan_user_merge,
     recover_activation,
     require_no_stray_cheat_engine,
     restore_previous_build,
     sha256_file,
     stray_cheat_engine_names,
+    user_merge_summary,
 )
 
 
@@ -437,6 +443,211 @@ class LauncherCoreTests(unittest.TestCase):
         message.encode("ascii")  # in-game and console text stays ASCII
         self.assertIn("Close Cheat Engine and press Launch again", message)
         self.assertIn("no items could be delivered", message)
+
+
+def write_user_mod(install, relative: str, content: bytes) -> Path:
+    path = install.user_mods.joinpath(*relative.split("/"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(content)
+    return path
+
+
+def digests(*paths: str) -> dict[str, str]:
+    return {path: hashlib.sha256(path.encode()).hexdigest() for path in paths}
+
+
+class UserModMergePolicyTests(unittest.TestCase):
+    """Pure file-set policy: what merges, what is excluded, and why.
+
+    These assert on a populated input every time -- an empty user set would
+    satisfy every "nothing was merged" claim vacuously.
+    """
+
+    def test_ordinary_user_files_merge(self):
+        user = digests("dvdroot_ps4/chr/c0000.bnd.dcx", "dvdroot_ps4/action/script/c0000.hks")
+        merge = plan_user_merge(user, [SUPPRESSION_PATH])
+        self.assertEqual(set(merge.merged), set(user))
+        self.assertEqual(len(merge.merged), 2)
+        self.assertFalse(merge.excluded, "nothing here collides with an owned path")
+
+    def test_ap_owned_path_is_excluded_and_reported_not_dropped(self):
+        user = digests(SUPPRESSION_PATH, "dvdroot_ps4/parts/wp.partsbnd.dcx")
+        merge = plan_user_merge(user, [SUPPRESSION_PATH])
+        self.assertEqual(set(merge.merged), {"dvdroot_ps4/parts/wp.partsbnd.dcx"})
+        self.assertEqual(
+            [(item.path, item.reason) for item in merge.excluded],
+            [(SUPPRESSION_PATH, EXCLUDED_AP_OWNED)],
+        )
+
+    def test_owned_map_collision_is_case_insensitive(self):
+        owned = f"{MAP_PREFIX}m24_01_00_00.msb.dcx"
+        user = digests(owned.upper(), f"{MAP_PREFIX}m99_99_99_99.msb.dcx")
+        merge = plan_user_merge(user, [owned])
+        self.assertEqual(set(merge.merged), {f"{MAP_PREFIX}m99_99_99_99.msb.dcx"})
+        self.assertEqual([item.reason for item in merge.excluded], [EXCLUDED_AP_OWNED])
+
+    def test_launcher_reserved_names_are_excluded(self):
+        user = digests(OWNER_NAME, ".bb-ap-anything/inside.bin", "dvdroot_ps4/chr/ok.dcx")
+        merge = plan_user_merge(user, [SUPPRESSION_PATH])
+        self.assertEqual(set(merge.merged), {"dvdroot_ps4/chr/ok.dcx"})
+        self.assertEqual(
+            sorted(item.reason for item in merge.excluded),
+            [EXCLUDED_RESERVED, EXCLUDED_RESERVED],
+        )
+
+    def test_fingerprint_tracks_both_the_merged_and_excluded_sets(self):
+        base = plan_user_merge(digests("dvdroot_ps4/chr/a.dcx"), [SUPPRESSION_PATH])
+        same = plan_user_merge(digests("dvdroot_ps4/chr/a.dcx"), [SUPPRESSION_PATH])
+        added = plan_user_merge(
+            digests("dvdroot_ps4/chr/a.dcx", "dvdroot_ps4/chr/b.dcx"), [SUPPRESSION_PATH]
+        )
+        collided = plan_user_merge(
+            digests("dvdroot_ps4/chr/a.dcx", SUPPRESSION_PATH), [SUPPRESSION_PATH]
+        )
+        self.assertEqual(base.fingerprint, same.fingerprint)
+        self.assertNotEqual(base.fingerprint, added.fingerprint)
+        self.assertNotEqual(base.fingerprint, collided.fingerprint)
+
+    def test_unsafe_user_paths_are_refused_outright(self):
+        with self.assertRaisesRegex(ValidationError, "unsafe game-relative path"):
+            plan_user_merge(digests("../escape.bin"), [SUPPRESSION_PATH])
+
+
+class UserModMergeActivationTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        self.install = make_install(self.root / "game")
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def test_user_files_merge_into_the_overlay_and_are_owned_by_the_manifest(self):
+        write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
+        write_user_mod(self.install, "dvdroot_ps4/action/script/c0000.hks", b"jump")
+        before = snapshot_tree(self.install.user_mods)
+        _cache, build = make_build(self.root / "build", "seed", b"suppressed")
+        owner = activate_build(self.install, build, process_is_running=lambda: False)
+        merged, excluded = user_merge_summary(owner)
+        self.assertEqual((merged, excluded), (2, ()))
+        self.assertEqual(
+            self.install.mods.joinpath("dvdroot_ps4", "chr", "c0000.bnd.dcx").read_bytes(),
+            b"user-chr",
+        )
+        self.assertEqual(
+            self.install.mods.joinpath(*SUPPRESSION_PATH.split("/")).read_bytes(), b"suppressed"
+        )
+        # The user's directory is an input, never a target.
+        self.assertEqual(snapshot_tree(self.install.user_mods), before)
+        self.assertEqual(len(before), 2)
+
+    def test_user_gameparam_is_excluded_reported_and_the_ap_binder_wins(self):
+        write_user_mod(self.install, SUPPRESSION_PATH, b"USER-GAMEPARAM")
+        write_user_mod(self.install, "dvdroot_ps4/parts/wp.partsbnd.dcx", b"parts")
+        _cache, build = make_build(self.root / "build", "seed", b"suppressed")
+        owner = activate_build(self.install, build, process_is_running=lambda: False)
+        merged, excluded = user_merge_summary(owner)
+        self.assertEqual(merged, 1)
+        self.assertEqual(
+            [(item.path, item.reason) for item in excluded],
+            [(SUPPRESSION_PATH, EXCLUDED_AP_OWNED)],
+        )
+        backend, active = self.install.resolve_file(SUPPRESSION_PATH)
+        self.assertEqual((backend, active.read_bytes()), ("mods", b"suppressed"))
+        self.assertEqual(
+            self.install.user_mods.joinpath(*SUPPRESSION_PATH.split("/")).read_bytes(),
+            b"USER-GAMEPARAM",
+        )
+
+    def test_user_msb_colliding_with_an_enemizer_map_is_excluded(self):
+        colliding = f"{MAP_PREFIX}m24_01_00_00.msb.dcx"
+        write_user_mod(self.install, colliding, b"user-map")
+        write_user_mod(self.install, f"{MAP_PREFIX}m99_99_99_99.msb.dcx", b"other-map")
+        _cache, build = make_build(self.root / "build", "seed", b"suppressed", with_maps=True)
+        owner = activate_build(self.install, build, process_is_running=lambda: False)
+        merged, excluded = user_merge_summary(owner)
+        self.assertEqual(merged, 1)
+        self.assertEqual([item.path for item in excluded], [colliding])
+        self.assertEqual(
+            self.install.mods.joinpath(*colliding.split("/")).read_bytes(), b"map-suppressed"
+        )
+
+    def test_changing_the_user_directory_reactivates_the_same_seed(self):
+        _cache, build = make_build(self.root / "build", "seed", b"suppressed")
+        first = activate_build(self.install, build, process_is_running=lambda: False)
+        self.assertEqual(user_merge_summary(first)[0], 0)
+        write_user_mod(self.install, "dvdroot_ps4/chr/late.bnd.dcx", b"added-later")
+        second = activate_build(self.install, build, process_is_running=lambda: False)
+        self.assertEqual(user_merge_summary(second)[0], 1)
+        self.assertEqual(second["cache_key"], first["cache_key"])
+        self.assertTrue(
+            self.install.mods.joinpath("dvdroot_ps4", "chr", "late.bnd.dcx").is_file()
+        )
+        # Unchanged inputs still short-circuit rather than churn the overlay.
+        again = activate_build(self.install, build, process_is_running=lambda: False)
+        self.assertEqual(again["user_merge"]["fingerprint"], second["user_merge"]["fingerprint"])
+
+    def test_a_merged_overlay_still_fails_closed_on_an_unowned_addition(self):
+        write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
+        _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
+        _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
+        activate_build(self.install, build_a, process_is_running=lambda: False)
+        surprise = self.install.mods / "dvdroot_ps4" / "chr" / "surprise.bin"
+        surprise.write_bytes(b"dropped in by hand")
+        with self.assertRaisesRegex(ConflictError, "unowned"):
+            activate_build(self.install, build_b, process_is_running=lambda: False)
+        self.assertEqual(surprise.read_bytes(), b"dropped in by hand")
+
+    def test_editing_a_merged_file_in_place_is_detected(self):
+        write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
+        _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
+        _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
+        activate_build(self.install, build_a, process_is_running=lambda: False)
+        self.install.mods.joinpath("dvdroot_ps4", "chr", "c0000.bnd.dcx").write_bytes(b"tampered")
+        with self.assertRaisesRegex(ValidationError, "hash changed"):
+            activate_build(self.install, build_b, process_is_running=lambda: False)
+
+    def test_deactivate_and_restore_leave_the_user_directory_untouched(self):
+        write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
+        before = snapshot_tree(self.install.user_mods)
+        cache = SeedCache(self.root / "cache")
+        binder_a = self.root / "a.dcx"
+        binder_b = self.root / "b.dcx"
+        binder_a.write_bytes(b"A")
+        binder_b.write_bytes(b"B")
+        build_a = cache.build(identity("seed-a", b"A"), binder_a).path
+        build_b = cache.build(identity("seed-b", b"B"), binder_b).path
+        activate_build(self.install, build_a, process_is_running=lambda: False)
+        activate_build(self.install, build_b, process_is_running=lambda: False)
+        restore_previous_build(self.install, cache, process_is_running=lambda: False)
+        self.assertEqual(snapshot_tree(self.install.user_mods), before)
+        deactivate_overlay(self.install, process_is_running=lambda: False)
+        self.assertFalse(self.install.mods.exists())
+        self.assertEqual(snapshot_tree(self.install.user_mods), before)
+        self.assertEqual(len(before), 1)
+
+    def test_a_symlink_in_the_user_directory_fails_closed(self):
+        write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
+        link = self.install.user_mods / "dvdroot_ps4" / "chr" / "link.dcx"
+        try:
+            link.symlink_to(self.install.base)
+        except (OSError, NotImplementedError):
+            self.skipTest("this platform does not allow creating symbolic links")
+        with self.assertRaisesRegex(ValidationError, "symbolic links are not allowed"):
+            collect_user_mod_files(self.install.user_mods)
+
+    def test_the_user_directory_is_the_documented_sibling_and_may_be_absent(self):
+        self.assertEqual(self.install.user_mods.name, USER_MODS_DIR_NAME)
+        self.assertEqual(self.install.user_mods.parent, self.install.root)
+        self.assertFalse(self.install.user_mods.exists())
+        # Witness that the collector is the one reporting nothing: the same
+        # call finds the file once the directory exists.
+        self.assertFalse(collect_user_mod_files(self.install.user_mods))
+        write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
+        self.assertEqual(
+            list(collect_user_mod_files(self.install.user_mods)),
+            ["dvdroot_ps4/chr/c0000.bnd.dcx"],
+        )
 
 
 if __name__ == "__main__":

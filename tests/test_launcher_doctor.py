@@ -11,7 +11,13 @@ from unittest.mock import patch
 
 from bb_launcher.cli import main as cli_main
 from bb_launcher.client_config import session_paths
-from bb_launcher.core import SERIAL, SUPPRESSION_PATH, GameInstall
+from bb_launcher.core import (
+    MAP_PREFIX,
+    SERIAL,
+    SUPPRESSION_PATH,
+    USER_MODS_DIR_NAME,
+    GameInstall,
+)
 from bb_launcher.readiness import BRIDGE_STATE_NAME
 from bb_launcher.doctor import FAIL, PASS, SKIP, WARN, format_report, run_doctor
 from bb_launcher.workflow import PROCESS_PLAN_FORMAT, SETTINGS_FORMAT, LauncherSettings
@@ -195,6 +201,7 @@ class DoctorTests(unittest.TestCase):
             "suppression binder and manifest",
             "installed gameparam",
             "MapStudio source",
+            "user mods",
             "AP server",
             "blocking processes",
         ):
@@ -404,6 +411,40 @@ class DoctorTests(unittest.TestCase):
         )
         self.assertTrue(report.ok)
 
+    def _user_mod(self, relative: str, content: bytes = b"user") -> Path:
+        path = self.fixture.root / "game" / USER_MODS_DIR_NAME
+        path = path.joinpath(*relative.split("/"))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+        return path
+
+    def test_user_mods_pass_names_the_merged_count(self):
+        self._user_mod("dvdroot_ps4/chr/c0000.bnd.dcx")
+        self._user_mod("dvdroot_ps4/action/script/c0000.hks")
+        result = finding(run(self.fixture), "user mods")
+        self.assertEqual(result.status, PASS)
+        self.assertIn("2 file(s)", result.detail)
+
+    def test_user_gameparam_is_reported_as_an_exclusion(self):
+        self._user_mod(SUPPRESSION_PATH)
+        self._user_mod("dvdroot_ps4/chr/c0000.bnd.dcx")
+        result = finding(run(self.fixture), "user mods")
+        self.assertEqual(result.status, WARN)
+        self.assertIn("ap-owned", result.detail)
+        self.assertIn(SUPPRESSION_PATH, result.detail)
+        self.assertIsNotNone(result.remedy)
+
+    def test_user_maps_warn_only_while_the_enemizer_is_on(self):
+        self._user_mod(f"{MAP_PREFIX}m24_01_00_00.msb.dcx")
+        self.assertEqual(finding(run(self.fixture), "user mods").status, WARN)
+        report = run(self.fixture, randomize_enemies=False)
+        self.assertEqual(finding(report, "user mods").status, PASS)
+
+    def test_absent_user_directory_passes(self):
+        result = finding(run(self.fixture), "user mods")
+        self.assertEqual(result.status, PASS)
+        self.assertIn(USER_MODS_DIR_NAME, result.detail)
+
     def test_bad_game_root_skips_dependent_checks(self):
         self.fixture.gameparam.unlink()
         broken = self.fixture.settings_dict()
@@ -415,6 +456,7 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(finding(report, "game installation").status, FAIL)
         self.assertEqual(finding(report, "installed gameparam").status, SKIP)
         self.assertEqual(finding(report, "MapStudio source").status, FAIL)
+        self.assertEqual(finding(report, "user mods").status, SKIP)
 
     def test_enemizer_off_skips_map_check(self):
         report = run(self.fixture, randomize_enemies=False)
