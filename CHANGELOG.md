@@ -8,6 +8,8 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **Save-restore and character-switch reconciliation is documented as shipped (#77).** The native client keys each delivery receipt to a `seed_name:slot` ledger that now carries a per-slot save watermark: a save restored to an earlier state re-issues exactly the erased deliveries, a lost ledger adopts the save's cursor without re-granting, and switching to another character is refused rather than mixing two inventories -- every shape has one defined outcome and no outcome can duplicate or silently drop an acknowledged item. Automatic restore detection still waits on the live watermark address (#56); until then an operator confirms a restore with the `bb-restored` command. `docs/SAVE-RECONCILIATION.md` now records the implemented status, its evidence label (mock-tested, not live-validated), and the owner game-session checklist for the remaining live facts.
+
 - **Slice 3 — Cathedral Ward, Old Yharnam, and the Blood-starved Beast.** The
   playable area is no longer Central Yharnam alone. A seed now covers Central
   Yharnam, Cathedral Ward, Old Yharnam and the Grand Cathedral: **168 checks**
