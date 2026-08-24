@@ -63,6 +63,18 @@ a running randomized seed, and tells you exactly what to report back.
    other players find for you arrive in your inventory automatically. The
    client's console window says what arrived.
 
+### What normal delivery looks like
+
+- **Consumables** (vials, bullets, Molotovs, pebbles) arrive **instantly** and
+  stack onto piles you already have — if you were full, they overflow into
+  storage. Nothing appearing on screen does not mean nothing arrived.
+- **Key items and weapons can take up to ~30 seconds each.** They are inserted
+  natively and verified one at a time, so a burst of deliveries arrives as a
+  queue, not all at once. A key item taking half a minute is normal.
+- The launcher's **Session status** panel shows the truth: `Ledger: N
+  acknowledged` counts everything the server sent that you have actually
+  received. Trust the ledger count over your memory of the inventory.
+
 ### The three rules (this is early test software)
 
 - **One character per session.** The client cannot yet tell which character is
