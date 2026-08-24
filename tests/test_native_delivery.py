@@ -44,7 +44,18 @@ from bb_native_delivery.descriptor import (  # noqa: E402
 from bb_native_delivery.guest import entry_address  # noqa: E402
 from bb_native_delivery.process import logged_eboot_base  # noqa: E402
 
-TABLE = ROOT / "tables" / "Bloodborne-native-item-grant-auto-v2.CT"
+# The Archipelago CI tier copies tests/ and tools/ into a checkout of Archipelago
+# but not tables/, so the table sits one level up there. Same fallback as
+# tests/test_grant_harness_contract.py.
+TABLE_NAME = "Bloodborne-native-item-grant-auto-v2.CT"
+TABLE = next(
+    path
+    for path in (ROOT / "tables" / TABLE_NAME, ROOT.parent / "tables" / TABLE_NAME)
+    if path.exists()
+)
+CONTRACT_ROOT = next(
+    root for root in (ROOT, ROOT.parent) if contract.contract_path(root).exists()
+)
 
 
 # The bytes this assembler emitted the day it was written, verified instruction
@@ -449,7 +460,7 @@ class ContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.committed = json.loads(
-            contract.contract_path(ROOT).read_text(encoding="utf-8")
+            contract.contract_path(CONTRACT_ROOT).read_text(encoding="utf-8")
         )
 
     def test_the_committed_contract_is_what_the_generator_produces(self):
