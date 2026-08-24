@@ -50,6 +50,16 @@ def main() -> int:
     parser.add_argument("--pid", type=int, required=True)
     parser.add_argument("--base", type=lambda v: int(v, 0), default=None)
     parser.add_argument("--shad-log", default=None)
+    parser.add_argument(
+        "--armed",
+        action="store_true",
+        help=(
+            "the CE table is already installed: the hook sites now hold E9 "
+            "detours, so the original-bytes image check cannot pass. Trust "
+            "--base (from the table's AUTO V5 READY line) and confirm a detour "
+            "is present at each hook instead."
+        ),
+    )
     args = parser.parse_args()
 
     with ProcessMemory(args.pid, writable=False) as memory:
@@ -61,13 +71,29 @@ def main() -> int:
             if base is None:
                 print(f"no eboot base found in {log_path}; pass --base", file=sys.stderr)
                 return 2
-        if not verify_base(memory, base):
+        if args.armed:
+            if args.base is None:
+                print("--armed requires --base (from the AUTO V5 READY line)", file=sys.stderr)
+                return 2
+            for name, rva in (("consume_hook", 0x14D9575), ("heartbeat_hook", 0x1BFE882)):
+                first = memory.read(base + rva, 1)
+                if first != b"\xE9":
+                    print(
+                        f"eboot base 0x{base:X}: no E9 detour at {name}+0x{rva:X} "
+                        f"(found 0x{first.hex().upper()}) -- wrong base, or the table is not armed",
+                        file=sys.stderr,
+                    )
+                    return 2
+            print(f"eboot base 0x{base:X} confirmed armed (E9 detours present at both hooks)")
+        elif not verify_base(memory, base):
             print(
-                f"eboot base 0x{base:X} failed image verification -- stale log? pass --base",
+                f"eboot base 0x{base:X} failed image verification. If the CE table is "
+                f"already loaded, the hook originals are overwritten -- rerun with --armed.",
                 file=sys.stderr,
             )
             return 2
-        print(f"eboot base 0x{base:X} verified")
+        else:
+            print(f"eboot base 0x{base:X} verified (unarmed image)")
 
         failures = 0
         for blob in (consume_cave(), heartbeat_cave()):
