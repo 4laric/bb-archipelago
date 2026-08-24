@@ -49,6 +49,58 @@ conflict. An owned directory with an added file is also a conflict. Neither is
 renamed, merged, deleted, or overwritten. The code never opens the base or
 update trees for writing.
 
+## Player mods: `CUSA03173-mods-user`
+
+shadPS4 resolves loose files `mods > patch > base`, and that documented search
+path names exactly one mods location per game. The launcher owns it, so a file
+dropped into `CUSA03173-mods` by hand or by a third-party tool is carried aside
+into `.CUSA03173-mods.bb-ap-previous-<txid>` on the next activation -- which is
+the transaction working correctly, and looked like data loss (#134).
+
+The supported place for player content is the sibling directory
+`CUSA03173-mods-user`. The launcher **only ever reads it**: it is never renamed,
+written, staged, quarantined, or removed by activation, recovery, `Launch
+Vanilla`, or `Restore Previous`. On each activation the launcher hashes its
+contents, decides a merge, copies the accepted files into the staged overlay
+alongside the generated ones, and records them in the same ownership manifest
+(`user_merge`). So the launcher still owns `CUSA03173-mods` exclusively and the
+activation transaction is unchanged; the merge is one more thing the stage is
+built from. Put your mods there once and they survive every activation.
+
+```text
+<games>/
+├── CUSA03173/               # base, read-only
+├── CUSA03173-patch/         # 01.09 update, read-only
+├── CUSA03173-mods/          # launcher-owned overlay, rebuilt each activation
+└── CUSA03173-mods-user/     # yours: dvdroot_ps4/chr/..., dvdroot_ps4/parts/...
+```
+
+Lay the directory out exactly as the mod ships it relative to `dvdroot_ps4`.
+
+The conflict rule is explicit and fails loudly rather than merging or dropping:
+
+- **Archipelago-owned paths always win.** The suppression binder
+  (`dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx`) and any MSB the
+  enemizer emits under `dvdroot_ps4/map/MapStudio/` are seed correctness, not
+  preference: a user `gameparam` would silently break suppression, so a user
+  file at one of those paths is **excluded** (reason `ap-owned`), the
+  Archipelago file is used, and the exclusion is recorded in the manifest and
+  reported by the Doctor. Comparison is case-insensitive.
+- Names the launcher reserves inside the overlay (`.bb-ap-*`, the ownership
+  manifest) are excluded with reason `reserved`.
+- Symbolic links, absolute paths, and anything escaping the directory fail
+  closed; nothing is merged.
+- Changing the contents of `CUSA03173-mods-user` changes the overlay even when
+  the seed build is identical, so the next activation runs a full transaction
+  instead of short-circuiting.
+
+`python -m bb_launcher doctor` reports a `user mods` line: how many files will
+merge, and every exclusion with its reason. Files that only collide when enemy
+randomization is on (your own MapStudio maps) are surfaced as a warning.
+
+Which mods are safe to merge at all is a separate question -- see the folder
+check in `docs/PLAYTESTING.md`.
+
 `Launch Vanilla` renames only a verified launcher-owned overlay out of shad's
 `mods > patch > base` search path. Cached builds remain available. `Restore
 Previous` resolves the predecessor by cache identity and performs another full

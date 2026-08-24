@@ -119,6 +119,29 @@ up the thing by the troll and nothing happened" is a useful report.
 
 ## Playing with other mods
 
+**Where your mods go: `CUSA03173-mods-user`.** Make that folder next to
+`CUSA03173` and `CUSA03173-patch` and put your mods inside it, laid out the way
+they ship (`dvdroot_ps4\chr\...`, `dvdroot_ps4\parts\...`). The launcher
+merges it into the randomizer overlay every time you launch, and never touches
+the folder itself.
+
+Do **not** put mods into `CUSA03173-mods`. That folder belongs to the launcher
+and is rebuilt from scratch on every launch; anything you add there is moved
+aside into a `.CUSA03173-mods.bb-ap-previous-...` folder. If you have done this
+already, your files are still in those folders — move them into
+`CUSA03173-mods-user` and they will come back.
+
+Two rules on top of that:
+
+- The randomizer's own files win. If your mod ships
+  `param\gameparam\gameparam.parambnd.dcx`, or a `map\mapstudio` MSB that a
+  seed's enemy randomizer also uses, that one file is left out and the
+  randomizer's version is used. Nothing is silently merged and nothing is
+  silently dropped.
+- Click **Open Diagnostics** / run the Doctor before a session: the `user mods`
+  line says how many of your files merged and names anything left out. If a mod
+  seems not to be working, that line is the first place to look.
+
 The randomizer changes exactly one game file: `gameparam.parambnd.dcx` (the
 suppression binder that stops chests and corpses from also handing you their
 vanilla item). It ships **no** map, model, or script files, so most cosmetic

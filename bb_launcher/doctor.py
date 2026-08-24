@@ -22,13 +22,17 @@ from typing import Any, Callable
 from .core import (
     CE_BRIDGE_PROCESS_NAME,
     CHEAT_ENGINE_PROCESSES,
+    MAP_PREFIX,
     SUPPRESSION_PATH,
+    USER_MODS_DIR_NAME,
     GameInstall,
     LauncherError,
     ProcessSpec,
     ValidationError,
     elevation_risks,
     launcher_is_elevated,
+    collect_user_mod_files,
+    plan_user_merge,
     process_is_running_by_name,
     sha256_file,
     stray_cheat_engine_names,
@@ -311,6 +315,65 @@ def _check_installed_gameparam(settings: LauncherSettings, chain: _Chain) -> Doc
     )
 
 
+def _check_user_mods(chain: _Chain, *, randomize_enemies: bool) -> DoctorFinding:
+    """Report what the player's own mods directory will contribute, and what won't.
+
+    The launcher owns CUSA03173-mods outright, so this is the only place a user
+    file can come from -- and the only place a silent drop could hide.
+    """
+
+    if chain.install is None:
+        return DoctorFinding(SKIP, "user mods", "upstream check failed")
+    directory = chain.install.user_mods
+    try:
+        sources = collect_user_mod_files(directory)
+    except LauncherError as exc:
+        return DoctorFinding(
+            FAIL,
+            "user mods",
+            str(exc),
+            f"make {directory} an ordinary directory containing only real files",
+        )
+    if not sources:
+        return DoctorFinding(
+            PASS,
+            "user mods",
+            f"no files in {USER_MODS_DIR_NAME}; the overlay is Archipelago content only",
+        )
+    # The suppression binder is owned on every seed; MapStudio maps only when
+    # the enemizer is emitting them, so name that case rather than guess it.
+    owned = [SUPPRESSION_PATH]
+    merge = plan_user_merge({relative: sha256_file(path) for relative, path in sources.items()}, owned)
+    map_files = sorted(
+        relative
+        for relative in merge.merged
+        if relative.casefold().startswith(MAP_PREFIX.casefold())
+        and relative.casefold().endswith(".msb.dcx")
+    )
+    detail = f"{len(merge.merged)} file(s) from {USER_MODS_DIR_NAME} will merge into the overlay"
+    if merge.excluded:
+        shown = ", ".join(f"{item.path} ({item.reason})" for item in merge.excluded[:3])
+        extra = "" if len(merge.excluded) <= 3 else f", and {len(merge.excluded) - 3} more"
+        return DoctorFinding(
+            WARN,
+            "user mods",
+            f"{detail}; excluded: {shown}{extra}",
+            "Archipelago-owned files always win; remove the colliding file from "
+            "your mod, or accept that the Archipelago version is the one loaded",
+        )
+    if randomize_enemies and map_files:
+        return DoctorFinding(
+            WARN,
+            "user mods",
+            f"{detail}, including {len(map_files)} MapStudio map(s) that the "
+            "enemy randomizer may also own on this seed",
+            "if a seed generates one of these maps the Archipelago version wins "
+            "and yours is reported as excluded; turn enemy randomization off to "
+            "keep your map mod whole",
+        )
+    return DoctorFinding(PASS, "user mods", detail)
+
+
 def _check_map_studio(
     settings: LauncherSettings, chain: _Chain, *, randomize_enemies: bool
 ) -> DoctorFinding:
@@ -557,6 +620,7 @@ def run_doctor(
         _safely(lambda: _check_suppression_chain(settings, chain)),
         _safely(lambda: _check_installed_gameparam(settings, chain)),
         _safely(lambda: _check_map_studio(settings, chain, randomize_enemies=randomize_enemies)),
+        _safely(lambda: _check_user_mods(chain, randomize_enemies=randomize_enemies)),
         _safely(lambda: _check_server(chain, server, probe)),
         _safely(lambda: _check_elevation(chain, process_running)),
     ]
