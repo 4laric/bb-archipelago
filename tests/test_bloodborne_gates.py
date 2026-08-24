@@ -24,17 +24,11 @@ from worlds.bloodborne.data import ITEMS
 DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     "Tomb of Oedon gate": {frozenset({"event_gascoigne_defeated"})},
     "Healing Church Workshop door": {frozenset({"event_blood_starved_beast_defeated"})},
-    # Emblem, or the workshop route that opens after Blood-starved Beast.
-    "Cathedral Ward plaza gate": {
-        frozenset({"hunter_chief_emblem"}),
-        frozenset({"event_blood_starved_beast_defeated"}),
-    },
-    # The road starts left of the Grand Cathedral entrance, so it is behind the
-    # plaza and inherits the plaza's requirement.
-    "Road to Hemwick": {
-        frozenset({"hunter_chief_emblem"}),
-        frozenset({"event_blood_starved_beast_defeated"}),
-    },
+    # The emblem opens the gate itself. The game's other way in is the Healing
+    # Church Workshop route, which is its own entrance below rather than a
+    # second clause here: folding it in made the emblem clause unreachable as a
+    # requirement, because Blood-starved Beast is free from Cathedral Ward.
+    "Cathedral Ward plaza gate": {frozenset({"hunter_chief_emblem"})},
     "Forbidden Woods password door": {frozenset({"event_forbidden_woods_password"})},
     "Path to Byrgenwerth": {frozenset({"event_shadows_defeated"})},
     "Blood Moon transition": {frozenset({"event_rom_defeated"})},
@@ -61,6 +55,12 @@ DOCUMENTED_FREE = {
     "Awaken in Central Yharnam",
     "Road into Old Yharnam",
     "Forbidden Woods clinic passage",
+    # The workshop's own door already costs Blood-starved Beast; the walk from
+    # it to the plaza costs nothing more.
+    "Healing Church Workshop plaza route",
+    # The road starts left of the Grand Cathedral entrance, so it is behind the
+    # plaza. Its requirement is now the plaza edge itself, not a copy of it.
+    "Road to Hemwick",
     "Lecture Hall giant door",
     "Lecture Building frontier door",
     "Research Hall summit",
@@ -140,6 +140,47 @@ class LocationRuleTests(unittest.TestCase):
             with self.subTest(location=location.key):
                 self.assertEqual(clauses(location.rule), {frozenset()},
                                  "undocumented location requirement")
+
+
+class EmblemIsNotVacuousTests(unittest.TestCase):
+    """The Hunter Chief Emblem has to gate something a seed can feel.
+
+    docs/PROGRESSION-DAG.md audits the plaza as "emblem OR the Healing Church
+    Workshop route". Modelled as one two-clause rule it is vacuous: Old Yharnam
+    is free from Cathedral Ward and the Blood-starved Beast is free inside it,
+    so the second clause is always satisfiable and the emblem never decides
+    anything. Slice 3 keeps the two routes as two edges, and does not seed the
+    workshop -- so in a slice-3 seed the emblem is the only way in.
+    """
+
+    def test_the_plaza_gate_is_emblem_only(self):
+        gate = next(e for e in ENTRANCES if e.name == "Cathedral Ward plaza gate")
+        self.assertEqual(clauses(gate.rule), {frozenset({"hunter_chief_emblem"})})
+
+    def test_the_workshop_route_still_reaches_the_plaza(self):
+        """Removing the disjunction must not remove the route it described."""
+        edges = {(e.source, e.target) for e in ENTRANCES}
+        self.assertIn(("Cathedral Ward", "Healing Church Workshop"), edges)
+        self.assertIn(("Healing Church Workshop", "Grand Cathedral"), edges)
+
+    def test_the_seeded_slice_reaches_the_plaza_only_through_the_emblem(self):
+        from worlds.bloodborne.data import SLICE_ENTRANCES, SLICE_REGIONS
+        into_plaza = [e for e in SLICE_ENTRANCES if e.target == "Grand Cathedral"]
+        self.assertEqual([e.name for e in into_plaza], ["Cathedral Ward plaza gate"])
+        self.assertNotIn("Healing Church Workshop", SLICE_REGIONS)
+
+    def test_the_emblem_gates_a_non_empty_set_of_seeded_checks(self):
+        """A gate in front of nothing is decoration."""
+        from worlds.bloodborne import NETWORK_LOCATIONS
+        behind = [l for l in NETWORK_LOCATIONS if l.region == "Grand Cathedral"]
+        self.assertGreaterEqual(len(behind), 2, [l.key for l in behind])
+
+    def test_the_emblem_is_in_every_seeded_pool(self):
+        """An emblem-only gate with no emblem in the pool is an unreachable region."""
+        from worlds.bloodborne import FULL_POOL_ITEM_KEYS
+        from worlds.bloodborne.data import SLICE_ITEM_KEYS
+        self.assertIn("hunter_chief_emblem", SLICE_ITEM_KEYS)
+        self.assertIn("hunter_chief_emblem", FULL_POOL_ITEM_KEYS)
 
 
 class EventItemTests(unittest.TestCase):

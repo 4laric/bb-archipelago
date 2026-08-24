@@ -1,7 +1,7 @@
 # Bloodborne research progression DAG
 
-This is the post-Gascoigne research scaffold, not the currently generated
-vertical slice. The playable slice ends at Father Gascoigne and is specified in
+This is the whole research scaffold. The playable slice is a subset of it:
+slice 3 ends at the Blood-starved Beast and is specified in
 `VERTICAL-SLICE.md`. This graph models candidate later requirements, not a
 prescribed walkthrough order. Return shortcuts and travel edges are omitted so
 the graph remains acyclic. Chalice Dungeons remain out of scope.
@@ -12,8 +12,9 @@ flowchart LR
     CY -->|Father Gascoigne defeated| CW[Cathedral Ward]
     CW --> OY[Old Yharnam]
     OY -->|Blood-starved Beast defeated| HCW[Healing Church Workshop]
-    CW -->|Hunter Chief Emblem OR Blood-starved Beast defeated| GC[Grand Cathedral]
-    CW -->|Hunter Chief Emblem OR Blood-starved Beast defeated| Hemwick[Hemwick Charnel Lane]
+    CW -->|Hunter Chief Emblem| GC[Grand Cathedral]
+    HCW --> GC
+    GC --> Hemwick[Hemwick Charnel Lane]
     GC -->|Vicar Amelia defeated; inspect Laurence's Skull| FW[Forbidden Woods]
     FW --> Clinic[Iosefka's Clinic]
     FW -->|Shadows of Yharnam defeated| Byrgenwerth
@@ -41,7 +42,7 @@ flowchart LR
 | Edge or gate | Result | Evidence |
 |---|---|---|
 | Gascoigne -> Cathedral Ward | Matches | Gascoigne awards the Oedon Tomb Key and opens Cathedral Ward. |
-| Cathedral plaza | Corrected | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. |
+| Cathedral plaza | **Corrected 2026-08-24** | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. The disjunction is real, but modelling it as one two-clause rule made the emblem clause dead: Old Yharnam is free from Cathedral Ward and Blood-starved Beast is free inside it, so the other clause was always satisfiable. It is now two edges — `Cathedral Ward --emblem--> Grand Cathedral` and `Healing Church Workshop --> Grand Cathedral` — which is what the game does and what lets a bounded slice make the emblem matter. |
 | Amelia -> Forbidden Woods | Corrected | Amelia must be defeated and Laurence's Skull inspected to learn the password. |
 | Forbidden Woods -> Byrgenwerth | Matches | Defeating Shadows of Yharnam opens the path. |
 | Rom -> Blood Moon Yahar'gul | Matches | Rom's death is the Blood Moon trigger. |
@@ -49,7 +50,7 @@ flowchart LR
 | Tonsil Stone route | Corrected | The Cathedral Ward grab transports to Lecture Building 1F; its door reaches the Frontier. |
 | Cainhurst branch | Matches | Cainhurst Summons plus the Hemwick obelisk summons the carriage. |
 | Upper Cathedral branch | **Corrected** | The Upper Cathedral Key opens the seal, but the chapel side doors that reach it only open after Blood-starved Beast. The key alone is not sufficient. |
-| Hemwick branch | **Corrected 2026-08-18** | The road to Hemwick starts left of the Grand Cathedral entrance, so it sits behind the plaza and carries the plaza's requirement. This edge was modelled as free and **was absent from this table**, which is how it survived the original audit. |
+| Hemwick branch | **Corrected 2026-08-18, re-sourced 2026-08-24** | The road to Hemwick starts left of the Grand Cathedral entrance, so it sits behind the plaza. It used to carry a *copy* of the plaza's requirement; it now leaves from the Grand Cathedral itself, so there is one place the plaza rule lives. This edge was modelled as free and **was absent from this table**, which is how it survived the original audit. |
 | DLC access | Matches | After Amelia and the altar interaction, the Dream supplies the Eye; the Oedon Chapel grab enters Hunter's Nightmare. |
 | Ludwig -> Research Hall | Matches | Ludwig gates the recovery-room route and the Eye Pendant operates its surgery altar. |
 | Living Failures -> Clocktower | Matches | Living Failures award the Astral Clocktower Key. |

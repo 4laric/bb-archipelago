@@ -5,11 +5,11 @@ from pathlib import Path
 from itertools import cycle, islice
 from typing import Any, Iterable
 from .data import (
-    CENTRAL_YHARNAM_SLICE_ENTRANCES,
-    CENTRAL_YHARNAM_SLICE_ITEM_KEYS,
-    CENTRAL_YHARNAM_SLICE_LOCATION_KEYS,
-    CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS,
-    CENTRAL_YHARNAM_SLICE_REGIONS,
+    SLICE_ENTRANCES,
+    SLICE_ITEM_KEYS,
+    SLICE_LOCATION_KEYS,
+    SLICE_POOL_SUPPRESSION_KEYS,
+    SLICE_REGIONS,
     MODEL,
 )
 from .model import ItemKind, Rule
@@ -20,11 +20,11 @@ GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r5"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
-SUPPRESSION_PLAN_SHA256 = "d044bdb5b02eeedf049718b69630866cf5eb89d98067445d772dd6ac486c6c73"
+SUPPRESSION_PLAN_SHA256 = "996a69a93764e3879b6f03016302fd03b04da8d827f3def4c0546f2774884421"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(
     location for location in MODEL.locations
-    if location.key in CENTRAL_YHARNAM_SLICE_LOCATION_KEYS
+    if location.key in SLICE_LOCATION_KEYS
 )
 # Everything that can enter the pool: every non-event item has a permanent
 # network id and a validated runtime binding. The Yharnam slice option below
@@ -34,10 +34,13 @@ SHUFFLABLE_ITEMS = tuple(
     if item.kind is not ItemKind.EVENT
 )
 FULL_POOL_ITEM_KEYS = frozenset(item.key for item in SHUFFLABLE_ITEMS)
-POOL_SUPPRESSION_ITEM_KEYS = CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS
+POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
 FILLER_ITEM_NAME = "Blood Vial"
-GOAL_LOCATION_KEY = "boss_father_gascoigne"
+# Slice 3 ends at the Blood-starved Beast. The client learns the goal from
+# slot data's "goal_location", so moving it is a seed-owned change, not a
+# client rebuild.
+GOAL_LOCATION_KEY = "boss_blood_starved_beast"
 
 
 def build_item_pool_names(item_keys: Iterable[str]) -> list[str]:
@@ -261,7 +264,7 @@ else:
         def create_regions(self) -> None:
             regions = {
                 name: Region(name, self.player, self.multiworld)
-                for name in CENTRAL_YHARNAM_SLICE_REGIONS
+                for name in SLICE_REGIONS
             }
             self.multiworld.regions.extend(regions.values())
             for data in NETWORK_LOCATIONS:
@@ -279,7 +282,7 @@ else:
                     event_location.place_locked_item(
                         BloodborneItem(event.name, ItemClassification.progression, None, self.player))
                     regions[data.region].locations.append(event_location)
-            for data in CENTRAL_YHARNAM_SLICE_ENTRANCES:
+            for data in SLICE_ENTRANCES:
                 entrance = regions[data.source].create_exit(data.name)
                 entrance.access_rule = _rule(data.rule, self.player)
                 entrance.connect(regions[data.target])
@@ -292,13 +295,14 @@ else:
         def _pool_item_keys(self) -> frozenset[str]:
             if self.options.full_item_pool:
                 return FULL_POOL_ITEM_KEYS
-            return CENTRAL_YHARNAM_SLICE_ITEM_KEYS
+            return SLICE_ITEM_KEYS
 
         def set_rules(self) -> None:
             # Runtime completion is authoritative: the client sends CLIENT_GOAL
-            # when the debounced Gascoigne location flag is reported.  The
-            # slice has no item-logic gate before either boss, so generation's
-            # reachability condition is intentionally unconditional.
+            # when the debounced goal location flag is reported.  Nothing in
+            # the slice gates the route to the Blood-starved Beast behind a
+            # pool item, so generation's reachability condition is
+            # intentionally unconditional.
             self.multiworld.completion_condition[self.player] = lambda state: True
 
         def fill_slot_data(self) -> dict[str, Any]:

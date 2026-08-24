@@ -76,16 +76,22 @@ ENTRANCES = (
     Entrance("Road into Old Yharnam", "Cathedral Ward", "Old Yharnam"),
     Entrance("Healing Church Workshop door", "Cathedral Ward", "Healing Church Workshop",
              Rule.all("event_blood_starved_beast_defeated")),
-    Entrance("Cathedral Ward plaza gate", "Cathedral Ward", "Grand Cathedral", Rule.any(
-        ("hunter_chief_emblem",),
-        ("event_blood_starved_beast_defeated",),
-    )),
+    # The audited edge is "Hunter Chief Emblem OR the Healing Church Workshop
+    # route". Collapsing that into one two-clause rule on a single entrance is
+    # what made the emblem vacuous: the workshop route's own prerequisite
+    # (Blood-starved Beast) is free from Cathedral Ward, so the emblem clause
+    # could never be the required one. The route is two hops in the game and is
+    # now two hops here — the emblem opens the gate directly, the workshop
+    # reaches the same plaza the long way round. Slice 3 seeds Cathedral Ward,
+    # Old Yharnam and the Grand Cathedral but not the Healing Church Workshop,
+    # so inside a slice-3 seed the emblem is the only route to the plaza.
+    Entrance("Cathedral Ward plaza gate", "Cathedral Ward", "Grand Cathedral",
+             Rule.all("hunter_chief_emblem")),
+    Entrance("Healing Church Workshop plaza route", "Healing Church Workshop",
+             "Grand Cathedral"),
     # The road to Hemwick starts left of the Grand Cathedral entrance, so it is
-    # behind the plaza and carries the plaza's requirement, not nothing.
-    Entrance("Road to Hemwick", "Cathedral Ward", "Hemwick Charnel Lane", Rule.any(
-        ("hunter_chief_emblem",),
-        ("event_blood_starved_beast_defeated",),
-    )),
+    # behind the plaza, not free from Cathedral Ward.
+    Entrance("Road to Hemwick", "Grand Cathedral", "Hemwick Charnel Lane"),
     Entrance("Forbidden Woods password door", "Cathedral Ward", "Forbidden Woods",
              Rule.all("event_forbidden_woods_password")),
     Entrance("Forbidden Woods clinic passage", "Forbidden Woods", "Iosefka's Clinic"),
@@ -177,15 +183,44 @@ LOCATIONS = (
 
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 
-# The generated player currently exposes one honest, bounded vertical slice.
-# The broader model above remains useful research scaffolding, but none of its
-# later regions enter multidata until their runtime contracts are ready.
-# Cathedral Ward is in the slice because Gascoigne — the slice's goal — is
-# also its gate, so post-goal pickups on the Tomb of Oedon strip (the Blood
-# Gem Workshop Tool, the Red Jeweled Brooch) stay honest in-slice checks.
-CENTRAL_YHARNAM_SLICE_REGIONS = ("Menu", "Hunter's Dream", "Central Yharnam", "Cathedral Ward")
-CENTRAL_YHARNAM_SLICE_ENTRANCES = ENTRANCES[:3]
-CENTRAL_YHARNAM_SLICE_ITEM_KEYS = frozenset({
+# The generated player exposes one honest, bounded slice. The broader model
+# above remains research scaffolding; none of its later regions enters
+# multidata until its runtime contracts are ready.
+#
+# Slice 3 (Cathedral Ward -> Old Yharnam -> Blood-starved Beast) adds three
+# regions to slice 1's Central Yharnam:
+#  - Cathedral Ward, entered on Gascoigne's defeat event (slice 1 already
+#    seeded its Tomb of Oedon strip for exactly this reason);
+#  - Old Yharnam, reached freely from the Cathedral Ward lamp, ending at the
+#    Blood-starved Beast, which is the slice goal;
+#  - the Grand Cathedral, behind the Hunter Chief Emblem. The emblem is the
+#    only in-slice route to it: the game's alternative runs through the
+#    Healing Church Workshop, which slice 3 does not seed. That is what stops
+#    the emblem from being a decorative pool item.
+SLICE_REGIONS = (
+    "Menu", "Hunter's Dream", "Central Yharnam", "Cathedral Ward",
+    "Old Yharnam", "Grand Cathedral",
+)
+_SLICE_ENTRANCE_NAMES = (
+    "Begin the Hunt",
+    "Awaken in Central Yharnam",
+    "Tomb of Oedon gate",
+    "Road into Old Yharnam",
+    "Cathedral Ward plaza gate",
+)
+SLICE_ENTRANCES = tuple(
+    entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
+)
+# Both endpoints of every seeded entrance must be a seeded region, or the
+# generator would build an exit into a region that does not exist.
+assert {e.source for e in SLICE_ENTRANCES} | {e.target for e in SLICE_ENTRANCES} <= set(SLICE_REGIONS)
+assert len(SLICE_ENTRANCES) == len(_SLICE_ENTRANCE_NAMES)
+
+# The reduced pool the first live sessions validated, plus the Hunter Chief
+# Emblem: with the plaza gate now emblem-only, a seed that cannot place the
+# emblem cannot reach the Grand Cathedral checks at all.
+SLICE_ITEM_KEYS = frozenset({
+    "hunter_chief_emblem",
     "saw_spear",
     "augur_of_ebrietas",
     "quicksilver_bullets",
@@ -195,16 +230,29 @@ CENTRAL_YHARNAM_SLICE_ITEM_KEYS = frozenset({
 })
 # Pool membership and global vanilla-item suppression are different contracts.
 # Repeatable consumables may remain elsewhere in the game; the Saw Spear's
-# in-slice vanilla copy must not coexist with its randomized AP copy.
-CENTRAL_YHARNAM_SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
+# in-slice vanilla copy must not coexist with its randomized AP copy. The
+# Hunter Chief Emblem needs no entry here: its vanilla copy sits on a fixed
+# manifest row (flag 52400450) whose award the location plan already replaces.
+SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
+
+# data.py checks (bosses, the one evidenced interaction, and the catalog-backed
+# treasures) that the slice seeds, named explicitly so that adding a region to
+# SLICE_REGIONS never sweeps an unreviewed scripted check into multidata.
+SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
+    "boss_cleric_beast",
+    "boss_father_gascoigne",
+    "boss_blood_starved_beast",
+    "boss_vicar_amelia",
+    "interaction_laurences_skull",
+    "treasure_radiant_sword_hunter_badge",
+})
 # Fixed rows whose region sits outside the slice (today: the two Iosefka's
 # Clinic back-yard pickups, gated behind the Amelia -> Laurence's-skull
 # password chain) stay in the TSV for the full world but do not enter slice
-# seeds. Their vanilla awards remain suppressed, so they are inert pickups in
-# slice 1 — documented in docs/VERTICAL-SLICE.md.
-CENTRAL_YHARNAM_SLICE_LOCATION_KEYS = frozenset({
-    "boss_cleric_beast",
-    "boss_father_gascoigne",
+# seeds. Their vanilla awards remain suppressed, so they are inert pickups —
+# documented in docs/VERTICAL-SLICE.md.
+SLICE_LOCATION_KEYS = frozenset({
+    *SLICE_SCRIPTED_LOCATION_KEYS,
     *(location.key for location in FIXED_LOCATIONS
-      if location.region in CENTRAL_YHARNAM_SLICE_REGIONS),
+      if location.region in SLICE_REGIONS),
 })

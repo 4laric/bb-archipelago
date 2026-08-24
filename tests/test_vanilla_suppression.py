@@ -152,15 +152,26 @@ class RealCorpusTests(unittest.TestCase):
         self.assertEqual([edit.item_key for edit in item_edits], ["saw_spear"])
         self.assertEqual(item_edits[0].item_category, "0")
 
-    def test_all_51_physical_pickups_and_the_hunter_set_group_can_be_suppressed(self):
+    def test_every_physical_pickup_and_award_group_can_be_suppressed(self):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
-        # Saw Spear's lot is already covered by the pool-item edit. The other
-        # 50 physical lots plus Hunter Set continuation rows 2410611-13 are
-        # location edits.
-        self.assertEqual(len(location_edits), 53)
+        # 164 manifest rows and the Radiant Sword Hunter Badge, minus Saw
+        # Spear's lot (already covered by the pool-item edit), plus 13
+        # continuation rows in shared-acquisition-flag award groups.
+        self.assertEqual(len(location_edits), 177)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
-            {"2410611", "2410612", "2410613"},
+            {
+                # Hunter Set (Central Yharnam)
+                "2410611", "2410612", "2410613",
+                # Top Hat and Black Church sets (Cathedral Ward)
+                "2400121", "2400122", "2400123",
+                "2400291", "2400292", "2400293",
+                # Rumpled Yharnam set, and the m24_00 chest whose flag is
+                # numbered in the m24_01 range
+                "2400541", "2410580",
+                # Charred Hunter Garb (Old Yharnam)
+                "2300401", "2300402",
+            },
         )
 
     def test_the_slice_plan_has_no_refusals(self):
@@ -183,10 +194,11 @@ class RealCorpusTests(unittest.TestCase):
             checked += 1
             self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
-        # 49 in-slice fixed pickups carry lots; the two bosses do not, and the
-        # two out-of-slice clinic rows are suppressed but not network
+        # 162 in-slice fixed pickups plus the Radiant Sword Hunter Badge carry
+        # lots; the three bosses and the skull interaction do not, and the two
+        # out-of-slice clinic rows are suppressed but are not network
         # locations, so they are not iterated here.
-        self.assertEqual(checked, 49)
+        self.assertEqual(checked, 163)
 
     def test_canonical_plan_digest_matches_the_runtime_contract(self):
         from tools.plan_vanilla_suppression import build_complete_plan, serialize_plan

@@ -30,9 +30,13 @@ class FixedLocationCatalogTests(unittest.TestCase):
         items = rows(ROOT / "research/catalog/fixed_location_items.tsv")
         event_refs = rows(ROOT / "research/joined/fixed_location_event_refs.tsv")
 
+        from tools.build_fixed_location_slice import SLICE_MAPS
+
+        seen_maps = set()
         for selected in FIXED_LOCATIONS:
             source = catalog[selected.event_flag]
-            self.assertEqual("m24_01_00_00", source["canonical_map"])
+            self.assertIn(source["canonical_map"], SLICE_MAPS)
+            seen_maps.add(source["canonical_map"])
             self.assertIn(str(selected.item_lot_id), source["item_lot_ids"].split(";"))
             self.assertEqual(selected.classification, source["classification"])
             self.assertEqual(selected.source_ref, source["map_variants"])
@@ -48,6 +52,8 @@ class FixedLocationCatalogTests(unittest.TestCase):
                 and row["item_lot_id"] == str(selected.item_lot_id)
                 for row in event_refs
             ))
+        # Witness: the loop above covered every slice map, not just the first.
+        self.assertEqual(seen_maps, set(SLICE_MAPS))
 
     def test_canary_is_the_live_validated_bullet_lot(self):
         canary = next(
@@ -58,10 +64,23 @@ class FixedLocationCatalogTests(unittest.TestCase):
         self.assertEqual(52410800, canary.event_flag)
         self.assertTrue(canary.vanilla_award_suppressed)
 
-    def test_manifest_is_the_complete_first_cycle_map_slice(self):
-        from tools.build_central_yharnam_slice import REPLACEMENT_FLAGS, build_rows
+    def test_the_slice_three_regions_each_contribute_checks(self):
+        from collections import Counter
+        counts = Counter(row.region for row in FIXED_LOCATIONS)
+        self.assertEqual(counts["Cathedral Ward"], 61)   # 59 m24_00 + the two Oedon strip rows
+        self.assertEqual(counts["Old Yharnam"], 54)
+        self.assertEqual(counts["Central Yharnam"], 47)
+        self.assertEqual(counts["Iosefka's Clinic"], 2)
 
-        self.assertEqual(51, len(FIXED_LOCATIONS))
+    def test_manifest_is_the_complete_first_cycle_map_slice(self):
+        from tools.build_fixed_location_slice import (
+            EXCLUDED_FLAGS,
+            REPLACEMENT_FLAGS,
+            build_rows,
+        )
+
+        # 51 Central Yharnam (slice 1) + 59 Cathedral Ward + 54 Old Yharnam.
+        self.assertEqual(164, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [
@@ -83,7 +102,9 @@ class FixedLocationCatalogTests(unittest.TestCase):
         )
         selected_flags = {row.event_flag for row in FIXED_LOCATIONS}
         self.assertTrue(selected_flags.isdisjoint(REPLACEMENT_FLAGS))
-        self.assertTrue(set(REPLACEMENT_FLAGS.values()) <= selected_flags)
+        # Every replacement collapses onto a row that is either shipped here or
+        # deliberately excluded (52400480 ships from data.py under its own key).
+        self.assertTrue(set(REPLACEMENT_FLAGS.values()) <= selected_flags | set(EXCLUDED_FLAGS))
 
     def test_every_selected_location_has_a_stable_id_and_wire_binding(self):
         from worlds.bloodborne import NETWORK_LOCATIONS

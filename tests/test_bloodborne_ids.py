@@ -105,15 +105,39 @@ class GoldenIdTests(unittest.TestCase):
 
         from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
         published = set(GOLDEN_LOCATIONS)
-        added = [row.key for row in FIXED_LOCATIONS if row.key not in published]
-        expected = {
-            key: 0xBB1025 + index for index, key in enumerate(added)
-        }
+        # Slice 1's Central Yharnam block, assigned 2026-08-18 in manifest
+        # order. It must stay exactly where it was when slice 3 appended.
+        slice_one = [row.key for row in FIXED_LOCATIONS
+                     if row.key not in published and row.key.startswith("fixed_")
+                     and not row.key.startswith(("fixed_cathedral_ward_lot_",
+                                                 "fixed_old_yharnam_lot_"))]
+        self.assertEqual(len(slice_one), 45)
+        expected = {key: 0xBB1025 + index for index, key in enumerate(slice_one)}
         expected["boss_cleric_beast"] = 0xBB1052
+        expected["treasure_underground_cell_inner_chamber_key"] = 0xBB1053
+        # Slice 3's block, appended after the last id slice 1 handed out.
+        slice_three = [row.key for row in FIXED_LOCATIONS
+                       if row.key.startswith(("fixed_cathedral_ward_lot_",
+                                              "fixed_old_yharnam_lot_"))]
+        self.assertEqual(len(slice_three), 113)
+        expected.update({key: 0xBB1054 + index for index, key in enumerate(slice_three)})
         self.assertEqual(
             {key: LOCATION_ID_BY_KEY[key] for key in expected},
             expected,
         )
+
+    def test_appending_slice_three_moved_no_published_id(self):
+        """The property the registry exists for, asserted against the file.
+
+        Slice 3 appends 113 location rows. If any of them had been inserted
+        rather than appended, or if a key had been reused, the ids below would
+        have moved and every already-generated seed would silently desync.
+        """
+        for key, value in GOLDEN_LOCATIONS.items():
+            self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
+        ids = sorted(LOCATION_ID_BY_KEY.values())
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(max(ids), 0xBB10C4)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

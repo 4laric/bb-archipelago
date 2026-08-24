@@ -21,13 +21,15 @@ Gascoigne check and then sends Archipelago goal status.
 
 ## Current vertical slice
 
-The generated slice is Central Yharnam through Father Gascoigne. It contains all
-51 canonical, first-cycle physical pickup flags in map `m24_01_00_00`, plus the
-Cleric Beast and Father Gascoigne defeat checks, for 53 network locations total.
-The two observed replacement flags are collapsed into their canonical pickup
-flags, and the four-row Hunter Set award group is represented by one location.
-The shuffled pool is intentionally minimal for this first end-to-end slice: one
-Saw Spear and Blood Vial filler.
+The generated slice is Central Yharnam, Cathedral Ward and Old Yharnam, ending
+at the Blood-starved Beast, plus the Grand Cathedral behind the Hunter Chief
+Emblem. It contains 162 canonical, first-cycle physical pickup flags across
+maps `m24_01_00_00`, `m24_00_00_00` and `m23_00_00_00`, plus six scripted
+checks, for 168 network locations total. Observed replacement flags are
+collapsed into their canonical pickup flags, and each shared-acquisition-flag
+award group (Hunter Set, Top Hat, Black Church, Rumpled Yharnam, Charred Hunter
+Garb) is represented by one location. The shuffled pool stays deliberately
+small: the validated key items, the Saw Spear, and Blood Vial filler.
 
 Every fixed check records its exact acquisition flag, item-lot row, item category,
 item ID, and MSB or EMEVD source in `runtime_bindings.py`. The suppression planner
@@ -43,9 +45,13 @@ reward. The full post-Gascoigne model remains research scaffolding only.
    must the client set a separate gate flag?
 3. Should Vicar Amelia's password interaction be represented solely by her defeat
    event, or by a separately observed altar/skull-interaction event?
-4. Cathedral Ward has alternate routing through Old Yharnam. Until that region and
-   its exact gates are modeled, the prototype conservatively requires the Hunter
-   Chief Emblem for the Grand Cathedral route.
+4. **Answered for the slice (2026-08-24).** Cathedral Ward's alternate routing
+   is now modelled as what it is: two edges into the Grand Cathedral, one
+   costing the Hunter Chief Emblem and one running through the Healing Church
+   Workshop behind the Blood-starved Beast. The seeded slice contains only the
+   first, so the emblem gates real checks. Whether later slices should keep
+   both routes seeded — which makes the emblem optional again, exactly as in
+   vanilla — is the open half.
 5. Which later completion goals should become options after the Gascoigne slice?
    The first slice has one explicit goal: Father Gascoigne's defeat flag.
 6. How should missable NPC quest rewards be handled so multiworld generation never
