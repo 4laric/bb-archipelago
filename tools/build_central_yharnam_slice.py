@@ -50,16 +50,19 @@ PUBLISHED_KEYS = {
 }
 
 # Placements behind intra-map gates in m24_01 (issue #124, verified against
-# the wiki and the catalog coordinates):
+# the wiki, the catalog coordinates, and playtester reports):
 # - 52410140 / 52410640: clinic back yard (`診療所外` anchor), unlocked only
 #   via the Forbidden Woods cave passage.
+# - 52410920: ledge above the Tomb of Oedon; the approach is through the
+#   Gascoigne arena's post-fight exit.
 # - 52411000: library chest between the Gascoigne arena and the Cathedral
 #   Ward lamp, gated by event_gascoigne_defeated.
-# The clinic front courtyard (52410800) and the ledge above the Gascoigne
-# arena (52410920) stay in Central Yharnam: both are reachable at sphere 1.
+# The clinic front courtyard (52410800) stays in Central Yharnam: it is
+# reachable at sphere 1 on the way out of the clinic.
 REGION_OVERRIDES = {
     52410140: "Iosefka's Clinic",
     52410640: "Iosefka's Clinic",
+    52410920: "Cathedral Ward",
     52411000: "Cathedral Ward",
 }
 
