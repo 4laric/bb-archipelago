@@ -22,8 +22,8 @@ module	test_fixed_location_catalog	6
 module	test_ce_table_inventory	3
 module	test_launcher_client_config	6
 module	test_launcher_core	22
-module	test_launcher_readiness	4
-module	test_launcher_ui	24
+module	test_launcher_readiness	7
+module	test_launcher_ui	25
 module	test_launcher_package	4
 module	test_launcher_plan	4
 module	test_launcher_doctor	16

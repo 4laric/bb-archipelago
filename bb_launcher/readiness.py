@@ -22,6 +22,28 @@ from .core import GameInstall, LauncherError, _load_owner
 BRIDGE_STATE_NAME = "native-grant-state.txt"
 
 
+def grants_watchdog_warning(
+    readiness: "LauncherReadiness", *, bridge_expected: bool
+) -> str | None:
+    """Verdict for the post-launch grant watchdog.
+
+    Returns the warning to show when the launch pinned a CE bridge but the
+    grant harness still has not reported, so the player finds out in minutes
+    rather than after a session of undeliverable items. None when grants
+    are armed (any bridge state at all means the harness reported) or when
+    no bridge was expected.
+    """
+    if not bridge_expected or readiness.bridge is not None:
+        return None
+    return (
+        "The Cheat Engine grant table has not reported since launch -- item "
+        "grants are NOT armed and nothing you are owed can be delivered. "
+        "Open Cheat Engine with the bundled grant table, accept its "
+        "administrator and script prompts, and let it attach to shadPS4. "
+        "The status panel shows 'Bridge: no state yet' until it reports."
+    )
+
+
 @dataclass(frozen=True)
 class OverlayStatus:
     cache_key: str
