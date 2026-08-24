@@ -60,6 +60,13 @@ local build=[[bb-0.1.0-r5]]
 local protocol=[[BBGRANT1]]
 local harness=[[bb-native-grant-v5]]
 local maxVerifyPolls=20
+-- An empty result slot with no inventory stack is "not hydrated yet"
+-- evidence, not failure evidence (observed live 2026-08-24: an Orphanage
+-- Key grant three minutes after a fresh boot read slot_id=0xFFFFFFFF for
+-- the whole 20-poll budget and parked a progression item). That shape gets
+-- a two-minute hydration grace before going terminal; contradictory
+-- evidence (wrong slot id or short quantity) still fails on the fast budget.
+local maxHydrationVerifyPolls=240
 local maxManualWaitPolls=1200
 local bootstrapVialPending=true
 local bootstrapAbsentPolls=0
@@ -469,8 +476,15 @@ local function poll()
       local slotVerified=slotId==active.normalized and slotQuantity~=nil and slotQuantity>=active.count
       if not slotVerified and actual~=wanted then
         active.verifyPolls=(active.verifyPolls or 0)+1
-        if active.verifyPolls<maxVerifyPolls then
-          state("verify_pending",string.format("tag=%s expected_after=%d actual=%s attempt=%d/%d",active.tag,wanted,tostring(actual),active.verifyPolls,maxVerifyPolls))
+        -- Empty result slot AND no inventory stack: the game has likely not
+        -- hydrated the target list yet (fresh boot, loading screen). That
+        -- shape gets the hydration grace budget, not the fast one.
+        local budget=maxVerifyPolls
+        if (slotId==nil or slotId==0xFFFFFFFF) and (actual==nil or actual==0) then
+          budget=maxHydrationVerifyPolls
+        end
+        if active.verifyPolls<budget then
+          state("verify_pending",string.format("tag=%s expected_after=%d actual=%s attempt=%d/%d",active.tag,wanted,tostring(actual),active.verifyPolls,budget))
           return
         end
         local slotDetail=slotId and string.format(" slot=%d slot_id=0x%08X slot_quantity=%s slot_address=0x%X",
@@ -478,11 +492,11 @@ local function poll()
         append(string.format("AUTO FAILED tag=%s expected_after=%d actual=%s native_result=%s%s; retry budget exhausted",active.tag,wanted,tostring(actual),tostring(nativeResult),slotDetail))
         if active.bootstrap then
           local failureDetail=string.format("expected_after=%d actual=%s native_result=%s retry_budget=%d%s",
-            wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls,slotDetail)
+            wanted,tostring(actual),tostring(nativeResult),budget,slotDetail)
           active=nil
           finishBootstrap("bootstrap_failed",failureDetail)
         else
-          state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d%s",active.tag,wanted,tostring(actual),tostring(nativeResult),maxVerifyPolls,slotDetail))
+          state("failed",string.format("tag=%s expected_after=%d actual=%s native_result=%s retry_budget=%d%s",active.tag,wanted,tostring(actual),tostring(nativeResult),budget,slotDetail))
           os.remove(commandPath)
           active=nil
         end

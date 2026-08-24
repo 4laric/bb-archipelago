@@ -29,6 +29,13 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn("$protocol='BBGRANT1'", self.helper)
         self.assertIn("$harness='bb-native-grant-v5'", self.helper)
 
+    def test_manual_grant_helper_targets_the_client_bridge_directory(self):
+        # The client reads commands from %LOCALAPPDATA%\BloodborneArchipelago\bridge;
+        # a hardcoded dev-machine work dir silently writes where nobody listens.
+        self.assertIn("BloodborneArchipelago\\bridge", self.helper)
+        self.assertIn("[string]$BridgeDir", self.helper)
+        self.assertNotIn(r"C:\Users\alari", self.helper)
+
     def test_table_paths_are_portable_and_setup_failures_are_actionable(self):
         self.assertNotIn(r"C:\Users\alari", self.text)
         self.assertIn('local roamingAppData=os.getenv("APPDATA")', self.text)
@@ -113,6 +120,12 @@ class GrantHarnessContractTests(unittest.TestCase):
 
     def test_native_verify_has_a_terminal_retry_budget(self):
         self.assertIn("local maxVerifyPolls=20", self.text)
+        # Empty-slot + absent-stack evidence (post-boot hydration lag) gets a
+        # longer grace before parking; wrong-id or short-quantity still fails fast.
+        self.assertIn("local maxHydrationVerifyPolls=240", self.text)
+        self.assertIn("local budget=maxVerifyPolls", self.text)
+        self.assertIn("budget=maxHydrationVerifyPolls", self.text)
+        self.assertIn("active.verifyPolls<budget", self.text)
         self.assertIn('state("failed",string.format("tag=%s expected_after=', self.text)
         self.assertIn("native_result=%s retry_budget=%d", self.text)
 
