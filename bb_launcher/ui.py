@@ -42,7 +42,7 @@ FIELD_DEFINITIONS = (
     ("soulsformats_next", "SoulsFormatsNEXT", "directory"),
     ("process_plan", "Launch plan", "file"),
     ("shad_executable", "shadPS4.exe", "file"),
-    ("ce_executable", "Cheat Engine (optional)", "file"),
+    ("ce_executable", "Cheat Engine (required to receive items)", "file"),
     ("cache_root", "Seed cache", "directory"),
     ("state_root", "Launcher state (optional)", "directory"),
     ("shad_log", "shadPS4 log (optional)", "file"),

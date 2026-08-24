@@ -32,7 +32,15 @@ class GrantHarnessContractTests(unittest.TestCase):
     def test_table_paths_are_portable_and_setup_failures_are_actionable(self):
         self.assertNotIn(r"C:\Users\alari", self.text)
         self.assertIn('local roamingAppData=os.getenv("APPDATA")', self.text)
-        self.assertIn("local root=getTempFolder()", self.text)
+        # The bridge directory is the contract with the AP client
+        # (%LOCALAPPDATA%\BloodborneArchipelago\bridge\native-grant-state.txt);
+        # the temp folder is only the loudly-warned last-resort fallback.
+        self.assertIn('os.getenv("LOCALAPPDATA")', self.text)
+        self.assertIn(r'localAppData..[[\BloodborneArchipelago]]', self.text)
+        self.assertIn(r'base..[[\bridge]]', self.text)
+        self.assertIn("lfs.mkdir", self.text)
+        self.assertIn("root=getTempFolder()", self.text)
+        self.assertIn("WILL NOT receive item grants", self.text)
         self.assertNotIn("directoryExists", self.text)
         self.assertNotIn("createDirectory", self.text)
         self.assertIn(r'local shadLog=roamingAppData..[[\shadPS4\log\shad_log.txt]]', self.text)

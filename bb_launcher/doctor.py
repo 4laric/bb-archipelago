@@ -376,6 +376,22 @@ def _check_server(
     return DoctorFinding(PASS, "AP server", f"{address} accepted a connection")
 
 
+def _check_item_grants(chain: _Chain) -> DoctorFinding:
+    names = {spec.name for spec in chain.processes or ()}
+    if "CE bridge" in names:
+        return DoctorFinding(
+            PASS, "item grants", "Cheat Engine bridge pinned: items can be delivered"
+        )
+    return DoctorFinding(
+        WARN,
+        "item grants",
+        "no Cheat Engine bridge in the launch plan",
+        "regenerate the launch plan with Cheat Engine and the grant table "
+        "(Generate Launch Plan): without it your checks still reach the "
+        "server, but no items can be delivered into your game",
+    )
+
+
 def _check_elevation(chain: _Chain, process_running: Callable[[str], bool]) -> DoctorFinding:
     if launcher_is_elevated():
         return DoctorFinding(
@@ -450,6 +466,7 @@ def run_doctor(
         _safely(lambda: _check_install(settings, chain)),
         _safely(lambda: _check_request(settings, chain)),
         _safely(lambda: _check_plan(settings, chain)),
+        _safely(lambda: _check_item_grants(chain)),
         _safely(lambda: _check_runtime_agreement(chain)),
         _safely(lambda: _check_suppression_chain(settings, chain)),
         _safely(lambda: _check_installed_gameparam(settings, chain)),
