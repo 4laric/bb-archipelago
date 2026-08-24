@@ -270,10 +270,12 @@ In order. Items 1-2 need no game running; items 3 onward need a live session and
    `validated`. (`--armed` is required because a loaded table overwrites the hook originals with
    `E9` detours, so the unarmed image check cannot pass; the tool confirms the base by the detours
    instead.)
-2. **Run `python -m tools.bb_native_delivery verify --pid <shadPS4>`** against a running,
-   *unpatched* emulator. Expect six `ok` rows. Then run it against a patched process (CE already
-   loaded) and confirm it now reports `FAIL` — an assert gate that cannot detect the patched state
-   is not a gate.
+2. **~~Run `verify` against unpatched then patched.~~ DONE 2026-08-24.** Unpatched (base
+   0x5830000) returned six `ok` rows. With the CE table loaded, both hook rows flipped to `FAIL`
+   (showing the `E9` detours) and `require_validated_image` refused — the gate detects the patched
+   state. The armed cave bytes also matched the validated frozen payload. Pass `--base` from the
+   AUTO V5 READY line for the patched run, since the loaded table overwrites the logged-base
+   anchor.
 3. **Refuse a wrong image.** If a CUSA00900 install is available, `verify` against it and confirm
    the refusal message names the mismatching site. If not, record that this remains untested.
 4. **Dry-run install** (`install --pid <pid>`, no `--arm`) on an unpatched process and confirm the
