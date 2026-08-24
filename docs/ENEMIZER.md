@@ -48,7 +48,12 @@ a number with an ItemLotParam row, only two occurrences are `AwardItemLot`
 operands, and only 20 of those collisions lack a separate character operation.
 This disproves the stronger "all numeric collisions are item-lot uses" premise
 without converting the opposite heuristic into policy. Any relaxation remains
-blocked on an in-game map-load and playtest pass.
+blocked on an in-game map-load and playtest pass. `docs/ENEMIZER-COVERAGE.md`
+sharpens this decomposition, proposes the character-operation predicate, and
+measures the coverage delta it would earn (308 → 336 swaps, +28, all
+non-boss). That wider mode is available behind the off-by-default
+`build_enemizer_catalog.py --relax-non-character-emevd` flag; the conservative
+default swap set is unchanged.
 
 Target selection follows the Nightreign engine's two-stage model. It chooses a
 character model family uniformly, preventing enemies with many authored
