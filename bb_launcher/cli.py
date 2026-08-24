@@ -154,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "game_root": str(install.root),
                     "base": str(install.base),
-                    "patch": str(install.patch),
+                    "patch": str(install.patch) if install.patch is not None else None,
                     "mods": str(install.mods),
                     "serial": install.serial,
                     "app_version": install.app_version,
@@ -169,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
                     "serial": install.serial,
                     "app_version": install.app_version,
                     "base": str(install.base),
-                    "patch": str(install.patch),
+                    "patch": str(install.patch) if install.patch is not None else None,
                 }
             )
         elif args.command == "resolve":

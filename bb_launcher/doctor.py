@@ -137,8 +137,9 @@ def _check_install(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
             FAIL,
             "game installation",
             str(exc),
-            "point the shadPS4 game folder at the directory holding CUSA03173 "
-            "and its single CUSA03173-patch (01.09) directory",
+            "point the shadPS4 game folder at the directory holding CUSA03173, "
+            "either with its CUSA03173-patch (01.09) update directory or as a "
+            "merged 01.09 dump on its own",
         )
     return DoctorFinding(
         PASS,
@@ -299,7 +300,7 @@ def _check_map_studio(
     candidate = settings.map_studio_source
     if candidate is None and chain.install is not None:
         relative = Path("dvdroot_ps4") / "map" / "MapStudio"
-        for backend in (chain.install.patch, chain.install.base):
+        for _name, backend in chain.install.content_backends():
             found = backend / relative
             if found.is_dir():
                 candidate = found

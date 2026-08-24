@@ -144,6 +144,43 @@ class LauncherCoreTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "missing base game directory"):
             GameInstall.from_root(empty)
 
+    def test_merged_dump_without_patch_directory_is_accepted(self):
+        merged = self.root / "merged"
+        write_sfo(
+            merged / SERIAL / "sce_sys" / "param.sfo",
+            {"TITLE_ID": SERIAL, "APP_VER": APP_VERSION},
+        )
+        install = GameInstall.from_root(merged)
+        self.assertIsNone(install.patch)
+        self.assertEqual(install.app_version, APP_VERSION)
+        relative = "dvdroot_ps4/test/file.bin"
+        install.base.joinpath(*relative.split("/")).parent.mkdir(parents=True, exist_ok=True)
+        install.base.joinpath(*relative.split("/")).write_bytes(b"merged")
+        backend, path = install.resolve_file(relative, include_mods=False)
+        self.assertEqual((backend, path.read_bytes()), ("base", b"merged"))
+        self.assertEqual(
+            [name for name, _layer in install.content_backends()], ["base"]
+        )
+
+    def test_merged_dump_at_the_wrong_version_is_rejected(self):
+        stale = self.root / "stale"
+        write_sfo(
+            stale / SERIAL / "sce_sys" / "param.sfo",
+            {"TITLE_ID": SERIAL, "APP_VER": "01.00"},
+        )
+        with self.assertRaisesRegex(ValidationError, "merged base reports '01.00'"):
+            GameInstall.from_root(stale)
+
+    def test_patch_directory_without_param_sfo_is_not_a_merged_dump(self):
+        broken = self.root / "broken"
+        write_sfo(
+            broken / SERIAL / "sce_sys" / "param.sfo",
+            {"TITLE_ID": SERIAL, "APP_VER": APP_VERSION},
+        )
+        (broken / f"{SERIAL}-patch").mkdir(parents=True)
+        with self.assertRaisesRegex(ValidationError, "PARAM.SFO"):
+            GameInstall.from_root(broken)
+
     def test_backend_resolution_is_mods_then_patch_then_base(self):
         install = make_install(self.root / "game")
         relative = "dvdroot_ps4/test/file.bin"

@@ -470,7 +470,7 @@ def _foreign_serial_dirs(candidate: Path) -> list[str]:
 class GameInstall:
     root: Path
     base: Path
-    patch: Path
+    patch: Path | None
     mods: Path
     serial: str = SERIAL
     app_version: str = APP_VERSION
@@ -490,30 +490,51 @@ class GameInstall:
                     f"{APP_VERSION} is supported: {base}"
                 )
             raise ValidationError(f"missing base game directory: {base}")
-        if len(patches) != 1:
+        if len(patches) > 1:
             raise ValidationError(
-                f"expected exactly one CUSA03173 01.09 update directory, found {len(patches)}"
+                f"expected at most one {SERIAL} {APP_VERSION} update directory, "
+                f"found {len(patches)}"
             )
-        if base.is_symlink() or patches[0].is_symlink():
+        patch = patches[0] if patches else None
+        if base.is_symlink() or (patch is not None and patch.is_symlink()):
             raise ValidationError("base and update directories may not be symbolic links")
         base_sfo = read_param_sfo(base / "sce_sys" / "param.sfo")
-        patch_sfo = read_param_sfo(patches[0] / "sce_sys" / "param.sfo")
-        serial = patch_sfo.get("TITLE_ID", base_sfo.get("TITLE_ID"))
-        version = patch_sfo.get("APP_VER")
+        # Two valid shapes: a two-layer install (base + official update in a
+        # patch directory) or a merged dump whose base is already at 01.09.
+        # A patch directory that exists but lacks its param.sfo is an error,
+        # not a merged install -- silently ignoring it would mask a corrupt or
+        # hand-assembled tree.
+        if patch is not None:
+            patch_sfo = read_param_sfo(patch / "sce_sys" / "param.sfo")
+            serial = patch_sfo.get("TITLE_ID", base_sfo.get("TITLE_ID"))
+            version = patch_sfo.get("APP_VER")
+            version_source = "update"
+        else:
+            serial = base_sfo.get("TITLE_ID")
+            version = base_sfo.get("APP_VER")
+            version_source = "merged base"
         if serial != SERIAL:
             raise ValidationError(f"expected serial {SERIAL}, installation reports {serial!r}")
         if version != APP_VERSION:
             raise ValidationError(
-                f"expected {SERIAL} AppVer {APP_VERSION}, update reports {version!r}"
+                f"expected {SERIAL} AppVer {APP_VERSION}, {version_source} reports {version!r}"
             )
-        return cls(candidate, base, patches[0], candidate / MODS_DIR_NAME)
+        return cls(candidate, base, patch, candidate / MODS_DIR_NAME)
+
+    def content_backends(self) -> list[tuple[str, Path]]:
+        """Patch-then-base layers holding source game content (never mods)."""
+        backends: list[tuple[str, Path]] = []
+        if self.patch is not None:
+            backends.append(("patch", self.patch))
+        backends.append(("base", self.base))
+        return backends
 
     def resolve_file(self, relative: str, *, include_mods: bool = True) -> tuple[str, Path]:
         path = _safe_relative_path(relative)
         backends: list[tuple[str, Path]] = []
         if include_mods:
             backends.append(("mods", self.mods))
-        backends.extend((("patch", self.patch), ("base", self.base)))
+        backends.extend(self.content_backends())
         for name, root in backends:
             candidate = root.joinpath(*path.parts)
             if candidate.is_file():

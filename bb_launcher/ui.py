@@ -126,7 +126,7 @@ def derive_map_studio_for_game_root(game_root: Path | str) -> Path | None:
     except LauncherError:
         return None
     relative = Path(MAP_PREFIX)
-    for backend in (install.patch, install.base):
+    for _name, backend in install.content_backends():
         candidate = backend / relative
         if candidate.is_dir():
             return candidate
