@@ -267,6 +267,13 @@ else:
             for data in NETWORK_LOCATIONS:
                 location = BloodborneLocation(self.player, data.name, LOCATION_ID_BY_KEY[data.key], regions[data.region])
                 location.access_rule = _rule(data.rule, self.player)
+                if data.locked_item:
+                    # Boss checks carry their defeated-event as a locked item
+                    # so gated slice regions (Cathedral Ward behind Gascoigne)
+                    # are reachable in generation logic.
+                    event = next(item for item in EVENT_ITEMS if item.key == data.locked_item)
+                    location.place_locked_item(
+                        BloodborneItem(event.name, ItemClassification.progression, None, self.player))
                 regions[data.region].locations.append(location)
             for data in CENTRAL_YHARNAM_SLICE_ENTRANCES:
                 entrance = regions[data.source].create_exit(data.name)
