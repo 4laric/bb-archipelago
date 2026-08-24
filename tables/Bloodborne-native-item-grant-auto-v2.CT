@@ -30,8 +30,8 @@ end
 -- launcher-launched client never saw the harness state and every grant was
 -- blocked; writing here also works when CE is started manually. The temp
 -- folder remains a last-resort fallback, with a loud warning, if the bridge
--- directory cannot be created. CE exposes no createDirectory Lua function;
--- lfs (LuaFileSystem) ships with CE and is global (see CE's own
+-- directory cannot be created. CE exposes no directory-creation Lua
+-- function; lfs (LuaFileSystem) ships with CE and is global (see CE's own
 -- autorun/andtools.lua), and lfs.mkdir creates one level per call.
 local localAppData=os.getenv("LOCALAPPDATA")
 local root
