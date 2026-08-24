@@ -97,6 +97,7 @@ item	pebbles	0xBB0102
 item	molotov_cocktails	0xBB0103
 item	blood_stone_shards	0xBB0104
 item	augur_of_ebrietas	0xBB0105
+item	oedon_tomb_key	0xBB0106
 location	treasure_underground_cell_inner_chamber_key	0xBB1053
 location	fixed_cathedral_ward_lot_2400100	0xBB1054
 location	fixed_cathedral_ward_lot_2400120	0xBB1055

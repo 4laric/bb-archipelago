@@ -115,6 +115,20 @@ class ApplyTests(unittest.TestCase):
         self.assertEqual(t.field(t.row_by_id["100"], "lotItemId02"), "1000")
         self.assertEqual(t.field(t.row_by_id["100"], "lotItemCategory02"), "4")
 
+    def test_a_flagless_lot_is_edited_and_its_absent_flag_is_left_absent(self):
+        """A lot with getItemFlagId -1 must not be refused, or invented into.
+
+        The Oedon Tomb Key's vanilla award (lot 31000, handed out by EMEVD
+        event 12411800) has no acquisition flag at all. The writer's invariant
+        is "the flag did not move", and -1 is what not moving looks like here;
+        refusing the row instead would leave the vanilla key in the game.
+        """
+        t = table(row("31000", "lot", {1: ("4000", "4")}, "-1"))
+        applied = apply_plan(t, plan(edit("oedon_tomb_key", "31000", "4000", "-1")))
+        self.assertEqual(applied[0].acquisition_flag, "-1")
+        self.assertEqual(t.field(t.row_by_id["31000"], "lotItemId01"), "1000")
+        self.assertEqual(t.field(t.row_by_id["31000"], "getItemFlagId"), "-1")
+
     def test_untouched_rows_are_byte_identical(self):
         t = table(row("100", "a", {1: ("4001", "4")}, "1"),
                   row("200", "b", {1: ("4002", "4")}, "2"))
@@ -234,6 +248,15 @@ class EndToEndTests(unittest.TestCase):
 
     def test_it_verifies(self):
         verify(self.before, self.after, self.applied)
+
+    def test_the_flagless_script_award_lands_in_the_real_table(self):
+        """The one row in the real plan that carries no acquisition flag."""
+        applied = {a.item_lot_id: a for a in self.applied}
+        self.assertIn("31000", applied)
+        self.assertEqual(applied["31000"].was, "4000")
+        self.assertEqual(applied["31000"].now, "1000")
+        self.assertEqual(applied["31000"].acquisition_flag, "-1")
+        self.assertEqual(self.after.field(self.after.row_by_id["31000"], "getItemFlagId"), "-1")
 
     def test_exactly_the_planned_rows_changed(self):
         changed = sum(1 for a, b in zip(self.before.lines, self.after.lines) if a != b)

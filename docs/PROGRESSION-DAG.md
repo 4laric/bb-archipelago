@@ -9,7 +9,7 @@ the graph remains acyclic. Chalice Dungeons remain out of scope.
 ```mermaid
 flowchart LR
     Menu --> Dream[Hunter's Dream] --> CY[Central Yharnam]
-    CY -->|Father Gascoigne defeated| CW[Cathedral Ward]
+    CY -->|Oedon Tomb Key + Father Gascoigne defeated| CW[Cathedral Ward]
     CW --> OY[Old Yharnam]
     OY -->|Blood-starved Beast defeated| HCW[Healing Church Workshop]
     CW -->|Hunter Chief Emblem| GC[Grand Cathedral]
@@ -41,7 +41,7 @@ flowchart LR
 
 | Edge or gate | Result | Evidence |
 |---|---|---|
-| Gascoigne -> Cathedral Ward | Matches | Gascoigne awards the Oedon Tomb Key and opens Cathedral Ward. |
+| Gascoigne -> Cathedral Ward | Matches | Two requirements, not one. The door out of the Tomb of Oedon (object 2411304) is the generic key door: `m24_01_00_00.emevd.dcx.js:168` initializes event 12410110 slot 5 with `objParameterId 2410080`, so the item requirement is an ObjActParam property and no `PlayerHasItem` condition exists in EMEVD. The door also sits behind Gascoigne's arena. Vanilla hid the coupling by awarding the key on his death (`:1394`, `AwardItemLot(31000)`); with the key shuffled the edge costs both. |
 | Cathedral plaza | **Corrected 2026-08-24** | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. The disjunction is real, but modelling it as one two-clause rule made the emblem clause dead: Old Yharnam is free from Cathedral Ward and Blood-starved Beast is free inside it, so the other clause was always satisfiable. It is now two edges — `Cathedral Ward --emblem--> Grand Cathedral` and `Healing Church Workshop --> Grand Cathedral` — which is what the game does and what lets a bounded slice make the emblem matter. |
 | Amelia -> Forbidden Woods | Corrected | Amelia must be defeated and Laurence's Skull inspected to learn the password. |
 | Forbidden Woods -> Byrgenwerth | Matches | Defeating Shadows of Yharnam opens the path. |

@@ -20,7 +20,7 @@ GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r5"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
-SUPPRESSION_PLAN_SHA256 = "996a69a93764e3879b6f03016302fd03b04da8d827f3def4c0546f2774884421"
+SUPPRESSION_PLAN_SHA256 = "c411d4d91775c11f91052f8390ff2a891ec23db402efc10c6c3952f557fe71d9"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(
     location for location in MODEL.locations
@@ -298,12 +298,16 @@ else:
             return SLICE_ITEM_KEYS
 
         def set_rules(self) -> None:
-            # Runtime completion is authoritative: the client sends CLIENT_GOAL
-            # when the debounced goal location flag is reported.  Nothing in
-            # the slice gates the route to the Blood-starved Beast behind a
-            # pool item, so generation's reachability condition is
-            # intentionally unconditional.
-            self.multiworld.completion_condition[self.player] = lambda state: True
+            # Runtime completion is still authoritative: the client sends
+            # CLIENT_GOAL when the debounced goal location flag is reported.
+            # But the route to the Blood-starved Beast is no longer free --
+            # Cathedral Ward, and therefore Old Yharnam, is behind the shuffled
+            # Oedon Tomb Key. Leaving this unconditional would let fill bury the
+            # key behind itself in a multiworld and call the seed complete.
+            goal_region = next(location.region for location in NETWORK_LOCATIONS
+                               if location.key == GOAL_LOCATION_KEY)
+            self.multiworld.completion_condition[self.player] = (
+                lambda state: state.can_reach_region(goal_region, self.player))
 
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"

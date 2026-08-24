@@ -8,6 +8,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **The Oedon Tomb Key is shuffled, so a seed no longer opens in go-mode.**
+  Vanilla hands you the key on Father Gascoigne's corpse, and the door out of
+  the Tomb of Oedon is the only way into Cathedral Ward — which meant every one
+  of a slice-3 seed's 167 checks was reachable from the start and nothing you
+  found ever opened anything. The key is now an Archipelago progression item,
+  placed like any other and guaranteed to be in every pool. **Central Yharnam
+  is a real sphere 0**: 48 checks are open when you wake up, and the other 119
+  — all of Cathedral Ward, Old Yharnam, the Grand Cathedral, and the
+  Blood-starved Beast goal — wait behind the key. Gascoigne is still a check
+  and still opens his own door; he just no longer hands you the key through it.
+
 - **Save-restore and character-switch reconciliation is documented as shipped (#77).** The native client keys each delivery receipt to a `seed_name:slot` ledger that now carries a per-slot save watermark: a save restored to an earlier state re-issues exactly the erased deliveries, a lost ledger adopts the save's cursor without re-granting, and switching to another character is refused rather than mixing two inventories -- every shape has one defined outcome and no outcome can duplicate or silently drop an acknowledged item. Automatic restore detection still waits on the live watermark address (#56); until then an operator confirms a restore with the `bb-restored` command. `docs/SAVE-RECONCILIATION.md` now records the implemented status, its evidence label (mock-tested, not live-validated), and the owner game-session checklist for the remaining live facts.
 
 - **Slice 3 — Cathedral Ward, Old Yharnam, and the Blood-starved Beast.** The
@@ -31,6 +42,17 @@ under `Unreleased` and move into a dated version section when released.
   placed in every pool.
 
 ### Changed
+
+- **Rebuild the suppression binder again.** The canonical plan grew from 178
+  edits to **179** — the new one replaces the key Gascoigne drops with the Blood
+  Vial placeholder, so the vanilla key cannot satisfy its own randomized
+  placement — and the plan's SHA-256 changed with it. A binder built for any
+  earlier plan no longer matches the seed and the native client will stay
+  disarmed until you rebuild. Note that `build.ps1` keeps
+  `work\vanilla-suppression-build` when it already exists: **delete that
+  directory first**, or the rebuild reinstalls the stale binder. Row ids and
+  acquisition flags are preserved exactly, as before — including this row's
+  absence of one.
 
 - **Playtesters must rebuild and reinstall the suppression binder.** The
   canonical suppression plan grew from 54 edits to **178** to cover the new

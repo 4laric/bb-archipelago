@@ -95,3 +95,23 @@ The bundle is a binary blob, so every rebuild adds its full size to git history.
 Rebuild when the tools need something new or the dump changes, not routinely.
 `--list` shows a per-file sha256, so a rebuild that should have changed nothing
 can be checked before it is committed.
+
+## Open request: `params/ObjActParam.csv`
+
+Not in the bundle today, and adding it would settle one claim on paper that the
+world currently ships as `inferred`.
+
+The Cathedral Ward door (object 2411304) is the generic key door:
+`event/m24_01_00_00.emevd.dcx.js:168` initializes event 12410110 slot 5 with
+`objParameterId 2410080` and persistent flag 12411307. The item requirement is
+therefore a property of `ObjActParam` row 2410080, and nothing in any committed
+event file tests `PlayerHasItem(Goods, 4000)`. With the Oedon Tomb Key now
+shuffled, "an AP-granted goods 4000 satisfies that row" is load-bearing, and the
+only two ways to settle it are a live session or reading row 2410080.
+
+The bundle's rule is that it grows when a committed tool reads the input, not on
+speculation, so this is a paired request rather than a bare one: add
+`params/ObjActParam.csv` **together with** a small check tool that reads row
+2410080 and asserts what it requires, so `--check-coverage` stays honest and the
+claim gains a test rather than a file. Until then it is an owner step, and the
+claim stays `inferred` with the checklist in `docs/VANILLA-SUPPRESSION.md`.

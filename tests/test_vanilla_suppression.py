@@ -149,8 +149,71 @@ class RealCorpusTests(unittest.TestCase):
 
     def test_the_slice_pool_item_can_be_suppressed(self):
         item_edits = [edit for edit in self.plan.edits if not edit.item_key.startswith("location:")]
-        self.assertEqual([edit.item_key for edit in item_edits], ["saw_spear"])
-        self.assertEqual(item_edits[0].item_category, "0")
+        self.assertEqual(sorted(edit.item_key for edit in item_edits),
+                         ["oedon_tomb_key", "saw_spear"])
+        by_key = {edit.item_key: edit for edit in item_edits}
+        self.assertEqual(by_key["saw_spear"].item_category, "0")
+
+    def test_the_script_award_key_is_suppressed_on_its_flagless_lot(self):
+        """The shape the automatic search cannot plan, planned deliberately.
+
+        Lot 31000 is awarded by EMEVD (event 12411800 -> AwardItemLot) and has
+        no acquisition flag, so both of the planner's refusal branches would
+        have fired on it. The edit must exist, must name the real lot, and must
+        carry the row's literal getItemFlagId rather than an invented flag --
+        the writers compare that value against the params before touching them.
+        """
+        edits = [edit for edit in self.plan.edits if edit.item_key == "oedon_tomb_key"]
+        self.assertEqual(1, len(edits))
+        edit = edits[0]
+        self.assertEqual(("4", "4000", "31000", "-1"),
+                         (edit.item_category, edit.goods_id, edit.item_lot_id,
+                          edit.acquisition_flag))
+        self.assertEqual(0, edit.placements)  # script-awarded: no MSB or drop placement
+
+    def test_a_stale_script_award_review_is_refused_rather_than_planned(self):
+        """The declaration is checked against the corpus, not trusted.
+
+        If another lot starts awarding the item, editing only the reviewed ones
+        leaves the vanilla key reachable and the plan still looks green.
+        """
+        from dataclasses import replace
+        from tools.plan_vanilla_suppression import Plan, plan_script_awards
+        from worlds.bloodborne.runtime_bindings import SCRIPT_AWARD_SUPPRESSIONS
+
+        declared = SCRIPT_AWARD_SUPPRESSIONS["oedon_tomb_key"]
+        patched = replace(declared, unreferenced_lot_ids=())
+        plan = Plan(placeholder=PLACEHOLDER)
+        SCRIPT_AWARD_SUPPRESSIONS["oedon_tomb_key"] = patched
+        try:
+            plan_script_awards(plan, REPO / "research", set())
+        finally:
+            SCRIPT_AWARD_SUPPRESSIONS["oedon_tomb_key"] = declared
+        self.assertEqual(["review_is_stale"], [r.problem for r in plan.refusals])
+        self.assertEqual(0, len(plan.edits))
+        self.assertIn("27100000", plan.refusals[0].detail)  # witness: the dropped row
+
+    def test_the_reviewed_unreferenced_lot_is_reachable_from_nothing(self):
+        """"Nothing reaches lot 27100000" is a census, so count the census.
+
+        The declaration edits 31000 and leaves 27100000 alone. That is only
+        safe while no committed source can award 27100000, and a test that
+        asserted the absence without proving it looked at a populated corpus
+        would pass on an empty read.
+        """
+        import csv
+        rows = list(csv.DictReader(
+            (REPO / "research/joined/fixed_enemy_drop_sources.tsv").open(encoding="utf-8"),
+            delimiter="\t"))
+        treasures = list(csv.DictReader(
+            (REPO / "research/joined/fixed_treasure_lots.tsv").open(encoding="utf-8"),
+            delimiter="\t"))
+        self.assertGreater(len(rows), 1000)      # witness: the drop corpus is real
+        self.assertGreater(len(treasures), 100)  # witness: the treasure corpus is real
+        reachable = ({row["item_lot_id"] for row in rows}
+                     | {row["item_lot_id"] for row in treasures})
+        self.assertIn("2410100", reachable)      # witness: a known lot is found this way
+        self.assertNotIn("27100000", reachable)
 
     def test_every_physical_pickup_and_award_group_can_be_suppressed(self):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]

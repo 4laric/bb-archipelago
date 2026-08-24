@@ -20,6 +20,7 @@ E = ItemKind.EVENT
 ITEMS = (
     # Shufflable inventory/key items. Runtime grant semantics remain unvalidated.
     Item("hunter_chief_emblem", "Hunter Chief Emblem", P),
+    Item("oedon_tomb_key", "Oedon Tomb Key", P),
     Item("cainhurst_summons", "Cainhurst Summons", P),
     Item("tonsil_stone", "Tonsil Stone", P),
     Item("upper_cathedral_key", "Upper Cathedral Key", P),
@@ -72,7 +73,17 @@ REGIONS = (
 ENTRANCES = (
     Entrance("Begin the Hunt", "Menu", "Hunter's Dream"),
     Entrance("Awaken in Central Yharnam", "Hunter's Dream", "Central Yharnam"),
-    Entrance("Tomb of Oedon gate", "Central Yharnam", "Cathedral Ward", Rule.all("event_gascoigne_defeated")),
+    # Two requirements, both real. The door out of the Tomb of Oedon (object
+    # 2411304) is the generic key door: m24_01_00_00 event 12410110 slot 5 is
+    # initialized with objParameterId 2410080, so the item requirement lives in
+    # ObjActParam row 2410080 rather than in any EMEVD condition -- no
+    # PlayerHasItem(Goods, 4000) test exists in the event files. And the door
+    # sits behind Gascoigne's arena, so beating him is a physical prerequisite
+    # for standing at it. Vanilla hid the coupling by handing the key out on
+    # his death (event 12411800 -> AwardItemLot(31000)); with the key shuffled,
+    # the two stop being the same requirement.
+    Entrance("Tomb of Oedon gate", "Central Yharnam", "Cathedral Ward",
+             Rule.all("oedon_tomb_key", "event_gascoigne_defeated")),
     Entrance("Road into Old Yharnam", "Cathedral Ward", "Old Yharnam"),
     Entrance("Healing Church Workshop door", "Cathedral Ward", "Healing Church Workshop",
              Rule.all("event_blood_starved_beast_defeated")),
@@ -189,8 +200,10 @@ MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 #
 # Slice 3 (Cathedral Ward -> Old Yharnam -> Blood-starved Beast) adds three
 # regions to slice 1's Central Yharnam:
-#  - Cathedral Ward, entered on Gascoigne's defeat event (slice 1 already
-#    seeded its Tomb of Oedon strip for exactly this reason);
+#  - Cathedral Ward, entered with the Oedon Tomb Key after Gascoigne's defeat
+#    (slice 1 already seeded its Tomb of Oedon strip for exactly this reason);
+#    the key is shuffled, so this edge is what makes Central Yharnam a real
+#    sphere 0 rather than a corridor the seed starts on the far side of;
 #  - Old Yharnam, reached freely from the Cathedral Ward lamp, ending at the
 #    Blood-starved Beast, which is the slice goal;
 #  - the Grand Cathedral, behind the Hunter Chief Emblem. The emblem is the
@@ -217,10 +230,12 @@ assert {e.source for e in SLICE_ENTRANCES} | {e.target for e in SLICE_ENTRANCES}
 assert len(SLICE_ENTRANCES) == len(_SLICE_ENTRANCE_NAMES)
 
 # The reduced pool the first live sessions validated, plus the Hunter Chief
-# Emblem: with the plaza gate now emblem-only, a seed that cannot place the
-# emblem cannot reach the Grand Cathedral checks at all.
+# Emblem and the Oedon Tomb Key: with the plaza gate emblem-only and the Tomb
+# of Oedon gate key-only, a seed that cannot place either cannot reach the
+# checks behind it at all. Both are in every pool the world can build.
 SLICE_ITEM_KEYS = frozenset({
     "hunter_chief_emblem",
+    "oedon_tomb_key",
     "saw_spear",
     "augur_of_ebrietas",
     "quicksilver_bullets",
@@ -233,6 +248,11 @@ SLICE_ITEM_KEYS = frozenset({
 # in-slice vanilla copy must not coexist with its randomized AP copy. The
 # Hunter Chief Emblem needs no entry here: its vanilla copy sits on a fixed
 # manifest row (flag 52400450) whose award the location plan already replaces.
+# The Oedon Tomb Key is not here either, for a different reason: its vanilla
+# copy comes from an EMEVD script award with no acquisition flag and no
+# placement, so it cannot be resolved by the goods -> lot search this set
+# drives. It is suppressed by the reviewed declaration in runtime_bindings.py
+# (SCRIPT_AWARD_SUPPRESSIONS) instead.
 SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
 
 # data.py checks (bosses, the one evidenced interaction, and the catalog-backed
