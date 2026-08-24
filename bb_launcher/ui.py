@@ -10,8 +10,16 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 from .client_config import default_shad_log, default_state_root
-from .core import MAP_PREFIX, GameInstall, LauncherError, ValidationError, discover_game_install
-from .doctor import format_report, run_doctor
+from .core import (
+    MAP_PREFIX,
+    GameInstall,
+    LauncherError,
+    ValidationError,
+    discover_game_install,
+    elevation_risks,
+    launcher_is_elevated,
+)
+from .doctor import _process_running, format_report, run_doctor
 from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from .readiness import format_readiness, gather_readiness
 from .resources import application_root, resource_root
@@ -126,7 +134,7 @@ def derive_map_studio_for_game_root(game_root: Path | str) -> Path | None:
     except LauncherError:
         return None
     relative = Path(MAP_PREFIX)
-    for backend in (install.patch, install.base):
+    for _name, backend in install.content_backends():
         candidate = backend / relative
         if candidate.is_dir():
             return candidate
@@ -608,6 +616,8 @@ class LauncherApp:
         except LauncherError as exc:
             self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
             return
+        if not self._confirm_elevation():
+            return
         self._set_busy(True)
         self._append_log("Starting Randomize & Launch...")
         threading.Thread(
@@ -616,6 +626,25 @@ class LauncherApp:
             daemon=True,
             name="bloodborne-randomize-launch",
         ).start()
+
+    def _confirm_elevation(self) -> bool:
+        """True to proceed. Nudges when shadPS4 may out-elevate the client."""
+        if launcher_is_elevated():
+            return True
+        raw = self.fields["shad_executable"].get().strip()
+        risks = elevation_risks(Path(raw) if raw else None, _process_running)
+        if not risks:
+            return True
+        return self.messagebox.askyesno(
+            "Run as administrator?",
+            "shadPS4 may start elevated while this launcher is not:\n\n- "
+            + "\n- ".join(risks)
+            + "\n\nAn unelevated AP client cannot attach to an elevated shadPS4 "
+            "and will wait for the game forever. Cancel, restart this launcher "
+            "as administrator, and launch again (recommended) -- or continue "
+            "anyway?",
+            parent=self.root,
+        )
 
     def _setup_for_action(self, label: str) -> LauncherSettings | None:
         try:

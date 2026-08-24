@@ -541,8 +541,8 @@ class LauncherWorkflow:
             relative_maps = Path("dvdroot_ps4") / "map" / "MapStudio"
             candidates = [
                 candidate
-                for candidate in (install.patch / relative_maps, install.base / relative_maps)
-                if candidate.is_dir()
+                for _name, layer in install.content_backends()
+                if (candidate := layer / relative_maps).is_dir()
             ]
             if candidates:
                 def map_count(candidate: Path) -> int:

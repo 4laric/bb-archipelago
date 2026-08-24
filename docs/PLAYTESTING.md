@@ -7,8 +7,8 @@ a running randomized seed, and tells you exactly what to report back.
 
 1. **A Windows PC.**
 2. **Your own Bloodborne game files** — a PS4 dump of `CUSA03173`
-   (Bloodborne: Game of the Year Edition) at update **01.09**, installed into
-   shadPS4. We cannot provide game files. Three things that trip people up:
+   (Bloodborne: Game of the Year Edition) at update **01.09**. We cannot
+   provide game files. Three things that trip people up:
    - **The exact title ID matters.** Other releases — the US standard edition
      `CUSA00900`, the EU standard edition `CUSA00207`, and the rest — are
      **not** supported, even at the same 01.09 update. The randomizer's game
@@ -16,9 +16,12 @@ a running randomized seed, and tells you exactly what to report back.
      else. Watch out for pre-modded repacks too (anything with "Mods" in the
      release name): their executables are often already patched and will not
      match what the client expects.
-   - **A `.pkg` file is not an installed game.** Install the base game and the
-     01.09 update through shadPS4 first; the launcher works with the installed
-     `CUSA03173` + `CUSA03173-patch` directories, not the packages.
+   - **Either install layout works.** A merged dump where `CUSA03173` is
+     already at 01.09 on its own is fine; so is a vanilla base with the 01.09
+     update in a separate `CUSA03173-patch` (or `CUSA03173-UPDATE`) directory
+     next to it. What never works is hand-assembling folders to satisfy the
+     Doctor — the launcher reads each directory's real `param.sfo` and hashes
+     real game files, so empty or renamed directories are caught immediately.
    - **"shadPS4 game folder" means the game's install directory** — the folder
      *containing* `CUSA03173` — not the folder shadPS4 itself lives in.
 3. **shadPS4 0.18.0** — the emulator the mod runs under.

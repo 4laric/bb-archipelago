@@ -21,12 +21,12 @@ module	test_grant_harness_contract	8
 module	test_fixed_location_catalog	6
 module	test_ce_table_inventory	3
 module	test_launcher_client_config	6
-module	test_launcher_core	19
+module	test_launcher_core	22
 module	test_launcher_readiness	4
 module	test_launcher_ui	24
 module	test_launcher_package	4
 module	test_launcher_plan	4
-module	test_launcher_doctor	12
+module	test_launcher_doctor	14
 module	test_launcher_workflow	1
 module	test_location_names	9
 module	test_death_signal_candidates	8
