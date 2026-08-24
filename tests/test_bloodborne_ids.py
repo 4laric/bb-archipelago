@@ -51,6 +51,7 @@ GOLDEN_ITEMS = {
     "molotov_cocktails": 0xBB0103,
     "blood_stone_shards": 0xBB0104,
     "augur_of_ebrietas": 0xBB0105,
+    "oedon_tomb_key": 0xBB0106,
 }
 GOLDEN_LOCATIONS = {
     "boss_father_gascoigne": 0xBB1001,

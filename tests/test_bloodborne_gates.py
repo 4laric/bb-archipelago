@@ -22,7 +22,12 @@ from worlds.bloodborne.data import ITEMS
 # entrance name -> the clauses that satisfy it, each a frozenset of item keys.
 # Sourced from the game; see docs/PROGRESSION-DAG.md for the citations.
 DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
-    "Tomb of Oedon gate": {frozenset({"event_gascoigne_defeated"})},
+    # Two requirements. The door object 2411304 is the generic key door
+    # (m24_01_00_00 event 12410110 slot 5, objParameterId 2410080), so the item
+    # requirement is an ObjActParam property rather than an EMEVD condition;
+    # and the door is physically behind Gascoigne's arena. Vanilla awarded the
+    # key on his death, which hid the second requirement inside the first.
+    "Tomb of Oedon gate": {frozenset({"oedon_tomb_key", "event_gascoigne_defeated"})},
     "Healing Church Workshop door": {frozenset({"event_blood_starved_beast_defeated"})},
     # The emblem opens the gate itself. The game's other way in is the Healing
     # Church Workshop route, which is its own entrance below rather than a

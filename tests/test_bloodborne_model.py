@@ -22,6 +22,45 @@ from worlds.bloodborne import (
 ROOT = Path(__file__).resolve().parents[1]
 
 
+
+def seeded_locations():
+    from worlds.bloodborne import NETWORK_LOCATIONS
+    seeded = {n.key for n in NETWORK_LOCATIONS}
+    return [location for location in MODEL.locations if location.key in seeded]
+
+
+def slice_reachable(held: set[str], *, locations=None) -> set[str]:
+    """Fixed point over seeded regions and the events their locations grant.
+
+    Archipelago-free on purpose: the property is a property of the model, and a
+    test that needed a checkout to state it would not run in the AP-free tier
+    where most of the suite lives.
+    """
+    from worlds.bloodborne.data import SLICE_ENTRANCES
+
+    locations = seeded_locations() if locations is None else locations
+    owned = set(held)
+    while True:
+        regions = {"Menu"}
+        grown = True
+        while grown:
+            grown = False
+            for entrance in SLICE_ENTRANCES:
+                if (entrance.source in regions and entrance.target not in regions
+                        and entrance.rule.allows(owned)):
+                    regions.add(entrance.target)
+                    grown = True
+        open_keys = {
+            location.key for location in locations
+            if location.region in regions and location.rule.allows(owned)
+        }
+        events = {location.locked_item for location in locations
+                  if location.key in open_keys and location.locked_item}
+        if events <= owned:
+            return open_keys
+        owned |= events
+
+
 class BloodborneModelTests(unittest.TestCase):
     def test_model_references_are_valid(self):
         self.assertEqual([], MODEL.validate())
@@ -86,43 +125,45 @@ class BloodborneModelTests(unittest.TestCase):
             "Laurence's Skull",
             "Saw Spear",
             "Augur of Ebrietas",
+            "Oedon Tomb Key",
         ):
             self.assertEqual(counts[name], 1, name)
-        # 167 locations - 12 one-off items = 155 filler slots cycling five
-        # names: 155 / 5 = 31 each.
-        self.assertEqual(counts["Blood Vial"], 31)
-        for name in (
-            "Quicksilver Bullets x3",
-            "Pebbles x3",
-            "Molotov Cocktails x2",
-            "Blood Stone Shards x2",
-        ):
-            self.assertEqual(counts[name], 31, name)
-
-    def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
-        """The grant shapes the first live sessions validated are unchanged.
-
-        Slice 3 adds the Hunter Chief Emblem to this pool because the plaza
-        gate is emblem-only: without it the Grand Cathedral checks would be
-        unreachable with the option off. The ribbon exclusion shrinks the
-        location count to 167: 167 - 3 one-off items = 164 filler slots over
-        five names, so the first four get 33 and the last gets 32.
-        """
-        counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
-        self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
-        self.assertEqual(counts["Saw Spear"], 1)
-        self.assertEqual(counts["Augur of Ebrietas"], 1)
-        self.assertEqual(counts["Hunter Chief Emblem"], 1)
+        # 167 locations - 13 one-off items = 154 filler slots cycling five
+        # names: the first four get 31, the last gets 30.
         for name in (
             "Blood Vial",
             "Quicksilver Bullets x3",
             "Pebbles x3",
             "Molotov Cocktails x2",
         ):
+            self.assertEqual(counts[name], 31, name)
+        self.assertEqual(counts["Blood Stone Shards x2"], 30)
+
+    def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
+        """The grant shapes the first live sessions validated are unchanged.
+
+        Slice 3 added the Hunter Chief Emblem to this pool because the plaza
+        gate is emblem-only, and the Oedon Tomb Key joins it for the same
+        reason: with the key shuffled, a pool without it cannot leave Central
+        Yharnam. 167 - 4 one-off items = 163 filler slots over five names, so
+        the first three get 33 and the last two get 32.
+        """
+        counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
+        self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
+        self.assertEqual(counts["Saw Spear"], 1)
+        self.assertEqual(counts["Augur of Ebrietas"], 1)
+        self.assertEqual(counts["Hunter Chief Emblem"], 1)
+        self.assertEqual(counts["Oedon Tomb Key"], 1)
+        for name in (
+            "Blood Vial",
+            "Quicksilver Bullets x3",
+            "Pebbles x3",
+        ):
             self.assertEqual(counts[name], 33, name)
-        self.assertEqual(counts["Blood Stone Shards x2"], 32)
+        for name in ("Molotov Cocktails x2", "Blood Stone Shards x2"):
+            self.assertEqual(counts[name], 32, name)
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
-        self.assertEqual(len(slot_data["runtime_items"]), 8)  # seven slice items + Blood Vial
+        self.assertEqual(len(slot_data["runtime_items"]), 9)  # eight slice items + Blood Vial
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
@@ -247,33 +288,10 @@ class BloodborneModelTests(unittest.TestCase):
         Hunter Chief Emblem withheld, some seeded locations must become
         unreachable, or the emblem-only plaza gate is decoration.
         """
-        from worlds.bloodborne import NETWORK_LOCATIONS
-        from worlds.bloodborne.data import SLICE_ENTRANCES, SLICE_ITEM_KEYS, SLICE_REGIONS
+        from worlds.bloodborne.data import SLICE_ITEM_KEYS, SLICE_REGIONS
 
-        locations = [l for l in MODEL.locations if l.key in {n.key for n in NETWORK_LOCATIONS}]
-
-        def reachable(held: set[str]) -> set[str]:
-            """Fixed point over regions and the events locations grant."""
-            owned = set(held)
-            while True:
-                regions = {"Menu"}
-                grown = True
-                while grown:
-                    grown = False
-                    for entrance in SLICE_ENTRANCES:
-                        if (entrance.source in regions and entrance.target not in regions
-                                and entrance.rule.allows(owned)):
-                            regions.add(entrance.target)
-                            grown = True
-                open_keys = {
-                    l.key for l in locations
-                    if l.region in regions and l.rule.allows(owned)
-                }
-                events = {l.locked_item for l in locations
-                          if l.key in open_keys and l.locked_item}
-                if events <= owned:
-                    return open_keys
-                owned |= events
+        locations = seeded_locations()
+        reachable = slice_reachable
 
         # Menu and Hunter's Dream are transit regions in this slice: the
         # Dream's own check (the Eye) belongs to the post-Amelia chain.
@@ -290,6 +308,58 @@ class BloodborneModelTests(unittest.TestCase):
             {l.key for l in locations if l.region == "Grand Cathedral"},
         )
         self.assertTrue(gated, "the Hunter Chief Emblem gates nothing in the seeded slice")
+
+    def test_withholding_the_oedon_tomb_key_strands_the_seed_in_central_yharnam(self):
+        """The point of shuffling the key: sphere 0 is a place, not the world.
+
+        Before this, the Tomb of Oedon gate cost only Gascoigne's defeat event,
+        which the seed grants itself from a Central Yharnam check -- so every
+        seeded check was reachable from the start and the seed opened in
+        go-mode. With the key shuffled, withholding it must leave exactly the
+        Central Yharnam checks open, and nothing beyond them.
+        """
+        from worlds.bloodborne.data import SLICE_ITEM_KEYS
+
+        locations = seeded_locations()
+        everything = set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)
+        with_everything = slice_reachable(everything)
+        without_key = slice_reachable(everything - {"oedon_tomb_key"})
+
+        # Sphere 0 is what a player can open holding nothing at all. Hunter's
+        # Dream is a seeded region but seeds no check in this slice (its Eye
+        # belongs to the post-Amelia chain), so sphere 0 is Central Yharnam.
+        sphere_zero = slice_reachable(set())
+        central_yharnam = {l.key for l in locations if l.region == "Central Yharnam"}
+        self.assertTrue(central_yharnam)  # witness: the region really seeds checks
+        self.assertEqual(sphere_zero, central_yharnam)
+        self.assertEqual(without_key, central_yharnam)
+
+        gated = with_everything - without_key
+        self.assertEqual(gated, {l.key for l in locations
+                                 if l.region not in ("Central Yharnam", "Hunter's Dream")})
+        # 119 of 167: the key is the single largest gate in the slice, so a
+        # seed that could not place it reachably would be mostly unplayable.
+        self.assertEqual(len(gated), len(locations) - len(central_yharnam))
+        self.assertGreater(len(gated), len(locations) // 2)
+
+    def test_the_goal_is_behind_the_oedon_tomb_key(self):
+        """The Blood-starved Beast is in Old Yharnam, two gates past the key."""
+        from worlds.bloodborne import GOAL_LOCATION_KEY
+        from worlds.bloodborne.data import SLICE_ITEM_KEYS
+
+        everything = set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)
+        self.assertIn(GOAL_LOCATION_KEY, slice_reachable(everything))
+        self.assertNotIn(GOAL_LOCATION_KEY,
+                         slice_reachable(everything - {"oedon_tomb_key"}))
+
+    def test_the_key_is_in_every_pool_the_world_can_build(self):
+        """A progression item the pool may omit is a generation failure waiting."""
+        from worlds.bloodborne import build_item_pool_names
+        from worlds.bloodborne.data import SLICE_ITEM_KEYS
+
+        for keys in (FULL_POOL_ITEM_KEYS, SLICE_ITEM_KEYS):
+            self.assertIn("oedon_tomb_key", keys)
+            self.assertIn("Oedon Tomb Key", build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}

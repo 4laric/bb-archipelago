@@ -22,23 +22,95 @@ The plan therefore replaces the awarded slot with one Blood Vial and preserves:
 
 `tools/plan_vanilla_suppression.py` consumes the active world contract rather
 than the whole future model. Since slice 3 (Cathedral Ward, Old Yharnam, the
-Blood-starved Beast) its canonical plan contains **178 edits and zero
+Blood-starved Beast) its canonical plan contains **179 edits and zero
 refusals**:
 
 - 164 physical pickups on the reviewed manifest;
 - the Radiant Sword Hunter Badge, which ships from `data.py` under its own key;
 - 13 continuation rows in shared-acquisition-flag award groups (Hunter Set,
   Top Hat, Black Church, Rumpled Yharnam, Charred Hunter Garb, and the m24_00
-  chest whose flag is numbered in the m24_01 range).
+  chest whose flag is numbered in the m24_01 range);
+- lot 31000, the Oedon Tomb Key's EMEVD award (see below).
+
+## The script-award lane, and a lot with no flag
+
+Most edits are found by search: resolve the randomized item to the one row that
+awards it. The planner refuses two shapes rather than guessing past them — an
+item awarded by several rows, and a row with no acquisition flag. Both refusals
+are requests for a decision, and `SCRIPT_AWARD_SUPPRESSIONS` in
+`worlds/bloodborne/runtime_bindings.py` is where the decision is written down.
+`plan_script_awards` re-checks that record against the corpus every time it
+plans, so a review that has gone stale becomes a refusal instead of a silent
+omission.
+
+The Oedon Tomb Key is the first entry, and it hits both shapes:
+
+- **It is a script award.** `event/m24_01_00_00.emevd.dcx.js:1394` — event
+  12411800 waits on `CharacterDead(2410810 || 2410811)` and, host-only, calls
+  `AwardItemLot(31000)` and then `SetEventFlag(2412/9457/5910)`. There is no MSB
+  treasure and no NpcParam drop for it.
+- **Its lot has no acquisition flag.** Lot 31000 awards category 4 item 4000
+  (`聖堂街Bの鍵`) in slot 01 with `getItemFlagId = -1`. The plan records `-1`
+  literally, because both writers preflight "the row's flag is what the plan
+  says" before touching anything, and inventing a flag for a row that has none
+  would make that check assert a fiction. Nothing is lost: this fight's check is
+  Gascoigne's own defeat flag 12411800, which the same event sets on the same
+  line regardless of what the lot awards.
+- **A second lot awards the same goods and is deliberately not edited.** Lot
+  27100000 (`ガスコイン神父（獣）　聖堂街B`) is reachable from nothing in the
+  committed corpus: it appears in no MSB treasure (`mined/msb_treasures.tsv`,
+  146,152 rows), no MSB enemy drop field (`mined/msb_enemies.tsv`), no NpcParam
+  item-lot column, and no committed EMEVD decompile. It is recorded in the
+  declaration as reviewed-and-unreachable, and a test re-counts that census so
+  the absence is measured rather than asserted. If a future corpus does reach
+  it, the planner refuses instead of shipping a half-suppression.
+
+The Cathedral Ward door itself is untouched. Object 2411304 is the generic key
+door: `m24_01_00_00.emevd.dcx.js:168` initializes event 12410110 slot 5 with
+`objParameterId 2410080` and persistent flag 12411307, so the item requirement
+lives in `ObjActParam` row 2410080 and no `PlayerHasItem(Goods, 4000)` condition
+exists anywhere in the event files. Suppressing the award changes what the
+player receives, not what the door asks for.
+
+### Owner validation checklist (both claims are `inferred`)
+
+Neither of these has been seen live. They are the two facts that decide whether
+a shuffled Oedon Tomb Key is playable, and until a session records them the
+world ships them labelled `inferred`, per `docs/RESEARCH-BASELINE.md`.
+
+1. **A suppressed script-award lot awards the placeholder without breaking the
+   event.** Kill Father Gascoigne on a suppressed binder and confirm: one Blood
+   Vial is received instead of the key; flag 12411800 is set (the AP check
+   reports); flags 2412, 9457 and 5910 are set; and the achievement/world-state
+   tail of event 12411800 still runs. A `SetEventFlag` that stops firing because
+   the award ahead of it changed would be silent and would strand the seed.
+2. **An AP-granted goods 4000 opens door 2411304.** With no vanilla key ever
+   received, take the key from Archipelago and confirm the Tomb of Oedon door
+   opens and sets flag 12411307. This is the inventory-keyed `ObjActParam`
+   assumption — true of the DS family, not yet witnessed here. If the door
+   instead reads an event flag, suppression is not enough on its own and the
+   door needs its own edit.
+3. **The grant survives an absent stack.** Goods 4000 is `maxNum 1`,
+   `isOnlyOne 0` — the same shape as the Hunter Chief Emblem, and the shape
+   behind the #70-class risk that a native grant into a slot the inventory has
+   never held behaves differently from a top-up of an existing stack. Grant the
+   key on a character that has never carried one, then reload the save and
+   confirm it is still there.
+
+Record the results in `docs/PLAYTESTING.md` with serial and AppVer; only then
+may either claim be relabelled.
 
 Four of those edits are no-ops on the bytes: the Blood Vial x1 corpses in Old
 Yharnam and Cathedral Ward already award exactly the placeholder. The writer
 now records them as such, so "the row did not change" stays distinguishable
 from "the write did not happen".
 
-**The plan digest changed with slice 3.** A binder built for the slice-1 plan
-no longer matches the seed's `plan_sha256`, and the client will refuse to arm
-until the binder is rebuilt and reinstalled.
+**The plan digest changed again with the Oedon Tomb Key.** A binder built for
+any earlier plan no longer matches the seed's `plan_sha256`, and the client will
+refuse to arm until the binder is rebuilt and reinstalled. `build.ps1` caches its
+output in `work\vanilla-suppression-build` and keeps that directory if it
+exists, so **delete `work\vanilla-suppression-build` first** or the rebuild is a
+no-op that reinstalls the stale binder.
 
 Saw Spear, Torch, Hunter attire, and the category-8 blood-gem row are all
 covered. The planner records the original item category and item ID for every

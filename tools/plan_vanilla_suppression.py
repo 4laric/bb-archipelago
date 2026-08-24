@@ -31,6 +31,15 @@ key.
 
 ## What this tool does and does not do
 
+Most edits are found by search: resolve the randomized item to the one row that
+awards it. Two shapes cannot be found that way and are refused rather than
+guessed -- an item awarded by several rows, and a row with no acquisition flag.
+`SCRIPT_AWARD_SUPPRESSIONS` in `worlds/bloodborne/runtime_bindings.py` is where
+a contributor records the decision those refusals ask for, and
+`plan_script_awards` checks that record against the corpus before planning from
+it. The Oedon Tomb Key is the first: EMEVD hands it out on Gascoigne's death
+through `AwardItemLot(31000)`, and lot 31000 has no acquisition flag at all.
+
 It plans. It reads the committed research corpus, resolves each randomized item
 to the row that awards it, and refuses to emit a plan for anything ambiguous.
 It does not open a param file — writing needs the game dump and belongs in a
@@ -204,6 +213,73 @@ def build_plan(item_goods: dict[str, str | tuple[str, str]], research: Path,
     return plan
 
 
+def plan_script_awards(plan: Plan, research: Path, occupied_lots: set[str]) -> None:
+    """Add the reviewed script-award edits the goods -> lot search cannot make.
+
+    `build_plan` refuses an item awarded by several lots, and refuses a lot with
+    no acquisition flag. Both refusals are correct as defaults and both are
+    requests for a decision. `SCRIPT_AWARD_SUPPRESSIONS` is where the decision
+    is recorded, so this function checks the declaration against the corpus
+    rather than searching: a declaration that no longer matches the params is a
+    refusal, never a silently skipped edit.
+
+    A flagless lot is planned, not refused. The lot's acquisition flag is not
+    the detection target for anything here -- the Oedon Tomb Key's check is
+    Gascoigne's defeat flag, which the same event sets independently of the
+    award. What the writers need is the row's literal `getItemFlagId` so their
+    "the flag did not move" invariant has something true to compare against;
+    inventing a flag for a row that has none would make that invariant lie.
+    """
+    sys.path.insert(0, str(REPO))
+    from worlds.bloodborne.runtime_bindings import SCRIPT_AWARD_SUPPRESSIONS
+
+    rows = read_tsv(research / "joined" / "lot_items.tsv")
+    facts = collect_lot_facts(research)
+    for key, declared in sorted(SCRIPT_AWARD_SUPPRESSIONS.items()):
+        category, goods_id = str(declared.item_category), str(declared.item_id)
+        awarding = {row["item_lot_id"] for row in rows
+                    if row["item_category"] == category and row["item_id"] == goods_id}
+        declared_lots = {str(lot) for lot in declared.item_lot_ids}
+        reviewed = declared_lots | {str(lot) for lot in declared.unreferenced_lot_ids}
+        if awarding != reviewed:
+            plan.refusals.append(Refusal(key, category, goods_id, "review_is_stale",
+                f"the declaration reviewed lots {sorted(reviewed)}, but the corpus says "
+                f"{sorted(awarding)} award this item. A row that appeared since the "
+                "review has to be reviewed too, or the vanilla item stays reachable."))
+            continue
+        for lot in sorted(declared_lots, key=int):
+            fact = facts.get(lot)
+            if fact is None:
+                plan.refusals.append(Refusal(key, category, goods_id, "no_lot",
+                    f"declared lot {lot} is not in the corpus"))
+                continue
+            if lot in occupied_lots:
+                plan.refusals.append(Refusal(key, category, goods_id, "lot_already_planned",
+                    f"lot {lot} is already edited by another plan entry"))
+                continue
+            if fact.item_rows > 1:
+                plan.refusals.append(Refusal(key, category, goods_id, "multi_item_lot",
+                    f"lot {lot} awards {fact.item_rows} item rows. Replacing the whole "
+                    "row would also suppress the others; the edit has to be per-slot."))
+                continue
+            # The literal getItemFlagId, taken from the corpus rather than from
+            # the declaration, so a param change fails here instead of in the
+            # writer's preflight on a playtester's machine.
+            actual = {(row.get("generic_acquisition_flag") or "").strip()
+                      for row in rows if row["item_lot_id"] == lot}
+            if actual != {str(declared.acquisition_flag)}:
+                plan.refusals.append(Refusal(key, category, goods_id, "flag_declaration_mismatch",
+                    f"lot {lot} carries getItemFlagId {sorted(actual)}, the declaration "
+                    f"says {declared.acquisition_flag}"))
+                continue
+            plan.edits.append(PlannedEdit(
+                key, category, goods_id, lot, fact.lot_name,
+                str(declared.acquisition_flag), fact.placements,
+                "reviewed script award of a randomized item; the awarding lot has no "
+                "acquisition flag, so the edit preserves getItemFlagId as it stands"))
+            occupied_lots.add(lot)
+
+
 def load_item_goods() -> dict[str, tuple[str, str]]:
     """Map each randomized item key to its param category/id pair."""
     sys.path.insert(0, str(REPO))
@@ -228,6 +304,7 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
     """Plan both shuffled-key awards and the vanilla awards at AP checks."""
     plan = build_plan(load_item_goods(), research, placeholder)
     occupied_lots = {edit.item_lot_id for edit in plan.edits}
+    plan_script_awards(plan, research, occupied_lots)
     facts = collect_lot_facts(research)
     rows = read_tsv(research / "joined" / "lot_items.tsv")
 

@@ -194,7 +194,11 @@ What is **not** claimed:
 
 ### Suppression
 
-The canonical plan is now **178 edits, zero refusals** (see
-`VANILLA-SUPPRESSION.md`). Its SHA-256 changed, so **every playtester must
-rebuild and reinstall the binder**; a slice-1 binder will not satisfy a slice-3
-seed's installation witness and the native client will stay disarmed.
+The canonical plan is now **179 edits, zero refusals** (see
+`VANILLA-SUPPRESSION.md`); the 179th is lot 31000, the Oedon Tomb Key's EMEVD
+award, which is now a shuffled progression item. Its SHA-256 changed, so **every
+playtester must rebuild and reinstall the binder** — and `build.ps1` keeps
+`work\vanilla-suppression-build` when it already exists, so delete that
+directory first or the rebuild does nothing. A binder from any earlier plan will
+not satisfy a current seed's installation witness and the native client will
+stay disarmed.

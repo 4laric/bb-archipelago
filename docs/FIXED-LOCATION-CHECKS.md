@@ -36,7 +36,8 @@ Forbidden Woods passage past Amelia, #124), and the White Messenger Ribbon
 only after Rom's blood moon — when the full world models the quest it needs
 an `event_rom_defeated` rule, not just a region. The Tomb of Oedon strip
 rows (Red Jeweled Brooch, Blood Gem Workshop Tool) seed as Cathedral Ward
-checks behind `event_gascoigne_defeated`.
+checks behind the Tomb of Oedon gate, which now costs both
+`event_gascoigne_defeated` and the shuffled Oedon Tomb Key.
 
 The bullet pickup is the canary: ItemLotParam `2410800`, acquisition flag
 `52410800`. That exact flag was observed false before pickup and true after

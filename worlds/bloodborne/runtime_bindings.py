@@ -83,6 +83,13 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     # Category-4 goods descriptors. The formula is validated against four live inventory records;
     # key-item gate side effects still require end-to-end runtime testing.
     "hunter_chief_emblem": RuntimeItemBinding(0x40000FAB, 0xB0000FAB, "FMG/param + validated goods formula"),
+    # EquipParamGoods 4000 (聖堂街Bの鍵), the Oedon Tomb Key. lot_items.tsv
+    # carries the same normalized/raw pair for lot 31000, derived by the same
+    # category-4 formula (0x40000000|id, 0xB0000000|id) validated live against
+    # four inventory records. `inferred`: no live grant of goods 4000 has been
+    # observed, and no live confirmation that an AP-granted copy satisfies
+    # ObjActParam 2410080 on door 2411304 -- see docs/VANILLA-SUPPRESSION.md.
+    "oedon_tomb_key": RuntimeItemBinding(0x40000FA0, 0xB0000FA0, "FMG/param + validated goods formula"),
     "cainhurst_summons": RuntimeItemBinding(0x40000FA3, 0xB0000FA3, "FMG/param + validated goods formula"),
     "tonsil_stone": RuntimeItemBinding(0x400010D6, 0xB00010D6, "FMG/param + validated goods formula"),
     "upper_cathedral_key": RuntimeItemBinding(0x40000FAA, 0xB0000FAA, "FMG/param + validated goods formula"),
@@ -341,6 +348,61 @@ for location in FIXED_LOCATIONS:
         location.item_category,
         location.item_id,
     )
+
+@dataclass(frozen=True)
+class ScriptAwardSuppression:
+    """A vanilla award the goods -> lot search cannot resolve on its own.
+
+    The automatic planner refuses two shapes deliberately: an item awarded by
+    more than one ItemLotParam row (editing one leaves the others reachable),
+    and a lot with no acquisition flag (nothing can detect the pickup). Both
+    refusals ask a contributor to decide, and this is where the decision is
+    written down so that it is reviewable rather than implicit in a tool.
+
+    ``item_lot_ids`` are the rows to edit. ``unreferenced_lot_ids`` are rows
+    that award the same item but that no committed source reaches; each one
+    needs the census that says so recorded in ``evidence``, because "nothing
+    references it" is exactly the claim a later corpus can falsify.
+    ``acquisition_flag`` is the row's literal ``getItemFlagId`` -- ``-1`` and
+    ``0`` mean the row has none, and the planner must emit the literal value so
+    that the writers' "the flag did not move" invariant compares like for like
+    instead of inventing a flag that does not exist.
+    """
+
+    item_key: str
+    item_category: int
+    item_id: int
+    item_lot_ids: tuple[int, ...]
+    acquisition_flag: int
+    unreferenced_lot_ids: tuple[int, ...]
+    evidence: str
+
+
+SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
+    "oedon_tomb_key": ScriptAwardSuppression(
+        item_key="oedon_tomb_key",
+        item_category=4,
+        item_id=4000,
+        item_lot_ids=(31000,),
+        acquisition_flag=-1,
+        unreferenced_lot_ids=(27100000,),
+        evidence=(
+            "m24_01_00_00.emevd.dcx.js:1394 - event 12411800 waits on "
+            "CharacterDead(2410810 || 2410811) and, host-only, calls "
+            "AwardItemLot(31000) then SetEventFlag(2412/9457/5910). Lot 31000 "
+            "awards category 4 item 4000 in slot 01 with getItemFlagId -1 "
+            "(ItemLotParam.csv; research/joined/lot_items.tsv), so the award "
+            "carries no acquisition flag and the check for this fight is "
+            "Gascoigne's own defeat flag 12411800, not the key. Lot 27100000 "
+            "awards the same goods and is edited by nothing: it appears in no "
+            "MSB treasure (mined/msb_treasures.tsv, 146152 rows), no MSB enemy "
+            "drop field (mined/msb_enemies.tsv), no NpcParam itemLot column "
+            "(params/NpcParam.csv) and no committed EMEVD decompile, so it is "
+            "recorded here as reviewed-and-unreachable rather than edited."
+        ),
+    ),
+}
+
 
 # Known delivery fixtures, not currently part of the randomized design pool.
 DELIVERY_FIXTURES: dict[str, RuntimeItemBinding] = {

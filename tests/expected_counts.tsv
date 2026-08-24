@@ -4,16 +4,16 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		370
+total		378
 
 module	test_bb_enemizer	8
-module	test_bloodborne_model	16
+module	test_bloodborne_model	19
 module	test_bloodborne_ids	24
 module	test_bloodborne_gates	14
 module	test_bloodborne_memory	20
-module	test_vanilla_suppression	18
+module	test_vanilla_suppression	21
 module	test_inputs_bundle	15
-module	test_suppression_writer	27
+module	test_suppression_writer	29
 module	test_emevd_entity_usage	7
 module	test_enemizer_coverage	10
 module	test_flag_addressing	12
