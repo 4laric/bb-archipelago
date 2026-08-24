@@ -90,7 +90,7 @@ rather than runtime evidence. The `basis` column says which:
 ## Follow-ups
 
 - #75 is decided and landed: the 45 shipped `(Lot NNN)` placeholders publish
-  their table names, and this table feeds `tools/build_central_yharnam_slice.py`.
+  their table names, and this table feeds `tools/build_fixed_location_slice.py`.
   Quantities follow the owner ruling: `x1` is dropped, `xN` for N > 1 stays.
 - #82 is decided and landed: the boss-defeat flags are mapped (#86), the
   `53500630` divergence is resolved by owner ruling — the check is Research

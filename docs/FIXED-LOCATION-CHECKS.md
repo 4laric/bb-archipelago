@@ -1,7 +1,10 @@
 # Generated fixed-location checks
 
-Status: all first-cycle Central Yharnam fixed pickups generated; suppression,
-automatic AP reporting, and ordered reward delivery validated live on three lots.
+Status: all first-cycle Central Yharnam, Cathedral Ward and Old Yharnam fixed
+pickups generated (164 manifest rows, 162 seeded). Suppression, automatic AP
+reporting, and ordered reward delivery are validated live on three Central
+Yharnam lots only; no Cathedral Ward or Old Yharnam flag has a runtime witness
+yet, and neither region's boss flag has been seen fire.
 
 ## Source contract
 
@@ -18,8 +21,10 @@ client owns those version-specific facts.
 
 ## Included slice
 
-The first slice seeds 49 of the 51 physical first-cycle Central Yharnam
-pickups, plus Cleric Beast and Father Gascoigne.
+Slice 3 seeds 162 of the 164 manifest rows — 47 Central Yharnam, 61 Cathedral
+Ward, 54 Old Yharnam — plus Cleric Beast, Father Gascoigne, the Blood-starved
+Beast (the goal), Vicar Amelia, the Laurence's-skull interaction, and the
+Radiant Sword Hunter Badge.
 `worlds/bloodborne/fixed_locations.tsv` is the complete reviewed pickup
 manifest; mutually exclusive later-cycle map copies do not become duplicate
 network checks. Two manifest rows — the Iosefka's Clinic back-yard pair

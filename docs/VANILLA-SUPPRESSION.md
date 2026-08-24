@@ -18,14 +18,27 @@ The plan therefore replaces the awarded slot with one Blood Vial and preserves:
 - every unrelated slot and field;
 - every unrelated binder file.
 
-## Central Yharnam plan
+## Slice plan
 
 `tools/plan_vanilla_suppression.py` consumes the active world contract rather
-than the whole future model. Its current canonical plan contains **54 edits and
-zero refusals**:
+than the whole future model. Since slice 3 (Cathedral Ward, Old Yharnam, the
+Blood-starved Beast) its canonical plan contains **178 edits and zero
+refusals**:
 
-- 51 first-cycle physical pickups;
-- three continuation rows for the Hunter Set award group.
+- 164 physical pickups on the reviewed manifest;
+- the Radiant Sword Hunter Badge, which ships from `data.py` under its own key;
+- 13 continuation rows in shared-acquisition-flag award groups (Hunter Set,
+  Top Hat, Black Church, Rumpled Yharnam, Charred Hunter Garb, and the m24_00
+  chest whose flag is numbered in the m24_01 range).
+
+Four of those edits are no-ops on the bytes: the Blood Vial x1 corpses in Old
+Yharnam and Cathedral Ward already award exactly the placeholder. The writer
+now records them as such, so "the row did not change" stays distinguishable
+from "the write did not happen".
+
+**The plan digest changed with slice 3.** A binder built for the slice-1 plan
+no longer matches the seed's `plan_sha256`, and the client will refuse to arm
+until the binder is rebuilt and reinstalled.
 
 Saw Spear, Torch, Hunter attire, and the category-8 blood-gem row are all
 covered. The planner records the original item category and item ID for every
@@ -66,7 +79,7 @@ It never installs the binder. The directory contains:
 - `build-manifest.json` with source, plan, and output SHA-256 values and
   `installed: false`.
 
-The complete 54-edit binder has been built and reopened against the committed
+The complete slice-1 54-edit binder was built and reopened against the committed
 game inputs. That proves the offline transformation, not in-game behavior.
 
 ## Installation witness

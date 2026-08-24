@@ -1,8 +1,11 @@
-# Central Yharnam vertical slice
+# Bloodborne Archipelago playable slices
 
-The first Bloodborne Archipelago game is deliberately bounded to Central
-Yharnam through Father Gascoigne. The broader model in `data.py` remains
-research scaffolding; it is not emitted into this slice's multidata.
+The playable scope grows one reviewed step at a time. Slice 1 was Central
+Yharnam through Father Gascoigne; **slice 3 extends it to Cathedral Ward, Old
+Yharnam, and the Blood-starved Beast**, which is now the goal. The broader
+model in `data.py` remains research scaffolding; it is not emitted into the
+seed. Slice 3 is specified in its own section at the end of this document; the
+slice-1 sections below still describe the Central Yharnam half exactly.
 
 ## Seed contents
 
@@ -25,7 +28,7 @@ research scaffolding; it is not emitted into this slice's multidata.
 
 The pickup manifest is generated from
 `research/catalog/fixed_location_catalog.tsv` by
-`tools/build_central_yharnam_slice.py`. Two mutually exclusive later-cycle
+`tools/build_fixed_location_slice.py`. Two mutually exclusive later-cycle
 replacement rows are collapsed onto their first-cycle physical chests, so they
 cannot become phantom checks. Existing published keys retain their permanent
 AP IDs; every new ID is append-only in `worlds/bloodborne/ids.tsv`.
@@ -104,3 +107,90 @@ The remaining finite playtest is:
 2. validate Cleric Beast and Gascoigne flags, including `CLIENT_GOAL`;
 3. restart/reconnect and confirm no location or item is replayed;
 4. replace operator attestation with a real loaded-save identity before general release.
+
+
+## Slice 3: Cathedral Ward, Old Yharnam, Blood-starved Beast
+
+### Scope
+
+Three maps, read off `research/catalog/fixed_location_catalog.tsv` rather than
+assumed: `m24_01_00_00` (Central Yharnam, slice 1), `m24_00_00_00` (Cathedral
+Ward) and `m23_00_00_00` (Old Yharnam). `SLICE_MAPS` in
+`tools/build_fixed_location_slice.py` is the whole scope statement.
+
+### Seed contents
+
+- **164 reviewed fixed pickups** in the manifest, of which **162** are seeded:
+  47 Central Yharnam, 61 Cathedral Ward (59 from `m24_00` plus the two Tomb of
+  Oedon strip rows slice 1 already placed there), and 54 Old Yharnam. The two
+  Iosefka's Clinic back-yard rows stay out of seeds, unchanged from slice 1.
+- **6 scripted checks:** Cleric Beast, Father Gascoigne, Blood-starved Beast,
+  Vicar Amelia, the Laurence's-skull altar interaction, and the Radiant Sword
+  Hunter Badge treasure.
+- **168 network locations total.**
+- **Goal:** the Blood-starved Beast (`12301800`). The client reads the goal
+  from slot data's `goal_location`, so this is a seed-owned move, not a client
+  rebuild.
+
+### Regions and gates
+
+```
+Menu -> Hunter's Dream -> Central Yharnam
+Central Yharnam --(Father Gascoigne defeated)--> Cathedral Ward
+Cathedral Ward --(free)--> Old Yharnam            [Blood-starved Beast]
+Cathedral Ward --(Hunter Chief Emblem)--> Grand Cathedral
+```
+
+**Why the emblem is modelled as a single-clause gate.** The audited edge in
+`PROGRESSION-DAG.md` is "Hunter Chief Emblem **or** the Healing Church Workshop
+route". Written as one two-clause rule on one entrance, it is vacuous: Old
+Yharnam is free from Cathedral Ward and the Blood-starved Beast is free inside
+it, so the Beast clause is always satisfiable and the emblem can never be the
+requirement. The route is two hops in the game, and it is now two hops in the
+model: the emblem opens the gate directly, while the workshop is entered behind
+the Beast and reaches the same plaza from the other side. Slice 3 does not seed
+the Healing Church Workshop, so inside a slice-3 seed the emblem is the only
+way into the Grand Cathedral and it gates the two checks there.
+`tests/test_bloodborne_gates.py::EmblemIsNotVacuousTests` and the reachability
+test in `tests/test_bloodborne_model.py` hold that claim: withholding the
+emblem must make a non-empty set of seeded checks unreachable.
+
+The Hunter Chief Emblem is therefore in **both** pools — the full pool and the
+reduced `SLICE_ITEM_KEYS` pool — because an emblem-only gate with no emblem in
+the pool is an unreachable region, not a challenge.
+
+### Evidence and its limits
+
+Every new row is a catalog row. Its acquisition flag, item lot, category and
+item id come from `fixed_location_catalog.tsv` and `fixed_location_items.tsv`,
+and the builder refuses any row whose flag/lot pair is missing from
+`research/joined/fixed_location_event_refs.tsv` — a `lot_items.tsv`
+acquisition-flag row on its own is a param join, not a placement, and is not
+evidence that a treasure exists. `source_kind` stays `treasure` for exactly
+that reason.
+
+What is **not** claimed:
+
+- No new flag has been observed live. Slice 1's canary (`52410800`) is still
+  the only pickup flag with a pre/post/restart runtime witness. Cathedral Ward
+  and Old Yharnam need their own canary runs before this slice can be called
+  playtested, and neither region's boss flag (`12301800`, `12401800`) has been
+  seen fire.
+- No new runtime **item** descriptor was added. The pool is unchanged apart
+  from the emblem, which already had a validated category-4 binding. The Rifle
+  Spear, Hunter's Torch and Charred Hunter Garb that Old Yharnam holds in
+  vanilla are suppressed, not granted: admitting a weapon or attire item to the
+  pool still needs its own live grant canary.
+- Two rows in the slice maps are deliberately excluded, with reasons recorded
+  in `EXCLUDED_FLAGS`: `52400480` already ships from `data.py`, and `52420320`
+  shares its flag between an `m24_00` dummy corpse and the real `m24_02`
+  placement.
+- Three more NG-cycle replacement rows (`52400485`, `52420645`, `52420695`)
+  collapse onto their first-cycle chests, exactly as slice 1's two did.
+
+### Suppression
+
+The canonical plan is now **178 edits, zero refusals** (see
+`VANILLA-SUPPRESSION.md`). Its SHA-256 changed, so **every playtester must
+rebuild and reinstall the binder**; a slice-1 binder will not satisfy a slice-3
+seed's installation witness and the native client will stay disarmed.

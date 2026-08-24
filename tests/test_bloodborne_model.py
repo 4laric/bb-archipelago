@@ -3,7 +3,7 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
-from worlds.bloodborne.data import CENTRAL_YHARNAM_SLICE_ITEM_KEYS, MODEL
+from worlds.bloodborne.data import SLICE_ITEM_KEYS, MODEL
 from worlds.bloodborne.model import ItemKind, Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 from worlds.bloodborne import (
@@ -41,14 +41,21 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertTrue(expected <= set(LOCATION_BINDINGS))
         self.assertTrue(all(LOCATION_BINDINGS[key].event_flag for key in expected))
 
-    def test_slice_contains_the_map_and_two_bosses(self):
-        # 49 in-slice fixed pickups + 2 bosses; the two clinic back-yard rows
-        # (Iosefka's Clinic region) stay out of slice seeds until the world
-        # grows the Amelia -> password chain (#124).
-        self.assertEqual(51, len(NETWORK_LOCATIONS))
+    def test_slice_contains_the_three_maps_and_their_bosses(self):
+        # 162 in-slice fixed pickups + 6 scripted checks. The two clinic
+        # back-yard rows (Iosefka's Clinic region) stay out of slice seeds
+        # until the world grows the Amelia -> password chain (#124).
+        self.assertEqual(168, len(NETWORK_LOCATIONS))
+        by_region = Counter(location.region for location in NETWORK_LOCATIONS)
+        self.assertEqual(
+            dict(by_region),
+            {"Central Yharnam": 49, "Cathedral Ward": 62,
+             "Old Yharnam": 55, "Grand Cathedral": 2},
+        )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
-        self.assertEqual("boss_father_gascoigne", GOAL_LOCATION_KEY)
+        self.assertEqual(12301800, LOCATION_BINDINGS["boss_blood_starved_beast"].event_flag)
+        self.assertEqual("boss_blood_starved_beast", GOAL_LOCATION_KEY)
         self.assertEqual(
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
             build_runtime_slot_data()["goal_location"],
@@ -80,38 +87,40 @@ class BloodborneModelTests(unittest.TestCase):
             "Augur of Ebrietas",
         ):
             self.assertEqual(counts[name], 1, name)
-        # 51 locations - 12 one-off items = 39 filler slots cycling five
-        # names: first four get 8, the last gets 7.
-        self.assertEqual(counts["Blood Vial"], 8)
+        # 168 locations - 12 one-off items = 156 filler slots cycling five
+        # names: the first gets 32, the rest 31.
+        self.assertEqual(counts["Blood Vial"], 32)
         for name in (
             "Quicksilver Bullets x3",
             "Pebbles x3",
             "Molotov Cocktails x2",
+            "Blood Stone Shards x2",
         ):
-            self.assertEqual(counts[name], 8, name)
-        self.assertEqual(counts["Blood Stone Shards x2"], 7)
+            self.assertEqual(counts[name], 31, name)
 
     def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
         """The grant shapes the first live sessions validated are unchanged.
 
-        The two out-of-slice clinic rows (#124) shrink the location count to
-        51, which only shifts the filler cycle: 51 - 2 one-off items = 49
-        slots over five names, so the first four get 10 and the last gets 9.
+        Slice 3 adds the Hunter Chief Emblem to this pool because the plaza
+        gate is emblem-only: without it the Grand Cathedral checks would be
+        unreachable with the option off. 168 - 3 one-off items = 165 filler
+        slots over five names, so each gets 33.
         """
-        counts = Counter(build_item_pool_names(CENTRAL_YHARNAM_SLICE_ITEM_KEYS))
+        counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
         self.assertEqual(counts["Saw Spear"], 1)
         self.assertEqual(counts["Augur of Ebrietas"], 1)
-        self.assertEqual(counts["Blood Vial"], 10)
+        self.assertEqual(counts["Hunter Chief Emblem"], 1)
         for name in (
+            "Blood Vial",
             "Quicksilver Bullets x3",
             "Pebbles x3",
             "Molotov Cocktails x2",
+            "Blood Stone Shards x2",
         ):
-            self.assertEqual(counts[name], 10, name)
-        self.assertEqual(counts["Blood Stone Shards x2"], 9)
-        slot_data = build_runtime_slot_data(CENTRAL_YHARNAM_SLICE_ITEM_KEYS)
-        self.assertEqual(len(slot_data["runtime_items"]), 7)  # six slice items + Blood Vial
+            self.assertEqual(counts[name], 33, name)
+        slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
+        self.assertEqual(len(slot_data["runtime_items"]), 8)  # seven slice items + Blood Vial
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
@@ -226,6 +235,59 @@ class BloodborneModelTests(unittest.TestCase):
 
         for region in MODEL.regions:
             visit(region)
+
+    def test_the_seeded_slice_is_fully_reachable_and_the_emblem_is_load_bearing(self):
+        """Reachability, without needing an Archipelago checkout.
+
+        Two claims, and the second is the one worth having. Every seeded
+        location must be reachable with the seeded pool -- otherwise
+        generation would have to bury real checks under filler. And with the
+        Hunter Chief Emblem withheld, some seeded locations must become
+        unreachable, or the emblem-only plaza gate is decoration.
+        """
+        from worlds.bloodborne import NETWORK_LOCATIONS
+        from worlds.bloodborne.data import SLICE_ENTRANCES, SLICE_ITEM_KEYS, SLICE_REGIONS
+
+        locations = [l for l in MODEL.locations if l.key in {n.key for n in NETWORK_LOCATIONS}]
+
+        def reachable(held: set[str]) -> set[str]:
+            """Fixed point over regions and the events locations grant."""
+            owned = set(held)
+            while True:
+                regions = {"Menu"}
+                grown = True
+                while grown:
+                    grown = False
+                    for entrance in SLICE_ENTRANCES:
+                        if (entrance.source in regions and entrance.target not in regions
+                                and entrance.rule.allows(owned)):
+                            regions.add(entrance.target)
+                            grown = True
+                open_keys = {
+                    l.key for l in locations
+                    if l.region in regions and l.rule.allows(owned)
+                }
+                events = {l.locked_item for l in locations
+                          if l.key in open_keys and l.locked_item}
+                if events <= owned:
+                    return open_keys
+                owned |= events
+
+        # Menu and Hunter's Dream are transit regions in this slice: the
+        # Dream's own check (the Eye) belongs to the post-Amelia chain.
+        self.assertEqual(set(SLICE_REGIONS) - {"Menu", "Hunter's Dream"},
+                         {l.region for l in locations})
+        with_everything = reachable(set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS))
+        self.assertEqual(with_everything, {l.key for l in locations})
+
+        without_emblem = reachable(
+            (set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)) - {"hunter_chief_emblem"})
+        gated = with_everything - without_emblem
+        self.assertEqual(
+            gated,
+            {l.key for l in locations if l.region == "Grand Cathedral"},
+        )
+        self.assertTrue(gated, "the Hunter Chief Emblem gates nothing in the seeded slice")
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}

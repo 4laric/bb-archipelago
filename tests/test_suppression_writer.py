@@ -237,7 +237,14 @@ class EndToEndTests(unittest.TestCase):
 
     def test_exactly_the_planned_rows_changed(self):
         changed = sum(1 for a, b in zip(self.before.lines, self.after.lines) if a != b)
-        self.assertEqual(changed, len(self.plan["edits"]))
+        no_ops = [a for a in self.applied if a.already_placeholder]
+        self.assertEqual(changed, len(self.plan["edits"]) - len(no_ops))
+        # Witness: the no-op branch is exercised by the real corpus rather
+        # than merely tolerated. These lots already award one Blood Vial.
+        self.assertEqual(
+            sorted(a.item_lot_id for a in no_ops),
+            ["2300090", "2300100", "2300110", "2400190"],
+        )
 
     def test_every_flag_survived(self):
         for a in self.applied:

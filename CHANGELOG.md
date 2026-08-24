@@ -8,6 +8,52 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **Slice 3 — Cathedral Ward, Old Yharnam, and the Blood-starved Beast.** The
+  playable area is no longer Central Yharnam alone. A seed now covers Central
+  Yharnam, Cathedral Ward, Old Yharnam and the Grand Cathedral: **168 checks**
+  (up from 51), of which 113 are new Cathedral Ward and Old Yharnam pickups
+  taken from the mined location catalog. The **Blood-starved Beast is the new
+  goal**; Vicar Amelia, the Laurence's-skull altar prompt, and the Radiant
+  Sword Hunter Badge join the seeded checks. Every new check keeps the
+  acquisition flag from its own ItemLotParam row, and every new network id was
+  appended to `ids.tsv` — no already-published id moved, so seeds generated
+  before this change keep their meaning.
+
+- **The Hunter Chief Emblem now actually gates something.** The Grand Cathedral
+  used to be modelled as "emblem OR Blood-starved Beast", which meant the
+  emblem decided nothing: the Beast is free to reach. The two routes are now
+  two separate edges, as they are in the game — the emblem opens the plaza gate
+  directly, and the Healing Church Workshop reaches the same plaza the long way
+  round. Slice 3 does not include the workshop, so in a slice-3 seed the emblem
+  is the only way to the Grand Cathedral's checks, and it is guaranteed to be
+  placed in every pool.
+
+### Changed
+
+- **Playtesters must rebuild and reinstall the suppression binder.** The
+  canonical suppression plan grew from 54 edits to **178** to cover the new
+  pickups, so its SHA-256 changed. A binder built for a slice-1 seed no longer
+  matches the installation witness and the native client will stay disarmed
+  until you rebuild it. Row ids and acquisition flags are preserved exactly, as
+  before.
+
+- Four planned suppression rows are no-ops: those pickups already award exactly
+  one Blood Vial. The writer records them as such, so "unchanged" no longer
+  looks like a failed write.
+
+### Known limitations
+
+- Nothing in Cathedral Ward or Old Yharnam has been seen live. Every new flag
+  is static evidence from the committed catalogs: no pickup in either region
+  has a pre-pickup/post-pickup/restart canary, and neither the Blood-starved
+  Beast nor Vicar Amelia flag has been observed firing. Slice 1's Central
+  Yharnam evidence does not carry over to them.
+- The Rifle Spear, Hunter's Torch and Charred Hunter Garb that Old Yharnam
+  holds in vanilla are suppressed, not shuffled: admitting a weapon or attire
+  item to the pool still needs its own live grant canary.
+
+### Added
+
 - **Doctor**: a one-shot preflight of the whole player chain, available as a
   launcher button, as `python -m bb_launcher doctor --settings ...`, and as
   `build.ps1 -Doctor`. It validates the game install, AP seed request, launch

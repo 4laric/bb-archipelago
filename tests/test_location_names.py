@@ -26,7 +26,7 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 TOTAL_CATALOG_ROWS = 651
 TOTAL_TABLE_ROWS = 671  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
-SHIPPED_NAMED_ROWS = 51
+SHIPPED_NAMED_ROWS = 164
 
 # Non-catalog checks the table names: boss defeats, EMEVD script awards, and
 # the one evidenced interaction, each keyed by the check flag committed in

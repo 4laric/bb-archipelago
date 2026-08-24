@@ -61,23 +61,30 @@ build and live-test procedure.
 
 ## Current boundary
 
-Generation now emits the bounded Central Yharnam slice: 51 physical pickups,
-Cleric Beast, and Father Gascoigne. Gascoigne is the goal. The fixed-pickup
+Generation emits the bounded slice-3 scope: Central Yharnam, Cathedral Ward and
+Old Yharnam, with the Grand Cathedral behind the Hunter Chief Emblem. 162
+physical pickups and six scripted checks, 168 network locations. The
+Blood-starved Beast is the goal. Cathedral Ward and Old Yharnam are
+static-evidence only so far: no flag in either region has a runtime witness. The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
-(`12411700`, `12411800`) come from Central Yharnam EMEVD.
+(`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved
+Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed
+`m23_00_00_00` / `m24_00_00_00` EMEVD decompiles and have not been seen fire.
 
-The complete suppression plan rewrites 54 ItemLotParam rows with zero refusals,
+The complete suppression plan rewrites 178 ItemLotParam rows with zero refusals,
 including Saw Spear, Torch, the Hunter Set award group, and the category-8
-blood-gem pickup. Its binder was installed and playtested on shadPS4 0.18.0: a
-suppressed pickup awarded the one-Vial placeholder, retained its acquisition
-flag, and remained collected after restart. Seeds require the matching
+blood-gem pickup. Its slice-1 predecessor (54 edits) was installed and
+playtested on shadPS4 0.18.0: a suppressed pickup awarded the one-Vial
+placeholder, retained its acquisition flag, and remained collected after
+restart. Slice 3 changed the plan digest, so that binder no longer satisfies a
+current seed -- rebuild and reinstall it. Seeds require the matching
 installed-binder hash witness before the native client arms.
 
 The apworld's Python client remains a manual-check fallback. The native client
-in `from-software-archipelago-clients` consumes all 53 runtime flag bindings,
+in `from-software-archipelago-clients` consumes every runtime flag binding the seed sends,
 debounces true reads three times, delivers the Saw Spear and category-4 goods
-through the durable r5 grant bridge, and sends Archipelago goal status for the
-Gascoigne check. Its explicit `--assume-correct-save` MVP mode has reported
+through the durable r5 grant bridge, and sends Archipelago goal status for the seed's
+`goal_location`. Its explicit `--assume-correct-save` MVP mode has reported
 three pickups automatically and acknowledged their AP rewards in order during
 a live run. This mode is operator-attested, not real save identification: never
 switch characters while connected. Normal live mode remains fail closed.

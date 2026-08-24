@@ -88,6 +88,11 @@ class Applied:
     was_quantity: str
     now_quantity: str
     acquisition_flag: str
+    # A handful of planned rows already award exactly the placeholder (the
+    # Blood Vial x1 corpses in Old Yharnam and Cathedral Ward). Suppressing
+    # them is a no-op on the bytes, which is correct but indistinguishable
+    # from "the write did not happen" unless it is declared here.
+    already_placeholder: bool = False
 
 
 def apply_plan(table: Table, plan: dict, *, dry_run: bool = False) -> list[Applied]:
@@ -139,7 +144,10 @@ def apply_plan(table: Table, plan: dict, *, dry_run: bool = False) -> list[Appli
         applied.append(Applied(edit["item_key"], lot, slot, goods,
                                goods if dry_run else placeholder, category,
                                category if dry_run else GOODS_CATEGORY, quantity_before,
-                               quantity_before if dry_run else placeholder_quantity, flag_before))
+                               quantity_before if dry_run else placeholder_quantity, flag_before,
+                               already_placeholder=(goods == placeholder
+                                                    and category == GOODS_CATEGORY
+                                                    and quantity_before == placeholder_quantity)))
     return applied
 
 
@@ -152,7 +160,9 @@ def verify(before: Table, after: Table, applied: list[Applied]) -> None:
     if len(before.lines) != len(after.lines):
         raise SuppressionError("row count changed")
 
-    expected = {a.item_lot_id for a in applied}
+    # Rows that already awarded the placeholder must be byte-identical after
+    # the write; every other planned row must have moved.
+    expected = {a.item_lot_id for a in applied if not a.already_placeholder}
     changed = {after.lines[i].split(",", 1)[0]
                for i in range(len(after.lines)) if before.lines[i] != after.lines[i]}
     if changed != expected:
