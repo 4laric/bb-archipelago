@@ -113,6 +113,42 @@ session files. Send your host:
 Screenshots of anything weird help. There is no wrong way to report — "I picked
 up the thing by the troll and nothing happened" is a useful report.
 
+## Playing with other mods
+
+The randomizer changes exactly one game file: `gameparam.parambnd.dcx` (the
+suppression binder that stops chests and corpses from also handing you their
+vanilla item). It ships **no** map, model, or script files, so most cosmetic
+and quality-of-life mods coexist with it fine.
+
+How to check a mod yourself: look at the folders inside it.
+
+- **Safe** — anything that only ships `chr`, `parts`, `mtd`, `sfx`, `msg`,
+  or `action\script` (`.hks`). Models, textures, physics, and gameplay scripts
+  do not touch pickups or item grants.
+- **Safe, with one assumption** — mods that ship `map\mapstudio` MSB files
+  (performance mods often do). Those files are where pickups live, so the mod
+  is compatible only if it keeps the vanilla treasure placements. A full run
+  with checks firing normally is the practical proof.
+- **Not compatible** — anything that ships `param\gameparam`. A gameplay or
+  item-rebalance mod will either trip the Doctor's `already modified` check
+  (if installed on disk) or quietly override the suppression binder at
+  runtime (if loaded through ModEngine), which means chests hand you their
+  vanilla item *and* send an AP check. Restore a clean 01.09 gameparam
+  before playing.
+
+Verified compatible in playtesting (full slice completed, checks and
+deliveries normal):
+
+| Mod | What it ships |
+| --- | --- |
+| Boczekek's FPS boost Lite | `map\mapstudio` MSBs (keeps vanilla pickups) |
+| Half Cloth Physics with Blood | `chr`, `mtd`, `parts` |
+| Jump on L3 - Modern (Enhanced) | `action\script\c0000.hks` only |
+| Vertex Explosion fix - modloader friendly | `parts` only |
+
+If your favorite mod is not on this list, apply the folder check above — and
+tell your host what you're running when you report back.
+
 ## Troubleshooting
 
 | Symptom | What it means |
