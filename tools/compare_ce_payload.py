@@ -93,7 +93,15 @@ def main() -> int:
             )
             return 2
         else:
-            print(f"eboot base 0x{base:X} verified (unarmed image)")
+            print(
+                f"eboot base 0x{base:X} verified (UNARMED image). The caves are only "
+                f"written when Cheat Engine loads the table, so there is nothing to "
+                f"compare here. Load the table and rerun with --armed, or run "
+                f"`python -m tools.bb_native_delivery verify --pid <pid>` for the "
+                f"unpatched-image check.",
+                file=sys.stderr,
+            )
+            return 2
 
         failures = 0
         for blob in (consume_cave(), heartbeat_cave()):
