@@ -58,22 +58,24 @@ CONTRACT_ROOT = next(
 )
 
 
-# The bytes this assembler emitted the day it was written, verified instruction
-# by instruction against a Capstone disassembly of the same output. Freezing
-# them is what turns "the assembler still runs" into "the assembler still emits
-# the payload the contract records".
+# The bytes the assembler emits. VALIDATED 2026-08-24 against a live shadPS4
+# process: the CE table was loaded and armed, both caves read back with
+# tools/compare_ce_payload.py, and the only differences were MR-form vs
+# RM-form encodings of three reg-to-reg movs (mov rdi,r13 x2; mov rsi,rsp;
+# mov esi,eax) -- semantically identical. The assembler was switched to CE's
+# RM-form encoding so the shipped blob is byte-identical to the reference.
 FROZEN_CONSUME_CAVE = (
-    "4C892D09040000833DF2030000000F84BB000000833DE5030000020F8468000000C705D50300000000"
-    "00008B052F04000089042448C7442408000000008B052D04000089442410C7442414000000004C89EF"
-    "4889E68B050504000025000000F03D000000800F8507000000488D35EE0300008B158C030000"
-    "48B8A0A04D0100000000FFD0E936000000C7056D030000000000004C89EF8B35980300008B1562030000"
-    "488D0D870300004C8B05880300004531C948B8A0944D0100000000FFD0890543030000C7053D0300000"
-    "10000004489E04883C428E9A1DA3FFC"
+    "4C892D09040000833DF2030000000F84BB000000833DE5030000020F8468000000C705D503000000"
+    "0000008B052F04000089042448C7442408000000008B052D04000089442410C74424140000000049"
+    "8BFD488BF48B050504000025000000F03D000000800F8507000000488D35EE0300008B158C030000"
+    "48B8A0A04D0100000000FFD0E936000000C7056D03000000000000498BFD8B35980300008B156203"
+    "0000488D0D870300004C8B05880300004531C948B8A0944D0100000000FFD0890543030000C7053D"
+    "030000010000004489E04883C428E9A1DA3FFC"
 )
 FROZEN_HEARTBEAT_CAVE = (
     "833D49020000000F855C000000833DEC010000000F844F00000048833DEE010000000F8441000000"
-    "488B3DE1010000488D350A02000048B8C0A24D0100000000FFD083F8FF0F841E000000488B3DBE0100"
-    "0089C631D2488D0DEF01000048B8A0944D0100000000FFD04881C4E8070000E9142CB2FC"
+    "488B3DE1010000488D350A02000048B8C0A24D0100000000FFD083F8FF0F841E000000488B3DBE01"
+    "00008BF031D2488D0DEF01000048B8A0944D0100000000FFD04881C4E8070000E9142CB2FC"
 )
 
 
@@ -499,11 +501,15 @@ class ContractTests(unittest.TestCase):
         self.assertGreaterEqual(len(found), 15)
         self.assertFalse(set(found) - allowed, f"unknown provenance labels in {sorted(set(found))}")
 
-    def test_the_payload_bytes_are_labelled_inferred_not_validated(self):
-        """CE assembled these mnemonics at runtime and nobody captured the
-        result; calling the encoding validated would be the exact promotion
-        RESEARCH-BASELINE.md forbids."""
-        self.assertEqual("inferred", self.committed["payload"]["provenance"])
+    def test_the_payload_bytes_are_labelled_validated(self):
+        """Owner checklist item 1 (2026-08-24): the caves were read back from a
+        live armed shadPS4 process with tools/compare_ce_payload.py. The only
+        differences were MR-form vs RM-form encodings of three reg-to-reg movs,
+        which were switched to CE's encoding, so the shipped blob is now
+        byte-identical to what CE emits. `validated` is earned, not asserted."""
+        self.assertEqual("validated", self.committed["payload"]["provenance"])
+        for blob in self.committed["payload"]["blobs"]:
+            self.assertEqual("validated", blob["provenance"], blob["name"])
 
     def test_the_contract_names_only_the_validated_serial(self):
         self.assertEqual("CUSA03173", self.committed["target"]["serial"])
