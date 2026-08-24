@@ -303,3 +303,13 @@ Initial vertical-slice development release.
   playtested in game.
 - The grant bridge still needs live validation of its failed-verify and restart
   recovery paths.
+
+### Validated
+
+- **The CE-free delivery payload encoding is confirmed against Cheat Engine.**
+  The two cave blobs in the native-grant contract were read back from a live
+  armed shadPS4 process (`tools/compare_ce_payload.py`) and matched Cheat
+  Engine's assembled bytes, after switching three register-to-register `mov`s
+  to CE's RM-form encoding (semantically identical). The payload's provenance
+  moves from `inferred` to `validated`; owner checklist item 1 is complete.
+  Cheat Engine remains the shipping delivery path for now.

@@ -167,20 +167,22 @@ def build_contract() -> dict:
             "assembled_at_base": 0,
             "source": "tools/bb_native_delivery/payload.py",
             "source_of_truth": "tables/Bloodborne-native-item-grant-auto-v2.CT autoAssemble template",
-            "provenance": "inferred",
+            "provenance": "validated",
             "note": (
-                "The assembly source is validated (installed and exercised live by Cheat "
-                "Engine). These BYTES are not: CE assembled the mnemonics at runtime and the "
-                "resulting bytes were never captured, so nothing has compared this encoding "
-                "against what CE actually emitted. That comparison is the first item on the "
-                "owner validation checklist."
+                "VALIDATED 2026-08-24 against a live shadPS4 process. The CE table was "
+                "loaded and armed, both caves read back with tools/compare_ce_payload.py, "
+                "and the only differences were MR-form vs RM-form encodings of three "
+                "reg-to-reg movs (mov rdi,r13 x2; mov rsi,rsp; mov esi,eax) -- semantically "
+                "identical instructions. The assembler was switched to CE's RM-form encoding, "
+                "so the shipped blob is now byte-identical to what CE emits. Owner checklist "
+                "item 1 is complete."
             ),
             "blobs": [
                 _blob_entry(payload.state_region(), "validated", "initial request/state block"),
-                _blob_entry(payload.consume_cave(), "inferred", "consume-return detour cave"),
-                _blob_entry(payload.heartbeat_cave(), "inferred", "idle-heartbeat detour cave"),
-                _blob_entry(payload.consume_detour(), "inferred", "E9 rel32 + NOP pad over the original"),
-                _blob_entry(payload.heartbeat_detour(), "inferred", "E9 rel32 + NOP pad over the original"),
+                _blob_entry(payload.consume_cave(), "validated", "consume-return detour cave"),
+                _blob_entry(payload.heartbeat_cave(), "validated", "idle-heartbeat detour cave"),
+                _blob_entry(payload.consume_detour(), "validated", "E9 rel32 + NOP pad over the original"),
+                _blob_entry(payload.heartbeat_detour(), "validated", "E9 rel32 + NOP pad over the original"),
             ],
         },
         "policy": {

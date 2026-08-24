@@ -190,10 +190,12 @@ Every entry carries a `provenance` label from the RESEARCH-BASELINE.md vocabular
 enforce that only those five labels appear. Two labels deserve emphasis:
 
 - the **assembly source** is `validated` — Cheat Engine installed and exercised it live;
-- the **byte encoding** is `inferred` — CE assembled those mnemonics at runtime and *nobody ever
-  captured the bytes it emitted*. Nothing compares this encoding against CE's. That comparison is
-  item 1 of the checklist below, and until it is done the frozen blob is a careful reading of an
-  assembler listing, not a validated payload.
+- the **byte encoding** is now `validated` too. On 2026-08-24 the caves were read back from a live
+  armed shadPS4 process (`tools/compare_ce_payload.py`) and compared against the relocated frozen
+  blobs. They agreed except for three reg-to-reg `mov`s that CE assembles in the RM form (`8B`)
+  where the prototype had emitted the equivalent MR form (`89`) — semantically identical. The
+  assembler was switched to CE's encoding, and the shipped blob is now byte-identical to what CE
+  emits. Checklist item 1 is complete.
 
 ### The payload is position-independent apart from three quadwords
 
@@ -260,12 +262,14 @@ They prove nothing about whether the guest accepts any of it.
 
 In order. Items 1-2 need no game running; items 3 onward need a live session and a throwaway save.
 
-1. **Compare the frozen bytes against Cheat Engine's.** Load
-   `tables/Bloodborne-native-item-grant-auto-v2.CT` as usual, then read back the 219 bytes at
-   `eboot+0x50DBA00` and the 117 at `eboot+0x50DBC00` and diff them against
-   `payload.blobs[*].bytes` in the contract JSON (relocated to that session's base). This is the
-   one measurement that promotes the payload from `inferred` to `validated`. **If it disagrees,
-   the CE table is right and this prototype is wrong.**
+1. **~~Compare the frozen bytes against Cheat Engine's.~~ DONE 2026-08-24.**
+   `python -m tools.compare_ce_payload --pid <shadPS4> --base 0x<from the table's AUTO V5 READY
+   line> --armed` read back the 219 bytes at `eboot+0x50DBA00` and the 117 at `eboot+0x50DBC00`
+   from a live armed process and diffed them against the relocated frozen blobs. Result: agreement
+   after switching three reg-to-reg movs to CE's RM-form encoding (see above). The payload is now
+   `validated`. (`--armed` is required because a loaded table overwrites the hook originals with
+   `E9` detours, so the unarmed image check cannot pass; the tool confirms the base by the detours
+   instead.)
 2. **Run `python -m tools.bb_native_delivery verify --pid <shadPS4>`** against a running,
    *unpatched* emulator. Expect six `ok` rows. Then run it against a patched process (CE already
    loaded) and confirm it now reports `FAIL` — an assert gate that cannot detect the patched state
@@ -286,5 +290,6 @@ In order. Items 1-2 need no game running; items 3 onward need a live session and
 10. **Confirm the fail-closed rows still fail closed:** an absent Blood Vial must be refused, and a
     Torch ItemLot id must not be reachable at all.
 
-Until items 1-2 are done, treat the prototype as a reading of the CE table, not a replacement for
-it. Cheat Engine remains the shipping path for at least one more release regardless.
+Item 1 is done; the payload encoding is validated. Item 2 (the `verify` fail-closed check) and
+the live-grant items remain. Cheat Engine remains the shipping path for at least one more release
+regardless.

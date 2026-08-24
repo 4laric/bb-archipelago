@@ -178,10 +178,10 @@ def _program_consume() -> list[tuple[str | None, _Insn | None]]:
         (None, _fixed(b"\x89\x44\x24\x10")),
         # mov dword ptr [rsp+14],0
         (None, _fixed(b"\xc7\x44\x24\x14" + _imm32(0))),
-        # mov rdi,r13
-        (None, _fixed(b"\x4c\x89\xef")),
-        # mov rsi,rsp
-        (None, _fixed(b"\x48\x89\xe6")),
+        # mov rdi,r13  (CE assembles the RM form: 49 8B FD)
+        (None, _fixed(b"\x49\x8b\xfd")),
+        # mov rsi,rsp  (CE assembles the RM form: 48 8B F4)
+        (None, _fixed(b"\x48\x8b\xf4")),
         # mov eax,[bbAutoDescriptor]
         (None, _rip_form(b"\x8b\x05", "descriptor")),
         # and eax,F0000000
@@ -203,8 +203,8 @@ def _program_consume() -> list[tuple[str | None, _Insn | None]]:
         ("existing", None),
         # mov dword ptr [bbAutoRequest],0
         (None, _rip_form(b"\xc7\x05", "request", _imm32(0))),
-        # mov rdi,r13
-        (None, _fixed(b"\x4c\x89\xef")),
+        # mov rdi,r13  (CE assembles the RM form: 49 8B FD)
+        (None, _fixed(b"\x49\x8b\xfd")),
         # mov esi,[bbAutoSlotIndex]
         (None, _rip_form(b"\x8b\x35", "slot_index")),
         # mov edx,[bbAutoQuantity]
@@ -257,7 +257,7 @@ def _program_heartbeat() -> list[tuple[str | None, _Insn | None]]:
         # mov rdi,[bbAutoInventory]
         (None, _rip_form(b"\x48\x8b\x3d", "inventory")),
         # mov esi,eax ; xor edx,edx
-        (None, _fixed(b"\x89\xc6")),
+        (None, _fixed(b"\x8b\xf0")),  # mov esi,eax (CE RM form)
         (None, _fixed(b"\x31\xd2")),
         # lea rcx,[heartbeat delta arg]
         (None, _rip_form(b"\x48\x8d\x0d", "heartbeat_delta_arg")),

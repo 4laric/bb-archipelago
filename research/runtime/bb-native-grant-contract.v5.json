@@ -221,8 +221,8 @@
     "assembled_at_base": 0,
     "source": "tools/bb_native_delivery/payload.py",
     "source_of_truth": "tables/Bloodborne-native-item-grant-auto-v2.CT autoAssemble template",
-    "provenance": "inferred",
-    "note": "The assembly source is validated (installed and exercised live by Cheat Engine). These BYTES are not: CE assembled the mnemonics at runtime and the resulting bytes were never captured, so nothing has compared this encoding against what CE actually emitted. That comparison is the first item on the owner validation checklist.",
+    "provenance": "validated",
+    "note": "VALIDATED 2026-08-24 against a live shadPS4 process. The CE table was loaded and armed, both caves read back with tools/compare_ce_payload.py, and the only differences were MR-form vs RM-form encodings of three reg-to-reg movs (mov rdi,r13 x2; mov rsi,rsp; mov esi,eax) -- semantically identical instructions. The assembler was switched to CE's RM-form encoding, so the shipped blob is now byte-identical to what CE emits. Owner checklist item 1 is complete.",
     "blobs": [
       {
         "name": "state_region",
@@ -237,7 +237,7 @@
         "name": "consume_cave",
         "rva": 84785664,
         "size": 219,
-        "bytes": "4C892D09040000833DF2030000000F84BB000000833DE5030000020F8468000000C705D5030000000000008B052F04000089042448C7442408000000008B052D04000089442410C7442414000000004C89EF4889E68B050504000025000000F03D000000800F8507000000488D35EE0300008B158C03000048B8A0A04D0100000000FFD0E936000000C7056D030000000000004C89EF8B35980300008B1562030000488D0D870300004C8B05880300004531C948B8A0944D0100000000FFD0890543030000C7053D030000010000004489E04883C428E9A1DA3FFC",
+        "bytes": "4C892D09040000833DF2030000000F84BB000000833DE5030000020F8468000000C705D5030000000000008B052F04000089042448C7442408000000008B052D04000089442410C744241400000000498BFD488BF48B050504000025000000F03D000000800F8507000000488D35EE0300008B158C03000048B8A0A04D0100000000FFD0E936000000C7056D03000000000000498BFD8B35980300008B1562030000488D0D870300004C8B05880300004531C948B8A0944D0100000000FFD0890543030000C7053D030000010000004489E04883C428E9A1DA3FFC",
         "relocations": [
           {
             "offset": 122,
@@ -250,14 +250,14 @@
             "target_rva": 21861536
           }
         ],
-        "provenance": "inferred",
+        "provenance": "validated",
         "note": "consume-return detour cave"
       },
       {
         "name": "heartbeat_cave",
         "rva": 84786176,
         "size": 117,
-        "bytes": "833D49020000000F855C000000833DEC010000000F844F00000048833DEE010000000F8441000000488B3DE1010000488D350A02000048B8C0A24D0100000000FFD083F8FF0F841E000000488B3DBE01000089C631D2488D0DEF01000048B8A0944D0100000000FFD04881C4E8070000E9142CB2FC",
+        "bytes": "833D49020000000F855C000000833DEC010000000F844F00000048833DEE010000000F8441000000488B3DE1010000488D350A02000048B8C0A24D0100000000FFD083F8FF0F841E000000488B3DBE0100008BF031D2488D0DEF01000048B8A0944D0100000000FFD04881C4E8070000E9142CB2FC",
         "relocations": [
           {
             "offset": 56,
@@ -270,7 +270,7 @@
             "target_rva": 21861536
           }
         ],
-        "provenance": "inferred",
+        "provenance": "validated",
         "note": "idle-heartbeat detour cave"
       },
       {
@@ -279,7 +279,7 @@
         "size": 7,
         "bytes": "E98624C0039090",
         "relocations": [],
-        "provenance": "inferred",
+        "provenance": "validated",
         "note": "E9 rel32 + NOP pad over the original"
       },
       {
@@ -288,7 +288,7 @@
         "size": 7,
         "bytes": "E979D34D039090",
         "relocations": [],
-        "provenance": "inferred",
+        "provenance": "validated",
         "note": "E9 rel32 + NOP pad over the original"
       }
     ]
