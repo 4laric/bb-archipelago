@@ -122,6 +122,7 @@ up the thing by the troll and nothing happened" is a useful report.
 | `shadPS4.exe is not running or cannot be opened` | Something started shadPS4 as administrator (for example the third-party "BBLauncher" tool). Close it, then run BloodborneAPLauncher as administrator too. |
 | A `PARKED AP item` line in the client console | An item delivery failed safely; later items keep arriving. Send the console text to your host — there is a tool to confirm or redeliver it. |
 | Doctor says the installed gameparam was `already modified` | Your game files were changed by something else. Restore a clean 01.09 patch before playing. |
+| Geometry stretches into huge spikes across the screen | A known shadPS4 emulator bug ("vertex explosions", shadPS4 issue #1232), not the randomizer. Enabling **readbacks** in the shadPS4 settings usually fixes it (small performance cost); tell your host if you see it. |
 
 ## Known limits of this build
 
