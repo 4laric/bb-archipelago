@@ -9,9 +9,12 @@ the six previously published stable keys.
 
 Player-facing names come from ``worlds/bloodborne/location_names.tsv``, the
 single source defined by docs/LOCATION-NAMING.md; this tool never invents one.
-The ``region`` column is the logic placement and stays Central Yharnam for the
-whole slice — the two checks the name table places in Iosefka's Clinic still
-sit in this map's logic bucket.
+The ``region`` column is the logic placement.  It is Central Yharnam for the
+open-street majority of the slice, but m24_01 is one MSB, not one logic
+region: the clinic back yard is reached only through the Forbidden Woods
+passage, and the workshop-tool chest sits past the Gascoigne arena exit.
+``REGION_OVERRIDES`` places those rows in the region that models their gate
+(issue #124).
 """
 
 from __future__ import annotations
@@ -44,6 +47,20 @@ PUBLISHED_KEYS = {
     52410520: "fixed_torch",
     52410800: "fixed_iosefka_courtyard_bullets",
     52411000: "fixed_blood_gem_workshop_tool",
+}
+
+# Placements behind intra-map gates in m24_01 (issue #124, verified against
+# the wiki and the catalog coordinates):
+# - 52410140 / 52410640: clinic back yard (`診療所外` anchor), unlocked only
+#   via the Forbidden Woods cave passage.
+# - 52411000: library chest between the Gascoigne arena and the Cathedral
+#   Ward lamp, gated by event_gascoigne_defeated.
+# The clinic front courtyard (52410800) and the ledge above the Gascoigne
+# arena (52410920) stay in Central Yharnam: both are reachable at sphere 1.
+REGION_OVERRIDES = {
+    52410140: "Iosefka's Clinic",
+    52410640: "Iosefka's Clinic",
+    52411000: "Cathedral Ward",
 }
 
 FIELDS = (
@@ -95,7 +112,7 @@ def build_rows(repo: Path = REPO) -> list[dict[str, str]]:
         output.append({
             "key": key,
             "name": names_by_flag[flag],
-            "region": "Central Yharnam",
+            "region": REGION_OVERRIDES.get(flag, "Central Yharnam"),
             "location_flag": str(flag),
             "item_lot_id": item["item_lot_id"],
             "item_category": item["category"],
