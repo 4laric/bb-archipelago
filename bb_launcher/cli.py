@@ -26,6 +26,7 @@ from .core import (
     recover_activation,
     restore_previous_build,
     validate_processes,
+    wait_for_early_exit,
 )
 from .client_config import default_shad_log, default_state_root, write_client_runtime_config
 from .doctor import format_report, run_doctor
@@ -118,8 +119,6 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument("--output", required=True, help="where to write the process plan JSON")
     plan.add_argument("--shad", required=True, help="shadPS4 executable to pin")
     plan.add_argument("--client", required=True, help="AP client executable to pin")
-    plan.add_argument("--ce", help="Cheat Engine executable for the optional bridge")
-    plan.add_argument("--ce-table", help="CE grant table; required when --ce is given")
     plan.add_argument("--server", default=DEFAULT_SERVER, help="Archipelago server address")
     plan.add_argument("--shad-build", default=DEFAULT_SHAD_BUILD, help="shadPS4 build string")
     plan.add_argument("--slot", help="AP slot name (defaults to the AP request's player_name)")
@@ -280,11 +279,22 @@ def main(argv: list[str] | None = None) -> int:
             resolved = resolve_process_plan(process_plan, paths).processes
             require_no_stray_cheat_engine(resolved)
             started = launch_processes(resolved)
+            early_exit = wait_for_early_exit(started, resolved)
             _print(
                 {
                     "mode": "vanilla" if args.vanilla else "randomized",
                     "client_config": None if paths is None else str(paths.config),
                     "ledger": None if paths is None else str(paths.ledger),
+                    "client_log": None if paths is None else str(paths.client_log),
+                    "early_exit": (
+                        None
+                        if early_exit is None
+                        else {
+                            "name": early_exit.name,
+                            "returncode": early_exit.returncode,
+                            "log_tail": early_exit.log_tail,
+                        }
+                    ),
                     "started": [
                         {"name": spec.name, "pid": getattr(process, "pid", None)}
                         for spec, process in zip(processes, started)
@@ -314,13 +324,9 @@ def main(argv: list[str] | None = None) -> int:
                 raise ValidationError("plan requires --slot or --ap-request")
             if runtime_build is None:
                 raise ValidationError("plan requires --runtime-build or --ap-request")
-            if args.ce_table is not None and args.ce is None:
-                raise ValidationError("--ce-table requires --ce")
             document = generate_process_plan(
                 shad_executable=args.shad,
                 client_executable=args.client,
-                ce_executable=args.ce,
-                ce_table=args.ce_table,
                 server=args.server,
                 shad_build=args.shad_build,
                 slot=slot,

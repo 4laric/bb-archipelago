@@ -12,6 +12,7 @@ from .core import (
     BuildResult,
     ConflictError,
     DiscoveryError,
+    EarlyExit,
     GameInstall,
     LaunchError,
     LauncherError,
@@ -28,6 +29,7 @@ from .core import (
     recover_activation,
     restore_previous_build,
     validate_processes,
+    wait_for_early_exit,
 )
 from .workflow import (
     EnemizerOptions,
@@ -44,6 +46,7 @@ __all__ = [
     "BuildResult",
     "ConflictError",
     "DiscoveryError",
+    "EarlyExit",
     "GameInstall",
     "LaunchError",
     "LauncherError",
@@ -60,6 +63,7 @@ __all__ = [
     "recover_activation",
     "restore_previous_build",
     "validate_processes",
+    "wait_for_early_exit",
     "EnemizerOptions",
     "EnemizerToolchain",
     "LauncherSettings",

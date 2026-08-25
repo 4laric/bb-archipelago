@@ -187,5 +187,40 @@ class GrantHarnessContractTests(unittest.TestCase):
         )
 
 
+    def test_a_quantity_coincidence_is_not_an_execution_witness(self):
+        # bb-archipelago#163: the CE lane acked a 13-item backlog drain that
+        # never reached inventory. The only path that reports success without
+        # executing anything is the recovered_complete shortcut, reached when
+        # the stack already holds expected_before+quantity. That is a witness
+        # only when the durable state from this harness recorded a VERIFIED
+        # write; the statuses written before a write must not qualify.
+        self.assertIn("local priorWitnessed=false", self.text)
+        self.assertIn(
+            'priorWitnessed=priorMatches and (prior.status=="completed" or prior.status=="recovered_complete")',
+            self.text,
+        )
+        # The in-progress statuses may still reconstruct expected_before (that
+        # is what stops a double grant) but may not acknowledge.
+        self.assertIn("local recoverable=priorMatches and (priorWitnessed", self.text)
+        self.assertIn('or prior.status=="executing" or prior.status=="queued" or prior.status=="verify_pending"', self.text)
+        self.assertIn("if not priorWitnessed then", self.text)
+        self.assertIn('state("recovery_ambiguous"', self.text)
+        # Fail-closed: the refusal keeps the command file, so the client's
+        # staleness check reports it instead of the ledger recording a
+        # delivery. Neither the ack nor the unlink may run on this path.
+        refusal = self.text.index("if not priorWitnessed then")
+        ack = self.text.index('state("recovered_complete"')
+        self.assertLess(refusal, ack)
+        self.assertNotIn(
+            'state("recovery_ambiguous"', self.text[ack:],
+        )
+        between = self.text[refusal:ack]
+        self.assertNotIn("os.remove(commandPath)", between)
+        # recovery_ambiguous is deliberately in neither client verdict set
+        # (is_success / is_terminal_failure), so the client reads it as still
+        # pending and goes stale out loud rather than parking or acking.
+        self.assertNotIn('"recovery_ambiguous"', self.helper)
+
+
 if __name__ == "__main__":
     unittest.main()

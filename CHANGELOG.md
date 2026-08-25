@@ -23,6 +23,24 @@ under `Unreleased` and move into a dated version section when released.
   than the event that owns it and are corrected. `docs/SLICE3-WITNESS-PASS.md`
   carries the verdicts and the owner checklist for the live session that is
   still owed.
+- **The launcher no longer starts Cheat Engine, and Cheat Engine is no longer
+  required.** Item delivery is the client's native path, and that is now the
+  client's default; a generated launch plan has exactly two children, shadPS4
+  and the AP client. Cheat Engine is only involved if your host explicitly
+  tells you to restart the client with `--delivery=ce-bridge` and walks you
+  through opening it by hand -- worth avoiding, because the bridge can report a
+  whole backlog of items as delivered when none of them actually arrived, and
+  those items are lost for the run (#163). If the client stops with a message
+  about an unrecognized or unvalidated game build, nothing was written: send
+  the exact console text to your host rather than switching lanes yourself
+  (#153).
+- **A client that stops at startup now says why.** The AP client's output is
+  appended to `client.log` in the session folder, beside `ledger.json`, with a
+  dated `=== SESSION START ===` header per launch, and the launcher watches the
+  components it started for ten seconds. If one stops in that window, you get
+  an error dialog with its exit code and what it printed, instead of the
+  success popup -- previously the client's console closed with it and the
+  message was lost (#171). **Open Diagnostics** now finds `client.log` too.
 
 - **The `enemizer` YAML option is gone.** Enemization never affected
   generation -- no logic, pool, or region read it -- and the launcher's
@@ -194,6 +212,22 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Fixed
 
+- **The Cheat Engine grant bridge no longer acknowledges an item it cannot
+  witness being granted.** The harness had one path that reported success
+  without executing anything: when a retained command's stack already held
+  `expected_before + quantity`, it declared the grant "already applied". After
+  a crash or relaunch that equality is usually a coincidence -- the save
+  reloaded at a different count, or the player picked the same item up -- and
+  every item acknowledged that way was recorded as delivered and lost for good
+  (#163, seen as a 13-item backlog drained and acknowledged with nothing in
+  inventory). The shortcut now requires a durable state from this same harness
+  that recorded a *verified* write (`completed` / `recovered_complete`); the
+  statuses written before a write (`queued`, `executing`, `verify_pending`,
+  `recovery_pending`) may still reconstruct the expected count, which is what
+  keeps a genuinely-applied grant from being applied twice, but may no longer
+  acknowledge one. Without that witness the harness reports
+  `recovery_ambiguous` and keeps the command file, so the client's staleness
+  check blocks the delivery out loud instead of the ledger silently banking it.
 - Item grants no longer fail verification against the wrong inventory stack:
   the grant harness now verifies a native insert against the result slot the
   game itself reported (id matches, quantity covers the grant) instead of only

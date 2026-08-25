@@ -552,12 +552,24 @@ local function poll()
   else
     grantAbsentTag=""; grantAbsentPolls=0
   end
+  -- Whether the DURABLE state proves a previous session actually verified this
+  -- tag's mutation. Only "completed" and "recovered_complete" are written after
+  -- a verified write; "queued"/"executing"/"verify_pending"/"recovery_pending"
+  -- are all written BEFORE (or instead of) one, so they witness a published
+  -- command, never an executed one. The distinction is load-bearing below:
+  -- reconstructing expected_before from an unwitnessed prior is safe (it avoids
+  -- double-granting), but acknowledging from one is not (bb-archipelago#163:
+  -- a backlog drained after a crash was acked off quantity coincidences and
+  -- every item in it was permanently lost).
+  local priorWitnessed=false
   if command.autoExpected then
     local priorBefore,priorAfter=tonumber(prior.expected_before or ""),tonumber(prior.expected_after or "")
-    local recoverable=prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag==command.tag
+    local priorMatches=prior.build==build and prior.protocol==protocol and prior.harness==harness and prior.tag==command.tag
       and priorBefore~=nil and priorAfter==priorBefore+command.count
-      and (prior.status=="executing" or prior.status=="queued" or prior.status=="verify_pending"
-        or prior.status=="recovery_pending" or prior.status=="completed" or prior.status=="recovered_complete")
+    priorWitnessed=priorMatches and (prior.status=="completed" or prior.status=="recovered_complete")
+    local recoverable=priorMatches and (priorWitnessed
+      or prior.status=="executing" or prior.status=="queued" or prior.status=="verify_pending"
+      or prior.status=="recovery_pending")
     if recoverable then
       command.expected=priorBefore
     else
@@ -569,6 +581,18 @@ local function poll()
   stateExpectedBefore=command.expected
   stateExpectedAfter=wanted
   if actual==wanted then
+    -- The stack already holds expected_before+quantity. That is only evidence
+    -- of application when a durable state from this same harness witnessed the
+    -- write; otherwise it is a coincidence -- the save reloaded at a different
+    -- count, or the player picked the same item up. Acking on a coincidence is
+    -- how a grant is lost forever, so refuse: leave the command in place with a
+    -- status the client treats as neither success nor terminal failure, which
+    -- makes its 30s staleness check report the block out loud.
+    if not priorWitnessed then
+      append(string.format("AUTO AMBIGUOUS tag=%s quantity=%d prior_status=%s; refusing to acknowledge without an execution witness",command.tag,actual,tostring(prior.status)))
+      state("recovery_ambiguous",string.format("tag=%s quantity=%d already equals expected_after with no execution witness (prior_status=%s); the command is retained, not acknowledged. Delete the bridge command file to release it once you have confirmed whether the item is in inventory.",command.tag,actual,tostring(prior.status)))
+      return
+    end
     append(string.format("AUTO RECOVERED tag=%s quantity=%d; command already applied",command.tag,actual))
     state("recovered_complete",string.format("tag=%s quantity=%d",command.tag,actual))
     os.remove(commandPath)
