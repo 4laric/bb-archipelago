@@ -441,6 +441,11 @@ jobs:
       - name: The param writer round-trips losslessly
         run: python tools/apply_vanilla_suppression.py --check
 
+      # The slice-3 flag audit is a claim about the corpus, so it is checked
+      # against the corpus rather than trusted as a committed file (#158).
+      - name: The slice-3 witness audit still says what the corpus says
+        run: python tools/audit_slice3_witnesses.py --check
+
       - name: Extract and re-run the param joins
         run: |
           python tools/bb_inputs.py --extract work/inputs

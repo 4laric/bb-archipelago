@@ -8,6 +8,22 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **Slice-3 flag claims are now traced instruction by instruction, and two
+  citations were wrong.** Cathedral Ward and Old Yharnam shipped with no live
+  witness, so every detection flag there was a static claim. All 121 of them --
+  115 pickups plus the six scripted checks -- are audited against the committed
+  game corpus in `research/validation/slice3_witness_audit.tsv`, and the answer
+  matters for what a player can trust: 116 are complete from named sources, and
+  the five boss/interaction flags share one gap that no corpus can close (the
+  game never writes them with an instruction; the engine sets them when the
+  event ends), which the two flags slice 1 already shipped with have too. No
+  slice-3 flag can be cleared by any of the 279 resolved OFF ranges, and each
+  one has exactly one placed item lot, so no two checks collapse onto one flag.
+  Two binding source references pointed at code that *reads* the flag rather
+  than the event that owns it and are corrected. `docs/SLICE3-WITNESS-PASS.md`
+  carries the verdicts and the owner checklist for the live session that is
+  still owed.
+
 - **The `enemizer` YAML option is gone.** Enemization never affected
   generation -- no logic, pool, or region read it -- and the launcher's
   Randomize Enemies toggle has always been the authority at launch time. The

@@ -180,6 +180,9 @@ What is **not** claimed:
   and Old Yharnam need their own canary runs before this slice can be called
   playtested, and neither region's boss flag (`12301800`, `12401800`) has been
   seen fire.
+  `docs/SLICE3-WITNESS-PASS.md` traces every one of those flags to its
+  instruction or param row, records which claims a live session still has to
+  close, and carries the checklist for that session.
 - No new runtime **item** descriptor was added. The pool is unchanged apart
   from the emblem, which already had a validated category-4 binding. The Rifle
   Spear, Hunter's Torch and Charred Hunter Garb that Old Yharnam holds in

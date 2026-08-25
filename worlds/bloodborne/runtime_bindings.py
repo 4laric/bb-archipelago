@@ -146,19 +146,23 @@ EQUIPMENT_EXCLUSIONS: dict[str, RuntimeEquipmentExclusion] = {
 LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "boss_cleric_beast": RuntimeLocationBinding(
         12411700,
-        "EMEVD boss-completion flag; m24_01_00_00 event 12411700 is paired with 12411800",
+        "EMEVD boss-completion flag; $Event(12411700) waits CharacterDead(2410800) "
+        "and calls HandleBossDefeat on it; MSB places 2410800 with NpcParam 500241 "
+        "(教区長　聖堂街B)",
         None,
         "boss_defeat",
-        "m24_01_00_00.emevd.dcx.js:1047",
+        "m24_01_00_00.emevd.dcx.js:1052-1094",
         None,
         None,
     ),
     "boss_father_gascoigne": RuntimeLocationBinding(
         12411800,
-        "EMEVD boss-completion flag; event 12411800 gates the arena, key award, and world state",
+        "EMEVD boss-completion flag; $Event(12411800) waits CharacterDead(2410810 || "
+        "2410811) and calls HandleBossDefeat on both; the host block at :1394 awards "
+        "lot 31000 and sets 2412/9457/5910",
         None,
         "boss_defeat",
-        "m24_01_00_00.emevd.dcx.js:1394-1417",
+        "m24_01_00_00.emevd.dcx.js:1362-1412",
         None,
         None,
     ),
@@ -170,7 +174,11 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     # strings are internal names, not the shipped ones).
     "boss_blood_starved_beast": RuntimeLocationBinding(
         12301800,
-        "EMEVD boss-completion flag; event 12301800 defeats entity 2300800 (血に渇いた獣)",
+        "EMEVD boss-completion flag; $Event(12301800) waits CharacterDead(2300800) and "
+        "calls HandleBossDefeat(2300800), placed in m23_00_00_00 with NpcParam 209000 "
+        "(血に渇いた獣　廃墟). `inferred`: no instruction in the corpus writes this "
+        "flag -- the write is the engine's event-end rule, and no live session has "
+        "seen it fire. See research/validation/slice3_witness_audit.tsv",
         None,
         "boss_defeat",
         "m23_00_00_00.emevd.dcx.js:497-537",
@@ -179,7 +187,11 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     ),
     "boss_vicar_amelia": RuntimeLocationBinding(
         12401800,
-        "EMEVD boss-completion flag; event 12401800 defeats entity 2400800 (聖女ビースト)",
+        "EMEVD boss-completion flag; $Event(12401800) waits CharacterDead(2400800) and "
+        "calls HandleBossDefeat(2400800), placed in m24_00_00_00 with NpcParam 502000 "
+        "(聖女ビースト　聖堂街A). `inferred`: no instruction in the corpus writes this "
+        "flag -- the write is the engine's event-end rule, and no live session has "
+        "seen it fire. See research/validation/slice3_witness_audit.tsv",
         None,
         "boss_defeat",
         "m24_00_00_00.emevd.dcx.js:4287-4331",
@@ -278,8 +290,12 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     ),
     "interaction_laurences_skull": RuntimeLocationBinding(
         12401803,
-        "EMEVD one-shot interaction flag; event 12401803 (学長の記憶ポリ劇) gates on Amelia "
-        "(12401800) and fires on the Grand Cathedral altar action prompt, then ends",
+        "EMEVD one-shot interaction flag; $Event(12401803) (学長の記憶ポリ劇) waits on "
+        "Amelia (12401800), then on ActionButtonInArea(2400010, 2401801) at the Grand "
+        "Cathedral altar, and ends. `inferred` on two counts: nothing writes the flag "
+        "explicitly, and the event's `EndIf(HasMultiplayerState(Client))` at :4390 "
+        "ends it before the action prompt for a co-op guest, so a guest may hold the "
+        "flag without the interaction. See research/validation/slice3_witness_audit.tsv",
         None,
         "interaction",
         "m24_00_00_00.emevd.dcx.js:4382-4398",
