@@ -22,7 +22,8 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--inventory", default="research/mined/msb_enemies.tsv")
     seed = result.add_mutually_exclusive_group(required=True)
     seed.add_argument("--seed")
-    seed.add_argument("--ap-request", help="bb-enemizer-request-v1 emitted by the Bloodborne apworld")
+    seed.add_argument("--ap-request",
+                      help="bb-seed-request-v1 (or legacy bb-enemizer-request-v1) emitted by the Bloodborne apworld")
     result.add_argument("--tags", default="research/enemizer/enemy_tags.json",
                         help="archetype-tag JSON (default: generated research catalog)")
     result.add_argument("--slot-policy", default="research/enemizer/slot_policy.json",
@@ -37,8 +38,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     if args.ap_request:
         request = json.loads(Path(args.ap_request).read_text(encoding="utf-8"))
-        if request.get("format") != "bb-enemizer-request-v1":
-            raise SystemExit("invalid AP enemizer request format")
+        if request.get("format") not in ("bb-seed-request-v1", "bb-enemizer-request-v1"):
+            raise SystemExit("invalid AP seed request format")
         if not request.get("enemizer"):
             raise SystemExit("enemizer is disabled in this AP request")
         args.seed = str(request["enemizer_seed"])

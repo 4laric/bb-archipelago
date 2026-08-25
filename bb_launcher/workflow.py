@@ -40,7 +40,11 @@ from .resources import application_root
 
 SETTINGS_FORMAT = "bb-launcher-ui-settings-v1"
 PROCESS_PLAN_FORMAT = "bb-launcher-process-plan-v1"
-REQUEST_FORMAT = "bb-enemizer-request-v1"
+REQUEST_FORMAT = "bb-seed-request-v1"
+# Seeds generated before the request became the seed identity document (#149)
+# carry the old format name; the payload is compatible.
+LEGACY_REQUEST_FORMAT = "bb-enemizer-request-v1"
+REQUEST_FORMATS = (REQUEST_FORMAT, LEGACY_REQUEST_FORMAT)
 PLAN_FORMAT = "bb-enemizer-plan-v2"
 Progress = Callable[[str], None]
 CommandRunner = Callable[[Sequence[str], Path, Progress], None]
@@ -418,9 +422,11 @@ class EnemizerToolchain:
 
 
 def _request_identity(request_path: Path) -> dict[str, Any]:
-    request = _read_object(request_path, "AP enemizer request")
-    if request.get("format") != REQUEST_FORMAT:
-        raise ValidationError(f"expected a {REQUEST_FORMAT} file")
+    request = _read_object(request_path, "AP seed request")
+    if request.get("format") not in REQUEST_FORMATS:
+        raise ValidationError(
+            f"expected a {REQUEST_FORMAT} file (or legacy {LEGACY_REQUEST_FORMAT})"
+        )
     player = request.get("player")
     player_name = request.get("player_name")
     runtime_build = request.get("runtime_build")

@@ -27,7 +27,7 @@ def make_request(root: Path, *, player_name: str = "Alice", runtime_build: str =
     path.write_text(
         json.dumps(
             {
-                "format": "bb-enemizer-request-v1",
+                "format": "bb-seed-request-v1",
                 "player": 1,
                 "player_name": player_name,
                 "runtime_build": runtime_build,

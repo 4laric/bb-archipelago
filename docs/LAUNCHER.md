@@ -121,7 +121,7 @@ python -m bb_launcher status --game-root C:\path\to\shad-games
 
 A process plan is generated, not hand-written. `python -m bb_launcher plan`
 pins each selected executable by SHA-256, derives the slot and runtime build
-from the seed's `.bbenemizer.json` request (`--ap-request`), and writes a
+from the seed's `.bbseed.json` request (`--ap-request`), and writes a
 `bb-launcher-process-plan-v1` document whose client arguments carry the
 `{runtime_config}` / `{ledger}` placeholders the launcher substitutes at
 launch — so the plan is portable across machines and sessions:
@@ -131,7 +131,7 @@ python -m bb_launcher plan `
   --output plan.json `
   --shad C:\path\to\shadPS4.exe `
   --client C:\path\to\bb-ap-client.exe `
-  --ap-request seed.bbenemizer.json
+  --ap-request seed.bbseed.json
 ```
 
 The client entry carries `--assume-correct-save`, the explicitly unsafe MVP
@@ -156,7 +156,8 @@ suppression binder/manifest pair is offered when
 choosing a `shadPS4.exe` derives the game root from its `games` sibling when
 that discovery is unambiguous. Select:
 
-- the seed's `.bbenemizer.json` request;
+- the seed's `.bbseed.json` request (generation emits one per slot whether or
+  not the enemizer option is on; older seeds' `.bbenemizer.json` still works);
 - the validated shadPS4 game root;
 - the generated suppression binder and its `build-manifest.json`;
 - the player's source `MapStudio` (automatically discovered in the Windows package);

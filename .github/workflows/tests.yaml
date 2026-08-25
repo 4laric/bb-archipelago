@@ -199,27 +199,30 @@ jobs:
           fi
 
       # The seam between the two halves of the project: the world emits a
-      # request and the planner is supposed to consume it.
-      - name: The enemizer request is emitted and well formed
+      # seed request (the launcher's identity document) and the planner can
+      # consume it. bb-archipelago#149: every slot gets one, enemizer on or
+      # off -- an enemizer-off slot without a request cannot launch at all.
+      - name: The seed request is emitted for every slot and well formed
         working-directory: _ap
         run: |
           python - <<'PY'
           import glob, json, zipfile
           zips = sorted(glob.glob("out/*.zip"))
           assert zips, "no output produced"
-          requests = 0
+          expected = {"Tester": True, "NoEnemizer": False}
           for path in zips:
               archive = zipfile.ZipFile(path)
+              seen = {}
               for name in archive.namelist():
-                  if not name.endswith(".bbenemizer.json"):
+                  if not name.endswith(".bbseed.json"):
                       continue
-                  requests += 1
                   payload = json.loads(archive.read(name))
-                  assert payload["format"] == "bb-enemizer-request-v1", payload
+                  assert payload["format"] == "bb-seed-request-v1", payload
                   assert payload["enemizer_seed"], "the planner is seeded from this"
                   assert payload["player"] and payload["player_name"]
-          assert requests, "no .bbenemizer.json emitted by any seed"
-          print(f"{requests} enemizer request(s) verified")
+                  seen[payload["player_name"]] = payload["enemizer"]
+              assert seen == expected, (path, seen)
+          print(f"{len(zips)} seed(s): one request per slot, enemizer on and off")
           PY
 
       # NOTE: this leg proves the request is emitted and well formed, but the

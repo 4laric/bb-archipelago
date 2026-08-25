@@ -34,7 +34,8 @@ a running randomized seed, and tells you exactly what to report back.
 5. **The launcher package** — `BloodborneAPLauncher-win-x64.zip`, from the
    release page or sent to you directly. Unzip it anywhere.
 6. **Two things from your session host** (the person running the seed):
-   - your **AP seed request file** (`....bbenemizer.json`), generated with the seed;
+   - your **AP seed request file** (`....bbseed.json`; older seeds:
+     `....bbenemizer.json`), generated with the seed;
    - the **server address** (looks like `example.com:38281`) and your **player name**.
 
 ## Setup (about five minutes)
@@ -43,7 +44,7 @@ a running randomized seed, and tells you exactly what to report back.
 2. Fill in the four fields the launcher cannot guess:
    - **shadPS4.exe** — pick the emulator executable. The game folder fills in
      automatically if your game is installed in the usual place.
-   - **AP seed request** — the `.bbenemizer.json` your host sent you. In a
+   - **AP seed request** — the `.bbseed.json` your host sent you. In a
      multiworld with more than one Bloodborne player, make sure it is **yours**:
      the file name ends with your player name, and the Doctor checks it.
    - **Archipelago server** — the address your host sent you.
