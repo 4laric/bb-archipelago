@@ -285,10 +285,10 @@ jobs:
           import glob, json, zipfile
           zips = sorted(glob.glob("out/*.zip"))
           assert zips, "no output produced"
-          expected = {"Tester": True, "NoEnemizer": False}
+          expected = {"Tester", "NoEnemizer"}
           for path in zips:
               archive = zipfile.ZipFile(path)
-              seen = {}
+              seen = set()
               for name in archive.namelist():
                   if not name.endswith(".bbseed.json"):
                       continue
@@ -296,7 +296,10 @@ jobs:
                   assert payload["format"] == "bb-seed-request-v1", payload
                   assert payload["enemizer_seed"], "the planner is seeded from this"
                   assert payload["player"] and payload["player_name"]
-                  seen[payload["player_name"]] = payload["enemizer"]
+                  # bb-archipelago#150: enemization is a launch-time decision,
+                  # not a seed term. The key must not come back.
+                  assert "enemizer" not in payload, (name, payload.get("enemizer"))
+                  seen.add(payload["player_name"])
               assert seen == expected, (path, seen)
           print(f"{len(zips)} seed(s): one request per slot, enemizer on and off")
           PY

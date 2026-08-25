@@ -193,14 +193,6 @@ except ImportError:
 else:
     from dataclasses import dataclass
 
-    class Enemizer(Toggle):
-        """Randomize enemy placement for this slot.
-
-        Enemy randomization is applied by the launcher when the seed is
-        built; the seed request file is emitted either way."""
-        display_name = "Enemy Randomizer"
-        default = 1
-
     class AutoUpgrade(Toggle):
         """Raise received weapons to the player's validated reinforcement target."""
         display_name = "Auto Upgrade Received Weapons"
@@ -221,7 +213,6 @@ else:
 
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
-        enemizer: Enemizer
         auto_upgrade: AutoUpgrade
         auto_equip: AutoEquip
         full_item_pool: FullItemPool
@@ -318,7 +309,6 @@ else:
                 "version": 4,
                 "world_version": WORLD_VERSION,
                 "runtime_build": RUNTIME_BUILD,
-                "enemizer": bool(self.options.enemizer),
                 "auto_upgrade": bool(self.options.auto_upgrade),
                 "auto_equip": bool(self.options.auto_equip),
                 "full_item_pool": bool(self.options.full_item_pool),
@@ -330,7 +320,7 @@ else:
             # The request file is the seed's identity document for the
             # launcher -- slot, player, world/runtime builds, and the
             # suppression plan hash all come from it -- so it is emitted for
-            # every slot regardless of the enemizer option (#149). Whether
+            # every slot (#149). Whether
             # enemies are actually randomized is a launch-time decision;
             # `enemizer_seed` is one field of the identity, not its reason
             # to exist.

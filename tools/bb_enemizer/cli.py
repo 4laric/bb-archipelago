@@ -40,8 +40,10 @@ def main(argv: list[str] | None = None) -> int:
         request = json.loads(Path(args.ap_request).read_text(encoding="utf-8"))
         if request.get("format") not in ("bb-seed-request-v1", "bb-enemizer-request-v1"):
             raise SystemExit("invalid AP seed request format")
-        if not request.get("enemizer"):
-            raise SystemExit("enemizer is disabled in this AP request")
+        # Whether enemies are randomized is a launch-time decision
+        # (bb-archipelago#150): the request seeds the planner, it does not
+        # authorize it. Legacy requests still carry an `enemizer` flag; it is
+        # deliberately ignored.
         args.seed = str(request["enemizer_seed"])
     slots = load_slots(args.inventory)
     tags_path = args.tags if Path(args.tags).is_file() else None
