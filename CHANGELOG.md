@@ -8,6 +8,21 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **The client's console window shows live output again, and still leaves a
+  log behind.** Capturing the client's output into `client.log` (#171) had
+  blanked the console window you watch to see what arrived. The client now
+  keeps that console *itself* and writes the log *itself*: the launcher hands
+  it `--log-file` pointing at this session's `client.log` and then stays
+  entirely out of its output path — no redirect, no relay. Every line goes to
+  both places at once, flushed as it is printed, so a crash cannot swallow the
+  last thing it said. Nothing about sending diagnostics changes: `client.log`
+  is still the file to send, still one `=== SESSION START ... ===` block per
+  launch, and the early-exit dialog still quotes this session's tail. shadPS4's
+  output is captured by the launcher exactly as before (#175). Requires the
+  matching client build, which a generated plan pins by SHA-256, so the plan
+  and the executable always travel together (#181, with
+  fromsoftware-archipelago-clients#425).
+
 - **shadPS4 is now launched by path, so your game folder is what decides which
   game boots.** The launch plan used to invoke `shadPS4.exe CUSA03173` — a bare
   game ID the emulator can only resolve against its *own* library config. On an

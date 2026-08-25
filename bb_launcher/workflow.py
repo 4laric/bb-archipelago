@@ -34,6 +34,7 @@ from .core import (
     wait_for_early_exit,
 )
 from .client_config import (
+    CLIENT_LOG_FLAG,
     ClientRuntimePaths,
     default_shad_log,
     default_state_root,
@@ -281,6 +282,15 @@ def resolve_process_plan(
     ``game_path`` is the game directory shadPS4 should boot -- the installation's
     own ``CUSA03173`` folder, which is what the ``{game_path}`` placeholder in a
     generated plan resolves to (bb-archipelago#177).
+
+    Both children get a session ``log_path``, because that names the file the
+    early-exit dialog reads.  Who *writes* it is decided by the entry's own
+    arguments: one that carries ``--log-file`` tees console and file itself
+    (clients#425) and is marked ``self_logging``, so the launcher leaves its
+    output alone; anything else keeps the launcher's tee.  A generated plan
+    passes the flag to the AP client and not to shadPS4, and a plan pinned
+    before bb-archipelago#181 passes it to nobody -- which is the right answer
+    for a stale plan paired with any client build.
     """
 
     refuse_stale_plan(plan)
@@ -298,6 +308,15 @@ def resolve_process_plan(
                 working_directory=spec.working_directory,
                 expected_sha256=spec.expected_sha256,
                 log_path=logs.get(spec.name, spec.log_path),
+                # Read from the arguments, not from the process name: an entry
+                # that was told --log-file writes its own session log
+                # (clients#425) and must keep the console it inherited, because
+                # piping it would take away the very console its tee exists to
+                # preserve. An entry that was NOT told keeps the launcher's own
+                # tee (bb-archipelago#179) -- which is exactly what a plan
+                # pinned before bb-archipelago#181 needs, so a stale plan keeps
+                # a populated client.log instead of silently losing it.
+                self_logging=(CLIENT_LOG_FLAG in spec.arguments),
             )
             for spec in plan.processes
         ),

@@ -1417,9 +1417,16 @@ class ProcessSpec:
     arguments: Sequence[str] = ()
     working_directory: Path | None = None
     expected_sha256: str | None = None
-    # When set, this process's stdout and stderr are appended to the file so a
-    # startup refusal survives the console window closing (bb-archipelago#171).
+    # Where this process's output for the session lands (bb-archipelago#171).
+    # The early-exit dialog reads its tail from here whoever did the writing.
     log_path: Path | None = None
+    # True when the process writes ``log_path`` ITSELF and must keep the console
+    # it inherited (bb-archipelago#181). The AP client does: it is handed
+    # ``--log-file`` and tees its own output to console and file
+    # (clients#425), so the launcher must neither redirect nor pump it -- a pipe
+    # here would take away the real console the client-side tee exists to keep.
+    # ``log_path`` stays set regardless, because it names the file to READ.
+    self_logging: bool = False
 
 
 @dataclass(frozen=True)
@@ -1603,6 +1610,12 @@ def launch_processes(
     evidence a startup refusal needs after the window closes
     (bb-archipelago#179, preserving #171).  With no ``log_path`` the child
     inherits the console exactly as before -- no pipe, no pump, no file.
+
+    A ``self_logging`` component is left alone entirely: it writes ``log_path``
+    itself and keeps the console it inherited (bb-archipelago#181).  Piping it
+    would be worse than useless -- it would replace the real console the child's
+    own tee exists to preserve, and duplicate every line into the file the child
+    is already writing.
     """
 
     if console is None:
@@ -1614,7 +1627,7 @@ def launch_processes(
         log_handle = None
         try:
             extra: dict[str, Any] = {}
-            if spec.log_path is not None:
+            if spec.log_path is not None and not spec.self_logging:
                 log_handle = _open_process_log(spec.log_path)
                 # A pipe (not the file) so the pump can tee; line-buffered text
                 # so each line is teed as the child emits it.
@@ -1708,6 +1721,7 @@ def validate_processes(processes: Sequence[ProcessSpec]) -> list[ProcessSpec]:
                 working,
                 expected_hash,
                 log_path,
+                spec.self_logging,
             )
         )
     return validated

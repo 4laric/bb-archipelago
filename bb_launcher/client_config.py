@@ -55,7 +55,12 @@ SHAD_LOG_NAME = "shadps4.log"
 
 # Placeholders that only a randomized launch can satisfy: they name files the
 # client runtime configuration writer produces.
-CLIENT_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root")
+CLIENT_LOG_PLACEHOLDER = "client_log"
+# The argument that tells a component to write its own session log. Its presence
+# in a plan entry is what marks that entry self-logging, so the launcher leaves
+# its output alone (bb-archipelago#181, clients#425).
+CLIENT_LOG_FLAG = "--log-file"
+CLIENT_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root", CLIENT_LOG_PLACEHOLDER)
 # The game directory shadPS4 is told to boot (bb-archipelago#177). Unlike the
 # client placeholders this one is satisfiable on a vanilla launch too, because
 # the game folder comes from the launcher settings, not from the AP session.
@@ -200,6 +205,10 @@ def substitute_plan_arguments(
             "runtime_config": str(paths.config),
             "ledger": str(paths.ledger),
             "bridge_root": str(paths.bridge_root),
+            # Where the client writes its own session log (bb-archipelago#181):
+            # a generated plan passes it as ``--log-file {client_log}`` and the
+            # client tees console and file itself (clients#425).
+            "client_log": str(paths.client_log),
         }
     if game_path is not None:
         tokens[GAME_PATH_PLACEHOLDER] = str(game_path)
