@@ -288,6 +288,12 @@ After a full shadPS4 shutdown and relaunch of the same save, the inventory still
 contained two Pebbles. This confirms durable save persistence for the combined
 absent-then-existing delivery sequence on v0.18, not merely live-memory success.
 
+> The later revision (issue #144 / PR #145) found the *external* direct write
+> to an existing guest inventory stack is what wounds the emulator, and
+> retired it in favour of the cave path. That protection-tracking
+> assumption is recorded as a checkable design constraint in
+> [`research/runtime/ASSUMPTIONS.md`](../research/runtime/ASSUMPTIONS.md) (A1).
+
 ### Versioned bridge failure and replay canaries
 
 On 2026-08-19, the `bb-0.1.0-r3` / `BBGRANT1` /
