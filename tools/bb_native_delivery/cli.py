@@ -13,8 +13,12 @@ Only descriptors this project validated live can be armed (issue #146): a
 category-4 goods pair, or an allowlisted equipment row. Everything else is
 refused before the attach, --unvalidated-descriptor notwithstanding.
 
-⚠️ UNTESTED AGAINST A LIVE GAME. This has never attached to shadPS4. Cheat
-Engine remains the supported delivery path; see docs/SPEC-client-without-cheat-engine.md.
+⚠️ DEVELOPER TOOL. Validated live on 2026-08-24 (shadPS4, CUSA03173 01.09):
+dry-run and armed install, atomic detour commit, native grants, restart
+persistence, replay recovery and the fail-closed refusals all passed on
+throwaway saves. That covers one serial and one build, and the client half has
+not shipped, so Cheat Engine remains the supported delivery path; see
+docs/SPEC-client-without-cheat-engine.md.
 """
 
 from __future__ import annotations
@@ -31,8 +35,8 @@ from .delivery import GrantCommand, GrantSession, SUCCESS, TERMINAL
 from .descriptor import DescriptorError, describe_validated_descriptor
 
 BANNER = (
-    "bb_native_delivery is a DEVELOPER PROTOTYPE. It has never been run against "
-    "a live game. Cheat Engine remains the supported delivery path."
+    "bb_native_delivery is a DEVELOPER TOOL, validated live on 2026-08-24 against "
+    "shadPS4 CUSA03173 01.09 only. Cheat Engine remains the supported delivery path."
 )
 
 
@@ -151,8 +155,9 @@ def _cmd_install(args: argparse.Namespace) -> int:
             print(f"{'WROTE' if args.arm else 'would write'} {name:18} 0x{address:X} ({size} bytes)")
         if args.arm:
             print("\nDetours were committed under a full guest-thread suspend "
-                  "(see docs/INSTALL-ATOMICITY.md). The live suspend/RIP read is "
-                  "untested against the game -- owner checklist item 5a.")
+                  "(see docs/INSTALL-ATOMICITY.md). The live suspend/RIP read was "
+                  "validated against the game on 2026-08-24 -- owner checklist "
+                  "item 5a.")
         else:
             print("\nDry run. Re-run with --arm to write. Arming suspends every guest "
                   "thread and verifies no RIP is inside a detour window before writing "

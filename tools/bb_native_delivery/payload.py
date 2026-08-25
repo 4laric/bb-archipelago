@@ -5,9 +5,10 @@ from the ``autoAssemble`` template in
 ``tables/Bloodborne-native-item-grant-auto-v2.CT`` (harness ``bb-native-grant-v5``).
 That template is ``validated`` in the sense of RESEARCH-BASELINE.md -- it has been
 installed and exercised live on CUSA03173 01.09 under shadPS4 0.18. The *byte
-encoding* produced here is ``inferred``: Cheat Engine assembled those mnemonics
-at runtime and nobody ever captured the resulting bytes, so this module's output
-has never been compared against what CE emitted on a live image.
+encoding* produced here is ``validated`` too, as of 2026-08-24: the caves were
+read back from a live armed process and matched these blobs (owner checklist
+item 1), and on the same day an armed install of these bytes ran the guest
+through native grants without Cheat Engine loaded at all (items 5 through 9).
 
 Every operand in the template is a constant or a label, so the blob is static.
 Assembling at ``base = 0`` makes it fully position-independent apart from three

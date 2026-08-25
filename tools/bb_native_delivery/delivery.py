@@ -330,11 +330,13 @@ class GrantSession:
     def _queue(self, stack: StackView, *, existing_stack: bool) -> str:
         """Commit one request to the cave and go active.
 
-        Whether the insert path's ``ItemGrant`` call would merge into an existing
-        stack or create a duplicate slot next to it is ``inferred`` and has never
-        been checked live -- which is precisely why the existing-stack case takes
-        the cave's own quantity-delta branch rather than reusing the insert path.
-        Owner checklist item 7 revalidates both.
+        The existing-stack case takes the cave's own quantity-delta branch rather
+        than reusing the insert path, and that branch is ``validated`` as of
+        2026-08-24: owner checklist item 7 ran ``native existing-stack delta
+        slot=78`` live. Whether the *insert* path's ``ItemGrant`` call would merge
+        into an existing stack or duplicate the slot is moot for the delta path
+        and remains ``inferred`` for the equipment insert path, which nothing has
+        exercised live.
         """
         command = self.command
         if self.runtime.request_pending():

@@ -1,13 +1,16 @@
 # Install atomicity: committing the detours without crashing the guest
 
-Status: **implemented, with one owner-gated primitive untested against the game.**
+Status: **implemented, and validated against the game on 2026-08-24.**
 The protocol, its ordering guarantees, and the fail-closed abort are exercised by
 unit tests against a fake thread controller (`tests/test_native_delivery.py`,
 classes `SafeInstallProtocolTests` and `InstallRoutingTests`). The live
-suspend-and-read-RIP primitive (`WindowsThreadController`) has never run against
-shadPS4 and is owner checklist item 5a in
-`docs/SPEC-client-without-cheat-engine.md`. Do not label it `validated` until it
-has.
+suspend-and-read-RIP primitive (`WindowsThreadController`) passed owner checklist
+item 5a in `docs/SPEC-client-without-cheat-engine.md`: on a live shadPS4 process
+(CUSA03173 `01.09`) it enumerated the guest's threads, balanced
+suspend/resume, returned plausible in-module RIPs, and both detours were
+committed under a single suspend with the game still running afterwards. Scope:
+one armed install on one build. It is not a proof against every thread schedule
+the guest can produce, and CI still exercises the fake, not the primitive.
 
 ## The hazard
 
@@ -139,12 +142,14 @@ a fake:
   `rip(tid) -> int | None`.
 - `WindowsThreadController`: the real implementation — Toolhelp thread snapshot
   filtered to the pid; `SuspendThread`/`ResumeThread`; `GetThreadContext` with
-  `CONTEXT_CONTROL` for RIP. **`untested-against-game`** — no line has run
-  against shadPS4. Owner checklist item 5a.
+  `CONTEXT_CONTROL` for RIP. **`validated` 2026-08-24** — owner checklist item 5a
+  passed on a live shadPS4 process, one install on one build. No automated test
+  touches it.
 - `FakeThreadController`: scriptable RIPs (fixed or a per-read sequence) and full
   suspend/resume logging, so tests drive the nudge loop, the abort, and the
   no-leaked-suspend invariant.
 
 Everything except the live suspend/RIP read is tested. The live read is the one
-thing this environment cannot exercise, and it must be validated on a throwaway
-save before an armed install goes anywhere near a player.
+thing this environment cannot exercise; it was validated by hand on a throwaway
+save on 2026-08-24, and any future change to it needs the same treatment, because
+no gate here will catch a regression in it.

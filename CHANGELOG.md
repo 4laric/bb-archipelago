@@ -18,8 +18,9 @@ under `Unreleased` and move into a dated version section when released.
   both seven-byte windows, writes both detours under a single suspend only when
   every pointer is clear, and resumes; if a bounded retry budget is exhausted it
   aborts having written no detour (the caves alone are harmless). The live
-  suspend/RIP-read primitive is isolated behind an injectable seam and remains
-  untested against the game -- it is owner validation checklist item 5a. The
+  suspend/RIP-read primitive is isolated behind an injectable seam and was
+  validated against the game on 2026-08-24 (owner validation checklist item 5a):
+  both detours went in under one live suspend and the game kept running. The
   protocol, ordering, nudge loop, fail-closed abort, and no-leaked-suspend
   invariant are unit tested against a fake thread controller. Cheat Engine
   remains the shipping delivery path. See `docs/INSTALL-ATOMICITY.md`.

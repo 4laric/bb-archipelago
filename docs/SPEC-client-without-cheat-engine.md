@@ -1,11 +1,21 @@
 # Spec: retiring Cheat Engine from the player-facing path
 
-Status: **design, plus an extracted contract and an unvalidated prototype.** The analysis below
-is unchanged. What has since been built, and what it is worth, is in
-[What now exists](#what-now-exists) and the [owner validation checklist](#owner-validation-checklist).
+Status: **design, plus an extracted contract and a prototype that has now been driven end to end
+against a live game.** The analysis below is unchanged. What has since been built, and what it is
+worth, is in [What now exists](#what-now-exists) and the
+[owner validation checklist](#owner-validation-checklist).
 
-Cheat Engine is still the supported delivery path and the tables are untouched. Nothing in this
-document has been run against a live game.
+On 2026-08-24 the checklist was run on the owner's machine — shadPS4, CUSA03173 `01.09`, throwaway
+saves — and items 4 through 10 passed, two of them only after a live failure was diagnosed and
+fixed (issues #144 and #146, PRs #145 and #147). The tool has attached to, installed into, granted
+through, and recovered against a real guest. That is `validated` for the paths the checklist
+actually walked and nothing wider: one serial, one game build, one emulator version, one machine.
+Two paths stay `inferred` because nothing exercised them — the equipment insert path, and any
+build that is not CUSA03173 `01.09`.
+
+Cheat Engine remains the supported delivery path and the tables are untouched: the client half has
+not shipped, so none of this is player-facing yet. Item 3 (refusing a CUSA00900 image) is the one
+checklist item still open, and it waits on a dump.
 
 ## The decomposition, and its load-bearing assumption
 
@@ -132,8 +142,9 @@ against a guest thread mid-fetch, and re-verification passes happily after that 
 died. The standard answer is implemented in `threadcontrol.py` and documented in
 `docs/INSTALL-ATOMICITY.md`: suspend all guest threads, check each RIP against the two seven-byte
 patch windows, write both detours under one suspend, resume; abort with no detour written if a
-bounded budget is exhausted. Only the live suspend/RIP read is untested against the game (checklist
-item 5a). `VirtualProtectEx` on the RX code pages is also hiding inside the "trivial"
+bounded budget is exhausted. The live suspend/RIP read is `validated` as of 2026-08-24 (checklist
+item 5a): both detours were committed under one live suspend and the game kept running.
+`VirtualProtectEx` on the RX code pages is also hiding inside the "trivial"
 `WriteProcessMemory` row above.
 
 ### Stage 4 — install via shadPS4's IPC (probably not)
@@ -240,7 +251,7 @@ The command-file bridge has no module, because in-process it does not exist.
 refuses on any assert mismatch, which is how CUSA00900 and every other build fail closed: a partial
 match is a different image, not a near-enough one.
 
-### Install atomicity — implemented, one primitive untested live
+### Install atomicity — implemented, and validated live 2026-08-24
 
 The heartbeat hook executes every frame, so writing its detour is not atomic
 against a guest thread mid-fetch. This is now handled:
@@ -251,9 +262,12 @@ detour (the caves are harmless). `install()` routes the two detours through it
 when arming, and refuses to arm without a thread controller. The protocol,
 ordering, nudge loop, fail-closed abort, and guaranteed-resume invariant are unit
 tested against a fake controller. The **live suspend + RIP read**
-(`WindowsThreadController`) has never run against the game and is owner checklist
-item 5a below; it must not be labelled `validated` until it has. Full rationale
-in `docs/INSTALL-ATOMICITY.md`.
+(`WindowsThreadController`) is `validated` as of 2026-08-24 (owner checklist item
+5a below): on a live shadPS4 process it enumerated the guest's threads, suspended
+and resumed them in balance, returned plausible in-module RIPs, and both detours
+went in under a single suspend with the game still running afterwards. One pass
+on one build — it is not a claim about every schedule the guest can produce.
+Full rationale in `docs/INSTALL-ATOMICITY.md`.
 
 ### What is deliberately not implemented
 
@@ -263,16 +277,17 @@ in `docs/INSTALL-ATOMICITY.md`.
 
 ### Tests
 
-`tests/test_native_delivery.py`, 61 tests, in the AP-free CI tier. They cover descriptor encoding
+`tests/test_native_delivery.py`, 97 tests, in the AP-free CI tier. They cover descriptor encoding
 and the category branch, AOB parse/match/scan including fail-closed on a one-byte difference,
 payload byte assembly against a frozen encoding plus structural invariants (detour covers the
 original exactly, the displaced original is replayed, no region overlaps, caves install before
 detours), the inventory bank split, log base resolution, and fourteen state-machine transitions:
-direct write, hydration grace, absent-Vial refusal, quantity mismatch, replay recovery with and
+the retired direct write, hydration grace, absent-Vial refusal, quantity mismatch, replay recovery with and
 without a matching tag, slot-verified completion, fast-budget failure, hydration-budget patience,
-and the busy request cell. The eleven added for install atomicity drive the safe-detour protocol against a fake thread controller: a clear RIP writes on the first attempt, a RIP inside a window nudges until it clears, budget exhaustion aborts with no detour written (a positive witness that both hook sites keep their original bytes), both detours land under one suspend, and every path resumes every thread. The live suspend/RIP read is the only untested piece (checklist item 5a).
+and the busy request cell. The eleven added for install atomicity drive the safe-detour protocol against a fake thread controller: a clear RIP writes on the first attempt, a RIP inside a window nudges until it clears, budget exhaustion aborts with no detour written (a positive witness that both hook sites keep their original bytes), both detours land under one suspend, and every path resumes every thread. The live suspend/RIP read is no longer untested — checklist item 5a passed on 2026-08-24 — but nothing in this file exercises it; the fake is still what the suite drives.
 
-They prove nothing about whether the guest accepts any of it.
+They prove nothing about whether the guest accepts any of it. The
+[checklist](#owner-validation-checklist) is where that evidence lives.
 
 ## Owner validation checklist
 
@@ -294,29 +309,59 @@ In order. Items 1-2 need no game running; items 3 onward need a live session and
    anchor.
 3. **Refuse a wrong image.** If a CUSA00900 install is available, `verify` against it and confirm
    the refusal message names the mismatching site. If not, record that this remains untested.
-4. **Dry-run install** (`install --pid <pid>`, no `--arm`) on an unpatched process and confirm the
-   five planned writes and their addresses match the contract.
-5. **Armed install on a throwaway save only,** with the CE table *not* loaded. Then read back all
-   five regions and diff against the plan. Do not proceed if anything differs.
-5a. **Validate the live thread-suspend primitive** (`WindowsThreadController` in
-   `tools/bb_native_delivery/threadcontrol.py`), which the armed install of item 5 now routes both
-   detours through. It is the only piece of the install-atomicity protocol untested against the
-   game: confirm that `enumerate()` returns the guest's threads, `SuspendThread`/`ResumeThread`
-   balance (the game resumes cleanly, no frozen guest), and `GetThreadContext` returns plausible
-   in-module RIPs. On a clean armed install the caves go in first, then both detours land under one
-   suspend once every RIP is clear of the two seven-byte windows; a still-running guest afterward is
-   the pass. See `docs/INSTALL-ATOMICITY.md`. Until this is done the primitive stays
-   `untested-against-game`; do not label it `validated`.
-6. **One grant, category 4:** absent Pebble (`--raw 0xB00004CE --normalized 0x400004CE`). Fire one
-   Bullet first to cache the inventory pointer. Expect a native slot, quantity 1, and a responsive
-   game.
-7. **One grant, existing stack:** Pebble again. Expect the direct-write path, no native call.
-8. **Restart persistence:** full shadPS4 shutdown and relaunch, confirm the granted item survived.
-9. **Replay recovery:** kill the client between the durable grant and the acknowledgement, restart,
-   and confirm `recovered_complete` rather than a second grant.
-10. **Confirm the fail-closed rows still fail closed:** an absent Blood Vial must be refused, and a
-    Torch ItemLot id must not be reachable at all.
+   **Still open 2026-08-24** — no CUSA00900 dump was available. This is the only checklist item
+   not yet run, and until it is, cross-build refusal is `inferred` from
+   `require_validated_image`'s unit tests alone.
+4. **~~Dry-run install~~ DONE 2026-08-24.** `install --pid <pid>` with no `--arm` on an unpatched
+   process listed five planned writes whose names, addresses and sizes matched the contract at
+   base `0x56B0000`. Nothing was written.
+5. **~~Armed install on a throwaway save~~ DONE 2026-08-24.** With the CE table *not* loaded, the
+   armed install wrote all five regions; the readback of every region matched the plan byte for
+   byte.
+5a. **~~Validate the live thread-suspend primitive~~ DONE 2026-08-24.** The armed install of item 5
+   routed both detours through `WindowsThreadController`: `enumerate()` returned the guest's
+   threads, `SuspendThread`/`ResumeThread` balanced, `GetThreadContext` returned plausible
+   in-module RIPs, both detours landed under one suspend, and the game kept running afterwards —
+   the still-running guest is the pass. The primitive is now `validated`; note the scope, which is
+   one install on one build, not a proof against every thread schedule. See
+   `docs/INSTALL-ATOMICITY.md`.
+6. **~~One grant, category 4: absent Pebble~~ DONE 2026-08-24.**
+   (`--raw 0xB00004CE --normalized 0x400004CE`, one Bullet fired first to cache the inventory
+   pointer.) A native slot appeared with quantity 1 and the game stayed responsive. This is the
+   first item ever delivered into Bloodborne by this project without Cheat Engine.
+7. **~~One grant, existing stack~~ DONE 2026-08-24, after a live failure and a fix.** The original
+   plan here was "expect the direct-write path, no native call". Running it **froze the guest
+   twice**. Finding (issue #144, with the evidence in its revision comment): the guest inventory
+   page is protection-tracked by shadPS4, so an external `WriteProcessMemory` into it wounds the
+   emulator regardless of how correct the value is. **The direct-write path is retired for live
+   guests.** PR #145 routes existing-stack grants through the cave's request-word-2
+   quantity-delta branch instead, which executes on the game thread; the re-run passed
+   (`native existing-stack delta slot=78`). The delta branch is `validated`. Whether the *insert*
+   path's `ItemGrant` merges into an existing stack or duplicates the slot is moot for the delta
+   path and stays `inferred` for the equipment insert path. Eboot-image regions remain safe for
+   external writes — the retirement is about guest data pages, not about every write.
+8. **~~Restart persistence~~ DONE 2026-08-24, with a stronger witness than asked for.** The
+   granted item survived a **hard process kill** of shadPS4 and a relaunch, not merely a graceful
+   shutdown. The grant is in the save, not in emulator state.
+9. **~~Replay recovery~~ DONE 2026-08-24, with a caveat that is now load-bearing.** Killing the
+   client between the durable grant and the acknowledgement and restarting produced
+   `recovered_complete` with no second grant — **when `--expected-before` was supplied.** Without
+   it, a same-tag rerun *double-granted*, observed live: the CLI samples a live baseline when none
+   is given, so a partial prior delivery is invisible to it. PR #147 added the tag journal and the
+   baseline-free warning that guards this, but the rule survives the guard: **replay recovery
+   requires `--expected-before`.**
+10. **Confirm the fail-closed rows still fail closed.**
+    a. **~~Absent Blood Vial refused~~ DONE 2026-08-24.** The hydration budget was exhausted
+       (39 of 40 polls) and then the coded refusal fired, exactly as designed.
+    b. **~~Torch ItemLot id unreachable~~ FAILED 2026-08-24 on the first run, then fixed and
+       re-run.** The Torch canary **executed** via the persistent-source path and produced an
+       invisible record at slot 79 on a throwaway save. Cause (issue #146): the CLI had no
+       descriptor allowlist, so the negative canary reached the attach at all. PR #147 added a
+       fail-closed pre-attach allowlist; the re-run **refused with zero polls and no guest memory
+       touched**. Recorded as a failure because it was one — the design intent was right and the
+       CLI did not implement it.
 
-Item 1 is done; the payload encoding is validated. Item 2 (the `verify` fail-closed check) and
-the live-grant items remain. Cheat Engine remains the shipping path for at least one more release
-regardless.
+Items 1, 2, 4, 5, 5a, 6, 7, 8, 9 and 10 are done; item 3 is open on a CUSA00900 dump. Two of those
+passes cost a live defect each (#144, #146) and both fixes shipped (#145, #147). Cheat Engine
+remains the shipping path for at least one more release regardless — the checklist validates the
+delivery tool, not a client that uses it.
