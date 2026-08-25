@@ -65,6 +65,10 @@ SOURCES: tuple[Source, ...] = (
     Source("mined", "../research/mined", "*.tsv", False,
            "msbb_miner output. Derived rather than raw, but the MSBs themselves "
            "are not bundled, so without it the joins cannot be re-run."),
+    Source("parambnd", "install/CUSA03173/dvdroot_ps4/param/gameparam", "gameparam.parambnd.dcx", True,
+           "patch-layer gameparam; the suppression binder builds from exactly these bytes"),
+    Source("parambnd", "install/CUSA03173/dvdroot_ps4/paramdef", "paramdef.paramdefbnd.dcx", True,
+           "paramdefs for the binder build"),
 )
 
 # Params are large and most are unused. Restrict to what tools reference, and
