@@ -11,11 +11,14 @@ protocol this module implements.
 The one primitive that cannot be exercised without the game -- suspending a live
 guest thread and reading its ``RIP`` -- lives behind :class:`ThreadController`.
 :class:`WindowsThreadController` is the real implementation and is
-``untested-against-game``: no line of it has run against shadPS4, for the same
-reason the rest of this package hasn't (the sandbox has neither Windows nor the
-emulator). :class:`FakeThreadController` is scriptable and is what the tests
-drive, so the *control flow* around the primitive is fully exercised while the
-primitive itself stays owner-gated (owner checklist item 5a).
+``validated`` as of 2026-08-24 (owner checklist item 5a): on a live shadPS4
+process it enumerated the guest's threads, balanced suspend/resume, returned
+plausible in-module RIPs, and both detours were committed under a single suspend
+with the game still running afterwards. That is one install on one build, not a
+proof against every thread schedule. Nothing in CI touches it -- the sandbox has
+neither Windows nor the emulator -- so :class:`FakeThreadController` is still
+what the tests drive, and the *control flow* around the primitive is what the
+suite exercises.
 """
 
 from __future__ import annotations

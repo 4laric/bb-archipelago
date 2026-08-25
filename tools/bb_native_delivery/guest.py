@@ -1,11 +1,19 @@
 """A :class:`~.delivery.Runtime` backed by ReadProcessMemory/WriteProcessMemory.
 
-DEVELOPER TOOL, untested against a live game.
+DEVELOPER TOOL. Exercised against a live game on 2026-08-24 (shadPS4,
+CUSA03173 01.09): the inventory walk found the absent-item and existing-stack
+cases the owner checklist's items 6, 7 and 10 depend on. One build only.
 
 The inventory geometry is transcribed from the CE harness's ``findItem``:
 the cached inventory pointer leads to a split pair of fixed-stride record
-arrays. ``observed`` -- it was exercised live by the harness, but this
-transcription of it has not been.
+arrays. ``validated`` as of 2026-08-24 -- this transcription drove live grants
+through both the absent and the existing-stack paths.
+
+Do not write into these pages from outside the guest. Issue #144: the inventory
+page is protection-tracked by shadPS4, and an external ``WriteProcessMemory``
+into it froze the guest twice, however correct the value was. Quantity changes
+go through the cave's quantity-delta branch, on the game thread. Eboot-image
+regions are unaffected -- the install's own writes remain safe.
 """
 
 from __future__ import annotations

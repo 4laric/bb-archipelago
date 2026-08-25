@@ -371,7 +371,7 @@ def install(
     every guest thread, verify no RIP is inside either seven-byte window, write
     both detours under that one suspend, resume. Arming requires a ``controller``;
     without one this fails closed rather than write a detour blind. The live
-    suspend/RIP read is the only piece untested against the game (owner checklist
+    suspend/RIP read was validated against the game on 2026-08-24 (owner checklist
     item 5a).
     """
     require_validated_image(memory, base)
