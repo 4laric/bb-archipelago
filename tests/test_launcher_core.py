@@ -443,6 +443,36 @@ class LauncherCoreTests(unittest.TestCase):
         self.assertIn(str(log), report)
         self.assertIn(message, log.read_text(encoding="utf-8"))
 
+    def test_a_shadps4_boot_crash_names_shadps4_and_carries_its_output(self):
+        # bb-archipelago#175 motivating case: shadPS4, not the client, exits 1
+        # right after launch.  The report must name shadPS4 and carry what the
+        # emulator wrote, from shadPS4's own session log.
+        message = "Fatal: failed to load mod file at boot"
+        log = self.root / "session" / "shadps4.log"
+        specs = [
+            ProcessSpec(
+                "shadPS4",
+                Path(sys.executable),
+                (
+                    "-c",
+                    f"import sys; sys.stderr.write({message!r} + chr(10)); sys.exit(1)",
+                ),
+                log_path=log,
+            )
+        ]
+        started = launch_processes(specs)
+        early = wait_for_early_exit(started, specs, timeout=30.0, interval=0.05)
+        self.assertIsInstance(early, EarlyExit)
+        self.assertEqual(early.name, "shadPS4")
+        self.assertEqual(early.returncode, 1)
+        self.assertEqual(early.log_path, log)
+        self.assertIn(message, early.log_tail)
+        report = early.describe()
+        self.assertTrue(report.startswith("shadPS4 exited with exit code 1"))
+        self.assertIn(message, report)
+        self.assertIn(str(log), report)
+        self.assertNotIn("AP client", report)
+
     def test_each_launch_appends_a_dated_session_header_to_the_same_log(self):
         log = self.root / "session" / "client.log"
         def spec(text: str) -> ProcessSpec:

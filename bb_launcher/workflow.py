@@ -45,6 +45,7 @@ SETTINGS_FORMAT = "bb-launcher-ui-settings-v1"
 PROCESS_PLAN_FORMAT = "bb-launcher-process-plan-v1"
 # The plan entry whose output is captured and watched (bb-archipelago#171).
 CLIENT_PROCESS_NAME = "AP client"
+SHAD_PROCESS_NAME = "shadPS4"
 REQUEST_FORMAT = "bb-seed-request-v1"
 # Seeds generated before the request became the seed identity document (#149)
 # carry the old format name; the payload is compatible.
@@ -164,6 +165,8 @@ class WorkflowResult:
     # The captured AP client output for this session, and the first component
     # observed to die inside the post-launch watch window (bb-archipelago#171).
     client_log: Path | None = None
+    # shadPS4's captured output for this session (bb-archipelago#175).
+    shad_process_log: Path | None = None
     early_exit: EarlyExit | None = None
 
 
@@ -230,9 +233,28 @@ def load_process_plan(path: Path | str) -> ProcessPlan:
     return ProcessPlan(shad_build, runtime_build, tuple(processes))
 
 
+def captured_process_logs(
+    paths: ClientRuntimePaths | None,
+) -> dict[str, Path]:
+    """Session log destinations keyed by process name.
+
+    Only the two children a generated plan emits are captured; a host-authored
+    entry such as the CE bridge keeps whatever logging it brought.  The plan
+    file format is untouched -- these are attached at resolve time.
+    """
+
+    if paths is None:
+        return {}
+    return {
+        CLIENT_PROCESS_NAME: paths.client_log,
+        SHAD_PROCESS_NAME: paths.shad_process_log,
+    }
+
+
 def resolve_process_plan(plan: ProcessPlan, paths: ClientRuntimePaths | None) -> ProcessPlan:
     """Return the plan with launch-time placeholders substituted throughout."""
 
+    logs = captured_process_logs(paths)
     return ProcessPlan(
         shad_build=plan.shad_build,
         runtime_build=plan.runtime_build,
@@ -243,11 +265,7 @@ def resolve_process_plan(plan: ProcessPlan, paths: ClientRuntimePaths | None) ->
                 arguments=substitute_plan_arguments(spec.arguments, paths),
                 working_directory=spec.working_directory,
                 expected_sha256=spec.expected_sha256,
-                log_path=(
-                    paths.client_log
-                    if paths is not None and spec.name == CLIENT_PROCESS_NAME
-                    else spec.log_path
-                ),
+                log_path=logs.get(spec.name, spec.log_path),
             )
             for spec in plan.processes
         ),
@@ -698,7 +716,10 @@ class LauncherWorkflow:
         if early_exit is None:
             progress("Randomized Bloodborne launch started.")
         else:
-            progress(f"{early_exit.name} exited immediately; see {paths.client_log}")
+            progress(
+                f"{early_exit.name} exited immediately; see "
+                f"{early_exit.log_path or paths.session}"
+            )
         swaps = 0
         if enemizer is not None:
             swaps = len(enemizer.manifest["swaps"])
@@ -714,6 +735,7 @@ class LauncherWorkflow:
             client_config=paths.config,
             ledger=paths.ledger,
             client_log=paths.client_log,
+            shad_process_log=paths.shad_process_log,
             early_exit=early_exit,
             grants_bridge=any(spec.name == "CE bridge" for spec in resolved.processes),
         )

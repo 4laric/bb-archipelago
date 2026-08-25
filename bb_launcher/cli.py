@@ -286,13 +286,22 @@ def main(argv: list[str] | None = None) -> int:
                     "client_config": None if paths is None else str(paths.config),
                     "ledger": None if paths is None else str(paths.ledger),
                     "client_log": None if paths is None else str(paths.client_log),
+                    "shad_process_log": (
+                        None if paths is None else str(paths.shad_process_log)
+                    ),
                     "early_exit": (
                         None
                         if early_exit is None
                         else {
                             "name": early_exit.name,
                             "returncode": early_exit.returncode,
+                            "log_path": (
+                                None
+                                if early_exit.log_path is None
+                                else str(early_exit.log_path)
+                            ),
                             "log_tail": early_exit.log_tail,
+                            "message": early_exit.describe(),
                         }
                     ),
                     "started": [
