@@ -434,6 +434,26 @@ class DoctorTests(unittest.TestCase):
         self.assertIn(SUPPRESSION_PATH, result.detail)
         self.assertIsNotNone(result.remedy)
 
+    def test_wrapper_folder_mods_warn_loudly_and_name_the_wrapper(self):
+        """The oz playtest.9 shape: mods dropped in as their shipped folders."""
+
+        self._user_mod("Boczkek's FPS boost Lite/dvdroot_ps4/chr/c0000.bnd.dcx")
+        self._user_mod("Boczkek's FPS boost Lite/dvdroot_ps4/chr/c1000.bnd.dcx")
+        self._user_mod("Half Cloth Physics with Blood/dvdroot_ps4/chr/c2000.bnd.dcx")
+        self._user_mod("dvdroot_ps4/parts/wp.partsbnd.dcx")
+        result = finding(run(self.fixture), "user mods")
+        self.assertEqual(result.status, WARN)
+        self.assertIn("Boczkek's FPS boost Lite (2 file(s))", result.detail)
+        self.assertIn("Half Cloth Physics with Blood (1 file(s))", result.detail)
+        self.assertIn("3 file(s) can never load", result.detail)
+        self.assertIn("1 file(s) from", result.detail)
+        self.assertIsNotNone(result.remedy)
+        self.assertIn(
+            "move the contents of Boczkek's FPS boost Lite up one level so "
+            "paths start with dvdroot_ps4/",
+            result.remedy,
+        )
+
     def test_user_maps_warn_only_while_the_enemizer_is_on(self):
         self._user_mod(f"{MAP_PREFIX}m24_01_00_00.msb.dcx")
         self.assertEqual(finding(run(self.fixture), "user mods").status, WARN)

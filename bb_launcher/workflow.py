@@ -21,6 +21,7 @@ from .core import (
     SeedIdentity,
     ValidationError,
     activate_build,
+    dead_path_warnings,
     deactivate_overlay,
     launch_processes,
     process_is_running_by_name,
@@ -674,6 +675,8 @@ class LauncherWorkflow:
         )
         if owner["suppression"]["sha256"] != build.manifest["suppression"]["sha256"]:
             raise ValidationError("activated suppression witness does not match the seed build")
+        for line in dead_path_warnings(owner):
+            progress(line)
         progress("Writing the native client runtime configuration...")
         paths = write_client_runtime_config(
             settings.state_root or default_state_root(),

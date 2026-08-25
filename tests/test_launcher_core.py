@@ -12,6 +12,7 @@ from bb_launcher.core import (
     APP_VERSION,
     SESSION_HEADER_PREFIX,
     EXCLUDED_AP_OWNED,
+    EXCLUDED_DEAD_PATH,
     EXCLUDED_RESERVED,
     MAP_PREFIX,
     MODS_DIR_NAME,
@@ -34,6 +35,8 @@ from bb_launcher.core import (
     discover_game_install,
     discover_shad_executable,
     launch_processes,
+    dead_path_warnings,
+    dead_path_wrappers,
     plan_user_merge,
     recover_activation,
     require_no_stray_cheat_engine,
@@ -567,6 +570,58 @@ class UserModMergePolicyTests(unittest.TestCase):
             [EXCLUDED_RESERVED, EXCLUDED_RESERVED],
         )
 
+    def test_wrapper_folder_mod_tree_is_excluded_as_dead_paths(self):
+        """oz's playtest.9 tree: one wrapper folder per mod, each with dvdroot_ps4.
+
+        Every one of these paths lands outside dvdroot_ps4/ in the overlay, so
+        shadPS4 never resolves them (bb-archipelago#173).
+        """
+
+        user = digests(
+            "Boczkek's FPS boost Lite/dvdroot_ps4/param/gameparam/x.dcx",
+            "Boczkek's FPS boost Lite/dvdroot_ps4/chr/c0000.bnd.dcx",
+            "Half Cloth Physics with Blood/dvdroot_ps4/chr/c1000.bnd.dcx",
+            "dvdroot_ps4/parts/wp.partsbnd.dcx",
+        )
+        merge = plan_user_merge(user, [SUPPRESSION_PATH])
+        self.assertEqual(set(merge.merged), {"dvdroot_ps4/parts/wp.partsbnd.dcx"})
+        self.assertEqual(
+            sorted(item.reason for item in merge.excluded),
+            [EXCLUDED_DEAD_PATH] * 3,
+        )
+
+    def test_dead_path_detection_is_case_insensitive_like_the_owned_rule(self):
+        user = digests("DVDRoot_PS4/chr/c0000.bnd.dcx", "wrapper/DVDRoot_PS4/chr/c1000.bnd.dcx")
+        merge = plan_user_merge(user, [SUPPRESSION_PATH])
+        self.assertEqual(set(merge.merged), {"DVDRoot_PS4/chr/c0000.bnd.dcx"})
+        self.assertEqual(
+            [(item.path, item.reason) for item in merge.excluded],
+            [("wrapper/DVDRoot_PS4/chr/c1000.bnd.dcx", EXCLUDED_DEAD_PATH)],
+        )
+
+    def test_dead_path_wrappers_group_by_wrapper_largest_first(self):
+        user = digests(
+            "Mod A/dvdroot_ps4/one.dcx",
+            "Mod A/dvdroot_ps4/two.dcx",
+            "Mod B/dvdroot_ps4/three.dcx",
+            "loose.txt",
+            "dvdroot_ps4/chr/kept.dcx",
+        )
+        merge = plan_user_merge(user, [SUPPRESSION_PATH])
+        self.assertEqual(
+            dead_path_wrappers(merge.excluded),
+            (("Mod A", 2), ("Mod B", 1), ("loose.txt", 1)),
+        )
+
+    def test_dead_paths_change_the_fingerprint(self):
+        clean = plan_user_merge(digests("dvdroot_ps4/chr/a.dcx"), [SUPPRESSION_PATH])
+        wrapped = plan_user_merge(
+            digests("dvdroot_ps4/chr/a.dcx", "Mod A/dvdroot_ps4/chr/a.dcx"),
+            [SUPPRESSION_PATH],
+        )
+        self.assertEqual(len(wrapped.excluded), 1)
+        self.assertNotEqual(clean.fingerprint, wrapped.fingerprint)
+
     def test_fingerprint_tracks_both_the_merged_and_excluded_sets(self):
         base = plan_user_merge(digests("dvdroot_ps4/chr/a.dcx"), [SUPPRESSION_PATH])
         same = plan_user_merge(digests("dvdroot_ps4/chr/a.dcx"), [SUPPRESSION_PATH])
@@ -643,6 +698,40 @@ class UserModMergeActivationTests(unittest.TestCase):
         self.assertEqual(
             self.install.mods.joinpath(*colliding.split("/")).read_bytes(), b"map-suppressed"
         )
+
+    def test_wrapper_folder_mods_merge_nothing_and_the_activation_says_so(self):
+        write_user_mod(
+            self.install, "Boczkek's FPS boost Lite/dvdroot_ps4/chr/c0000.bnd.dcx", b"fps"
+        )
+        write_user_mod(
+            self.install, "Boczkek's FPS boost Lite/dvdroot_ps4/chr/c1000.bnd.dcx", b"fps2"
+        )
+        write_user_mod(self.install, "dvdroot_ps4/parts/wp.partsbnd.dcx", b"parts")
+        _cache, build = make_build(self.root / "build", "seed", b"suppressed")
+        owner = activate_build(self.install, build, process_is_running=lambda: False)
+        merged, excluded = user_merge_summary(owner)
+        self.assertEqual(merged, 1)
+        self.assertEqual(
+            sorted(item.reason for item in excluded), [EXCLUDED_DEAD_PATH] * 2
+        )
+        self.assertFalse(
+            self.install.mods.joinpath("Boczkek's FPS boost Lite").exists(),
+            "a dead wrapper folder must not be copied into the overlay",
+        )
+        warnings = dead_path_warnings(owner)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("Boczkek's FPS boost Lite", warnings[0])
+        self.assertIn("2 file(s)", warnings[0])
+        self.assertIn("move the contents of", warnings[0])
+
+    def test_a_clean_activation_emits_no_dead_path_warning(self):
+        write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
+        _cache, build = make_build(self.root / "build", "seed", b"suppressed")
+        owner = activate_build(self.install, build, process_is_running=lambda: False)
+        self.assertEqual(user_merge_summary(owner)[0], 1)
+        # Witnessed against its sibling above, which produces exactly one line
+        # from the same call for the wrapper-folder tree.
+        self.assertEqual(len(dead_path_warnings(owner)), 0)
 
     def test_changing_the_user_directory_reactivates_the_same_seed(self):
         _cache, build = make_build(self.root / "build", "seed", b"suppressed")

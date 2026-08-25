@@ -158,6 +158,22 @@ aside into a `.CUSA03173-mods.bb-ap-previous-...` folder. If you have done this
 already, your files are still in those folders — move them into
 `CUSA03173-mods-user` and they will come back.
 
+**One wrapper folder per mod does not work.** Mods almost always download as a
+folder named after the mod, with `dvdroot_ps4` inside it. If you drop those
+folders in as they came, the game loads none of them -- the files end up at
+`CUSA03173-mods\Boczkek's FPS boost Lite\dvdroot_ps4\...`, and shadPS4 only
+ever looks at `dvdroot_ps4\...`. Open each mod's folder and move its contents
+up one level, so the folder you end up with is:
+
+```text
+CUSA03173-mods-user\dvdroot_ps4\chr\...
+CUSA03173-mods-user\dvdroot_ps4\parts\...
+```
+
+with every mod merged into that one `dvdroot_ps4` tree and no mod-name folders
+left. The launcher will not merge files outside `dvdroot_ps4\` and the Doctor
+says so by name, but it is easier to lay it out right the first time (#173).
+
 Two rules on top of that:
 
 - The randomizer's own files win. If your mod ships
@@ -166,8 +182,9 @@ Two rules on top of that:
   randomizer's version is used. Nothing is silently merged and nothing is
   silently dropped.
 - Click **Open Diagnostics** / run the Doctor before a session: the `user mods`
-  line says how many of your files merged and names anything left out. If a mod
-  seems not to be working, that line is the first place to look.
+  line says how many of your files merged and names anything left out --
+  including any wrapper folder whose files can never load. If a mod seems not
+  to be working, that line is the first place to look.
 
 The randomizer changes exactly one game file: `gameparam.parambnd.dcx` (the
 suppression binder that stops chests and corpses from also handing you their
