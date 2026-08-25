@@ -613,7 +613,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             out = root / "Archipelago" / "out" / "seed1"
             out.mkdir(parents=True)
             older = out / "AP_1_P1_First.bbenemizer.json"
-            newer = out / "AP_2_P1_Second.bbenemizer.json"
+            newer = out / "AP_2_P1_Second.bbseed.json"
             older.write_bytes(b"{}")
             newer.write_bytes(b"{}")
             os.utime(older, (1_000_000, 1_000_000))
@@ -639,13 +639,13 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             out = root / "Archipelago" / "out" / "seed1"
             out.mkdir(parents=True)
             bas = out / "AP_1_P1_Bas.bbenemizer.json"
-            oz = out / "AP_1_P2_oz.bbenemizer.json"
+            oz = out / "AP_1_P2_oz.bbseed.json"
             bas.write_text(
                 json.dumps({"format": "bb-enemizer-request-v1", "player_name": "Bas"}),
                 encoding="utf-8",
             )
             oz.write_text(
-                json.dumps({"format": "bb-enemizer-request-v1", "player_name": "oz"}),
+                json.dumps({"format": "bb-seed-request-v1", "player_name": "oz"}),
                 encoding="utf-8",
             )
             os.utime(bas, (1_000_000, 1_000_000))

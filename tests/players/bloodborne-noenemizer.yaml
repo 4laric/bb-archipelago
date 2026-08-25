@@ -1,0 +1,11 @@
+# bb-archipelago#149: a slot generated with enemizer off must still get a
+# seed request file, or it cannot use the launcher at all.
+description: Bloodborne enemizer-off slot
+name: NoEnemizer
+game: Bloodborne
+Bloodborne:
+  progression_balancing: 50
+  accessibility: items
+  enemizer: false
+  auto_upgrade: false
+  auto_equip: false

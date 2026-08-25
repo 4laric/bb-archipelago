@@ -24,6 +24,7 @@ from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from .readiness import format_readiness, gather_readiness, grants_watchdog_warning
 from .resources import application_root, resource_root
 from .workflow import (
+    REQUEST_FORMATS,
     SETTINGS_FORMAT,
     EnemizerOptions,
     LauncherSettings,
@@ -125,16 +126,17 @@ def _request_player_name(path: Path) -> str | None:
         value = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeError, json.JSONDecodeError):
         return None
-    if not isinstance(value, dict) or value.get("format") != "bb-enemizer-request-v1":
+    if not isinstance(value, dict) or value.get("format") not in REQUEST_FORMATS:
         return None
     name = value.get("player_name")
     return name.strip() if isinstance(name, str) and name.strip() else None
 
 
 def derive_ap_request(roots: Iterable[Path], player_name: str = "") -> Path | None:
-    """Newest enemizer request under each root's Archipelago output directory.
+    """Newest seed request under each root's Archipelago output directory.
 
-    Generation drops `<seed>_P<slot>_<name>.bbenemizer.json` beside the seed
+    Generation drops `<seed>_P<slot>_<name>.bbseed.json` (older seeds:
+    `.bbenemizer.json`) beside the seed
     zip in `Archipelago/out` or `Archipelago/output`; the newest one is the
     best guess for what the player just generated. A multi-Bloodborne
     multiworld drops one request per Bloodborne player, so when the player
@@ -146,6 +148,7 @@ def derive_ap_request(roots: Iterable[Path], player_name: str = "") -> Path | No
         for name in ("out", "output"):
             directory = root / "Archipelago" / name
             if directory.is_dir():
+                candidates.extend(directory.rglob("*.bbseed.json"))
                 candidates.extend(directory.rglob("*.bbenemizer.json"))
     wanted = player_name.strip()
     if wanted:
@@ -196,7 +199,7 @@ def request_enemy_seed(path: Path | str) -> str:
         value = json.loads(source.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValidationError(f"could not read AP seed request {source}: {exc}") from exc
-    if not isinstance(value, dict) or value.get("format") != "bb-enemizer-request-v1":
+    if not isinstance(value, dict) or value.get("format") not in REQUEST_FORMATS:
         raise ValidationError("selected AP seed request has the wrong format")
     seed = value.get("enemizer_seed")
     if not isinstance(seed, str) or not seed.strip():

@@ -151,7 +151,8 @@ def _check_request(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
             FAIL,
             "AP seed request",
             str(exc),
-            "select the *.bbenemizer.json the generator dropped beside your seed "
+            "select the *.bbseed.json (older seeds: *.bbenemizer.json) the "
+            "generator dropped beside your seed "
             "zip; if it predates world-version tagging, regenerate the seed",
         )
     request = chain.request
@@ -203,7 +204,7 @@ def _check_slot_agreement(chain: _Chain, player_name: str | None) -> DoctorFindi
             FAIL,
             "request slot agreement",
             f"the AP seed request is for slot {slot!r} but you entered {entered!r}",
-            "select YOUR own <seed>_P<number>_<name>.bbenemizer.json from the seed "
+            "select YOUR own <seed>_P<number>_<name>.bbseed.json from the seed "
             "output; launching with another player's request connects you as their "
             "slot and steals their checks",
         )

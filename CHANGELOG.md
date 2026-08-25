@@ -8,6 +8,15 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **Every slot now gets a seed request file, enemizer on or off.** Generation
+  drops `<seed>_P<n>_<name>.bbseed.json` beside the seed zip for every
+  Bloodborne slot. Previously the file was only written when the `enemizer`
+  option was on, and it is the launcher's seed identity document -- a seed
+  generated with `enemizer: false` could not use Randomize & Launch at all
+  (#149). Whether enemies are actually randomized remains a launch-time
+  choice in the launcher. Requests from older seeds (`.bbenemizer.json`,
+  `bb-enemizer-request-v1`) are still accepted everywhere.
+
 - **The Cheat-Engine-free installer commits its detours atomically (developer
   tooling, not player-facing).** The native-delivery prototype installs by
   overwriting seven live instruction bytes at each of two hook sites with an

@@ -68,11 +68,11 @@ class DoctorFixture:
         maps.mkdir(parents=True)
         (maps / "m22_00_00_00.msb.dcx").write_bytes(b"map")
 
-        self.request_path = root / "seed.bbenemizer.json"
+        self.request_path = root / "seed.bbseed.json"
         self.request_path.write_text(
             json.dumps(
                 {
-                    "format": "bb-enemizer-request-v1",
+                    "format": "bb-seed-request-v1",
                     "player": 1,
                     "player_name": "Hunter",
                     "seed_name": "AP_test",

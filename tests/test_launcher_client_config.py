@@ -256,11 +256,11 @@ class ClientConfigTests(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        request = self.root / "seed.bbenemizer.json"
+        request = self.root / "seed.bbseed.json"
         request.write_text(
             json.dumps(
                 {
-                    "format": "bb-enemizer-request-v1",
+                    "format": "bb-seed-request-v1",
                     "player": 1,
                     "player_name": "Hunter",
                     "seed_name": "52100005",

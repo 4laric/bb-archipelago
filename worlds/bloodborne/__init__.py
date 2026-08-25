@@ -194,7 +194,10 @@ else:
     from dataclasses import dataclass
 
     class Enemizer(Toggle):
-        """Generate a deterministic enemizer request beside the multiworld output."""
+        """Randomize enemy placement for this slot.
+
+        Enemy randomization is applied by the launcher when the seed is
+        built; the seed request file is emitted either way."""
         display_name = "Enemy Randomizer"
         default = 1
 
@@ -324,11 +327,16 @@ else:
             }
 
         def generate_output(self, output_directory: str) -> None:
-            if not self.options.enemizer:
-                return
-            request = {"format": "bb-enemizer-request-v1", **self.fill_slot_data(), "player": self.player,
+            # The request file is the seed's identity document for the
+            # launcher -- slot, player, world/runtime builds, and the
+            # suppression plan hash all come from it -- so it is emitted for
+            # every slot regardless of the enemizer option (#149). Whether
+            # enemies are actually randomized is a launch-time decision;
+            # `enemizer_seed` is one field of the identity, not its reason
+            # to exist.
+            request = {"format": "bb-seed-request-v1", **self.fill_slot_data(), "player": self.player,
                        "player_name": self.player_name}
-            path = Path(output_directory) / f"{self.multiworld.get_out_file_name_base(self.player)}.bbenemizer.json"
+            path = Path(output_directory) / f"{self.multiworld.get_out_file_name_base(self.player)}.bbseed.json"
             path.write_text(json.dumps(request, indent=2) + "\n", encoding="utf-8")
 
     __all__ = ["MODEL", "BloodborneWorld"]
