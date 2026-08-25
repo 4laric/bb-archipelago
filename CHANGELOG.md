@@ -8,6 +8,16 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **Mods that could never load are no longer reported as merged.** Mods
+  normally download as one folder per mod with `dvdroot_ps4` inside; dropping
+  those folders straight into `CUSA03173-mods-user` produced overlay paths
+  shadPS4 never reads, and the launcher counted them as merged, so the mods
+  silently did nothing. Any user file whose path does not start with
+  `dvdroot_ps4/` is now left out (reason `dead-path`), and both the Doctor's
+  `user mods` line and the launch progress log name each wrapper folder, how
+  many files it lost, and the fix: move the contents of that folder up one
+  level (#173).
+
 - **Slice-3 flag claims are now traced instruction by instruction, and two
   citations were wrong.** Cathedral Ward and Old Yharnam shipped with no live
   witness, so every detection flag there was a static claim. All 121 of them --

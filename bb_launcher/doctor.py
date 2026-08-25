@@ -22,6 +22,7 @@ from typing import Any, Callable
 from .core import (
     CE_BRIDGE_PROCESS_NAME,
     CHEAT_ENGINE_PROCESSES,
+    DVDROOT_PREFIX,
     MAP_PREFIX,
     SUPPRESSION_PATH,
     USER_MODS_DIR_NAME,
@@ -29,6 +30,8 @@ from .core import (
     LauncherError,
     ProcessSpec,
     ValidationError,
+    dead_path_remedy,
+    dead_path_wrappers,
     elevation_risks,
     launcher_is_elevated,
     collect_user_mod_files,
@@ -352,6 +355,23 @@ def _check_user_mods(chain: _Chain, *, randomize_enemies: bool) -> DoctorFinding
         and relative.casefold().endswith(".msb.dcx")
     )
     detail = f"{len(merge.merged)} file(s) from {USER_MODS_DIR_NAME} will merge into the overlay"
+    # Dead paths first: they are the only exclusion that means a mod the player
+    # believes is installed does nothing at all (bb-archipelago#173).
+    wrappers = dead_path_wrappers(merge.excluded)
+    if wrappers:
+        dead = sum(count for _, count in wrappers)
+        shown = wrappers[:5]
+        listed = "; ".join(f"{wrapper} ({count} file(s))" for wrapper, count in shown)
+        if len(wrappers) > len(shown):
+            listed += f", and {len(wrappers) - len(shown)} more"
+        return DoctorFinding(
+            WARN,
+            "user mods",
+            f"{detail}; {dead} file(s) can never load because their paths do "
+            f"not start with {DVDROOT_PREFIX} -- these are NOT merged and the "
+            f"mod will do nothing: {listed}",
+            "; ".join(dead_path_remedy(wrapper) for wrapper, _ in shown),
+        )
     if merge.excluded:
         shown = ", ".join(f"{item.path} ({item.reason})" for item in merge.excluded[:3])
         extra = "" if len(merge.excluded) <= 3 else f", and {len(merge.excluded) - 3} more"

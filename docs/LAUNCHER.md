@@ -76,6 +76,26 @@ built from. Put your mods there once and they survive every activation.
 ```
 
 Lay the directory out exactly as the mod ships it relative to `dvdroot_ps4`.
+**The union of your mods sits directly under `CUSA03173-mods-user`, with no
+per-mod wrapper folder.** Mods usually download as one folder per mod, each
+containing its own `dvdroot_ps4` tree; dropping those folders in as-is is the
+natural first attempt and it does not work:
+
+```text
+CUSA03173-mods-user/
+├── Boczkek's FPS boost Lite/     # WRONG: overlay path becomes
+│   └── dvdroot_ps4/...           # CUSA03173-mods/Boczkek's FPS boost Lite/dvdroot_ps4/...
+└── Half Cloth Physics/           # -- a path shadPS4 never resolves
+    └── dvdroot_ps4/...
+
+CUSA03173-mods-user/
+└── dvdroot_ps4/                  # RIGHT: every mod's contents merged here
+    ├── chr/...
+    └── parts/...
+```
+
+Move the contents of each wrapper up one level so paths start with
+`dvdroot_ps4/` (#173).
 
 The conflict rule is explicit and fails loudly rather than merging or dropping:
 
@@ -86,6 +106,12 @@ The conflict rule is explicit and fails loudly rather than merging or dropping:
   file at one of those paths is **excluded** (reason `ap-owned`), the
   Archipelago file is used, and the exclusion is recorded in the manifest and
   reported by the Doctor. Comparison is case-insensitive.
+- **Paths that do not start with `dvdroot_ps4/` can never load.** shadPS4
+  resolves nothing outside that tree, so such a file is **excluded** (reason
+  `dead-path`) rather than merged into an overlay path nothing reads. The
+  Doctor and the launch progress log both report it, grouped by the top-level
+  wrapper folder, with the one move that fixes every file under it (#173).
+  Comparison is case-insensitive.
 - Names the launcher reserves inside the overlay (`.bb-ap-*`, the ownership
   manifest) are excluded with reason `reserved`.
 - Symbolic links, absolute paths, and anything escaping the directory fail
@@ -95,7 +121,8 @@ The conflict rule is explicit and fails loudly rather than merging or dropping:
   instead of short-circuiting.
 
 `python -m bb_launcher doctor` reports a `user mods` line: how many files will
-merge, and every exclusion with its reason. Files that only collide when enemy
+merge, and every exclusion with its reason -- including dead paths, which are
+named by wrapper folder because one move fixes all of them. Files that only collide when enemy
 randomization is on (your own MapStudio maps) are surfaced as a warning.
 
 Which mods are safe to merge at all is a separate question -- see the folder

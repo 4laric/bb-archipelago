@@ -40,14 +40,21 @@ OWNER_NAME = ".bb-ap-owner.json"
 OWNER_FORMAT = "bb-launcher-overlay-owner-v1"
 TRANSACTION_NAME = ".bb-ap-launcher-transaction.json"
 TRANSACTION_FORMAT = "bb-launcher-activation-transaction-v1"
-SUPPRESSION_PATH = "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx"
-MAP_PREFIX = "dvdroot_ps4/map/MapStudio/"
+DVDROOT_PREFIX = "dvdroot_ps4/"
+SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
+MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
 # Names the launcher's own transaction and ownership machinery uses inside the
 # overlay.  A user file claiming one of them is excluded, not merged.
 RESERVED_OVERLAY_PREFIX = ".bb-ap-"
 EXCLUDED_AP_OWNED = "ap-owned"
 EXCLUDED_RESERVED = "reserved"
+# A user file whose overlay path does not begin with dvdroot_ps4/ is a path
+# shadPS4 never resolves: merging it is indistinguishable from doing nothing,
+# which is exactly how a wrapper-folder mod tree failed silently
+# (bb-archipelago#173).  Excluded, and reported by wrapper so the remedy is
+# one move per mod rather than one per file.
+EXCLUDED_DEAD_PATH = "dead-path"
 
 
 class LauncherError(RuntimeError):
@@ -222,8 +229,40 @@ def plan_user_merge(
         if normalized.casefold() in protected:
             excluded.append(UserModExclusion(normalized, EXCLUDED_AP_OWNED))
             continue
+        if not normalized.casefold().startswith(DVDROOT_PREFIX.casefold()):
+            excluded.append(UserModExclusion(normalized, EXCLUDED_DEAD_PATH))
+            continue
         merged[normalized] = digest
     return UserModMerge(merged, tuple(excluded))
+
+
+def dead_path_wrappers(
+    exclusions: Iterable[UserModExclusion],
+) -> tuple[tuple[str, int], ...]:
+    """Group dead-path exclusions by their top-level folder, largest first.
+
+    Mods ship one wrapper folder each, so a mistaken tree produces one wrapper
+    with many dead files, not many unrelated ones.  Reporting the wrapper names
+    the single move that fixes every file under it.
+    """
+
+    counts: dict[str, int] = {}
+    for exclusion in exclusions:
+        if exclusion.reason != EXCLUDED_DEAD_PATH:
+            continue
+        parts = PurePosixPath(exclusion.path).parts
+        wrapper = parts[0] if len(parts) > 1 else exclusion.path
+        counts[wrapper] = counts.get(wrapper, 0) + 1
+    return tuple(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
+
+
+def dead_path_remedy(wrapper: str) -> str:
+    """The one sentence that fixes a wrapper folder, named for that wrapper."""
+
+    return (
+        f"move the contents of {wrapper} up one level so paths start with "
+        f"{DVDROOT_PREFIX}"
+    )
 
 
 def collect_user_mod_files(root: Path) -> dict[str, Path]:
@@ -771,6 +810,25 @@ def user_merge_summary(owner: Mapping[str, Any]) -> tuple[int, tuple[UserModExcl
         if isinstance(entry, dict)
     )
     return len(_user_merge_records(owner)), exclusions
+
+
+def dead_path_warnings(owner: Mapping[str, Any]) -> tuple[str, ...]:
+    """Player-facing lines for every wrapper folder that merged nothing.
+
+    An activation that excluded dead paths still succeeds -- nothing was going
+    to load either way -- but it must never be reported as a plain success:
+    that silence is the whole of bb-archipelago#173.
+    """
+
+    _, exclusions = user_merge_summary(owner)
+    lines = []
+    for wrapper, count in dead_path_wrappers(exclusions):
+        lines.append(
+            f"WARNING: {count} file(s) under {USER_MODS_DIR_NAME}/{wrapper} were "
+            f"NOT merged and that mod will do nothing: their paths do not start "
+            f"with {DVDROOT_PREFIX}. To fix it, {dead_path_remedy(wrapper)}."
+        )
+    return tuple(lines)
 
 
 def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any]:
