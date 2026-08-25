@@ -46,6 +46,7 @@ from .core import (
 # the launcher's session naming and the ledger's slot namespacing agree about
 # what "one AP session" means.
 SESSION_KEY_SEPARATOR = "\x1f"
+CLIENT_LOG_NAME = "client.log"
 
 KNOWN_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root")
 _PLACEHOLDER_PATTERN = re.compile(r"\{([a-z_]+)\}")
@@ -59,6 +60,9 @@ class ClientRuntimePaths:
     config: Path
     ledger: Path
     bridge_root: Path
+    # Where the AP client's own stdout/stderr is appended, beside the ledger,
+    # so Open Diagnostics picks it up (bb-archipelago#171).
+    client_log: Path
 
 
 def default_state_root() -> Path:
@@ -87,6 +91,7 @@ def session_paths(state_root: Path | str, *, seed: str, slot: str) -> ClientRunt
         config=session / "runtime-config.json",
         ledger=session / "ledger.json",
         bridge_root=root / "bridge",
+        client_log=session / CLIENT_LOG_NAME,
     )
 
 

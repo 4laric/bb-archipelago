@@ -13,6 +13,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
     SUPPRESSION_PATH,
+    EarlyExit,
     GameInstall,
     LauncherError,
     ProcessSpec,
@@ -27,6 +28,7 @@ from .core import (
     restore_previous_build,
     sha256_file,
     validate_processes,
+    wait_for_early_exit,
 )
 from .client_config import (
     ClientRuntimePaths,
@@ -40,6 +42,8 @@ from .resources import application_root
 
 SETTINGS_FORMAT = "bb-launcher-ui-settings-v1"
 PROCESS_PLAN_FORMAT = "bb-launcher-process-plan-v1"
+# The plan entry whose output is captured and watched (bb-archipelago#171).
+CLIENT_PROCESS_NAME = "AP client"
 REQUEST_FORMAT = "bb-seed-request-v1"
 # Seeds generated before the request became the seed identity document (#149)
 # carry the old format name; the payload is compatible.
@@ -156,6 +160,10 @@ class WorkflowResult:
     # True when the launch plan pinned a CE bridge, so the UI knows item
     # grants are expected and can watch for the harness reporting in.
     grants_bridge: bool
+    # The captured AP client output for this session, and the first component
+    # observed to die inside the post-launch watch window (bb-archipelago#171).
+    client_log: Path | None = None
+    early_exit: EarlyExit | None = None
 
 
 def _read_object(path: Path, label: str) -> dict[str, Any]:
@@ -234,6 +242,11 @@ def resolve_process_plan(plan: ProcessPlan, paths: ClientRuntimePaths | None) ->
                 arguments=substitute_plan_arguments(spec.arguments, paths),
                 working_directory=spec.working_directory,
                 expected_sha256=spec.expected_sha256,
+                log_path=(
+                    paths.client_log
+                    if paths is not None and spec.name == CLIENT_PROCESS_NAME
+                    else spec.log_path
+                ),
             )
             for spec in plan.processes
         ),
@@ -516,10 +529,13 @@ class LauncherWorkflow:
         toolchain: EnemizerToolchain | None = None,
         process_launcher: Callable[[Sequence[ProcessSpec]], list[Any]] = launch_processes,
         process_running: Callable[[str], bool] = process_is_running_by_name,
+        process_watcher: Callable[..., EarlyExit | None] = wait_for_early_exit,
     ):
         self.repo_root = Path(repo_root).expanduser().resolve()
         self.toolchain = toolchain or EnemizerToolchain(self.repo_root)
         self.process_launcher = process_launcher
+        # Injectable so the early-exit report is testable without real timing.
+        self.process_watcher = process_watcher
         # Injectable so the stray-Cheat-Engine refusal is testable off Windows.
         self.process_running = process_running
 
@@ -674,7 +690,12 @@ class LauncherWorkflow:
         # while the seed was building.
         require_no_stray_cheat_engine(resolved.processes, self.process_running)
         started = self.process_launcher(resolved.processes)
-        progress("Randomized Bloodborne launch started.")
+        progress("Watching the launched components for an early exit...")
+        early_exit = self.process_watcher(started, resolved.processes)
+        if early_exit is None:
+            progress("Randomized Bloodborne launch started.")
+        else:
+            progress(f"{early_exit.name} exited immediately; see {paths.client_log}")
         swaps = 0
         if enemizer is not None:
             swaps = len(enemizer.manifest["swaps"])
@@ -689,6 +710,8 @@ class LauncherWorkflow:
             process_ids=tuple(getattr(process, "pid", None) for process in started),
             client_config=paths.config,
             ledger=paths.ledger,
+            client_log=paths.client_log,
+            early_exit=early_exit,
             grants_bridge=any(spec.name == "CE bridge" for spec in resolved.processes),
         )
 

@@ -19,6 +19,13 @@ under `Unreleased` and move into a dated version section when released.
   about an unrecognized or unvalidated game build, nothing was written: send
   the exact console text to your host rather than switching lanes yourself
   (#153).
+- **A client that stops at startup now says why.** The AP client's output is
+  appended to `client.log` in the session folder, beside `ledger.json`, with a
+  dated `=== SESSION START ===` header per launch, and the launcher watches the
+  components it started for ten seconds. If one stops in that window, you get
+  an error dialog with its exit code and what it printed, instead of the
+  success popup -- previously the client's console closed with it and the
+  message was lost (#171). **Open Diagnostics** now finds `client.log` too.
 
 - **The `enemizer` YAML option is gone.** Enemization never affected
   generation -- no logic, pool, or region read it -- and the launcher's

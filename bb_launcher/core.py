@@ -20,8 +20,10 @@ import shutil
 import struct
 import subprocess
 import sys
+import time
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
@@ -1343,6 +1345,12 @@ def restore_previous_build(
     )
 
 
+SESSION_HEADER_PREFIX = "=== SESSION START"
+# Enough of the tail to carry a startup refusal and its context, bounded so a
+# long-running client's log can never fill a dialog.
+LOG_TAIL_BYTES = 4000
+
+
 @dataclass(frozen=True)
 class ProcessSpec:
     name: str
@@ -1350,6 +1358,100 @@ class ProcessSpec:
     arguments: Sequence[str] = ()
     working_directory: Path | None = None
     expected_sha256: str | None = None
+    # When set, this process's stdout and stderr are appended to the file so a
+    # startup refusal survives the console window closing (bb-archipelago#171).
+    log_path: Path | None = None
+
+
+@dataclass(frozen=True)
+class EarlyExit:
+    """A launched component that stopped before the watch window ended."""
+
+    name: str
+    returncode: int | None
+    log_path: Path | None
+    log_tail: str
+
+    def describe(self) -> str:
+        code = "an unknown exit code" if self.returncode is None else f"exit code {self.returncode}"
+        lines = [f"{self.name} exited with {code} immediately after launch."]
+        if self.log_tail:
+            lines.append("")
+            lines.append(self.log_tail)
+        if self.log_path is not None:
+            lines.append("")
+            lines.append(f"Full log: {self.log_path}")
+        return "\n".join(lines)
+
+
+def _open_process_log(path: Path) -> Any:
+    """Open a per-process log for append and stamp this session's header."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = open(path, "ab")
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    handle.write(f"\n{SESSION_HEADER_PREFIX} {stamp} ===\n".encode("utf-8"))
+    handle.flush()
+    return handle
+
+
+def read_session_log_tail(path: Path | None, *, limit: int = LOG_TAIL_BYTES) -> str:
+    """Return this session's output from a process log, bounded to `limit`."""
+
+    if path is None:
+        return ""
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    marker = text.rfind(SESSION_HEADER_PREFIX)
+    if marker != -1:
+        newline = text.find("\n", marker)
+        text = text[newline + 1 :] if newline != -1 else ""
+    text = text.strip()
+    if len(text) > limit:
+        text = "..." + text[-limit:]
+    return text
+
+
+def wait_for_early_exit(
+    started: Sequence[Any],
+    processes: Sequence[ProcessSpec],
+    *,
+    timeout: float = 10.0,
+    interval: float = 0.25,
+    sleep: Callable[[float], None] = time.sleep,
+    monotonic: Callable[[], float] = time.monotonic,
+) -> EarlyExit | None:
+    """Watch freshly launched children briefly and report the first casualty.
+
+    A component that refuses at startup writes its reason and dies; its console
+    dies with it.  Polling for the watch window turns that silence into a
+    reportable exit code plus the tail of the log the process just wrote.
+    """
+
+    watchable = [
+        (index, process)
+        for index, process in enumerate(started)
+        if callable(getattr(process, "poll", None))
+    ]
+    if not watchable:
+        # Nothing exposes an exit status: there is no observation to wait for,
+        # and waiting anyway would only stall the launch.
+        return None
+    deadline = monotonic() + max(timeout, 0.0)
+    while True:
+        for index, process in watchable:
+            code = process.poll()
+            if code is None:
+                continue
+            spec = processes[index] if index < len(processes) else None
+            name = spec.name if spec is not None else f"process {index + 1}"
+            log_path = spec.log_path if spec is not None else None
+            return EarlyExit(name, code, log_path, read_session_log_tail(log_path))
+        if monotonic() >= deadline:
+            return None
+        sleep(interval)
 
 
 def launch_processes(
@@ -1363,11 +1465,18 @@ def launch_processes(
     started: list[Any] = []
     for spec in validated:
         command = [str(spec.executable), *[str(argument) for argument in spec.arguments]]
+        redirect = None
         try:
+            if spec.log_path is not None:
+                redirect = _open_process_log(spec.log_path)
+            extra: dict[str, Any] = {}
+            if redirect is not None:
+                extra = {"stdout": redirect, "stderr": subprocess.STDOUT}
             started.append(
                 popen(
                     command,
                     cwd=(str(spec.working_directory) if spec.working_directory else None),
+                    **extra,
                 )
             )
         except OSError as exc:
@@ -1375,6 +1484,11 @@ def launch_processes(
             raise LaunchError(
                 f"could not start {spec.name}: {exc}. Already started: {running}"
             ) from exc
+        finally:
+            # The child holds its own duplicate of the handle; the parent must
+            # not keep the log file open for the life of the session.
+            if redirect is not None:
+                redirect.close()
     return started
 
 
@@ -1404,7 +1518,17 @@ def validate_processes(processes: Sequence[ProcessSpec]) -> list[ProcessSpec]:
             working = Path(spec.working_directory).expanduser().resolve()
             if not working.is_dir():
                 raise LaunchError(f"{spec.name} working directory does not exist: {working}")
+        log_path = None
+        if spec.log_path is not None:
+            log_path = Path(spec.log_path).expanduser()
         validated.append(
-            ProcessSpec(spec.name, executable, tuple(spec.arguments), working, expected_hash)
+            ProcessSpec(
+                spec.name,
+                executable,
+                tuple(spec.arguments),
+                working,
+                expected_hash,
+                log_path,
+            )
         )
     return validated

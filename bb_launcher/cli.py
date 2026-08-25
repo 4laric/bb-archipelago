@@ -26,6 +26,7 @@ from .core import (
     recover_activation,
     restore_previous_build,
     validate_processes,
+    wait_for_early_exit,
 )
 from .client_config import default_shad_log, default_state_root, write_client_runtime_config
 from .doctor import format_report, run_doctor
@@ -278,11 +279,22 @@ def main(argv: list[str] | None = None) -> int:
             resolved = resolve_process_plan(process_plan, paths).processes
             require_no_stray_cheat_engine(resolved)
             started = launch_processes(resolved)
+            early_exit = wait_for_early_exit(started, resolved)
             _print(
                 {
                     "mode": "vanilla" if args.vanilla else "randomized",
                     "client_config": None if paths is None else str(paths.config),
                     "ledger": None if paths is None else str(paths.ledger),
+                    "client_log": None if paths is None else str(paths.client_log),
+                    "early_exit": (
+                        None
+                        if early_exit is None
+                        else {
+                            "name": early_exit.name,
+                            "returncode": early_exit.returncode,
+                            "log_tail": early_exit.log_tail,
+                        }
+                    ),
                     "started": [
                         {"name": spec.name, "pid": getattr(process, "pid", None)}
                         for spec, process in zip(processes, started)

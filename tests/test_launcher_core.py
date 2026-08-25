@@ -3,12 +3,14 @@ from __future__ import annotations
 import hashlib
 import json
 import struct
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from bb_launcher.core import (
     APP_VERSION,
+    SESSION_HEADER_PREFIX,
     EXCLUDED_AP_OWNED,
     EXCLUDED_RESERVED,
     MAP_PREFIX,
@@ -19,6 +21,7 @@ from bb_launcher.core import (
     USER_MODS_DIR_NAME,
     ConflictError,
     DiscoveryError,
+    EarlyExit,
     GameInstall,
     LaunchError,
     ProcessSpec,
@@ -36,8 +39,10 @@ from bb_launcher.core import (
     require_no_stray_cheat_engine,
     restore_previous_build,
     sha256_file,
+    read_session_log_tail,
     stray_cheat_engine_names,
     user_merge_summary,
+    wait_for_early_exit,
 )
 
 
@@ -406,6 +411,73 @@ class LauncherCoreTests(unittest.TestCase):
         processes = launch_processes(specs[:1], popen=fake_popen)
         self.assertEqual(processes[0].pid, 42)
         self.assertEqual(started[0][0], [str(executable.resolve()), "--game", SERIAL])
+
+    def test_a_client_that_exits_at_startup_reports_its_message_verbatim(self):
+        # bb-archipelago#171 motivating case: the client refuses at startup and
+        # its console dies with it.  The captured log must carry the reason.
+        message = "OpenProcess error 5: run the launcher as administrator"
+        log = self.root / "session" / "client.log"
+        specs = [
+            ProcessSpec(
+                "AP client",
+                Path(sys.executable),
+                (
+                    "-c",
+                    f"import sys; sys.stderr.write({message!r} + chr(10)); sys.exit(1)",
+                ),
+                log_path=log,
+            )
+        ]
+        started = launch_processes(specs)
+        early = wait_for_early_exit(started, specs, timeout=30.0, interval=0.05)
+        self.assertIsInstance(early, EarlyExit)
+        self.assertEqual(early.name, "AP client")
+        self.assertEqual(early.returncode, 1)
+        self.assertIn(message, early.log_tail)
+        report = early.describe()
+        self.assertIn(message, report)
+        self.assertIn("exit code 1", report)
+        self.assertIn(str(log), report)
+        self.assertIn(message, log.read_text(encoding="utf-8"))
+
+    def test_each_launch_appends_a_dated_session_header_to_the_same_log(self):
+        log = self.root / "session" / "client.log"
+        def spec(text: str) -> ProcessSpec:
+            return ProcessSpec(
+                "AP client",
+                Path(sys.executable),
+                ("-c", f"import sys; sys.stdout.write({text!r} + chr(10))"),
+                log_path=log,
+            )
+
+        for text in ("first-run", "second-run"):
+            started = launch_processes([spec(text)])
+            wait_for_early_exit(started, [spec(text)], timeout=30.0, interval=0.05)
+        contents = log.read_text(encoding="utf-8")
+        self.assertEqual(contents.count(SESSION_HEADER_PREFIX), 2)
+        self.assertIn("first-run", contents)
+        self.assertIn("second-run", contents)
+        # The reported tail is this session only, never the previous run's.
+        tail = read_session_log_tail(log)
+        self.assertIn("second-run", tail)
+        self.assertNotIn("first-run", tail)
+
+    def test_the_early_exit_watch_gives_up_when_every_child_stays_alive(self):
+        class Alive:
+            def poll(self):
+                return None
+
+        slept: list[float] = []
+        clock = iter([0.0, 1.0, 2.0, 99.0])
+        result = wait_for_early_exit(
+            [Alive(), Alive()],
+            [ProcessSpec("shadPS4", self.root), ProcessSpec("AP client", self.root)],
+            timeout=10.0,
+            sleep=slept.append,
+            monotonic=lambda: next(clock),
+        )
+        self.assertIsNone(result)
+        self.assertTrue(slept)
 
     def test_process_launch_refuses_an_incompatible_executable_hash(self):
         executable = self.root / "shadPS4.exe"

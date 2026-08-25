@@ -889,7 +889,22 @@ class LauncherApp:
         self._append_log(f"Launch started ({mode}); cache {result.cache_key[:12]}.")
         self._append_log(f"Client runtime config: {result.client_config}")
         self._append_log(f"Receive ledger: {result.ledger}")
+        client_log = getattr(result, "client_log", None)
+        if client_log is not None:
+            self._append_log(f"Client log: {client_log}")
         self._refresh_status()
+        early_exit = getattr(result, "early_exit", None)
+        if early_exit is not None:
+            # The overlay is active but the component died at startup: report
+            # what it said instead of the success popup (bb-archipelago#171).
+            report = early_exit.describe()
+            self._append_log(f"EARLY EXIT: {report}")
+            self.messagebox.showerror(
+                "Bloodborne AP client stopped",
+                report,
+                parent=self.root,
+            )
+            return
         if result.grants_bridge:
             self._append_log(
                 "Item grants expected: watching for the Cheat Engine bridge to report..."
