@@ -263,10 +263,15 @@ A seed identity file has this shape:
   "options": {
     "enemy_randomizer": true
   },
-  "enemizer_seed": "52100005:VarietyTester",
+  "enemizer_seed": "52100005:1",
   "suppression_plan_sha256": "<sha256>"
 }
 ```
+
+The `enemizer_seed` is `f"{seed_name}:{player}"` — the multiworld seed name
+joined to the player *number* (`1` for a solo seed), not the slot name.
+Regenerating a multiworld can renumber the players, which changes each
+slot's enemizer seed even when the multiworld seed name is unchanged.
 
 Compose and activate derived outputs without placing either output back into
 the game tree by hand:
