@@ -197,6 +197,22 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Fixed
 
+- **The Cheat Engine grant bridge no longer acknowledges an item it cannot
+  witness being granted.** The harness had one path that reported success
+  without executing anything: when a retained command's stack already held
+  `expected_before + quantity`, it declared the grant "already applied". After
+  a crash or relaunch that equality is usually a coincidence -- the save
+  reloaded at a different count, or the player picked the same item up -- and
+  every item acknowledged that way was recorded as delivered and lost for good
+  (#163, seen as a 13-item backlog drained and acknowledged with nothing in
+  inventory). The shortcut now requires a durable state from this same harness
+  that recorded a *verified* write (`completed` / `recovered_complete`); the
+  statuses written before a write (`queued`, `executing`, `verify_pending`,
+  `recovery_pending`) may still reconstruct the expected count, which is what
+  keeps a genuinely-applied grant from being applied twice, but may no longer
+  acknowledge one. Without that witness the harness reports
+  `recovery_ambiguous` and keeps the command file, so the client's staleness
+  check blocks the delivery out loud instead of the ledger silently banking it.
 - Item grants no longer fail verification against the wrong inventory stack:
   the grant harness now verifies a native insert against the result slot the
   game itself reported (id matches, quantity covers the grant) instead of only
