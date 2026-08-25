@@ -30,6 +30,7 @@ from .core import (
     LauncherError,
     ProcessSpec,
     ValidationError,
+    STALE_BARE_SERIAL_REMEDY,
     dead_path_remedy,
     dead_path_wrappers,
     elevation_risks,
@@ -38,12 +39,14 @@ from .core import (
     plan_user_merge,
     process_is_running_by_name,
     sha256_file,
+    stale_bare_serial_process,
     stray_cheat_engine_names,
     validate_processes,
 )
 from .client_config import default_state_root
 from .readiness import gather_readiness
 from .workflow import (
+    SHAD_PROCESS_NAME,
     LauncherSettings,
     ProcessPlan,
     _read_object,
@@ -186,6 +189,139 @@ def _check_plan(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
         "launch plan",
         f"{len(chain.processes)} process(es) pinned and present: {names}",
     )
+
+
+def _check_plan_game_argument(chain: _Chain) -> DoctorFinding:
+    """The plan must name the game by path, not by bare game ID.
+
+    bb-archipelago#177: shadPS4 resolves a bare ``CUSA03173`` only against its
+    own ``install_dirs`` config, which is empty on a fresh emulator copy, so a
+    player whose launcher game-folder field was perfectly correct still hit
+    "Game ID or file path not found".  A plan pinned before that fix carries the
+    old argument and has to be regenerated; nothing at launch can repair it,
+    because the plan is the document the player may have hand-edited.
+    """
+
+    if chain.plan is None:
+        return DoctorFinding(SKIP, "launch plan game argument", "upstream check failed")
+    stale = stale_bare_serial_process(chain.plan.processes)
+    if stale is not None:
+        return DoctorFinding(
+            FAIL,
+            "launch plan game argument",
+            f"{stale.name} is invoked with the bare game ID; shadPS4 can only "
+            "resolve that against its own library config, which is empty on an "
+            "emulator copy that has never been opened and configured",
+            STALE_BARE_SERIAL_REMEDY,
+        )
+    if chain.install is None:
+        return DoctorFinding(
+            SKIP, "launch plan game argument", "game installation check failed"
+        )
+    return DoctorFinding(
+        PASS,
+        "launch plan game argument",
+        f"the game is launched by path: {chain.install.base}",
+    )
+
+
+def _read_windows_file_version(path: Path) -> str | None:
+    """Read an executable's file-version resource, or None where there isn't one.
+
+    Windows-only by construction: everywhere else this returns None and the
+    version gate reports SKIP rather than inventing a verdict.
+    """
+
+    import sys
+
+    if sys.platform != "win32":  # pragma: no cover - platform-specific
+        return None
+    try:  # pragma: no cover - exercised only on Windows
+        import ctypes
+        from ctypes import wintypes
+
+        version_dll = ctypes.WinDLL("version")
+        size = version_dll.GetFileVersionInfoSizeW(ctypes.c_wchar_p(str(path)), None)
+        if not size:
+            return None
+        buffer = ctypes.create_string_buffer(size)
+        if not version_dll.GetFileVersionInfoW(
+            ctypes.c_wchar_p(str(path)), 0, size, buffer
+        ):
+            return None
+        value = ctypes.c_void_p()
+        length = wintypes.UINT()
+        if not version_dll.VerQueryValueW(
+            buffer, ctypes.c_wchar_p("\\"), ctypes.byref(value), ctypes.byref(length)
+        ):
+            return None
+
+        class _FixedFileInfo(ctypes.Structure):
+            _fields_ = [
+                ("dwSignature", ctypes.c_uint32),
+                ("dwStrucVersion", ctypes.c_uint32),
+                ("dwFileVersionMS", ctypes.c_uint32),
+                ("dwFileVersionLS", ctypes.c_uint32),
+                ("dwProductVersionMS", ctypes.c_uint32),
+                ("dwProductVersionLS", ctypes.c_uint32),
+            ]
+
+        info = ctypes.cast(value, ctypes.POINTER(_FixedFileInfo)).contents
+        return (
+            f"{info.dwFileVersionMS >> 16}.{info.dwFileVersionMS & 0xFFFF}."
+            f"{info.dwFileVersionLS >> 16}.{info.dwFileVersionLS & 0xFFFF}"
+        )
+    except Exception:  # noqa: BLE001 - a missing resource is not a doctor crash
+        return None
+
+
+def _version_triple(raw: str) -> tuple[str, ...]:
+    """The first three dotted components, so 0.18.0.0 and 0.18.0 compare equal."""
+
+    parts = [part for part in raw.strip().lstrip("vV.").split(".") if part != ""]
+    return tuple(parts[:3])
+
+
+def _check_shad_version(
+    chain: _Chain,
+    read_version: Callable[[Path], str | None],
+) -> DoctorFinding:
+    """Refuse a shadPS4 build the native delivery RVAs were not validated against.
+
+    bb-archipelago#177 point 1: the Doctor used to accept any file named
+    shadPS4.exe, so a playtester passed every gate with the 0.16.0 copy bundled
+    inside the third-party BBLauncher and only found out at runtime.
+    """
+
+    if chain.plan is None or chain.processes is None:
+        return DoctorFinding(SKIP, "shadPS4 version", "upstream check failed")
+    specs = [spec for spec in chain.processes if spec.name == SHAD_PROCESS_NAME]
+    if not specs:
+        return DoctorFinding(
+            SKIP, "shadPS4 version", f"the plan pins no {SHAD_PROCESS_NAME} process"
+        )
+    executable = Path(specs[0].executable)
+    found = read_version(executable)
+    if found is None:
+        return DoctorFinding(
+            SKIP,
+            "shadPS4 version",
+            f"could not read a version resource from {executable}",
+        )
+    expected = chain.plan.shad_build
+    if _version_triple(found) != _version_triple(expected):
+        return DoctorFinding(
+            FAIL,
+            "shadPS4 version",
+            f"{executable} reports version {found}, but this seed needs "
+            f"shadPS4 {expected}",
+            f"select a standalone shadPS4 {expected} build: native item delivery "
+            f"is validated against {expected} only, and the client hard-fails on "
+            "another build even after a successful boot. Beware the copy bundled "
+            "inside the third-party BBLauncher tree -- it has shipped older "
+            "builds, and picking it has cost a playtester a session before",
+        )
+    return DoctorFinding(PASS, "shadPS4 version", f"{executable} is shadPS4 {found}")
 
 
 def _check_slot_agreement(chain: _Chain, player_name: str | None) -> DoctorFinding:
@@ -625,17 +761,21 @@ def run_doctor(
     player_name: str | None = None,
     process_running: Callable[[str], bool] | None = None,
     probe: Callable[[str, int], None] | None = None,
+    read_shad_version: Callable[[Path], str | None] | None = None,
 ) -> DoctorReport:
     """Check every link in the player chain. Never raises for bad state."""
 
     process_running = process_running or _process_running
     probe = probe or _probe_server
+    read_shad_version = read_shad_version or _read_windows_file_version
     chain = _Chain()
     findings = [
         _safely(lambda: _check_install(settings, chain)),
         _safely(lambda: _check_request(settings, chain)),
         _safely(lambda: _check_slot_agreement(chain, player_name)),
         _safely(lambda: _check_plan(settings, chain)),
+        _safely(lambda: _check_plan_game_argument(chain)),
+        _safely(lambda: _check_shad_version(chain, read_shad_version)),
         _safely(lambda: _check_item_grants(settings, chain, process_running)),
         _safely(lambda: _check_runtime_agreement(chain)),
         _safely(lambda: _check_suppression_chain(settings, chain)),

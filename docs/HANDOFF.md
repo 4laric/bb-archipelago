@@ -172,8 +172,10 @@ counts and retain any terminal `native-grant-state.txt` failure before retrying.
 ## Cross-machine CE onboarding notes
 
 - Use stable shadPS4 0.18 for the current table. The Qt launcher catalog may lag
-  the downloadable stable SDL build; the latter can be launched with
-  `shadPS4.exe CUSA03173` or an explicit `eboot.bin` path.
+  the downloadable stable SDL build; the latter can be launched with an explicit
+  game-directory or `eboot.bin` path. `shadPS4.exe CUSA03173` only works if that
+  copy of the emulator already has the containing folder in its own
+  `install_dirs`, which is why the launcher passes a path instead (#177).
 - Loading the table twice in the same CE/game session reports `already_ready`;
   restart CE before replacing or reloading a table that already installed hooks.
 - More than one shadPS4 process can make name-based attachment select the wrong

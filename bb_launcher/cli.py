@@ -276,7 +276,9 @@ def main(argv: list[str] | None = None) -> int:
                     suppression_manifest=args.suppression_manifest,
                     shad_log=args.shad_log or default_shad_log(),
                 )
-            resolved = resolve_process_plan(process_plan, paths).processes
+            resolved = resolve_process_plan(
+                process_plan, paths, game_path=install.base
+            ).processes
             require_no_stray_cheat_engine(resolved)
             started = launch_processes(resolved)
             early_exit = wait_for_early_exit(started, resolved)

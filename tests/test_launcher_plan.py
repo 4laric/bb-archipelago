@@ -6,14 +6,25 @@ import unittest
 from pathlib import Path
 
 from bb_launcher.cli import main as cli_main
-from bb_launcher.core import ValidationError, sha256_file
+from bb_launcher.core import (
+    SERIAL,
+    STALE_BARE_SERIAL_REMEDY,
+    ValidationError,
+    sha256_file,
+    stale_bare_serial_process,
+)
 from bb_launcher.plan import (
     DEFAULT_SERVER,
     DEFAULT_SHAD_BUILD,
     generate_process_plan,
     write_process_plan,
 )
-from bb_launcher.workflow import PROCESS_PLAN_FORMAT, load_process_plan
+from bb_launcher.client_config import substitute_plan_arguments
+from bb_launcher.workflow import (
+    PROCESS_PLAN_FORMAT,
+    load_process_plan,
+    resolve_process_plan,
+)
 
 
 def make_executable(root: Path, name: str, payload: bytes) -> Path:
@@ -64,7 +75,7 @@ class PlanGenerationTests(unittest.TestCase):
         by_name = {record["name"]: record for record in document["processes"]}
         self.assertEqual(by_name["shadPS4"]["sha256"], sha256_file(self.shad))
         self.assertEqual(by_name["AP client"]["sha256"], sha256_file(self.client))
-        self.assertEqual(by_name["shadPS4"]["arguments"], ["CUSA03173"])
+        self.assertEqual(by_name["shadPS4"]["arguments"], ["{game_path}"])
         client_args = by_name["AP client"]["arguments"]
         self.assertEqual(client_args[0], DEFAULT_SERVER)
         self.assertEqual(client_args[1], "Alice")
@@ -74,6 +85,73 @@ class PlanGenerationTests(unittest.TestCase):
         self.assertEqual(client_args[2:], ["{runtime_config}", "{ledger}", "--assume-correct-save"])
         loaded = load_process_plan(write_process_plan(self.root / "plan.json", document))
         self.assertEqual([spec.name for spec in loaded.processes], names)
+
+    def test_shadps4_is_launched_by_path_not_by_bare_game_id(self) -> None:
+        # bb-archipelago#177, the motivating case: oz's launcher game-folder
+        # field was set correctly and shadPS4 still exited with
+        # "Game ID or file path not found: CUSA03173", because the bare ID is
+        # resolved only against the emulator's own install_dirs config -- empty
+        # on any copy that has never been opened and configured. shadPS4 0.18
+        # takes "Game path or ID" positionally and skips that lookup entirely
+        # when the argument is an existing path (src/main.cpp), so a generated
+        # plan hands it the game directory through the {game_path} placeholder
+        # and no in-emulator setup is needed.
+        document = generate_process_plan(
+            shad_executable=self.shad,
+            client_executable=self.client,
+            slot="Alice",
+            runtime_build="r1",
+        )
+        shad_entry = document["processes"][0]
+        self.assertEqual(shad_entry["name"], "shadPS4")
+        self.assertEqual(shad_entry["arguments"], ["{game_path}"])
+        self.assertNotIn(SERIAL, shad_entry["arguments"])
+        # The absolute path is NOT baked into the file: the plan stays portable
+        # between machines and resolves against the launcher's own settings.
+        self.assertNotIn(SERIAL, json.dumps(shad_entry))
+        # ... and at launch it resolves to the installation's game directory,
+        # which is the folder whose CUSA03173-patch / CUSA03173-mods siblings
+        # shadPS4 overlays on top of /app0.
+        plan = load_process_plan(write_process_plan(self.root / "bypath.json", document))
+        game = self.root / "game" / SERIAL
+        resolved = substitute_plan_arguments(
+            plan.processes[0].arguments, None, game_path=game
+        )
+        self.assertEqual(resolved, (str(game),))
+
+    def test_a_pre_177_plan_refuses_to_launch_instead_of_failing_in_the_emulator(self) -> None:
+        # A plan generated before #177 is on disk for every current playtester,
+        # and write_process_plan never overwrites one without force. Rather
+        # than silently rewriting a document the player may have hand-edited,
+        # every launch path refuses it with the regenerate remedy -- the same
+        # thing the Doctor reports up front.
+        document = generate_process_plan(
+            shad_executable=self.shad,
+            client_executable=self.client,
+            slot="Alice",
+            runtime_build="r1",
+        )
+        document["processes"][0]["arguments"] = [SERIAL]
+        stale = self.root / "stale.json"
+        stale.write_text(json.dumps(document), encoding="utf-8")
+        plan = load_process_plan(stale)
+        self.assertEqual(plan.processes[0].arguments, (SERIAL,))
+        with self.assertRaisesRegex(ValidationError, "bare game ID"):
+            resolve_process_plan(plan, None, game_path=self.root / "game" / SERIAL)
+        # The refusal is the plan's shape, not a missing substitution: it fires
+        # before any placeholder work.
+        self.assertIsNotNone(stale_bare_serial_process(plan.processes))
+        self.assertIn("regenerate the launch plan", STALE_BARE_SERIAL_REMEDY)
+        # Narrow by construction: a host who wrote a real path is left alone.
+        current = load_process_plan(
+            write_process_plan(self.root / "current.json", generate_process_plan(
+                shad_executable=self.shad,
+                client_executable=self.client,
+                slot="Alice",
+                runtime_build="r1",
+            ))
+        )
+        self.assertIsNone(stale_bare_serial_process(current.processes))
 
     def test_generation_refuses_bad_components(self) -> None:
         missing = self.root / "absent.exe"

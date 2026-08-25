@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
+    STALE_BARE_SERIAL_REMEDY,
     SUPPRESSION_PATH,
     EarlyExit,
     GameInstall,
@@ -28,6 +29,7 @@ from .core import (
     require_no_stray_cheat_engine,
     restore_previous_build,
     sha256_file,
+    stale_bare_serial_process,
     validate_processes,
     wait_for_early_exit,
 )
@@ -251,9 +253,37 @@ def captured_process_logs(
     }
 
 
-def resolve_process_plan(plan: ProcessPlan, paths: ClientRuntimePaths | None) -> ProcessPlan:
-    """Return the plan with launch-time placeholders substituted throughout."""
+def refuse_stale_plan(plan: ProcessPlan) -> None:
+    """Refuse a plan pinned before bb-archipelago#177.
 
+    Called before any mutation on every launch path, and again from
+    :func:`resolve_process_plan` as the backstop, so no caller can route around
+    it. Regenerating is the player's move -- the launcher does not silently
+    rewrite a plan file a player may have hand-validated.
+    """
+
+    stale = stale_bare_serial_process(plan.processes)
+    if stale is not None:
+        raise ValidationError(
+            f"{stale.name} still launches the game by bare game ID; "
+            + STALE_BARE_SERIAL_REMEDY
+        )
+
+
+def resolve_process_plan(
+    plan: ProcessPlan,
+    paths: ClientRuntimePaths | None,
+    *,
+    game_path: Path | None = None,
+) -> ProcessPlan:
+    """Return the plan with launch-time placeholders substituted throughout.
+
+    ``game_path`` is the game directory shadPS4 should boot -- the installation's
+    own ``CUSA03173`` folder, which is what the ``{game_path}`` placeholder in a
+    generated plan resolves to (bb-archipelago#177).
+    """
+
+    refuse_stale_plan(plan)
     logs = captured_process_logs(paths)
     return ProcessPlan(
         shad_build=plan.shad_build,
@@ -262,7 +292,9 @@ def resolve_process_plan(plan: ProcessPlan, paths: ClientRuntimePaths | None) ->
             ProcessSpec(
                 name=spec.name,
                 executable=spec.executable,
-                arguments=substitute_plan_arguments(spec.arguments, paths),
+                arguments=substitute_plan_arguments(
+                    spec.arguments, paths, game_path=game_path
+                ),
                 working_directory=spec.working_directory,
                 expected_sha256=spec.expected_sha256,
                 log_path=logs.get(spec.name, spec.log_path),
@@ -572,6 +604,9 @@ class LauncherWorkflow:
         request = _request_identity(settings.ap_request)
         plan = load_process_plan(settings.process_plan)
         validate_processes(plan.processes)
+        # Before the overlay is touched: a stale bare-game-ID plan (#177) would
+        # cost the player a full build only to die inside shadPS4.
+        refuse_stale_plan(plan)
         # Before the overlay is touched: a bridge that cannot arm must not
         # cost the player a build (bb-archipelago#137).
         require_no_stray_cheat_engine(plan.processes, self.process_running)
@@ -706,7 +741,7 @@ class LauncherWorkflow:
             shad_log=settings.shad_log or default_shad_log(),
         )
         progress("Starting shadPS4, bridge, and AP client...")
-        resolved = resolve_process_plan(plan, paths)
+        resolved = resolve_process_plan(plan, paths, game_path=install.base)
         # Re-checked at the spawn point: Cheat Engine may have been opened
         # while the seed was building.
         require_no_stray_cheat_engine(resolved.processes, self.process_running)
@@ -761,7 +796,7 @@ class LauncherWorkflow:
         validate_processes(plan.processes)
         # Resolve before any mutation: a plan that still carries client
         # placeholders must fail closed with the overlay untouched.
-        resolved = resolve_process_plan(plan, None)
+        resolved = resolve_process_plan(plan, None, game_path=install.base)
         require_no_stray_cheat_engine(resolved.processes, self.process_running)
         progress("Moving the launcher-owned overlay out of the search path...")
         disabled = deactivate_overlay(install, process_is_running=process_is_running)
