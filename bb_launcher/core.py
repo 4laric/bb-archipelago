@@ -20,12 +20,13 @@ import shutil
 import struct
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
-from typing import Any, Callable, Iterable, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence, TextIO
 
 
 SERIAL = "CUSA03173"
@@ -1453,6 +1454,78 @@ def _open_process_log(path: Path) -> Any:
     return handle
 
 
+# Attribute under which a launched child carries the daemon thread that tees its
+# output.  ``wait_for_early_exit`` joins it before reading the tail so the file
+# is complete even when the child dies immediately (bb-archipelago#179).
+_OUTPUT_PUMP_ATTR = "_bb_output_pump"
+
+
+def _pump_output(source: Any, log_handle: Any, console: TextIO | None) -> None:
+    """Tee each line the child writes to BOTH the console and the log file.
+
+    Windows ``Popen`` cannot tee natively, so the launcher owns the split: the
+    child speaks over a pipe, and this pump duplicates every line onto the live
+    console window (so the player sees the client#422 banner and diagnostics)
+    and onto ``log_handle`` (so a startup refusal survives the window closing,
+    preserving bb-archipelago#171).  The pump owns ``log_handle`` and closes it
+    when the pipe reaches EOF, so the tail-reader opens its own handle only
+    after the pump has flushed and released the file.
+    """
+
+    try:
+        for line in source:
+            data = line if isinstance(line, bytes) else line.encode("utf-8", "replace")
+            try:
+                log_handle.write(data)
+                log_handle.flush()
+            except (OSError, ValueError):
+                pass
+            if console is not None:
+                text = line if isinstance(line, str) else line.decode("utf-8", "replace")
+                try:
+                    console.write(text)
+                    console.flush()
+                except (OSError, ValueError):
+                    pass
+    finally:
+        try:
+            source.close()
+        except Exception:
+            pass
+        try:
+            log_handle.close()
+        except Exception:
+            pass
+
+
+def _start_output_pump(child: Any, log_handle: Any, console: TextIO | None) -> Any:
+    """Spawn a daemon pump for ``child`` and record it for later joining."""
+
+    source = getattr(child, "stdout", None)
+    if source is None:
+        # Nothing to read (e.g. an injected fake process with no pipe): the
+        # caller still owns the log handle, so close it rather than leak it.
+        log_handle.close()
+        return None
+    thread = threading.Thread(
+        target=_pump_output,
+        args=(source, log_handle, console),
+        name="bb-launcher-output-pump",
+        daemon=True,
+    )
+    setattr(child, _OUTPUT_PUMP_ATTR, thread)
+    thread.start()
+    return thread
+
+
+def _join_output_pump(child: Any, *, timeout: float = 5.0) -> None:
+    """Drain a child's pump so its log file is complete before the tail read."""
+
+    thread = getattr(child, _OUTPUT_PUMP_ATTR, None)
+    if thread is not None:
+        thread.join(timeout)
+
+
 def read_session_log_tail(path: Path | None, *, limit: int = LOG_TAIL_BYTES) -> str:
     """Return this session's output from a process log, bounded to `limit`."""
 
@@ -1506,6 +1579,9 @@ def wait_for_early_exit(
             spec = processes[index] if index < len(processes) else None
             name = spec.name if spec is not None else f"process {index + 1}"
             log_path = spec.log_path if spec is not None else None
+            # Drain the tee so everything the child wrote before dying has been
+            # flushed to the file and the handle released before we read it.
+            _join_output_pump(process)
             return EarlyExit(name, code, log_path, read_session_log_tail(log_path))
         if monotonic() >= deadline:
             return None
@@ -1516,37 +1592,57 @@ def launch_processes(
     processes: Sequence[ProcessSpec],
     *,
     popen: Callable[..., Any] = subprocess.Popen,
+    console: TextIO | None = None,
 ) -> list[Any]:
-    """Start configured components as siblings inheriting one privilege token."""
+    """Start configured components as siblings inheriting one privilege token.
 
+    When a component sets ``log_path`` its output is *teed* rather than
+    redirected: the child speaks over a pipe and a daemon pump duplicates every
+    line onto ``console`` (the live window; ``sys.stdout`` by default) and into
+    the session log.  The player still sees live output while the file keeps the
+    evidence a startup refusal needs after the window closes
+    (bb-archipelago#179, preserving #171).  With no ``log_path`` the child
+    inherits the console exactly as before -- no pipe, no pump, no file.
+    """
+
+    if console is None:
+        console = sys.stdout
     validated = validate_processes(processes)
     started: list[Any] = []
     for spec in validated:
         command = [str(spec.executable), *[str(argument) for argument in spec.arguments]]
-        redirect = None
+        log_handle = None
         try:
-            if spec.log_path is not None:
-                redirect = _open_process_log(spec.log_path)
             extra: dict[str, Any] = {}
-            if redirect is not None:
-                extra = {"stdout": redirect, "stderr": subprocess.STDOUT}
-            started.append(
-                popen(
-                    command,
-                    cwd=(str(spec.working_directory) if spec.working_directory else None),
-                    **extra,
-                )
+            if spec.log_path is not None:
+                log_handle = _open_process_log(spec.log_path)
+                # A pipe (not the file) so the pump can tee; line-buffered text
+                # so each line is teed as the child emits it.
+                extra = {
+                    "stdout": subprocess.PIPE,
+                    "stderr": subprocess.STDOUT,
+                    "text": True,
+                    "encoding": "utf-8",
+                    "errors": "replace",
+                    "bufsize": 1,
+                }
+            child = popen(
+                command,
+                cwd=(str(spec.working_directory) if spec.working_directory else None),
+                **extra,
             )
         except OSError as exc:
+            if log_handle is not None:
+                log_handle.close()
             running = ", ".join(item.name for item in validated[:len(started)]) or "none"
             raise LaunchError(
                 f"could not start {spec.name}: {exc}. Already started: {running}"
             ) from exc
-        finally:
-            # The child holds its own duplicate of the handle; the parent must
-            # not keep the log file open for the life of the session.
-            if redirect is not None:
-                redirect.close()
+        if log_handle is not None:
+            # Ownership of the log handle passes to the pump, which closes it at
+            # EOF; nothing else may close it here.
+            _start_output_pump(child, log_handle, console)
+        started.append(child)
     return started
 
 

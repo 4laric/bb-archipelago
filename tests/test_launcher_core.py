@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import struct
 import sys
@@ -442,6 +443,68 @@ class LauncherCoreTests(unittest.TestCase):
         self.assertIn("exit code 1", report)
         self.assertIn(str(log), report)
         self.assertIn(message, log.read_text(encoding="utf-8"))
+
+    def test_launch_tees_child_output_to_both_console_and_log(self):
+        # bb-archipelago#179: output must be TEE'd, not redirected -- a live
+        # console window AND the session log both receive the child's lines, so
+        # the client#422 banner is visible again instead of a blank window.
+        line = "client#422 banner: starting up"
+        log = self.root / "session" / "client.log"
+        console = io.StringIO()
+        spec = ProcessSpec(
+            "AP client",
+            Path(sys.executable),
+            ("-c", f"import sys; sys.stdout.write({line!r} + chr(10))"),
+            log_path=log,
+        )
+        started = launch_processes([spec], console=console)
+        wait_for_early_exit(started, [spec], timeout=30.0, interval=0.05)
+        self.assertIn(line, console.getvalue())
+        self.assertIn(line, log.read_text(encoding="utf-8"))
+
+    def test_immediate_exit_still_tees_its_tail_to_console_and_log(self):
+        # The tee must not regress #171: a child that dies at once still leaves
+        # its refusal in the file for EarlyExit, and now also on the console.
+        message = "startup refusal: bad server address"
+        log = self.root / "session" / "client.log"
+        console = io.StringIO()
+        spec = ProcessSpec(
+            "AP client",
+            Path(sys.executable),
+            (
+                "-c",
+                f"import sys; sys.stderr.write({message!r} + chr(10)); sys.exit(1)",
+            ),
+            log_path=log,
+        )
+        started = launch_processes([spec], console=console)
+        early = wait_for_early_exit(started, [spec], timeout=30.0, interval=0.05)
+        self.assertIsInstance(early, EarlyExit)
+        self.assertEqual(early.returncode, 1)
+        self.assertIn(message, early.log_tail)
+        self.assertIn(message, log.read_text(encoding="utf-8"))
+        self.assertIn(message, console.getvalue())
+
+    def test_launch_without_log_path_inherits_console_and_starts_no_pump(self):
+        # With no log_path the child inherits the console exactly as before:
+        # no pipe kwargs, no pump thread, nothing teed into the console sink.
+        executable = self.root / "client.exe"
+        executable.write_bytes(b"exe")
+        calls: list[dict] = []
+
+        class Started:
+            pass
+
+        def fake_popen(command, cwd=None, **kwargs):
+            calls.append(kwargs)
+            return Started()
+
+        console = io.StringIO()
+        spec = ProcessSpec("AP client", executable)
+        started = launch_processes([spec], popen=fake_popen, console=console)
+        self.assertEqual(calls, [{}])
+        self.assertEqual(console.getvalue(), "")
+        self.assertFalse(hasattr(started[0], "_bb_output_pump"))
 
     def test_a_shadps4_boot_crash_names_shadps4_and_carries_its_output(self):
         # bb-archipelago#175 motivating case: shadPS4, not the client, exits 1
