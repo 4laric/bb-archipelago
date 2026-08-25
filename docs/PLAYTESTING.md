@@ -70,6 +70,12 @@ a running randomized seed, and tells you exactly what to report back.
 
 ### What normal delivery looks like
 
+**As of playtest.9, items are delivered natively, in-process.** The client
+writes them through the game itself; Cheat Engine is no longer part of item
+delivery. The launcher still runs as **administrator** (the client needs it to
+attach to shadPS4 — without it you get an `OpenProcess ... error 5` line and
+nothing delivers).
+
 - **Consumables** (vials, bullets, Molotovs, pebbles) arrive **instantly** and
   stack onto piles you already have — if you were full, they overflow into
   storage. Nothing appearing on screen does not mean nothing arrived.
@@ -89,6 +95,22 @@ a running randomized seed, and tells you exactly what to report back.
 - **If something looks wrong** — an item that did not arrive, a pickup that
   gave the wrong thing, a crash — stop playing and report it (below). Do not
   try to fix it by reloading a save.
+
+### If the client refuses to deliver ("unrecognized game build")
+
+Native delivery is deliberately strict: before touching game memory it
+validates your exact game executable, and if yours differs from the build it
+was validated against it **stops with a clear message instead of guessing**.
+That refusal is safe — nothing was written — and the message is the report:
+copy the console text and send it to your host.
+
+Do **not** work around it by restarting with `--delivery=ce-bridge` unless your
+host explicitly tells you to. The CE bridge requires the Cheat Engine table
+loaded and armed, and it has a known defect: after a stall or a game
+crash/relaunch it can mark a whole backlog of items as delivered when none of
+them actually arrived, and those items are then lost for the run
+(bb-archipelago#163). If you do end up on the CE bridge, treat any burst of
+`Acknowledged AP item` lines as suspect: check your inventory and report.
 
 ## What to play (the slice-1 checklist)
 
@@ -185,6 +207,8 @@ tell your host what you're running when you report back.
 | Client says `a full error is available elsewhere` | Almost always a wrong server address or port. Check the server field against what your host sent. |
 | `shadPS4.exe is not running or cannot be opened` | Something started shadPS4 as administrator (for example the third-party "BBLauncher" tool). Close it, then run BloodborneAPLauncher as administrator too. |
 | A `PARKED AP item` line in the client console | An item delivery failed safely; later items keep arriving. Send the console text to your host — there is a tool to confirm or redeliver it. |
+| The client stops with a message about an unrecognized or unvalidated game build | Native delivery refused to touch a build it was not validated against. Safe; nothing was written. Send the exact console text to your host — do not switch to `--delivery=ce-bridge` on your own. |
+| `OpenProcess` failing with `error 5` in the client console | The client is not running as administrator. Close everything and start the launcher as administrator. |
 | Doctor says the installed gameparam was `already modified` | Your game files were changed by something else. Restore a clean 01.09 patch before playing. |
 | Geometry stretches into huge spikes across the screen | A known shadPS4 emulator bug ("vertex explosions", shadPS4 issue #1232), not the randomizer. Enabling **readbacks** in the shadPS4 settings usually fixes it (small performance cost); tell your host if you see it. |
 
@@ -220,8 +244,13 @@ Windows launcher package — launcher, native tools, CE table, and the
 `BloodborneAPLauncher-win-x64.zip` plus `bloodborne.apworld` to a GitHub
 prerelease. Verify the two assets appeared before posting the link.
 
-**The suppression binder is NOT in that zip** — it is licensed-game-derived
-and never built in CI. Send playtesters `gameparam.parambnd.dcx` and
-`build-manifest.json` from your local `work\vanilla-suppression-build\`
-alongside the release link (or ship a full local `build.ps1 -Package` zip,
-which bundles them). The launcher Doctor checks both halves either way.
+**The suppression binder is NOT in that zip.** Since #164, CI rebuilds it
+from the committed inputs bundle on every push — the `suppression binder from
+the inputs bundle` job uploads a `vanilla-suppression-binder` artifact whose
+plan is held to the world's pin and whose bytes are reproduced across two
+builds, so it is safe to hand out. Grab that artifact (it is
+licensed-game-derived: send it to playtesters directly, never attach it to the
+public release), or build locally with `build.ps1 -Package` as before — if you
+do build locally, delete `work\vanilla-suppression-build` first, because a
+stale cached binder is silently reused when its manifest still exists. The
+launcher Doctor checks both halves either way.
