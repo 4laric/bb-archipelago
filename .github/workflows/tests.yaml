@@ -35,6 +35,63 @@ jobs:
           -p:SoulsFormatsNextRoot=$PWD\_soulsformats
           -v:minimal
 
+  # The binder the launcher validates, rebuilt from the repo alone (#138). The
+  # world pins SUPPRESSION_PLAN_SHA256 into every seed and the launcher refuses
+  # a binder whose manifest plan_sha256 disagrees, so this proves the repo can
+  # still produce a binder that satisfies the seeds it generates. Built twice:
+  # a binder CI cannot reproduce byte-for-byte is a binder nobody can check.
+  suppression-binder:
+    name: suppression binder from the inputs bundle
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Fetch the pinned SoulsFormatsNEXT writer dependency
+        shell: pwsh
+        run: |
+          git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
+          git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+      - name: Extract the inputs bundle
+        shell: pwsh
+        run: |
+          python tools/bb_inputs.py --verify
+          python tools/bb_inputs.py --extract work/inputs
+      - name: Build the binder from bundled inputs, twice
+        shell: pwsh
+        run: |
+          foreach ($n in 1, 2) {
+            ./tools/build_vanilla_suppression.ps1 `
+              -GameParam work/inputs/parambnd/gameparam.parambnd.dcx `
+              -Paramdef work/inputs/parambnd/paramdef.paramdefbnd.dcx `
+              -OutputRoot "work/binder$n" `
+              -SoulsFormatsNextRoot $PWD\_soulsformats `
+              -Apply
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+      - name: The plan matches the pin the world ships
+        shell: pwsh
+        run: python tools/check_suppression_plan_pin.py --manifest work/binder1/build-manifest.json
+      - name: The two builds agree byte-for-byte
+        shell: pwsh
+        run: |
+          $a = (Get-Content work/binder1/build-manifest.json | ConvertFrom-Json).output_gameparam_sha256
+          $b = (Get-Content work/binder2/build-manifest.json | ConvertFrom-Json).output_gameparam_sha256
+          if ($a -ne $b) { Write-Error "binder output is not reproducible: $a vs $b"; exit 1 }
+          Write-Host "binder $a reproduced"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vanilla-suppression-binder
+          path: |
+            work/binder1/gameparam.parambnd.dcx
+            work/binder1/build-manifest.json
+            work/binder1/suppression-plan.json
+          if-no-files-found: error
+
   launcher-package:
     name: Windows launcher package
     runs-on: windows-latest

@@ -1,6 +1,6 @@
 # The inputs bundle
 
-`research/bb_inputs.db` — 18.7 MB, 35 files, sqlite with zlib blobs.
+`research/bb_inputs.db` — 20.1 MB, 37 files, sqlite with zlib blobs.
 
 ## Why it exists
 
@@ -43,6 +43,7 @@ python tools/bb_inputs.py --build <path to the extracted game>
 | `params/` | 4 | `ItemLotParam`, `NpcParam`, `EquipParamGoods`, `SpEffectParam` |
 | `event/` | 27 | decompiled `*.emevd.dcx.js` |
 | `mined/` | 4 | `msbb_miner` output — MSB treasures, enemies, regions, failures |
+| `parambnd/` | 2 | patch-layer `gameparam.parambnd.dcx` + `paramdef.paramdefbnd.dcx` — the suppression binder builds from exactly these bytes, so CI can rebuild the binder and hold its plan to the pin (#138) |
 
 **Only inputs a committed tool actually reads.** `--check-coverage` scans
 `tools/` for every `*.csv` it names and fails if the bundle is missing one, so
