@@ -37,7 +37,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .client_config import GAME_PATH_PLACEHOLDER
+from .client_config import CLIENT_LOG_PLACEHOLDER, GAME_PATH_PLACEHOLDER
 from .core import ValidationError, _write_json_atomic, sha256_file
 from .workflow import PROCESS_PLAN_FORMAT, load_process_plan
 
@@ -50,6 +50,10 @@ DEFAULT_SHAD_BUILD = "0.18.0"
 GAME_PATH_ARGUMENT = "{" + GAME_PATH_PLACEHOLDER + "}"
 # 38281 is MultiServer's default port; 38282 only ever existed here.
 DEFAULT_SERVER = "localhost:38281"
+# Where the AP client writes its own session log. Resolved at launch to this
+# session's ``client.log``, the same file the early-exit dialog reads
+# (bb-archipelago#181).
+CLIENT_LOG_ARGUMENT = "{" + CLIENT_LOG_PLACEHOLDER + "}"
 
 
 def _pinned_executable(raw: Path | str, label: str) -> dict[str, Any]:
@@ -93,7 +97,20 @@ def generate_process_plan(
             "name": "AP client",
             "executable": str(client["path"]),
             "sha256": client["sha256"],
-            "arguments": [server, slot, "{runtime_config}", "{ledger}", "--assume-correct-save"],
+            "arguments": [
+                server,
+                slot,
+                "{runtime_config}",
+                "{ledger}",
+                "--assume-correct-save",
+                # The client tees its own output to the console AND this file
+                # (clients#425): the console stays live for the player while
+                # client.log keeps the evidence a startup refusal needs. The
+                # launcher does not redirect this entry -- see
+                # `resolve_process_plan` (bb-archipelago#181).
+                "--log-file",
+                CLIENT_LOG_ARGUMENT,
+            ],
         }
     )
     return {

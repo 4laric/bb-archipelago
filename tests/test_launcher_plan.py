@@ -19,7 +19,7 @@ from bb_launcher.plan import (
     generate_process_plan,
     write_process_plan,
 )
-from bb_launcher.client_config import substitute_plan_arguments
+from bb_launcher.client_config import session_paths, substitute_plan_arguments
 from bb_launcher.workflow import (
     PROCESS_PLAN_FORMAT,
     load_process_plan,
@@ -82,9 +82,92 @@ class PlanGenerationTests(unittest.TestCase):
         self.assertIn("{runtime_config}", client_args)
         self.assertIn("{ledger}", client_args)
         self.assertIn("--assume-correct-save", client_args)
-        self.assertEqual(client_args[2:], ["{runtime_config}", "{ledger}", "--assume-correct-save"])
+        self.assertEqual(
+            client_args[2:],
+            [
+                "{runtime_config}",
+                "{ledger}",
+                "--assume-correct-save",
+                "--log-file",
+                "{client_log}",
+            ],
+        )
         loaded = load_process_plan(write_process_plan(self.root / "plan.json", document))
         self.assertEqual([spec.name for spec in loaded.processes], names)
+
+    def test_the_client_is_told_where_to_write_its_own_log(self) -> None:
+        # bb-archipelago#181: the client tees its output to the console AND to
+        # client.log itself (clients#425), so the plan has to name the file.
+        # The plan stays portable: the path is the {client_log} placeholder,
+        # resolved at launch to this session's own directory.
+        document = generate_process_plan(
+            shad_executable=self.shad,
+            client_executable=self.client,
+            slot="Alice",
+            runtime_build="r1",
+        )
+        by_name = {record["name"]: record for record in document["processes"]}
+        client_args = by_name["AP client"]["arguments"]
+        self.assertIn("--log-file", client_args)
+        self.assertEqual(
+            client_args[client_args.index("--log-file") + 1],
+            "{client_log}",
+            "the flag must carry the placeholder, not a machine-specific path",
+        )
+        # No per-machine path leaked into the document.
+        self.assertNotIn("client.log", json.dumps(document))
+        # shadPS4 is not given the flag: it has no tee of its own and keeps the
+        # launcher's capture.
+        self.assertNotIn("--log-file", by_name["shadPS4"]["arguments"])
+
+    def test_the_client_log_placeholder_resolves_to_this_sessions_file(self) -> None:
+        paths = session_paths(self.root / "state", seed="seed-1", slot="Alice")
+        resolved = substitute_plan_arguments(
+            ("--log-file", "{client_log}"), paths, game_path=self.root
+        )
+        self.assertEqual(resolved, ("--log-file", str(paths.client_log)))
+        self.assertEqual(paths.client_log.name, "client.log")
+        self.assertEqual(paths.client_log.parent, paths.session)
+
+    def test_resolve_leaves_the_client_to_write_its_own_log_but_not_shadps4(
+        self,
+    ) -> None:
+        # bb-archipelago#181: both children still NAME a session log -- that is
+        # what the early-exit dialog reads -- but only shadPS4 has it written by
+        # the launcher.  The client is marked self_logging, so launch_processes
+        # neither pipes nor pumps it and its console stays real.
+        plan = load_process_plan(
+            write_process_plan(
+                self.root / "plan.json",
+                generate_process_plan(
+                    shad_executable=self.shad,
+                    client_executable=self.client,
+                    slot="Alice",
+                    runtime_build="r1",
+                ),
+            )
+        )
+        paths = session_paths(self.root / "state", seed="seed-1", slot="Alice")
+        resolved = resolve_process_plan(plan, paths, game_path=self.root / "game")
+        by_name = {spec.name: spec for spec in resolved.processes}
+        client = by_name["AP client"]
+        shad = by_name["shadPS4"]
+        self.assertTrue(client.self_logging)
+        self.assertFalse(shad.self_logging)
+        self.assertEqual(client.log_path, paths.client_log)
+        self.assertEqual(shad.log_path, paths.shad_process_log)
+        self.assertNotEqual(client.log_path, shad.log_path)
+        # And the client was actually told where to write it.
+        self.assertIn("--log-file", client.arguments)
+        self.assertIn(str(paths.client_log), client.arguments)
+
+    def test_a_vanilla_launch_cannot_satisfy_the_client_log_placeholder(self) -> None:
+        # With no AP session there is no session directory to name, so the
+        # placeholder fails closed rather than reaching the client as a literal.
+        with self.assertRaises(ValidationError):
+            substitute_plan_arguments(
+                ("--log-file", "{client_log}"), None, game_path=self.root
+            )
 
     def test_shadps4_is_launched_by_path_not_by_bare_game_id(self) -> None:
         # bb-archipelago#177, the motivating case: oz's launcher game-folder

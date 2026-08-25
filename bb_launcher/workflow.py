@@ -281,6 +281,13 @@ def resolve_process_plan(
     ``game_path`` is the game directory shadPS4 should boot -- the installation's
     own ``CUSA03173`` folder, which is what the ``{game_path}`` placeholder in a
     generated plan resolves to (bb-archipelago#177).
+
+    Both children get a session ``log_path``, because that names the file the
+    early-exit dialog reads.  Only shadPS4 gets it *written by the launcher*:
+    the AP client is marked ``self_logging`` because a generated plan hands it
+    ``--log-file {client_log}`` and it tees console and file itself
+    (clients#425).  So the client keeps a real inherited console and the tail
+    reader keeps its file, with no pipe between them.
     """
 
     refuse_stale_plan(plan)
@@ -298,6 +305,12 @@ def resolve_process_plan(
                 working_directory=spec.working_directory,
                 expected_sha256=spec.expected_sha256,
                 log_path=logs.get(spec.name, spec.log_path),
+                # The AP client writes its session log itself (clients#425), so
+                # the launcher must not redirect or pump it -- doing so would
+                # take away the real console the client's own tee exists to
+                # keep. shadPS4 has no such tee and keeps the launcher's
+                # capture (bb-archipelago#175/#179).
+                self_logging=(spec.name == CLIENT_PROCESS_NAME),
             )
             for spec in plan.processes
         ),

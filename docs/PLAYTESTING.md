@@ -70,7 +70,9 @@ a running randomized seed, and tells you exactly what to report back.
    otherwise.
 3. Play. Pickups you collect are sent to Archipelago automatically, and items
    other players find for you arrive in your inventory automatically. The
-   client's console window says what arrived.
+   client's console window says what arrived, live, as it happens — and every
+   line it shows is also written to `client.log` for you to send on later, so
+   watching the console costs you nothing.
 
 ### What normal delivery looks like
 
@@ -138,12 +140,14 @@ In the launcher, click **Open Diagnostics** — it opens the folder with your
 session files. Send your host:
 
 1. **`ledger.json`** from the current session folder (`sessions\<long-hash>\`).
-2. **`client.log`** from the same folder. The launcher now appends everything
-   the AP client prints to this file, one `=== SESSION START ... ===` block per
-   launch, so a client that dies before you can read its console still leaves
-   its message behind. If any component stops right after launching, the
-   launcher also shows you that message in a dialog, titled with the name of
-   the thing that stopped.
+2. **`client.log`** from the same folder. The client prints everything to two
+   places at once: its console window, live, as it happens — and this file, one
+   `=== SESSION START ... ===` block per launch. So the console is the thing to
+   watch while you play, and this file is the thing to send afterwards; a
+   client that dies before you can read its console still leaves its message
+   here. If any component stops right after launching, the launcher also shows
+   you that message in a dialog, titled with the name of the thing that
+   stopped.
 3. **`shadps4.log`** from the same folder, if the emulator was the thing that
    quit (optional otherwise). It captures shadPS4's own output the same way,
    which is what answers "did a mod crash the emulator at boot?".

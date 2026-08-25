@@ -506,6 +506,77 @@ class LauncherCoreTests(unittest.TestCase):
         self.assertEqual(console.getvalue(), "")
         self.assertFalse(hasattr(started[0], "_bb_output_pump"))
 
+    def test_a_self_logging_client_is_neither_piped_nor_pumped(self):
+        # bb-archipelago#181: the client writes log_path ITSELF (clients#425),
+        # so the launcher must hand it the console untouched -- no pipe kwargs,
+        # no pump thread, and no launcher-written header.  log_path stays set
+        # because it still names the file the early-exit dialog reads.
+        executable = self.root / "client.exe"
+        executable.write_bytes(b"exe")
+        log = self.root / "session" / "client.log"
+        calls: list[dict] = []
+
+        class Started:
+            pass
+
+        def fake_popen(command, cwd=None, **kwargs):
+            calls.append(kwargs)
+            return Started()
+
+        console = io.StringIO()
+        spec = ProcessSpec("AP client", executable, log_path=log, self_logging=True)
+        started = launch_processes([spec], popen=fake_popen, console=console)
+        self.assertEqual(calls, [{}], "a self-logging child must inherit the console")
+        self.assertFalse(hasattr(started[0], "_bb_output_pump"))
+        self.assertEqual(console.getvalue(), "")
+        self.assertFalse(log.exists(), "the launcher must not open the child's own log")
+
+    def test_a_self_logging_client_that_dies_reports_the_log_it_wrote_itself(self):
+        # The #171 early-exit dialog is unchanged in shape: read_session_log_tail
+        # slices on the last header and reports the refusal.  The only thing that
+        # moved is WHO wrote the file -- here a stub standing in for the client,
+        # writing its own header and refusal exactly as clients#425 does.
+        message = "OpenProcess error 5: run the launcher as administrator"
+        log = self.root / "session" / "client.log"
+        log.parent.mkdir(parents=True, exist_ok=True)
+        # A previous session's output is already in the file: the tail must not
+        # report it.
+        log.write_text(
+            f"\n{SESSION_HEADER_PREFIX} 2026-08-24 10:00:00 UTC ===\nan older run\n",
+            encoding="utf-8",
+        )
+        script = (
+            "import sys\n"
+            "path = sys.argv[1]\n"
+            "with open(path, 'a', encoding='utf-8') as handle:\n"
+            f"    handle.write('\\n{SESSION_HEADER_PREFIX} 2026-08-25 11:00:00 UTC ===\\n')\n"
+            f"    handle.write({message!r} + chr(10))\n"
+            "sys.exit(1)\n"
+        )
+        specs = [
+            ProcessSpec(
+                "AP client",
+                Path(sys.executable),
+                ("-c", script, str(log)),
+                log_path=log,
+                self_logging=True,
+            )
+        ]
+        started = launch_processes(specs)
+        early = wait_for_early_exit(started, specs, timeout=30.0, interval=0.05)
+        self.assertIsInstance(early, EarlyExit)
+        self.assertEqual(early.name, "AP client")
+        self.assertEqual(early.returncode, 1)
+        self.assertEqual(early.log_path, log)
+        self.assertIn(message, early.log_tail)
+        self.assertNotIn("an older run", early.log_tail)
+        report = early.describe()
+        self.assertIn(message, report)
+        self.assertIn(str(log), report)
+        # Exactly the two headers that were written: the launcher added none.
+        contents = log.read_text(encoding="utf-8")
+        self.assertEqual(contents.count(SESSION_HEADER_PREFIX), 2)
+
     def test_a_shadps4_boot_crash_names_shadps4_and_carries_its_output(self):
         # bb-archipelago#175 motivating case: shadPS4, not the client, exits 1
         # right after launch.  The report must name shadPS4 and carry what the
