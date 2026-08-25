@@ -33,3 +33,6 @@ __pycache__/
 # Local machine configuration.
 .env
 *.user.toml
+
+# Issue #146: the CLI reused-tag journal, per machine.
+/.bb-native-grant-journal.json

@@ -215,13 +215,22 @@ class GrantSession:
             self._disarm_best_effort()
             raise
 
-    def _disarm_best_effort(self) -> None:
+    def disarm_best_effort(self) -> None:
+        """Disarm a committed request, if one is in flight. Never raises.
+
+        Public because the CLI's poll loop needs it too (issue #146 item 5): a
+        Ctrl+C in the loop's ``time.sleep`` lands outside :meth:`poll`, so the
+        handler inside `poll` never sees it and the cell stayed armed.
+        """
         if not self._active:
             return
         try:
             self.runtime.clear_request()
         except Exception:  # pragma: no cover - the backstop is the attach gate
             pass
+
+    #: Retained name; :meth:`disarm_best_effort` is the same handler.
+    _disarm_best_effort = disarm_best_effort
 
     def _poll_active(self) -> str:
         if not self.runtime.native_done():

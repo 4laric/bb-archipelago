@@ -12,11 +12,16 @@ docs/SPEC-client-without-cheat-engine.md.
 
 from __future__ import annotations
 
+import argparse
+import contextlib
+import io
 import json
 import struct
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -36,7 +41,11 @@ from bb_native_delivery.delivery import (  # noqa: E402
     StackView,
     TERMINAL,
 )
+from bb_native_delivery import cli  # noqa: E402
 from bb_native_delivery.descriptor import (  # noqa: E402
+    VALIDATED_EQUIPMENT_ROWS,
+    describe_validated_descriptor,
+    is_validated_descriptor,
     DESCRIPTOR_SIZE,
     STAGED_SIZE,
     DescriptorError,
@@ -1103,3 +1112,151 @@ class InstallRoutingTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DescriptorAllowlistTests(unittest.TestCase):
+    """Issue #146: a hand-typed (raw, normalized) pair is not evidence."""
+
+    def test_the_validated_goods_canaries_are_derivable(self):
+        for goods_id in (0x4CE, 0x384, 0x3E8):
+            raw, normalized = goods_descriptor_ids(goods_id)
+            self.assertIn("category-4 goods",
+                          describe_validated_descriptor(raw, normalized))
+
+    def test_the_saw_spear_row_is_the_only_validated_equipment_row(self):
+        self.assertEqual([0x806C5660], sorted(VALIDATED_EQUIPMENT_ROWS))
+        self.assertIn("Saw Spear", describe_validated_descriptor(0x806C5660, 0x006C5660))
+
+    def test_the_torch_negative_canary_is_refused_by_exact_value(self):
+        with self.assertRaises(DescriptorError) as caught:
+            describe_validated_descriptor(0x8132B3A0, 0x0032B3A0)
+        message = str(caught.exception)
+        self.assertIn("Torch", message)
+        self.assertIn("RESEARCH-BASELINE.md", message)
+        self.assertIn("#146", message)
+
+    def test_the_rifle_spear_negative_canary_is_refused_by_exact_value(self):
+        with self.assertRaises(DescriptorError) as caught:
+            describe_validated_descriptor(0x80989680, 0xFFFFFFFF)
+        self.assertIn("Rifle Spear", str(caught.exception))
+
+    def test_an_excluded_raw_id_is_refused_whatever_it_is_paired_with(self):
+        # The exclusion is on the item, not on one typo of its normalized id.
+        with self.assertRaises(DescriptorError):
+            describe_validated_descriptor(0x8132B3A0, 0x0132B3A0)
+
+    def test_a_goods_pair_whose_ids_disagree_is_refused(self):
+        with self.assertRaises(DescriptorError) as caught:
+            describe_validated_descriptor(0xB00004CE, 0x400004CF)
+        self.assertIn("Missing evidence", str(caught.exception))
+
+    def test_a_goods_raw_with_a_non_goods_normalized_is_refused(self):
+        self.assertFalse(is_validated_descriptor(0xB00004CE, 0x000004CE))
+
+    def test_an_unseen_equipment_raw_is_refused_even_in_the_right_category(self):
+        # Category 0 alone is not a derivation: RESEARCH-BASELINE.md validates
+        # equipment descriptors one live dump at a time.
+        self.assertTrue(uses_persistent_source(0x80123456))
+        with self.assertRaises(DescriptorError) as caught:
+            describe_validated_descriptor(0x80123456, 0x00123456)
+        self.assertIn("allowlisted equipment row", str(caught.exception))
+
+    def test_the_invalid_item_info_record_is_refused(self):
+        self.assertFalse(is_validated_descriptor(0xF00003E8, 0x400003E8))
+
+
+class ReusedTagAndPollLoopTests(unittest.TestCase):
+    """Issues #146 items 4 and 5, both observed live on 2026-08-24."""
+
+    def _args(self, **overrides):
+        values = dict(expected_before=None, tag="pebble-1", force=False)
+        values.update(overrides)
+        return argparse.Namespace(**values)
+
+    def test_a_fresh_tag_without_a_baseline_warns_but_is_not_refused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Path(directory) / "journal.json"
+            self.assertEqual(0, cli._gate_reused_tag(self._args(), journal))
+
+    def test_a_reused_tag_without_a_baseline_is_refused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Path(directory) / "journal.json"
+            cli._record_tag(journal, "pebble-1", "armed")
+            self.assertEqual(1, cli._gate_reused_tag(self._args(), journal))
+
+    def test_a_reused_tag_passes_with_a_baseline_or_with_force(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Path(directory) / "journal.json"
+            cli._record_tag(journal, "pebble-1", "interrupted")
+            self.assertEqual(0, cli._gate_reused_tag(self._args(expected_before=3), journal))
+            self.assertEqual(0, cli._gate_reused_tag(self._args(force=True), journal))
+
+    def test_an_interrupt_in_the_sleep_between_polls_still_disarms(self):
+        # #145 wrapped poll() only; the live Ctrl+C landed in time.sleep.
+        runtime = FakeRuntime()
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=0))
+        for _ in range(MIN_ABSENT_POLLS):
+            session.poll()
+        self.assertTrue(runtime.pending, "the request is committed")
+
+        def interrupt(_seconds):
+            raise KeyboardInterrupt()
+
+        with self.assertRaises(KeyboardInterrupt):
+            cli._poll_to_completion(session, timeout=60.0, sleep=interrupt)
+        self.assertFalse(runtime.pending, "the cell was disarmed on the way out")
+
+    def test_a_terminal_status_leaves_the_loop_without_disarming_anything(self):
+        runtime = FakeRuntime({PEBBLE: StackView(4, True, 79, 0x2080_67C08)})
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=3))
+        self.assertEqual(0, cli._poll_to_completion(session, timeout=60.0, sleep=lambda _s: None))
+        self.assertEqual("recovered_complete", session.state.status)
+
+
+class Issue146AcceptanceTests(unittest.TestCase):
+    """The motivating case: the exact Torch command line from issue #146.
+
+    The failed live run waited 39 hydration polls and then armed, so the
+    acceptance criterion is that this refusal costs no polls and never attaches.
+    """
+
+    def test_the_torch_item10_command_is_refused_before_any_attach(self):
+        def explode(*_args, **_kwargs):
+            raise AssertionError("the Torch canary reached the guest process")
+
+        argv = [
+            "grant", "--pid", "4242", "--base", "0x56B0000",
+            "--raw", "0x8132B3A0", "--normalized", "0x0032B3A0",
+            "--quantity", "1", "--tag", "torch-item10", "--arm",
+        ]
+        output = io.StringIO()
+        with mock.patch.object(cli, "_attach", explode), \
+                contextlib.redirect_stdout(output), \
+                contextlib.redirect_stderr(io.StringIO()):
+            code = cli.main(argv)
+        self.assertEqual(1, code)
+        printed = output.getvalue()
+        self.assertIn("REFUSING TO GRANT", printed)
+        self.assertIn("Torch", printed)
+        self.assertIn("no guest memory was touched", printed)
+
+    def test_the_escape_hatch_arms_it_and_says_what_evidence_is_missing(self):
+        args = argparse.Namespace(raw=0x8132B3A0, normalized=0x0032B3A0,
+                                  unvalidated_descriptor=True)
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(0, cli._gate_descriptor(args))
+        printed = output.getvalue()
+        self.assertIn("--unvalidated-descriptor", printed)
+        self.assertIn("What evidence is missing", printed)
+        self.assertIn("Torch", printed)
+
+    def test_the_escape_hatch_is_off_by_default(self):
+        parsed = cli.build_parser().parse_args(
+            ["grant", "--pid", "1", "--raw", "0xB00004CE",
+             "--normalized", "0x400004CE", "--tag", "t"]
+        )
+        self.assertFalse(parsed.unvalidated_descriptor)
+        self.assertFalse(parsed.force)

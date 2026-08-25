@@ -9,6 +9,10 @@
         --normalized 0x400004CE --quantity 1 --tag manual --arm
     python -m tools.bb_native_delivery grant --pid 1234 ... --arm --clear-stale-request
 
+Only descriptors this project validated live can be armed (issue #146): a
+category-4 goods pair, or an allowlisted equipment row. Everything else is
+refused before the attach, --unvalidated-descriptor notwithstanding.
+
 ⚠️ UNTESTED AGAINST A LIVE GAME. This has never attached to shadPS4. Cheat
 Engine remains the supported delivery path; see docs/SPEC-client-without-cheat-engine.md.
 """
@@ -24,6 +28,7 @@ from pathlib import Path
 from . import payload
 from .contract import build_contract, contract_path, write_contract
 from .delivery import GrantCommand, GrantSession, SUCCESS, TERMINAL
+from .descriptor import DescriptorError, describe_validated_descriptor
 
 BANNER = (
     "bb_native_delivery is a DEVELOPER PROTOTYPE. It has never been run against "
@@ -155,9 +160,123 @@ def _cmd_install(args: argparse.Namespace) -> int:
     return 0
 
 
+DEFAULT_JOURNAL_NAME = ".bb-native-grant-journal.json"
+
+
+def _journal_path(args: argparse.Namespace) -> Path:
+    return Path(args.journal) if args.journal else _repo_root() / DEFAULT_JOURNAL_NAME
+
+
+def _read_journal(path: Path) -> dict:
+    """The tags this CLI has armed before. A missing or corrupt file is empty."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _record_tag(path: Path, tag: str, status: str) -> None:
+    """Best effort: an unwritable journal must not block a grant."""
+    journal = _read_journal(path)
+    entry = journal.get(tag) if isinstance(journal.get(tag), dict) else {}
+    entry["status"] = status
+    entry["armed_count"] = int(entry.get("armed_count", 0)) + (status == "armed")
+    journal[tag] = entry
+    try:
+        path.write_text(json.dumps(journal, indent=2, sort_keys=True), encoding="utf-8")
+    except OSError as exc:
+        print(f"warning: could not update the grant journal at {path}: {exc}")
+
+
+def _gate_descriptor(args: argparse.Namespace) -> int:
+    """Refuse an unvalidated (raw, normalized) pair BEFORE anything is queued.
+
+    Issue #146: the Torch negative canary executed on a live save because the
+    CLI armed whatever it was handed and only then waited for hydration -- 39
+    polls of waiting, and then a guest write. This gate runs before the attach,
+    so the refusal costs no polls and reaches no guest memory.
+    """
+    try:
+        derivation = describe_validated_descriptor(args.raw, args.normalized)
+    except DescriptorError as exc:
+        if args.unvalidated_descriptor:
+            print("\n*** --unvalidated-descriptor: ARMING A DESCRIPTOR NOTHING VALIDATES ***")
+            print("What evidence is missing:")
+            print(f"  {exc}")
+            print("Research only. Use a throwaway save; an invisible record is not "
+                  "removable from a save you care about.")
+            return 0
+        print(f"\nREFUSING TO GRANT: {exc}")
+        print("Nothing was queued and no guest memory was touched.")
+        return 1
+    print(f"descriptor allowlist: {derivation}")
+    return 0
+
+
+def _gate_reused_tag(args: argparse.Namespace, journal: Path) -> int:
+    """Warn on a baseline-free grant; refuse a reused tag without one.
+
+    Issue #146 item 4: an interrupted grant landed, and rerunning the same tag
+    without ``--expected-before`` granted it a second time -- the CLI samples a
+    live baseline when none is given, so a partial prior delivery is invisible
+    to it. A fresh tag stays frictionless; a tag this journal has already armed
+    is the case that cannot be ruled out.
+    """
+    if args.expected_before is not None:
+        return 0
+    print("warning: no --expected-before. The baseline is sampled live, so a prior "
+          "partial delivery of this tag cannot be detected from the numbers alone.")
+    entry = _read_journal(journal).get(args.tag)
+    if not entry:
+        return 0
+    if args.force:
+        print(f"--force: arming tag {args.tag!r} again anyway (journal says "
+              f"status={entry.get('status')!r}).")
+        return 0
+    print(f"\nREFUSING TO GRANT: tag {args.tag!r} was already armed by this CLI "
+          f"(journal {journal}, status={entry.get('status')!r}). A rerun without "
+          "--expected-before cannot rule out that the first attempt landed, and the "
+          "live reproduction in issue #146 double-granted exactly this way. Re-run "
+          "with --expected-before <count read from the inventory UI>, or a fresh "
+          "--tag, or --force if you have already ruled a prior delivery out.")
+    return 1
+
+
+def _poll_to_completion(session, timeout: float, sleep=time.sleep) -> int:
+    """The CLI's poll loop, with the disarm handler around the WHOLE loop.
+
+    Issue #146 item 5: #145 put the disarm inside :meth:`GrantSession.poll`, but
+    a Ctrl+C lands in the ``sleep`` between polls far more often than inside one,
+    and there it escaped the handler and left the cave armed.
+    """
+    deadline = time.monotonic() + timeout
+    try:
+        while time.monotonic() < deadline:
+            status = session.poll()
+            print(f"{status}: {session.state.detail}")
+            if status in TERMINAL:
+                return 0 if status in SUCCESS else 1
+            sleep(0.25)
+    except BaseException:
+        session.disarm_best_effort()
+        print("\ninterrupted: disarmed the native request cell before exiting.")
+        raise
+    print("timed out")
+    return 1
+
+
 def _cmd_grant(args: argparse.Namespace) -> int:
     from .guest import GuestRuntime
     from .process import StaleRequest
+
+    # Both gates are pre-queue and pre-attach: they must cost no hydration polls.
+    refused = _gate_descriptor(args)
+    if refused:
+        return refused
+    journal = _journal_path(args)
+    if args.arm and _gate_reused_tag(args, journal):
+        return 1
 
     memory, base = _attach(args, writable=args.arm)
     with memory:
@@ -170,6 +289,7 @@ def _cmd_grant(args: argparse.Namespace) -> int:
             print(f"\nREFUSING TO GRANT: {exc}")
             return 1
         session = GrantSession(runtime=GuestRuntime(memory, base))
+        _record_tag(journal, args.tag, "armed")
         session.submit(
             GrantCommand(
                 raw_id=args.raw,
@@ -180,15 +300,13 @@ def _cmd_grant(args: argparse.Namespace) -> int:
             ),
             manual_trigger=args.manual,
         )
-        deadline = time.monotonic() + args.timeout
-        while time.monotonic() < deadline:
-            status = session.poll()
-            print(f"{status}: {session.state.detail}")
-            if status in TERMINAL:
-                return 0 if status in SUCCESS else 1
-            time.sleep(0.25)
-        print("timed out")
-        return 1
+        try:
+            code = _poll_to_completion(session, args.timeout)
+        except BaseException:
+            _record_tag(journal, args.tag, "interrupted")
+            raise
+        _record_tag(journal, args.tag, session.state.status or "unknown")
+        return code
 
 
 def _hex_int(text: str) -> int:
@@ -232,6 +350,20 @@ def build_parser() -> argparse.ArgumentParser:
     grant.add_argument("--tag", required=True)
     grant.add_argument("--expected-before", type=int, default=None)
     grant.add_argument("--manual", action="store_true")
+    grant.add_argument(
+        "--unvalidated-descriptor", action="store_true",
+        help="research escape hatch (issue #146): arm a (raw, normalized) pair no live "
+             "dump validates. Loud, never the default, and prints what evidence is missing",
+    )
+    grant.add_argument(
+        "--force", action="store_true",
+        help="arm a tag this CLI already armed even without --expected-before "
+             "(issue #146); you are asserting no prior delivery landed",
+    )
+    grant.add_argument(
+        "--journal", default=None,
+        help=f"path to the reused-tag journal (default: repo root/{DEFAULT_JOURNAL_NAME})",
+    )
     grant.add_argument("--timeout", type=float, default=120.0)
     return parser
 
