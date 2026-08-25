@@ -281,8 +281,11 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         shad = [spec for spec in launched if spec.name == "shadPS4"][0]
         self.assertEqual(client.log_path, result.ledger.parent / "client.log")
         self.assertEqual(result.client_log, client.log_path)
-        # Only the client is captured; shadPS4 keeps its own logging.
-        self.assertIsNone(shad.log_path)
+        # Both generated children are captured into the same session folder,
+        # so an emulator boot crash carries evidence too (#175).
+        self.assertEqual(shad.log_path, result.ledger.parent / "shadps4.log")
+        self.assertEqual(result.shad_process_log, shad.log_path)
+        self.assertNotEqual(client.log_path, shad.log_path)
 
     def test_an_early_exit_is_watched_for_and_carried_on_the_result(self):
         early = EarlyExit("AP client", 1, Path("client.log"), "OpenProcess error 5")
@@ -875,6 +878,7 @@ class Result:
         self.client_config = Path("runtime-config.json")
         self.ledger = Path("ledger.json")
         self.client_log = Path("client.log")
+        self.shad_process_log = Path("shadps4.log")
         self.early_exit = None
         self.grants_bridge = False
         self.__dict__.update(values)
@@ -891,11 +895,29 @@ class LauncherUiEarlyExitTests(unittest.TestCase):
         )
         self.assertEqual([kind for kind, _title, _body in app.messagebox.calls], ["error"])
         _kind, title, body = app.messagebox.calls[0]
-        self.assertEqual(title, "Bloodborne AP client stopped")
+        self.assertEqual(title, "AP client stopped")
         self.assertIn(message, body)
         self.assertIn("exit code 1", body)
         self.assertIn(str(log), body)
         self.assertIn(f"Client log: {log}", app.log)
+
+    def test_a_shadps4_early_exit_names_shadps4_in_the_title_and_body(self):
+        # bb-archipelago#175: the dialog blamed the AP client whichever child
+        # died.  The title and body must name the process that exited.
+        message = "Fatal: failed to load mod file at boot"
+        log = Path("state") / "sessions" / "abc" / "shadps4.log"
+        app = FakeApp()
+        LauncherApp._finished(
+            app,
+            Result(early_exit=EarlyExit("shadPS4", 1, log, message), shad_process_log=log),
+        )
+        _kind, title, body = app.messagebox.calls[0]
+        self.assertEqual(title, "shadPS4 stopped")
+        self.assertTrue(body.startswith("shadPS4 exited with exit code 1"))
+        self.assertIn(message, body)
+        self.assertIn(str(log), body)
+        self.assertNotIn("AP client", body)
+        self.assertIn(f"shadPS4 log: {log}", app.log)
 
     def test_a_healthy_launch_still_reports_success_and_names_the_client_log(self):
         app = FakeApp()
@@ -905,3 +927,4 @@ class LauncherUiEarlyExitTests(unittest.TestCase):
             [("info", "Bloodborne AP started")],
         )
         self.assertIn("Client log: client.log", app.log)
+        self.assertIn("shadPS4 log: shadps4.log", app.log)

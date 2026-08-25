@@ -47,6 +47,11 @@ from .core import (
 # what "one AP session" means.
 SESSION_KEY_SEPARATOR = "\x1f"
 CLIENT_LOG_NAME = "client.log"
+# shadPS4's own captured stdout/stderr, beside the client's, so an emulator
+# boot crash carries evidence the way a client refusal does
+# (bb-archipelago#175).  Distinct from ``shad_log``, the emulator's internal
+# log file that the client config points at.
+SHAD_LOG_NAME = "shadps4.log"
 
 KNOWN_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root")
 _PLACEHOLDER_PATTERN = re.compile(r"\{([a-z_]+)\}")
@@ -63,6 +68,8 @@ class ClientRuntimePaths:
     # Where the AP client's own stdout/stderr is appended, beside the ledger,
     # so Open Diagnostics picks it up (bb-archipelago#171).
     client_log: Path
+    # Where shadPS4's own stdout/stderr is appended for this session.
+    shad_process_log: Path
 
 
 def default_state_root() -> Path:
@@ -92,6 +99,7 @@ def session_paths(state_root: Path | str, *, seed: str, slot: str) -> ClientRunt
         ledger=session / "ledger.json",
         bridge_root=root / "bridge",
         client_log=session / CLIENT_LOG_NAME,
+        shad_process_log=session / SHAD_LOG_NAME,
     )
 
 

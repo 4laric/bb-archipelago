@@ -892,15 +892,21 @@ class LauncherApp:
         client_log = getattr(result, "client_log", None)
         if client_log is not None:
             self._append_log(f"Client log: {client_log}")
+        shad_log = getattr(result, "shad_process_log", None)
+        if shad_log is not None:
+            self._append_log(f"shadPS4 log: {shad_log}")
         self._refresh_status()
         early_exit = getattr(result, "early_exit", None)
         if early_exit is not None:
             # The overlay is active but the component died at startup: report
             # what it said instead of the success popup (bb-archipelago#171).
+            # The title names the component that actually died -- a hardcoded
+            # client title blamed the client for a shadPS4 crash
+            # (bb-archipelago#175).
             report = early_exit.describe()
             self._append_log(f"EARLY EXIT: {report}")
             self.messagebox.showerror(
-                "Bloodborne AP client stopped",
+                f"{early_exit.name} stopped",
                 report,
                 parent=self.root,
             )

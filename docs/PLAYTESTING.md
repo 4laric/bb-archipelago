@@ -137,9 +137,13 @@ session files. Send your host:
 2. **`client.log`** from the same folder. The launcher now appends everything
    the AP client prints to this file, one `=== SESSION START ... ===` block per
    launch, so a client that dies before you can read its console still leaves
-   its message behind. If the client stops right after launching, the launcher
-   also shows you that message in a dialog.
-3. A plain-English list: what you picked up, where, and anything odd.
+   its message behind. If any component stops right after launching, the
+   launcher also shows you that message in a dialog, titled with the name of
+   the thing that stopped.
+3. **`shadps4.log`** from the same folder, if the emulator was the thing that
+   quit (optional otherwise). It captures shadPS4's own output the same way,
+   which is what answers "did a mod crash the emulator at boot?".
+4. A plain-English list: what you picked up, where, and anything odd.
 
 Screenshots of anything weird help. There is no wrong way to report — "I picked
 up the thing by the troll and nothing happened" is a useful report.

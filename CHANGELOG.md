@@ -8,6 +8,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **An early-exit dialog now names the component that actually stopped, and
+  shadPS4's output is captured too.** When shadPS4 quit immediately after
+  launch, the dialog was still titled "Bloodborne AP client stopped" and had no
+  log to show, because output capture was attached to the AP client alone. The
+  title and body now come from the process that exited ("shadPS4 stopped" /
+  "shadPS4 exited with exit code 1 immediately after launch."), and shadPS4's
+  stdout and stderr are appended to `shadps4.log` beside `client.log` in the
+  session folder, using the same per-launch `=== SESSION START ... ===` header
+  and bounded tail. An emulator boot crash -- for example a user mod that
+  shadPS4 refuses -- now carries its own evidence (#175).
+
 - **Mods that could never load are no longer reported as merged.** Mods
   normally download as one folder per mod with `dvdroot_ps4` inside; dropping
   those folders straight into `CUSA03173-mods-user` produced overlay paths
