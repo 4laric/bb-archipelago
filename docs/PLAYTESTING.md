@@ -134,7 +134,11 @@ In the launcher, click **Open Diagnostics** — it opens the folder with your
 session files. Send your host:
 
 1. **`ledger.json`** from the current session folder (`sessions\<long-hash>\`).
-2. The **AP client console text** — select all, copy, paste into a text file.
+2. **`client.log`** from the same folder. The launcher now appends everything
+   the AP client prints to this file, one `=== SESSION START ... ===` block per
+   launch, so a client that dies before you can read its console still leaves
+   its message behind. If the client stops right after launching, the launcher
+   also shows you that message in a dialog.
 3. A plain-English list: what you picked up, where, and anything odd.
 
 Screenshots of anything weird help. There is no wrong way to report — "I picked

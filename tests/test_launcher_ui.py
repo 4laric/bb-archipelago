@@ -13,9 +13,11 @@ from bb_launcher.core import (
     ConflictError,
     ValidationError,
 )
+from bb_launcher.core import EarlyExit
 from bb_launcher.plan import DEFAULT_SERVER
 from bb_launcher.ui import (
     FIELD_DEFINITIONS,
+    LauncherApp,
     default_field_values,
     derive_ap_request,
     derive_game_root_for_shad,
@@ -259,6 +261,54 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(toolchain.calls[0]["map_studio_source"], installed_maps)
         self.assertIsNone(toolchain.calls[0]["inventory"])
         self.assertIsNone(toolchain.calls[0]["soulsformats_next"])
+
+    def test_the_client_log_sits_beside_the_ledger_and_is_reported(self):
+        launched: list = []
+
+        def launch(processes):
+            launched.extend(processes)
+            return [Process(10), Process(11)]
+
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=FakeToolchain(), process_launcher=launch
+        )
+        result = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        client = [spec for spec in launched if spec.name == "AP client"][0]
+        shad = [spec for spec in launched if spec.name == "shadPS4"][0]
+        self.assertEqual(client.log_path, result.ledger.parent / "client.log")
+        self.assertEqual(result.client_log, client.log_path)
+        # Only the client is captured; shadPS4 keeps its own logging.
+        self.assertIsNone(shad.log_path)
+
+    def test_an_early_exit_is_watched_for_and_carried_on_the_result(self):
+        early = EarlyExit("AP client", 1, Path("client.log"), "OpenProcess error 5")
+        seen: list = []
+
+        def watcher(started, processes, **_kwargs):
+            seen.append((tuple(started), tuple(spec.name for spec in processes)))
+            return early
+
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda _processes: [Process(1), Process(2)],
+            process_watcher=watcher,
+        )
+        progress: list[str] = []
+        result = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            progress=progress.append,
+            process_is_running=lambda: False,
+        )
+        self.assertIs(result.early_exit, early)
+        self.assertEqual(seen[0][1], ("shadPS4", "AP client"))
+        self.assertIn("exited immediately", "\n".join(progress))
+        self.assertNotIn("Randomized Bloodborne launch started.", progress)
 
     def test_runtime_mismatch_refuses_before_toolchain_or_activation(self):
         value = json.loads(self.process_plan.read_text(encoding="utf-8"))
@@ -775,3 +825,83 @@ class LauncherUiWorkflowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FakeMessagebox:
+    """Records every dialog in call order, so a test can witness which fired."""
+
+    def __init__(self):
+        self.calls: list[tuple[str, str, str]] = []
+
+    def showinfo(self, title, message, **_kwargs):
+        self.calls.append(("info", title, message))
+
+    def showerror(self, title, message, **_kwargs):
+        self.calls.append(("error", title, message))
+
+
+class FakeRoot:
+    def after(self, _delay, callback=None, *args):
+        if callback is not None:
+            callback(*args)
+
+
+class FakeApp:
+    """The exact surface LauncherApp._finished touches, with no Tk involved."""
+
+    def __init__(self):
+        self.messagebox = FakeMessagebox()
+        self.root = FakeRoot()
+        self.log: list[str] = []
+        self.busy: list[bool] = []
+        self.refreshed = 0
+
+    _set_busy = lambda self, value: self.busy.append(value)
+
+    def _append_log(self, message):
+        self.log.append(message)
+
+    def _refresh_status(self):
+        self.refreshed += 1
+
+    def _check_grants_armed(self):
+        pass
+
+
+class Result:
+    def __init__(self, **values):
+        self.cache_key = "0" * 64
+        self.enemizer_enabled = False
+        self.client_config = Path("runtime-config.json")
+        self.ledger = Path("ledger.json")
+        self.client_log = Path("client.log")
+        self.early_exit = None
+        self.grants_bridge = False
+        self.__dict__.update(values)
+
+
+class LauncherUiEarlyExitTests(unittest.TestCase):
+    def test_a_client_early_exit_replaces_the_success_popup_with_its_message(self):
+        message = "OpenProcess error 5: run the launcher as administrator"
+        log = Path("state") / "sessions" / "abc" / "client.log"
+        app = FakeApp()
+        LauncherApp._finished(
+            app,
+            Result(early_exit=EarlyExit("AP client", 1, log, message), client_log=log),
+        )
+        self.assertEqual([kind for kind, _title, _body in app.messagebox.calls], ["error"])
+        _kind, title, body = app.messagebox.calls[0]
+        self.assertEqual(title, "Bloodborne AP client stopped")
+        self.assertIn(message, body)
+        self.assertIn("exit code 1", body)
+        self.assertIn(str(log), body)
+        self.assertIn(f"Client log: {log}", app.log)
+
+    def test_a_healthy_launch_still_reports_success_and_names_the_client_log(self):
+        app = FakeApp()
+        LauncherApp._finished(app, Result())
+        self.assertEqual(
+            [(kind, title) for kind, title, _body in app.messagebox.calls],
+            [("info", "Bloodborne AP started")],
+        )
+        self.assertIn("Client log: client.log", app.log)

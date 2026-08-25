@@ -8,6 +8,14 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **A client that stops at startup now says why.** The AP client's output is
+  appended to `client.log` in the session folder, beside `ledger.json`, with a
+  dated `=== SESSION START ===` header per launch, and the launcher watches the
+  components it started for ten seconds. If one stops in that window, you get
+  an error dialog with its exit code and what it printed, instead of the
+  success popup -- previously the client's console closed with it and the
+  message was lost (#171). **Open Diagnostics** now finds `client.log` too.
+
 - **The `enemizer` YAML option is gone.** Enemization never affected
   generation -- no logic, pool, or region read it -- and the launcher's
   Randomize Enemies toggle has always been the authority at launch time. The
