@@ -8,6 +8,15 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **The `enemizer` YAML option is gone.** Enemization never affected
+  generation -- no logic, pool, or region read it -- and the launcher's
+  Randomize Enemies toggle has always been the authority at launch time. The
+  option's last real function, gating the seed request file, was removed with
+  the seed-request separation, so the seed contract no longer carries it: slot
+  data and `.bbseed.json` requests omit the key, and the planner CLI no longer
+  refuses a request that carried `enemizer: false`. Old YAMLs that still set
+  `enemizer` keep generating (Archipelago ignores unknown options with a
+  warning).
 - **Every slot now gets a seed request file, enemizer on or off.** Generation
   drops `<seed>_P<n>_<name>.bbseed.json` beside the seed zip for every
   Bloodborne slot. Previously the file was only written when the `enemizer`
