@@ -6,10 +6,11 @@ name: release
 # plus bloodborne.apworld to a GitHub prerelease, so a playtester needs no
 # GitHub login to download.
 #
-# The suppression binder is licensed-game-derived and is never built in CI:
-# the host ships the playtest zip from a local `build.ps1 -Package` run (which
-# bundles the binder automatically), or sends binder + manifest alongside this
-# zip. The launcher Doctor checks both halves either way.
+# The suppression binder is built here too, from the committed inputs bundle
+# (#138/#164), held to the world's plan pin, and bundled into the zip via
+# -SuppressionBuild -- so the prerelease is self-contained. The binder is
+# licensed-game-derived; this repository already commits the same data in
+# research/bb_inputs.db, so the zip adds no new exposure.
 
 on:
   push:
@@ -67,12 +68,30 @@ jobs:
       - name: Install the pinned Windows packager
         run: python -m pip install --disable-pip-version-check -r packaging/requirements-build.txt
 
+      - name: Build the suppression binder from the inputs bundle
+        shell: pwsh
+        run: |
+          python tools/bb_inputs.py --verify
+          python tools/bb_inputs.py --extract work/inputs
+          ./tools/build_vanilla_suppression.ps1 `
+            -GameParam work/inputs/parambnd/gameparam.parambnd.dcx `
+            -Paramdef work/inputs/parambnd/paramdef.paramdefbnd.dcx `
+            -OutputRoot work/release-binder `
+            -SoulsFormatsNextRoot $PWD\_soulsformats `
+            -Apply
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+
+      - name: The binder plan matches the pin the world ships
+        shell: pwsh
+        run: python tools/check_suppression_plan_pin.py --manifest work/release-binder/build-manifest.json
+
       - name: Build the launcher package
         shell: pwsh
         run: >-
           ./packaging/build_launcher.ps1
           -SoulsFormatsNextRoot $PWD\_soulsformats
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
+          -SuppressionBuild $PWD\work\release-binder
 
       - name: Package the apworld
         shell: pwsh

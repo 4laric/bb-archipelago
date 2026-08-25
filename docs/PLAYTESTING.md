@@ -25,12 +25,12 @@ a running randomized seed, and tells you exactly what to report back.
    - **"shadPS4 game folder" means the game's install directory** — the folder
      *containing* `CUSA03173` — not the folder shadPS4 itself lives in.
 3. **shadPS4 0.18.0** — the emulator the mod runs under.
-4. **Cheat Engine** — installed from its official site. This is **required**:
-   without it your pickups still reach the server, but no items can be
-   delivered into your game. You never operate it yourself — the launcher
-   opens it with the correct grant table, which is bundled in the package (do
-   not go looking for a `.CT` file or load one by hand). Cheat Engine may ask
-   to run as administrator; let it.
+4. **Cheat Engine** — installed from its official site. Item delivery is
+   native now and does not go through Cheat Engine, but keep it installed:
+   the launcher still opens it with the bundled grant table as the fallback
+   delivery path. You never operate it yourself (do not go looking for a
+   `.CT` file or load one by hand). Cheat Engine may ask to run as
+   administrator; let it.
 5. **The launcher package** — `BloodborneAPLauncher-win-x64.zip`, from the
    release page or sent to you directly. Unzip it anywhere.
 6. **Two things from your session host** (the person running the seed):
@@ -244,13 +244,13 @@ Windows launcher package — launcher, native tools, CE table, and the
 `BloodborneAPLauncher-win-x64.zip` plus `bloodborne.apworld` to a GitHub
 prerelease. Verify the two assets appeared before posting the link.
 
-**The suppression binder is NOT in that zip.** Since #164, CI rebuilds it
-from the committed inputs bundle on every push — the `suppression binder from
-the inputs bundle` job uploads a `vanilla-suppression-binder` artifact whose
-plan is held to the world's pin and whose bytes are reproduced across two
-builds, so it is safe to hand out. Grab that artifact (it is
-licensed-game-derived: send it to playtesters directly, never attach it to the
-public release), or build locally with `build.ps1 -Package` as before — if you
-do build locally, delete `work\vanilla-suppression-build` first, because a
-stale cached binder is silently reused when its manifest still exists. The
-launcher Doctor checks both halves either way.
+**The suppression binder is IN that zip.** The release job rebuilds it from
+the committed inputs bundle (#138/#164), checks its plan against the world's
+pin, and bundles it via `-SuppressionBuild`, so the prerelease is
+self-contained: playtesters need nothing beyond the zip, the apworld, and
+their own game files. If you build a package locally with `build.ps1
+-Package` instead, delete `work\vanilla-suppression-build` first — a stale
+cached binder is silently reused when its manifest still exists. The launcher
+Doctor validates the binder against the player's installed gameparam either
+way, so a dump whose 01.09 patch layer differs from the bundled inputs is
+caught, not corrupted.
