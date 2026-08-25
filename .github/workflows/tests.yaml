@@ -77,6 +77,25 @@ jobs:
       - name: Run the AP-free tier
         run: python tools/run_tests.py --expect-file tests/expected_counts.tsv
 
+  # A contract change here reds nothing until someone touches the clients repo,
+  # whose Contract::assert_agrees_with_crate guard only runs in the clients CI.
+  # This job pulls the clients repo's vendored copy and fails on a semantic diff,
+  # so drift reds in the PR that creates it. Separate job: its red is the
+  # contract, not the test suite. No secrets: both repos are public and the copy
+  # is fetched unauthenticated. A fetch failure fails the job (never a silent
+  # green); raw.githubusercontent.com is not authenticated here, so an Actions
+  # rate-limit would surface as a fetch failure and a re-run clears it.
+  contract-drift:
+    name: native-grant contract matches the clients copy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: The clients repo's vendored contract still agrees with ours
+        run: python tools/check_contract_drift.py
+
   # The tier that skips itself when Archipelago is not importable. It only ever
   # runs here, so what it examined is asserted rather than assumed.
   archipelago:
