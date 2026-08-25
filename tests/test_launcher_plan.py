@@ -49,27 +49,22 @@ class PlanGenerationTests(unittest.TestCase):
         self.shad = make_executable(self.root, "shadPS4.exe", b"shad")
         self.client = make_executable(self.root, "bb-ap-client.exe", b"client")
         self.ce = make_executable(self.root, "cheatengine.exe", b"ce")
-        self.table = make_executable(self.root, "grant.CT", b"table")
 
     def test_generated_plan_is_pinned_portable_and_loadable(self) -> None:
         document = generate_process_plan(
             shad_executable=self.shad,
             client_executable=self.client,
-            ce_executable=self.ce,
-            ce_table=self.table,
             slot="Alice",
             runtime_build="r1",
         )
         self.assertEqual(document["format"], PROCESS_PLAN_FORMAT)
         self.assertEqual(document["shad_build"], DEFAULT_SHAD_BUILD)
         names = [record["name"] for record in document["processes"]]
-        self.assertEqual(names, ["shadPS4", "CE bridge", "AP client"])
+        self.assertEqual(names, ["shadPS4", "AP client"])
         by_name = {record["name"]: record for record in document["processes"]}
         self.assertEqual(by_name["shadPS4"]["sha256"], sha256_file(self.shad))
-        self.assertEqual(by_name["CE bridge"]["sha256"], sha256_file(self.ce))
         self.assertEqual(by_name["AP client"]["sha256"], sha256_file(self.client))
         self.assertEqual(by_name["shadPS4"]["arguments"], ["CUSA03173"])
-        self.assertEqual(by_name["CE bridge"]["arguments"], [str(self.table.resolve())])
         client_args = by_name["AP client"]["arguments"]
         self.assertEqual(client_args[0], DEFAULT_SERVER)
         self.assertEqual(client_args[1], "Alice")
@@ -93,14 +88,6 @@ class PlanGenerationTests(unittest.TestCase):
             generate_process_plan(
                 shad_executable=self.shad,
                 client_executable=self.client,
-                ce_executable=self.ce,
-                slot="Alice",
-                runtime_build="r1",
-            )
-        with self.assertRaises(ValidationError):
-            generate_process_plan(
-                shad_executable=self.shad,
-                client_executable=self.client,
                 server="bad server",
                 slot="Alice",
                 runtime_build="r1",
@@ -112,6 +99,53 @@ class PlanGenerationTests(unittest.TestCase):
                 slot=" ",
                 runtime_build="r1",
             )
+
+    def test_a_generated_plan_can_never_pin_a_cheat_engine_bridge(self) -> None:
+        # bb-archipelago#153: native delivery is the client's default, and the
+        # CE bridge can mark a backlog of items delivered when none arrived
+        # (#163). A packaged player must not be put on that lane by default --
+        # so the generated shape has two children and generation has no CE
+        # knob left to pass, from the CLI or from the UI.
+        document = generate_process_plan(
+            shad_executable=self.shad,
+            client_executable=self.client,
+            slot="Alice",
+            runtime_build="r1",
+        )
+        self.assertEqual(
+            [record["name"] for record in document["processes"]], ["shadPS4", "AP client"]
+        )
+        blob = json.dumps(document)
+        self.assertNotIn("cheatengine", blob.lower())
+        self.assertNotIn(".CT", blob)
+        with self.assertRaises(TypeError):
+            generate_process_plan(
+                shad_executable=self.shad,
+                client_executable=self.client,
+                ce_executable=self.ce,
+                slot="Alice",
+                runtime_build="r1",
+            )
+        # The CLI knob is gone too: argparse refuses it rather than silently
+        # generating a plan without the lane the caller asked for.
+        output = self.root / "cli-ce.json"
+        with self.assertRaises(SystemExit):
+            cli_main(
+                [
+                    "plan",
+                    "--output", str(output),
+                    "--shad", str(self.shad),
+                    "--client", str(self.client),
+                    "--slot", "Alice",
+                    "--runtime-build", "r1",
+                    "--ce", str(self.ce),
+                ]
+            )
+        self.assertFalse(output.exists())
+        ui_source = (
+            Path(__file__).resolve().parents[1] / "bb_launcher" / "ui.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("ce_executable", ui_source)
 
     def test_write_never_clobbers_without_force(self) -> None:
         document = generate_process_plan(

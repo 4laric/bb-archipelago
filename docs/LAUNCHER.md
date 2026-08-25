@@ -170,8 +170,8 @@ that discovery is unambiguous. Select:
 A **Session status** panel below the setup shows, read-only and on demand: the
 active overlay's seed/slot, cache key, suppression hash, and enemizer state;
 the session's client config and ledger paths with delivery progress (cursor,
-acknowledged count, watermark mode); and the CE bridge's reported
-harness/protocol/status. Missing pieces are normal states ("no state yet"), and
+acknowledged count, watermark mode); and, for a host-authored CE-bridge
+fallback plan only, that bridge's reported harness/protocol/status. Missing pieces are normal states ("no state yet"), and
 conflicts or unreadable files appear as notes rather than errors. After every
 launch the panel refreshes and the log names the written config and ledger
 paths.
@@ -191,8 +191,10 @@ When the player chooses **Randomize & Launch**, the workflow:
    isolated temporary output;
 5. requires compressed `*.msb.dcx` output, composes or reuses the verified seed
    cache, and activates it transactionally;
-6. starts the configured shadPS4, CE bridge, and native AP client as direct
-   children of the launcher.
+6. starts the configured shadPS4 and native AP client as direct children of
+   the launcher. A generated plan has exactly these two entries: item delivery
+   is the client's native path (bb-archipelago#153), so the launcher no longer
+   pins or starts a Cheat Engine bridge.
 
 Planner/writer output streams into the on-screen log. A failed enemizer build
 is retained under the cache root and its path is printed for diagnostics. A
@@ -302,7 +304,9 @@ machines by naming placeholders instead of per-machine paths:
 - `{runtime_config}` — the runtime config the launcher just wrote;
 - `{ledger}` — the session's durable receive ledger (never reused across
   seed/slot pairs, never wiped by a rebuild of the same pair);
-- `{bridge_root}` — the launcher-managed CE bridge directory.
+- `{bridge_root}` — the launcher-managed CE bridge directory. Generated plans
+  never use it; it stays substitutable for one release so a host-authored
+  fallback plan (`--delivery=ce-bridge`) still resolves.
 
 Any other `{...}` token, or any placeholder at all in a `run --vanilla` plan,
 is refused before launch.
@@ -318,12 +322,6 @@ is refused before launch.
       "executable": "C:\\path\\to\\shadPS4.exe",
       "sha256": "<validated shadPS4 executable sha256>",
       "arguments": ["<locally validated Bloodborne launch arguments>"]
-    },
-    {
-      "name": "CE bridge",
-      "executable": "C:\\path\\to\\Cheat Engine.exe",
-      "sha256": "<validated Cheat Engine executable sha256>",
-      "arguments": ["C:\\path\\to\\Bloodborne-native-item-grant-auto-v2.CT"]
     },
     {
       "name": "AP client",

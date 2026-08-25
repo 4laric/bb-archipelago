@@ -50,17 +50,11 @@ FIELD_DEFINITIONS = (
     ("soulsformats_next", "SoulsFormatsNEXT", "directory"),
     ("process_plan", "Launch plan", "file"),
     ("shad_executable", "shadPS4.exe", "file"),
-    ("ce_executable", "Cheat Engine (required to receive items)", "file"),
     ("cache_root", "Seed cache", "directory"),
     ("state_root", "Launcher state (optional)", "directory"),
     ("shad_log", "shadPS4 log (optional)", "file"),
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
-
-CE_EXECUTABLE_CANDIDATES = (
-    Path(r"C:\Program Files\Cheat Engine\cheatengine.exe"),
-    Path(r"C:\Program Files (x86)\Cheat Engine\cheatengine.exe"),
-)
 
 # Bloodborne palette: hunter's-dream night blues, bone parchment text,
 # blood-red accents, lamp-light gold headers.
@@ -95,9 +89,6 @@ def default_field_values(
         "shad_log": str(default_shad_log()),
         "process_plan": str(state_root / "process-plan.json"),
     }
-    ce = derive_ce_executable()
-    if ce is not None:
-        values["ce_executable"] = str(ce)
     if repo_root is not None:
         request = derive_ap_request((repo_root,), player_name)
         if request is not None:
@@ -111,14 +102,6 @@ def default_field_values(
         if manifest.is_file():
             values.setdefault("suppression_manifest", str(manifest))
     return values
-
-
-def derive_ce_executable() -> Path | None:
-    """Best-effort Cheat Engine discovery in its two standard install dirs."""
-    for candidate in CE_EXECUTABLE_CANDIDATES:
-        if candidate.is_file():
-            return candidate
-    return None
 
 
 def _request_player_name(path: Path) -> str | None:
@@ -526,7 +509,6 @@ class LauncherApp:
                 "ap_server": self.ap_server.get().strip(),
                 "player_name": self.player_name.get().strip(),
                 "shad_executable": self.fields["shad_executable"].get().strip(),
-                "ce_executable": self.fields["ce_executable"].get().strip(),
                 "allow_tier_mixing": self.allow_tier_mixing.get(),
                 "preserve_locomotion": self.preserve_locomotion.get(),
             }
@@ -574,21 +556,12 @@ class LauncherApp:
                     f"the packaged AP client is missing: {client} "
                     "(from a checkout, use: python -m bb_launcher plan --client ...)"
                 )
-            ce_raw = self.fields["ce_executable"].get().strip()
-            ce_table = None
-            if ce_raw:
-                table = application_root() / "tools" / "Bloodborne-native-item-grant-auto-v2.CT"
-                if not table.is_file():
-                    raise ValidationError(f"the bundled CE grant table is missing: {table}")
-                ce_table = table
             state_raw = self.fields["state_root"].get().strip()
             state_root = Path(state_raw).expanduser() if state_raw else default_state_root()
             output = state_root / "process-plan.json"
             document = generate_process_plan(
                 shad_executable=shad_raw,
                 client_executable=client,
-                ce_executable=ce_raw or None,
-                ce_table=ce_table,
                 server=self.ap_server.get().strip() or DEFAULT_SERVER,
                 slot=request["slot"],
                 runtime_build=request["runtime_build"],

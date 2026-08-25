@@ -25,12 +25,11 @@ a running randomized seed, and tells you exactly what to report back.
    - **"shadPS4 game folder" means the game's install directory** — the folder
      *containing* `CUSA03173` — not the folder shadPS4 itself lives in.
 3. **shadPS4 0.18.0** — the emulator the mod runs under.
-4. **Cheat Engine** — installed from its official site. Item delivery is
-   native now and does not go through Cheat Engine, but keep it installed:
-   the launcher still opens it with the bundled grant table as the fallback
-   delivery path. You never operate it yourself (do not go looking for a
-   `.CT` file or load one by hand). Cheat Engine may ask to run as
-   administrator; let it.
+4. **Cheat Engine** — *not needed.* Item delivery is native, and the launcher
+   no longer opens Cheat Engine at all. It is only used if your host
+   explicitly tells you to restart the client with `--delivery=ce-bridge`, and
+   in that case your host walks you through opening it and the grant table by
+   hand. Otherwise do not install it, and do not go looking for a `.CT` file.
 5. **The launcher package** — `BloodborneAPLauncher-win-x64.zip`, from the
    release page or sent to you directly. Unzip it anywhere.
 6. **Two things from your session host** (the person running the seed):
@@ -61,7 +60,8 @@ a running randomized seed, and tells you exactly what to report back.
 ## Playing
 
 1. Click **Randomize & Launch**. The launcher builds the seed overlay, swaps it
-   in, and starts shadPS4, Cheat Engine, and the AP client for you.
+   in, and starts shadPS4 and the AP client for you — two windows, no Cheat
+   Engine.
 2. **Start a brand-new character** for the seed, unless your host tells you
    otherwise.
 3. Play. Pickups you collect are sent to Archipelago automatically, and items
@@ -72,7 +72,7 @@ a running randomized seed, and tells you exactly what to report back.
 
 **As of playtest.9, items are delivered natively, in-process.** The client
 writes them through the game itself; Cheat Engine is no longer part of item
-delivery. The launcher still runs as **administrator** (the client needs it to
+delivery, and the launcher no longer starts it. The launcher still runs as **administrator** (the client needs it to
 attach to shadPS4 — without it you get an `OpenProcess ... error 5` line and
 nothing delivers).
 

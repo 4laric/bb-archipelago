@@ -8,6 +8,18 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **The launcher no longer starts Cheat Engine, and Cheat Engine is no longer
+  required.** Item delivery is the client's native path, and that is now the
+  client's default; a generated launch plan has exactly two children, shadPS4
+  and the AP client. Cheat Engine is only involved if your host explicitly
+  tells you to restart the client with `--delivery=ce-bridge` and walks you
+  through opening it by hand -- worth avoiding, because the bridge can report a
+  whole backlog of items as delivered when none of them actually arrived, and
+  those items are lost for the run (#163). If the client stops with a message
+  about an unrecognized or unvalidated game build, nothing was written: send
+  the exact console text to your host rather than switching lanes yourself
+  (#153).
+
 - **The `enemizer` YAML option is gone.** Enemization never affected
   generation -- no logic, pool, or region read it -- and the launcher's
   Randomize Enemies toggle has always been the authority at launch time. The

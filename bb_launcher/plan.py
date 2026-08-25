@@ -1,7 +1,7 @@
 """Hash-pinned process plan generation (bb-archipelago#65 slice 3).
 
 A packaged player should never hand-write the launch plan: the package already
-carries the client, the CE table, and the planner tools, and the plan's
+carries the client and the planner tools, and the plan's
 per-machine paths are exactly the kind of tester-authored JSON the launcher
 exists to retire. This module builds a `bb-launcher-process-plan-v1` document
 from discovered or selected components:
@@ -13,6 +13,14 @@ from discovered or selected components:
 - the client entry carries `--assume-correct-save`, the explicitly unsafe MVP
   mode, because real save identity is still #56 -- generating the plan does
   not change that boundary.
+
+A generated plan has exactly two children: shadPS4 and the AP client
+(bb-archipelago#153). Item delivery is the client's own native path, which is
+its default; the Cheat Engine bridge is no longer part of the packaged shape.
+It survives only as a host-directed fallback (`--delivery=ce-bridge`, Cheat
+Engine opened by hand), because the bridge can mark a backlog of items as
+delivered when none arrived and lose them for the run (#163). A dead lane the
+launcher keeps arming is a lane players end up on silently.
 """
 
 from __future__ import annotations
@@ -44,8 +52,6 @@ def generate_process_plan(
     client_executable: Path | str,
     shad_build: str = DEFAULT_SHAD_BUILD,
     server: str = DEFAULT_SERVER,
-    ce_executable: Path | str | None = None,
-    ce_table: Path | str | None = None,
 ) -> dict[str, Any]:
     """Build the plan document. Pure I/O: reads only the pinned executables."""
 
@@ -67,21 +73,6 @@ def generate_process_plan(
             "arguments": ["CUSA03173"],
         }
     ]
-    if ce_executable is not None:
-        if ce_table is None:
-            raise ValidationError("the CE bridge entry requires the grant table path")
-        table = Path(ce_table).expanduser().resolve()
-        if not table.is_file() or table.is_symlink():
-            raise ValidationError(f"CE grant table is not a regular file: {table}")
-        bridge = _pinned_executable(ce_executable, "Cheat Engine executable")
-        processes.append(
-            {
-                "name": "CE bridge",
-                "executable": str(bridge["path"]),
-                "sha256": bridge["sha256"],
-                "arguments": [str(table)],
-            }
-        )
     processes.append(
         {
             "name": "AP client",
