@@ -602,7 +602,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         self.assertIn('text="Generate Launch Plan"', source)
         self.assertIn('"shad_executable"', source)
-        self.assertIn('"ce_executable"', source)
+        self.assertNotIn('"ce_executable"', source)  # bb-archipelago#153
         self.assertIn("ap_server", source)
         self.assertIn("generate_process_plan", source)
         self.assertIn('application_root() / "tools" / "bb-ap-client.exe"', source)
