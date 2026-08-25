@@ -146,13 +146,32 @@ def extract(bundle: Path, target: Path) -> int:
     return 0
 
 
-def get(bundle: Path, path: str) -> int:
+def read_blob(bundle: Path, path: str) -> bytes:
+    """Return one bundled input without extracting the whole bundle.
+
+    ``--extract`` costs about 148 MB of disk and most callers want one file, so
+    tools and tests that read a single input go through here instead.
+    """
     db = connect(bundle)
     row = db.execute("SELECT blob FROM files WHERE path = ?", (path,)).fetchone()
     db.close()
     if row is None:
         raise SystemExit(f"{path} is not in the bundle; --list to see what is")
-    sys.stdout.buffer.write(zlib.decompress(row[0]))
+    return zlib.decompress(row[0])
+
+
+def read_prefix(bundle: Path, prefix: str) -> dict[str, bytes]:
+    """Every bundled input whose path starts with ``prefix``, decompressed."""
+    db = connect(bundle)
+    rows = db.execute(
+        "SELECT path, blob FROM files WHERE path LIKE ? ORDER BY path", (prefix + "%",)
+    ).fetchall()
+    db.close()
+    return {path: zlib.decompress(blob) for path, blob in rows}
+
+
+def get(bundle: Path, path: str) -> int:
+    sys.stdout.buffer.write(read_blob(bundle, path))
     return 0
 
 

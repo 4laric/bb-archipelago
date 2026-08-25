@@ -1,0 +1,15 @@
+{
+  "scanned_event_files": 27,
+  "scanned_event_lines": 50934,
+  "resolved_off_ranges": 279,
+  "unresolved_off_ranges": 0,
+  "audited_rows": 121,
+  "scripted_rows": 6,
+  "pickup_rows": 115,
+  "corpus_complete": 116,
+  "corpus_gap": 5,
+  "gap_reasons": [
+    "corpus_gap:implicit_write"
+  ],
+  "observed_live": 0
+}

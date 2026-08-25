@@ -1,0 +1,122 @@
+key	flag	kind	role	writer	writer_kind	self_read	readers	explicit_set_sites	off_writers	placed_lots	corroboration	corpus_status	evidence_label
+boss_cleric_beast	12411700	scripted	control_slice1	m24_01_00_00.emevd.dcx.js:1052 $Event(12411700) end	event_end_implicit	yes	common.emevd.dcx.js;m24_01_00_00.emevd.dcx.js				HandleBossDefeat(2410800) placed in m24_01_00_00;m24_01_00_01;m24_01_00_11; NpcParam 500241 = 教区長　聖堂街B	corpus_gap:implicit_write	inferred
+boss_father_gascoigne	12411800	scripted	control_slice1	m24_01_00_00.emevd.dcx.js:1362 $Event(12411800) end	event_end_implicit	yes	common.emevd.dcx.js;m24_01_00_00.emevd.dcx.js				HandleBossDefeat(2410810) placed in m24_01_00_00;m24_01_00_01;m24_01_00_11; NpcParam 271000 = SP　ガスコイン神父 | HandleBossDefeat(2410811) placed in m24_01_00_00;m24_01_00_01;m24_01_00_11; NpcParam 272000 = SP　ガスコイン神父（獣）	corpus_gap:implicit_write	inferred
+boss_blood_starved_beast	12301800	scripted	slice3_goal	m23_00_00_00.emevd.dcx.js:497 $Event(12301800) end	event_end_implicit	yes	common.emevd.dcx.js;m21_00_00_00.emevd.dcx.js;m23_00_00_00.emevd.dcx.js				HandleBossDefeat(2300800) placed in m23_00_00_00;m23_00_00_01; NpcParam 209000 = 血に渇いた獣　廃墟	corpus_gap:implicit_write	inferred
+boss_vicar_amelia	12401800	scripted	slice3	m24_00_00_00.emevd.dcx.js:4287 $Event(12401800) end	event_end_implicit	yes	common.emevd.dcx.js;m24_00_00_00.emevd.dcx.js				HandleBossDefeat(2400800) placed in m24_00_00_00;m24_00_00_01; NpcParam 502000 = 聖女ビースト　聖堂街A	corpus_gap:implicit_write	inferred
+interaction_laurences_skull	12401803	scripted	slice3	m24_00_00_00.emevd.dcx.js:4382 $Event(12401803) end	event_end_implicit	yes	m24_00_00_00.emevd.dcx.js					corpus_gap:implicit_write	inferred
+treasure_radiant_sword_hunter_badge	52400480	scripted	slice3	ItemLotParam getItemFlagId on lot 2400480	item_lot_acquisition		m21_00_00_00.emevd.dcx.js					corpus_complete	inferred
+fixed_central_yharnam_lot_2410920	52410920	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2410920	item_lot_acquisition					2410920		corpus_complete	inferred
+fixed_blood_gem_workshop_tool	52411000	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2411000	item_lot_acquisition					2411000		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400100	52400100	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400100	item_lot_acquisition					2400100		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400120	52400120	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400120	item_lot_acquisition					2400120	same-flag lots 2400120,2400121,2400122,2400123	corpus_complete	inferred
+fixed_cathedral_ward_lot_2400130	52400130	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400130	item_lot_acquisition					2400130		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400140	52400140	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400140	item_lot_acquisition					2400140		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400150	52400150	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400150	item_lot_acquisition					2400150		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400160	52400160	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400160	item_lot_acquisition					2400160		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400170	52400170	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400170	item_lot_acquisition					2400170		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400180	52400180	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400180	item_lot_acquisition					2400180		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400190	52400190	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400190	item_lot_acquisition					2400190		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400200	52400200	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400200	item_lot_acquisition					2400200		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400210	52400210	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400210	item_lot_acquisition					2400210		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400220	52400220	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400220	item_lot_acquisition					2400220		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400230	52400230	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400230	item_lot_acquisition					2400230		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400240	52400240	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400240	item_lot_acquisition					2400240		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400250	52400250	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400250	item_lot_acquisition					2400250		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400260	52400260	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400260	item_lot_acquisition					2400260		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400270	52400270	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400270	item_lot_acquisition					2400270		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400280	52400280	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400280	item_lot_acquisition					2400280		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400290	52400290	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400290	item_lot_acquisition					2400290	same-flag lots 2400290,2400291,2400292,2400293	corpus_complete	inferred
+fixed_cathedral_ward_lot_2400300	52400300	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400300	item_lot_acquisition					2400300		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400310	52400310	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400310	item_lot_acquisition					2400310		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400320	52400320	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400320	item_lot_acquisition					2400320		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400330	52400330	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400330	item_lot_acquisition					2400330		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400340	52400340	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400340	item_lot_acquisition					2400340		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400350	52400350	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400350	item_lot_acquisition					2400350		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400360	52400360	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400360	item_lot_acquisition					2400360		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400370	52400370	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400370	item_lot_acquisition					2400370		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400380	52400380	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400380	item_lot_acquisition					2400380		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400390	52400390	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400390	item_lot_acquisition					2400390		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400400	52400400	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400400	item_lot_acquisition					2400400		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400410	52400410	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400410	item_lot_acquisition					2400410		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400420	52400420	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400420	item_lot_acquisition					2400420		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400430	52400430	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400430	item_lot_acquisition					2400430		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400440	52400440	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400440	item_lot_acquisition					2400440		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400450	52400450	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400450	item_lot_acquisition					2400450		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400460	52400460	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400460	item_lot_acquisition					2400460		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400470	52400470	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400470	item_lot_acquisition					2400470		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400760	52410580	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400760	item_lot_acquisition					2400760	same-flag lots 2400760,2410580	corpus_complete	inferred
+fixed_cathedral_ward_lot_2400540	52420540	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400540	item_lot_acquisition					2400540	same-flag lots 2400540,2400541	corpus_complete	inferred
+fixed_cathedral_ward_lot_2400550	52420550	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400550	item_lot_acquisition					2400550		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400560	52420560	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400560	item_lot_acquisition					2400560		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400570	52420570	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400570	item_lot_acquisition					2400570		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400580	52420580	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400580	item_lot_acquisition					2400580		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400590	52420590	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400590	item_lot_acquisition					2400590		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400600	52420600	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400600	item_lot_acquisition					2400600		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400610	52420610	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400610	item_lot_acquisition					2400610		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400620	52420620	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400620	item_lot_acquisition					2400620		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400630	52420630	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400630	item_lot_acquisition					2400630		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400640	52420640	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400640	item_lot_acquisition		m21_00_00_00.emevd.dcx.js			2400640		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400650	52420650	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400650	item_lot_acquisition					2400650		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400660	52420660	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400660	item_lot_acquisition					2400660		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400670	52420670	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400670	item_lot_acquisition					2400670		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400690	52420690	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400690	item_lot_acquisition		m21_00_00_00.emevd.dcx.js			2400690		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400700	52420700	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400700	item_lot_acquisition					2400700		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400710	52420710	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400710	item_lot_acquisition					2400710		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400720	52420720	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400720	item_lot_acquisition					2400720		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400730	52420730	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400730	item_lot_acquisition					2400730		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400740	52420740	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400740	item_lot_acquisition					2400740		corpus_complete	inferred
+fixed_cathedral_ward_lot_2400750	52420750	pickup	cathedral_ward	ItemLotParam getItemFlagId on lot 2400750	item_lot_acquisition					2400750		corpus_complete	inferred
+fixed_old_yharnam_lot_2300000	52300000	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300000	item_lot_acquisition					2300000		corpus_complete	inferred
+fixed_old_yharnam_lot_2300010	52300010	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300010	item_lot_acquisition					2300010		corpus_complete	inferred
+fixed_old_yharnam_lot_2300020	52300020	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300020	item_lot_acquisition					2300020		corpus_complete	inferred
+fixed_old_yharnam_lot_2300030	52300030	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300030	item_lot_acquisition					2300030		corpus_complete	inferred
+fixed_old_yharnam_lot_2300040	52300040	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300040	item_lot_acquisition					2300040		corpus_complete	inferred
+fixed_old_yharnam_lot_2300050	52300050	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300050	item_lot_acquisition					2300050		corpus_complete	inferred
+fixed_old_yharnam_lot_2300060	52300060	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300060	item_lot_acquisition					2300060		corpus_complete	inferred
+fixed_old_yharnam_lot_2300070	52300070	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300070	item_lot_acquisition					2300070		corpus_complete	inferred
+fixed_old_yharnam_lot_2300080	52300080	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300080	item_lot_acquisition					2300080		corpus_complete	inferred
+fixed_old_yharnam_lot_2300090	52300090	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300090	item_lot_acquisition					2300090		corpus_complete	inferred
+fixed_old_yharnam_lot_2300100	52300100	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300100	item_lot_acquisition					2300100		corpus_complete	inferred
+fixed_old_yharnam_lot_2300110	52300110	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300110	item_lot_acquisition					2300110		corpus_complete	inferred
+fixed_old_yharnam_lot_2300120	52300120	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300120	item_lot_acquisition					2300120		corpus_complete	inferred
+fixed_old_yharnam_lot_2300130	52300130	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300130	item_lot_acquisition					2300130		corpus_complete	inferred
+fixed_old_yharnam_lot_2300140	52300140	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300140	item_lot_acquisition					2300140		corpus_complete	inferred
+fixed_old_yharnam_lot_2300150	52300150	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300150	item_lot_acquisition					2300150		corpus_complete	inferred
+fixed_old_yharnam_lot_2300160	52300160	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300160	item_lot_acquisition					2300160		corpus_complete	inferred
+fixed_old_yharnam_lot_2300170	52300170	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300170	item_lot_acquisition					2300170		corpus_complete	inferred
+fixed_old_yharnam_lot_2300180	52300180	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300180	item_lot_acquisition					2300180		corpus_complete	inferred
+fixed_old_yharnam_lot_2300190	52300190	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300190	item_lot_acquisition					2300190		corpus_complete	inferred
+fixed_old_yharnam_lot_2300200	52300200	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300200	item_lot_acquisition					2300200		corpus_complete	inferred
+fixed_old_yharnam_lot_2300210	52300210	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300210	item_lot_acquisition					2300210		corpus_complete	inferred
+fixed_old_yharnam_lot_2300220	52300220	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300220	item_lot_acquisition					2300220		corpus_complete	inferred
+fixed_old_yharnam_lot_2300230	52300230	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300230	item_lot_acquisition					2300230		corpus_complete	inferred
+fixed_old_yharnam_lot_2300240	52300240	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300240	item_lot_acquisition					2300240		corpus_complete	inferred
+fixed_old_yharnam_lot_2300250	52300250	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300250	item_lot_acquisition					2300250		corpus_complete	inferred
+fixed_old_yharnam_lot_2300260	52300260	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300260	item_lot_acquisition					2300260		corpus_complete	inferred
+fixed_old_yharnam_lot_2300270	52300270	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300270	item_lot_acquisition					2300270		corpus_complete	inferred
+fixed_old_yharnam_lot_2300280	52300280	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300280	item_lot_acquisition					2300280		corpus_complete	inferred
+fixed_old_yharnam_lot_2300290	52300290	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300290	item_lot_acquisition					2300290		corpus_complete	inferred
+fixed_old_yharnam_lot_2300300	52300300	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300300	item_lot_acquisition					2300300		corpus_complete	inferred
+fixed_old_yharnam_lot_2300310	52300310	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300310	item_lot_acquisition					2300310		corpus_complete	inferred
+fixed_old_yharnam_lot_2300320	52300320	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300320	item_lot_acquisition					2300320		corpus_complete	inferred
+fixed_old_yharnam_lot_2300330	52300330	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300330	item_lot_acquisition					2300330		corpus_complete	inferred
+fixed_old_yharnam_lot_2300340	52300340	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300340	item_lot_acquisition					2300340		corpus_complete	inferred
+fixed_old_yharnam_lot_2300350	52300350	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300350	item_lot_acquisition					2300350		corpus_complete	inferred
+fixed_old_yharnam_lot_2300360	52300360	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300360	item_lot_acquisition					2300360		corpus_complete	inferred
+fixed_old_yharnam_lot_2300370	52300370	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300370	item_lot_acquisition					2300370		corpus_complete	inferred
+fixed_old_yharnam_lot_2300380	52300380	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300380	item_lot_acquisition					2300380		corpus_complete	inferred
+fixed_old_yharnam_lot_2300390	52300390	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300390	item_lot_acquisition					2300390		corpus_complete	inferred
+fixed_old_yharnam_lot_2300400	52300400	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300400	item_lot_acquisition					2300400	same-flag lots 2300400,2300401,2300402	corpus_complete	inferred
+fixed_old_yharnam_lot_2300410	52300410	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300410	item_lot_acquisition					2300410		corpus_complete	inferred
+fixed_old_yharnam_lot_2300420	52300420	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300420	item_lot_acquisition					2300420		corpus_complete	inferred
+fixed_old_yharnam_lot_2300430	52300430	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300430	item_lot_acquisition					2300430		corpus_complete	inferred
+fixed_old_yharnam_lot_2300440	52300440	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300440	item_lot_acquisition					2300440		corpus_complete	inferred
+fixed_old_yharnam_lot_2300450	52300450	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300450	item_lot_acquisition					2300450		corpus_complete	inferred
+fixed_old_yharnam_lot_2300460	52300460	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300460	item_lot_acquisition					2300460		corpus_complete	inferred
+fixed_old_yharnam_lot_2300470	52300470	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300470	item_lot_acquisition					2300470		corpus_complete	inferred
+fixed_old_yharnam_lot_2300480	52300480	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300480	item_lot_acquisition					2300480		corpus_complete	inferred
+fixed_old_yharnam_lot_2300490	52300490	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300490	item_lot_acquisition					2300490		corpus_complete	inferred
+fixed_old_yharnam_lot_2300500	52300500	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300500	item_lot_acquisition					2300500		corpus_complete	inferred
+fixed_old_yharnam_lot_2300510	52300510	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300510	item_lot_acquisition					2300510		corpus_complete	inferred
+fixed_old_yharnam_lot_2300520	52300520	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300520	item_lot_acquisition					2300520		corpus_complete	inferred
+fixed_old_yharnam_lot_2300530	52300530	pickup	old_yharnam	ItemLotParam getItemFlagId on lot 2300530	item_lot_acquisition					2300530		corpus_complete	inferred

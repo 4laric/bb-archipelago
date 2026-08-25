@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		449
+total		452
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	19
@@ -33,3 +33,4 @@ module	test_launcher_doctor	27
 module	test_launcher_workflow	4
 module	test_location_names	9
 module	test_death_signal_candidates	8
+module	test_slice3_witnesses	9
