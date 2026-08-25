@@ -56,6 +56,10 @@ SHAD_LOG_NAME = "shadps4.log"
 # Placeholders that only a randomized launch can satisfy: they name files the
 # client runtime configuration writer produces.
 CLIENT_LOG_PLACEHOLDER = "client_log"
+# The argument that tells a component to write its own session log. Its presence
+# in a plan entry is what marks that entry self-logging, so the launcher leaves
+# its output alone (bb-archipelago#181, clients#425).
+CLIENT_LOG_FLAG = "--log-file"
 CLIENT_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root", CLIENT_LOG_PLACEHOLDER)
 # The game directory shadPS4 is told to boot (bb-archipelago#177). Unlike the
 # client placeholders this one is satisfiable on a vanilla launch too, because

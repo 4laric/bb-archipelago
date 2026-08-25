@@ -37,7 +37,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .client_config import CLIENT_LOG_PLACEHOLDER, GAME_PATH_PLACEHOLDER
+from .client_config import CLIENT_LOG_FLAG, CLIENT_LOG_PLACEHOLDER, GAME_PATH_PLACEHOLDER
 from .core import ValidationError, _write_json_atomic, sha256_file
 from .workflow import PROCESS_PLAN_FORMAT, load_process_plan
 
@@ -108,7 +108,7 @@ def generate_process_plan(
                 # client.log keeps the evidence a startup refusal needs. The
                 # launcher does not redirect this entry -- see
                 # `resolve_process_plan` (bb-archipelago#181).
-                "--log-file",
+                CLIENT_LOG_FLAG,
                 CLIENT_LOG_ARGUMENT,
             ],
         }

@@ -161,6 +161,36 @@ class PlanGenerationTests(unittest.TestCase):
         self.assertIn("--log-file", client.arguments)
         self.assertIn(str(paths.client_log), client.arguments)
 
+    def test_a_plan_pinned_before_the_flag_keeps_the_launchers_own_tee(self) -> None:
+        # No staleness gate is needed here, and this is why: an entry that was
+        # never told --log-file is not self-logging, so the launcher keeps
+        # capturing it (bb-archipelago#179) and client.log stays populated.
+        # (The other direction cannot happen at all: the plan pins the client by
+        # SHA-256, so an old exe can never be paired with a new plan.)
+        document = generate_process_plan(
+            shad_executable=self.shad,
+            client_executable=self.client,
+            slot="Alice",
+            runtime_build="r1",
+        )
+        for record in document["processes"]:
+            arguments = record["arguments"]
+            if "--log-file" in arguments:
+                index = arguments.index("--log-file")
+                del arguments[index : index + 2]
+        stale = load_process_plan(
+            write_process_plan(self.root / "stale.json", document)
+        )
+        paths = session_paths(self.root / "state", seed="seed-1", slot="Alice")
+        resolved = resolve_process_plan(stale, paths, game_path=self.root / "game")
+        client = {spec.name: spec for spec in resolved.processes}["AP client"]
+        self.assertNotIn("--log-file", client.arguments)
+        self.assertFalse(
+            client.self_logging,
+            "an entry that was never told to log itself must keep the launcher's tee",
+        )
+        self.assertEqual(client.log_path, paths.client_log)
+
     def test_a_vanilla_launch_cannot_satisfy_the_client_log_placeholder(self) -> None:
         # With no AP session there is no session directory to name, so the
         # placeholder fails closed rather than reaching the client as a literal.

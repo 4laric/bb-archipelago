@@ -34,6 +34,7 @@ from .core import (
     wait_for_early_exit,
 )
 from .client_config import (
+    CLIENT_LOG_FLAG,
     ClientRuntimePaths,
     default_shad_log,
     default_state_root,
@@ -283,11 +284,13 @@ def resolve_process_plan(
     generated plan resolves to (bb-archipelago#177).
 
     Both children get a session ``log_path``, because that names the file the
-    early-exit dialog reads.  Only shadPS4 gets it *written by the launcher*:
-    the AP client is marked ``self_logging`` because a generated plan hands it
-    ``--log-file {client_log}`` and it tees console and file itself
-    (clients#425).  So the client keeps a real inherited console and the tail
-    reader keeps its file, with no pipe between them.
+    early-exit dialog reads.  Who *writes* it is decided by the entry's own
+    arguments: one that carries ``--log-file`` tees console and file itself
+    (clients#425) and is marked ``self_logging``, so the launcher leaves its
+    output alone; anything else keeps the launcher's tee.  A generated plan
+    passes the flag to the AP client and not to shadPS4, and a plan pinned
+    before bb-archipelago#181 passes it to nobody -- which is the right answer
+    for a stale plan paired with any client build.
     """
 
     refuse_stale_plan(plan)
@@ -305,12 +308,15 @@ def resolve_process_plan(
                 working_directory=spec.working_directory,
                 expected_sha256=spec.expected_sha256,
                 log_path=logs.get(spec.name, spec.log_path),
-                # The AP client writes its session log itself (clients#425), so
-                # the launcher must not redirect or pump it -- doing so would
-                # take away the real console the client's own tee exists to
-                # keep. shadPS4 has no such tee and keeps the launcher's
-                # capture (bb-archipelago#175/#179).
-                self_logging=(spec.name == CLIENT_PROCESS_NAME),
+                # Read from the arguments, not from the process name: an entry
+                # that was told --log-file writes its own session log
+                # (clients#425) and must keep the console it inherited, because
+                # piping it would take away the very console its tee exists to
+                # preserve. An entry that was NOT told keeps the launcher's own
+                # tee (bb-archipelago#179) -- which is exactly what a plan
+                # pinned before bb-archipelago#181 needs, so a stale plan keeps
+                # a populated client.log instead of silently losing it.
+                self_logging=(CLIENT_LOG_FLAG in spec.arguments),
             )
             for spec in plan.processes
         ),
