@@ -128,7 +128,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
                             "name": "shadPS4",
                             "executable": self.shad.name,
                             "sha256": digest(b"shad"),
-                            "arguments": ["--game", "CUSA03173"],
+                            "arguments": ["--game", "{game_path}"],
                         },
                         {
                             "name": "AP client",
@@ -763,11 +763,57 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         pids = workflow.launch_vanilla(self.settings(), process_is_running=lambda: False)
         self.assertEqual(pids, (10, 11))
         self.assertFalse(self.install.mods.exists())
-        self.assertEqual(launched[-2:], [("--game", "CUSA03173"), ()])
+        # bb-archipelago#177: a vanilla launch resolves {game_path} too, so the
+        # emulator is handed the real game directory and never has to consult
+        # its own (possibly empty) library config.
+        self.assertEqual(
+            launched[-2:], [("--game", str(self.install.base)), ()]
+        )
         preserved = [
             path for path in self.root.glob("game/.*") if "bb-ap-disabled" in path.name
         ]
         self.assertEqual(len(preserved), 1)
+
+    def test_a_stale_bare_id_plan_refuses_before_the_overlay_is_touched(self):
+        # bb-archipelago#177: every playtester has a pre-#177 plan on disk, and
+        # write_process_plan will not overwrite one without force. A launch
+        # that used it would boot shadPS4 into "Game ID or file path not
+        # found" -- after a full build. Refuse it at the same point a client
+        # placeholder is refused: before anything is mutated.
+        launched: list[tuple[str, ...]] = []
+
+        def launch(processes):
+            launched.extend(tuple(spec.arguments) for spec in processes)
+            return [Process(10), Process(11)]
+
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=FakeToolchain(), process_launcher=launch
+        )
+        # Control: the current plan launches, so the launcher list is witnessed
+        # non-empty before the stale plan is asked to add nothing to it.
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(len(launched), 2)
+        self.assertTrue(self.install.mods.is_dir())
+
+        value = json.loads(self.process_plan.read_text(encoding="utf-8"))
+        value["processes"][0]["arguments"] = ["CUSA03173"]
+        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "bare game ID"):
+            workflow.randomize_and_launch(
+                self.settings(enemy_inputs=False),
+                EnemizerOptions(enabled=False),
+                process_is_running=lambda: False,
+            )
+        with self.assertRaisesRegex(ValidationError, "regenerate the launch plan"):
+            workflow.launch_vanilla(self.settings(), process_is_running=lambda: False)
+        # Nothing was spawned, and the active overlay was not moved aside --
+        # the refusal costs the player neither a build nor a reinstall.
+        self.assertEqual(len(launched), 2)
+        self.assertTrue(self.install.mods.is_dir())
 
     def test_restore_previous_reactivates_the_prior_seed(self):
         toolchain = FakeToolchain()

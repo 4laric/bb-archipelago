@@ -10,6 +10,15 @@ from discovered or selected components:
 - the AP client's config and ledger are the `{runtime_config}` / `{ledger}`
   placeholders the launcher substitutes at launch, so the plan is portable
   across machines and sessions;
+- shadPS4 is told to boot the game by PATH, through the same mechanism: the
+  `{game_path}` placeholder resolves at launch to the game directory the
+  launcher settings already name (bb-archipelago#177). The bare `CUSA03173`
+  game ID it used to pass could only be resolved against shadPS4's own
+  `install_dirs` config, which is empty on any never-configured emulator copy,
+  so a correct launcher setup still died with "Game ID or file path not
+  found". Passing the directory keeps shadPS4's `CUSA03173-patch` and
+  `CUSA03173-mods` overlay resolution intact: the emulator derives both from
+  the booted eboot's own parent folder, not from its library config;
 - the client entry carries `--assume-correct-save`, the explicitly unsafe MVP
   mode, because real save identity is still #56 -- generating the plan does
   not change that boundary.
@@ -28,11 +37,17 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .client_config import GAME_PATH_PLACEHOLDER
 from .core import ValidationError, _write_json_atomic, sha256_file
 from .workflow import PROCESS_PLAN_FORMAT, load_process_plan
 
 
 DEFAULT_SHAD_BUILD = "0.18.0"
+# What a generated plan hands shadPS4 as its positional game argument. shadPS4
+# 0.18's CLI takes "Game path or ID" positionally and only falls back to its
+# library config when the argument is not an existing path, so a real directory
+# needs no in-emulator setup at all.
+GAME_PATH_ARGUMENT = "{" + GAME_PATH_PLACEHOLDER + "}"
 # 38281 is MultiServer's default port; 38282 only ever existed here.
 DEFAULT_SERVER = "localhost:38281"
 
@@ -70,7 +85,7 @@ def generate_process_plan(
             "name": "shadPS4",
             "executable": str(shad["path"]),
             "sha256": shad["sha256"],
-            "arguments": ["CUSA03173"],
+            "arguments": [GAME_PATH_ARGUMENT],
         }
     ]
     processes.append(

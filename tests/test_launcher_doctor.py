@@ -104,6 +104,7 @@ class DoctorFixture:
 
         shad_exe = root / "shadPS4.exe"
         shad_exe.write_bytes(b"shad")
+        self.shad_exe = shad_exe
         client_exe = root / "bb-ap-client.exe"
         client_exe.write_bytes(b"client")
         self.plan_path = root / "process-plan.json"
@@ -118,7 +119,7 @@ class DoctorFixture:
                             "name": "shadPS4",
                             "executable": str(shad_exe),
                             "sha256": sha256(b"shad"),
-                            "arguments": ["CUSA03173"],
+                            "arguments": ["{game_path}"],
                         },
                         {
                             "name": "AP client",
@@ -206,6 +207,63 @@ class DoctorTests(unittest.TestCase):
             "blocking processes",
         ):
             self.assertEqual(finding(report, name).status, PASS, name)
+
+    def test_a_pre_177_plan_is_reported_stale_instead_of_dying_at_runtime(self):
+        # bb-archipelago#177: the plan the launcher used to generate invokes
+        # shadPS4 with the bare game ID, which the emulator resolves only
+        # against its own install_dirs -- empty on a never-configured copy.
+        # oz's launcher game-folder field was correct and it still failed, so
+        # the Doctor has to name the plan, not the folder.
+        value = json.loads(self.fixture.plan_path.read_text(encoding="utf-8"))
+        self.assertEqual(value["processes"][0]["arguments"], ["{game_path}"])
+        value["processes"][0]["arguments"] = [SERIAL]
+        self.fixture.plan_path.write_text(json.dumps(value), encoding="utf-8")
+        report = run(self.fixture)
+        result = finding(report, "launch plan game argument")
+        self.assertEqual(result.status, FAIL)
+        self.assertIn("bare game ID", result.detail)
+        self.assertIn("regenerate the launch plan", result.remedy)
+        self.assertFalse(report.ok)
+        # The plan itself still loads and hashes clean: this is a *stale* plan,
+        # not a broken one, and the two findings must not be confused.
+        self.assertEqual(finding(report, "launch plan").status, PASS)
+
+    def test_a_current_plan_names_the_game_directory_by_path(self):
+        report = run(self.fixture)
+        result = finding(report, "launch plan game argument")
+        self.assertEqual(result.status, PASS)
+        self.assertIn(str(self.fixture.root / "game" / SERIAL), result.detail)
+
+    def test_the_shadps4_version_gate_fails_the_bblauncher_bundled_016(self):
+        # oz passed every Doctor gate with the 0.16.0 copy bundled inside the
+        # third-party BBLauncher and only found out at runtime (#177 point 1).
+        report = run(self.fixture, read_shad_version=lambda _path: "0.16.0.0")
+        result = finding(report, "shadPS4 version")
+        self.assertEqual(result.status, FAIL)
+        self.assertIn("0.16.0.0", result.detail)
+        self.assertIn("0.18.0", result.detail)
+        self.assertIn("BBLauncher", result.remedy)
+        self.assertFalse(report.ok)
+
+    def test_the_shadps4_version_gate_accepts_the_supported_build(self):
+        seen: list[Path] = []
+
+        def read(path: Path) -> str:
+            seen.append(path)
+            # A real Windows resource carries the four-part form.
+            return "0.18.0.0"
+
+        report = run(self.fixture, read_shad_version=read)
+        result = finding(report, "shadPS4 version")
+        self.assertEqual(result.status, PASS)
+        self.assertEqual(seen, [self.fixture.shad_exe])
+        self.assertIn("0.18.0.0", result.detail)
+
+    def test_an_unreadable_version_resource_skips_rather_than_guesses(self):
+        report = run(self.fixture, read_shad_version=lambda _path: None)
+        result = finding(report, "shadPS4 version")
+        self.assertEqual(result.status, SKIP)
+        self.assertTrue(report.ok)
 
     def test_slot_agreement_passes_when_names_match(self):
         report = run(self.fixture, player_name="Hunter")

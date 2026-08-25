@@ -172,18 +172,19 @@ class ClientConfigTests(unittest.TestCase):
             shad_build="0.18.0",
             runtime_build="bb-runtime-r1",
             processes=(
-                ProcessSpec("shadPS4", Path("shadPS4.exe"), ("CUSA03173",)),
+                ProcessSpec("shadPS4", Path("shadPS4.exe"), ("{game_path}",)),
                 ProcessSpec("AP client", Path("bb-ap-client.exe"), ("{runtime_config}", "{ledger}")),
             ),
         )
-        resolved_plan = resolve_process_plan(plan, paths)
-        self.assertEqual(resolved_plan.processes[0].arguments, ("CUSA03173",))
+        game = self.root / "game" / "CUSA03173"
+        resolved_plan = resolve_process_plan(plan, paths, game_path=game)
+        self.assertEqual(resolved_plan.processes[0].arguments, (str(game),))
         self.assertEqual(
             resolved_plan.processes[1].arguments,
             (str(paths.config), str(paths.ledger)),
         )
         with self.assertRaisesRegex(ValidationError, "vanilla launch"):
-            resolve_process_plan(plan, None)
+            resolve_process_plan(plan, None, game_path=game)
 
     def test_switching_seeds_rewrites_the_config_and_keeps_both_ledgers(self):
         install, owner_a = self.activate("seed-a", b"suppressed-a")

@@ -24,6 +24,10 @@ a running randomized seed, and tells you exactly what to report back.
      real game files, so empty or renamed directories are caught immediately.
    - **"shadPS4 game folder" means the game's install directory** — the folder
      *containing* `CUSA03173` — not the folder shadPS4 itself lives in.
+   - **You do not have to open or configure shadPS4 first.** The launcher hands
+     the emulator this exact folder on the command line, so a freshly unzipped
+     shadPS4 that has never had a game directory added in its own UI works
+     fine. This field is what decides which install is launched.
 3. **shadPS4 0.18.0** — the emulator the mod runs under.
 4. **Cheat Engine** — *not needed.* Item delivery is native, and the launcher
    no longer opens Cheat Engine at all. It is only used if your host
@@ -230,6 +234,8 @@ tell your host what you're running when you report back.
 | --- | --- |
 | Doctor says `FAIL: AP server: nothing is listening` | The host's server is not up, or the port is wrong. Check with your host. |
 | Client says `a full error is available elsewhere` | Almost always a wrong server address or port. Check the server field against what your host sent. |
+| shadPS4 closes instantly and its log says `Game ID or file path not found: CUSA03173` | Your launch plan was generated before the launcher started passing the game by path. Click **Generate Launch Plan** again, then **Doctor**. (The Doctor now catches this before you launch.) |
+| Doctor says `FAIL: shadPS4 version` | The picked `shadPS4.exe` is not 0.18.0. Item delivery is validated against 0.18.0 only. Pick a standalone 0.18.0 build — in particular, do not pick the copy bundled inside the third-party "BBLauncher" tree. |
 | `shadPS4.exe is not running or cannot be opened` | Something started shadPS4 as administrator (for example the third-party "BBLauncher" tool). Close it, then run BloodborneAPLauncher as administrator too. |
 | A `PARKED AP item` line in the client console | An item delivery failed safely; later items keep arriving. Send the console text to your host — there is a tool to confirm or redeliver it. |
 | The client stops with a message about an unrecognized or unvalidated game build | Native delivery refused to touch a build it was not validated against. Safe; nothing was written. Send the exact console text to your host — do not switch to `--delivery=ce-bridge` on your own. |

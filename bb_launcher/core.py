@@ -1550,6 +1550,31 @@ def launch_processes(
     return started
 
 
+STALE_BARE_SERIAL_REMEDY = (
+    "regenerate the launch plan (Generate Launch Plan, or python -m bb_launcher "
+    "plan): plans pinned before bb-archipelago#177 invoke shadPS4 with the bare "
+    f"{SERIAL} game ID, which shadPS4 can only resolve against its OWN library "
+    "config -- empty on a fresh emulator copy, which is why it exits with "
+    f"\"Game ID or file path not found: {SERIAL}\". A regenerated plan passes "
+    "the game folder by path instead, so no in-emulator setup is needed"
+)
+
+
+def stale_bare_serial_process(processes: Sequence[ProcessSpec]) -> ProcessSpec | None:
+    """Find a plan entry that still launches the game by bare game ID.
+
+    Deliberately narrow: only the exact argument the pre-#177 generator emitted
+    counts. A host who hand-authored an absolute path, or who passes the serial
+    embedded in some other argument, is left alone -- this detects the shape the
+    launcher itself used to write, so it can tell the player to regenerate.
+    """
+
+    for spec in processes:
+        if any(argument == SERIAL for argument in spec.arguments):
+            return spec
+    return None
+
+
 def validate_processes(processes: Sequence[ProcessSpec]) -> list[ProcessSpec]:
     """Preflight a complete launch plan without starting any component."""
 

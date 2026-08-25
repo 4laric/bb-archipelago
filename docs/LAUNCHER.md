@@ -328,6 +328,23 @@ plan. The plan deliberately carries exact arguments instead of guessing a
 shadPS4 or third-party launcher command line, and it stays portable across
 machines by naming placeholders instead of per-machine paths:
 
+- `{game_path}` — the game directory shadPS4 is told to boot: the `CUSA03173`
+  folder inside the validated game root. This is the only argument a generated
+  shadPS4 entry carries. Passing the game by **path** rather than by the bare
+  `CUSA03173` game ID is what makes the launcher's game-folder field
+  authoritative (bb-archipelago#177): shadPS4 resolves a bare ID only against
+  its own `install_dirs` config, which is empty on any emulator copy that has
+  never been opened and configured, and it then exits with `Game ID or file
+  path not found: CUSA03173`. shadPS4 0.18's positional argument is documented
+  as "Game path or ID" and its resolver consults `install_dirs` only when the
+  argument is not an existing path (`src/main.cpp`), so a real directory needs
+  no in-emulator setup at all. Overlay resolution is unaffected: shadPS4
+  derives the `CUSA03173-patch`/`-UPDATE` and `CUSA03173-mods` overlays from
+  the booted game folder itself (`Emulator::Run` sets `game_folder` to the
+  eboot's parent; `MntPoints::Mount` probes the `-mods`/`-UPDATE`/`-patch`
+  siblings of that folder), never from its library config — so suppression and
+  the launcher-owned mods overlay still apply. Unlike the client placeholders,
+  `{game_path}` resolves on a `--vanilla` launch too;
 - `{runtime_config}` — the runtime config the launcher just wrote;
 - `{ledger}` — the session's durable receive ledger (never reused across
   seed/slot pairs, never wiped by a rebuild of the same pair);
@@ -335,8 +352,16 @@ machines by naming placeholders instead of per-machine paths:
   never use it; it stays substitutable for one release so a host-authored
   fallback plan (`--delivery=ce-bridge`) still resolves.
 
-Any other `{...}` token, or any placeholder at all in a `run --vanilla` plan,
+Any other `{...}` token, or any client placeholder in a `run --vanilla` plan,
 is refused before launch.
+
+A plan generated before bb-archipelago#177 passes the literal `CUSA03173`
+instead. Because `write_process_plan` never overwrites an existing plan without
+`force`, those files stay on disk, so every launch path refuses them up front
+(before the overlay is touched or a build is spent) and the Doctor reports them
+as a distinct `launch plan game argument` FAIL with the regenerate remedy. The
+launcher does not rewrite the plan itself: a player may have hand-validated its
+arguments. Regenerating is one click.
 
 ```json
 {
@@ -348,7 +373,7 @@ is refused before launch.
       "name": "shadPS4",
       "executable": "C:\\path\\to\\shadPS4.exe",
       "sha256": "<validated shadPS4 executable sha256>",
-      "arguments": ["<locally validated Bloodborne launch arguments>"]
+      "arguments": ["{game_path}"]
     },
     {
       "name": "AP client",

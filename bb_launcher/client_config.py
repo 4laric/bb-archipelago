@@ -53,7 +53,14 @@ CLIENT_LOG_NAME = "client.log"
 # log file that the client config points at.
 SHAD_LOG_NAME = "shadps4.log"
 
-KNOWN_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root")
+# Placeholders that only a randomized launch can satisfy: they name files the
+# client runtime configuration writer produces.
+CLIENT_PLACEHOLDERS = ("runtime_config", "ledger", "bridge_root")
+# The game directory shadPS4 is told to boot (bb-archipelago#177). Unlike the
+# client placeholders this one is satisfiable on a vanilla launch too, because
+# the game folder comes from the launcher settings, not from the AP session.
+GAME_PATH_PLACEHOLDER = "game_path"
+KNOWN_PLACEHOLDERS = CLIENT_PLACEHOLDERS + (GAME_PATH_PLACEHOLDER,)
 _PLACEHOLDER_PATTERN = re.compile(r"\{([a-z_]+)\}")
 
 
@@ -170,13 +177,21 @@ def write_client_runtime_config(
 def substitute_plan_arguments(
     arguments: Sequence[str],
     paths: ClientRuntimePaths | None,
+    *,
+    game_path: Path | str | None = None,
 ) -> tuple[str, ...]:
     """Resolve launch-time placeholders in one process argument list.
 
+    Placeholders keep the plan file portable: the machine-specific paths are
+    filled in at launch from the launcher's own settings, so a plan can be
+    copied between machines and still boot the right game.
+
     With ``paths=None`` (a vanilla launch) no client placeholder can be
-    satisfied, so any placeholder at all fails closed.  Otherwise the three
-    known placeholders are substituted and anything unrecognized is refused --
-    a typo'd token must never reach the client as a literal path.
+    satisfied, so any client placeholder at all fails closed.  ``{game_path}``
+    is separate: it resolves on every launch, vanilla included, and only fails
+    closed when the caller had no game installation to name.  Anything
+    unrecognized is refused -- a typo'd token must never reach a process as a
+    literal path.
     """
 
     tokens = {}
@@ -186,13 +201,21 @@ def substitute_plan_arguments(
             "ledger": str(paths.ledger),
             "bridge_root": str(paths.bridge_root),
         }
+    if game_path is not None:
+        tokens[GAME_PATH_PLACEHOLDER] = str(game_path)
     resolved: list[str] = []
     for argument in arguments:
         for name, value in tokens.items():
             argument = argument.replace("{" + name + "}", value)
         remaining = sorted(set(_PLACEHOLDER_PATTERN.findall(argument)))
         if remaining:
-            if paths is None and all(name in KNOWN_PLACEHOLDERS for name in remaining):
+            if GAME_PATH_PLACEHOLDER in remaining and game_path is None:
+                raise ValidationError(
+                    "this launch has no game installation to substitute for the "
+                    "{game_path} placeholder; set the shadPS4 game folder in the "
+                    "launcher settings"
+                )
+            if paths is None and all(name in CLIENT_PLACEHOLDERS for name in remaining):
                 raise ValidationError(
                     "a vanilla launch has no client runtime configuration; remove the "
                     + ", ".join(f"{{{name}}}" for name in remaining)

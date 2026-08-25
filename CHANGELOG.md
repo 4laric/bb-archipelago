@@ -8,6 +8,33 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **shadPS4 is now launched by path, so your game folder is what decides which
+  game boots.** The launch plan used to invoke `shadPS4.exe CUSA03173` — a bare
+  game ID the emulator can only resolve against its *own* library config. On an
+  emulator copy that had never been opened and pointed at a game directory,
+  that config is empty, so the launcher's "shadPS4 game folder" field was
+  cosmetic and shadPS4 exited immediately with `Game ID or file path not found:
+  CUSA03173`, even for a player whose setup was completely correct. Generated
+  plans now carry a `{game_path}` placeholder that resolves at launch to the
+  `CUSA03173` directory inside your configured game root, so a freshly unzipped
+  shadPS4 works with no in-emulator setup at all. Update and mods overlays are
+  unaffected — shadPS4 derives those from the booted game folder, not from its
+  library config (#177).
+
+- **A launch plan generated before that change is caught and named.** Existing
+  plans are never silently rewritten, so the Doctor reports a `launch plan game
+  argument` FAIL with the fix ("Generate Launch Plan" again), and every launch
+  path refuses the stale plan up front rather than spending a build and dying
+  inside the emulator (#177).
+
+- **The Doctor now checks the selected shadPS4's version.** It used to accept
+  any file named `shadPS4.exe`; a playtester passed every gate with the 0.16.0
+  copy bundled inside the third-party BBLauncher tool and only found out at
+  runtime. The version resource is read from the executable and anything other
+  than the supported build fails, with a remedy that names 0.18.0 and warns
+  about that bundled copy specifically. On a build with no readable version
+  resource the check reports SKIP rather than guessing (#177).
+
 - **An early-exit dialog now names the component that actually stopped, and
   shadPS4's output is captured too.** When shadPS4 quit immediately after
   launch, the dialog was still titled "Bloodborne AP client stopped" and had no
