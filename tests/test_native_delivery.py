@@ -13,6 +13,7 @@ docs/SPEC-client-without-cheat-engine.md.
 from __future__ import annotations
 
 import json
+import struct
 import sys
 import unittest
 from pathlib import Path
@@ -33,16 +34,30 @@ from bb_native_delivery.delivery import (  # noqa: E402
     GrantSession,
     SlotRecord,
     StackView,
+    TERMINAL,
 )
 from bb_native_delivery.descriptor import (  # noqa: E402
     DESCRIPTOR_SIZE,
+    STAGED_SIZE,
     DescriptorError,
     ItemGrantDescriptor,
     goods_descriptor_ids,
     uses_persistent_source,
 )
-from bb_native_delivery.guest import entry_address  # noqa: E402
+from bb_native_delivery import guest as guest_module  # noqa: E402
+from bb_native_delivery.guest import GuestRuntime, entry_address  # noqa: E402
 from bb_native_delivery.process import logged_eboot_base  # noqa: E402
+from bb_native_delivery.process import (  # noqa: E402
+    ProcessMemory,
+    StaleRequest,
+    WriteRefused,
+    assert_write_allowed,
+    clear_stale_request,
+    owned_write_ranges,
+    read_request_cell,
+    request_is_armed,
+    require_idle_request_cell,
+)
 from bb_native_delivery.process import install, AttachError  # noqa: E402
 from bb_native_delivery.threadcontrol import (  # noqa: E402
     DEFAULT_ATTEMPT_BUDGET,
@@ -274,8 +289,22 @@ class FakeRuntime:
     def request_pending(self):
         return self.pending
 
-    def queue_native(self, descriptor, quantity, slot, quantity_address, manual_trigger):
-        self.queued.append((descriptor, quantity, slot, quantity_address, manual_trigger))
+    def queue_native(self, descriptor, quantity, slot, quantity_address, manual_trigger,
+                     existing_stack=False):
+        self.queued.append(
+            (descriptor, quantity, slot, quantity_address, manual_trigger, existing_stack)
+        )
+        self.pending = True
+
+    def complete_native(self, normalized_id, quantity, result_slot=EMPTY_SLOT):
+        """Model the cave running on the game thread: it grows the stack itself."""
+        stack = self.stacks.get(normalized_id, StackView(quantity=0, exists=False))
+        self.stacks[normalized_id] = StackView(
+            stack.quantity + quantity, True, stack.slot, stack.quantity_address
+        )
+        self.pending = False
+        self.result = result_slot
+        self.done = True
 
     def native_done(self):
         return self.done
@@ -298,20 +327,38 @@ def _command(**overrides):
 
 
 class DeliveryStateMachineTests(unittest.TestCase):
-    def test_an_existing_stack_takes_the_direct_write_path(self):
+    def test_an_existing_stack_goes_through_the_cave_not_an_external_write(self):
+        """Issue #144: the direct-write transition is retired. An existing stack
+        arms the cave's existing-stack branch and never touches the guest page
+        from outside."""
         runtime = FakeRuntime({PEBBLE: StackView(3, True, 79, 0x2080_67C08)})
         session = GrantSession(runtime=runtime)
         session.submit(_command(expected_before=3))
+        self.assertEqual("executing", session.poll())
+        self.assertEqual(0, len(runtime.writes),
+                         f"external writes to the inventory page: {runtime.writes}")
+        self.assertEqual(1, len(runtime.queued))
+        _descriptor, quantity, slot, address, _manual, existing = runtime.queued[0]
+        self.assertTrue(existing, "the cave's existing-stack branch, not the insert path")
+        self.assertEqual(1, quantity)
+        self.assertEqual(79, slot)
+        self.assertEqual(0x2080_67C08, address, "the cave writes it, we only name it")
+        runtime.complete_native(PEBBLE, 1)
         self.assertEqual("completed", session.poll())
-        self.assertEqual([(0x2080_67C08, 4)], runtime.writes)
-        self.assertEqual(0, len(runtime.queued), "an existing stack must not call ItemGrant")
 
-    def test_a_direct_write_that_does_not_stick_fails_instead_of_acknowledging(self):
-        runtime = FakeRuntime({PEBBLE: StackView(3, True, 79, 0x2080_67C08)})
-        runtime.write_quantity = lambda address, value: False
+    def test_an_existing_stack_grant_verifies_against_the_slot_it_located(self):
+        """The existing path's native_result is a delta return value, not a slot
+        index, so verification must read the slot the tool found."""
+        runtime = FakeRuntime(
+            {PEBBLE: StackView(3, True, 79, 0x2080_67C08)},
+            slot_records={79: SlotRecord(PEBBLE, 4, 0x2080_67C08)},
+        )
         session = GrantSession(runtime=runtime)
         session.submit(_command(expected_before=3))
-        self.assertEqual("write_error", session.poll())
+        self.assertEqual("executing", session.poll())
+        runtime.done = True
+        runtime.result = 0  # the delta routine's own return value
+        self.assertEqual("completed", session.poll())
 
     def test_an_absent_stack_waits_out_the_hydration_grace_before_inserting(self):
         runtime = FakeRuntime()
@@ -322,7 +369,8 @@ class DeliveryStateMachineTests(unittest.TestCase):
         self.assertEqual(0, len(runtime.queued), "inserted before hydration could be ruled out")
         self.assertEqual("executing", session.poll())
         self.assertEqual(1, len(runtime.queued))
-        descriptor, quantity, _slot, _address, manual = runtime.queued[0]
+        descriptor, quantity, _slot, _address, manual, existing = runtime.queued[0]
+        self.assertFalse(existing, "an absent stack takes the ItemGrant insert path")
         self.assertEqual(ItemGrantDescriptor(PEBBLE_RAW, PEBBLE), descriptor)
         self.assertEqual(1, quantity)
         self.assertFalse(manual)
@@ -372,8 +420,9 @@ class DeliveryStateMachineTests(unittest.TestCase):
                              expected_before=3, expected_after=4)
         session = GrantSession(runtime=runtime, prior=prior)
         session.submit(_command(expected_before=None))
-        self.assertEqual("completed", session.poll())
-        self.assertEqual([(0x2080_67C08, 5)], runtime.writes)
+        self.assertEqual("executing", session.poll())
+        self.assertEqual(0, len(runtime.writes), f"external writes: {runtime.writes}")
+        self.assertEqual(4, session.state.expected_before, "sampled live, not inherited")
 
     def test_verification_accepts_the_slot_the_native_call_reported(self):
         """findItem returns the FIRST matching stack, which is the wrong witness
@@ -441,6 +490,366 @@ class DeliveryStateMachineTests(unittest.TestCase):
         for overrides in ({"quantity": 0}, {"quantity": 100}, {"tag": ""}, {"tag": "two words"}):
             with self.assertRaises(DeliveryError):
                 _command(**overrides)
+
+
+# ---------------------------------------------------------------------------
+# Issue #144: the guest inventory page is protection-tracked by shadPS4.
+# ---------------------------------------------------------------------------
+
+#: Where the fake puts the guest-side inventory structure. Any address outside
+#: the eboot regions would do; these mirror the live pointers in issue #144.
+FAKE_INVENTORY = 0x2_0806_0000
+FAKE_PRIMARY = 0x2_0806_7000
+FAKE_SECONDARY = 0x2_0806_9000
+FAKE_SPLIT = 8
+
+
+class TrackedPageMemory:
+    """A ProcessMemory stand-in that models what issue #144 observed live.
+
+    Reads and writes anywhere succeed, with one exception that is the whole
+    point: once an *external* write lands on the guest inventory page, every
+    subsequent read of that page raises, exactly as the live read-back of the
+    just-written address did microseconds after the write. The fake does not
+    know about the fix -- it only reproduces the emulator's behaviour, so a
+    delivery path that still writes the page fails here on its own merits.
+    """
+
+    PAGE_MASK = ~0xFFFF
+
+    def __init__(self, base=0):
+        self.base = base
+        self._bytes = {}
+        self.writes = []
+        self.wounded_pages = set()
+        #: Pages inside the eboot image. Issue #144 established these are NOT
+        #: protection-tracked: the tool wrote them externally all session.
+        self.eboot_pages = {
+            self._page(address)
+            for _name, start, end in owned_write_ranges(base)
+            for address in range(start, end, 0x1000)
+        }
+        self.read_failures = 0
+        self._pending_read_failures = 0
+
+    # -- seeding, from "the game's own thread", which is never external
+    def poke(self, address, data):
+        for index, byte in enumerate(data):
+            self._bytes[address + index] = byte
+
+    def poke_u32(self, address, value):
+        self.poke(address, struct.pack("<I", value & 0xFFFFFFFF))
+
+    def poke_u64(self, address, value):
+        self.poke(address, struct.pack("<Q", value))
+
+    def fail_next_reads(self, count):
+        self._pending_read_failures = count
+
+    def _page(self, address):
+        return address & self.PAGE_MASK
+
+    # -- the ProcessMemory surface
+    def read(self, address, size):
+        if self._pending_read_failures:
+            self._pending_read_failures -= 1
+            self.read_failures += 1
+            raise AttachError(f"ReadProcessMemory({address:#x}, {size}) failed")
+        if self._page(address) in self.wounded_pages:
+            self.read_failures += 1
+            raise AttachError(f"ReadProcessMemory({address:#x}, {size}) failed")
+        return bytes(self._bytes.get(address + index, 0) for index in range(size))
+
+    def write(self, address, data):
+        assert_write_allowed(self.base, address, len(data))
+        self.writes.append((address, bytes(data)))
+        if self._page(address) not in self.eboot_pages:
+            self.wounded_pages.add(self._page(address))
+        self.poke(address, data)
+
+    def read_u32(self, address):
+        return struct.unpack("<I", self.read(address, 4))[0]
+
+    def read_u64(self, address):
+        return struct.unpack("<Q", self.read(address, 8))[0]
+
+    def write_u32(self, address, value):
+        self.write(address, struct.pack("<I", value & 0xFFFFFFFF))
+
+    def write_u64(self, address, value):
+        self.write(address, struct.pack("<Q", value))
+
+    # -- convenience
+    def state_head(self):
+        return self.read(self.base + payload.STATE_RVA, 0x10)
+
+
+def _seed_inventory(memory, quantity=3, normalized=PEBBLE, slot=0):
+    """One Pebble stack, reachable through the geometry GuestRuntime walks."""
+    base = memory.base
+    memory.poke(base + payload.STATE_RVA, bytes(0x70))
+    memory.poke_u64(base + payload.INVENTORY_RVA, FAKE_INVENTORY)
+    memory.poke_u32(FAKE_INVENTORY + guest_module.SPLIT_OFFSET, FAKE_SPLIT)
+    memory.poke_u32(FAKE_INVENTORY + guest_module.LAST_OFFSET, slot)
+    memory.poke_u64(FAKE_INVENTORY + guest_module.PRIMARY_ARRAY_OFFSET, FAKE_PRIMARY)
+    memory.poke_u64(FAKE_INVENTORY + guest_module.SECONDARY_ARRAY_OFFSET, FAKE_SECONDARY)
+    entry = entry_address(FAKE_INVENTORY, slot, FAKE_SPLIT, FAKE_PRIMARY, FAKE_SECONDARY)
+    memory.poke_u32(entry + guest_module.RECORD_ID_OFFSET, normalized)
+    memory.poke_u32(entry + guest_module.RECORD_QUANTITY_OFFSET, quantity)
+    return entry
+
+
+class Issue144AcceptanceTests(unittest.TestCase):
+    """The motivating case, replayed: owner checklist item 7 against a guest
+    whose inventory page dies the moment anything writes it from outside."""
+
+    def test_an_existing_stack_grant_never_writes_the_tracked_guest_page(self):
+        memory = TrackedPageMemory()
+        entry = _seed_inventory(memory, quantity=3)
+        runtime = GuestRuntime(memory, 0)
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=3))
+
+        self.assertEqual("executing", session.poll())
+
+        # 1. Nothing was written outside the eboot image.
+        eboot_pages = {memory._page(start) for _n, start, _e in owned_write_ranges(0)}
+        for address, data in memory.writes:
+            self.assertIn(memory._page(address), eboot_pages,
+                          f"write to {address:#x} left the eboot image")
+        self.assertNotIn(memory._page(entry), memory.wounded_pages,
+                         "the inventory page was never touched from outside")
+
+        # 2. The grant went to the cave's existing-stack branch.
+        self.assertEqual(guest_module.REQUEST_EXISTING,
+                         struct.unpack_from("<I", memory.state_head(), 0)[0])
+        self.assertEqual(0, struct.unpack_from("<I", memory.state_head(), 0xC)[0], "done clear")
+        self.assertEqual(
+            entry + guest_module.RECORD_QUANTITY_OFFSET,
+            memory.read_u64(payload.ITEM_QUANTITY_POINTER_RVA),
+        )
+
+        # 3. The guest is still alive: the page still reads.
+        self.assertEqual(3, memory.read_u32(entry + guest_module.RECORD_QUANTITY_OFFSET))
+
+        # 4. The game thread runs the cave: it clears the request and grows the
+        #    stack itself, which is the only write the page ever sees.
+        memory.poke_u32(payload.REQUEST_RVA, 0)
+        memory.poke_u32(entry + guest_module.RECORD_QUANTITY_OFFSET, 4)
+        memory.poke_u32(payload.RESULT_RVA, 0)
+        memory.poke_u32(payload.DONE_RVA, 1)
+
+        self.assertEqual("completed", session.poll())
+        self.assertFalse(request_is_armed(memory.state_head()),
+                         "no armed request left behind")
+
+    def test_the_retired_direct_write_would_have_wounded_this_same_fake(self):
+        """The control that keeps the fake honest: the old path really does die
+        here, so the passing test above is evidence and not a tautology."""
+        memory = TrackedPageMemory()
+        entry = _seed_inventory(memory, quantity=3)
+        runtime = GuestRuntime(memory, 0)
+        with self.assertRaises(WriteRefused):
+            runtime.write_quantity(entry + guest_module.RECORD_QUANTITY_OFFSET, 4)
+
+
+class WriteGuardTests(unittest.TestCase):
+    def test_every_installed_region_is_inside_the_guard(self):
+        for blob in payload.blobs():
+            self.assertEqual(
+                blob.name,
+                assert_write_allowed(0x5650000, 0x5650000 + blob.rva, len(blob.data)),
+            )
+
+    def test_the_descriptor_span_reaches_past_the_end_of_the_state_blob(self):
+        base = 0x5650000
+        self.assertEqual(
+            "descriptor",
+            assert_write_allowed(base, base + payload.DESCRIPTOR_RVA + 0x18, 8),
+        )
+
+    def test_a_guest_inventory_address_is_refused(self):
+        with self.assertRaises(WriteRefused) as caught:
+            assert_write_allowed(0x5650000, 0x2_0806_7BF8, 4)
+        self.assertIn("#144", str(caught.exception))
+
+    def test_a_write_straddling_the_end_of_a_region_is_refused(self):
+        base = 0x5650000
+        state = payload.state_region()
+        with self.assertRaises(WriteRefused):
+            assert_write_allowed(base, base + payload.DESCRIPTOR_RVA + STAGED_SIZE - 4, 8)
+        self.assertEqual("state_region",
+                         assert_write_allowed(base, base + state.rva, len(state.data)))
+
+    def test_the_guard_fires_inside_ProcessMemory_write_itself(self):
+        """Not the pure helper: the actual live method, which must refuse before
+        it reaches kernel32. ProcessMemory cannot be constructed off Windows, so
+        the method is called against a minimal stand-in for self."""
+
+        class _Stub:
+            _write_guard_base = 0x5650000
+
+            def __getattr__(self, name):  # any kernel32 touch is a test failure
+                raise AssertionError(f"the guard let the call reach {name}")
+
+        with self.assertRaises(WriteRefused):
+            ProcessMemory.write(_Stub(), 0x2_0806_7BF8, b"\x04\x00\x00\x00")
+
+
+class StaleRequestGateTests(unittest.TestCase):
+    def _armed(self):
+        memory = TrackedPageMemory()
+        memory.poke(payload.STATE_RVA, bytes(0x70))
+        memory.poke_u32(payload.REQUEST_RVA, 1)
+        memory.poke_u32(payload.QUANTITY_RVA, 1)
+        memory.poke(payload.DESCRIPTOR_RVA, ItemGrantDescriptor(PEBBLE_RAW, PEBBLE).encode())
+        return memory
+
+    def test_an_idle_cell_lets_the_tool_proceed(self):
+        memory = TrackedPageMemory()
+        memory.poke(payload.STATE_RVA, payload.state_region().data)
+        require_idle_request_cell(memory, 0)  # does not raise
+
+    def test_a_completed_grant_is_still_idle(self):
+        """done=1 and a descriptor left over from the last grant are the normal
+        resting state; only the request word arms the cave."""
+        memory = TrackedPageMemory()
+        memory.poke(payload.STATE_RVA, payload.state_region().data)
+        memory.poke_u32(payload.DONE_RVA, 1)
+        memory.poke_u32(payload.RESULT_RVA, 79)
+        memory.poke(payload.DESCRIPTOR_RVA, ItemGrantDescriptor(PEBBLE_RAW, PEBBLE).encode())
+        require_idle_request_cell(memory, 0)  # does not raise
+
+    def test_an_armed_cell_refuses_and_prints_what_it_found(self):
+        memory = self._armed()
+        with self.assertRaises(StaleRequest) as caught:
+            require_idle_request_cell(memory, 0)
+        message = str(caught.exception)
+        self.assertIn("#144", message)
+        self.assertIn("--tag", message, "the tag-replay route is offered")
+        self.assertIn("--clear-stale-request", message)
+        self.assertIn("CE 04 00 B0", message, "the armed descriptor bytes are printed")
+
+    def test_clear_stale_request_reports_and_disarms(self):
+        memory = self._armed()
+        before_state, before_descriptor = clear_stale_request(memory, 0)
+        self.assertTrue(request_is_armed(before_state), "it returns what it cleared")
+        self.assertEqual(PEBBLE_RAW, struct.unpack_from("<I", before_descriptor, 0)[0])
+        after_state, after_descriptor = read_request_cell(memory, 0)
+        self.assertFalse(request_is_armed(after_state))
+        self.assertEqual(bytes(STAGED_SIZE), after_descriptor)
+        require_idle_request_cell(memory, 0)
+
+    def test_clearing_keeps_the_seeded_slot_index_and_heartbeat_descriptor(self):
+        """A blind zero fill would break the heartbeat cave, which reads both
+        every frame."""
+        memory = self._armed()
+        clear_stale_request(memory, 0)
+        self.assertEqual(0xFFFFFFFF, memory.read_u32(payload.SLOT_INDEX_RVA))
+        self.assertEqual(0xB0000384, memory.read_u32(payload.HEARTBEAT_DESCRIPTOR_RVA))
+
+
+class FallibleGeometryReadTests(unittest.TestCase):
+    def test_a_failing_read_retries_and_then_reports_a_clean_status(self):
+        memory = TrackedPageMemory()
+        _seed_inventory(memory)
+        runtime = GuestRuntime(memory, 0)
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=3))
+        memory.fail_next_reads(guest_module.READ_ATTEMPTS * 4)
+
+        status = session.poll()
+
+        self.assertEqual("read_unavailable", status)
+        self.assertTrue(runtime.read_unavailable())
+        self.assertNotIn(status, TERMINAL, "the session stays resumable")
+
+    def test_the_retry_budget_is_bounded_and_a_late_success_is_taken(self):
+        memory = TrackedPageMemory()
+        _seed_inventory(memory)
+        runtime = GuestRuntime(memory, 0)
+        guest_module.time.sleep  # the retry sleeps; keep it visible in the test
+        memory.fail_next_reads(guest_module.READ_ATTEMPTS - 1)
+        stack = runtime.find_stack(PEBBLE)
+        self.assertIsNotNone(stack, "recovered inside the budget")
+        self.assertEqual(3, stack.quantity)
+        self.assertFalse(runtime.read_unavailable())
+        self.assertEqual(guest_module.READ_ATTEMPTS - 1, memory.read_failures)
+
+    def test_a_read_that_never_recovers_does_not_spin_forever(self):
+        memory = TrackedPageMemory()
+        _seed_inventory(memory)
+        runtime = GuestRuntime(memory, 0)
+        memory.fail_next_reads(10_000)
+        self.assertIsNone(runtime.find_stack(PEBBLE))
+        self.assertEqual(guest_module.READ_ATTEMPTS, memory.read_failures)
+
+    def test_a_resumed_session_completes_after_the_reads_come_back(self):
+        memory = TrackedPageMemory()
+        entry = _seed_inventory(memory)
+        runtime = GuestRuntime(memory, 0)
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=3))
+        # Exactly one poll's worth of failure, so the next poll finds the
+        # geometry back and the session carries on where it left off.
+        memory.fail_next_reads(guest_module.READ_ATTEMPTS)
+        self.assertEqual("read_unavailable", session.poll())
+        self.assertEqual("executing", session.poll())
+        memory.poke_u32(payload.REQUEST_RVA, 0)
+        memory.poke_u32(entry + guest_module.RECORD_QUANTITY_OFFSET, 4)
+        memory.poke_u32(payload.DONE_RVA, 1)
+        self.assertEqual("completed", session.poll())
+
+
+class DisarmOnExceptionTests(unittest.TestCase):
+    """Issue #144's landmine: a crash after the request was committed left the
+    cave armed for the next bullet the player fired."""
+
+    def test_an_exception_after_commit_disarms_the_request_first(self):
+        runtime = FakeRuntime()
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=0))
+        for _ in range(MIN_ABSENT_POLLS):
+            session.poll()
+        self.assertTrue(runtime.pending, "the request is committed")
+
+        boom = AttachError("ReadProcessMemory(0x20806779c, 4) failed")
+
+        def explode():
+            raise boom
+
+        runtime.native_done = explode
+        with self.assertRaises(AttachError):
+            session.poll()
+        self.assertFalse(runtime.pending, "the cell was disarmed on the way out")
+
+    def test_a_failure_while_committing_still_disarms(self):
+        runtime = FakeRuntime()
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=0))
+        for _ in range(MIN_ABSENT_POLLS - 1):
+            session.poll()
+
+        def half_arm(*_args, **_kwargs):
+            runtime.pending = True
+            raise AttachError("WriteProcessMemory failed mid-stage")
+
+        runtime.queue_native = half_arm
+        with self.assertRaises(AttachError):
+            session.poll()
+        self.assertFalse(runtime.pending, "a half-staged request is not left armed")
+
+    def test_an_exception_before_any_commit_leaves_the_cell_untouched(self):
+        runtime = FakeRuntime({PEBBLE: StackView(3, True, 79, 0x2080_67C08)})
+        cleared = []
+        runtime.clear_request = lambda: cleared.append(True)
+        runtime.inventory_ready = lambda: (_ for _ in ()).throw(AttachError("nope"))
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=3))
+        with self.assertRaises(AttachError):
+            session.poll()
+        self.assertEqual(0, len(cleared),
+                         "nothing was committed, so nothing should be disarmed")
 
 
 class GuestGeometryTests(unittest.TestCase):

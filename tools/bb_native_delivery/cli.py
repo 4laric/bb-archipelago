@@ -7,6 +7,7 @@
     python -m tools.bb_native_delivery install --pid 1234 --arm      # writes
     python -m tools.bb_native_delivery grant --pid 1234 --raw 0xB00004CE \
         --normalized 0x400004CE --quantity 1 --tag manual --arm
+    python -m tools.bb_native_delivery grant --pid 1234 ... --arm --clear-stale-request
 
 ⚠️ UNTESTED AGAINST A LIVE GAME. This has never attached to shadPS4. Cheat
 Engine remains the supported delivery path; see docs/SPEC-client-without-cheat-engine.md.
@@ -64,7 +65,42 @@ def _attach(args: argparse.Namespace, writable: bool):
                 "could not resolve a validated eboot base from the shad log; "
                 "pass --base explicitly (a live AOB scan is not implemented in this prototype)"
             )
+    if writable:
+        # Issue #144: from here on, every write is confined to the eboot regions
+        # this tool installed. An external write to a guest data page freezes
+        # shadPS4, so the guard fails closed rather than trusting call sites.
+        memory.set_write_guard(base)
     return memory, base
+
+
+def _gate_request_cell(memory, base, clear: bool) -> None:
+    """Refuse to proceed on an armed request cell (issue #144).
+
+    A tool crash between committing a request and acknowledging it leaves the
+    cave armed with a hair trigger the player holds: the next consume hook fired
+    in game executes the stale request. Adding a second grant on top of that is
+    how it detonates, so both `grant` and `install` check the cell on attach.
+    """
+    from .process import (
+        clear_stale_request,
+        format_request_cell,
+        read_request_cell,
+        request_is_armed,
+        require_idle_request_cell,
+    )
+
+    if clear:
+        state_head, descriptor_bytes = read_request_cell(memory, base)
+        if not request_is_armed(state_head):
+            print("--clear-stale-request: the cell was already idle; cleared it anyway.")
+        print("clearing the native request cell. What was there:")
+        print(format_request_cell(state_head, descriptor_bytes))
+        clear_stale_request(memory, base)
+        after_state, after_descriptor = read_request_cell(memory, base)
+        print("after:")
+        print(format_request_cell(after_state, after_descriptor))
+        return
+    require_idle_request_cell(memory, base)
 
 
 def _cmd_verify(args: argparse.Namespace) -> int:
@@ -84,10 +120,17 @@ def _cmd_verify(args: argparse.Namespace) -> int:
 
 
 def _cmd_install(args: argparse.Namespace) -> int:
-    from .process import install
+    from .process import StaleRequest, install
     from .threadcontrol import InstallAborted
 
     memory, base = _attach(args, writable=args.arm)
+    if args.arm:
+        try:
+            _gate_request_cell(memory, base, args.clear_stale_request)
+        except StaleRequest as exc:
+            print(f"\nREFUSING TO INSTALL: {exc}")
+            memory.close()
+            return 1
     controller = None
     if args.arm:
         from .threadcontrol import WindowsThreadController
@@ -114,12 +157,18 @@ def _cmd_install(args: argparse.Namespace) -> int:
 
 def _cmd_grant(args: argparse.Namespace) -> int:
     from .guest import GuestRuntime
+    from .process import StaleRequest
 
     memory, base = _attach(args, writable=args.arm)
     with memory:
         if not args.arm:
             print("Dry run: not queueing. Re-run with --arm.")
             return 0
+        try:
+            _gate_request_cell(memory, base, args.clear_stale_request)
+        except StaleRequest as exc:
+            print(f"\nREFUSING TO GRANT: {exc}")
+            return 1
         session = GrantSession(runtime=GuestRuntime(memory, base))
         session.submit(
             GrantCommand(
@@ -169,6 +218,11 @@ def build_parser() -> argparse.ArgumentParser:
         if name != "verify":
             attached.add_argument("--arm", action="store_true",
                                   help="actually write to the guest process")
+            attached.add_argument(
+                "--clear-stale-request", action="store_true",
+                help="zero the native request cell and descriptor before proceeding "
+                     "(issue #144); prints what it cleared",
+            )
         attached.set_defaults(func=handler)
 
     grant = sub.choices["grant"]

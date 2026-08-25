@@ -22,6 +22,7 @@ from pathlib import Path
 
 from . import payload
 from .aob import BytePattern, parse
+from .descriptor import STAGED_SIZE
 from .threadcontrol import (
     DEFAULT_ATTEMPT_BUDGET,
     PatchWindow,
@@ -45,11 +46,33 @@ ASSERTS: tuple[tuple[str, int, str], ...] = (
     ("descriptor", payload.DESCRIPTOR_RVA, "00 " * 24),
 )
 
+#: The span of the state block, in bytes, counted from ``payload.STATE_RVA``.
+#: ``payload.state_region()`` is 0x70 bytes, but the 32-byte staged descriptor
+#: starts at +0x60, so the block the tool owns actually runs to +0x80.
+STATE_SPAN = (payload.DESCRIPTOR_RVA - payload.STATE_RVA) + STAGED_SIZE
+
 PROCESS_VM_READ = 0x0010
 PROCESS_VM_WRITE = 0x0020
 PROCESS_VM_OPERATION = 0x0008
 PROCESS_QUERY_INFORMATION = 0x0400
 PAGE_EXECUTE_READWRITE = 0x40
+
+
+class WriteRefused(Exception):
+    """A write was aimed outside the launcher-owned eboot regions.
+
+    ``observed`` (issue #144, two live reproductions on 2026-08-24): the guest
+    inventory page under shadPS4 is protection-tracked, so an external
+    WriteProcessMemory into it wounds the emulator -- the read-back of the very
+    address just written fails microseconds later and the guest freezes shortly
+    after. Regions inside the eboot image (the caves, the state block, the
+    descriptor, the two detour sites) were written externally many times in the
+    same sessions with no ill effect.
+
+    So the rule this guard enforces is not a style preference: every external
+    write must land inside the eboot image. Anything else is refused, loudly,
+    before a single byte reaches the guest.
+    """
 
 
 class AttachError(Exception):
@@ -69,8 +92,51 @@ class AssertResult:
     ok: bool
 
 
+def owned_write_ranges(base: int) -> tuple[tuple[str, int, int], ...]:
+    """(name, start, end) for every region this tool is allowed to write.
+
+    The five contract regions come straight from :func:`payload.blobs` -- the
+    state block, both caves and both detour sites -- so the guard cannot drift
+    away from what the installer actually writes. The descriptor span is added
+    explicitly because it reaches past the end of the state blob (see
+    :data:`STATE_SPAN`).
+    """
+    ranges = [
+        (blob.name, base + blob.rva, base + blob.rva + len(blob.data))
+        for blob in payload.blobs()
+    ]
+    ranges.append(("descriptor", base + payload.DESCRIPTOR_RVA,
+                   base + payload.DESCRIPTOR_RVA + STAGED_SIZE))
+    return tuple(ranges)
+
+
+def assert_write_allowed(base: int, address: int, size: int) -> str:
+    """Return the owning region's name, or raise :class:`WriteRefused`.
+
+    Pure, so the guard is testable without a process. Fails closed: a write that
+    straddles a region boundary is refused even though its first byte is inside.
+    """
+    if size <= 0:
+        raise WriteRefused(f"refusing a {size}-byte write at {address:#x} (issue #144)")
+    for name, start, end in owned_write_ranges(base):
+        if start <= address and address + size <= end:
+            return name
+    raise WriteRefused(
+        f"refusing WriteProcessMemory({address:#x}, {size}): outside the "
+        f"launcher-owned eboot regions (eboot base {base:#x}). External writes "
+        "to guest pages freeze shadPS4 -- see issue #144. Grants into an "
+        "existing stack go through the native queue, not through this path."
+    )
+
+
 class ProcessMemory:
-    """A thin ReadProcessMemory/WriteProcessMemory wrapper."""
+    """A thin ReadProcessMemory/WriteProcessMemory wrapper.
+
+    Once :meth:`set_write_guard` has been told the eboot base, every write is
+    checked against :func:`owned_write_ranges` and refused if it falls outside.
+    The guard is armed by the CLI on attach; leaving it unset keeps the raw
+    behaviour for probes that resolve a base by scanning.
+    """
 
     def __init__(self, pid: int, *, writable: bool = False) -> None:
         if os.name != "nt":  # pragma: no cover - the sandbox has no Win32
@@ -85,6 +151,11 @@ class ProcessMemory:
         self.pid = pid
         self.handle = handle
         self._kernel32 = kernel32
+        self._write_guard_base: int | None = None
+
+    def set_write_guard(self, base: int) -> None:
+        """Confine every subsequent write to the eboot regions at ``base``."""
+        self._write_guard_base = base
 
     def close(self) -> None:
         if getattr(self, "handle", None):
@@ -108,6 +179,8 @@ class ProcessMemory:
         return bytes(buffer)
 
     def write(self, address: int, data: bytes) -> None:
+        if self._write_guard_base is not None:
+            assert_write_allowed(self._write_guard_base, address, len(data))
         old = ctypes.c_ulong(0)
         self._kernel32.VirtualProtectEx(
             self.handle, ctypes.c_void_p(address), len(data), PAGE_EXECUTE_READWRITE, ctypes.byref(old)
@@ -198,6 +271,81 @@ def require_validated_image(memory: ProcessMemory, base: int) -> None:
         raise ImageMismatch(
             "refusing to patch: this is not the validated CUSA03173 01.09 image. " + detail
         )
+
+
+class StaleRequest(AttachError):
+    """The state cell was armed when we attached. Refuse; do not add to it."""
+
+
+#: The 16-byte head of the state block: request / quantity / result / done.
+REQUEST_HEAD_SIZE = 0x10
+
+
+def read_request_cell(memory: ProcessMemory, base: int) -> tuple[bytes, bytes]:
+    """(state head, staged descriptor) as raw bytes, for printing."""
+    return (
+        memory.read(base + payload.STATE_RVA, REQUEST_HEAD_SIZE),
+        memory.read(base + payload.DESCRIPTOR_RVA, STAGED_SIZE),
+    )
+
+
+def request_is_armed(state_head: bytes) -> bool:
+    """True when the cave would pick this request up on its next fire.
+
+    ``observed`` (issue #144): the cave arms on ``bbAutoRequest != 0`` and clears
+    it itself, so the request word alone decides. ``done``/``result`` are left
+    set by a *completed* grant and the descriptor keeps its last contents, so
+    demanding an all-zero block here would refuse every second legitimate grant.
+    """
+    return struct.unpack_from("<I", state_head, 0x00)[0] != 0
+
+
+def format_request_cell(state_head: bytes, descriptor_bytes: bytes) -> str:
+    return (
+        f"  state_region  +{payload.STATE_RVA:#x}  {state_head.hex(' ').upper()}\n"
+        f"  descriptor    +{payload.DESCRIPTOR_RVA:#x}  {descriptor_bytes.hex(' ').upper()}"
+    )
+
+
+STALE_REQUEST_GUIDANCE = (
+    "A request is still armed in the state cell. The next consume hook the "
+    "player triggers in game would execute it -- that is the landmine in issue "
+    "#144, and queueing a second grant on top of it is how it detonates.\n"
+    "Either re-run the original grant with the same --tag (the durable ledger "
+    "replays it and decides 'already applied' instead of granting twice), or "
+    "re-run with --clear-stale-request to zero the cell first."
+)
+
+
+def require_idle_request_cell(memory: ProcessMemory, base: int) -> None:
+    """Fail closed when the state cell is armed on attach."""
+    state_head, descriptor_bytes = read_request_cell(memory, base)
+    if request_is_armed(state_head):
+        raise StaleRequest(
+            "refusing to proceed: the native request cell is not idle.\n"
+            + format_request_cell(state_head, descriptor_bytes)
+            + "\n"
+            + STALE_REQUEST_GUIDANCE
+        )
+
+
+def clear_stale_request(memory: ProcessMemory, base: int) -> tuple[bytes, bytes]:
+    """Disarm the cell and return the bytes that were there.
+
+    Safe to write externally: both the state block and the descriptor live
+    inside the eboot image at ``eboot+0x50DBxxx``, which issue #144 established
+    is not protection-tracked (``observed``).
+
+    The state block is restored to the freshly-installed
+    :func:`payload.state_region` bytes rather than zeroed outright -- a zero fill
+    would also wipe ``bbAutoSlotIndex = FFFFFFFF`` and the heartbeat descriptor
+    that the heartbeat cave reads every frame.
+    """
+    before = read_request_cell(memory, base)
+    blob = payload.state_region()
+    memory.write(base + blob.rva, blob.data)
+    memory.write(base + payload.DESCRIPTOR_RVA, bytes(STAGED_SIZE))
+    return before
 
 
 def install(

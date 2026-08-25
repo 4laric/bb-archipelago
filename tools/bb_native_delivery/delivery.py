@@ -19,6 +19,26 @@ paid for live:
   restart decide "already applied" instead of granting twice;
 * fail closed -- absent Blood Vial insertion is refused outright after the live
   ``?ItemInfo?`` (``0xF00003E8``) reproduction.
+
+Issue #144 retired one transition that used to live here. An *existing* stack
+was grown by writing its quantity field with WriteProcessMemory from outside the
+process. Two live reproductions on 2026-08-24 showed that write wounding the
+emulator: the read-back of the same address microseconds later failed and the
+guest froze shortly after. The mechanism, ``inferred`` but explaining both
+freezes and the intermittent reads, is that shadPS4 protection-tracks the guest
+inventory page; the eboot-image regions the caves live in are demonstrably safe
+to write externally, the inventory page is not.
+
+So both branches now go through the cave, which runs on the game's own thread:
+
+* absent stack -> ``request = 1``, the ``ItemGrant`` insert path;
+* existing stack -> ``request = 2``, the cave's ``bbAutoExisting`` label, which
+  calls the game's quantity-delta routine with the slot index and quantity
+  pointer the tool already located.
+
+``_direct_write`` is kept below, unreachable from :meth:`GrantSession.poll`, so
+the retired transition stays readable next to the note explaining why it is
+retired. Nothing on the live ``GuestRuntime`` path calls it.
 """
 
 from __future__ import annotations
@@ -94,10 +114,19 @@ class Runtime(Protocol):
     def queue_native(
         self, descriptor: ItemGrantDescriptor, quantity: int, slot: int | None,
         quantity_address: int | None, manual_trigger: bool,
+        existing_stack: bool = False,
     ) -> None: ...
     def native_done(self) -> bool: ...
     def native_result(self) -> int: ...
     def clear_request(self) -> None: ...
+
+    def read_unavailable(self) -> bool:
+        """True when the last geometry read exhausted its retry budget.
+
+        Optional: implementations that cannot fail a read (the test fakes) may
+        omit it, and :class:`GrantSession` treats its absence as False.
+        """
+        ...
 
 
 @dataclass
@@ -127,6 +156,7 @@ class GrantSession:
     _expected_before: int | None = None
     _active: bool = False
     _manual: bool = False
+    _verify_slot: int | None = None
 
     # -- helpers
 
@@ -163,13 +193,35 @@ class GrantSession:
     # -- the poll
 
     def poll(self) -> str:
-        if self._active:
-            return self._poll_active()
-        if self.command is None:
-            return self.state.status
-        if self.state.status in TERMINAL:
-            return self.state.status
-        return self._poll_pending()
+        """One transition. Never leaves an armed request behind on the way out.
+
+        Issue #144: a traceback out of the poll loop after the request cell had
+        been committed left the cave armed, and the next consume hook the player
+        triggered in game executed it and froze the guest. So any exception that
+        escapes a poll with a request in flight disarms the cell first, best
+        effort, and then propagates unchanged. This is belt, not braces -- the
+        attach-time gate in :mod:`.process` is the backstop for the cases this
+        cannot reach (a kill -9, a crash between the two writes).
+        """
+        try:
+            if self._active:
+                return self._poll_active()
+            if self.command is None:
+                return self.state.status
+            if self.state.status in TERMINAL:
+                return self.state.status
+            return self._poll_pending()
+        except BaseException:
+            self._disarm_best_effort()
+            raise
+
+    def _disarm_best_effort(self) -> None:
+        if not self._active:
+            return
+        try:
+            self.runtime.clear_request()
+        except Exception:  # pragma: no cover - the backstop is the attach gate
+            pass
 
     def _poll_active(self) -> str:
         if not self.runtime.native_done():
@@ -178,7 +230,12 @@ class GrantSession:
         stack = self.runtime.find_stack(self.command.normalized_id)
         actual = stack.quantity if stack else None
         wanted = self._expected_before + self.command.quantity
-        record = self.runtime.read_slot_record(native_result)
+        # The insert path returns the slot it filled. The existing path returns
+        # the quantity-delta routine's own value, which is not a slot index, so
+        # verify against the slot we located before queueing instead.
+        record = self.runtime.read_slot_record(
+            native_result if self._verify_slot is None else self._verify_slot
+        )
         slot_verified = (
             record.normalized_id == self.command.normalized_id
             and record.quantity is not None
@@ -204,9 +261,23 @@ class GrantSession:
     def _poll_pending(self) -> str:
         command = self.command
         if not self.runtime.inventory_ready():
+            if self._read_unavailable():
+                return self._set(
+                    "read_unavailable",
+                    "Command retained; a guest read failed its retry budget",
+                )
             return self._set("awaiting_inventory", "Command retained; use one bullet once")
         stack = self.runtime.find_stack(command.normalized_id)
         if stack is None:
+            if self._read_unavailable():
+                # Issue #144: a failed ReadProcessMemory during the geometry
+                # chase used to traceback out of the poll loop. It is a status
+                # now, and a non-terminal one: the session stays resumable and
+                # the next poll tries again.
+                return self._set(
+                    "read_unavailable",
+                    "Command retained; a guest read failed its retry budget",
+                )
             return self._set("awaiting_inventory", "Command retained; inventory geometry is not hydrated yet")
         if not stack.exists:
             self._absent_polls += 1
@@ -234,7 +305,10 @@ class GrantSession:
             )
 
         if stack.exists:
-            return self._direct_write(wanted)
+            # Issue #144: this used to be `return self._direct_write(wanted)`.
+            # The cave's `bbAutoExisting` branch does the same arithmetic on the
+            # game's own thread, which is the only way the write survives.
+            return self._queue(stack, existing_stack=True)
 
         if command.normalized_id == BLOOD_VIAL_NORMALIZED:
             return self._finish(
@@ -242,26 +316,62 @@ class GrantSession:
                 f"tag={command.tag} absent Blood Vial insertion is disabled after the live "
                 "invalid-record reproduction; acquire one Vial before delivery",
             )
+        return self._queue(stack, existing_stack=False)
+
+    def _queue(self, stack: StackView, *, existing_stack: bool) -> str:
+        """Commit one request to the cave and go active.
+
+        Whether the insert path's ``ItemGrant`` call would merge into an existing
+        stack or create a duplicate slot next to it is ``inferred`` and has never
+        been checked live -- which is precisely why the existing-stack case takes
+        the cave's own quantity-delta branch rather than reusing the insert path.
+        Owner checklist item 7 revalidates both.
+        """
+        command = self.command
         if self.runtime.request_pending():
             return self._set("busy", "Native request already pending")
 
         descriptor = ItemGrantDescriptor(command.raw_id, command.normalized_id)
-        self.runtime.queue_native(
-            descriptor,
-            command.quantity,
-            stack.slot,
-            stack.quantity_address,
-            self._manual,
-        )
+        try:
+            self.runtime.queue_native(
+                descriptor,
+                command.quantity,
+                stack.slot,
+                stack.quantity_address,
+                self._manual,
+                existing_stack,
+            )
+        except BaseException:
+            # The cell may be half-written; treat it as armed and disarm it.
+            self._active = True
+            raise
         self._active = True
         self._verify_polls = 0
-        return self._set(
-            "executing",
-            f"tag={command.tag} native source="
-            f"{'persistent' if uses_persistent_source(command.raw_id) else 'in_frame'}",
-        )
+        self._verify_slot = stack.slot if existing_stack else None
+        if existing_stack:
+            detail = (
+                f"tag={command.tag} native existing-stack delta slot={stack.slot} "
+                f"expected_after={self._expected_before + command.quantity}"
+            )
+        else:
+            detail = (
+                f"tag={command.tag} native source="
+                f"{'persistent' if uses_persistent_source(command.raw_id) else 'in_frame'}"
+            )
+        return self._set("executing", detail)
+
+    def _read_unavailable(self) -> bool:
+        probe = getattr(self.runtime, "read_unavailable", None)
+        return bool(probe()) if probe is not None else False
 
     def _direct_write(self, wanted: int) -> str:
+        """RETIRED (issue #144); unreachable from :meth:`poll`.
+
+        This is the external WriteProcessMemory into the guest inventory page
+        that froze shadPS4 twice on 2026-08-24. It is kept only so the retired
+        transition can be exercised against an in-memory fake, and must never be
+        reached from a :class:`~.guest.GuestRuntime`.
+        """
         command = self.command
         stack = self.runtime.find_stack(command.normalized_id)
         address = stack.quantity_address if stack else None
