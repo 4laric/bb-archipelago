@@ -321,6 +321,42 @@ class LauncherApp:
             "Horizontal.TProgressbar", background=THEME_BLOOD,
             troughcolor=THEME_PANEL, bordercolor=THEME_PANEL,
         )
+        # The notebook arrived with #190/#191 but no theme entry, so clam's
+        # stock light tabs rendered as a dashed empty box on the dark panel.
+        style.configure(
+            "TNotebook", background=THEME_BACKGROUND, bordercolor=THEME_BORDER,
+            tabmargins=(4, 4, 4, 0),
+        )
+        style.configure(
+            "TNotebook.Tab", background=THEME_PANEL, foreground=THEME_MUTED,
+            bordercolor=THEME_BORDER, padding=(14, 6), focuscolor=THEME_BACKGROUND,
+        )
+        style.map(
+            "TNotebook.Tab",
+            background=[("selected", THEME_BACKGROUND), ("active", "#1f2733")],
+            foreground=[("selected", THEME_GOLD), ("active", THEME_FOREGROUND)],
+            expand=[("selected", (0, 0, 0, 0))],
+        )
+        # clam draws the focus ring as a dashed rectangle inside the tab; the
+        # layout has no other job, so dropping the focus element is the plain-ttk
+        # way to kill it without a new dependency.
+        try:
+            style.layout(
+                "TNotebook.Tab",
+                [(
+                    "Notebook.tab", {
+                        "sticky": "nswe",
+                        "children": [(
+                            "Notebook.padding", {
+                                "side": "top", "sticky": "nswe",
+                                "children": [("Notebook.label", {"side": "top", "sticky": ""})],
+                            },
+                        )],
+                    },
+                )],
+            )
+        except self.tk.TclError:
+            pass
 
     def _apply_default_fields(self) -> None:
         """Fill empty fields the launcher can derive; saved/user values win."""

@@ -818,6 +818,97 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         # statement about the log, not about a build with no tabs at all.
         self.assertTrue(tab_frames)
 
+    def _theme_style_calls(self):
+        """(configure-kwargs, map-kwargs, laid-out-styles) read out of `_apply_theme`.
+
+        Source-level for the same reason as `_build_widget_tree`: CI is
+        headless, so no real Style object can be interrogated. Values are kept
+        as AST nodes so a test can tell a THEME_ constant from a literal.
+        """
+        import ast
+
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        theme = next(
+            node for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.FunctionDef) and node.name == "_apply_theme"
+        )
+        configured: dict[str, dict[str, ast.expr]] = {}
+        mapped: dict[str, dict[str, ast.expr]] = {}
+        laid_out: set[str] = set()
+        for node in ast.walk(theme):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                continue
+            if not node.args or not isinstance(node.args[0], ast.Constant):
+                continue
+            name = node.args[0].value
+            kwargs = {kw.arg: kw.value for kw in node.keywords if kw.arg}
+            if node.func.attr == "configure":
+                configured.setdefault(name, {}).update(kwargs)
+            elif node.func.attr == "map":
+                mapped.setdefault(name, {}).update(kwargs)
+            elif node.func.attr == "layout":
+                laid_out.add(name)
+        return configured, mapped, laid_out
+
+    def test_ui_contract_themes_the_notebook_with_the_palette_constants(self):
+        """bb-archipelago#198: the #191 notebook was never given a theme entry.
+
+        Unthemed, clam draws the selected tab as an empty dashed rectangle and
+        the unselected one as a grey ghost on the dark panel. The colours must
+        come from the THEME_ constants, not from fresh literals that can drift
+        away from the rest of the window.
+        """
+        import ast
+
+        configured, mapped, laid_out = self._theme_style_calls()
+        # The control: the widgets that were always themed are visible here, so
+        # a helper that found nothing cannot pass this test.
+        self.assertIn("TButton", configured)
+        self.assertIn("TButton", mapped)
+
+        self.assertIn("TNotebook", configured)
+        self.assertIn("TNotebook.Tab", configured)
+        self.assertIn("TNotebook.Tab", mapped)
+
+        tab = configured["TNotebook.Tab"]
+        for option in ("background", "foreground", "padding"):
+            self.assertIn(option, tab, f"TNotebook.Tab has no {option}")
+        for option in ("background", "foreground", "bordercolor", "focuscolor"):
+            value = tab[option]
+            self.assertIsInstance(
+                value, ast.Name, f"TNotebook.Tab {option} is a literal, not a THEME_ constant"
+            )
+            self.assertTrue(
+                value.id.startswith("THEME_"),
+                f"TNotebook.Tab {option} uses {value.id}, not a THEME_ constant",
+            )
+        self.assertIsInstance(
+            configured["TNotebook"]["background"], ast.Name
+        )
+        self.assertTrue(configured["TNotebook"]["background"].id.startswith("THEME_"))
+
+        # The selected/active states are the illegible ones in the screenshot,
+        # so both must be remapped for both colours.
+        for option in ("background", "foreground"):
+            states = mapped["TNotebook.Tab"][option]
+            self.assertIsInstance(states, ast.List)
+            named = {
+                element.elts[0].value
+                for element in states.elts
+                if isinstance(element, ast.Tuple) and isinstance(element.elts[0], ast.Constant)
+            }
+            self.assertLessEqual({"selected", "active"}, named, f"{option} misses a state")
+        selected_fg = next(
+            element.elts[1] for element in mapped["TNotebook.Tab"]["foreground"].elts
+            if element.elts[0].value == "selected"
+        )
+        self.assertIsInstance(selected_fg, ast.Name)
+        self.assertTrue(selected_fg.id.startswith("THEME_"))
+
+        # The dashed border is a focus element in clam's stock tab layout; the
+        # fix relayouts the tab to drop it.
+        self.assertIn("TNotebook.Tab", laid_out)
+
     def test_ui_contract_gates_the_enemizer_inputs_across_both_tabs(self):
         """The enemizer path fields moved tabs; the disable group must follow."""
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")

@@ -8,6 +8,21 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Fixed
 
+- **The launcher's tabs are legible again.** The notebook added with the tabbed
+  layout inherited ttk's stock light theming, so on the dark launcher the
+  selected tab drew as an empty dashed rectangle and the unselected one as a
+  grey ghost. `TNotebook` and `TNotebook.Tab` now use the same palette as every
+  other widget, with a gold selected label and no dashed focus ring.
+
+### Changed
+
+- **The Doctor names the usual cause of a modified gameparam.** Both
+  installed-gameparam failures now say that a pre-modded repack (installs named
+  like "Bloodborne (feat. shadPS4)") ships an already-modified patch gameparam,
+  point at restoring a clean 01.09 patch layer, and note that the operator
+  `--allow-suppression-mismatch` override reverts whatever the repack's param
+  edits did.
+
 - **Activation no longer refuses over the spelling of `MapStudio`.** A managed
   overlay could be refused with the same map file listed as both `missing`
   (spelled `dvdroot_ps4/map/mapstudio/...`) and `unowned` (spelled

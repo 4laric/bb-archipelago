@@ -250,7 +250,7 @@ tell your host what you're running when you report back.
 | A `PARKED AP item` line in the client console | An item delivery failed safely; later items keep arriving. Send the console text to your host — there is a tool to confirm or redeliver it. |
 | The client stops with a message about an unrecognized or unvalidated game build | Native delivery refused to touch a build it was not validated against. Safe; nothing was written. Send the exact console text to your host — do not switch to `--delivery=ce-bridge` on your own. |
 | `OpenProcess` failing with `error 5` in the client console | The client is not running as administrator. Close everything and start the launcher as administrator. |
-| Doctor says the installed gameparam was `already modified` | Your game files were changed by something else. Restore a clean 01.09 patch before playing. |
+| Doctor says the installed gameparam was `already modified`, or that it matches `neither` the vanilla source nor the suppressed build | Something outside the launcher changed your patch gameparam. The usual cause is a pre-modded repack -- installs named like "Bloodborne (feat. shadPS4)" ship an already-modified `param\gameparam`. Restore a clean 01.09 patch layer before playing. Your host's `--allow-suppression-mismatch` override can launch it anyway, but doing so reverts whatever the repack's param edits did. |
 | Geometry stretches into huge spikes across the screen | A known shadPS4 emulator bug ("vertex explosions", shadPS4 issue #1232), not the randomizer. Enabling **readbacks** in the shadPS4 settings usually fixes it (small performance cost); tell your host if you see it. |
 
 ## Known limits of this build
