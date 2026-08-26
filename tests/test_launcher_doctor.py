@@ -315,6 +315,29 @@ class DoctorTests(unittest.TestCase):
         self.assertIn("neither", result.detail)
         self.assertIn(str(self.fixture.gameparam), result.detail)
 
+    def test_modified_gameparam_remedies_name_the_pre_modded_repack(self):
+        """bb-archipelago#198: the common real cause, in both FAIL branches.
+
+        Players hitting this are usually running a repack that ships its own
+        param edits, not a corrupted dump, so the remedy names that case, points
+        at a clean 01.09 patch layer, and says what the operator override costs.
+        """
+        for payload in (SUPPRESSED, b"someone elses experiment"):
+            self.fixture.gameparam.write_bytes(payload)
+            result = finding(run(self.fixture), "installed gameparam")
+            self.assertEqual(result.status, FAIL)
+            remedy = result.remedy or ""
+            self.assertIn("repack", remedy)
+            self.assertIn("Bloodborne (feat. shadPS4)", remedy)
+            self.assertIn("01.09", remedy)
+            self.assertIn(SUPPRESSION_OVERRIDE_KNOB, remedy)
+        # The control: a healthy install carries no remedy at all, so this is a
+        # statement about the failure branches.
+        self.fixture.gameparam.write_bytes(VANILLA)
+        healthy = finding(run(self.fixture), "installed gameparam")
+        self.assertEqual(healthy.status, PASS)
+        self.assertIsNone(healthy.remedy)
+
     def test_plan_hash_mismatch_between_seed_and_manifest(self):
         manifest = json.loads(self.fixture.manifest_path.read_text(encoding="utf-8"))
         manifest["plan_sha256"] = sha256(b"a different seeds plan")

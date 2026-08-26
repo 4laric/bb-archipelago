@@ -384,6 +384,16 @@ def _check_runtime_agreement(chain: _Chain) -> DoctorFinding:
     return DoctorFinding(PASS, "runtime build agreement", wanted)
 
 
+_REPACK_REMEDY = (
+    "the usual cause is a pre-modded repack -- installs named like "
+    '"Bloodborne (feat. shadPS4)" ship an already-modified patch gameparam; '
+    "restore a clean 01.09 patch layer (re-dump or re-copy the untouched "
+    "gameparam.parambnd.dcx) before building or launching. "
+    f"The operator override {SUPPRESSION_OVERRIDE_KNOB} exists, but launching "
+    "under it reverts whatever the repack's param edits did"
+)
+
+
 _OVERRIDE_REMEDY = (
     f"this is skew, not corruption; rebuild the binder for this seed and this "
     f"installation, or relaunch with {SUPPRESSION_OVERRIDE_KNOB} if you are the "
@@ -505,16 +515,15 @@ def _check_installed_gameparam(
             "installed gameparam",
             f"the {backend}-layer {source_path} IS the suppressed binder -- this "
             "installation was already modified outside the launcher",
-            "restore the untouched 01.09 gameparam.parambnd.dcx (re-dump or "
-            "re-copy the patch) before building or launching",
+            _REPACK_REMEDY,
         )
     return DoctorFinding(
         FAIL,
         "installed gameparam",
         f"the {backend}-layer {source_path} matches neither the vanilla source "
         f"nor the suppressed build (found {actual[:12]})",
-        "something outside this toolchain modified the game files; restore a "
-        "clean 01.09 installation before building or launching",
+        "something outside this toolchain modified the game files; "
+        + _REPACK_REMEDY,
     )
 
 
