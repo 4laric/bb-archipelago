@@ -178,7 +178,7 @@ def _read_json(path: Path, label: str) -> dict[str, Any]:
 
 
 def _safe_overlay_path(raw: str) -> str:
-    value = raw.replace("\\", "/")
+    value = canonical_overlay_case(raw)
     path = PurePosixPath(value)
     if not value or path.is_absolute() or any(part in ("", ".", "..") for part in path.parts):
         raise ValidationError(f"unsafe overlay path: {raw!r}")
@@ -196,8 +196,27 @@ def _safe_overlay_path(raw: str) -> str:
     return normalized
 
 
+def canonical_overlay_case(value: str) -> str:
+    """Spell an overlay-relative path the one way the launcher records it.
+
+    The overlay is consumed on case-insensitive filesystems, so
+    ``map/mapstudio`` and ``map/MapStudio`` are one directory on disk but two
+    different strings in a manifest.  Recording is pinned to the constants
+    (``SUPPRESSION_PATH``, ``MAP_PREFIX``) so a spelling picked up from disk --
+    the player's mods tree, the configured source MapStudio -- cannot fork the
+    name of a file the launcher owns.
+    """
+
+    normalized = value.replace("\\", "/")
+    if normalized.casefold() == SUPPRESSION_PATH.casefold():
+        return SUPPRESSION_PATH
+    if normalized.casefold().startswith(MAP_PREFIX.casefold()):
+        return MAP_PREFIX + normalized[len(MAP_PREFIX) :]
+    return normalized
+
+
 def _safe_relative_path(raw: str) -> PurePosixPath:
-    value = raw.replace("\\", "/")
+    value = canonical_overlay_case(raw)
     path = PurePosixPath(value)
     if not value or path.is_absolute() or any(part in ("", ".", "..") for part in path.parts):
         raise ValidationError(f"unsafe game-relative path: {raw!r}")
@@ -909,18 +928,41 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
         if relative in expected or relative.casefold() in protected:
             raise ValidationError(f"merged user file collides with an owned path: {relative}")
         expected[relative] = record
+    # The set comparison is case-insensitive for the same reason the user-merge
+    # ap-owned rule is: the overlay is consumed on a case-insensitive
+    # filesystem, where "map/mapstudio/x" and "map/MapStudio/x" are one file.
+    # Recording is canonical now, but manifests written before that are already
+    # in the wild, and one of them must still verify against its own disk tree
+    # rather than reporting the same file as both missing and unowned.
     actual = _tree_files(root, ignore=(OWNER_NAME,))
-    if set(actual) != set(expected):
+    actual_by_key: dict[str, str] = {}
+    for relative in actual:
+        key = relative.casefold()
+        if key in actual_by_key:
+            raise ConflictError(
+                "managed overlay holds two files differing only by case: "
+                f"{actual_by_key[key]} and {relative}"
+            )
+        actual_by_key[key] = relative
+    expected_keys = {relative.casefold() for relative in expected}
+    if set(actual_by_key) != expected_keys:
+        missing = sorted(
+            relative for relative in expected if relative.casefold() not in actual_by_key
+        )
+        unowned = sorted(
+            relative for relative in actual if relative.casefold() not in expected_keys
+        )
         raise ConflictError(
             "managed overlay contains unowned or missing files; "
-            f"missing={sorted(set(expected) - set(actual))} "
-            f"unowned={sorted(set(actual) - set(expected))}"
+            f"missing={missing} "
+            f"unowned={unowned}"
         )
     for relative, record in expected.items():
         digest = _require_sha256(str(record.get("sha256", "")), f"owned file {relative}")
-        if actual[relative].stat().st_size != record.get("size"):
+        found = actual[actual_by_key[relative.casefold()]]
+        if found.stat().st_size != record.get("size"):
             raise ValidationError(f"owned overlay file size changed: {relative}")
-        if sha256_file(actual[relative]) != digest:
+        if sha256_file(found) != digest:
             raise ValidationError(f"owned overlay file hash changed: {relative}")
     return owner
 

@@ -6,6 +6,24 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+### Fixed
+
+- **Activation no longer refuses over the spelling of `MapStudio`.** A managed
+  overlay could be refused with the same map file listed as both `missing`
+  (spelled `dvdroot_ps4/map/mapstudio/...`) and `unowned` (spelled
+  `dvdroot_ps4/map/MapStudio/...`) -- one file, two spellings. Windows folds
+  the two into one directory; ownership verification compared the manifest's
+  relative paths against the disk case-sensitively, so whichever spelling the
+  manifest held showed up as gone and the disk's spelling showed up as an
+  intruder. Overlay paths are now recorded in one canonical spelling
+  (`dvdroot_ps4/map/MapStudio/`, `dvdroot_ps4/param/gameparam/...`) whatever
+  case the source directory or the player's mods tree used, *and* verification
+  compares case-insensitively -- the same rule the user-merge conflict check
+  already used -- so an overlay activated before this fix verifies against its
+  own disk tree without being re-activated. Two files that really do differ
+  only by case are still refused, and a genuinely missing or genuinely unowned
+  file is refused exactly as before.
+
 ### Added
 
 - **The launcher takes the Archipelago multiworld zip your host sent you.**

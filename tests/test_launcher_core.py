@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from bb_launcher import core
 from bb_launcher.core import (
     APP_VERSION,
     SESSION_HEADER_PREFIX,
@@ -31,6 +32,7 @@ from bb_launcher.core import (
     SeedIdentity,
     ValidationError,
     activate_build,
+    canonical_overlay_case,
     collect_user_mod_files,
     deactivate_overlay,
     discover_game_install,
@@ -973,6 +975,107 @@ class UserModMergeActivationTests(unittest.TestCase):
             list(collect_user_mod_files(self.install.user_mods)),
             ["dvdroot_ps4/chr/c0000.bnd.dcx"],
         )
+
+
+class OverlayOwnershipCaseTests(unittest.TestCase):
+    """The overlay lives on a case-insensitive filesystem; the manifest must too.
+
+    An activation refused with the same map listed as both ``missing`` (spelled
+    ``map/mapstudio``) and ``unowned`` (spelled ``map/MapStudio``), because
+    ownership verification compared relative paths case-sensitively while
+    Windows had folded the two spellings into one directory.
+    """
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        self.install = make_install(self.root / "game")
+        _cache, self.build = make_build(self.root / "build", "seed", b"sup", with_maps=True)
+        self.owner = activate_build(self.install, self.build, process_is_running=lambda: False)
+        self.owner_path = self.install.mods / OWNER_NAME
+        self.map_relative = f"{MAP_PREFIX}m24_01_00_00.msb.dcx"
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def _rewrite_owner(self, replace: str, with_: str) -> None:
+        text = self.owner_path.read_text(encoding="utf-8")
+        self.assertIn(replace, text)
+        self.owner_path.write_text(text.replace(replace, with_), encoding="utf-8")
+
+    def _rename_disk_map(self, spelling: str) -> None:
+        maps = self.install.mods / "dvdroot_ps4" / "map"
+        (maps / "MapStudio").rename(maps / f".tmp-{spelling}")
+        (maps / f".tmp-{spelling}").rename(maps / spelling)
+
+    def test_a_lowercase_recorded_map_verifies_against_a_mapstudio_disk_tree(self):
+        # The live report: a manifest written before recording was canonical.
+        self._rewrite_owner("map/MapStudio/", "map/mapstudio/")
+        # Verification passes: the record and the disk file are one file.
+        reloaded = core._load_owner(self.install.mods)
+        self.assertEqual(
+            [
+                canonical_overlay_case(record["path"])
+                for record in reloaded["files"]
+                if record["path"] != SUPPRESSION_PATH
+            ],
+            [self.map_relative],
+        )
+
+    def test_a_lowercase_merged_user_record_verifies_against_the_folded_directory(self):
+        write_user_mod(self.install, "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx", b"user-map")
+        owner = activate_build(self.install, self.build, process_is_running=lambda: False)
+        self.assertEqual(
+            [record["path"] for record in owner["user_merge"]["files"]],
+            [f"{MAP_PREFIX}m21_00_00_00.msb.dcx"],
+        )
+        self._rewrite_owner(
+            f"{MAP_PREFIX}m21_00_00_00.msb.dcx", "dvdroot_ps4/map/mapstudio/m21_00_00_00.msb.dcx"
+        )
+        reloaded = core._load_owner(self.install.mods)
+        self.assertEqual(len(reloaded["user_merge"]["files"]), 1)
+
+    def test_a_canonical_record_verifies_against_a_lowercase_disk_tree(self):
+        self._rename_disk_map("mapstudio")
+        reloaded = core._load_owner(self.install.mods)
+        self.assertEqual(reloaded["cache_key"], self.owner["cache_key"])
+
+    def test_recording_is_canonical_whatever_case_the_source_spelled(self):
+        self.assertEqual(
+            canonical_overlay_case("dvdroot_ps4/map/MAPSTUDIO/m21_00_00_00.msb.dcx"),
+            f"{MAP_PREFIX}m21_00_00_00.msb.dcx",
+        )
+        self.assertEqual(
+            canonical_overlay_case("DVDROOT_PS4/PARAM/GAMEPARAM/gameparam.parambnd.dcx"),
+            SUPPRESSION_PATH,
+        )
+        write_user_mod(self.install, "dvdroot_ps4/map/mapstudio/m21_00_00_00.msb.dcx", b"user-map")
+        owner = activate_build(self.install, self.build, process_is_running=lambda: False)
+        self.assertEqual(
+            [record["path"] for record in owner["user_merge"]["files"]],
+            [f"{MAP_PREFIX}m21_00_00_00.msb.dcx"],
+        )
+
+    def test_a_genuinely_missing_owned_file_still_refuses(self):
+        self.install.mods.joinpath(*self.map_relative.split("/")).unlink()
+        with self.assertRaisesRegex(ConflictError, "missing=..dvdroot_ps4/map/MapStudio/"):
+            core._load_owner(self.install.mods)
+
+    def test_a_genuinely_unowned_file_still_refuses(self):
+        intruder = self.install.mods / "dvdroot_ps4" / "map" / "MapStudio" / "m29_00_00_00.msb.dcx"
+        intruder.write_bytes(b"not ours")
+        with self.assertRaisesRegex(ConflictError, "unowned=..dvdroot_ps4/map/MapStudio/m29"):
+            core._load_owner(self.install.mods)
+        self.assertEqual(intruder.read_bytes(), b"not ours")
+
+    def test_two_disk_files_differing_only_by_case_are_refused_not_folded(self):
+        # Case-insensitivity must not silently accept a tree that could only
+        # exist on a case-sensitive filesystem: one of the two is unowned.
+        twin = self.install.mods / "dvdroot_ps4" / "map" / "mapstudio" / "m24_01_00_00.msb.dcx"
+        twin.parent.mkdir(parents=True, exist_ok=True)
+        twin.write_bytes(b"twin")
+        with self.assertRaisesRegex(ConflictError, "differing only by case"):
+            core._load_owner(self.install.mods)
 
 
 if __name__ == "__main__":
