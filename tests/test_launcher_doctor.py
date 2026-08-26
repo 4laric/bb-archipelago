@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 import hashlib
+import io
 import json
 import socket
 import struct
@@ -14,6 +16,9 @@ from bb_launcher.client_config import session_paths
 from bb_launcher.core import (
     MAP_PREFIX,
     SERIAL,
+    SUPPRESSION_CHECK_PLAN,
+    SUPPRESSION_CHECK_SOURCE,
+    SUPPRESSION_OVERRIDE_KNOB,
     SUPPRESSION_PATH,
     USER_MODS_DIR_NAME,
     GameInstall,
@@ -562,6 +567,115 @@ class DoctorTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             code = cli_main(["doctor", "--settings", str(self.fixture.settings_path)])
         self.assertEqual(code, 1)
+
+
+class DoctorSuppressionOverrideTests(unittest.TestCase):
+    """bb-archipelago#183: Doctor must agree with the launch lane.
+
+    An override that fires at launch but still FAILs in Doctor sends the
+    operator chasing a refusal that will not happen -- so the same two skews
+    become WARN here, each naming the knob, and never a silent PASS.
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.fixture = DoctorFixture(Path(self.temp.name))
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def skew_the_plan(self) -> None:
+        manifest = json.loads(self.fixture.manifest_path.read_text(encoding="utf-8"))
+        manifest["plan_sha256"] = hashlib.sha256(b"a different seed's plan").hexdigest()
+        self.fixture.manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    def test_plan_skew_fails_without_the_knob(self):
+        self.skew_the_plan()
+        report = run(self.fixture)
+        item = finding(report, "suppression binder and manifest")
+        self.assertEqual(FAIL, item.status)
+        self.assertFalse(report.ok)
+
+    def test_plan_skew_warns_naming_the_knob_under_the_knob(self):
+        self.skew_the_plan()
+        report = run(self.fixture, allow_suppression_mismatch=True)
+        item = finding(report, "suppression binder and manifest")
+        self.assertEqual(WARN, item.status)
+        self.assertIn(SUPPRESSION_OVERRIDE_KNOB, item.detail)
+        self.assertIn(SUPPRESSION_CHECK_PLAN, item.detail)
+        self.assertIn(SUPPRESSION_OVERRIDE_KNOB, item.remedy or "")
+        # WARN does not sink the report, but it is visible in the rendering.
+        self.assertTrue(report.ok)
+        self.assertIn("[WARN] suppression binder and manifest", format_report(report))
+
+    def test_installed_gameparam_skew_fails_without_the_knob(self):
+        self.fixture.gameparam.write_bytes(b"an install one re-copy behind")
+        report = run(self.fixture)
+        self.assertEqual(FAIL, finding(report, "installed gameparam").status)
+
+    def test_installed_gameparam_skew_warns_naming_expected_and_found(self):
+        self.fixture.gameparam.write_bytes(b"an install one re-copy behind")
+        report = run(self.fixture, allow_suppression_mismatch=True)
+        item = finding(report, "installed gameparam")
+        self.assertEqual(WARN, item.status)
+        self.assertIn(SUPPRESSION_CHECK_SOURCE, item.detail)
+        self.assertIn(sha256(VANILLA)[:12], item.detail)
+        self.assertIn(sha256(b"an install one re-copy behind")[:12], item.detail)
+        self.assertIn(str(self.fixture.gameparam), item.detail)
+
+    def test_an_already_suppressed_install_also_warns_rather_than_failing(self):
+        # The launch lane bypasses one comparison (manifest source vs the
+        # installed file); both of this check's FAIL branches are that same
+        # comparison, so both must downgrade together.
+        self.fixture.gameparam.write_bytes(SUPPRESSED)
+        self.assertEqual(FAIL, finding(run(self.fixture), "installed gameparam").status)
+        item = finding(
+            run(self.fixture, allow_suppression_mismatch=True), "installed gameparam"
+        )
+        self.assertEqual(WARN, item.status)
+        self.assertIn(SUPPRESSION_OVERRIDE_KNOB, item.detail)
+
+    def test_a_healthy_chain_under_the_knob_still_passes_without_a_warning(self):
+        report = run(self.fixture, allow_suppression_mismatch=True)
+        self.assertEqual(PASS, finding(report, "suppression binder and manifest").status)
+        self.assertEqual(PASS, finding(report, "installed gameparam").status)
+        self.assertNotIn(SUPPRESSION_OVERRIDE_KNOB, format_report(report))
+
+    def test_the_knob_does_not_soften_a_corrupt_binder(self):
+        self.fixture.binder.write_bytes(b"not what the manifest describes")
+        item = finding(
+            run(self.fixture, allow_suppression_mismatch=True),
+            "suppression binder and manifest",
+        )
+        self.assertEqual(FAIL, item.status)
+        self.assertIn("does not match its build manifest", item.detail)
+
+    def test_the_cli_flag_is_off_unless_passed_and_is_never_read_from_settings(self):
+        self.skew_the_plan()
+        # A saved setup that tries to turn the override on is ignored: the knob
+        # is per-invocation by construction, so it can never go sticky-silent.
+        saved = self.fixture.settings_dict()
+        saved["allow_suppression_mismatch"] = True
+        self.fixture.settings_path.write_text(json.dumps(saved), encoding="utf-8")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = cli_main(["doctor", "--settings", str(self.fixture.settings_path)])
+        self.assertEqual(1, code)
+        self.assertIn("[FAIL] suppression binder and manifest", out.getvalue())
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            cli_main(
+                [
+                    "doctor",
+                    "--settings",
+                    str(self.fixture.settings_path),
+                    SUPPRESSION_OVERRIDE_KNOB,
+                ]
+            )
+        rendered = out.getvalue()
+        self.assertIn("[WARN] suppression binder and manifest", rendered)
+        self.assertIn(SUPPRESSION_OVERRIDE_KNOB, rendered)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,9 @@ from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
     STALE_BARE_SERIAL_REMEDY,
+    SUPPRESSION_CHECK_PLAN,
+    SUPPRESSION_CHECK_SOURCE,
+    SUPPRESSION_OVERRIDE_KNOB,
     SUPPRESSION_PATH,
     EarlyExit,
     GameInstall,
@@ -30,6 +33,7 @@ from .core import (
     restore_previous_build,
     sha256_file,
     stale_bare_serial_process,
+    suppression_override_line,
     validate_processes,
     wait_for_early_exit,
 )
@@ -135,6 +139,14 @@ class LauncherSettings:
             "state_root": None if self.state_root is None else str(self.state_root),
             "shad_log": None if self.shad_log is None else str(self.shad_log),
         }
+
+
+@dataclass(frozen=True)
+class SuppressionValidation:
+    """The verified suppression manifest plus whatever the operator waved past."""
+
+    manifest: Mapping[str, Any]
+    bypassed: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -545,7 +557,21 @@ def _validate_suppression(
     binder: Path,
     manifest_path: Path,
     expected_plan_hash: str,
-) -> dict[str, Any]:
+    *,
+    allow_mismatch: bool = False,
+    progress: Progress = lambda _message: None,
+) -> "SuppressionValidation":
+    """Check the binder against the seed and the install.
+
+    With ``allow_mismatch`` false -- the default, and the only thing a player
+    ever gets -- every refusal below is exactly the one this function has
+    always raised, word for word.  With it true (bb-archipelago#183) the two
+    *skew* comparisons emit a loud line each instead of raising, and the names
+    of the checks that were bypassed come back for the launch record.  The
+    binder-vs-manifest hash and the byte-identical-to-vanilla refusal are never
+    bypassable: those mean the binder itself is wrong.
+    """
+
     if not binder.is_file() or binder.is_symlink():
         raise ValidationError(f"suppression binder does not exist: {binder}")
     manifest = _read_object(manifest_path, "suppression build manifest")
@@ -553,24 +579,45 @@ def _validate_suppression(
         raise ValidationError("suppression build manifest has the wrong format")
     if manifest.get("output_relative_path") != "param/gameparam/gameparam.parambnd.dcx":
         raise ValidationError("suppression manifest output path is not the gameparam binder")
+    bypassed: list[str] = []
     if manifest.get("plan_sha256") != expected_plan_hash:
-        raise ValidationError("suppression build plan hash does not match the AP seed")
+        if not allow_mismatch:
+            raise ValidationError("suppression build plan hash does not match the AP seed")
+        bypassed.append(SUPPRESSION_CHECK_PLAN)
+        progress(
+            suppression_override_line(
+                SUPPRESSION_CHECK_PLAN,
+                expected_plan_hash,
+                manifest.get("plan_sha256"),
+                "binder plan vs the seed's suppression_plan_sha256",
+            )
+        )
     source_path = install.resolve_file(SUPPRESSION_PATH, include_mods=False)[1]
     source_hash = sha256_file(source_path)
     if manifest.get("source_gameparam_sha256") != source_hash:
-        raise ValidationError(
-            f"suppression build source hash does not match the installed game: "
-            f"{source_path} hashes to {source_hash[:12]}..., but the binder was built from "
-            f"{str(manifest.get('source_gameparam_sha256'))[:12]}... -- rebuild the suppression "
-            "binder against the installed gameparam (build.ps1 -Package -GameRoot ...), or "
-            "restore a clean 01.09 installation if the game files were modified"
+        if not allow_mismatch:
+            raise ValidationError(
+                f"suppression build source hash does not match the installed game: "
+                f"{source_path} hashes to {source_hash[:12]}..., but the binder was built from "
+                f"{str(manifest.get('source_gameparam_sha256'))[:12]}... -- rebuild the suppression "
+                "binder against the installed gameparam (build.ps1 -Package -GameRoot ...), or "
+                "restore a clean 01.09 installation if the game files were modified"
+            )
+        bypassed.append(SUPPRESSION_CHECK_SOURCE)
+        progress(
+            suppression_override_line(
+                SUPPRESSION_CHECK_SOURCE,
+                manifest.get("source_gameparam_sha256"),
+                source_hash,
+                f"binder source vs the installed {source_path}",
+            )
         )
     output_hash = sha256_file(binder)
     if manifest.get("output_gameparam_sha256") != output_hash:
         raise ValidationError("suppression binder hash does not match its build manifest")
     if output_hash == source_hash:
         raise ValidationError("suppression binder is byte-identical to vanilla; refusing an unsuppressed build")
-    return manifest
+    return SuppressionValidation(manifest, tuple(bypassed))
 
 
 def _source_hashes(install: GameInstall, map_root: Path | None) -> dict[str, str]:
@@ -615,6 +662,7 @@ class LauncherWorkflow:
         options: EnemizerOptions,
         *,
         force_rebuild: bool = False,
+        allow_suppression_mismatch: bool = False,
         progress: Progress = lambda _message: None,
         process_is_running: Callable[[], bool] | None = None,
     ) -> WorkflowResult:
@@ -634,11 +682,16 @@ class LauncherWorkflow:
                 f"AP seed requires runtime {request['runtime_build']}, process plan supplies {plan.runtime_build}"
             )
         binder = settings.suppression_binder.expanduser().resolve()
-        _validate_suppression(
+        # Operator override (bb-archipelago#183): off by default, and when on
+        # it emits one loud line per bypassed check through this same progress
+        # sink, so the launch log carries what was waved past.
+        suppression = _validate_suppression(
             install,
             binder,
             settings.suppression_manifest.expanduser().resolve(),
             request["suppression_plan_sha256"],
+            allow_mismatch=allow_suppression_mismatch,
+            progress=progress,
         )
 
         enemy_seed = options.seed.strip() if options.seed else request["enemizer_seed"]
@@ -744,6 +797,7 @@ class LauncherWorkflow:
             install,
             build.path,
             process_is_running=process_is_running,
+            suppression_override=suppression.bypassed,
         )
         if owner["suppression"]["sha256"] != build.manifest["suppression"]["sha256"]:
             raise ValidationError("activated suppression witness does not match the seed build")

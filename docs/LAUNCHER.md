@@ -229,6 +229,34 @@ successful temporary build is removed after its files enter the verified
 cache. Turning **Randomize Enemies** off skips the inventory, map, SoulsFormats,
 planner, and writer stages and builds a suppression-only overlay.
 
+### Allowing a suppression mismatch (operators only)
+
+Two of the launch-time refusals compare hashes that drift constantly during
+rapid playtest iteration and never drift during play: the suppression binder's
+`plan_sha256` against the seed's `suppression_plan_sha256`, and the binder's
+`source_gameparam_sha256` against the gameparam actually installed. A host
+running a session across a regenerated seed, a binder built on another machine,
+or an install one re-copy behind knows exactly what is skewed, and today pays a
+full refusal for it. **Allow suppression binder mismatch** in the launcher (and
+`--allow-suppression-mismatch` on `python -m bb_launcher doctor`) turns those
+two comparisons — and only those two — into loud warnings instead of refusals.
+Each bypassed check prints its own line naming what was expected, what was
+found, and the knob that let it through; Doctor reports it as `WARN` naming the
+knob rather than passing quietly; and the activated overlay's ownership
+manifest gains a `suppression_validation` section recording the bypass, so a
+bug report filed against that session is attributable. The knob is
+per-invocation by construction — the checkbox is deliberately never saved with
+the rest of the setup, and Doctor never reads it from the settings file — so it
+cannot be switched on once and forgotten. It does not soften a binder that
+disagrees with its own manifest, or one that is byte-identical to vanilla:
+those mean the binder itself is wrong, not merely stale.
+
+**Players should not use this.** A binder built from a different seed plan
+suppresses the wrong vanilla item grants, and a binder built from a different
+gameparam can restore rows your installation never had — the resulting run
+looks fine and quietly diverges from the seed. If you are playing rather than
+testing, rebuild the binder for your seed and your installation instead.
+
 The packaged path calls `BBEnemizerPlanner.exe`, `MSBBMiner.exe`, and
 `BBEnemizerWriter.exe` directly. It needs no Python, .NET SDK, SoulsFormats
 checkout, repository checkout, or pre-extracted enemy inventory. The checkout

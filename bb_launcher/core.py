@@ -45,6 +45,47 @@ DVDROOT_PREFIX = "dvdroot_ps4/"
 SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
 MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
+# The one operator escape hatch over suppression-binder hash skew
+# (bb-archipelago#183).  Modeled on the delivery tool's
+# --unvalidated-descriptor: opt-in per invocation, never persisted, and loud on
+# every individual check it bypasses.  It covers *skew* only -- a binder built
+# from a different seed plan or from a different source gameparam.  It never
+# covers the binder-vs-its-own-manifest hash or the byte-identical-to-vanilla
+# refusal: those are corruption, not skew, and no operator wants them anyway.
+SUPPRESSION_OVERRIDE_KNOB = "--allow-suppression-mismatch"
+SUPPRESSION_OVERRIDE_FORMAT = "bb-launcher-suppression-override-v1"
+# The two bypassable checks, named for the manifest keys they compare, so the
+# emitted line, the doctor finding and the recorded owner field say one word.
+SUPPRESSION_CHECK_PLAN = "plan_sha256"
+SUPPRESSION_CHECK_SOURCE = "source_gameparam_sha256"
+
+
+def _short_hash(value: object) -> str:
+    text = str(value)
+    if value is None:
+        return "(absent)"
+    if len(text) == 64 and all(character in "0123456789abcdef" for character in text.lower()):
+        return f"{text[:12]}..."
+    return text
+
+
+def suppression_override_line(
+    check: str, expected: object, found: object, context: str | None = None
+) -> str:
+    """One loud ASCII line per bypassed suppression check.
+
+    Every bypass gets its own line, naming the check, what was expected, what
+    was actually there, and the knob that let it through -- so a log tail from
+    a playtest tells you which of the two skews the operator waved past.
+    """
+
+    line = (
+        f"*** {SUPPRESSION_OVERRIDE_KNOB}: {check} mismatch BYPASSED -- "
+        f"expected {_short_hash(expected)}, found {_short_hash(found)}"
+    )
+    if context:
+        line += f" ({context})"
+    return line + " ***"
 # Names the launcher's own transaction and ownership machinery uses inside the
 # overlay.  A user file claiming one of them is excluded, not merged.
 RESERVED_OVERLAY_PREFIX = ".bb-ap-"
@@ -1078,6 +1119,7 @@ def _stage_overlay(
     previous_cache_key: str | None,
     user_sources: Mapping[str, Path] | None = None,
     merge: UserModMerge | None = None,
+    suppression_override: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     stage.mkdir()
     for record in build.manifest["files"]:
@@ -1127,6 +1169,17 @@ def _stage_overlay(
             ],
         },
     }
+    # Present only when the operator override actually fired, so an ordinary
+    # activation writes byte-identical ownership json to the one it always
+    # has, and the presence of the key is itself the attribution
+    # (bb-archipelago#183).
+    if suppression_override:
+        owner["suppression_validation"] = {
+            "format": SUPPRESSION_OVERRIDE_FORMAT,
+            "overridden": True,
+            "knob": SUPPRESSION_OVERRIDE_KNOB,
+            "bypassed": list(suppression_override),
+        }
     _write_json_atomic(stage / OWNER_NAME, owner)
     _load_owner(stage, expected_key=build.cache_key)
     return owner
@@ -1150,8 +1203,14 @@ def activate_build(
     *,
     process_is_running: Callable[[], bool] | None = None,
     failpoint: Callable[[str], None] | None = None,
+    suppression_override: Sequence[str] | None = None,
 ) -> dict[str, Any]:
-    """Atomically activate a verified build, preserving any owned predecessor."""
+    """Atomically activate a verified build, preserving any owned predecessor.
+
+    ``suppression_override`` names the suppression checks an operator bypassed
+    for this build (bb-archipelago#183); it is recorded in the ownership
+    manifest so a later bug report against this overlay is attributable.
+    """
 
     _require_shad_stopped(process_is_running)
     recover_activation(install, process_is_running=process_is_running)
@@ -1191,6 +1250,7 @@ def activate_build(
             None if previous_owner is None else str(previous_owner["cache_key"]),
             user_sources,
             merge,
+            suppression_override,
         )
     except Exception:
         if stage.exists():
