@@ -7,3 +7,6 @@ Bloodborne:
   auto_upgrade: false
   auto_equip: false
   full_item_pool: true
+  # Uncanny variants of your pooled weapons, normally Chalice-only (#205).
+  # They replace filler, so the seed keeps its size. Off by default.
+  uncanny_weapons: false

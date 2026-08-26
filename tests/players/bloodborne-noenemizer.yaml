@@ -9,3 +9,7 @@ Bloodborne:
   accessibility: items
   auto_upgrade: false
   auto_equip: false
+  # bb-archipelago#205: exactly one generating slot turns the option on, so the
+  # generation leg exercises the Uncanny pool while the other slot stays the
+  # option-off control.
+  uncanny_weapons: true

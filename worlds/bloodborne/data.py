@@ -41,6 +41,13 @@ ITEMS = (
     Item("pebbles", "Pebbles x3", F, 3),
     Item("molotov_cocktails", "Molotov Cocktails x2", F, 2),
     Item("blood_stone_shards", "Blood Stone Shards x2", F, 2),
+    # Uncanny variants of pooled weapons (bb-archipelago#205). Each is its own
+    # EquipParamWeapon row with its own gem-slot layout, so it is a distinct
+    # named item rather than a second copy of its base weapon. They are listed
+    # LAST on purpose: build_item_pool_names sheds the tail first when a pool
+    # has no filler slack, so a small seed drops Uncanny copies deterministically
+    # instead of overflowing the location count.
+    Item("uncanny_saw_spear", "Uncanny Saw Spear", U),
     # Locked local events. These are never placed in the random item pool.
     Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
@@ -254,6 +261,17 @@ SLICE_ITEM_KEYS = frozenset({
 # drives. It is suppressed by the reviewed declaration in runtime_bindings.py
 # (SCRIPT_AWARD_SUPPRESSIONS) instead.
 SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
+
+# bb-archipelago#205. Base weapon key -> its Uncanny variant key. The Uncanny
+# rows are shufflable items with permanent network ids like any other, but they
+# are NOT part of FULL_POOL_ITEM_KEYS: a seed places them only when the
+# `uncanny_weapons` option is on, and only for weapons its own pool already
+# contains. Nothing here is a claim about the base item's classification --
+# the first copy's kind is untouched.
+UNCANNY_WEAPONS = {
+    "saw_spear": "uncanny_saw_spear",
+}
+UNCANNY_ITEM_KEYS = frozenset(UNCANNY_WEAPONS.values())
 
 # data.py checks (bosses, the one evidenced interaction, and the catalog-backed
 # treasures) that the slice seeds, named explicitly so that adding a region to

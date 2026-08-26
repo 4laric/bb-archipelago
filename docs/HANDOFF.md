@@ -92,6 +92,10 @@ Spear and Augur once each, eleven Vials, and ten each of Quicksilver
 Bullets x3, Pebbles x3, Molotov Cocktails x2, and Blood Stone Shards x2. The
 checked-in tests pin both compositions.
 
+**Uncanny Weapon Variants** (`uncanny_weapons`, off by default) is orthogonal to
+both: with it on, each weapon the pool places is joined by its Uncanny variant,
+which replaces one filler item. Pool size is unchanged either way.
+
 Client repository:
 
 ```powershell

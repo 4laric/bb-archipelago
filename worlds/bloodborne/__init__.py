@@ -10,6 +10,8 @@ from .data import (
     SLICE_LOCATION_KEYS,
     SLICE_POOL_SUPPRESSION_KEYS,
     SLICE_REGIONS,
+    UNCANNY_ITEM_KEYS,
+    UNCANNY_WEAPONS,
     MODEL,
 )
 from .model import ItemKind, Rule
@@ -33,7 +35,12 @@ SHUFFLABLE_ITEMS = tuple(
     item for item in MODEL.items
     if item.kind is not ItemKind.EVENT
 )
-FULL_POOL_ITEM_KEYS = frozenset(item.key for item in SHUFFLABLE_ITEMS)
+# Uncanny variants are shufflable (permanent ids, validated bindings) but are
+# opt-in: they enter a pool only through the `uncanny_weapons` option, so the
+# default pool -- and every seed generated before #205 -- is unchanged.
+FULL_POOL_ITEM_KEYS = frozenset(
+    item.key for item in SHUFFLABLE_ITEMS if item.key not in UNCANNY_ITEM_KEYS
+)
 POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
 FILLER_ITEM_NAME = "Blood Vial"
@@ -50,17 +57,28 @@ def build_item_pool_names(item_keys: Iterable[str]) -> list[str]:
     cycles up to the location count either way. The full pool places all ten
     progression keys plus the two useful items; the slice pool places only the
     six items whose live grant shapes the slice set out to exercise.
+
+    Uncanny variants (#205) ride the same one-each path, so they displace
+    filler rather than adding pool entries: the filler top-up below is
+    `locations - placed`, and every Uncanny name placed is one fewer filler
+    cycled. They are placed LAST and truncated first, so a pool whose one-each
+    items already fill every location sheds Uncanny copies -- deterministically,
+    in data.py order -- instead of overflowing the location count.
     """
     selected = tuple(item for item in SHUFFLABLE_ITEMS if item.key in item_keys)
     names = [
         item.name for item in selected
-        if item.kind is not ItemKind.FILLER
+        if item.kind is not ItemKind.FILLER and item.key not in UNCANNY_ITEM_KEYS
     ]
+    slack = max(0, len(NETWORK_LOCATIONS) - len(names))
+    uncanny = [item.name for item in selected if item.key in UNCANNY_ITEM_KEYS]
+    names.extend(uncanny[:slack])
     filler_names = [FILLER_ITEM_NAME, *(
         item.name for item in selected
         if item.kind is ItemKind.FILLER
     )]
-    names.extend(islice(cycle(filler_names), len(NETWORK_LOCATIONS) - len(names)))
+    names.extend(islice(cycle(filler_names),
+                        max(0, len(NETWORK_LOCATIONS) - len(names))))
     return names
 
 
@@ -211,11 +229,23 @@ else:
         display_name = "Full Item Pool"
         default = 1
 
+    class UncannyWeapons(Toggle):
+        """Add the Uncanny variant of every weapon in your item pool.
+
+        Uncanny weapons are normally locked behind Chalice dungeons. They are
+        the same weapon with a different blood-gem slot layout, so a second
+        find is a real build choice rather than a duplicate. They replace
+        filler (Blood Vials and the like), never checks, so the seed keeps
+        exactly as many items as it has locations."""
+        display_name = "Uncanny Weapon Variants"
+        default = 0
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
         auto_equip: AutoEquip
         full_item_pool: FullItemPool
+        uncanny_weapons: UncannyWeapons
 
     class BloodborneItem(APItem):
         game = GAME
@@ -287,9 +317,15 @@ else:
             )
 
         def _pool_item_keys(self) -> frozenset[str]:
-            if self.options.full_item_pool:
-                return FULL_POOL_ITEM_KEYS
-            return SLICE_ITEM_KEYS
+            base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
+            if not self.options.uncanny_weapons:
+                return base
+            # One Uncanny variant per weapon this pool already places. A
+            # weapon the pool does not carry gets no variant, so the option
+            # never introduces an item whose base the seed cannot grant.
+            return base | frozenset(
+                uncanny for base_key, uncanny in UNCANNY_WEAPONS.items() if base_key in base
+            )
 
         def set_rules(self) -> None:
             # Runtime completion is still authoritative: the client sends
