@@ -15,6 +15,21 @@ import -- the world only imports inside Archipelago).
 
 A missing or malformed manifest is a failure, never a silent pass: an
 unreadable build is not evidence of agreement.
+
+It also pins the binder's LINEAGE (#200). The release bundle once shipped a
+binder built from a re-extracted gameparam that was byte-different from the
+patch layer real installs carry, so every zip binder failed the installed-
+gameparam check and manually built binders were couriered around it. Bytes,
+not content, are the identity (#104), so three more pins hold here:
+
+* the bundle's ``parambnd/gameparam.parambnd.dcx`` must hash to the installed
+  patch layer (``EXPECTED_SOURCE_SHA256``);
+* the manifest's ``source_gameparam_sha256`` must equal that same pin;
+* the manifest's ``output_gameparam_sha256`` must equal the known-good manual
+  binder (``EXPECTED_OUTPUT_SHA256``) that playtesters live-validated.
+
+Moving either constant is a deliberate act in the same commit as the bytes
+that justify it.
 """
 from __future__ import annotations
 
@@ -27,6 +42,26 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 WORLD_SOURCE = REPO / "worlds" / "bloodborne" / "__init__.py"
 MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
+BUNDLE_PATH = REPO / "research" / "bb_inputs.db"
+BUNDLE_MEMBER = "parambnd/gameparam.parambnd.dcx"
+# The installed CUSA03173 01.09 patch-layer gameparam, byte-for-byte -- the
+# bytes the launcher validates on every player machine (#104, #200).
+EXPECTED_SOURCE_SHA256 = "581e28302a231a10ad333806dfc90f41425db4f9f146799dca625f8d83c760c3"
+# The known-good binder output those bytes produce under the pinned plan --
+# the exact binder playtesters live-validated (#200).
+EXPECTED_OUTPUT_SHA256 = "195eb7cf79d2316a691b21e8a72ce437d4646f5d6afadca9c896f4bf77ee28b6"
+
+
+def read_bundle_source_sha(bundle: Path) -> str:
+    import sqlite3
+    if not bundle.exists():
+        raise SystemExit(f"ERROR: no inputs bundle at {bundle}; refusing to pass.")
+    row = sqlite3.connect(bundle).execute(
+        "SELECT sha256 FROM files WHERE path = ?", (BUNDLE_MEMBER,)
+    ).fetchone()
+    if row is None:
+        raise SystemExit(f"ERROR: {bundle} has no {BUNDLE_MEMBER}; refusing to pass.")
+    return row[0]
 _PIN_PATTERN = re.compile(
     r'^SUPPRESSION_PLAN_SHA256\s*=\s*"([0-9a-f]{64})"\s*$', re.MULTILINE
 )
@@ -67,6 +102,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="build-manifest.json written by the binder build")
     parser.add_argument("--world-source", type=Path, default=WORLD_SOURCE,
                         help=argparse.SUPPRESS)  # test seam only
+    parser.add_argument("--bundle", type=Path, default=BUNDLE_PATH,
+                        help=argparse.SUPPRESS)  # test seam only
     args = parser.parse_args(argv)
 
     pin = read_pin(args.world_source)
@@ -87,7 +124,39 @@ def main(argv: list[str] | None = None) -> int:
             "planner inputs or the planner itself regressed.\n"
         )
         return 1
-    print(f"plan {built[:12]} matches SUPPRESSION_PLAN_SHA256")
+    bundle_sha = read_bundle_source_sha(args.bundle)
+    if bundle_sha != EXPECTED_SOURCE_SHA256:
+        sys.stderr.write(
+            "ERROR: the inputs bundle's gameparam is not the installed patch layer.\n"
+            f"  bundle {BUNDLE_MEMBER}:  {bundle_sha}\n"
+            f"  EXPECTED_SOURCE_SHA256:  {EXPECTED_SOURCE_SHA256}\n"
+            "A binder built from these bytes will fail the installed-gameparam\n"
+            "check on every player machine (#200). Repack the bundle from the\n"
+            "installed CUSA03173-patch gameparam, or move the pin deliberately\n"
+            "in the same commit as the bytes that justify it.\n"
+        )
+        return 1
+    source = manifest.get("source_gameparam_sha256")
+    if source != EXPECTED_SOURCE_SHA256:
+        sys.stderr.write(
+            "ERROR: the binder was not built from the installed patch layer.\n"
+            f"  manifest source_gameparam_sha256: {source}\n"
+            f"  EXPECTED_SOURCE_SHA256:           {EXPECTED_SOURCE_SHA256}\n"
+        )
+        return 1
+    output = manifest.get("output_gameparam_sha256")
+    if output != EXPECTED_OUTPUT_SHA256:
+        sys.stderr.write(
+            "ERROR: the binder output differs from the known-good manual binder.\n"
+            f"  manifest output_gameparam_sha256: {output}\n"
+            f"  EXPECTED_OUTPUT_SHA256:           {EXPECTED_OUTPUT_SHA256}\n"
+            "Same plan + same source bytes must reproduce the binder the\n"
+            "playtesters validated; if the writer or plan changed on purpose,\n"
+            "move the pin in the same commit.\n"
+        )
+        return 1
+    print(f"plan {built[:12]} matches SUPPRESSION_PLAN_SHA256; "
+          f"source {source[:12]} and output {output[:12]} match the #200 pins")
     return 0
 
 

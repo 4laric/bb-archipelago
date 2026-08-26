@@ -6,6 +6,15 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The release bundle's suppression binder finally matches real installs (#200).**
+  The inputs bundle's `parambnd/gameparam.parambnd.dcx` was byte-different from
+  the patch layer installed games carry, so every zip-shipped binder failed the
+  installed-gameparam check and manually built binders had to be sent alongside
+  releases. The bundle now carries the installed patch-layer bytes exactly, and
+  the binder CI check pins the whole lineage: bundle source, manifest source,
+  and the known-good binder output playtesters validated. Drift in any of the
+  three reds the PR that introduces it.
+
 ### Fixed
 
 - **The launcher's tabs are legible again.** The notebook added with the tabbed
