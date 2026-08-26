@@ -12,7 +12,15 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from tools.check_suppression_plan_pin import MANIFEST_FORMAT, main, read_pin
+from tools.check_suppression_plan_pin import (
+    BUNDLE_PATH,
+    EXPECTED_OUTPUT_SHA256,
+    EXPECTED_SOURCE_SHA256,
+    MANIFEST_FORMAT,
+    main,
+    read_bundle_source_sha,
+    read_pin,
+)
 
 REPO = Path(__file__).resolve().parent.parent
 WORLD_SOURCE = REPO / "worlds" / "bloodborne" / "__init__.py"
@@ -22,7 +30,8 @@ def write_manifest(directory: Path, **overrides) -> Path:
     manifest = {
         "format": MANIFEST_FORMAT,
         "plan_sha256": read_pin(WORLD_SOURCE),
-        "output_gameparam_sha256": "0" * 64,
+        "source_gameparam_sha256": EXPECTED_SOURCE_SHA256,
+        "output_gameparam_sha256": EXPECTED_OUTPUT_SHA256,
     }
     manifest.update(overrides)
     path = directory / "build-manifest.json"
@@ -32,6 +41,7 @@ def write_manifest(directory: Path, **overrides) -> Path:
 
 class PlanPinCheck(unittest.TestCase):
     def check(self, manifest: Path) -> int:
+        # The committed bundle is the default and carries the pinned source.
         return main(["--manifest", str(manifest)])
 
     def test_matching_pin_passes(self):
@@ -74,6 +84,33 @@ class PlanPinCheck(unittest.TestCase):
         self.assertRegex(pin, r"^[0-9a-f]{64}$")
         self.assertIn(f'SUPPRESSION_PLAN_SHA256 = "{pin}"',
                       WORLD_SOURCE.read_text(encoding="utf-8"))
+
+
+class LineagePins(unittest.TestCase):
+    def test_the_committed_bundle_carries_the_installed_patch_layer(self):
+        # The #200 regression itself: the bundle's gameparam IS the pin.
+        self.assertEqual(read_bundle_source_sha(BUNDLE_PATH), EXPECTED_SOURCE_SHA256)
+
+    def test_a_binder_from_foreign_source_bytes_reds(self):
+        with TemporaryDirectory() as tmp:
+            manifest = write_manifest(Path(tmp), source_gameparam_sha256="a" * 64)
+            self.assertEqual(main(["--manifest", str(manifest)]), 1)
+
+    def test_a_binder_whose_output_drifts_from_the_validated_one_reds(self):
+        with TemporaryDirectory() as tmp:
+            manifest = write_manifest(Path(tmp), output_gameparam_sha256="b" * 64)
+            self.assertEqual(main(["--manifest", str(manifest)]), 1)
+
+    def test_a_missing_bundle_fails_closed(self):
+        with TemporaryDirectory() as tmp:
+            manifest = write_manifest(Path(tmp))
+            with self.assertRaises(SystemExit) as caught:
+                main(["--manifest", str(manifest), "--bundle", str(Path(tmp) / "absent.db")])
+            self.assertIn("refusing to pass", str(caught.exception))
+
+    def test_the_fully_pinned_manifest_passes(self):
+        with TemporaryDirectory() as tmp:
+            self.assertEqual(main(["--manifest", str(write_manifest(Path(tmp)))]), 0)
 
 
 if __name__ == "__main__":
