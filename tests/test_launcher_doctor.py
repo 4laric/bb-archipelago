@@ -201,7 +201,7 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(report.count(FAIL), 0)
         for name in (
             "game installation",
-            "AP seed request",
+            "AP seed file",
             "launch plan",
             "runtime build agreement",
             "suppression binder and manifest",
@@ -336,7 +336,7 @@ class DoctorTests(unittest.TestCase):
         del request["world_version"]
         self.fixture.request_path.write_text(json.dumps(request), encoding="utf-8")
         report = run(self.fixture)
-        result = finding(report, "AP seed request")
+        result = finding(report, "AP seed file")
         self.assertEqual(result.status, FAIL)
         self.assertIn("world_version", result.detail)
 

@@ -153,25 +153,35 @@ def _check_install(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
     )
 
 
-def _check_request(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
+def _check_request(
+    settings: LauncherSettings, chain: _Chain, player_name: str | None = None
+) -> DoctorFinding:
     try:
-        chain.request = _request_identity(settings.ap_request.expanduser().resolve())
+        chain.request = _request_identity(
+            settings.ap_request.expanduser().resolve(),
+            player_name=(player_name or "").strip(),
+            state_root=settings.state_root,
+        )
     except LauncherError as exc:
         return DoctorFinding(
             FAIL,
-            "AP seed request",
+            "AP seed file",
             str(exc),
-            "select the *.bbseed.json (older seeds: *.bbenemizer.json) the "
-            "generator dropped beside your seed "
-            "zip; if it predates world-version tagging, regenerate the seed",
+            "select the AP_<seed>.zip your host sent you, or the "
+            "*.bbseed.json (older seeds: *.bbenemizer.json) the generator "
+            "dropped beside it; if the seed predates world-version tagging, "
+            "regenerate it",
         )
     request = chain.request
-    return DoctorFinding(
-        PASS,
-        "AP seed request",
+    detail = (
         f"slot {request['slot']}, runtime {request['runtime_build']}, "
-        f"world {request['world_build']}",
+        f"world {request['world_build']}"
     )
+    source = request["source"]
+    if source.from_archive:
+        # Name both halves: which zip, and which member inside it was chosen.
+        detail = f"{detail} (member {source.member} of {source.archive})"
+    return DoctorFinding(PASS, "AP seed file", detail)
 
 
 def _check_plan(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
@@ -337,7 +347,7 @@ def _check_slot_agreement(chain: _Chain, player_name: str | None) -> DoctorFindi
         return DoctorFinding(
             WARN,
             "request slot agreement",
-            f"the AP seed request is for slot {slot!r}; no player name entered to verify against",
+            f"the AP seed file is for slot {slot!r}; no player name entered to verify against",
             "enter your AP player name so the Doctor can confirm the request is "
             "yours; in a multi-Bloodborne multiworld the launcher can auto-pick "
             "another player's request file",
@@ -346,10 +356,13 @@ def _check_slot_agreement(chain: _Chain, player_name: str | None) -> DoctorFindi
         return DoctorFinding(
             FAIL,
             "request slot agreement",
-            f"the AP seed request is for slot {slot!r} but you entered {entered!r}",
-            "select YOUR own <seed>_P<number>_<name>.bbseed.json from the seed "
-            "output; launching with another player's request connects you as their "
-            "slot and steals their checks",
+            f"the AP seed file is for slot {slot!r} but you entered {entered!r}",
+            "select YOUR own slot: with the AP_<seed>.zip, put your AP player "
+            "name in the player-name field so the launcher picks your member; "
+            "with a loose file, pick your own "
+            "<seed>_P<number>_<name>.bbseed.json. Launching with another "
+            "player's request connects you as their slot and steals their "
+            "checks",
         )
     return DoctorFinding(
         PASS, "request slot agreement", f"slot {slot!r} matches the entered player name"
@@ -366,7 +379,7 @@ def _check_runtime_agreement(chain: _Chain) -> DoctorFinding:
             FAIL,
             "runtime build agreement",
             f"the AP seed requires runtime {wanted}, the launch plan supplies {found}",
-            "regenerate the launch plan against the current AP seed request",
+            "regenerate the launch plan against the current AP seed file",
         )
     return DoctorFinding(PASS, "runtime build agreement", wanted)
 
@@ -822,7 +835,7 @@ def run_doctor(
     chain = _Chain()
     findings = [
         _safely(lambda: _check_install(settings, chain)),
-        _safely(lambda: _check_request(settings, chain)),
+        _safely(lambda: _check_request(settings, chain, player_name)),
         _safely(lambda: _check_slot_agreement(chain, player_name)),
         _safely(lambda: _check_plan(settings, chain)),
         _safely(lambda: _check_plan_game_argument(chain)),

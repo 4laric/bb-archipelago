@@ -148,7 +148,8 @@ python -m bb_launcher status --game-root C:\path\to\shad-games
 
 A process plan is generated, not hand-written. `python -m bb_launcher plan`
 pins each selected executable by SHA-256, derives the slot and runtime build
-from the seed's `.bbseed.json` request (`--ap-request`), and writes a
+from the seed file (`--ap-request`: the `AP_<seed>.zip`, or an extracted
+`.bbseed.json`), and writes a
 `bb-launcher-process-plan-v1` document whose client arguments carry the
 `{runtime_config}` / `{ledger}` placeholders the launcher substitutes at
 launch — so the plan is portable across machines and sessions:
@@ -183,8 +184,15 @@ suppression binder/manifest pair is offered when
 choosing a `shadPS4.exe` derives the game root from its `games` sibling when
 that discovery is unambiguous. Select:
 
-- the seed's `.bbseed.json` request (generation emits one per slot whether or
-  not the enemizer option is on; older seeds' `.bbenemizer.json` still works);
+- the seed file: either the `AP_<seed>.zip` Archipelago generation emits for
+  the whole multiworld, or the `.bbseed.json` request inside it (generation
+  emits one per slot whether or not the enemizer option is on; older seeds'
+  `.bbenemizer.json` still works). Given a zip, the launcher selects the
+  Bloodborne member whose `player_name` matches the entered AP player name --
+  a lone Bloodborne slot needs no name and can supply one, several slots
+  require it, and a zip with none is refused by name -- and extracts that
+  member once under `<state root>/seed-requests`, keyed by content so
+  re-selecting the same zip reuses it;
 - the validated shadPS4 game root;
 - the generated suppression binder and its `build-manifest.json`;
 - the player's source `MapStudio` (automatically discovered in the Windows package);
