@@ -8,6 +8,22 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **The launcher takes the Archipelago multiworld zip your host sent you.**
+  Generation emits one `AP_<seed>.zip` for the whole multiworld and hosts hand
+  players that zip; the launcher used to accept only the per-slot
+  `.bbseed.json` extracted from it, an unzip-and-pick step no other
+  Archipelago game asks for. The field is now **AP seed file (.zip or
+  .bbseed.json)** and takes either. Given a zip, the launcher reads each
+  Bloodborne request inside it and picks yours by the `player_name` in the
+  request itself, not by filename: a zip with exactly one Bloodborne slot is
+  used straight away and fills in your AP player name for you, a zip with
+  several requires the player-name field and refuses to guess between them,
+  and a zip with none says so by name. The chosen member is extracted once,
+  under `seed-requests` in the launcher state folder and keyed by content, so
+  re-selecting the same zip reuses the same file. The Doctor takes the zip
+  too, and its seed-file line names both the zip and the member it chose
+  (#194).
+
 - **An explicit operator override for suppression binder hash mismatches.**
   Host-side iteration constantly puts the seed, the suppression binder and the
   installed gameparam one step out of step with each other, and every skew cost

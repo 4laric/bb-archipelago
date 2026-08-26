@@ -46,6 +46,7 @@ from .client_config import (
     write_client_runtime_config,
 )
 from .resources import application_root
+from .seed_request import ResolvedRequest, resolve_request_source
 
 
 SETTINGS_FORMAT = "bb-launcher-ui-settings-v1"
@@ -516,8 +517,23 @@ class EnemizerToolchain:
         return EnemizerBuild(map_output, plan, sha256_file(plan_path))
 
 
-def _request_identity(request_path: Path) -> dict[str, Any]:
-    request = _read_object(request_path, "AP seed request")
+def _request_identity(
+    request_path: Path,
+    *,
+    player_name: str = "",
+    state_root: Path | None = None,
+) -> dict[str, Any]:
+    """Identity of the seed request the player chose.
+
+    ``request_path`` is either a request document or the Archipelago
+    multiworld zip (bb-archipelago#194); a zip is resolved to its Bloodborne
+    member first, and the resolution rides along in the returned identity so
+    the Doctor can name both halves.
+    """
+    resolved = resolve_request_source(
+        request_path, player_name=player_name, state_root=state_root
+    )
+    request = _read_object(resolved.path, "AP seed file")
     if request.get("format") not in REQUEST_FORMATS:
         raise ValidationError(
             f"expected a {REQUEST_FORMAT} file (or legacy {LEGACY_REQUEST_FORMAT})"
@@ -543,6 +559,8 @@ def _request_identity(request_path: Path) -> dict[str, Any]:
     seed_name = request.get("seed_name")
     return {
         "request": request,
+        "source": resolved,
+        "path": resolved.path,
         "seed": str(seed_name or enemizer_seed),
         "slot": player_name,
         "runtime_build": runtime_build,
@@ -663,12 +681,17 @@ class LauncherWorkflow:
         *,
         force_rebuild: bool = False,
         allow_suppression_mismatch: bool = False,
+        player_name: str = "",
         progress: Progress = lambda _message: None,
         process_is_running: Callable[[], bool] | None = None,
     ) -> WorkflowResult:
         progress("Validating CUSA03173 01.09 and launch components...")
         install = GameInstall.from_root(settings.game_root)
-        request = _request_identity(settings.ap_request)
+        request = _request_identity(
+            settings.ap_request,
+            player_name=player_name,
+            state_root=settings.state_root,
+        )
         plan = load_process_plan(settings.process_plan)
         validate_processes(plan.processes)
         # Before the overlay is touched: a stale bare-game-ID plan (#177) would

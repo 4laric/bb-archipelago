@@ -23,6 +23,11 @@ from .doctor import _process_running, format_report, run_doctor
 from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from .readiness import format_readiness, gather_readiness, grants_watchdog_warning
 from .resources import application_root, resource_root
+from .seed_request import (
+    archive_player_name,
+    looks_like_archive,
+    resolve_request_source,
+)
 from .workflow import (
     REQUEST_FORMATS,
     SETTINGS_FORMAT,
@@ -41,7 +46,7 @@ GRANT_WATCHDOG_MS = 240_000
 
 
 FIELD_DEFINITIONS = (
-    ("ap_request", "AP seed request", "file"),
+    ("ap_request", "AP seed file (.zip or .bbseed.json)", "file"),
     ("game_root", "shadPS4 game folder", "directory"),
     ("suppression_binder", "Suppressed gameparam", "file"),
     ("suppression_manifest", "Suppression manifest", "file"),
@@ -115,16 +120,29 @@ def _request_player_name(path: Path) -> str | None:
     return name.strip() if isinstance(name, str) and name.strip() else None
 
 
+def _candidate_player_name(path: Path) -> str | None:
+    """The slot a discovered candidate belongs to: loose file or whole zip.
+
+    A zip with several Bloodborne slots names none of them on its own, so it
+    stays a candidate only while no player name is known.
+    """
+    if looks_like_archive(path):
+        return archive_player_name(path)
+    return _request_player_name(path)
+
+
 def derive_ap_request(roots: Iterable[Path], player_name: str = "") -> Path | None:
     """Newest seed request under each root's Archipelago output directory.
 
     Generation drops `<seed>_P<slot>_<name>.bbseed.json` (older seeds:
     `.bbenemizer.json`) beside the seed
     zip in `Archipelago/out` or `Archipelago/output`; the newest one is the
-    best guess for what the player just generated. A multi-Bloodborne
-    multiworld drops one request per Bloodborne player, so when the player
-    name is known, only that player's own requests are considered — picking
-    another player's file connects the client as THEIR slot.
+    best guess for what the player just generated. The `AP_<seed>.zip` itself
+    counts too (bb-archipelago#194) -- the launcher takes either. A
+    multi-Bloodborne multiworld drops one request per Bloodborne player, so
+    when the player name is known, only that player's own requests are
+    considered — picking another player's file connects the client as THEIR
+    slot.
     """
     candidates: list[Path] = []
     for root in roots:
@@ -133,9 +151,10 @@ def derive_ap_request(roots: Iterable[Path], player_name: str = "") -> Path | No
             if directory.is_dir():
                 candidates.extend(directory.rglob("*.bbseed.json"))
                 candidates.extend(directory.rglob("*.bbenemizer.json"))
+                candidates.extend(directory.rglob("AP_*.zip"))
     wanted = player_name.strip()
     if wanted:
-        own = [path for path in candidates if _request_player_name(path) == wanted]
+        own = [path for path in candidates if _candidate_player_name(path) == wanted]
         if own:
             candidates = own
     if not candidates:
@@ -176,17 +195,25 @@ def default_settings_path() -> Path:
     return root / "BloodborneArchipelago" / "launcher-settings.json"
 
 
-def request_enemy_seed(path: Path | str) -> str:
-    source = Path(path).expanduser()
+def request_enemy_seed(
+    path: Path | str,
+    *,
+    player_name: str = "",
+    state_root: Path | None = None,
+) -> str:
+    """The enemizer seed of the chosen seed file -- request or multiworld zip."""
+    source = resolve_request_source(
+        path, player_name=player_name, state_root=state_root
+    ).path
     try:
         value = json.loads(source.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        raise ValidationError(f"could not read AP seed request {source}: {exc}") from exc
+        raise ValidationError(f"could not read AP seed file {source}: {exc}") from exc
     if not isinstance(value, dict) or value.get("format") not in REQUEST_FORMATS:
-        raise ValidationError("selected AP seed request has the wrong format")
+        raise ValidationError("selected AP seed file has the wrong format")
     seed = value.get("enemizer_seed")
     if not isinstance(seed, str) or not seed.strip():
-        raise ValidationError("selected AP seed request has no enemizer_seed")
+        raise ValidationError("selected AP seed file has no enemizer_seed")
     return seed
 
 
@@ -511,10 +538,30 @@ class LauncherApp:
         if name in {"shad_executable", "game_root"}:
             self._cascade_map_studio()
         if name == "ap_request":
-            try:
-                self.enemy_seed.set(request_enemy_seed(selected))
-            except LauncherError as exc:
-                self.messagebox.showerror("Invalid AP request", str(exc), parent=self.root)
+            self._accept_ap_request(selected)
+
+    def _accept_ap_request(self, selected: str) -> None:
+        """Resolve the chosen seed file and fill in what it tells us.
+
+        A multiworld zip with exactly one Bloodborne slot also prefills the
+        player-name field: the zip already knows whose slot it is, and an
+        empty field is what makes the Doctor's slot-agreement check a warning.
+        """
+        chosen = Path(selected).expanduser()
+        if looks_like_archive(chosen) and not self.player_name.get().strip():
+            only = archive_player_name(chosen)
+            if only is not None:
+                self.player_name.set(only)
+        try:
+            self.enemy_seed.set(
+                request_enemy_seed(
+                    chosen,
+                    player_name=self.player_name.get().strip(),
+                    state_root=self._state_root(),
+                )
+            )
+        except LauncherError as exc:
+            self.messagebox.showerror("Invalid AP seed file", str(exc), parent=self.root)
 
     def _cascade_map_studio(self) -> None:
         """Fill the MapStudio source from the game folder when unset."""
@@ -534,6 +581,11 @@ class LauncherApp:
         self.launch_button.configure(
             text="Randomize & Launch" if self.randomize_enemies.get() else "Build & Launch"
         )
+
+    def _state_root(self) -> Path:
+        """The launcher-owned state directory, whether or not it is typed in."""
+        raw = self.fields["state_root"].get().strip()
+        return Path(raw).expanduser() if raw else default_state_root()
 
     def _settings(self) -> LauncherSettings:
         return settings_from_fields({name: variable.get() for name, variable in self.fields.items()})
@@ -585,8 +637,12 @@ class LauncherApp:
         try:
             request_raw = self.fields["ap_request"].get().strip()
             if not request_raw:
-                raise ValidationError("select the AP seed request first")
-            request = _request_identity(Path(request_raw).expanduser())
+                raise ValidationError("select the AP seed file first")
+            request = _request_identity(
+                Path(request_raw).expanduser(),
+                player_name=self.player_name.get().strip(),
+                state_root=self._state_root(),
+            )
             shad_raw = self.fields["shad_executable"].get().strip()
             if not shad_raw:
                 raise ValidationError("select the shadPS4 executable")
@@ -633,7 +689,11 @@ class LauncherApp:
             return
         try:
             install = GameInstall.from_root(settings.game_root)
-            request = _request_identity(settings.ap_request)
+            request = _request_identity(
+                settings.ap_request,
+                player_name=self.player_name.get().strip(),
+                state_root=settings.state_root or default_state_root(),
+            )
             readiness = gather_readiness(
                 install,
                 settings.state_root or default_state_root(),
@@ -650,7 +710,11 @@ class LauncherApp:
         try:
             settings = self._settings()
             install = GameInstall.from_root(settings.game_root)
-            request = _request_identity(settings.ap_request)
+            request = _request_identity(
+                settings.ap_request,
+                player_name=self.player_name.get().strip(),
+                state_root=settings.state_root or default_state_root(),
+            )
             readiness = gather_readiness(
                 install,
                 settings.state_root or default_state_root(),
@@ -690,7 +754,13 @@ class LauncherApp:
         try:
             settings = self._settings()
             if not self.enemy_seed.get().strip():
-                self.enemy_seed.set(request_enemy_seed(settings.ap_request))
+                self.enemy_seed.set(
+                    request_enemy_seed(
+                        settings.ap_request,
+                        player_name=self.player_name.get().strip(),
+                        state_root=settings.state_root or default_state_root(),
+                    )
+                )
             options = EnemizerOptions(
                 enabled=self.randomize_enemies.get(),
                 seed=self.enemy_seed.get().strip() or None,
@@ -863,7 +933,13 @@ class LauncherApp:
         try:
             settings = self._settings()
             if not self.enemy_seed.get().strip():
-                self.enemy_seed.set(request_enemy_seed(settings.ap_request))
+                self.enemy_seed.set(
+                    request_enemy_seed(
+                        settings.ap_request,
+                        player_name=self.player_name.get().strip(),
+                        state_root=settings.state_root or default_state_root(),
+                    )
+                )
             options = EnemizerOptions(
                 enabled=self.randomize_enemies.get(),
                 seed=self.enemy_seed.get().strip() or None,
@@ -896,6 +972,7 @@ class LauncherApp:
                 options,
                 force_rebuild=True,
                 allow_suppression_mismatch=allow_suppression_mismatch,
+                player_name=self.player_name.get().strip(),
                 progress=self._progress_message,
             )
         except Exception as exc:
@@ -928,6 +1005,7 @@ class LauncherApp:
                 settings,
                 options,
                 allow_suppression_mismatch=allow_suppression_mismatch,
+                player_name=self.player_name.get().strip(),
                 progress=self._progress_message,
             )
         except Exception as exc:

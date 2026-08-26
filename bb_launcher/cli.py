@@ -124,7 +124,11 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument("--slot", help="AP slot name (defaults to the AP request's player_name)")
     plan.add_argument("--runtime-build", help="runtime build string (defaults to the AP request's)")
     plan.add_argument(
-        "--ap-request", help="AP enemizer request to derive the slot and runtime build from"
+        "--ap-request",
+        help=(
+            "AP seed file to derive the slot and runtime build from: the "
+            "AP_<seed>.zip, or an extracted *.bbseed.json"
+        ),
     )
     plan.add_argument("--force", action="store_true", help="overwrite an existing plan")
 
@@ -323,7 +327,8 @@ def main(argv: list[str] | None = None) -> int:
             runtime_build = args.runtime_build
             if args.ap_request is not None:
                 request = _request_identity(
-                    Path(args.ap_request).expanduser().resolve()
+                    Path(args.ap_request).expanduser().resolve(),
+                    player_name=(args.slot or ""),
                 )
                 if slot is not None and slot != request["slot"]:
                     raise ValidationError(

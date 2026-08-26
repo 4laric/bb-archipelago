@@ -175,6 +175,10 @@ class RequestIdentityFormatTests(unittest.TestCase):
         legacy = self._identity_for(_request_payload(LEGACY_REQUEST_FORMAT))
         current = self._identity_for(_request_payload(REQUEST_FORMAT))
         legacy["request"].pop("format"); current["request"].pop("format")
+        # Both were written to their own tmpdir, so the resolved source
+        # differs by construction; the identity either side of it must not.
+        for identity in (legacy, current):
+            identity.pop("source"); identity.pop("path")
         self.assertEqual(legacy, current)
 
     def test_unknown_format_is_refused_naming_both_accepted_formats(self):
