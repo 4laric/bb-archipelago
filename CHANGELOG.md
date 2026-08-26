@@ -6,9 +6,35 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The pool is a real Bloodborne pool now: every base-game weapon, and filler
+  with variety in it (#207 wave 1).** All fifteen base-game trick weapons (Saw
+  Cleaver, Saw Spear, Hunter Axe, Threaded Cane, Kirkhammer, Ludwig's Holy
+  Blade, Rifle Spear, Stake Driver, Beast Claw, Blade of Mercy, Burial Blade,
+  Chikage, Reiterpallasch, Tonitrus, Logarius' Wheel) and the five base-game
+  firearms (Hunter Pistol, Hunter Blunderbuss, Repeating Pistol, Ludwig's
+  Rifle, Cannon) are now `useful` items in the default pool — no option, no
+  YAML change. The Old Hunters weapons stay out until the DLC is modelled, and
+  the Torch stays out because it is a standing negative canary. On the goods
+  side, ten more consumables (Antidote, Sedatives, Beast Blood Pellet, Blue
+  Elixir, Poison Knife, Throwing Knife, Fire Paper, Bolt Paper, Bone Marrow
+  Ash, Lead Elixir) join the filler set, and the filler top-up is now a
+  weighted mix seeded by the multiworld seed instead of one cycled list — the
+  same seed gives the same pool, a different seed gives a different
+  arrangement, and Blood Vial is still the heaviest share. Seed size is
+  unchanged: the pool still holds exactly as many items as the seed has
+  locations, and a seed too small for its one-each items sheds Uncanny
+  variants first, then the useful tail, never a progression key.
+
+  Weapon ids are `EquipParamWeapon` rows agreed on by two independent
+  community corpora and carry `param_id_inferred` until a live delivery is
+  witnessed. The goods ids are read out of the repo's own bundled
+  `params/EquipParamGoods.csv`, which is the authoritative category-4 source.
+
 - **Uncanny weapon variants can now join the pool (#205).** A new opt-in YAML
   option, **Uncanny Weapon Variants** (`uncanny_weapons`, off by default), adds
-  the Uncanny version of every weapon your pool already places. Uncanny weapons
+  the Uncanny version of every weapon your pool already places — with #207
+  wave 1 that is one variant per base-game trick weapon (firearms have no
+  Uncanny rows in the game's params, so they get none). Uncanny weapons
   are normally Chalice-dungeon-only and differ from their base weapon in their
   blood-gem slot layout, so a second find is a build choice rather than a
   duplicate. They displace filler, never checks: the seed keeps exactly as many

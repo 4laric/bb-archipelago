@@ -122,6 +122,215 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
         feed_effect="right_hand_weapon",
         reinforcement_level=0,
     ),
+    "chikage": RuntimeItemBinding(
+        0x001E8480,
+        0x801E8480,
+        "EquipParamWeapon 2000000 (Chikage); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "blade_of_mercy": RuntimeItemBinding(
+        0x003D0900,
+        0x803D0900,
+        "EquipParamWeapon 4000000 (Blade of Mercy); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "hunter_axe": RuntimeItemBinding(
+        0x004C4B40,
+        0x804C4B40,
+        "EquipParamWeapon 5000000 (Hunter Axe); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "burial_blade": RuntimeItemBinding(
+        0x004DD1E0,
+        0x804DD1E0,
+        "EquipParamWeapon 5100000 (Burial Blade); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "saw_cleaver": RuntimeItemBinding(
+        0x006ACFC0,
+        0x806ACFC0,
+        "EquipParamWeapon 7000000 (Saw Cleaver); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "kirkhammer": RuntimeItemBinding(
+        0x007A1200,
+        0x807A1200,
+        "EquipParamWeapon 8000000 (Kirkhammer); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "ludwigs_holy_blade": RuntimeItemBinding(
+        0x007B98A0,
+        0x807B98A0,
+        "EquipParamWeapon 8100000 (Ludwig's Holy Blade); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "beast_claw": RuntimeItemBinding(
+        0x00895440,
+        0x80895440,
+        "EquipParamWeapon 9000000 (Beast Claw); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "rifle_spear": RuntimeItemBinding(
+        0x00989680,
+        0x80989680,
+        "EquipParamWeapon 10000000 (Rifle Spear); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "reiterpallasch": RuntimeItemBinding(
+        0x009A1D20,
+        0x809A1D20,
+        "EquipParamWeapon 10100000 (Reiterpallasch); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "stake_driver": RuntimeItemBinding(
+        0x00A7D8C0,
+        0x80A7D8C0,
+        "EquipParamWeapon 11000000 (Stake Driver); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "logarius_wheel": RuntimeItemBinding(
+        0x00B71B00,
+        0x80B71B00,
+        "EquipParamWeapon 12000000 (Logarius' Wheel); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "tonitrus": RuntimeItemBinding(
+        0x00C65D40,
+        0x80C65D40,
+        "EquipParamWeapon 13000000 (Tonitrus); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "threaded_cane": RuntimeItemBinding(
+        0x014FB180,
+        0x814FB180,
+        "EquipParamWeapon 22000000 (Threaded Cane); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "hunter_blunderbuss": RuntimeItemBinding(
+        0x005B8D80,
+        0x805B8D80,
+        "EquipParamWeapon 6000000 (Hunter Blunderbuss); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="left_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "ludwigs_rifle": RuntimeItemBinding(
+        0x005D1420,
+        0x805D1420,
+        "EquipParamWeapon 6100000 (Ludwig's Rifle); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="left_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "hunter_pistol": RuntimeItemBinding(
+        0x00D59F80,
+        0x80D59F80,
+        "EquipParamWeapon 14000000 (Hunter Pistol); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="left_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "repeating_pistol": RuntimeItemBinding(
+        0x00D8ACC0,
+        0x80D8ACC0,
+        "EquipParamWeapon 14200000 (Repeating Pistol); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="left_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "cannon": RuntimeItemBinding(
+        0x00E4E1C0,
+        0x80E4E1C0,
+        "EquipParamWeapon 15000000 (Cannon); Smithbox BB row names and the Bloodborne "
+        "save editor's weapons.json agree on the id. Descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="left_hand_weapon",
+        reinforcement_level=0,
+    ),
     # bb-archipelago#205. Uncanny Saw Spear, EquipParamWeapon 7110000 = base
     # weapon id 7100000 + 10000. The +10000/+20000 (Uncanny/Lost) offsets are
     # corroborated by two independent community corpora -- Smithbox's BB
@@ -143,6 +352,146 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
         feed_effect="right_hand_weapon",
         reinforcement_level=0,
     ),
+    "uncanny_chikage": RuntimeItemBinding(
+        0x001EAB90,
+        0x801EAB90,
+        "EquipParamWeapon 2010000 = Chikage 2000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_blade_of_mercy": RuntimeItemBinding(
+        0x003D3010,
+        0x803D3010,
+        "EquipParamWeapon 4010000 = Blade of Mercy 4000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_hunter_axe": RuntimeItemBinding(
+        0x004C7250,
+        0x804C7250,
+        "EquipParamWeapon 5010000 = Hunter Axe 5000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_burial_blade": RuntimeItemBinding(
+        0x004DF8F0,
+        0x804DF8F0,
+        "EquipParamWeapon 5110000 = Burial Blade 5100000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_saw_cleaver": RuntimeItemBinding(
+        0x006AF6D0,
+        0x806AF6D0,
+        "EquipParamWeapon 7010000 = Saw Cleaver 7000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_kirkhammer": RuntimeItemBinding(
+        0x007A3910,
+        0x807A3910,
+        "EquipParamWeapon 8010000 = Kirkhammer 8000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_ludwigs_holy_blade": RuntimeItemBinding(
+        0x007BBFB0,
+        0x807BBFB0,
+        "EquipParamWeapon 8110000 = Ludwig's Holy Blade 8100000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_beast_claw": RuntimeItemBinding(
+        0x00897B50,
+        0x80897B50,
+        "EquipParamWeapon 9010000 = Beast Claw 9000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_rifle_spear": RuntimeItemBinding(
+        0x0098BD90,
+        0x8098BD90,
+        "EquipParamWeapon 10010000 = Rifle Spear 10000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_reiterpallasch": RuntimeItemBinding(
+        0x009A4430,
+        0x809A4430,
+        "EquipParamWeapon 10110000 = Reiterpallasch 10100000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_stake_driver": RuntimeItemBinding(
+        0x00A7FFD0,
+        0x80A7FFD0,
+        "EquipParamWeapon 11010000 = Stake Driver 11000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_logarius_wheel": RuntimeItemBinding(
+        0x00B74210,
+        0x80B74210,
+        "EquipParamWeapon 12010000 = Logarius' Wheel 12000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_tonitrus": RuntimeItemBinding(
+        0x00C68450,
+        0x80C68450,
+        "EquipParamWeapon 13010000 = Tonitrus 13000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    "uncanny_threaded_cane": RuntimeItemBinding(
+        0x014FD890,
+        0x814FD890,
+        "EquipParamWeapon 22010000 = Threaded Cane 22000000 + the Uncanny offset; both rows named "
+        "in Smithbox and in the save editor's weapons.json. Not yet witnessed live.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
     "quicksilver_bullets": RuntimeItemBinding(
         0x40000384, 0xB0000384, "live grant and decrement observed"
     ),
@@ -157,6 +506,56 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     ),
     "augur_of_ebrietas": RuntimeItemBinding(
         0x400007D0, 0xB00007D0, "live grant and inventory persistence observed"
+    ),
+    "antidote": RuntimeItemBinding(
+        0x4000044C, 0xB000044C,
+        "bundled EquipParamGoods row 1100 (毒・出血回復薬) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "sedatives": RuntimeItemBinding(
+        0x4000044D, 0xB000044D,
+        "bundled EquipParamGoods row 1101 (狂気・獣化回復薬) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "beast_blood_pellet": RuntimeItemBinding(
+        0x40000456, 0xB0000456,
+        "bundled EquipParamGoods row 1110 (獣化薬) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "blue_elixir": RuntimeItemBinding(
+        0x40000460, 0xB0000460,
+        "bundled EquipParamGoods row 1120 (石ころ帽子) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "poison_knife": RuntimeItemBinding(
+        0x400004BA, 0xB00004BA,
+        "bundled EquipParamGoods row 1210 (毒ナイフ) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "throwing_knife": RuntimeItemBinding(
+        0x400004D8, 0xB00004D8,
+        "bundled EquipParamGoods row 1240 (投げナイフ) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "fire_paper": RuntimeItemBinding(
+        0x40000514, 0xB0000514,
+        "bundled EquipParamGoods row 1300 (エンチャント【炎】) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "bolt_paper": RuntimeItemBinding(
+        0x40000528, 0xB0000528,
+        "bundled EquipParamGoods row 1320 (エンチャント【雷】) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "bone_marrow_ash": RuntimeItemBinding(
+        0x40000532, 0xB0000532,
+        "bundled EquipParamGoods row 1330 (銃威力アップ) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
+    ),
+    "lead_elixir": RuntimeItemBinding(
+        0x400007EE, 0xB00007EE,
+        "bundled EquipParamGoods row 2030 (ヌルヌル化) + the live-validated category-4 "
+        "formula; English name from the save editor's items.json",
     ),
 }
 

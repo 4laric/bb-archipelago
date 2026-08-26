@@ -3,10 +3,19 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
-from worlds.bloodborne.data import SLICE_ITEM_KEYS, UNCANNY_WEAPONS, MODEL
+from worlds.bloodborne.data import (
+    BASE_GAME_WEAPON_KEYS,
+    GOODS_VARIETY_KEYS,
+    SLICE_ITEM_KEYS,
+    UNCANNY_ITEM_KEYS,
+    UNCANNY_WEAPONS,
+    MODEL,
+)
 from worlds.bloodborne.model import ItemKind, Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 from worlds.bloodborne import (
+    FILLER_ITEM_NAME,
+    FILLER_WEIGHTS,
     FULL_POOL_ITEM_KEYS,
     GOAL_LOCATION_KEY,
     ITEM_ID_BY_KEY,
@@ -135,16 +144,30 @@ class BloodborneModelTests(unittest.TestCase):
             "Oedon Tomb Key",
         ):
             self.assertEqual(counts[name], 1, name)
-        # 167 locations - 13 one-off items = 154 filler slots cycling five
-        # names: the first four get 31, the last gets 30.
+        # bb-archipelago#207 wave 1: the rest of the base-game trick weapons
+        # and firearms are one-each members of the default pool too.
         for name in (
-            "Blood Vial",
-            "Quicksilver Bullets x3",
-            "Pebbles x3",
-            "Molotov Cocktails x2",
+            "Saw Cleaver", "Hunter Axe", "Threaded Cane", "Kirkhammer",
+            "Ludwig's Holy Blade", "Rifle Spear", "Stake Driver", "Beast Claw",
+            "Blade of Mercy", "Burial Blade", "Chikage", "Reiterpallasch",
+            "Tonitrus", "Logarius' Wheel",
+            "Hunter Pistol", "Hunter Blunderbuss", "Repeating Pistol",
+            "Ludwig's Rifle", "Cannon",
         ):
-            self.assertEqual(counts[name], 31, name)
-        self.assertEqual(counts["Blood Stone Shards x2"], 30)
+            self.assertEqual(counts[name], 1, name)
+        # 167 locations - 32 one-off items = 135 filler slots, allocated across
+        # the weighted mix by largest remainder. The exact shares are restated
+        # here so a weight edit is a visible pool change, not a silent one.
+        self.assertEqual(counts["Blood Vial"], 26)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 18)
+        self.assertEqual(counts["Blood Stone Shards x2"], 13)
+        for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
+                     "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
+            self.assertEqual(counts[name], 9, name)
+        for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
+                     "Blue Elixir", "Beast Blood Pellet", "Lead Elixir"):
+            self.assertEqual(counts[name], 4, name)
+        self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
     def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
         """The grant shapes the first live sessions validated are unchanged.
@@ -152,8 +175,8 @@ class BloodborneModelTests(unittest.TestCase):
         Slice 3 added the Hunter Chief Emblem to this pool because the plaza
         gate is emblem-only, and the Oedon Tomb Key joins it for the same
         reason: with the key shuffled, a pool without it cannot leave Central
-        Yharnam. 167 - 4 one-off items = 163 filler slots over five names, so
-        the first three get 33 and the last two get 32.
+        Yharnam. 167 - 4 one-off items = 163 filler slots over the slice's own
+        five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
@@ -161,14 +184,15 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Augur of Ebrietas"], 1)
         self.assertEqual(counts["Hunter Chief Emblem"], 1)
         self.assertEqual(counts["Oedon Tomb Key"], 1)
-        for name in (
-            "Blood Vial",
-            "Quicksilver Bullets x3",
-            "Pebbles x3",
-        ):
-            self.assertEqual(counts[name], 33, name)
-        for name in ("Molotov Cocktails x2", "Blood Stone Shards x2"):
-            self.assertEqual(counts[name], 32, name)
+        # The slice pool keeps its four validated filler types, so wave 1's
+        # goods variety does not reach it: this pool is the canary set, not a
+        # play experience. 167 - 4 one-each = 163 slots over five weighted names.
+        self.assertEqual(counts["Blood Vial"], 58)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 38)
+        self.assertEqual(counts["Blood Stone Shards x2"], 29)
+        for name in ("Pebbles x3", "Molotov Cocktails x2"):
+            self.assertEqual(counts[name], 19, name)
+        self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 9)  # eight slice items + Blood Vial
 
@@ -380,28 +404,31 @@ class UncannyWeaponPoolTests(unittest.TestCase):
         return frozenset(base) | frozenset(
             uncanny for weapon, uncanny in UNCANNY_WEAPONS.items() if weapon in base)
 
-    def test_the_default_pool_is_the_pool_it_was_before_the_option_existed(self):
-        """The control. Option off must be indistinguishable from pre-#205."""
+    def test_the_default_pool_carries_no_uncanny_name(self):
+        """The control. With the option off, not one variant reaches the pool.
+
+        Wave 1 (#207) deliberately changed what the DEFAULT pool contains --
+        base weapons and goods variety are pool improvements, not options -- so
+        this control no longer asserts a byte-identical pre-#205 pool. What it
+        still asserts is the option's whole contract: the Uncanny keys are
+        unreachable without it.
+        """
         for keys in (FULL_POOL_ITEM_KEYS, SLICE_ITEM_KEYS):
             pool = build_item_pool_names(keys)
             self.assertEqual(len(pool), len(NETWORK_LOCATIONS))
             self.assertIn("Saw Spear", pool)          # witness: a real pool
-            self.assertNotIn("Uncanny Saw Spear", pool)
-        # The exact pre-#205 distribution, restated here so a silent shift in
-        # the default pool fails this test and not only the older one.
+            self.assertFalse([name for name in pool if "Uncanny" in name])
         counts = Counter(build_item_pool_names(FULL_POOL_ITEM_KEYS))
-        self.assertEqual(counts["Blood Vial"], 31)
-        self.assertEqual(counts["Blood Stone Shards x2"], 30)
         self.assertEqual(counts["Saw Spear"], 1)
-        self.assertNotIn("uncanny_saw_spear", FULL_POOL_ITEM_KEYS)
+        self.assertFalse(FULL_POOL_ITEM_KEYS & UNCANNY_ITEM_KEYS)
 
     def test_one_uncanny_per_pooled_weapon_and_the_seed_size_identity_holds(self):
         for base in (FULL_POOL_ITEM_KEYS, SLICE_ITEM_KEYS):
             with self.subTest(pool=len(base)):
                 counts = Counter(build_item_pool_names(self._keys_with_uncanny(base)))
                 self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
-                placed = {name for name in counts if name.startswith("Uncanny")}
-                self.assertEqual(placed, {"Uncanny Saw Spear"})
+                placed = {name for name in counts if "Uncanny" in name}
+                self.assertIn("Uncanny Saw Spear", placed)
                 for name in placed:
                     self.assertEqual(counts[name], 1, name)
                 # every weapon in the pool contributed exactly one variant
@@ -411,15 +438,15 @@ class UncannyWeaponPoolTests(unittest.TestCase):
     def test_each_uncanny_copy_displaces_exactly_one_filler_item(self):
         before = Counter(build_item_pool_names(FULL_POOL_ITEM_KEYS))
         after = Counter(build_item_pool_names(self._keys_with_uncanny(FULL_POOL_ITEM_KEYS)))
-        added = sum(count for name, count in after.items() if name.startswith("Uncanny"))
-        self.assertEqual(added, 1)
-        filler_names = {"Blood Vial", "Quicksilver Bullets x3", "Pebbles x3",
-                        "Molotov Cocktails x2", "Blood Stone Shards x2"}
+        added = sum(count for name, count in after.items() if "Uncanny" in name)
+        self.assertEqual(added, len(UNCANNY_WEAPONS))
+        filler_names = {item.name for item in SHUFFLABLE_ITEMS
+                        if item.kind is ItemKind.FILLER} | {"Blood Vial"}
         lost = sum(before[name] - after[name] for name in filler_names)
         self.assertEqual(lost, added)
         # nothing but filler moved
         for name in set(before) | set(after):
-            if name in filler_names or name.startswith("Uncanny"):
+            if name in filler_names or "Uncanny" in name:
                 continue
             self.assertEqual(before[name], after[name], name)
 
@@ -442,7 +469,7 @@ class UncannyWeaponPoolTests(unittest.TestCase):
         self.assertEqual(len(pool), len(tiny))
         self.assertEqual(pool, again)  # deterministic, not draw-dependent
         self.assertIn("Saw Spear", pool)              # witness: a real pool
-        self.assertNotIn("Uncanny Saw Spear", pool)
+        self.assertFalse([name for name in pool if "Uncanny" in name])
         self.assertIn("Oedon Tomb Key", pool)  # progression survives the shed
 
     def test_uncanny_variants_are_useful_and_leave_their_base_alone(self):
@@ -472,7 +499,7 @@ class UncannyWeaponPoolTests(unittest.TestCase):
         uncanny_id = str(ITEM_ID_BY_KEY["uncanny_saw_spear"])
         self.assertIn(uncanny_id, with_uncanny)
         self.assertNotIn(uncanny_id, without)
-        self.assertEqual(len(with_uncanny), len(without) + 1)
+        self.assertEqual(len(with_uncanny), len(without) + len(UNCANNY_WEAPONS))
         self.assertEqual(with_uncanny[uncanny_id]["item_category"], 0)
 
 
@@ -510,6 +537,242 @@ class UncannyOptionWiringTests(unittest.TestCase):
         self.assertEqual(option.default, 0)
         self.assertEqual(option.display_name, "Uncanny Weapon Variants")
         self.assertIn("Uncanny", option.__doc__)
+
+
+class Wave1WeaponPoolTests(unittest.TestCase):
+    """bb-archipelago#207 wave 1, weapon half: the base-game catalog joins the pool."""
+
+    # The list is the claim, so it is written out rather than derived from the
+    # code under test. Ids are EquipParamWeapon rows, agreed by Smithbox's BB
+    # row names and the Bloodborne save editor's weapons.json.
+    TRICK_WEAPONS = {
+        "chikage": (2000000, "Chikage"),
+        "blade_of_mercy": (4000000, "Blade of Mercy"),
+        "hunter_axe": (5000000, "Hunter Axe"),
+        "burial_blade": (5100000, "Burial Blade"),
+        "saw_cleaver": (7000000, "Saw Cleaver"),
+        "saw_spear": (7100000, "Saw Spear"),
+        "kirkhammer": (8000000, "Kirkhammer"),
+        "ludwigs_holy_blade": (8100000, "Ludwig's Holy Blade"),
+        "beast_claw": (9000000, "Beast Claw"),
+        "rifle_spear": (10000000, "Rifle Spear"),
+        "reiterpallasch": (10100000, "Reiterpallasch"),
+        "stake_driver": (11000000, "Stake Driver"),
+        "logarius_wheel": (12000000, "Logarius' Wheel"),
+        "tonitrus": (13000000, "Tonitrus"),
+        "threaded_cane": (22000000, "Threaded Cane"),
+    }
+    FIREARMS = {
+        "hunter_blunderbuss": (6000000, "Hunter Blunderbuss"),
+        "ludwigs_rifle": (6100000, "Ludwig's Rifle"),
+        "hunter_pistol": (14000000, "Hunter Pistol"),
+        "repeating_pistol": (14200000, "Repeating Pistol"),
+        "cannon": (15000000, "Cannon"),
+    }
+
+    def test_every_base_game_weapon_is_in_the_default_pool_as_useful(self):
+        by_key = {item.key: item for item in MODEL.items}
+        expected = set(self.TRICK_WEAPONS) | set(self.FIREARMS)
+        self.assertEqual(BASE_GAME_WEAPON_KEYS, frozenset(expected))
+        pool = set(build_item_pool_names(FULL_POOL_ITEM_KEYS))
+        for key, (_, name) in {**self.TRICK_WEAPONS, **self.FIREARMS}.items():
+            self.assertIn(key, FULL_POOL_ITEM_KEYS, key)
+            self.assertEqual(by_key[key].name, name, key)
+            self.assertEqual(by_key[key].kind, ItemKind.USEFUL, key)
+            self.assertIn(name, pool, name)
+
+    def test_each_weapon_descriptor_is_its_param_row_under_the_category_0_formula(self):
+        for key, (param_id, _) in {**self.TRICK_WEAPONS, **self.FIREARMS}.items():
+            binding = ITEM_BINDINGS[key]
+            self.assertEqual(binding.normalized_item_id, param_id, key)
+            self.assertEqual(binding.raw_descriptor, param_id | 0x80000000, key)
+            self.assertEqual(binding.item_category, 0, key)
+            self.assertEqual(binding.reinforcement_level, 0, key)
+        for key in self.TRICK_WEAPONS:
+            self.assertEqual(ITEM_BINDINGS[key].feed_effect, "right_hand_weapon", key)
+        for key in self.FIREARMS:
+            self.assertEqual(ITEM_BINDINGS[key].feed_effect, "left_hand_weapon", key)
+
+    def test_firearms_have_no_uncanny_variant(self):
+        """The finding, encoded.
+
+        Smithbox's BB EquipParamWeapon row names carry Uncanny (+10000) and
+        Lost (+20000) rows for every trick weapon and for NO firearm: the
+        firearm blocks (Hunter Blunderbuss 6000000, Ludwig's Rifle 6100000,
+        Hunter Pistol 14000000, Evelyn 14100000, Repeating Pistol 14200000,
+        Cannon 15000000, Rosmarinus 18000000, Flamesprayer 18100000) hold only
+        the base row and a `- Ghost` row. The save editor's weapons.json agrees:
+        it lists 7110000 Uncanny Saw Spear but has no 6010000 or 14010000. So
+        the Uncanny catalog is trick-weapon-only, and this asserts the code
+        never quietly grows a firearm variant.
+        """
+        for key in self.FIREARMS:
+            self.assertNotIn(key, UNCANNY_WEAPONS, key)
+        self.assertEqual(set(UNCANNY_WEAPONS), set(self.TRICK_WEAPONS))
+
+    def test_one_uncanny_row_per_trick_weapon_at_the_uncanny_offset(self):
+        self.assertEqual(len(UNCANNY_ITEM_KEYS), len(self.TRICK_WEAPONS))
+        for key, (param_id, _) in self.TRICK_WEAPONS.items():
+            variant = ITEM_BINDINGS[UNCANNY_WEAPONS[key]]
+            self.assertEqual(variant.normalized_item_id, param_id + 10000, key)
+            self.assertEqual(variant.descriptor_evidence, "param_id_inferred", key)
+
+    def test_the_dlc_weapons_and_the_torch_stay_excluded(self):
+        """The control for the exclusions, by id block and by name.
+
+        EquipParamWeapon ids from 23000000 up are The Old Hunters block
+        (Beasthunter Saif 23000000, Beast Cutter 24000000, Amygdalan Arm
+        25000000, Holy Moonlight Sword 26000000, Rakuyo 27000000, Boom Hammer
+        28000000, Bloodletter 29000000, Church Pick 30000000, Whirligig Saw
+        31000000, Simon's Bowblade 32000000, Kos Parasite 38000000). The Torch
+        is base game but is a standing negative canary, not an omission.
+        """
+        names = {item.name for item in MODEL.items}
+        for name in ("Beasthunter Saif", "Beast Cutter", "Amygdalan Arm",
+                     "Holy Moonlight Sword", "Rakuyo", "Boom Hammer",
+                     "Bloodletter", "Church Pick", "Whirligig Saw",
+                     "Simon's Bowblade", "Kos Parasite",
+                     "Torch", "Hunter's Torch", "Evelyn"):
+            self.assertNotIn(name, names, name)
+        category_0 = [b for b in ITEM_BINDINGS.values() if b.item_category == 0]
+        self.assertTrue(category_0)  # witness: there are weapons to check
+        for key, binding in ITEM_BINDINGS.items():
+            if binding.item_category == 0:
+                self.assertLess(binding.normalized_item_id, 23000000, key)
+
+
+class Wave1GoodsVarietyTests(unittest.TestCase):
+    """bb-archipelago#207 wave 1, goods half: filler stops being a wall of one name."""
+
+    # id -> (key, display name, quantity). Every id below is a row in the
+    # repo's own bundled params/EquipParamGoods.csv, which is the authoritative
+    # category-4 source; the test re-reads the bundle rather than trusting this.
+    GOODS = {
+        1100: ("antidote", "Antidote x2", 2),
+        1101: ("sedatives", "Sedatives x2", 2),
+        1110: ("beast_blood_pellet", "Beast Blood Pellet", 1),
+        1120: ("blue_elixir", "Blue Elixir", 1),
+        1210: ("poison_knife", "Poison Knife x3", 3),
+        1240: ("throwing_knife", "Throwing Knife x4", 4),
+        1300: ("fire_paper", "Fire Paper x2", 2),
+        1320: ("bolt_paper", "Bolt Paper x2", 2),
+        1330: ("bone_marrow_ash", "Bone Marrow Ash x3", 3),
+        2030: ("lead_elixir", "Lead Elixir", 1),
+    }
+
+    def test_the_variety_set_is_exactly_the_declared_goods(self):
+        by_key = {item.key: item for item in MODEL.items}
+        self.assertEqual(GOODS_VARIETY_KEYS,
+                         frozenset(key for key, _, _ in self.GOODS.values()))
+        for param_id, (key, name, quantity) in self.GOODS.items():
+            self.assertEqual(by_key[key].name, name, key)
+            self.assertEqual(by_key[key].kind, ItemKind.FILLER, key)
+            self.assertEqual(by_key[key].quantity, quantity, key)
+            binding = ITEM_BINDINGS[key]
+            self.assertEqual(binding.item_category, 4, key)
+            self.assertEqual(binding.normalized_item_id, 0x40000000 | param_id, key)
+            self.assertEqual(binding.raw_descriptor, 0xB0000000 | param_id, key)
+
+    def test_every_goods_id_is_a_row_in_the_bundled_param(self):
+        """The bundle is the promotion: these ids are not inferred from anywhere."""
+        import subprocess
+        import sys
+
+        text = subprocess.run(
+            [sys.executable, "tools/bb_inputs.py", "--get", "params/EquipParamGoods.csv"],
+            cwd=ROOT, capture_output=True, text=True, check=True).stdout
+        rows = {int(row["ID"]): row for row in csv.DictReader(text.splitlines())}
+        self.assertIn(1000, rows)  # witness: the bundle really parsed
+        for param_id, (key, _, quantity) in self.GOODS.items():
+            self.assertIn(param_id, rows, key)
+            # A grant that exceeds the row's own cap is not a grant.
+            self.assertLessEqual(quantity, int(rows[param_id]["maxNum"]), key)
+
+    def test_the_goods_reach_the_default_pool_as_filler(self):
+        counts = Counter(build_item_pool_names(FULL_POOL_ITEM_KEYS))
+        for _, (key, name, _) in sorted(self.GOODS.items()):
+            self.assertGreater(counts[name], 0, name)
+        self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
+
+
+class WeightedFillerTests(unittest.TestCase):
+    """The filler mix is a function of the seed, not of a draw."""
+
+    def test_the_mix_is_stable_for_one_seed_and_varies_across_seeds(self):
+        first = build_item_pool_names(FULL_POOL_ITEM_KEYS, "seed-a")
+        again = build_item_pool_names(FULL_POOL_ITEM_KEYS, "seed-a")
+        other = build_item_pool_names(FULL_POOL_ITEM_KEYS, "seed-b")
+        self.assertEqual(first, again)
+        self.assertNotEqual(first, other)
+        # Only the ARRANGEMENT moves: the composition is the same multiset, so
+        # no seed can be luckier than another.
+        self.assertEqual(Counter(first), Counter(other))
+        self.assertEqual(len(first), len(NETWORK_LOCATIONS))
+
+    def test_the_identity_holds_for_every_seed_and_both_modes(self):
+        for keys in (FULL_POOL_ITEM_KEYS, SLICE_ITEM_KEYS,
+                     FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS):
+            for seed in ("", "1", "99999", "a much longer seed name:3"):
+                pool = build_item_pool_names(keys, seed)
+                self.assertEqual(len(pool), len(NETWORK_LOCATIONS), (len(keys), seed))
+
+    def test_blood_vial_stays_in_the_mix_and_stays_the_filler_contract(self):
+        pool = build_item_pool_names(FULL_POOL_ITEM_KEYS, "seed-a")
+        self.assertIn(FILLER_ITEM_NAME, pool)
+        self.assertIn(FILLER_ITEM_NAME, ITEM_NAME_TO_ID)
+        # It is the heaviest share, so the mix is variety, not a shuffle that
+        # buries the item a run actually burns.
+        counts = Counter(pool)
+        heaviest = max(counts, key=lambda name: (counts[name], name))
+        self.assertEqual(heaviest, FILLER_ITEM_NAME)
+        self.assertEqual(FILLER_WEIGHTS["blood_vial"], max(FILLER_WEIGHTS.values()))
+
+    def test_every_filler_item_carries_a_weight(self):
+        """A new filler type must be weighted on purpose, not defaulted into."""
+        for item in SHUFFLABLE_ITEMS:
+            if item.kind is ItemKind.FILLER:
+                self.assertIn(item.key, FILLER_WEIGHTS, item.key)
+
+    def test_a_pool_that_cannot_hold_its_progression_raises(self):
+        import worlds.bloodborne as world
+
+        original = world.NETWORK_LOCATIONS
+        world.NETWORK_LOCATIONS = original[:3]
+        try:
+            with self.assertRaises(ValueError):
+                build_item_pool_names(FULL_POOL_ITEM_KEYS)
+        finally:
+            world.NETWORK_LOCATIONS = original
+
+    def test_scarce_seeds_shed_uncanny_before_base_weapons(self):
+        """The shed order, asserted: variants go first, then the useful tail."""
+        import worlds.bloodborne as world
+
+        keys = FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS
+        progression = [item for item in SHUFFLABLE_ITEMS
+                       if item.key in keys and item.kind is ItemKind.PROGRESSION]
+        useful = [item for item in SHUFFLABLE_ITEMS
+                  if item.key in keys and item.kind is ItemKind.USEFUL
+                  and item.key not in UNCANNY_ITEM_KEYS]
+        original = world.NETWORK_LOCATIONS
+        # Exactly enough room for progression plus every base useful item and
+        # not one variant.
+        world.NETWORK_LOCATIONS = original[:len(progression) + len(useful)]
+        try:
+            pool = build_item_pool_names(keys)
+            self.assertEqual(pool, build_item_pool_names(keys))  # deterministic
+            self.assertFalse([name for name in pool if "Uncanny" in name])
+            for item in useful:
+                self.assertIn(item.name, pool, item.name)
+            # One location fewer, and the useful TAIL is what goes.
+            world.NETWORK_LOCATIONS = original[:len(progression) + len(useful) - 1]
+            smaller = build_item_pool_names(keys)
+            self.assertNotIn(useful[-1].name, smaller)
+            self.assertIn(useful[0].name, smaller)
+            for item in progression:
+                self.assertIn(item.name, smaller, item.name)
+        finally:
+            world.NETWORK_LOCATIONS = original
 
 
 if __name__ == "__main__":
