@@ -49,3 +49,48 @@ read-back succeeds and the guest stays stable across a menu/level transition, th
 protection-tracking behavior has changed and the external direct-write path may
 be reconsidered. Until such a recheck passes, all inventory writes must be
 performed by the guest thread via the cave.
+
+
+## A2 — The grant routine's return value names the outcome
+
+**Assumption.** The game's `quantity_delta`/grant routine returns the **new held
+count** on a normal add, and **`1`** when the added item overflowed the held cap
+and the surplus went to the Hunter's Dream storage box.
+
+**Provenance: `inferred`, from three live data points.** Two of them are oz's
+first full clear on the native stack, taken during the goal-release flood rather
+than on purpose: `expected_after=5 actual=Some(20) native_result=1` (Pebbles,
+held cap 20) and `expected_after=4 actual=Some(10) native_result=1` (Molotovs,
+held cap 10). The third is the normal-add case, `native_result=8` (clients#443).
+Two overflow observations and one normal one are consistent with the assumption
+and with several other readings of the same cell; **sufficient is not necessary.**
+
+**Why it is load-bearing.** It is the only signal the delivery path has for the
+difference between "delivered, held" and "delivered, in storage". Under it, the
+completion detail can say `delivered to storage (held stack full)` instead of the
+generic wording, which is the whole of clients#445 — a progression key silently
+placed in storage leaves a player soft-stuck in practice, not because delivery
+failed but because nothing said where the item went. It is also why an at-cap
+grant ends `failed` in the state machine: the held stack never reaches
+`expected_after`, and the tool currently has no way to tell that apart from a
+delivery that did not land.
+
+**What would refute it.** Any at-cap add whose result cell is not `1`, or any
+normal add whose result cell is not the final held count. Both are step outcomes
+the probe classifies explicitly.
+
+**How to check it.** `python -m tools.bb_native_delivery probe-storage` — steps
+`a1-normal-add` and `a3-cap-overflow` on one goods id, `b1-vial-normal-add` and
+`b2-vial-overflow` on another. See `docs/STORAGE-ROUTING-PROBE.md`. Record the
+result here when the session runs; until then this stays `inferred`, and it must
+not be written into the contract JSON (see the note at the top of this file and
+issue #157 — the clients crate guards that file, and a semantic edit is a
+cross-repo step).
+
+**Open beside it.** Three further questions the same probe settles, all currently
+**unmeasured**: whether a unique-item insert delivered idle lands held (oz's
+Cheat-Engine-era control says yes; nothing has re-run it natively), whether an
+overflow makes the *next* add sticky to storage whatever it is, and whether the
+post-boss / non-gameplay state routes differently. Each step also records the
+insert source lane, so `persistent` vs `in_frame` can be ruled in or out as the
+cause rather than assumed innocent.

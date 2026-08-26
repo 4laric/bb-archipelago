@@ -244,8 +244,20 @@ Sizes: consume cave 219 bytes, heartbeat cave 117 bytes, state region 112 bytes,
 | `delivery.py` | the harness `poll()` loop — queue, bounded verify, replay recovery |
 | `contract.py` | emits and loads the contract |
 | `cli.py` | `contract` / `payload` / `verify` / `install` / `grant`, all needing `--arm` to write |
+| `probe.py` | the storage-routing probe's steps, journal resume and verdicts (clients#445) |
 
 The command-file bridge has no module, because in-process it does not exist.
+
+### The storage-routing probe
+
+`probe-storage` is a guided operator session, not a delivery path: it steps through
+controlled grants that force the cases clients#445 needs (a sub-cap add, a deliberate
+at-cap overflow, a unique insert idle and a unique insert straight after an overflow,
+and deliveries in the post-boss and non-gameplay states), records the request/result
+cells and the held read-back on both sides of each, and asks the operator where the
+item actually appeared — the one fact no memory read can supply. It grants only
+allowlisted descriptors and has no `--unvalidated-descriptor` escape hatch. Full
+runbook: `docs/STORAGE-ROUTING-PROBE.md`.
 
 `verify` never writes. `install` and `grant` are dry runs without `--arm`. `require_validated_image`
 refuses on any assert mismatch, which is how CUSA00900 and every other build fail closed: a partial
