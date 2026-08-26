@@ -218,6 +218,10 @@ class LauncherApp:
         self.player_name = tk.StringVar()
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
+        # Operator override (bb-archipelago#183).  Deliberately absent from
+        # _save_settings and _load_settings_if_present: it is per-session by
+        # construction, so it can never be left on and forgotten.
+        self.allow_suppression_mismatch = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
         self._enemy_widgets: list[Any] = []
         self._busy = False
@@ -355,6 +359,13 @@ class LauncherApp:
         ttk.Label(setup, text="the slot name your host gave you").grid(
             row=name_row, column=2, sticky="w", padx=(8, 0), pady=3
         )
+        # Outside the enemy-randomization widget group on purpose: it stays
+        # usable with Randomize Enemies off, and it is never saved.
+        ttk.Checkbutton(
+            setup,
+            text="Allow suppression binder mismatch (operators only, not saved)",
+            variable=self.allow_suppression_mismatch,
+        ).grid(row=name_row + 1, column=0, columnspan=3, sticky="w", pady=(8, 0))
 
         options = ttk.LabelFrame(outer, text="Enemy randomization", padding=10)
         options.grid(row=3, column=0, sticky="nsew", pady=(12, 0))
@@ -657,6 +668,7 @@ class LauncherApp:
                 allow_tier_mixing=self.allow_tier_mixing.get(),
                 preserve_locomotion=self.preserve_locomotion.get(),
             )
+            override = self.allow_suppression_mismatch.get()
             self._save_settings()
         except LauncherError as exc:
             self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
@@ -667,7 +679,7 @@ class LauncherApp:
         self._append_log("Starting Randomize & Launch...")
         threading.Thread(
             target=self._run,
-            args=(settings, options),
+            args=(settings, options, override),
             daemon=True,
             name="bloodborne-randomize-launch",
         ).start()
@@ -739,6 +751,7 @@ class LauncherApp:
                 self.randomize_enemies.get(),
                 self.ap_server.get().strip() or None,
                 self.player_name.get().strip() or None,
+                self.allow_suppression_mismatch.get(),
             ),
             daemon=True,
             name="bloodborne-doctor",
@@ -750,6 +763,7 @@ class LauncherApp:
         randomize_enemies: bool,
         server: str | None,
         player_name: str | None = None,
+        allow_suppression_mismatch: bool = False,
     ) -> None:
         try:
             report = run_doctor(
@@ -757,6 +771,7 @@ class LauncherApp:
                 randomize_enemies=randomize_enemies,
                 server=server,
                 player_name=player_name,
+                allow_suppression_mismatch=allow_suppression_mismatch,
             )
             text = format_report(report)
         except Exception as exc:
@@ -826,6 +841,7 @@ class LauncherApp:
                 allow_tier_mixing=self.allow_tier_mixing.get(),
                 preserve_locomotion=self.preserve_locomotion.get(),
             )
+            override = self.allow_suppression_mismatch.get()
             self._save_settings()
         except LauncherError as exc:
             self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
@@ -834,17 +850,23 @@ class LauncherApp:
         self._append_log("Starting Rebuild Seed...")
         threading.Thread(
             target=self._run_rebuild,
-            args=(settings, options),
+            args=(settings, options, override),
             daemon=True,
             name="bloodborne-rebuild-seed",
         ).start()
 
-    def _run_rebuild(self, settings: LauncherSettings, options: EnemizerOptions) -> None:
+    def _run_rebuild(
+        self,
+        settings: LauncherSettings,
+        options: EnemizerOptions,
+        allow_suppression_mismatch: bool = False,
+    ) -> None:
         try:
             result = self.workflow.randomize_and_launch(
                 settings,
                 options,
                 force_rebuild=True,
+                allow_suppression_mismatch=allow_suppression_mismatch,
                 progress=self._progress_message,
             )
         except Exception as exc:
@@ -866,11 +888,17 @@ class LauncherApp:
         else:
             self.status.set(f"Diagnostics folder: {root}")
 
-    def _run(self, settings: LauncherSettings, options: EnemizerOptions) -> None:
+    def _run(
+        self,
+        settings: LauncherSettings,
+        options: EnemizerOptions,
+        allow_suppression_mismatch: bool = False,
+    ) -> None:
         try:
             result = self.workflow.randomize_and_launch(
                 settings,
                 options,
+                allow_suppression_mismatch=allow_suppression_mismatch,
                 progress=self._progress_message,
             )
         except Exception as exc:

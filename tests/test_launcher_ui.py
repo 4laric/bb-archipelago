@@ -9,6 +9,9 @@ from pathlib import Path
 
 from bb_launcher.core import (
     OWNER_NAME,
+    SUPPRESSION_CHECK_PLAN,
+    SUPPRESSION_CHECK_SOURCE,
+    SUPPRESSION_OVERRIDE_KNOB,
     SUPPRESSION_PATH,
     ConflictError,
     ValidationError,
@@ -201,6 +204,120 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
         self.assertTrue(owner["enemizer"]["enabled"])
         self.assertIn("Planning deterministic enemy swaps", "\n".join(progress))
+
+    def _skew_the_installed_gameparam(self) -> None:
+        self.install.patch.joinpath(*SUPPRESSION_PATH.split("/")).write_bytes(
+            b"an install one re-copy behind"
+        )
+
+    def test_binder_skew_refuses_the_whole_launch_without_the_override(self):
+        # The control for bb-archipelago#183: no knob, no launch, nothing
+        # activated -- exactly today's behavior.
+        launched: list = []
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda processes: launched.extend(processes) or [],
+        )
+        self._skew_the_installed_gameparam()
+        with self.assertRaises(ValidationError) as raised:
+            workflow.randomize_and_launch(
+                self.settings(),
+                EnemizerOptions(enabled=True),
+                process_is_running=lambda: False,
+            )
+        self.assertIn("does not match the installed game", str(raised.exception))
+        self.assertEqual(
+            {"launched": [], "overlay_activated": False},
+            {
+                "launched": [spec.name for spec in launched],
+                "overlay_activated": (self.install.mods / OWNER_NAME).exists(),
+            },
+        )
+
+    def test_binder_skew_launches_under_the_override_loudly_and_on_the_record(self):
+        launched: list = []
+        progress: list[str] = []
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda processes: launched.extend(processes)
+            or [Process(21), Process(22)],
+        )
+        self._skew_the_installed_gameparam()
+        result = workflow.randomize_and_launch(
+            self.settings(),
+            EnemizerOptions(enabled=True),
+            allow_suppression_mismatch=True,
+            progress=progress.append,
+            process_is_running=lambda: False,
+        )
+        self.assertEqual((21, 22), result.process_ids)
+        self.assertEqual(["shadPS4", "AP client"], [spec.name for spec in launched])
+        # The loud line rode the same progress sink the launch log tails.
+        bypass_lines = [line for line in progress if SUPPRESSION_OVERRIDE_KNOB in line]
+        self.assertEqual(1, len(bypass_lines))
+        self.assertIn(SUPPRESSION_CHECK_SOURCE, bypass_lines[0])
+        self.assertIn("BYPASSED", bypass_lines[0])
+        # Recorded, so a bug report filed against this overlay is attributable.
+        owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
+        section = owner["suppression_validation"]
+        self.assertTrue(section["overridden"])
+        self.assertEqual(SUPPRESSION_OVERRIDE_KNOB, section["knob"])
+        self.assertEqual([SUPPRESSION_CHECK_SOURCE], section["bypassed"])
+
+    def test_seed_plan_skew_is_bypassable_and_named_in_the_record(self):
+        manifest = json.loads(self.suppression_manifest.read_text(encoding="utf-8"))
+        manifest["plan_sha256"] = digest(b"a different seed's plan")
+        self.suppression_manifest.write_text(json.dumps(manifest), encoding="utf-8")
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda _processes: [Process(31), Process(32)],
+        )
+        with self.assertRaises(ValidationError):
+            workflow.randomize_and_launch(
+                self.settings(),
+                EnemizerOptions(enabled=True),
+                process_is_running=lambda: False,
+            )
+        workflow.randomize_and_launch(
+            self.settings(),
+            EnemizerOptions(enabled=True),
+            allow_suppression_mismatch=True,
+            process_is_running=lambda: False,
+        )
+        owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
+        self.assertEqual(
+            [SUPPRESSION_CHECK_PLAN], owner["suppression_validation"]["bypassed"]
+        )
+
+    def test_an_ordinary_launch_records_no_override_section_at_all(self):
+        # Byte-identical default: the key's absence is what says "validated".
+        workflow = LauncherWorkflow(
+            self.repo,
+            toolchain=FakeToolchain(),
+            process_launcher=lambda _processes: [Process(41), Process(42)],
+        )
+        progress: list[str] = []
+        workflow.randomize_and_launch(
+            self.settings(),
+            EnemizerOptions(enabled=True),
+            allow_suppression_mismatch=True,
+            progress=progress.append,
+            process_is_running=lambda: False,
+        )
+        owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
+        self.assertEqual(
+            {"override_lines": 0, "recorded_section": False, "cache_key": owner["cache_key"]},
+            {
+                "override_lines": len(
+                    [line for line in progress if SUPPRESSION_OVERRIDE_KNOB in line]
+                ),
+                "recorded_section": "suppression_validation" in owner,
+                "cache_key": owner["cache_key"],
+            },
+        )
 
     def test_verified_enemy_cache_is_reused_without_running_writer_again(self):
         toolchain = FakeToolchain()
@@ -585,6 +702,26 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn('text="Randomize & Launch"', source)
         self.assertIn("tools.bb_enemizer.cli", (self.repo / "bb_launcher" / "workflow.py").read_text())
         self.assertIn("BBEnemizerWriter.csproj", (self.repo / "bb_launcher" / "workflow.py").read_text())
+
+    def test_ui_contract_offers_the_override_checkbox_and_never_persists_it(self):
+        """bb-archipelago#183: opt-in per session, and impossible to leave on.
+
+        The UI writes every other toggle into the saved setup; this one is
+        absent from both the save and the load on purpose, so an operator who
+        used it once cannot silently launch a player's seed unvalidated a week
+        later.
+        """
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn("Allow suppression binder mismatch (operators only, not saved)", source)
+        self.assertIn("allow_suppression_mismatch=allow_suppression_mismatch", source)
+        save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
+        load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
+        # The control: the neighbouring toggles ARE persisted, so this is a
+        # statement about this knob, not about an inert pair of blocks.
+        self.assertIn("allow_tier_mixing", save)
+        self.assertIn("allow_tier_mixing", load)
+        self.assertNotIn("allow_suppression_mismatch", save)
+        self.assertNotIn("allow_suppression_mismatch", load)
 
     def test_ui_contract_exposes_a_session_status_panel(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")

@@ -6,7 +6,13 @@ from pathlib import Path
 
 import json
 
-from bb_launcher.core import GameInstall, ValidationError
+from bb_launcher.core import (
+    SUPPRESSION_CHECK_PLAN,
+    SUPPRESSION_CHECK_SOURCE,
+    SUPPRESSION_OVERRIDE_KNOB,
+    GameInstall,
+    ValidationError,
+)
 from bb_launcher.workflow import (
     LEGACY_REQUEST_FORMAT,
     REQUEST_FORMAT,
@@ -32,6 +38,105 @@ class LauncherWorkflowTests(unittest.TestCase):
             message = str(raised.exception)
             self.assertIn(str(fixture.gameparam), message)
             self.assertIn("build.ps1 -Package -GameRoot", message)
+
+
+class SuppressionMismatchOverrideTests(unittest.TestCase):
+    """bb-archipelago#183: the operator escape hatch over binder hash skew.
+
+    The default half of each pair is the control: without the knob the refusal
+    must be exactly the one this code has always raised.
+    """
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.fixture = DoctorFixture(Path(self.temporary.name))
+        self.install = GameInstall.from_root(self.fixture.root / "game")
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def validate(self, plan_hash: str = PLAN_HASH, **kwargs):
+        lines: list[str] = []
+        result = _validate_suppression(
+            self.install,
+            self.fixture.binder,
+            self.fixture.manifest_path,
+            plan_hash,
+            progress=lines.append,
+            **kwargs,
+        )
+        return result, lines
+
+    def skew_the_plan(self) -> str:
+        wrong = "b" * 64
+        self.assertNotEqual(wrong, PLAN_HASH)
+        return wrong
+
+    def test_plan_hash_skew_still_refuses_without_the_knob(self):
+        with self.assertRaises(ValidationError) as raised:
+            self.validate(self.skew_the_plan())
+        self.assertEqual(
+            "suppression build plan hash does not match the AP seed",
+            str(raised.exception),
+        )
+
+    def test_plan_hash_skew_passes_under_the_knob_with_one_loud_line(self):
+        result, lines = self.validate(self.skew_the_plan(), allow_mismatch=True)
+        self.assertEqual((SUPPRESSION_CHECK_PLAN,), result.bypassed)
+        self.assertEqual(1, len(lines))
+        self.assertIn(SUPPRESSION_OVERRIDE_KNOB, lines[0])
+        self.assertIn(SUPPRESSION_CHECK_PLAN, lines[0])
+        self.assertIn("BYPASSED", lines[0])
+        # expected-vs-found, both named, both truncated the same way
+        self.assertIn(f"expected {'b' * 12}...", lines[0])
+        self.assertIn(f"found {PLAN_HASH[:12]}...", lines[0])
+        self.assertEqual(lines[0], lines[0].encode("ascii").decode("ascii"))
+
+    def test_source_hash_skew_still_refuses_without_the_knob(self):
+        self.fixture.gameparam.write_bytes(b"an install one re-copy behind")
+        with self.assertRaises(ValidationError) as raised:
+            self.validate()
+        self.assertIn("does not match the installed game", str(raised.exception))
+
+    def test_source_hash_skew_passes_under_the_knob_naming_the_installed_file(self):
+        self.fixture.gameparam.write_bytes(b"an install one re-copy behind")
+        result, lines = self.validate(allow_mismatch=True)
+        self.assertEqual((SUPPRESSION_CHECK_SOURCE,), result.bypassed)
+        self.assertEqual(1, len(lines))
+        self.assertIn(SUPPRESSION_CHECK_SOURCE, lines[0])
+        self.assertIn(str(self.fixture.gameparam), lines[0])
+
+    def test_both_skews_at_once_emit_one_line_each(self):
+        self.fixture.gameparam.write_bytes(b"an install one re-copy behind")
+        result, lines = self.validate(self.skew_the_plan(), allow_mismatch=True)
+        self.assertEqual(
+            (SUPPRESSION_CHECK_PLAN, SUPPRESSION_CHECK_SOURCE), result.bypassed
+        )
+        self.assertEqual(2, len(lines))
+        self.assertIn(SUPPRESSION_CHECK_PLAN, lines[0])
+        self.assertIn(SUPPRESSION_CHECK_SOURCE, lines[1])
+
+    def test_a_matching_chain_under_the_knob_adds_no_noise(self):
+        result, lines = self.validate(allow_mismatch=True)
+        self.assertEqual(
+            {"bypassed": (), "lines": [], "plan": PLAN_HASH},
+            {
+                "bypassed": result.bypassed,
+                "lines": lines,
+                "plan": result.manifest["plan_sha256"],
+            },
+        )
+
+    def test_the_knob_never_covers_a_corrupt_binder(self):
+        # Skew is bypassable; a binder that disagrees with its own manifest is
+        # corruption, and the override must not touch it.
+        self.fixture.binder.write_bytes(b"not what the manifest describes")
+        with self.assertRaises(ValidationError) as raised:
+            self.validate(allow_mismatch=True)
+        self.assertEqual(
+            "suppression binder hash does not match its build manifest",
+            str(raised.exception),
+        )
 
 
 def _request_payload(fmt: str) -> dict:

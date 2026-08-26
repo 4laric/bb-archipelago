@@ -139,6 +139,12 @@ def build_parser() -> argparse.ArgumentParser:
     doctor.add_argument(
         "--no-enemizer", action="store_true", help="skip the enemy-randomization checks"
     )
+    doctor.add_argument(
+        "--allow-suppression-mismatch",
+        action="store_true",
+        help="OPERATORS ONLY: report suppression binder/seed/install hash skew as a "
+        "named WARN instead of a FAIL (bb-archipelago#183)",
+    )
 
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
@@ -365,8 +371,14 @@ def main(argv: list[str] | None = None) -> int:
                 player_name = raw["player_name"].strip() or None
             if not args.no_enemizer and raw.get("randomize_enemies") is False:
                 randomize = False
+            # Deliberately not read from the saved settings: the override is
+            # per-invocation, so a saved setup can never silently keep it on.
             report = run_doctor(
-                settings, randomize_enemies=randomize, server=server, player_name=player_name
+                settings,
+                randomize_enemies=randomize,
+                server=server,
+                player_name=player_name,
+                allow_suppression_mismatch=args.allow_suppression_mismatch,
             )
             print(format_report(report))
             return 0 if report.ok else 1

@@ -8,6 +8,21 @@ under `Unreleased` and move into a dated version section when released.
 
 ### Added
 
+- **An explicit operator override for suppression binder hash mismatches.**
+  Host-side iteration constantly puts the seed, the suppression binder and the
+  installed gameparam one step out of step with each other, and every skew cost
+  a full refusal. **Allow suppression binder mismatch** in the launcher, and
+  `--allow-suppression-mismatch` on `python -m bb_launcher doctor`, downgrade
+  exactly two comparisons — binder plan versus the seed's plan hash, and binder
+  source versus the installed gameparam — from refusals to loud warnings, each
+  printing what was expected, what was found, and the knob that bypassed it.
+  Doctor reports them as `WARN` naming the override instead of failing, and the
+  activated overlay records the bypass in its ownership manifest so a later bug
+  report is attributable. The override is per-invocation and is never saved
+  with the setup; without it every refusal is exactly what it was before. It is
+  for hosts running playtests, not for players: a mismatched binder suppresses
+  the wrong grants and the run diverges from the seed silently (#183).
+
 - **The client's console window shows live output again, and still leaves a
   log behind.** Capturing the client's output into `client.log` (#171) had
   blanked the console window you watch to see what arrived. The client now

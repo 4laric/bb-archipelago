@@ -24,6 +24,9 @@ from .core import (
     CHEAT_ENGINE_PROCESSES,
     DVDROOT_PREFIX,
     MAP_PREFIX,
+    SUPPRESSION_CHECK_PLAN,
+    SUPPRESSION_CHECK_SOURCE,
+    SUPPRESSION_OVERRIDE_KNOB,
     SUPPRESSION_PATH,
     USER_MODS_DIR_NAME,
     GameInstall,
@@ -41,6 +44,7 @@ from .core import (
     sha256_file,
     stale_bare_serial_process,
     stray_cheat_engine_names,
+    suppression_override_line,
     validate_processes,
 )
 from .client_config import default_state_root
@@ -367,7 +371,16 @@ def _check_runtime_agreement(chain: _Chain) -> DoctorFinding:
     return DoctorFinding(PASS, "runtime build agreement", wanted)
 
 
-def _check_suppression_chain(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
+_OVERRIDE_REMEDY = (
+    f"this is skew, not corruption; rebuild the binder for this seed and this "
+    f"installation, or relaunch with {SUPPRESSION_OVERRIDE_KNOB} if you are the "
+    "operator and you know exactly what drifted -- players should never use it"
+)
+
+
+def _check_suppression_chain(
+    settings: LauncherSettings, chain: _Chain, *, allow_mismatch: bool = False
+) -> DoctorFinding:
     if chain.request is None:
         return DoctorFinding(SKIP, "suppression binder and manifest", "upstream check failed")
     binder = settings.suppression_binder.expanduser().resolve()
@@ -380,6 +393,7 @@ def _check_suppression_chain(settings: LauncherSettings, chain: _Chain) -> Docto
             "build it with tools/build_vanilla_suppression.ps1 or select the "
             "packaged gameparam.parambnd.dcx",
         )
+    overridden: list[str] = []
     try:
         manifest = _read_object(manifest_path, "suppression build manifest")
         if manifest.get("format") != SUPPRESSION_MANIFEST_FORMAT:
@@ -388,7 +402,18 @@ def _check_suppression_chain(settings: LauncherSettings, chain: _Chain) -> Docto
             raise ValidationError("suppression manifest output path is not the gameparam binder")
         expected_plan = chain.request["suppression_plan_sha256"]
         if manifest.get("plan_sha256") != expected_plan:
-            raise ValidationError("suppression build plan hash does not match the AP seed")
+            # WARN-with-the-knob-named, never a silent PASS: the operator still
+            # has to read a line saying which hash disagreed (#183).
+            if not allow_mismatch:
+                raise ValidationError("suppression build plan hash does not match the AP seed")
+            overridden.append(
+                suppression_override_line(
+                    SUPPRESSION_CHECK_PLAN,
+                    expected_plan,
+                    manifest.get("plan_sha256"),
+                    "binder plan vs the seed's suppression_plan_sha256",
+                )
+            )
         output_hash = sha256_file(binder)
         if manifest.get("output_gameparam_sha256") != output_hash:
             raise ValidationError("suppression binder hash does not match its build manifest")
@@ -404,6 +429,13 @@ def _check_suppression_chain(settings: LauncherSettings, chain: _Chain) -> Docto
             "binder and manifest must come from the same suppression build; "
             "if the seed was regenerated, rebuild the binder for its plan hash",
         )
+    if overridden:
+        return DoctorFinding(
+            WARN,
+            "suppression binder and manifest",
+            "; ".join(overridden),
+            _OVERRIDE_REMEDY,
+        )
     return DoctorFinding(
         PASS,
         "suppression binder and manifest",
@@ -411,7 +443,9 @@ def _check_suppression_chain(settings: LauncherSettings, chain: _Chain) -> Docto
     )
 
 
-def _check_installed_gameparam(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
+def _check_installed_gameparam(
+    settings: LauncherSettings, chain: _Chain, *, allow_mismatch: bool = False
+) -> DoctorFinding:
     if chain.install is None:
         return DoctorFinding(SKIP, "installed gameparam", "upstream check failed")
     try:
@@ -435,6 +469,22 @@ def _check_installed_gameparam(settings: LauncherSettings, chain: _Chain) -> Doc
             PASS,
             "installed gameparam",
             f"{backend}-layer {source_path} is the vanilla source the suppression build was made from",
+        )
+    # Both branches below are the same comparison the launch path bypasses
+    # (manifest source vs installed gameparam), so both downgrade together --
+    # an override that fires in one lane and refuses in the other is worse
+    # than no override at all (bb-archipelago#183).
+    if allow_mismatch:
+        return DoctorFinding(
+            WARN,
+            "installed gameparam",
+            suppression_override_line(
+                SUPPRESSION_CHECK_SOURCE,
+                source_expected,
+                actual,
+                f"binder source vs the installed {backend}-layer {source_path}",
+            ),
+            _OVERRIDE_REMEDY,
         )
     if actual == output_expected:
         return DoctorFinding(
@@ -759,6 +809,7 @@ def run_doctor(
     randomize_enemies: bool = True,
     server: str | None = None,
     player_name: str | None = None,
+    allow_suppression_mismatch: bool = False,
     process_running: Callable[[str], bool] | None = None,
     probe: Callable[[str, int], None] | None = None,
     read_shad_version: Callable[[Path], str | None] | None = None,
@@ -778,8 +829,16 @@ def run_doctor(
         _safely(lambda: _check_shad_version(chain, read_shad_version)),
         _safely(lambda: _check_item_grants(settings, chain, process_running)),
         _safely(lambda: _check_runtime_agreement(chain)),
-        _safely(lambda: _check_suppression_chain(settings, chain)),
-        _safely(lambda: _check_installed_gameparam(settings, chain)),
+        _safely(
+            lambda: _check_suppression_chain(
+                settings, chain, allow_mismatch=allow_suppression_mismatch
+            )
+        ),
+        _safely(
+            lambda: _check_installed_gameparam(
+                settings, chain, allow_mismatch=allow_suppression_mismatch
+            )
+        ),
         _safely(lambda: _check_map_studio(settings, chain, randomize_enemies=randomize_enemies)),
         _safely(lambda: _check_user_mods(chain, randomize_enemies=randomize_enemies)),
         _safely(lambda: _check_server(chain, server, probe)),
