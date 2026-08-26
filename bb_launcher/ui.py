@@ -227,7 +227,7 @@ class LauncherApp:
         self._busy = False
 
         root.title("Bloodborne AP Launcher")
-        root.minsize(820, 680)
+        root.minsize(820, 620)
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         self._apply_theme()
@@ -312,7 +312,13 @@ class LauncherApp:
         outer = ttk.Frame(self.root, padding=16)
         outer.grid(row=0, column=0, sticky="nsew")
         outer.columnconfigure(0, weight=1)
-        outer.rowconfigure(3, weight=1)
+        # The notebook and the log both stretch, and both carry a floor
+        # (bb-archipelago#190): the old single column stacked every panel in
+        # one grid, so on a short display Tk crushed the only weighted row --
+        # the enemy-randomization panel, toggle and progress log included --
+        # to zero height and it vanished with no diagnostic at all.
+        outer.rowconfigure(2, weight=1, minsize=240)
+        outer.rowconfigure(3, weight=2, minsize=140)
 
         title = ttk.Label(
             outer, text="Bloodborne Archipelago",
@@ -324,24 +330,45 @@ class LauncherApp:
             text="Build a seed-owned shadPS4 overlay, activate it safely, and launch every component.",
         ).grid(row=1, column=0, sticky="w", pady=(2, 12))
 
-        setup = ttk.LabelFrame(outer, text="Setup", padding=10)
-        setup.grid(row=2, column=0, sticky="ew")
+        notebook = ttk.Notebook(outer)
+        notebook.grid(row=2, column=0, sticky="nsew")
+        self.notebook = notebook
+
+        setup = ttk.Frame(notebook, padding=10)
         setup.columnconfigure(1, weight=1)
-        for row, (name, label, kind) in enumerate(FIELD_DEFINITIONS):
+        notebook.add(setup, text="Setup")
+
+        options = ttk.Frame(notebook, padding=10)
+        options.columnconfigure(1, weight=1)
+        notebook.add(options, text="Enemy randomization")
+
+        # The enemizer's own input paths live on the enemizer tab; everything
+        # else stays on Setup. Same variables, same commands, same
+        # _enemy_widgets group -- only the parent frame differs.
+        enemy_fields = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
+        setup_row = 0
+        enemy_row = 4
+        for name, label, kind in FIELD_DEFINITIONS:
             if self.packaged_toolchain and name in DEVELOPMENT_FIELDS:
                 continue
-            ttk.Label(setup, text=label).grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
-            entry = ttk.Entry(setup, textvariable=self.fields[name])
+            if name in enemy_fields:
+                parent, row = options, enemy_row
+                enemy_row += 1
+            else:
+                parent, row = setup, setup_row
+                setup_row += 1
+            ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
+            entry = ttk.Entry(parent, textvariable=self.fields[name])
             entry.grid(row=row, column=1, sticky="ew", pady=3)
             button = ttk.Button(
-                setup,
+                parent,
                 text="Browse...",
                 command=lambda key=name, selector=kind: self._browse(key, selector),
             )
             button.grid(row=row, column=2, padx=(8, 0), pady=3)
-            if name in {"map_studio_source", "enemy_inventory", "soulsformats_next"}:
+            if name in enemy_fields:
                 self._enemy_widgets.extend((entry, button))
-        server_row = len(FIELD_DEFINITIONS)
+        server_row = setup_row
         ttk.Label(setup, text="Archipelago server").grid(
             row=server_row, column=0, sticky="w", padx=(0, 8), pady=3
         )
@@ -367,10 +394,6 @@ class LauncherApp:
             variable=self.allow_suppression_mismatch,
         ).grid(row=name_row + 1, column=0, columnspan=3, sticky="w", pady=(8, 0))
 
-        options = ttk.LabelFrame(outer, text="Enemy randomization", padding=10)
-        options.grid(row=3, column=0, sticky="nsew", pady=(12, 0))
-        options.columnconfigure(1, weight=1)
-        options.rowconfigure(3, weight=1)
         ttk.Checkbutton(
             options,
             text="Randomize Enemies",
@@ -394,14 +417,20 @@ class LauncherApp:
         locomotion.grid(row=2, column=1, sticky="w")
         self._enemy_widgets.extend((seed_entry, tier, locomotion))
 
+        # Launch/build progress, not an enemizer concern: it lives outside the
+        # notebook so no tab selection can hide it.
+        log_frame = ttk.LabelFrame(outer, text="Progress", padding=10)
+        log_frame.grid(row=3, column=0, sticky="nsew", pady=(12, 0))
+        log_frame.columnconfigure(0, weight=1)
+        log_frame.rowconfigure(0, weight=1)
         self.log = self.tk.Text(
-            options, height=10, wrap="word", state="disabled",
+            log_frame, height=8, wrap="word", state="disabled",
             bg=THEME_PANEL, fg=THEME_FOREGROUND, insertbackground=THEME_FOREGROUND,
             relief="flat",
         )
-        self.log.grid(row=3, column=0, columnspan=2, sticky="nsew", pady=(10, 0))
-        scrollbar = ttk.Scrollbar(options, orient="vertical", command=self.log.yview)
-        scrollbar.grid(row=3, column=2, sticky="ns", pady=(10, 0))
+        self.log.grid(row=0, column=0, sticky="nsew")
+        scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
+        scrollbar.grid(row=0, column=1, sticky="ns")
         self.log.configure(yscrollcommand=scrollbar.set)
 
         status_frame = ttk.LabelFrame(outer, text="Session status", padding=10)
