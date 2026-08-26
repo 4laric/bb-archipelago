@@ -8,6 +8,10 @@
     python -m tools.bb_native_delivery grant --pid 1234 --raw 0xB00004CE \
         --normalized 0x400004CE --quantity 1 --tag manual --arm
     python -m tools.bb_native_delivery grant --pid 1234 ... --arm --clear-stale-request
+    python -m tools.bb_native_delivery probe-storage --runbook
+    python -m tools.bb_native_delivery probe-storage --pid 1234 --save-id throwaway-a \
+        --pass a --arm --yes-throwaway-save
+    python -m tools.bb_native_delivery probe-storage --summary
 
 Only descriptors this project validated live can be armed (issue #146): a
 category-4 goods pair, or an allowlisted equipment row. Everything else is
@@ -181,12 +185,20 @@ def _read_journal(path: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def _record_tag(path: Path, tag: str, status: str) -> None:
-    """Best effort: an unwritable journal must not block a grant."""
+def _record_tag(path: Path, tag: str, status: str, **extra) -> None:
+    """Best effort: an unwritable journal must not block a grant.
+
+    ``extra`` is how the storage probe stores its per-step resume state
+    (``probe_status``). It rides in this journal rather than a parallel store:
+    a probe step IS a grant with a tag, so the reused-tag refusal from issue
+    #146/#147 has to see it, and a second file would be a second answer to the
+    question "has this tag been armed".
+    """
     journal = _read_journal(path)
     entry = journal.get(tag) if isinstance(journal.get(tag), dict) else {}
     entry["status"] = status
     entry["armed_count"] = int(entry.get("armed_count", 0)) + (status == "armed")
+    entry.update(extra)
     journal[tag] = entry
     try:
         path.write_text(json.dumps(journal, indent=2, sort_keys=True), encoding="utf-8")
@@ -314,6 +326,236 @@ def _cmd_grant(args: argparse.Namespace) -> int:
         return code
 
 
+DEFAULT_PROBE_REPORT = "bb-storage-probe.jsonl"
+
+
+def _probe_report_path(args: argparse.Namespace) -> Path:
+    """The operator's working directory, not the repo: a probe report is session
+    evidence from one person's machine, and nothing in the repo consumes it."""
+    return Path(args.report) if args.report else Path.cwd() / DEFAULT_PROBE_REPORT
+
+
+def _probe_deliver(args, memory, base, step, expected_before: int):
+    """One controlled probe grant, through the ordinary machinery.
+
+    Nothing here re-implements delivery. The point of the probe is that the
+    grant is exactly the grant the client will make, so the destination it
+    observes is the destination players get; a bespoke path would measure the
+    bespoke path.
+
+    An at-cap grant is EXPECTED to end ``failed``: the stack does not reach
+    ``expected_after`` because the surplus went to storage -- that is the whole
+    observation (clients#445 read it as ``expected_after=5 actual=Some(20)``).
+    So a terminal non-success status is recorded, not raised.
+    """
+    from .guest import GuestRuntime
+    from .probe import DeliveryResult
+
+    runtime = GuestRuntime(memory, base)
+    if runtime.request_pending():
+        raise SystemExit(
+            "REFUSING: the native request cell is armed before this step. A probe step "
+            "must be the only thing in flight. Re-run `grant --clear-stale-request` "
+            "once, confirm the game is healthy, then resume the probe."
+        )
+    raw, normalized = step.descriptor
+    session = GrantSession(runtime=runtime)
+    session.submit(
+        GrantCommand(
+            raw_id=raw,
+            normalized_id=normalized,
+            quantity=step.quantity,
+            tag=step.tag(args.save_id),
+            expected_before=expected_before,
+        )
+    )
+    _poll_to_completion(session, args.timeout)
+    native_result = None
+    try:
+        native_result = runtime.native_result()
+    except Exception as exc:  # pragma: no cover - a read failure is data, not a crash
+        print(f"warning: could not read the result cell: {exc}")
+    return DeliveryResult(
+        status=session.state.status,
+        detail=session.state.detail,
+        native_result=native_result,
+        expected_before=session.state.expected_before,
+        expected_after=session.state.expected_after,
+    )
+
+
+def _cmd_probe_storage(args: argparse.Namespace) -> int:
+    from . import probe
+
+    probe.validate_steps()
+    report = _probe_report_path(args)
+
+    if args.runbook:
+        print(probe.runbook())
+        return 0
+    if args.summary:
+        records = probe.read_records(report)
+        if not records:
+            print(f"no probe records in {report}. Nothing to summarise.")
+            return 1
+        save_ids = tuple(sorted({record.get("save_id", "?") for record in records}))
+        print(probe.render_summary(records, save_ids=save_ids))
+        print(f"\n(read {len(records)} record(s) from {report})")
+        print("Paste the block above into clients#445.")
+        return 0
+
+    if not args.save_id:
+        print("REFUSING: --save-id names the throwaway save this pass runs on. It keys "
+              "the journal, so resuming into a DIFFERENT save would silently skip steps "
+              "that save never ran.")
+        return 1
+    try:
+        steps = probe.steps_for(args.pass_name)
+    except probe.ProbeError as exc:
+        print(f"REFUSING: {exc}")
+        return 1
+    if args.only:
+        wanted = set(args.only)
+        steps = tuple(step for step in steps if step.step_id in wanted)
+        unknown = wanted - {step.step_id for step in probe.PROBE_STEPS}
+        if unknown:
+            print(f"REFUSING: unknown step id(s): {', '.join(sorted(unknown))}")
+            return 1
+    if args.skip:
+        steps = tuple(step for step in steps if step.step_id not in set(args.skip))
+    if not steps:
+        print("no steps selected")
+        return 1
+
+    journal_path = _journal_path(args)
+    todo, done = probe.pending_steps(steps, _read_journal(journal_path), args.save_id)
+    for step in done:
+        print(f"[{step.step_id}] already recorded for save {args.save_id!r}; skipping. "
+              f"(Re-run it with --redo {step.step_id}.)")
+    if args.redo:
+        redo = set(args.redo)
+        todo = [step for step in steps if step.step_id in redo] + [
+            step for step in todo if step.step_id not in redo
+        ]
+    if not todo:
+        print(f"every selected step is already recorded for save {args.save_id!r}. "
+              "Run with --summary to render the report.")
+        return 0
+
+    if not args.arm:
+        print(probe.runbook(tuple(todo)))
+        print("\nDry run: nothing was queued and no guest memory was touched. "
+              "Re-run with --arm --yes-throwaway-save to deliver.")
+        return 0
+    if not args.yes_throwaway_save:
+        print("REFUSING: --yes-throwaway-save is required. This session inserts a unique "
+              "item, which a save can accept only once and which is not removable "
+              "afterwards. Use a save you are willing to delete.")
+        return 1
+
+    from .process import StaleRequest
+
+    memory, base = _attach(args, writable=True)
+    with memory:
+        try:
+            _gate_request_cell(memory, base, args.clear_stale_request)
+        except StaleRequest as exc:
+            print(f"\nREFUSING TO PROBE: {exc}")
+            return 1
+        return _run_probe_steps(args, memory, base, todo, report, journal_path)
+
+
+def _run_probe_steps(args, memory, base, todo, report, journal_path) -> int:
+    from . import probe
+    from .guest import GuestRuntime
+
+    runtime = GuestRuntime(memory, base)
+    recorded = 0
+    for step in todo:
+        tag = step.tag(args.save_id)
+        print("\n" + "=" * 72)
+        print(f"[{step.step_id}]  {step.hypothesis}  {step.item} x{step.quantity} "
+              f"({step.lane} lane)")
+        print(f"WHY:   {step.rationale}")
+        print(f"DO THIS IN GAME FIRST:\n  {step.setup}")
+        answer = input("ready? (y = deliver / s = skip this step / q = stop here): ").strip().lower()
+        if answer.startswith("q"):
+            print("stopping. Re-run the same command to resume where you left off.")
+            break
+        if answer.startswith("s"):
+            _record_tag(journal_path, tag, "skipped", probe_status="skipped")
+            print(f"[{step.step_id}] skipped and journalled; it will not be offered again "
+                  f"for save {args.save_id!r} unless you pass --redo {step.step_id}.")
+            continue
+
+        raw, normalized = step.descriptor
+        refused = _gate_descriptor(argparse.Namespace(
+            raw=raw, normalized=normalized, unvalidated_descriptor=False))
+        if refused:
+            return refused
+
+        read_back = runtime.find_stack(normalized)
+        held_before = read_back.quantity if read_back and read_back.exists else 0
+        typed = probe.parse_count(input(
+            f"[{step.step_id}] read the HELD count for {step.item} off the in-game UI "
+            f"(the tool read {held_before}): "))
+        if typed is None:
+            print(f"REFUSING: this step needs the count you can SEE. The tool's read-back "
+                  "alone is what issue #146 showed cannot detect a partial prior delivery.")
+            return 1
+        if typed != held_before:
+            print(f"REFUSING: the UI says {typed} and the tool read {held_before}. One of "
+                  "them is wrong, and a probe that records a baseline it cannot "
+                  "reconcile records nothing. Re-open the inventory, re-check, re-run.")
+            return 1
+
+        try:
+            _record_tag(journal_path, tag, "armed", probe_status="in_flight")
+            result = _probe_deliver(args, memory, base, step, held_before)
+        except KeyboardInterrupt:
+            _record_tag(journal_path, tag, "interrupted", probe_status="interrupted")
+            print(f"\ninterrupted during [{step.step_id}]. The request cell was disarmed. "
+                  "Confirm in game whether the item arrived before resuming.")
+            raise
+        print(f"delivery: {result.status}: {result.detail}")
+        print(f"result cell: native_result={result.native_result} "
+              f"expected_before={result.expected_before} expected_after={result.expected_after}")
+
+        # The pre-delivery read-back is the one already taken above (and
+        # reconciled against the UI), so the engine's first read replays it
+        # rather than sampling a stack the grant has already changed.
+        pending_reads = [held_before]
+
+        def read_stack(normalized_id: int) -> int:
+            if pending_reads:
+                return pending_reads.pop(0)
+            view = runtime.find_stack(normalized_id)
+            return view.quantity if view and view.exists else 0
+
+        context = probe.ProbeContext(
+            save_id=args.save_id,
+            read_stack=read_stack,
+            deliver=lambda _step, _before: result,
+            prompt=input,
+            now=lambda: time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        )
+        record = probe.run_step(step, context)
+        record["operator_confirmed_held_before"] = typed
+        probe.append_record(report, record)
+        _record_tag(journal_path, tag, result.status or "unknown", probe_status="recorded")
+        recorded += 1
+        print(f"[{step.step_id}] recorded to {report}")
+
+    print(f"\n{recorded} step(s) recorded this run.")
+    records = probe.read_records(report)
+    if records:
+        print()
+        print(probe.render_summary(
+            records, save_ids=tuple(sorted({r.get("save_id", "?") for r in records}))))
+        print("\nPaste the block above into clients#445.")
+    return 0
+
+
 def _hex_int(text: str) -> int:
     return int(text, 0)
 
@@ -370,6 +612,47 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"path to the reused-tag journal (default: repo root/{DEFAULT_JOURNAL_NAME})",
     )
     grant.add_argument("--timeout", type=float, default=120.0)
+
+    # The storage-routing probe (clients#445). It is a `grant` session with an
+    # operator in the loop, so it takes the same attach flags -- but --pid is
+    # optional here because --runbook and --summary touch no process at all.
+    storage = sub.add_parser(
+        "probe-storage",
+        help="guided storage-routing probe: one controlled grant per step, "
+             "recorded against the operator's in-game observation (clients#445)",
+    )
+    storage.add_argument("--pid", type=int, default=None)
+    storage.add_argument("--base", type=_hex_int, default=None)
+    storage.add_argument("--shad-log", default=None)
+    storage.add_argument("--arm", action="store_true",
+                         help="actually deliver; without it the run is a rehearsal")
+    storage.add_argument("--clear-stale-request", action="store_true")
+    storage.add_argument("--save-id", default=None,
+                         help="a name for the THROWAWAY save this pass runs on; keys "
+                              "the journal so resume cannot cross saves")
+    storage.add_argument("--pass", dest="pass_name", default=None, choices=("a", "b"),
+                         help="a = idle-first, b = sticky-first. Each pass needs its own "
+                              "throwaway save: a unique item inserts once per save")
+    storage.add_argument("--only", action="append", default=None, metavar="STEP")
+    storage.add_argument("--skip", action="append", default=None, metavar="STEP")
+    storage.add_argument("--redo", action="append", default=None, metavar="STEP",
+                         help="run a step again even though the journal has it recorded")
+    storage.add_argument("--report", default=None,
+                         help=f"append-mode JSON-lines report "
+                              f"(default: ./{DEFAULT_PROBE_REPORT})")
+    storage.add_argument("--journal", default=None,
+                         help=f"the grant journal (default: repo root/{DEFAULT_JOURNAL_NAME}); "
+                              "probe resume state rides in it, not in a parallel store")
+    storage.add_argument("--runbook", action="store_true",
+                         help="print the operator runbook and exit; touches nothing")
+    storage.add_argument("--summary", action="store_true",
+                         help="render the verdicts from an existing report and exit")
+    storage.add_argument("--yes-throwaway-save", action="store_true",
+                         help="required with --arm: you are asserting this save is "
+                              "disposable (the unique insert is once-per-save and "
+                              "not removable)")
+    storage.add_argument("--timeout", type=float, default=120.0)
+    storage.set_defaults(func=_cmd_probe_storage)
     return parser
 
 

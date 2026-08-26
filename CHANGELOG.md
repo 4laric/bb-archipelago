@@ -6,6 +6,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Where a delivered item lands is now a question with an experiment behind it
+  (#202, clients#445).** On the native stack some items arrive in held inventory and
+  some in the Hunter's Dream storage box, and a progression key quietly placed in
+  storage leaves a player stuck in practice even though delivery worked. The
+  developer tool grows a guided `probe-storage` session that forces each case
+  deliberately — a normal add, a deliberate at-cap overflow, a unique item
+  delivered idle, a unique item right after an overflow, and deliveries in the
+  post-boss and menu states — and renders a verdict the operator pastes into the
+  issue. No player-facing behaviour changes yet: this is the measurement the
+  console wording and any pacing fix have to be built on.
+
 - **The release bundle's suppression binder finally matches real installs (#200).**
   The inputs bundle's `parambnd/gameparam.parambnd.dcx` was byte-different from
   the patch layer installed games carry, so every zip-shipped binder failed the
