@@ -12,7 +12,7 @@ under `Unreleased` and move into a dated version section when released.
   installed-gameparam check and manually built binders had to be sent alongside
   releases. The bundle now carries the installed patch-layer bytes exactly, and
   the binder CI check pins the whole lineage: bundle source, manifest source,
-  and the known-good binder output playtesters validated. Drift in any of the
+  and the binder output CI reproduces under the pinned toolchain (the hand-built binder differed only by SoulsFormatsNEXT version; one live run on a CI binder is owed). Drift in any of the
   three reds the PR that introduces it.
 
 ### Fixed
