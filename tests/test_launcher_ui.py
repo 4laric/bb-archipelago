@@ -723,6 +723,116 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertNotIn("allow_suppression_mismatch", save)
         self.assertNotIn("allow_suppression_mismatch", load)
 
+    def _build_widget_tree(self):
+        """(parent-of-var, widgets-by-parent-var) read out of `_build` itself.
+
+        The defect this guards (bb-archipelago#190) is a parenting question,
+        and the suite cannot open a real window: CI is headless Linux. So the
+        layout is read structurally out of the AST rather than grepped for a
+        string that could survive the widget moving.
+        """
+        import ast
+
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        build = next(
+            node for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.FunctionDef) and node.name == "_build"
+        )
+        parent_of: dict[str, str] = {}
+        texts_by_parent: dict[str, set[str]] = {}
+        tabs: dict[str, str] = {}
+        for node in ast.walk(build):
+            if not isinstance(node, ast.Call):
+                continue
+            # notebook.add(frame, text="...")
+            if (
+                isinstance(node.func, ast.Attribute)
+                and node.func.attr == "add"
+                and isinstance(node.func.value, ast.Name)
+                and node.args
+                and isinstance(node.args[0], ast.Name)
+            ):
+                label = next(
+                    (kw.value.value for kw in node.keywords
+                     if kw.arg == "text" and isinstance(kw.value, ast.Constant)),
+                    None,
+                )
+                if label is not None:
+                    tabs[label] = node.args[0].id
+                continue
+            if not node.args or not isinstance(node.args[0], ast.Name):
+                continue
+            parent = node.args[0].id
+            for keyword in node.keywords:
+                if keyword.arg == "text" and isinstance(keyword.value, ast.Constant):
+                    texts_by_parent.setdefault(parent, set()).add(keyword.value.value)
+            for statement in ast.walk(build):
+                if isinstance(statement, ast.Assign) and statement.value is node:
+                    for target in statement.targets:
+                        if isinstance(target, ast.Name):
+                            parent_of[target.id] = parent
+                        elif isinstance(target, ast.Attribute):
+                            parent_of[f"self.{target.attr}"] = parent
+        return tabs, parent_of, texts_by_parent
+
+    def test_ui_contract_tabs_the_setup_and_the_enemizer(self):
+        """bb-archipelago#190: two tabs, and the enemizer controls are on one.
+
+        A single tall column let Tk crush the only weighted row to zero on a
+        short display, taking the Randomize Enemies toggle with it.
+        """
+        tabs, parent_of, texts_by_parent = self._build_widget_tree()
+        self.assertEqual(set(tabs), {"Setup", "Enemy randomization"})
+        enemy_tab = tabs["Enemy randomization"]
+        setup_tab = tabs["Setup"]
+        self.assertEqual(parent_of[enemy_tab], "notebook")
+        self.assertEqual(parent_of[setup_tab], "notebook")
+        self.assertLessEqual(
+            {
+                "Randomize Enemies",
+                "Allow tier mixing (experimental)",
+                "Preserve locomotion class",
+                "Enemy seed",
+            },
+            texts_by_parent[enemy_tab],
+        )
+        # The control: the #184 override stays in Setup and did not ride along.
+        self.assertIn(
+            "Allow suppression binder mismatch (operators only, not saved)",
+            texts_by_parent[setup_tab],
+        )
+        self.assertNotIn(
+            "Allow suppression binder mismatch (operators only, not saved)",
+            texts_by_parent[enemy_tab],
+        )
+
+    def test_ui_contract_keeps_the_log_and_status_out_of_the_notebook(self):
+        """The progress log is launch progress, so no tab can hide it."""
+        tabs, parent_of, _texts = self._build_widget_tree()
+        tab_frames = set(tabs.values())
+        for widget in ("self.log", "self.status_text"):
+            frame = parent_of[widget]
+            self.assertNotIn(frame, tab_frames, f"{widget} is inside a notebook tab")
+            self.assertEqual(parent_of[frame], "outer", f"{widget} is not top-level")
+        # The control: the enemizer controls ARE inside a tab, so this is a
+        # statement about the log, not about a build with no tabs at all.
+        self.assertTrue(tab_frames)
+
+    def test_ui_contract_gates_the_enemizer_inputs_across_both_tabs(self):
+        """The enemizer path fields moved tabs; the disable group must follow."""
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        build = source.split("def _build")[1].split("def _browse")[0]
+        for name in ("map_studio_source", "enemy_inventory", "soulsformats_next"):
+            self.assertIn(f'"{name}"', build)
+        self.assertIn("self._enemy_widgets.extend((entry, button))", build)
+        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion))", build)
+        toggle = source.split("def _toggle_enemy_fields")[1].split("def _settings")[0]
+        self.assertIn("for widget in self._enemy_widgets", toggle)
+        self.assertIn('widget.configure(state=state)', toggle)
+        # Neither weighted panel can be starved to nothing again.
+        self.assertIn("outer.rowconfigure(2, weight=1, minsize=", build)
+        self.assertIn("outer.rowconfigure(3, weight=2, minsize=", build)
+
     def test_ui_contract_exposes_a_session_status_panel(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         self.assertIn('text="Session status"', source)

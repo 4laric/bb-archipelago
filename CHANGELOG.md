@@ -244,6 +244,21 @@ under `Unreleased` and move into a dated version section when released.
   one Blood Vial. The writer records them as such, so "unchanged" no longer
   looks like a failed write.
 
+### Fixed
+
+- **The enemy-randomization panel could vanish on short displays; the launcher
+  is now tabbed.** Everything used to sit in one tall column, so on a 1080p-class
+  screen the fixed-height panels outgrew the window and Tk shrank the only
+  stretchable one — the enemy-randomization panel — to nothing, taking the
+  **Randomize Enemies** toggle and the progress log with it, with no message and
+  no scrollbar to reveal them. Setup and enemy randomization are now two tabs,
+  the progress log has moved out to its own always-visible panel beneath them
+  (it reports launch and build progress, not enemizer progress), and both
+  stretchable areas carry a minimum height so neither can be squeezed away
+  again. Nothing about what the fields do, what is saved, or what is validated
+  changed — only where they sit (#190).
+
+
 ### Known limitations
 
 - Nothing in Cathedral Ward or Old Yharnam has been seen live. Every new flag
