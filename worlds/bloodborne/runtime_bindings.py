@@ -33,6 +33,18 @@ class RuntimeEquipmentExclusion:
     evidence: str
 
 
+# Category-0 descriptors carry their provenance in the binding rather than in a
+# comment. `live_grant_inventory_ui` is a witnessed insert. `param_id_inferred`
+# is an id read out of community EquipParamWeapon documentation and NOT yet
+# witnessed in a live inventory -- the bundle does not pack EquipParamWeapon, so
+# nothing in this repo can promote it. Promotion is a first live insert seen in
+# the delivery-diagnostics jsonl (clients#446), which turns the row into
+# `live_grant_inventory_ui` in the same commit that cites the record.
+LIVE_CATEGORY_0_EVIDENCE = "live_grant_inventory_ui"
+INFERRED_CATEGORY_0_EVIDENCE = "param_id_inferred"
+CATEGORY_0_EVIDENCE = frozenset({LIVE_CATEGORY_0_EVIDENCE, INFERRED_CATEGORY_0_EVIDENCE})
+
+
 def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantity: int) -> None:
     """Reject runtime rows that do not carry the evidence their category needs."""
     if binding.normalized_item_id is None or binding.raw_descriptor is None:
@@ -58,7 +70,7 @@ def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantit
             and binding.normalized_item_id & 0x0FFFFFFF
             == binding.raw_descriptor & 0x0FFFFFFF
         )
-        if not compatible or binding.descriptor_evidence != "live_grant_inventory_ui":
+        if not compatible or binding.descriptor_evidence not in CATEGORY_0_EVIDENCE:
             raise ValueError(f"{key}: category-0 descriptor is not live-validated")
         if quantity != 1 or binding.reinforcement_level is None:
             raise ValueError(f"{key}: category-0 weapon policy is incomplete")
@@ -107,6 +119,27 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
         "clean-save native grant returned slot 77 and appeared in inventory UI",
         item_category=0,
         descriptor_evidence="live_grant_inventory_ui",
+        feed_effect="right_hand_weapon",
+        reinforcement_level=0,
+    ),
+    # bb-archipelago#205. Uncanny Saw Spear, EquipParamWeapon 7110000 = base
+    # weapon id 7100000 + 10000. The +10000/+20000 (Uncanny/Lost) offsets are
+    # corroborated by two independent community corpora -- Smithbox's BB
+    # EquipParamWeapon row names and the Bloodborne save editor's weapons.json --
+    # and the same three-row spacing is visible in this repo's own bundle:
+    # research/joined/lot_items.tsv has category-0 rows 7100000 (Central Yharnam
+    # lot 2410100), 7110000 and 7120000, the latter two only in chalice
+    # ("ユニーク【レベルN】トゥメル") lots, which is exactly where the variants live.
+    # `inferred`: no live grant of 7110000 has been observed. The descriptor
+    # formula itself is the live one validated on the Saw Spear.
+    "uncanny_saw_spear": RuntimeItemBinding(
+        0x006C7D70,
+        0x806C7D70,
+        "EquipParamWeapon 7110000 = Saw Spear 7100000 + the Uncanny offset; "
+        "id from community param documentation, descriptor formula from the "
+        "live Saw Spear grant. Not yet witnessed in a live inventory.",
+        item_category=0,
+        descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE,
         feed_effect="right_hand_weapon",
         reinforcement_level=0,
     ),

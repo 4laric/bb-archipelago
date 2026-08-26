@@ -45,6 +45,8 @@ GOLDEN_ITEMS = {
     "celestial_dial": 0xBB0009,
     "laurences_skull": 0xBB000A,
     "saw_spear": 0xBB000B,
+    # bb-archipelago#205, appended after the last equipment id.
+    "uncanny_saw_spear": 0xBB000C,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -242,7 +244,14 @@ class FillerTests(unittest.TestCase):
 
 class RuntimeItemContractTests(unittest.TestCase):
     def test_every_runtime_item_declares_receive_policy_metadata(self):
-        runtime_items = build_runtime_slot_data()["runtime_items"]
+        # The widest pool a seed can ask for: the default full pool plus the
+        # Uncanny variants the option adds. Every id the datapackage publishes
+        # must be deliverable in the pool that can place it.
+        from worlds.bloodborne.data import UNCANNY_ITEM_KEYS
+        from worlds.bloodborne import FULL_POOL_ITEM_KEYS
+
+        runtime_items = build_runtime_slot_data(
+            FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS)["runtime_items"]
         self.assertEqual(set(runtime_items), {str(value) for value in ITEM_NAME_TO_ID.values()})
         for binding in runtime_items.values():
             self.assertIn("raw_descriptor", binding)
@@ -251,6 +260,7 @@ class RuntimeItemContractTests(unittest.TestCase):
             self.assertIn(binding["item_category"], {0, 4})
             self.assertIn(binding["descriptor_evidence"], {
                 "goods_formula_observed", "live_grant_inventory_ui",
+                "param_id_inferred",
             })
             self.assertIn("feed_effect", binding)
             self.assertIn("reinforcement_level", binding)

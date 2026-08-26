@@ -6,6 +6,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Uncanny weapon variants can now join the pool (#205).** A new opt-in YAML
+  option, **Uncanny Weapon Variants** (`uncanny_weapons`, off by default), adds
+  the Uncanny version of every weapon your pool already places. Uncanny weapons
+  are normally Chalice-dungeon-only and differ from their base weapon in their
+  blood-gem slot layout, so a second find is a build choice rather than a
+  duplicate. They displace filler, never checks: the seed keeps exactly as many
+  items as it has locations, and a pool with no filler left to displace simply
+  places fewer of them. Their runtime ids are derived from community
+  `EquipParamWeapon` documentation (Uncanny = base weapon id + 10000) and are
+  marked `param_id_inferred` until a first live delivery is witnessed.
+
 - **Where a delivered item lands is now a question with an experiment behind it
   (#202, clients#445).** On the native stack some items arrive in held inventory and
   some in the Hunter's Dream storage box, and a progression key quietly placed in

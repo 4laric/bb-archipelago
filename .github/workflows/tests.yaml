@@ -299,6 +299,16 @@ jobs:
                   # bb-archipelago#150: enemization is a launch-time decision,
                   # not a seed term. The key must not come back.
                   assert "enemizer" not in payload, (name, payload.get("enemizer"))
+                  # bb-archipelago#205. The Players yamls are the control pair:
+                  # NoEnemizer has uncanny_weapons on, Tester has it off, so the
+                  # option's effect on the emitted pool is visible here rather
+                  # than only in unit tests. Uncanny variants are the only way a
+                  # slot carries more than one category-0 weapon row.
+                  weapons = [row for row in payload["runtime_items"].values()
+                             if row["item_category"] == 0]
+                  expected_weapons = 2 if payload["player_name"] == "NoEnemizer" else 1
+                  assert len(weapons) == expected_weapons, (
+                      name, payload["player_name"], weapons)
                   seen.add(payload["player_name"])
               assert seen == expected, (path, seen)
           print(f"{len(zips)} seed(s): one request per slot, enemizer on and off")

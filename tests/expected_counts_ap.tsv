@@ -6,3 +6,6 @@
 max_skips	0
 
 module	test_bloodborne_client	16
+# #205's option wiring only exists when Archipelago is importable, so the AP
+# tier asserts this module ran all of it rather than skipping the option tests.
+module	test_bloodborne_model	29

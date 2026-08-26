@@ -3,7 +3,7 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
-from worlds.bloodborne.data import SLICE_ITEM_KEYS, MODEL
+from worlds.bloodborne.data import SLICE_ITEM_KEYS, UNCANNY_WEAPONS, MODEL
 from worlds.bloodborne.model import ItemKind, Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
 from worlds.bloodborne import (
@@ -20,6 +20,13 @@ from worlds.bloodborne import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+
+try:
+    import Options  # noqa: F401  (the world's option classes need Archipelago)
+    from worlds.bloodborne import BloodborneWorld  # noqa: F401
+    AP_AVAILABLE = True
+except ImportError:                      # pragma: no cover - environment dependent
+    AP_AVAILABLE = False
 
 
 
@@ -364,6 +371,145 @@ class BloodborneModelTests(unittest.TestCase):
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}
         self.assertEqual({"Menu"}, set(MODEL.regions) - populated)
+
+
+class UncannyWeaponPoolTests(unittest.TestCase):
+    """bb-archipelago#205: opt-in Uncanny variants displace filler, never checks."""
+
+    def _keys_with_uncanny(self, base):
+        return frozenset(base) | frozenset(
+            uncanny for weapon, uncanny in UNCANNY_WEAPONS.items() if weapon in base)
+
+    def test_the_default_pool_is_the_pool_it_was_before_the_option_existed(self):
+        """The control. Option off must be indistinguishable from pre-#205."""
+        for keys in (FULL_POOL_ITEM_KEYS, SLICE_ITEM_KEYS):
+            pool = build_item_pool_names(keys)
+            self.assertEqual(len(pool), len(NETWORK_LOCATIONS))
+            self.assertIn("Saw Spear", pool)          # witness: a real pool
+            self.assertNotIn("Uncanny Saw Spear", pool)
+        # The exact pre-#205 distribution, restated here so a silent shift in
+        # the default pool fails this test and not only the older one.
+        counts = Counter(build_item_pool_names(FULL_POOL_ITEM_KEYS))
+        self.assertEqual(counts["Blood Vial"], 31)
+        self.assertEqual(counts["Blood Stone Shards x2"], 30)
+        self.assertEqual(counts["Saw Spear"], 1)
+        self.assertNotIn("uncanny_saw_spear", FULL_POOL_ITEM_KEYS)
+
+    def test_one_uncanny_per_pooled_weapon_and_the_seed_size_identity_holds(self):
+        for base in (FULL_POOL_ITEM_KEYS, SLICE_ITEM_KEYS):
+            with self.subTest(pool=len(base)):
+                counts = Counter(build_item_pool_names(self._keys_with_uncanny(base)))
+                self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
+                placed = {name for name in counts if name.startswith("Uncanny")}
+                self.assertEqual(placed, {"Uncanny Saw Spear"})
+                for name in placed:
+                    self.assertEqual(counts[name], 1, name)
+                # every weapon in the pool contributed exactly one variant
+                self.assertEqual(len(placed),
+                                 len([w for w in UNCANNY_WEAPONS if w in base]))
+
+    def test_each_uncanny_copy_displaces_exactly_one_filler_item(self):
+        before = Counter(build_item_pool_names(FULL_POOL_ITEM_KEYS))
+        after = Counter(build_item_pool_names(self._keys_with_uncanny(FULL_POOL_ITEM_KEYS)))
+        added = sum(count for name, count in after.items() if name.startswith("Uncanny"))
+        self.assertEqual(added, 1)
+        filler_names = {"Blood Vial", "Quicksilver Bullets x3", "Pebbles x3",
+                        "Molotov Cocktails x2", "Blood Stone Shards x2"}
+        lost = sum(before[name] - after[name] for name in filler_names)
+        self.assertEqual(lost, added)
+        # nothing but filler moved
+        for name in set(before) | set(after):
+            if name in filler_names or name.startswith("Uncanny"):
+                continue
+            self.assertEqual(before[name], after[name], name)
+
+    def test_a_pool_with_no_filler_slack_sheds_uncanny_copies_deterministically(self):
+        """A small seed must degrade, not overflow: the tail is dropped in order."""
+        import worlds.bloodborne as world
+
+        keys = self._keys_with_uncanny(FULL_POOL_ITEM_KEYS)
+        one_each = len([item for item in SHUFFLABLE_ITEMS
+                        if item.key in keys and item.kind is not ItemKind.FILLER
+                        and not item.key.startswith("uncanny_")])
+        tiny = NETWORK_LOCATIONS[:one_each]
+        original = world.NETWORK_LOCATIONS
+        world.NETWORK_LOCATIONS = tiny
+        try:
+            pool = build_item_pool_names(keys)
+            again = build_item_pool_names(keys)
+        finally:
+            world.NETWORK_LOCATIONS = original
+        self.assertEqual(len(pool), len(tiny))
+        self.assertEqual(pool, again)  # deterministic, not draw-dependent
+        self.assertIn("Saw Spear", pool)              # witness: a real pool
+        self.assertNotIn("Uncanny Saw Spear", pool)
+        self.assertIn("Oedon Tomb Key", pool)  # progression survives the shed
+
+    def test_uncanny_variants_are_useful_and_leave_their_base_alone(self):
+        by_key = {item.key: item for item in MODEL.items}
+        self.assertTrue(UNCANNY_WEAPONS)  # witness: the mapping is not empty
+        for weapon, uncanny in UNCANNY_WEAPONS.items():
+            self.assertEqual(by_key[uncanny].kind, ItemKind.USEFUL, uncanny)
+            self.assertEqual(by_key[weapon].kind, ItemKind.USEFUL, weapon)
+            self.assertEqual(ITEM_BINDINGS[uncanny].item_category, 0, uncanny)
+            self.assertEqual(ITEM_BINDINGS[uncanny].item_category,
+                             ITEM_BINDINGS[weapon].item_category)
+
+    def test_the_uncanny_descriptor_is_the_base_weapon_plus_the_uncanny_offset(self):
+        """The offset is the whole id claim, so it is asserted, not commented."""
+        for weapon, uncanny in UNCANNY_WEAPONS.items():
+            base = ITEM_BINDINGS[weapon]
+            variant = ITEM_BINDINGS[uncanny]
+            self.assertEqual(variant.normalized_item_id - base.normalized_item_id, 10000)
+            self.assertEqual(variant.raw_descriptor,
+                             variant.normalized_item_id | 0x80000000)
+            self.assertEqual(variant.descriptor_evidence, "param_id_inferred")
+
+    def test_an_uncanny_row_carries_slot_data_only_when_the_option_places_it(self):
+        with_uncanny = build_runtime_slot_data(
+            self._keys_with_uncanny(FULL_POOL_ITEM_KEYS))["runtime_items"]
+        without = build_runtime_slot_data(FULL_POOL_ITEM_KEYS)["runtime_items"]
+        uncanny_id = str(ITEM_ID_BY_KEY["uncanny_saw_spear"])
+        self.assertIn(uncanny_id, with_uncanny)
+        self.assertNotIn(uncanny_id, without)
+        self.assertEqual(len(with_uncanny), len(without) + 1)
+        self.assertEqual(with_uncanny[uncanny_id]["item_category"], 0)
+
+
+@unittest.skipUnless(AP_AVAILABLE, "requires an Archipelago checkout on sys.path")
+class UncannyOptionWiringTests(unittest.TestCase):
+    """The option is the only door into the Uncanny keys."""
+
+    class _Options:
+        def __init__(self, full_item_pool, uncanny_weapons):
+            self.full_item_pool = full_item_pool
+            self.uncanny_weapons = uncanny_weapons
+
+    def _keys(self, *, full, uncanny):
+        from worlds.bloodborne import BloodborneWorld
+
+        world = BloodborneWorld.__new__(BloodborneWorld)
+        world.options = self._Options(full, uncanny)
+        return BloodborneWorld._pool_item_keys(world)
+
+    def test_the_option_off_yields_todays_keys_exactly(self):
+        self.assertEqual(self._keys(full=1, uncanny=0), FULL_POOL_ITEM_KEYS)
+        self.assertEqual(self._keys(full=0, uncanny=0), SLICE_ITEM_KEYS)
+
+    def test_the_option_on_adds_exactly_the_variants_of_pooled_weapons(self):
+        for full, base in ((1, FULL_POOL_ITEM_KEYS), (0, SLICE_ITEM_KEYS)):
+            keys = self._keys(full=full, uncanny=1)
+            self.assertEqual(keys - base, frozenset(
+                uncanny for weapon, uncanny in UNCANNY_WEAPONS.items() if weapon in base))
+            self.assertIn("uncanny_saw_spear", keys)
+
+    def test_the_option_is_a_plain_opt_in_toggle(self):
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["uncanny_weapons"]
+        self.assertEqual(option.default, 0)
+        self.assertEqual(option.display_name, "Uncanny Weapon Variants")
+        self.assertIn("Uncanny", option.__doc__)
 
 
 if __name__ == "__main__":
