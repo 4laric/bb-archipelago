@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json
 from pathlib import Path
-from itertools import cycle, islice
+from random import Random
 from typing import Any, Iterable
 from .data import (
     SLICE_ENTRANCES,
@@ -50,35 +50,102 @@ FILLER_ITEM_NAME = "Blood Vial"
 GOAL_LOCATION_KEY = "boss_blood_starved_beast"
 
 
-def build_item_pool_names(item_keys: Iterable[str]) -> list[str]:
+# bb-archipelago#207 wave 1. The filler top-up used to cycle a five-name list,
+# which made every seed's flood log a wall of the same few names in the same
+# order. Filler is now a weighted mix: the weights below are relative shares of
+# the filler slots, allocated by largest remainder (so the composition is a
+# function of the weights and the slot count, never of a draw) and then ordered
+# by a Random seeded from the multiworld seed. Same seed, same pool; different
+# seed, different arrangement. Blood Vial stays the heaviest share -- it is the
+# item a Bloodborne run actually burns -- and remains FILLER_ITEM_NAME, which is
+# what get_filler_item_name/create_filler hand back for unexpected top-ups.
+FILLER_WEIGHTS: dict[str, int] = {
+    "blood_vial": 6,
+    "quicksilver_bullets": 4,
+    "blood_stone_shards": 3,
+    "pebbles": 2,
+    "molotov_cocktails": 2,
+    "throwing_knife": 2,
+    "bone_marrow_ash": 2,
+    "fire_paper": 2,
+    "bolt_paper": 2,
+    "poison_knife": 1,
+    "antidote": 1,
+    "sedatives": 1,
+    "blue_elixir": 1,
+    "beast_blood_pellet": 1,
+    "lead_elixir": 1,
+}
+FILLER_WEIGHT_DEFAULT = 1
+
+
+def _weighted_filler(candidates: list[tuple[str, str]], count: int, seed: str) -> list[str]:
+    """Allocate `count` filler slots across `candidates` by weight, then order them.
+
+    `candidates` is (key, name) in a fixed order, so the allocation is
+    reproducible. Largest-remainder rather than a per-slot draw: the counts are
+    exact and identical on every machine, and only the ARRANGEMENT depends on
+    the seeded Random. A weightless key still gets a share (default 1) rather
+    than silently vanishing from the mix.
+    """
+    if count <= 0 or not candidates:
+        return []
+    weights = [FILLER_WEIGHTS.get(key, FILLER_WEIGHT_DEFAULT) for key, _ in candidates]
+    total = sum(weights)
+    quotas = [count * weight / total for weight in weights]
+    allocation = [int(quota) for quota in quotas]
+    remainder = count - sum(allocation)
+    # Largest fractional part wins the leftover slots; ties break on candidate
+    # order, so this is a pure function of (candidates, count).
+    ranked = sorted(range(len(candidates)),
+                    key=lambda index: (-(quotas[index] - allocation[index]), index))
+    for index in ranked[:remainder]:
+        allocation[index] += 1
+    names = [name for (_, name), share in zip(candidates, allocation)
+             for _ in range(share)]
+    Random(f"bloodborne-filler:{seed}").shuffle(names)
+    return names
+
+
+def build_item_pool_names(item_keys: Iterable[str], seed: str = "") -> list[str]:
     """Build the varied-grant pool for the live slice's network locations.
 
-    `item_keys` selects which validated items are placed once each; filler
-    cycles up to the location count either way. The full pool places all ten
-    progression keys plus the two useful items; the slice pool places only the
-    six items whose live grant shapes the slice set out to exercise.
+    `item_keys` selects which validated items are placed once each; a weighted
+    filler mix tops the pool up to the location count either way, so the seed
+    size identity (pool == location count) holds in both `full_item_pool`
+    modes. `seed` orders that mix and nothing else.
 
-    Uncanny variants (#205) ride the same one-each path, so they displace
-    filler rather than adding pool entries: the filler top-up below is
-    `locations - placed`, and every Uncanny name placed is one fewer filler
-    cycled. They are placed LAST and truncated first, so a pool whose one-each
-    items already fill every location sheds Uncanny copies -- deterministically,
-    in data.py order -- instead of overflowing the location count.
+    Placement is three tiers, and the tiers are also the SHED ORDER when a seed
+    has fewer locations than one-each items (bb-archipelago#207):
+
+      1. progression -- never shed. A seed that cannot hold its own keys is a
+         model error, not a pool to truncate, so it raises.
+      2. useful one-each (weapons, the Augur) in data.py order.
+      3. Uncanny variants (#205, option-gated) in data.py order.
+
+    Uncanny sheds before base weapons, and each tier sheds from its tail: a
+    variant is a second layout of a weapon the seed already has, so it is the
+    cheapest thing to lose, and a base weapon the pool drops takes its variant
+    with it only in the sense that the variant was already gone. Everything
+    below the shed line is deterministic in data.py order, never draw-dependent.
     """
     selected = tuple(item for item in SHUFFLABLE_ITEMS if item.key in item_keys)
-    names = [
-        item.name for item in selected
-        if item.kind is not ItemKind.FILLER and item.key not in UNCANNY_ITEM_KEYS
-    ]
-    slack = max(0, len(NETWORK_LOCATIONS) - len(names))
+    progression = [item.name for item in selected if item.kind is ItemKind.PROGRESSION]
+    useful = [item.name for item in selected
+              if item.kind is ItemKind.USEFUL and item.key not in UNCANNY_ITEM_KEYS]
     uncanny = [item.name for item in selected if item.key in UNCANNY_ITEM_KEYS]
-    names.extend(uncanny[:slack])
-    filler_names = [FILLER_ITEM_NAME, *(
-        item.name for item in selected
-        if item.kind is ItemKind.FILLER
-    )]
-    names.extend(islice(cycle(filler_names),
-                        max(0, len(NETWORK_LOCATIONS) - len(names))))
+    capacity = len(NETWORK_LOCATIONS)
+    if len(progression) > capacity:
+        raise ValueError(
+            f"{len(progression)} progression items do not fit {capacity} locations; "
+            "the pool cannot shed a key")
+    names = list(progression)
+    names.extend(useful[:max(0, capacity - len(names))])
+    names.extend(uncanny[:max(0, capacity - len(names))])
+    filler_candidates = [("blood_vial", FILLER_ITEM_NAME)]
+    filler_candidates.extend(
+        (item.key, item.name) for item in selected if item.kind is ItemKind.FILLER)
+    names.extend(_weighted_filler(filler_candidates, capacity - len(names), seed))
     return names
 
 
@@ -313,7 +380,9 @@ else:
 
         def create_items(self) -> None:
             self.multiworld.itempool.extend(
-                self.create_item(name) for name in build_item_pool_names(self._pool_item_keys())
+                self.create_item(name)
+                for name in build_item_pool_names(
+                    self._pool_item_keys(), f"{self.multiworld.seed_name}:{self.player}")
             )
 
         def _pool_item_keys(self) -> frozenset[str]:

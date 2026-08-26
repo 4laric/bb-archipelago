@@ -34,6 +34,36 @@ ITEMS = (
     # observed through the native grant path and allowlisted separately from
     # the ItemLot identity. Torch deliberately remains excluded.
     Item("saw_spear", "Saw Spear", U),
+    # bb-archipelago#207 wave 1. The rest of the base-game trick weapons and
+    # firearms, admitted at the same category-0 confidence the Saw Spear
+    # canary established: the descriptor FORMULA is live-validated, the
+    # EquipParamWeapon row id comes from two independent community corpora
+    # (Smithbox's BB row names, the Bloodborne save editor's weapons.json)
+    # and is carried as `param_id_inferred` until a live insert witnesses it.
+    # Base game only: EquipParamWeapon ids >= 23000000 are The Old Hunters
+    # block (Beasthunter Saif onward) and are deliberately absent, as is the
+    # Torch (a standing negative canary, EQUIPMENT_EXCLUSIONS).
+    # Base-game trick weapons (bb-archipelago#207 wave 1).
+    Item("chikage", "Chikage", U),
+    Item("blade_of_mercy", "Blade of Mercy", U),
+    Item("hunter_axe", "Hunter Axe", U),
+    Item("burial_blade", "Burial Blade", U),
+    Item("saw_cleaver", "Saw Cleaver", U),
+    Item("kirkhammer", "Kirkhammer", U),
+    Item("ludwigs_holy_blade", "Ludwig's Holy Blade", U),
+    Item("beast_claw", "Beast Claw", U),
+    Item("rifle_spear", "Rifle Spear", U),
+    Item("reiterpallasch", "Reiterpallasch", U),
+    Item("stake_driver", "Stake Driver", U),
+    Item("logarius_wheel", "Logarius' Wheel", U),
+    Item("tonitrus", "Tonitrus", U),
+    Item("threaded_cane", "Threaded Cane", U),
+    # Base-game firearms.
+    Item("hunter_blunderbuss", "Hunter Blunderbuss", U),
+    Item("ludwigs_rifle", "Ludwig's Rifle", U),
+    Item("hunter_pistol", "Hunter Pistol", U),
+    Item("repeating_pistol", "Repeating Pistol", U),
+    Item("cannon", "Cannon", U),
     # Live category-4 grant canaries promoted into the vertical-slice pool.
     # Quantities are part of the AP item contract and are granted atomically.
     Item("augur_of_ebrietas", "Augur of Ebrietas", U),
@@ -41,6 +71,21 @@ ITEMS = (
     Item("pebbles", "Pebbles x3", F, 3),
     Item("molotov_cocktails", "Molotov Cocktails x2", F, 2),
     Item("blood_stone_shards", "Blood Stone Shards x2", F, 2),
+    # bb-archipelago#207 wave 1, goods variety. Every id here is read out of
+    # the repo's OWN bundled params/EquipParamGoods.csv (the authoritative
+    # cat-4 source, `python3 tools/bb_inputs.py --get params/EquipParamGoods.csv`);
+    # the English display name is the save editor's items.json entry for the
+    # same row. Quantities stay inside each row's maxNum.
+    Item("antidote", "Antidote x2", F, 2),
+    Item("sedatives", "Sedatives x2", F, 2),
+    Item("beast_blood_pellet", "Beast Blood Pellet", F, 1),
+    Item("blue_elixir", "Blue Elixir", F, 1),
+    Item("poison_knife", "Poison Knife x3", F, 3),
+    Item("throwing_knife", "Throwing Knife x4", F, 4),
+    Item("fire_paper", "Fire Paper x2", F, 2),
+    Item("bolt_paper", "Bolt Paper x2", F, 2),
+    Item("bone_marrow_ash", "Bone Marrow Ash x3", F, 3),
+    Item("lead_elixir", "Lead Elixir", F, 1),
     # Uncanny variants of pooled weapons (bb-archipelago#205). Each is its own
     # EquipParamWeapon row with its own gem-slot layout, so it is a distinct
     # named item rather than a second copy of its base weapon. They are listed
@@ -48,6 +93,20 @@ ITEMS = (
     # has no filler slack, so a small seed drops Uncanny copies deterministically
     # instead of overflowing the location count.
     Item("uncanny_saw_spear", "Uncanny Saw Spear", U),
+    Item("uncanny_chikage", "Uncanny Chikage", U),
+    Item("uncanny_blade_of_mercy", "Uncanny Blade of Mercy", U),
+    Item("uncanny_hunter_axe", "Uncanny Hunter Axe", U),
+    Item("uncanny_burial_blade", "Uncanny Burial Blade", U),
+    Item("uncanny_saw_cleaver", "Uncanny Saw Cleaver", U),
+    Item("uncanny_kirkhammer", "Uncanny Kirkhammer", U),
+    Item("uncanny_ludwigs_holy_blade", "Ludwig's Uncanny Holy Blade", U),
+    Item("uncanny_beast_claw", "Uncanny Beast Claw", U),
+    Item("uncanny_rifle_spear", "Uncanny Rifle Spear", U),
+    Item("uncanny_reiterpallasch", "Uncanny Reiterpallasch", U),
+    Item("uncanny_stake_driver", "Uncanny Stake Driver", U),
+    Item("uncanny_logarius_wheel", "Logarius' Uncanny Wheel", U),
+    Item("uncanny_tonitrus", "Uncanny Tonitrus", U),
+    Item("uncanny_threaded_cane", "Uncanny Threaded Cane", U),
     # Locked local events. These are never placed in the random item pool.
     Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
@@ -269,9 +328,39 @@ SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
 # contains. Nothing here is a claim about the base item's classification --
 # the first copy's kind is untouched.
 UNCANNY_WEAPONS = {
+    "chikage": "uncanny_chikage",
+    "blade_of_mercy": "uncanny_blade_of_mercy",
+    "hunter_axe": "uncanny_hunter_axe",
+    "burial_blade": "uncanny_burial_blade",
+    "saw_cleaver": "uncanny_saw_cleaver",
     "saw_spear": "uncanny_saw_spear",
+    "kirkhammer": "uncanny_kirkhammer",
+    "ludwigs_holy_blade": "uncanny_ludwigs_holy_blade",
+    "beast_claw": "uncanny_beast_claw",
+    "rifle_spear": "uncanny_rifle_spear",
+    "reiterpallasch": "uncanny_reiterpallasch",
+    "stake_driver": "uncanny_stake_driver",
+    "logarius_wheel": "uncanny_logarius_wheel",
+    "tonitrus": "uncanny_tonitrus",
+    "threaded_cane": "uncanny_threaded_cane",
 }
 UNCANNY_ITEM_KEYS = frozenset(UNCANNY_WEAPONS.values())
+
+# bb-archipelago#207 wave 1. The base-game weapon catalog and the goods variety
+# set, named so tests and reviewers can talk about them without re-deriving
+# them from ITEMS by kind. Both are ordinary members of the default pool --
+# there is no option for either, by design (#207: "goods variety should
+# probably just be default pool improvement").
+BASE_GAME_WEAPON_KEYS = frozenset({
+    *UNCANNY_WEAPONS,
+    "hunter_blunderbuss", "ludwigs_rifle", "hunter_pistol",
+    "repeating_pistol", "cannon",
+})
+GOODS_VARIETY_KEYS = frozenset({
+    "antidote", "sedatives", "beast_blood_pellet", "blue_elixir",
+    "poison_knife", "throwing_knife", "fire_paper", "bolt_paper",
+    "bone_marrow_ash", "lead_elixir",
+})
 
 # data.py checks (bosses, the one evidenced interaction, and the catalog-backed
 # treasures) that the slice seeds, named explicitly so that adding a region to

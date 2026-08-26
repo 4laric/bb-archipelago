@@ -299,16 +299,23 @@ jobs:
                   # bb-archipelago#150: enemization is a launch-time decision,
                   # not a seed term. The key must not come back.
                   assert "enemizer" not in payload, (name, payload.get("enemizer"))
-                  # bb-archipelago#205. The Players yamls are the control pair:
-                  # NoEnemizer has uncanny_weapons on, Tester has it off, so the
-                  # option's effect on the emitted pool is visible here rather
-                  # than only in unit tests. Uncanny variants are the only way a
-                  # slot carries more than one category-0 weapon row.
+                  # bb-archipelago#205/#207. The Players yamls are the control
+                  # pair: NoEnemizer has uncanny_weapons on, Tester has it off,
+                  # so the option's effect on the emitted pool is visible here
+                  # rather than only in unit tests. Wave 1 (#207) makes the
+                  # default pool the 20 base-game weapons (15 trick weapons +
+                  # 5 firearms); the option adds one Uncanny variant per trick
+                  # weapon and nothing for firearms.
                   weapons = [row for row in payload["runtime_items"].values()
                              if row["item_category"] == 0]
-                  expected_weapons = 2 if payload["player_name"] == "NoEnemizer" else 1
+                  expected_weapons = 35 if payload["player_name"] == "NoEnemizer" else 20
                   assert len(weapons) == expected_weapons, (
-                      name, payload["player_name"], weapons)
+                      name, payload["player_name"], len(weapons))
+                  # Wave 1's goods half: the filler mix is many category-4 rows,
+                  # not the four canaries plus Blood Vial it used to be.
+                  goods = [row for row in payload["runtime_items"].values()
+                           if row["item_category"] == 4]
+                  assert len(goods) == 27, (name, payload["player_name"], len(goods))
                   seen.add(payload["player_name"])
               assert seen == expected, (path, seen)
           print(f"{len(zips)} seed(s): one request per slot, enemizer on and off")

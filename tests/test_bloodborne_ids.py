@@ -47,6 +47,52 @@ GOLDEN_ITEMS = {
     "saw_spear": 0xBB000B,
     # bb-archipelago#205, appended after the last equipment id.
     "uncanny_saw_spear": 0xBB000C,
+    # bb-archipelago#207 wave 1: the base-game weapon catalog, its Uncanny
+    # variants, and the category-4 goods variety set. Appended, never
+    # renumbered -- these ids ship in the datapackage.
+    "chikage": 0xBB000D,
+    "blade_of_mercy": 0xBB000E,
+    "hunter_axe": 0xBB000F,
+    "burial_blade": 0xBB0010,
+    "saw_cleaver": 0xBB0011,
+    "kirkhammer": 0xBB0012,
+    "ludwigs_holy_blade": 0xBB0013,
+    "beast_claw": 0xBB0014,
+    "rifle_spear": 0xBB0015,
+    "reiterpallasch": 0xBB0016,
+    "stake_driver": 0xBB0017,
+    "logarius_wheel": 0xBB0018,
+    "tonitrus": 0xBB0019,
+    "threaded_cane": 0xBB001A,
+    "hunter_blunderbuss": 0xBB001B,
+    "ludwigs_rifle": 0xBB001C,
+    "hunter_pistol": 0xBB001D,
+    "repeating_pistol": 0xBB001E,
+    "cannon": 0xBB001F,
+    "uncanny_chikage": 0xBB0020,
+    "uncanny_blade_of_mercy": 0xBB0021,
+    "uncanny_hunter_axe": 0xBB0022,
+    "uncanny_burial_blade": 0xBB0023,
+    "uncanny_saw_cleaver": 0xBB0024,
+    "uncanny_kirkhammer": 0xBB0025,
+    "uncanny_ludwigs_holy_blade": 0xBB0026,
+    "uncanny_beast_claw": 0xBB0027,
+    "uncanny_rifle_spear": 0xBB0028,
+    "uncanny_reiterpallasch": 0xBB0029,
+    "uncanny_stake_driver": 0xBB002A,
+    "uncanny_logarius_wheel": 0xBB002B,
+    "uncanny_tonitrus": 0xBB002C,
+    "uncanny_threaded_cane": 0xBB002D,
+    "antidote": 0xBB0107,
+    "sedatives": 0xBB0108,
+    "beast_blood_pellet": 0xBB0109,
+    "blue_elixir": 0xBB010A,
+    "poison_knife": 0xBB010B,
+    "throwing_knife": 0xBB010C,
+    "fire_paper": 0xBB010D,
+    "bolt_paper": 0xBB010E,
+    "bone_marrow_ash": 0xBB010F,
+    "lead_elixir": 0xBB0110,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -278,8 +324,14 @@ class RuntimeItemContractTests(unittest.TestCase):
             key: binding for key, binding in runtime_items.items()
             if binding["item_category"] == 0
         }
+        # bb-archipelago#207 wave 1: the allowlist is now the base-game weapon
+        # catalog, not one canary. The invariant is unchanged -- nothing enters
+        # category 0 that is not a declared, bound weapon key.
+        from worlds.bloodborne.data import BASE_GAME_WEAPON_KEYS
+
         saw_spear = equipment[str(ITEM_ID_BY_KEY["saw_spear"])]
-        self.assertEqual(set(equipment), {str(ITEM_ID_BY_KEY["saw_spear"])})
+        self.assertEqual(set(equipment),
+                         {str(ITEM_ID_BY_KEY[key]) for key in BASE_GAME_WEAPON_KEYS})
         self.assertEqual(saw_spear["raw_descriptor"], 0x806C5660)
         self.assertEqual(saw_spear["normalized_item_id"], 0x006C5660)
         self.assertEqual(saw_spear["feed_effect"], "right_hand_weapon")
