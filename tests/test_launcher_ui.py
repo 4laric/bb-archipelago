@@ -67,7 +67,7 @@ class FakeToolchain:
         }
         return EnemizerBuild(output, plan, digest(json.dumps(plan).encode()))
 
-    def write_starting_weapons(self, **values):
+    def write_seed_weapons(self, **values):
         self.starting_calls.append(values)
         values["output_binder"].write_bytes(values["input_binder"].read_bytes() + b"-starting")
 
@@ -204,7 +204,28 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         manifest_path = Path(config["suppression_manifest"])
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         self.assertEqual(digest(active.read_bytes()), manifest["output_gameparam_sha256"])
-        self.assertEqual(payload["starting_weapons"], manifest["starting_weapons"])
+        self.assertEqual(payload["starting_weapons"], manifest["seed_weapon_edits"]["choices"])
+
+    def test_requirement_removal_composes_without_starting_randomization(self):
+        payload = json.loads(self.request.read_text(encoding="utf-8"))
+        payload.update({
+            "remove_weapon_requirements": True,
+            "weapon_requirement_families": [2000000, 2010000],
+        })
+        self.request.write_text(json.dumps(payload), encoding="utf-8")
+        toolchain = FakeToolchain()
+        result = LauncherWorkflow(
+            self.repo, toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(10), Process(11)],
+        ).randomize_and_launch(
+            self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(1, len(toolchain.starting_calls))
+        config = json.loads(result.client_config.read_text(encoding="utf-8"))
+        manifest = json.loads(Path(config["suppression_manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(payload["weapon_requirement_families"],
+                         manifest["seed_weapon_edits"]["requirement_families"])
 
     def test_randomize_enemies_runs_toolchain_caches_maps_activates_and_launches(self):
         toolchain = FakeToolchain()

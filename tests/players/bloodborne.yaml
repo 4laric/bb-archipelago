@@ -6,4 +6,5 @@ Bloodborne:
   accessibility: items
   auto_upgrade: false
   randomize_starting_weapons: true
+  remove_weapon_requirements: true
   auto_equip: false

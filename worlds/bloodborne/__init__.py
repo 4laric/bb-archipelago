@@ -73,6 +73,17 @@ def build_starting_weapon_choices(seed: str) -> dict[str, list[int]]:
     }
 
 
+def build_weapon_requirement_families(include_uncanny: bool) -> list[int]:
+    """Return player weapon variant roots whose four stat gates should be cleared."""
+    return sorted(
+        binding.normalized_item_id
+        for key, binding in ITEM_BINDINGS.items()
+        if binding.feed_effect in {"right_hand_weapon", "left_hand_weapon"}
+        and binding.normalized_item_id is not None
+        and (include_uncanny or key not in UNCANNY_ITEM_KEYS)
+    )
+
+
 # bb-archipelago#207 wave 1. The filler top-up used to cycle a five-name list,
 # which made every seed's flood log a wall of the same few names in the same
 # order. Filler is now a weighted mix: the weights below are relative shares of
@@ -335,6 +346,11 @@ else:
         display_name = "Randomize Starting Weapons"
         default = 1
 
+    class RemoveWeaponRequirements(Toggle):
+        """Remove stat requirements from player weapons while preserving scaling."""
+        display_name = "Remove Weapon Requirements"
+        default = 1
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
@@ -342,6 +358,7 @@ else:
         full_item_pool: FullItemPool
         uncanny_weapons: UncannyWeapons
         randomize_starting_weapons: RandomizeStartingWeapons
+        remove_weapon_requirements: RemoveWeaponRequirements
 
     class BloodborneItem(APItem):
         game = GAME
@@ -443,6 +460,10 @@ else:
                 build_starting_weapon_choices(seed)
                 if self.options.randomize_starting_weapons else None
             )
+            requirement_families = (
+                build_weapon_requirement_families(bool(self.options.uncanny_weapons))
+                if self.options.remove_weapon_requirements else None
+            )
             return {
                 "version": 4,
                 "world_version": WORLD_VERSION,
@@ -452,6 +473,8 @@ else:
                 "full_item_pool": bool(self.options.full_item_pool),
                 "randomize_starting_weapons": bool(self.options.randomize_starting_weapons),
                 "starting_weapons": starting_weapons,
+                "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
+                "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
                 **build_runtime_slot_data(self._pool_item_keys()),
             }

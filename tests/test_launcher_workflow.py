@@ -209,6 +209,25 @@ class RequestIdentityFormatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "right_hand"):
             self._identity_for(payload)
 
+    def test_weapon_requirement_families_join_seed_identity(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload.update({
+            "remove_weapon_requirements": True,
+            "weapon_requirement_families": [2000000, 2010000, 2020000],
+        })
+        identity = self._identity_for(payload)
+        self.assertEqual(payload["weapon_requirement_families"],
+                         identity["weapon_requirement_families"])
+
+    def test_duplicate_requirement_family_is_refused(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload.update({
+            "remove_weapon_requirements": True,
+            "weapon_requirement_families": [2000000, 2000000],
+        })
+        with self.assertRaisesRegex(ValidationError, "requirement families"):
+            self._identity_for(payload)
+
 
 if __name__ == "__main__":
     unittest.main()

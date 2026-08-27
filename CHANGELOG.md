@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Weapon stat requirements can now be removed.** The default-on
+  `remove_weapon_requirements` YAML option clears Strength, Skill, Bloodtinge,
+  and Arcane requirements across all eleven reinforcement rows for every
+  base-game player weapon. Uncanny families are included when their option is
+  enabled. Attribute scaling, bonuses, damage, and durability are untouched.
+
 - **Starting weapons can now be randomized by seed.** The default-on
   `randomize_starting_weapons` YAML option deterministically replaces the
   Hunter's Dream gifts with three unique base-game trick weapons and two

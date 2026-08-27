@@ -27,6 +27,7 @@ from worlds.bloodborne import (
     build_item_pool_names,
     build_runtime_slot_data,
     build_starting_weapon_choices,
+    build_weapon_requirement_families,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -566,6 +567,24 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         option = BloodborneOptions.type_hints["randomize_starting_weapons"]
         self.assertEqual(1, option.default)
         self.assertEqual("Randomize Starting Weapons", option.display_name)
+
+    def test_requirement_families_cover_base_and_optionally_uncanny_weapons(self):
+        base = set(build_weapon_requirement_families(False))
+        with_uncanny = set(build_weapon_requirement_families(True))
+        uncanny = {
+            ITEM_BINDINGS[key].normalized_item_id for key in UNCANNY_ITEM_KEYS
+            if ITEM_BINDINGS[key].feed_effect in {"right_hand_weapon", "left_hand_weapon"}
+        }
+        self.assertEqual(uncanny, with_uncanny - base)
+        self.assertTrue(base)
+
+    def test_remove_requirements_option_defaults_on(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+        option = BloodborneOptions.type_hints["remove_weapon_requirements"]
+        self.assertEqual(1, option.default)
+        self.assertEqual("Remove Weapon Requirements", option.display_name)
 
 
 class Wave1WeaponPoolTests(unittest.TestCase):

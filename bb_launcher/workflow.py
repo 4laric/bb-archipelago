@@ -410,7 +410,7 @@ class EnemizerToolchain:
             for path in (self.planner_executable, self.writer_executable, self.miner_executable)
         )
 
-    def write_starting_weapons(
+    def write_seed_weapons(
         self, *, request_path: Path, input_binder: Path, paramdef: Path,
         output_binder: Path, soulsformats_next: Path | None, progress: Progress,
     ) -> None:
@@ -427,10 +427,10 @@ class EnemizerToolchain:
                 "-c", "Release", f"-p:SoulsFormatsNextRoot={soulsformats_next}", "--",
             ]
         command.extend([
-            "--starting-weapons", str(request_path), str(input_binder), str(paramdef),
+            "--seed-weapons", str(request_path), str(input_binder), str(paramdef),
             str(output_binder), "--apply",
         ])
-        progress("Writing deterministic starting weapon choices...")
+        progress("Writing seed-specific weapon parameters...")
         self.runner(command, self.repo_root, progress)
         if not output_binder.is_file():
             raise ValidationError("parameter writer produced no starting-weapon binder")
@@ -601,6 +601,17 @@ def _request_identity(
                 raise ValidationError(f"AP request has invalid {hand} starting weapon choices")
     elif starting_weapons is not None:
         raise ValidationError("AP request disables starting weapons but still supplies choices")
+    remove_requirements = request.get("remove_weapon_requirements", False)
+    requirement_families = request.get("weapon_requirement_families")
+    if not isinstance(remove_requirements, bool):
+        raise ValidationError("AP request has invalid remove_weapon_requirements")
+    if remove_requirements:
+        if (not isinstance(requirement_families, list) or not requirement_families
+                or any(not isinstance(value, int) or value <= 0 for value in requirement_families)
+                or len(set(requirement_families)) != len(requirement_families)):
+            raise ValidationError("AP request has invalid weapon requirement families")
+    elif requirement_families is not None:
+        raise ValidationError("AP request keeps weapon requirements but still supplies families")
     seed_name = request.get("seed_name")
     return {
         "request": request,
@@ -613,6 +624,7 @@ def _request_identity(
         "enemizer_seed": enemizer_seed,
         "suppression_plan_sha256": suppression["plan_sha256"],
         "starting_weapons": starting_weapons if randomize_starting else None,
+        "weapon_requirement_families": requirement_families if remove_requirements else None,
     }
 
 
@@ -686,12 +698,12 @@ def _validate_suppression(
 
 def _write_seed_suppression_manifest(
     source_manifest: Path, *, state_root: Path, cache_key: str, output_hash: str,
-    starting_weapons: Mapping[str, Any],
+    weapon_edits: Mapping[str, Any],
 ) -> Path:
     """Publish the client witness for a suppression binder composed per seed."""
     manifest = _read_object(source_manifest, "suppression build manifest")
     manifest["output_gameparam_sha256"] = output_hash
-    manifest["starting_weapons"] = dict(starting_weapons)
+    manifest["seed_weapon_edits"] = dict(weapon_edits)
     directory = state_root.expanduser().resolve() / "seed-manifests"
     directory.mkdir(parents=True, exist_ok=True)
     output = directory / f"{cache_key}.json"
@@ -808,6 +820,7 @@ class LauncherWorkflow:
                 "allow_tier_mixing": options.allow_tier_mixing,
                 "preserve_locomotion": options.preserve_locomotion,
                 "starting_weapons": request["starting_weapons"],
+                "weapon_requirement_families": request["weapon_requirement_families"],
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -837,14 +850,16 @@ class LauncherWorkflow:
             composed_binder = binder
             completed = False
             try:
-                if options.enabled or request["starting_weapons"] is not None:
+                if (options.enabled or request["starting_weapons"] is not None
+                        or request["weapon_requirement_families"] is not None):
                     settings.cache_root.mkdir(parents=True, exist_ok=True)
                     temporary = Path(tempfile.mkdtemp(prefix=".seed-build-", dir=settings.cache_root))
-                if request["starting_weapons"] is not None:
+                if (request["starting_weapons"] is not None
+                        or request["weapon_requirement_families"] is not None):
                     assert temporary is not None
                     composed_binder = temporary / "gameparam.parambnd.dcx"
                     paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
-                    self.toolchain.write_starting_weapons(
+                    self.toolchain.write_seed_weapons(
                         request_path=request["path"], input_binder=binder, paramdef=paramdef,
                         output_binder=composed_binder,
                         soulsformats_next=settings.soulsformats_next, progress=progress,
@@ -902,13 +917,17 @@ class LauncherWorkflow:
             progress(line)
         progress("Writing the native client runtime configuration...")
         client_manifest = settings.suppression_manifest.expanduser().resolve()
-        if request["starting_weapons"] is not None:
+        if (request["starting_weapons"] is not None
+                or request["weapon_requirement_families"] is not None):
             client_manifest = _write_seed_suppression_manifest(
                 client_manifest,
                 state_root=settings.state_root or default_state_root(),
                 cache_key=build.cache_key,
                 output_hash=build.manifest["suppression"]["sha256"],
-                starting_weapons=request["starting_weapons"],
+                weapon_edits={
+                    "choices": request["starting_weapons"],
+                    "requirement_families": request["weapon_requirement_families"],
+                },
             )
         paths = write_client_runtime_config(
             settings.state_root or default_state_root(),

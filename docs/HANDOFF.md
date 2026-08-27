@@ -103,6 +103,12 @@ of the AP item pool. The launcher composes them into the seed-specific
 gameparam overlay; disabling the option leaves the five vanilla gift rows
 unchanged.
 
+**Remove Weapon Requirements** (`remove_weapon_requirements`, on by default)
+clears the four equip gates—Strength, Skill, Bloodtinge, and Arcane—from every
+reinforcement row in each eligible player weapon family. It does not alter
+attribute scaling or damage. Base-game trick weapons and firearms are always
+covered; Uncanny families join the edit set when `uncanny_weapons` is enabled.
+
 Client repository:
 
 ```powershell

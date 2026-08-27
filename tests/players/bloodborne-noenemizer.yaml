@@ -14,3 +14,4 @@ Bloodborne:
   # option-off control.
   uncanny_weapons: true
   randomize_starting_weapons: true
+  remove_weapon_requirements: true
