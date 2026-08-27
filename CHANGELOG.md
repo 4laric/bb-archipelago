@@ -6,6 +6,21 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Native delivery now constructs armor with the game's category-1 allocator.**
+  A live Charred Hunter Garb canary arrived as a proper instance, appeared in
+  the inventory, and equipped successfully. Unsupported armor remains blocked
+  behind the exact-row research allowlist until its catalog binding is added.
+  Category-8 blood gems remain refused: live tests proved that an ItemLot gem
+  row is a generation recipe, not a finished runtime descriptor, and both a
+  bare gem allocation and direct insertion produced invisible records.
+
+- **Client-delivered weapons are now real, fully repaired weapon instances.**
+  The native category-0 path now allocates a weapon through the game's equipment
+  registry instead of inserting its catalog descriptor directly, then initializes
+  the new instance from `EquipParamWeapon.durabilityMax` before granting it. Live
+  playtesting confirmed a delivered Beast Claw at 180/180 durability while the
+  save's existing weapons remained intact.
+
 - **The pool is a real Bloodborne pool now: every base-game weapon, and filler
   with variety in it (#207 wave 1).** All fifteen base-game trick weapons (Saw
   Cleaver, Saw Spear, Hunter Axe, Threaded Cane, Kirkhammer, Ludwig's Holy

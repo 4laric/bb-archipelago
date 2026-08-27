@@ -1,7 +1,7 @@
 """The grant state machine, lifted out of the Cheat Engine harness's ``poll()``.
 
 This is a faithful port of the control flow in
-``tables/Bloodborne-native-item-grant-auto-v2.CT`` (``bb-native-grant-v5``),
+``tables/Bloodborne-native-item-grant-auto-v2.CT`` (``bb-native-grant-v7``),
 with every memory access behind the :class:`Runtime` protocol so the transitions
 can be tested without a game. The semantics that matter, and that the CE table
 paid for live:

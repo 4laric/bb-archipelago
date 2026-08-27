@@ -10,9 +10,9 @@ param(
     [string]$BridgeDir=(Join-Path $env:LOCALAPPDATA 'BloodborneArchipelago\bridge')
 )
 if([string]::IsNullOrWhiteSpace($BridgeDir)){throw 'Bridge directory is empty; is LOCALAPPDATA set?'}
-$build='bb-0.1.0-r5'
+$build='bb-0.1.0-r7'
 $protocol='BBGRANT1'
-$harness='bb-native-grant-v5'
+$harness='bb-native-grant-v7'
 $command=Join-Path $BridgeDir 'native-grant-command.txt'
 $state=Join-Path $BridgeDir 'native-grant-state.txt'
 if(Test-Path -LiteralPath $command){throw 'A native grant command is already pending.'}

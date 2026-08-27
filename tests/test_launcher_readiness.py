@@ -55,7 +55,7 @@ class ReadinessTests(unittest.TestCase):
         )
         paths.bridge_root.mkdir(parents=True)
         (paths.bridge_root / BRIDGE_STATE_NAME).write_text(
-            "build=bb-0.1.0-r5\nprotocol=BBGRANT1\nharness=bb-native-grant-v5\n"
+            "build=bb-0.1.0-r7\nprotocol=BBGRANT1\nharness=bb-native-grant-v7\n"
             "status=completed\npid=5040\ntag=received_17\ndetail=direct before=2 after=3\n",
             encoding="utf-8",
         )
@@ -85,13 +85,13 @@ class ReadinessTests(unittest.TestCase):
         self.assertIsNotNone(bridge)
         assert bridge is not None
         self.assertEqual(bridge.status, "completed")
-        self.assertEqual(bridge.harness, "bb-native-grant-v5")
+        self.assertEqual(bridge.harness, "bb-native-grant-v7")
         self.assertEqual(bridge.pid, 5040)
 
         text = format_readiness(readiness)
         self.assertIn(owner["cache_key"][:12], text)
         self.assertIn("4 acknowledged, cursor 3, save watermark 3", text)
-        self.assertIn("bb-native-grant-v5", text)
+        self.assertIn("bb-native-grant-v7", text)
         self.assertIn("(written)", text)
 
     def test_readiness_is_fail_soft_for_a_fresh_session(self):
@@ -159,7 +159,7 @@ class ReadinessTests(unittest.TestCase):
         paths = session_paths(self.root / "state", seed="s", slot="Hunter")
         paths.bridge_root.mkdir(parents=True)
         (paths.bridge_root / BRIDGE_STATE_NAME).write_text(
-            "build=bb-0.1.0-r5\nprotocol=BBGRANT1\nharness=bb-native-grant-v5\n"
+            "build=bb-0.1.0-r7\nprotocol=BBGRANT1\nharness=bb-native-grant-v7\n"
             "status=executing\npid=5040\n",
             encoding="utf-8",
         )

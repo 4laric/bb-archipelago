@@ -98,12 +98,16 @@ CONTRACT_ROOT = next(
 # mov esi,eax) -- semantically identical. The assembler was switched to CE's
 # RM-form encoding so the shipped blob is byte-identical to the reference.
 FROZEN_CONSUME_CAVE = (
-    "4C892D09040000833DF2030000000F84BB000000833DE5030000020F8468000000C705D503000000"
+    "4C892D09040000833DF2030000000F846E010000833DE5030000020F841B010000C705D503000000"
     "0000008B052F04000089042448C7442408000000008B052D04000089442410C74424140000000049"
-    "8BFD488BF48B050504000025000000F03D000000800F8507000000488D35EE0300008B158C030000"
-    "48B8A0A04D0100000000FFD0E936000000C7056D03000000000000498BFD8B35980300008B156203"
-    "0000488D0D870300004C8B05880300004531C948B8A0944D0100000000FFD0890543030000C7053D"
-    "030000010000004489E04883C428E9A1DA3FFC"
+    "8BFD488BF48B050504000025000000F03D000000800F84100000003D000000900F8414000000E9AA"
+    "00000048B86072A80100000000E90F00000048B89073A80100000000E9000000008B15C103000048"
+    "8D3DBA030000488B35E32E4600FFD08B05AB03000025000000F03D000000800F8556000000488D3D"
+    "9403000048B87090A80100000000FFD0C70424FFFFFFFF48C744240800000000C7442410FFFFFFFF"
+    "488BFC8B357703000048B8A09AF20100000000FFD0488B4424080FB788BE000000488B0550030000"
+    "894818498BFD488D353B0300008B15D902000048B8A0A04D0100000000FFD0E936000000C705BA02"
+    "000000000000498BFD8B35E50200008B15AF020000488D0DD40200004C8B05D50200004531C948B8"
+    "A0944D0100000000FFD0890590020000C7058A020000010000004489E04883C428E9EED93FFC"
 )
 FROZEN_HEARTBEAT_CAVE = (
     "833D49020000000F855C000000833DEC010000000F844F00000048833DEE010000000F8441000000"
@@ -121,7 +125,10 @@ class PayloadAssemblyTests(unittest.TestCase):
         """The cross-check against the source of truth: the three absolute call
         targets the CE table names are exactly the payload's relocations."""
         text = TABLE.read_text(encoding="utf-8")
-        for rva in (payload.ITEM_GRANT_RVA, payload.QUANTITY_DELTA_RVA, payload.FIND_SLOT_RVA):
+        for rva in (payload.ITEM_GRANT_RVA, payload.QUANTITY_DELTA_RVA,
+                    payload.FIND_SLOT_RVA, payload.ALLOCATE_EQUIPMENT_INSTANCE_RVA,
+                    payload.ALLOCATE_ARMOR_INSTANCE_RVA,
+                    payload.RESOLVE_DESCRIPTOR_RVA, payload.LOOKUP_WEAPON_PARAM_RVA):
             self.assertIn(f"mov rax,80{rva:X}", text)
         targets = sorted(
             reloc.target_rva
@@ -130,7 +137,10 @@ class PayloadAssemblyTests(unittest.TestCase):
         )
         self.assertEqual(
             sorted([payload.ITEM_GRANT_RVA, payload.QUANTITY_DELTA_RVA,
-                    payload.QUANTITY_DELTA_RVA, payload.FIND_SLOT_RVA]),
+                    payload.QUANTITY_DELTA_RVA, payload.FIND_SLOT_RVA,
+                    payload.ALLOCATE_EQUIPMENT_INSTANCE_RVA,
+                    payload.ALLOCATE_ARMOR_INSTANCE_RVA,
+                    payload.RESOLVE_DESCRIPTOR_RVA, payload.LOOKUP_WEAPON_PARAM_RVA]),
             targets,
         )
 
@@ -149,7 +159,7 @@ class PayloadAssemblyTests(unittest.TestCase):
     def test_relocation_writes_the_absolute_routine_address(self):
         blob = payload.consume_cave()
         relocated = blob.relocated(0x8_0000_0000)
-        reloc = blob.relocations[0]
+        reloc = next(r for r in blob.relocations if r.target_rva == payload.ITEM_GRANT_RVA)
         value = int.from_bytes(relocated[reloc.offset : reloc.offset + 8], "little")
         self.assertEqual(0x8_0000_0000 + payload.ITEM_GRANT_RVA, value)
 

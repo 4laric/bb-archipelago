@@ -1,7 +1,7 @@
 """Emit and load the machine-readable runtime contract.
 
 ``research/runtime/bb-native-grant-contract.v5.json`` is the single committed
-statement of what the ``bb-native-grant-v5`` harness does to the guest process.
+statement of what the current native grant harness does to the guest process.
 It exists so the Cheat Engine table, this prototype and (eventually)
 ``crates/bb-archipelago`` in the clients repo stop being three uncompared copies
 of one contract.
@@ -22,8 +22,8 @@ from .descriptor import DESCRIPTOR_SIZE, STAGED_SIZE
 from .process import ASSERTS, CONSUME_SIGNATURE
 
 CONTRACT_VERSION = "bb-native-grant-contract-v5"
-HARNESS = "bb-native-grant-v5"
-BUILD = "bb-0.1.0-r5"
+HARNESS = "bb-native-grant-v7"
+BUILD = "bb-0.1.0-r7"
 PROTOCOL = "BBGRANT1"
 
 ROOT_CANDIDATES = ("research/runtime/bb-native-grant-contract.v5.json",)
@@ -99,6 +99,20 @@ def build_contract() -> dict:
             },
         ],
         "native_routines": [
+            {"name": "allocate_equipment_instance", "rva": payload.ALLOCATE_EQUIPMENT_INSTANCE_RVA,
+             "provenance": "validated",
+             "signature": "(rdi=descriptor, rsi=equipment registry, edx=raw id) -> descriptor handle",
+             "note": "live-validated with a Beast Claw whose allocated handle resolved to a weapon object"},
+            {"name": "allocate_armor_instance", "rva": payload.ALLOCATE_ARMOR_INSTANCE_RVA,
+             "provenance": "validated",
+             "signature": "(rdi=descriptor, rsi=equipment registry, edx=raw id) -> armor handle",
+             "note": "Charred Hunter Garb appeared in inventory and equipped successfully"},
+            {"name": "resolve_descriptor", "rva": payload.RESOLVE_DESCRIPTOR_RVA,
+             "provenance": "validated",
+             "signature": "(rdi=descriptor) -> backing equipment object"},
+            {"name": "lookup_weapon_param", "rva": payload.LOOKUP_WEAPON_PARAM_RVA,
+             "provenance": "validated",
+             "signature": "(rdi=lookup result, esi=normalized weapon id) -> param row at result+8"},
             {"name": "ItemGrant", "rva": payload.ITEM_GRANT_RVA, "provenance": "validated",
              "signature": "(rdi=inventory, rsi=descriptor, edx=quantity) -> slot|-1"},
             {"name": "quantity_delta", "rva": payload.QUANTITY_DELTA_RVA, "provenance": "validated",
@@ -126,7 +140,10 @@ def build_contract() -> dict:
             },
             "source_selection": {
                 "test": "raw_id & 0xF0000000 == 0x80000000",
-                "true": "persistent descriptor cell (category 0, equipment)",
+                "true": (
+                    "persistent descriptor cell after native equipment-instance allocation; "
+                    "the backing object's durability is initialized from EquipParamWeapon +0xBE"
+                ),
                 "false": "24 bytes materialized in the consume frame (category 4, goods)",
                 "provenance": "validated",
             },
@@ -190,7 +207,13 @@ def build_contract() -> dict:
             "absent_blood_vial_reason": (
                 "live reproduction created raw 0xF00003E8 '?ItemInfo?' instead of 0xB00003E8"
             ),
-            "equipment": "allowlist only; Saw Spear raw 0x806C5660 is the sole validated row",
+            "equipment": (
+                "allowlist only; allocate a category-0 instance, resolve its backing object, "
+                "and initialize current durability at object+0x18 from durabilityMax at "
+                "EquipParamWeapon row+0xBE before ItemGrant"
+            ),
+            "armor": "exact allowlist; category-1 allocator; Charred Hunter Garb insert and equip validated",
+            "blood_gems": "refused; category-8 lot ids require generation semantics not yet mapped",
             "excluded": ["Torch (ItemLot 20100000)", "Rifle Spear (ItemLot 10000000)"],
             "verify_polls": 20,
             "hydration_verify_polls": 240,

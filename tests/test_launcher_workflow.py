@@ -144,7 +144,7 @@ def _request_payload(fmt: str) -> dict:
         "format": fmt,
         "player": 1,
         "player_name": "Tester",
-        "runtime_build": "bb-0.1.0-r5",
+        "runtime_build": "bb-0.1.0-r7",
         "world_version": "0.1.0",
         "enemizer_seed": "AP_1:1",
         "suppression": {"plan_sha256": "0" * 64},
