@@ -385,14 +385,18 @@ class BloodborneModelTests(unittest.TestCase):
         playthrough only 2410290 spawns, so a check on flag 52410295 was
         unobtainable filler in every seed a player could actually reach.
         """
+        # Both names are read from the name table rather than spelled out, so
+        # a rename (#222 gave most names a landmark hint) cannot turn this
+        # witness red without changing what it is actually asserting.
+        from worlds.bloodborne.location_names import location_name
+
         keys = {location.key for location in NETWORK_LOCATIONS}
         self.assertNotIn("fixed_central_yharnam_lot_2410295", keys)
-        self.assertNotIn(
-            "Central Yharnam - Bold Hunter's Mark", LOCATION_NAME_TO_ID)
+        self.assertNotIn(location_name(52410295), LOCATION_NAME_TO_ID)
         # Control: the NG(1) half of the same substitution pair is untouched.
         # Removing both would silently delete a real check.
         self.assertIn("fixed_saw_hunter_badge", keys)
-        self.assertIn("Central Yharnam - Saw Hunter Badge", LOCATION_NAME_TO_ID)
+        self.assertIn(location_name(52410290), LOCATION_NAME_TO_ID)
 
     def test_the_unseeded_ng_plus_lot_keeps_its_permanent_network_id(self):
         """Ids are append-only: unseeding a check must never free its id.

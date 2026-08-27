@@ -17,6 +17,22 @@ under `Unreleased` and move into a dated version section when released.
   anything the multiworld does not know about. Existing seeds are unaffected in
   the sense that nothing was renumbered: the location's network id is retired in
   place and will never be reused.
+- **Location names now point at a landmark, not just a region and an item.**
+  Two playtesters in one day could not locate their checks: one hunted
+  `Central Yharnam - Blood Stone Shard x2` with a video guide open and still
+  needed operator support, and the other asked outright for names that say
+  where the item is. 180 of the 671 names gained a parenthetical hint, among
+  them `Central Yharnam - Blood Stone Shard x2 (sewer channel beam)`,
+  `Central Yharnam - Coldblood Dew (1) #1 (clinic backstreets)` and
+  `Central Yharnam - Blood Stone Shard #8 (bridge side)`. Hints come from the
+  developers' own per-map area tags, translated through a committed and
+  calibrated vocabulary, from MSB chest and placement data, or -- for a
+  handful of spots -- by hand with the evidence recorded in the row's
+  `basis`. Existing `#N` disambiguators are unchanged on purpose, so tracker
+  packs and spoiler logs keep working; the datapackage is regenerated per
+  seed, so seeds already in flight are unaffected. The remaining 491 names
+  carry no hint yet, which is honest rather than unfinished. See
+  docs/LOCATION-NAMING.md.
 
 - **Native delivery now constructs armor with the game's category-1 allocator.**
   A live Charred Hunter Garb canary arrived as a proper instance, appeared in

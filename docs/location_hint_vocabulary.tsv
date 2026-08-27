@@ -1,0 +1,21 @@
+canonical_map	tag	hint	confidence	calibration
+m24_01_00_00	前半	bridge side	calibrated	2410520 Torch is tagged 前半 and is the street corpse on the way to the Great Bridge
+m24_01_00_00	後半	sewer side	calibrated	2410100 Saw Spear is tagged 後半 and is the sewer-channel corpse
+m24_01_00_00	裏	clinic backstreets	calibrated	2410140 is tagged 裏 and is already named under Iosefka's Clinic
+m24_00_00_00	聖C前	Grand Cathedral approach	calibrated	2400480 Radiant Sword Hunter Badge is tagged 聖C前 and is the chest by the Grand Cathedral
+m28_00_00_00	ミイラ	mummified corpse	literal	ミイラ is 'mummy'; the tag names the corpse, not an area
+m32_00_00_00	教室	classroom	calibrated	3200600 Augur of Ebrietas is tagged 教室 and is the 1F classroom
+m35_00_00_00	ひまわり畑	sunflower patient room	calibrated	3500830 Blacksky Eye is tagged ひまわり畑 and already publishes (sunflower patient room)
+m35_00_00_00	地下牢	underground cell	calibrated	3500630 is tagged 地下牢03 and already publishes (underground cell) under the #82 ruling
+m35_00_00_00	聖堂	chapel	literal	聖堂 is 'chapel'
+m35_00_00_00	時計塔	tower	literal	時計塔 is 'clock tower', the Research Hall's main stack; a floor token in the tag refines it
+m36_00_00_00	賽の河原	shoreline	literal	賽の河原 is the mythic riverbed; the tag covers the arrival beach
+m36_00_00_00	村2_下層	lower hamlet	literal	村2 下層 is 'village 2, lower level'
+m36_00_00_00	村1	upper hamlet	literal	村1 is 'village 1', the first hamlet street
+m36_00_00_00	山道	mountain path	literal	山道 is 'mountain path'
+m36_00_00_00	灯台	lighthouse	literal	灯台 is 'lighthouse'
+m36_00_00_00	養殖槽上層	fish tank upper	literal	養殖槽 is the fish-farming tank; 上層 is the upper level
+m36_00_00_00	養殖槽中層	fish tank middle	literal	養殖槽 middle level
+m36_00_00_00	養殖槽下層	fish tank lower	calibrated	3600600 Blood Rock is tagged 養殖槽下層 and is the deepest hamlet pickup
+m36_00_00_00	暗渠中層	culvert middle	literal	暗渠 is 'culvert'; 中層 is the middle level
+m36_00_00_00	暗渠下層	culvert lower	literal	暗渠 lower level

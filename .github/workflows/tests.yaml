@@ -176,13 +176,15 @@ jobs:
       - name: Install headless dependencies
         run: pip install --no-cache-dir $PIP_DEPS
 
-      # The world is installed the way Archipelago loads it, and tools/ and
-      # research/ come along because the suite imports and reads them.
+      # The world is installed the way Archipelago loads it, and tools/,
+      # research/ and docs/ come along because the suite imports and reads
+      # them -- docs/ carries the location-hint vocabulary and the naming
+      # contract the hint gates check the table against (#222).
       - name: Install the world
         run: |
           rm -rf _ap/worlds/bloodborne
           cp -r worlds/bloodborne _ap/worlds/bloodborne
-          cp -r bb_launcher tools tests research packaging _ap/
+          cp -r bb_launcher tools tests research packaging docs _ap/
           cp build.ps1 _ap/
 
       - name: Run the suite inside Archipelago

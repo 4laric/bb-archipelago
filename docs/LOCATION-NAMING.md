@@ -77,6 +77,130 @@ rather than runtime evidence. The `basis` column says which:
   finer place claim is made.
 - `unestablished` — the spot is not pinned down; see the ordinal rule.
 
+## Landmark hints (#222)
+
+Two playtesters in one day could not *locate* their checks: one hunted
+`Central Yharnam - Blood Stone Shard x2` with a video guide open and still
+needed operator support, and could not tell which of the eight
+`Central Yharnam - Blood Stone Shard #N` rows the tracker had just lit; the
+other asked, in as many words, for names that say *where* the item is.
+
+So the optional place hint above stops being decoration and becomes the point:
+
+    Central Yharnam - Blood Stone Shard x2 (sewer channel beam)
+
+Two rules make this cheap and safe to land.
+
+- **The item half is load-bearing and does not move.** AP hints, spoiler logs
+  and `!hint` replies all carry the name; the vanilla contents are the handle
+  players recognise.
+- **The `#N` ordinal is stable.** A hint often makes a name unique on its
+  own, and the ordinal could then be dropped. It is kept anyway: renumbering
+  would churn every tracker pack, every spoiler a player has open, and every
+  bit of muscle memory, and would buy nothing mechanical. The pass *appends*.
+  `tests/test_location_names.py::test_ordinals_survive_hinting` holds the
+  line: a hinted ordinal row must still read `... #N (hint)`.
+
+`tools/build_location_hints.py` is the mechanical half. It never invents a
+hint, never overwrites a hint a row already carries, and re-running it is a
+no-op.
+
+### Hint sources, in trust order
+
+1. **The developers' own `lot_name` area tag** (`research/joined/lot_items.tsv`,
+   joined on the acquisition flag, never on the lot name). Each map's tags are
+   translated through the committed table below.
+2. **MSB signals** from the inputs bundle's `mined/msb_treasures.tsv`:
+   `in_chest` becomes `chest`; `start_disabled`, the model id and the
+   coordinates are evidence for a hand-written hint rather than a generator.
+   Coordinates also police the result -- two placements within 5 units of each
+   other in the same map may not publish contradictory hints
+   (`test_neighbouring_placements_do_not_contradict`). Five, not twenty:
+   these maps stack vertically and the developers' halves interleave at their
+   boundary, so a wider radius flags honest neighbours as contradictions.
+3. **Hand-written**, in `docs/location_hint_overrides.tsv`, for the famous
+   spots only where 1 and 2 fail. Every one carries its evidence in the `note`
+   column and lands in the row's `basis`, exactly like the #75 rename rows.
+
+**Coverage is deliberately partial.** 180 of 671 rows carry a hint; 491 do
+not, and a name with no landmark yet is honest rather than unfinished. The
+pass prioritised the collision groups (98 of the 407 `#N` rows now carry a
+hint) and the rows the playtesters actually hunted. Both numbers are witnessed
+in the test module and move only in the commit that earns them.
+
+### Per-map tag vocabulary
+
+Each table is the calibration, not just the translation: `confidence` says
+whether the English is anchored to a lot whose real location this project has
+already established, or is only a literal reading of the Japanese. These
+tables and `docs/location_hint_vocabulary.tsv` are checked against each other
+in both directions by
+`test_documented_vocabulary_matches_the_committed_table`, and every emitted
+hint is checked back against the table by
+`test_every_emitted_hint_is_vocabulary_or_carries_provenance`.
+
+A map absent from this section has no usable tag vocabulary and takes no
+tag hints. `m28_00_00_00` keeps only its one object tag: its `初回` and
+`人さらい` tags mark *visit phases* of the same geometry, not places -- lots
+3.2 units apart carry different ones -- so they are not landmarks and are not
+translated.
+
+#### m24_01_00_00 -- Central Yharnam
+
+| tag | hint | confidence | calibration |
+| --- | --- | --- | --- |
+| `前半` | `bridge side` | calibrated | 2410520 Torch is tagged 前半 and is the street corpse on the way to the Great Bridge |
+| `後半` | `sewer side` | calibrated | 2410100 Saw Spear is tagged 後半 and is the sewer-channel corpse |
+| `裏` | `clinic backstreets` | calibrated | 2410140 is tagged 裏 and is already named under Iosefka's Clinic |
+
+#### m24_00_00_00 -- Cathedral Ward
+
+| tag | hint | confidence | calibration |
+| --- | --- | --- | --- |
+| `聖C前` | `Grand Cathedral approach` | calibrated | 2400480 Radiant Sword Hunter Badge is tagged 聖C前 and is the chest by the Grand Cathedral |
+
+#### m28_00_00_00 -- Yahar'gul
+
+| tag | hint | confidence | calibration |
+| --- | --- | --- | --- |
+| `ミイラ` | `mummified corpse` | literal | ミイラ is 'mummy'; the tag names the corpse, not an area |
+
+#### m32_00_00_00 -- Lecture Building
+
+| tag | hint | confidence | calibration |
+| --- | --- | --- | --- |
+| `教室` | `classroom` | calibrated | 3200600 Augur of Ebrietas is tagged 教室 and is the 1F classroom |
+
+#### m35_00_00_00 -- Research Hall
+
+| tag | hint | confidence | calibration |
+| --- | --- | --- | --- |
+| `ひまわり畑` | `sunflower patient room` | calibrated | 3500830 Blacksky Eye is tagged ひまわり畑 and already publishes (sunflower patient room) |
+| `地下牢` | `underground cell` | calibrated | 3500630 is tagged 地下牢03 and already publishes (underground cell) under the #82 ruling |
+| `聖堂` | `chapel` | literal | 聖堂 is 'chapel' |
+| `時計塔` | `tower` | literal | 時計塔 is 'clock tower', the Research Hall's main stack; a floor token in the tag refines it |
+
+#### m36_00_00_00 -- Underground Corpse Pile (Fishing Hamlet)
+
+| tag | hint | confidence | calibration |
+| --- | --- | --- | --- |
+| `賽の河原` | `shoreline` | literal | 賽の河原 is the mythic riverbed; the tag covers the arrival beach |
+| `村2_下層` | `lower hamlet` | literal | 村2 下層 is 'village 2, lower level' |
+| `村1` | `upper hamlet` | literal | 村1 is 'village 1', the first hamlet street |
+| `山道` | `mountain path` | literal | 山道 is 'mountain path' |
+| `灯台` | `lighthouse` | literal | 灯台 is 'lighthouse' |
+| `養殖槽上層` | `fish tank upper` | literal | 養殖槽 is the fish-farming tank; 上層 is the upper level |
+| `養殖槽中層` | `fish tank middle` | literal | 養殖槽 middle level |
+| `養殖槽下層` | `fish tank lower` | calibrated | 3600600 Blood Rock is tagged 養殖槽下層 and is the deepest hamlet pickup |
+| `暗渠中層` | `culvert middle` | literal | 暗渠 is 'culvert'; 中層 is the middle level |
+| `暗渠下層` | `culvert lower` | literal | 暗渠 lower level |
+
+`tower` takes a floor from the tag when the tag names one, so
+`宝死体【時計塔11】_2F右通路手前` publishes `(tower 2F)` and a tag with no
+floor token publishes the coarser `(tower)`. A coarse hint and its refinement
+are the same claim at two resolutions, and the neighbour check treats them as
+such.
+
 ## Changing a name
 
 - Before the first numbered release: rename freely in review, with a
@@ -92,6 +216,13 @@ rather than runtime evidence. The `basis` column says which:
 - #75 is decided and landed: the 45 shipped `(Lot NNN)` placeholders publish
   their table names, and this table feeds `tools/build_fixed_location_slice.py`.
   Quantities follow the owner ruling: `x1` is dropped, `xN` for N > 1 stays.
+- #222 is decided and landed: the landmark-hint convention above, its
+  committed per-map vocabulary, and the 180 hinted rows. The remaining 491
+  bare rows are open work, not a defect; a new hint needs a vocabulary row or
+  an override row with evidence, never a guess. `52410295` is exempt from the
+  pass: it is the NG+ replacement corpse retired by #221, so no first
+  playthrough can reach it and a landmark for it would be noise. `EXEMPT` in
+  `tools/build_location_hints.py` carries the same note.
 - #82 is decided and landed: the boss-defeat flags are mapped (#86), the
   `53500630` divergence is resolved by owner ruling — the check is Research
   Hall's cell block (event tag 地下牢03, same 地下牢NN family as the Fist of

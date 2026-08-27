@@ -1,56 +1,56 @@
 key	name	region	location_flag	item_lot_id	item_category	item_id	classification	source_kind	source_ref	vanilla_award_suppressed
 fixed_white_messenger_ribbon	Central Yharnam - White Messenger Ribbon	Central Yharnam	50002200	42000	4	4903	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_saw_spear	Central Yharnam - Saw Spear	Central Yharnam	52410100	2410100	0	7100000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410110	Central Yharnam - Blood Stone Shard x2	Central Yharnam	52410110	2410110	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410120	Central Yharnam - Blood Vial x2 #1	Central Yharnam	52410120	2410120	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410130	Central Yharnam - Coldblood Dew (1) #1	Central Yharnam	52410130	2410130	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_saw_spear	Central Yharnam - Saw Spear (sewer side)	Central Yharnam	52410100	2410100	0	7100000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410110	Central Yharnam - Blood Stone Shard x2 (sewer channel beam)	Central Yharnam	52410110	2410110	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410120	Central Yharnam - Blood Vial x2 #1 (bridge side)	Central Yharnam	52410120	2410120	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410130	Central Yharnam - Coldblood Dew (1) #1 (clinic backstreets)	Central Yharnam	52410130	2410130	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410140	Iosefka's Clinic - Madman's Knowledge (corpse)	Iosefka's Clinic	52410140	2410140	4	1500	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410150	Central Yharnam - Coldblood Dew (1) #2	Central Yharnam	52410150	2410150	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410160	Central Yharnam - Pebble x8	Central Yharnam	52410160	2410160	4	1230	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410170	Central Yharnam - Blood Stone Shard #1	Central Yharnam	52410170	2410170	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410180	Central Yharnam - Blood Stone Shard #2	Central Yharnam	52410180	2410180	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410190	Central Yharnam - Blood Vial x2 #2	Central Yharnam	52410190	2410190	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410200	Central Yharnam - Molotov Cocktail x4 #1	Central Yharnam	52410200	2410200	4	1200	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410210	Central Yharnam - Blood Stone Shard #3	Central Yharnam	52410210	2410210	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410220	Central Yharnam - Pungent Blood Cocktail x2	Central Yharnam	52410220	2410220	4	1260	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410240	Central Yharnam - Coldblood Dew (3)	Central Yharnam	52410240	2410240	4	1512	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410250	Central Yharnam - Madman's Knowledge #1	Central Yharnam	52410250	2410250	4	1500	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410260	Central Yharnam - Coldblood Dew (1) #3	Central Yharnam	52410260	2410260	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410270	Central Yharnam - Quicksilver Bullets x10 #1	Central Yharnam	52410270	2410270	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410280	Central Yharnam - Coldblood Dew (2)	Central Yharnam	52410280	2410280	4	1511	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_saw_hunter_badge	Central Yharnam - Saw Hunter Badge	Central Yharnam	52410290	2410290	4	4110	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410150	Central Yharnam - Coldblood Dew (1) #2 (bridge side)	Central Yharnam	52410150	2410150	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410160	Central Yharnam - Pebble x8 (bridge side)	Central Yharnam	52410160	2410160	4	1230	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410170	Central Yharnam - Blood Stone Shard #1 (bridge side)	Central Yharnam	52410170	2410170	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410180	Central Yharnam - Blood Stone Shard #2 (bridge side)	Central Yharnam	52410180	2410180	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410190	Central Yharnam - Blood Vial x2 #2 (bridge side)	Central Yharnam	52410190	2410190	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410200	Central Yharnam - Molotov Cocktail x4 #1 (bridge side)	Central Yharnam	52410200	2410200	4	1200	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410210	Central Yharnam - Blood Stone Shard #3 (bridge side)	Central Yharnam	52410210	2410210	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410220	Central Yharnam - Pungent Blood Cocktail x2 (bridge side)	Central Yharnam	52410220	2410220	4	1260	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410240	Central Yharnam - Coldblood Dew (3) (sewer side)	Central Yharnam	52410240	2410240	4	1512	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410250	Central Yharnam - Madman's Knowledge #1 (bridge side)	Central Yharnam	52410250	2410250	4	1500	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410260	Central Yharnam - Coldblood Dew (1) #3 (sewer side)	Central Yharnam	52410260	2410260	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410270	Central Yharnam - Quicksilver Bullets x10 #1 (sewer side)	Central Yharnam	52410270	2410270	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410280	Central Yharnam - Coldblood Dew (2) (sewer side)	Central Yharnam	52410280	2410280	4	1511	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_saw_hunter_badge	Central Yharnam - Saw Hunter Badge (sewer side)	Central Yharnam	52410290	2410290	4	4110	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410295	Central Yharnam - Bold Hunter's Mark	Central Yharnam	52410295	2410295	4	1400	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410310	Central Yharnam - Pebble x10	Central Yharnam	52410310	2410310	4	1230	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410330	Central Yharnam - Blood Stone Shard #4	Central Yharnam	52410330	2410330	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410340	Central Yharnam - Blood Vial x4	Central Yharnam	52410340	2410340	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410360	Central Yharnam - Blood Vial x2 #3	Central Yharnam	52410360	2410360	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410370	Central Yharnam - Oil Urn x2 #1	Central Yharnam	52410370	2410370	4	1220	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410380	Central Yharnam - Blood Vial x2 #4	Central Yharnam	52410380	2410380	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410390	Central Yharnam - Blood Vial x6	Central Yharnam	52410390	2410390	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410400	Central Yharnam - Blood Stone Shard #5	Central Yharnam	52410400	2410400	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410430	Central Yharnam - Quicksilver Bullets x10 #2	Central Yharnam	52410430	2410430	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410440	Central Yharnam - Coldblood Dew (1) #4	Central Yharnam	52410440	2410440	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410450	Central Yharnam - Coldblood Dew (1) #5	Central Yharnam	52410450	2410450	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410470	Central Yharnam - Oil Urn x2 #2	Central Yharnam	52410470	2410470	4	1220	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410480	Central Yharnam - Madman's Knowledge #2	Central Yharnam	52410480	2410480	4	1500	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410490	Central Yharnam - Blood Stone Shard #6	Central Yharnam	52410490	2410490	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410510	Central Yharnam - Bold Hunter's Mark x2	Central Yharnam	52410510	2410510	4	1400	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_torch	Central Yharnam - Torch	Central Yharnam	52410520	2410520	0	20100000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410530	Central Yharnam - Coldblood Dew (1) #6	Central Yharnam	52410530	2410530	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410540	Central Yharnam - Blood Stone Shard #7	Central Yharnam	52410540	2410540	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410560	Central Yharnam - Quicksilver Bullets x5	Central Yharnam	52410560	2410560	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410570	Central Yharnam - Molotov Cocktail x4 #2	Central Yharnam	52410570	2410570	4	1200	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410590	Central Yharnam - Molotov Cocktail x6	Central Yharnam	52410590	2410590	4	1200	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410600	Central Yharnam - Coldblood Dew (1) #7	Central Yharnam	52410600	2410600	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410610	Central Yharnam - Hunter Set	Central Yharnam	52410610	2410610	1	70000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410620	Central Yharnam - Thick Coldblood (5)	Central Yharnam	52410620	2410620	4	1514	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410630	Central Yharnam - Coldblood Dew (1) #8	Central Yharnam	52410630	2410630	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Blood Gem	Iosefka's Clinic	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410650	Central Yharnam - Blood Stone Shard #8	Central Yharnam	52410650	2410650	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_iosefka_courtyard_bullets	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10	Central Yharnam	52410800	2410800	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410310	Central Yharnam - Pebble x10 (bridge side)	Central Yharnam	52410310	2410310	4	1230	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410330	Central Yharnam - Blood Stone Shard #4 (bridge side)	Central Yharnam	52410330	2410330	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410340	Central Yharnam - Blood Vial x4 (bridge side)	Central Yharnam	52410340	2410340	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410360	Central Yharnam - Blood Vial x2 #3 (bridge side)	Central Yharnam	52410360	2410360	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410370	Central Yharnam - Oil Urn x2 #1 (bridge side)	Central Yharnam	52410370	2410370	4	1220	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410380	Central Yharnam - Blood Vial x2 #4 (bridge side)	Central Yharnam	52410380	2410380	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410390	Central Yharnam - Blood Vial x6 (bridge side)	Central Yharnam	52410390	2410390	4	1000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410400	Central Yharnam - Blood Stone Shard #5 (bridge side)	Central Yharnam	52410400	2410400	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410430	Central Yharnam - Quicksilver Bullets x10 #2 (bridge side)	Central Yharnam	52410430	2410430	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410440	Central Yharnam - Coldblood Dew (1) #4 (sewer side)	Central Yharnam	52410440	2410440	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410450	Central Yharnam - Coldblood Dew (1) #5 (sewer side)	Central Yharnam	52410450	2410450	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410470	Central Yharnam - Oil Urn x2 #2 (sewer side)	Central Yharnam	52410470	2410470	4	1220	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410480	Central Yharnam - Madman's Knowledge #2 (sewer side)	Central Yharnam	52410480	2410480	4	1500	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410490	Central Yharnam - Blood Stone Shard #6 (sewer side)	Central Yharnam	52410490	2410490	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410510	Central Yharnam - Bold Hunter's Mark x2 (sewer side)	Central Yharnam	52410510	2410510	4	1400	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_torch	Central Yharnam - Torch (bridge side)	Central Yharnam	52410520	2410520	0	20100000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410530	Central Yharnam - Coldblood Dew (1) #6 (bridge side)	Central Yharnam	52410530	2410530	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410540	Central Yharnam - Blood Stone Shard #7 (bridge side)	Central Yharnam	52410540	2410540	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410560	Central Yharnam - Quicksilver Bullets x5 (bridge side)	Central Yharnam	52410560	2410560	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410570	Central Yharnam - Molotov Cocktail x4 #2 (bridge side)	Central Yharnam	52410570	2410570	4	1200	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410590	Central Yharnam - Molotov Cocktail x6 (bridge side)	Central Yharnam	52410590	2410590	4	1200	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410600	Central Yharnam - Coldblood Dew (1) #7 (bridge side)	Central Yharnam	52410600	2410600	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410610	Central Yharnam - Hunter Set (sewer side)	Central Yharnam	52410610	2410610	1	70000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410620	Central Yharnam - Thick Coldblood (5) (sewer side)	Central Yharnam	52410620	2410620	4	1514	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410630	Central Yharnam - Coldblood Dew (1) #8 (sewer side)	Central Yharnam	52410630	2410630	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Blood Gem (chest)	Iosefka's Clinic	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410650	Central Yharnam - Blood Stone Shard #8 (bridge side)	Central Yharnam	52410650	2410650	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_iosefka_courtyard_bullets	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10 (bridge side)	Central Yharnam	52410800	2410800	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410920	Central Yharnam - Red Jeweled Brooch	Cathedral Ward	52410920	2410920	4	4306	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_blood_gem_workshop_tool	Central Yharnam - Blood Gem Workshop Tool	Cathedral Ward	52411000	2411000	4	4103	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_cathedral_ward_lot_2400100	Cathedral Ward - Pungent Blood Cocktail x2	Cathedral Ward	52400100	2400100	4	1260	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_blood_gem_workshop_tool	Central Yharnam - Blood Gem Workshop Tool (chest)	Cathedral Ward	52411000	2411000	4	4103	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_cathedral_ward_lot_2400100	Cathedral Ward - Pungent Blood Cocktail x2 (Grand Cathedral approach chest)	Cathedral Ward	52400100	2400100	4	1260	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400120	Cathedral Ward - Top Hat (small plaza)	Cathedral Ward	52400120	2400120	1	280000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400130	Cathedral Ward - Blood Stone Shard x2	Cathedral Ward	52400130	2400130	4	3000	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400140	Cathedral Ward - Madman's Knowledge #1	Cathedral Ward	52400140	2400140	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
@@ -76,18 +76,18 @@ fixed_cathedral_ward_lot_2400330	Cathedral Ward - Blood Stone Shard x3	Cathedral
 fixed_cathedral_ward_lot_2400340	Cathedral Ward - Quicksilver Bullets x10	Cathedral Ward	52400340	2400340	4	900	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400350	Cathedral Ward - Thick Coldblood (4) #1	Cathedral Ward	52400350	2400350	4	1513	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400360	Cathedral Ward - Madman's Knowledge #5	Cathedral Ward	52400360	2400360	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400370	Cathedral Ward - Thick Coldblood (6) #1	Cathedral Ward	52400370	2400370	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400370	Cathedral Ward - Thick Coldblood (6) #1 (Grand Cathedral approach)	Cathedral Ward	52400370	2400370	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400380	Cathedral Ward - Throwing Knife x3	Cathedral Ward	52400380	2400380	4	1240	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400390	Cathedral Ward - Molotov Cocktail x4	Cathedral Ward	52400390	2400390	4	1200	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400400	Cathedral Ward - Coldblood Dew (2)	Cathedral Ward	52400400	2400400	4	1511	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400410	Cathedral Ward - Madman's Knowledge #6	Cathedral Ward	52400410	2400410	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400420	Cathedral Ward - Thick Coldblood (6) #2	Cathedral Ward	52400420	2400420	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400430	Cathedral Ward - Blood Gem #2	Cathedral Ward	52400430	2400430	8	124003	optional	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400440	Cathedral Ward - Thick Coldblood (6) #3	Cathedral Ward	52400440	2400440	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400410	Cathedral Ward - Madman's Knowledge #6 (Grand Cathedral approach)	Cathedral Ward	52400410	2400410	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400420	Cathedral Ward - Thick Coldblood (6) #2 (Grand Cathedral approach)	Cathedral Ward	52400420	2400420	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400430	Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)	Cathedral Ward	52400430	2400430	8	124003	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400440	Cathedral Ward - Thick Coldblood (6) #3 (Grand Cathedral approach)	Cathedral Ward	52400440	2400440	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400450	Cathedral Ward - Hunter Chief Emblem (plaza entrance)	Cathedral Ward	52400450	2400450	4	4011	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400460	Cathedral Ward - Thick Coldblood (5) #2	Cathedral Ward	52400460	2400460	4	1514	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400470	Cathedral Ward - Thick Coldblood (4) #2	Cathedral Ward	52400470	2400470	4	1513	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400760	Cathedral Ward - Blood Gem #3	Cathedral Ward	52410580	2400760	8	124001	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400760	Cathedral Ward - Blood Gem #3 (chest)	Cathedral Ward	52410580	2400760	8	124001	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400540	Cathedral Ward - Rumpled Yharnam Hat (workshop-tower back alley)	Cathedral Ward	52420540	2400540	1	320000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400550	Cathedral Ward - Wooden Shield	Cathedral Ward	52420550	2400550	0	19000000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400560	Cathedral Ward - Blood Stone Shard x5	Cathedral Ward	52420560	2400560	4	3000	filler	treasure	m24_00_00_00;m24_00_00_01	True
@@ -98,11 +98,11 @@ fixed_cathedral_ward_lot_2400600	Cathedral Ward - Twin Blood Stone Shards x2	Cat
 fixed_cathedral_ward_lot_2400610	Cathedral Ward - Antidote	Cathedral Ward	52420610	2400610	4	1100	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400620	Cathedral Ward - Madman's Knowledge #8	Cathedral Ward	52420620	2400620	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400630	Cathedral Ward - Poison Knife x18	Cathedral Ward	52420630	2400630	4	1210	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400640	Cathedral Ward - Blood Gem #4	Cathedral Ward	52420640	2400640	8	102901	optional	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400650	Cathedral Ward - Blood Gem #5	Cathedral Ward	52420650	2400650	8	124004	optional	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400660	Cathedral Ward - Madman's Knowledge #10	Cathedral Ward	52420660	2400660	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400670	Cathedral Ward - Messenger Top Hat	Cathedral Ward	52420670	2400670	4	4905	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400690	Cathedral Ward - Blood Gem #6	Cathedral Ward	52420690	2400690	8	103104	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400640	Cathedral Ward - Blood Gem #4 (Grand Cathedral approach chest)	Cathedral Ward	52420640	2400640	8	102901	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400650	Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)	Cathedral Ward	52420650	2400650	8	124004	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400660	Cathedral Ward - Madman's Knowledge #10 (Grand Cathedral approach)	Cathedral Ward	52420660	2400660	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400670	Cathedral Ward - Messenger Top Hat (Grand Cathedral approach)	Cathedral Ward	52420670	2400670	4	4905	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400690	Cathedral Ward - Blood Gem #6 (chest)	Cathedral Ward	52420690	2400690	8	103104	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400700	Cathedral Ward - Frenzied Coldblood (7)	Cathedral Ward	52420700	2400700	4	1516	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400710	Cathedral Ward - Twin Blood Stone Shards	Cathedral Ward	52420710	2400710	4	3010	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400720	Cathedral Ward - Madman's Knowledge #12	Cathedral Ward	52420720	2400720	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
@@ -126,7 +126,7 @@ fixed_old_yharnam_lot_2300130	Old Yharnam - Coldblood Dew (3) #2	Old Yharnam	523
 fixed_old_yharnam_lot_2300140	Old Yharnam - Blood Stone Shard x2 #3	Old Yharnam	52300140	2300140	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300150	Old Yharnam - Blood Stone Shard x2 #4	Old Yharnam	52300150	2300150	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300160	Old Yharnam - Madman's Knowledge #1	Old Yharnam	52300160	2300160	4	1500	filler	treasure	m23_00_00_00;m23_00_00_01	True
-fixed_old_yharnam_lot_2300170	Old Yharnam - Ritual Blood (1) x2	Old Yharnam	52300170	2300170	4	7000	filler	treasure	m23_00_00_00;m23_00_00_01	True
+fixed_old_yharnam_lot_2300170	Old Yharnam - Ritual Blood (1) x2 (chest)	Old Yharnam	52300170	2300170	4	7000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300180	Old Yharnam - Pungent Blood Cocktail x3	Old Yharnam	52300180	2300180	4	1260	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300190	Old Yharnam - Fire Paper x2 #2	Old Yharnam	52300190	2300190	4	1300	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300200	Old Yharnam - Hunter's Torch	Old Yharnam	52300200	2300200	0	20000000	useful	treasure	m23_00_00_00;m23_00_00_01	True
