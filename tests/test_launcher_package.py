@@ -131,9 +131,13 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn('bare + ".msb.dcx"', writer)
 
     def test_release_build_stamps_the_exact_client_checkout(self):
-        workflow = (self.repo / ".github" / "workflows" / "release.yaml").read_text(
-            encoding="utf-8"
+        candidates = (
+            Path.cwd() / ".github" / "workflows" / "release.yaml",
+            self.repo / ".github" / "workflows" / "release.yaml",
         )
+        workflow_path = next((path for path in candidates if path.is_file()), None)
+        self.assertIsNotNone(workflow_path, "release workflow is unavailable to its regression gate")
+        workflow = workflow_path.read_text(encoding="utf-8")
         self.assertIn("git -C _client rev-parse HEAD", workflow)
         self.assertIn("BB_BUILD_SHA: ${{ steps.client-sha.outputs.sha }}", workflow)
         self.assertLess(
