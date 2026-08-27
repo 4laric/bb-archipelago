@@ -188,6 +188,27 @@ class RequestIdentityFormatTests(unittest.TestCase):
         self.assertIn(REQUEST_FORMAT, message)
         self.assertIn(LEGACY_REQUEST_FORMAT, message)
 
+    def test_starting_weapon_choices_join_seed_identity(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload.update({
+            "randomize_starting_weapons": True,
+            "starting_weapons": {
+                "right_hand": [9000000, 5100000, 2000000],
+                "left_hand": [6000000, 14000000],
+            },
+        })
+        identity = self._identity_for(payload)
+        self.assertEqual(payload["starting_weapons"], identity["starting_weapons"])
+
+    def test_malformed_starting_weapon_choices_are_refused(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload.update({
+            "randomize_starting_weapons": True,
+            "starting_weapons": {"right_hand": [7000000] * 3, "left_hand": [6000000]},
+        })
+        with self.assertRaisesRegex(ValidationError, "right_hand"):
+            self._identity_for(payload)
+
 
 if __name__ == "__main__":
     unittest.main()

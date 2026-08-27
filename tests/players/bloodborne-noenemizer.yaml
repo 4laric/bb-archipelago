@@ -13,3 +13,4 @@ Bloodborne:
   # generation leg exercises the Uncanny pool while the other slot stays the
   # option-off control.
   uncanny_weapons: true
+  randomize_starting_weapons: true

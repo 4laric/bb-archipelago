@@ -2,6 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SoulsFormats;
 
+if (args.Length == 6 && args[0] == "--starting-weapons" && args[5] == "--apply")
+{
+    WriteStartingWeapons(args[1], args[2], args[3], args[4]);
+    return 0;
+}
+
 if (args.Length != 5 || args[4] != "--apply")
 {
     Console.Error.WriteLine(
@@ -97,6 +103,80 @@ foreach (Applied change in changes)
         + $"category:item={change.ItemCategory}:{change.GoodsId}->4:{placeholderGoods} "
         + $"flag={change.AcquisitionFlag} unchanged key={change.ItemKey}");
 return 0;
+
+static void WriteStartingWeapons(string requestPath, string inputPath, string paramdefPath,
+                                 string outputPath)
+{
+    inputPath = Path.GetFullPath(inputPath);
+    outputPath = Path.GetFullPath(outputPath);
+    if (StringComparer.OrdinalIgnoreCase.Equals(inputPath, outputPath))
+        throw new InvalidDataException("input and output paths must differ");
+    if (File.Exists(outputPath))
+        throw new IOException($"refusing to overwrite existing output: {outputPath}");
+
+    using JsonDocument document = JsonDocument.Parse(File.ReadAllText(requestPath));
+    JsonElement root = document.RootElement;
+    if (!root.TryGetProperty("randomize_starting_weapons", out JsonElement enabled)
+        || enabled.ValueKind != JsonValueKind.True)
+        throw new InvalidDataException("request does not enable starting-weapon randomization");
+    JsonElement choices = root.GetProperty("starting_weapons");
+    int[] right = choices.GetProperty("right_hand").EnumerateArray().Select(v => v.GetInt32()).ToArray();
+    int[] left = choices.GetProperty("left_hand").EnumerateArray().Select(v => v.GetInt32()).ToArray();
+    if (right.Length != 3 || left.Length != 2 || right.Distinct().Count() != 3
+        || left.Distinct().Count() != 2 || right.Concat(left).Any(id => id <= 0))
+        throw new InvalidDataException("starting weapon choices must be three unique right-hand and two unique left-hand ids");
+
+    BND4 game = BND4.Read(inputPath);
+    BND4 defs = BND4.Read(paramdefPath);
+    BinderFile shopFile = RequireSingleFile(game, "ShopLineupParam.param");
+    PARAM shops = PARAM.Read(shopFile.Bytes);
+    PARAMDEF definition = ReadMatchingDefinition(defs, shops);
+    shops.ApplyParamdef(definition);
+    PARAM weapons = PARAM.Read(RequireSingleFile(game, "EquipParamWeapon.param").Bytes);
+    var weaponIds = weapons.Rows.Select(row => row.ID).ToHashSet();
+    if (right.Concat(left).Any(id => !weaponIds.Contains(id)))
+        throw new InvalidDataException("starting weapon choices contain an unknown EquipParamWeapon id");
+    var originalFiles = game.Files.Select(file =>
+        new FileState(file.ID, file.Name, (byte[])file.Bytes.Clone())).ToList();
+    var originalRows = shops.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
+    var assignments = new[] { 2000, 2001, 2002 }.Zip(right)
+        .Concat(new[] { 2010, 2011 }.Zip(left)).ToList();
+    foreach ((int rowId, int equipId) in assignments)
+    {
+        PARAM.Row row = shops.Rows.Single(candidate => candidate.ID == rowId);
+        RequireCell(row, "equipId").Value = equipId;
+    }
+    shopFile.Bytes = shops.Write();
+    Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+    game.Write(outputPath);
+
+    BND4 check = BND4.Read(outputPath);
+    BinderFile checkedShopFile = RequireSingleFile(check, "ShopLineupParam.param");
+    for (int index = 0; index < check.Files.Count; index++)
+    {
+        BinderFile file = check.Files[index];
+        FileState before = originalFiles[index];
+        if (file.ID != before.Id || file.Name != before.Name)
+            throw new InvalidDataException($"round-trip changed binder identity at index {index}");
+        if (file != checkedShopFile && !file.Bytes.SequenceEqual(before.Bytes))
+            throw new InvalidDataException($"round-trip changed unrelated binder file {file.Name}");
+    }
+    PARAM checkedShops = PARAM.Read(checkedShopFile.Bytes);
+    checkedShops.ApplyParamdef(definition);
+    var changedRows = assignments.Select(pair => pair.First).ToHashSet();
+    foreach (PARAM.Row row in checkedShops.Rows)
+        originalRows[row.ID].RequireEqualExcept(
+            RowState.Capture(row), changedRows.Contains(row.ID)
+                ? new HashSet<string> { "equipId" } : new HashSet<string>(),
+            $"ShopLineupParam row {row.ID}");
+    foreach ((int rowId, int equipId) in assignments)
+    {
+        PARAM.Row row = checkedShops.Rows.Single(candidate => candidate.ID == rowId);
+        if (Convert.ToInt32(RequireCell(row, "equipId").Value) != equipId)
+            throw new InvalidDataException($"starting row {rowId} did not retain equipId {equipId}");
+    }
+    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} output={outputPath}");
+}
 
 static BinderFile RequireSingleFile(BND4 binder, string suffix)
 {

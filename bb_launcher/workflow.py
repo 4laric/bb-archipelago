@@ -60,6 +60,7 @@ REQUEST_FORMAT = "bb-seed-request-v1"
 LEGACY_REQUEST_FORMAT = "bb-enemizer-request-v1"
 REQUEST_FORMATS = (REQUEST_FORMAT, LEGACY_REQUEST_FORMAT)
 PLAN_FORMAT = "bb-enemizer-plan-v2"
+PARAMDEF_PATH = "dvdroot_ps4/paramdef/paramdef.paramdefbnd.dcx"
 Progress = Callable[[str], None]
 CommandRunner = Callable[[Sequence[str], Path, Progress], None]
 
@@ -395,6 +396,10 @@ class EnemizerToolchain:
         return self.app_root / "tools" / "BBEnemizerWriter.exe"
 
     @property
+    def parameter_writer_executable(self) -> Path:
+        return self.app_root / "tools" / "BBSuppressionWriter.exe"
+
+    @property
     def miner_executable(self) -> Path:
         return self.app_root / "tools" / "MSBBMiner.exe"
 
@@ -404,6 +409,31 @@ class EnemizerToolchain:
             path.is_file()
             for path in (self.planner_executable, self.writer_executable, self.miner_executable)
         )
+
+    def write_starting_weapons(
+        self, *, request_path: Path, input_binder: Path, paramdef: Path,
+        output_binder: Path, soulsformats_next: Path | None, progress: Progress,
+    ) -> None:
+        if self.parameter_writer_executable.is_file():
+            command = [str(self.parameter_writer_executable)]
+        else:
+            if soulsformats_next is None or not soulsformats_next.is_dir():
+                raise ValidationError(
+                    "SoulsFormatsNEXT is required when the packaged parameter writer is unavailable"
+                )
+            command = [
+                self.dotnet, "run", "--project",
+                str(self.repo_root / "tools" / "bb_suppression_writer" / "BBSuppressionWriter.csproj"),
+                "-c", "Release", f"-p:SoulsFormatsNextRoot={soulsformats_next}", "--",
+            ]
+        command.extend([
+            "--starting-weapons", str(request_path), str(input_binder), str(paramdef),
+            str(output_binder), "--apply",
+        ])
+        progress("Writing deterministic starting weapon choices...")
+        self.runner(command, self.repo_root, progress)
+        if not output_binder.is_file():
+            raise ValidationError("parameter writer produced no starting-weapon binder")
 
     def build(
         self,
@@ -556,6 +586,21 @@ def _request_identity(
         raise ValidationError("AP request has no enemizer_seed")
     if not isinstance(suppression, dict) or not isinstance(suppression.get("plan_sha256"), str):
         raise ValidationError("AP request has no suppression plan hash")
+    randomize_starting = request.get("randomize_starting_weapons", False)
+    starting_weapons = request.get("starting_weapons")
+    if not isinstance(randomize_starting, bool):
+        raise ValidationError("AP request has invalid randomize_starting_weapons")
+    if randomize_starting:
+        if not isinstance(starting_weapons, dict):
+            raise ValidationError("AP request has no starting weapon choices")
+        for hand, count in (("right_hand", 3), ("left_hand", 2)):
+            values = starting_weapons.get(hand)
+            if (not isinstance(values, list) or len(values) != count
+                    or any(not isinstance(value, int) or value <= 0 for value in values)
+                    or len(set(values)) != count):
+                raise ValidationError(f"AP request has invalid {hand} starting weapon choices")
+    elif starting_weapons is not None:
+        raise ValidationError("AP request disables starting weapons but still supplies choices")
     seed_name = request.get("seed_name")
     return {
         "request": request,
@@ -567,6 +612,7 @@ def _request_identity(
         "world_build": f"bloodborne-apworld-{world_version}",
         "enemizer_seed": enemizer_seed,
         "suppression_plan_sha256": suppression["plan_sha256"],
+        "starting_weapons": starting_weapons if randomize_starting else None,
     }
 
 
@@ -636,6 +682,21 @@ def _validate_suppression(
     if output_hash == source_hash:
         raise ValidationError("suppression binder is byte-identical to vanilla; refusing an unsuppressed build")
     return SuppressionValidation(manifest, tuple(bypassed))
+
+
+def _write_seed_suppression_manifest(
+    source_manifest: Path, *, state_root: Path, cache_key: str, output_hash: str,
+    starting_weapons: Mapping[str, Any],
+) -> Path:
+    """Publish the client witness for a suppression binder composed per seed."""
+    manifest = _read_object(source_manifest, "suppression build manifest")
+    manifest["output_gameparam_sha256"] = output_hash
+    manifest["starting_weapons"] = dict(starting_weapons)
+    directory = state_root.expanduser().resolve() / "seed-manifests"
+    directory.mkdir(parents=True, exist_ok=True)
+    output = directory / f"{cache_key}.json"
+    output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return output
 
 
 def _source_hashes(install: GameInstall, map_root: Path | None) -> dict[str, str]:
@@ -746,6 +807,7 @@ class LauncherWorkflow:
                 "enemy_randomizer": options.enabled,
                 "allow_tier_mixing": options.allow_tier_mixing,
                 "preserve_locomotion": options.preserve_locomotion,
+                "starting_weapons": request["starting_weapons"],
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -772,8 +834,21 @@ class LauncherWorkflow:
             reused = True
         else:
             map_output = None
+            composed_binder = binder
             completed = False
             try:
+                if options.enabled or request["starting_weapons"] is not None:
+                    settings.cache_root.mkdir(parents=True, exist_ok=True)
+                    temporary = Path(tempfile.mkdtemp(prefix=".seed-build-", dir=settings.cache_root))
+                if request["starting_weapons"] is not None:
+                    assert temporary is not None
+                    composed_binder = temporary / "gameparam.parambnd.dcx"
+                    paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
+                    self.toolchain.write_starting_weapons(
+                        request_path=request["path"], input_binder=binder, paramdef=paramdef,
+                        output_binder=composed_binder,
+                        soulsformats_next=settings.soulsformats_next, progress=progress,
+                    )
                 if options.enabled:
                     if map_root is None:
                         raise ValidationError(
@@ -786,8 +861,7 @@ class LauncherWorkflow:
                         ):
                             if path is None:
                                 raise ValidationError(f"Randomize Enemies requires {label}")
-                    settings.cache_root.mkdir(parents=True, exist_ok=True)
-                    temporary = Path(tempfile.mkdtemp(prefix=".enemizer-build-", dir=settings.cache_root))
+                    assert temporary is not None
                     progress("Planning deterministic enemy swaps...")
                     enemizer = self.toolchain.build(
                         seed=enemy_seed,
@@ -801,7 +875,7 @@ class LauncherWorkflow:
                     )
                     map_output = enemizer.map_studio
                 progress("Composing and verifying the seed cache...")
-                result = cache.build(identity, binder, map_output)
+                result = cache.build(identity, composed_binder, map_output)
                 build = result
                 reused = result.reused
                 completed = True
@@ -809,7 +883,7 @@ class LauncherWorkflow:
                 if temporary is not None and temporary.exists():
                     resolved_cache = settings.cache_root.expanduser().resolve()
                     resolved_temp = temporary.resolve()
-                    if resolved_temp.parent != resolved_cache or not resolved_temp.name.startswith(".enemizer-build-"):
+                    if resolved_temp.parent != resolved_cache or not resolved_temp.name.startswith(".seed-build-"):
                         raise WorkflowError(f"refusing to clean unexpected build path: {resolved_temp}")
                     if completed:
                         shutil.rmtree(resolved_temp)
@@ -827,13 +901,22 @@ class LauncherWorkflow:
         for line in dead_path_warnings(owner):
             progress(line)
         progress("Writing the native client runtime configuration...")
+        client_manifest = settings.suppression_manifest.expanduser().resolve()
+        if request["starting_weapons"] is not None:
+            client_manifest = _write_seed_suppression_manifest(
+                client_manifest,
+                state_root=settings.state_root or default_state_root(),
+                cache_key=build.cache_key,
+                output_hash=build.manifest["suppression"]["sha256"],
+                starting_weapons=request["starting_weapons"],
+            )
         paths = write_client_runtime_config(
             settings.state_root or default_state_root(),
             seed=request["seed"],
             slot=request["slot"],
             install=install,
             owner=owner,
-            suppression_manifest=settings.suppression_manifest.expanduser().resolve(),
+            suppression_manifest=client_manifest,
             shad_log=settings.shad_log or default_shad_log(),
         )
         progress("Starting shadPS4, bridge, and AP client...")

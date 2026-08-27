@@ -96,6 +96,13 @@ checked-in tests pin both compositions.
 both: with it on, each weapon the pool places is joined by its Uncanny variant,
 which replaces one filler item. Pool size is unchanged either way.
 
+**Randomize Starting Weapons** (`randomize_starting_weapons`, on by default)
+selects three unique base-game right-hand weapons and two unique base-game
+firearms from a separate deterministic seed stream. The gifts are independent
+of the AP item pool. The launcher composes them into the seed-specific
+gameparam overlay; disabling the option leaves the five vanilla gift rows
+unchanged.
+
 Client repository:
 
 ```powershell
