@@ -96,6 +96,19 @@ checked-in tests pin both compositions.
 both: with it on, each weapon the pool places is joined by its Uncanny variant,
 which replaces one filler item. Pool size is unchanged either way.
 
+**Randomize Starting Weapons** (`randomize_starting_weapons`, on by default)
+selects three unique base-game right-hand weapons and two unique base-game
+firearms from a separate deterministic seed stream. The gifts are independent
+of the AP item pool. The launcher composes them into the seed-specific
+gameparam overlay; disabling the option leaves the five vanilla gift rows
+unchanged.
+
+**Remove Weapon Requirements** (`remove_weapon_requirements`, on by default)
+clears the four equip gates—Strength, Skill, Bloodtinge, and Arcane—from every
+reinforcement row in each eligible player weapon family. It does not alter
+attribute scaling or damage. Base-game trick weapons and firearms are always
+covered; Uncanny families join the edit set when `uncanny_weapons` is enabled.
+
 Client repository:
 
 ```powershell

@@ -26,6 +26,8 @@ from worlds.bloodborne import (
     SHUFFLABLE_ITEMS,
     build_item_pool_names,
     build_runtime_slot_data,
+    build_starting_weapon_choices,
+    build_weapon_requirement_families,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -537,6 +539,52 @@ class UncannyOptionWiringTests(unittest.TestCase):
         self.assertEqual(option.default, 0)
         self.assertEqual(option.display_name, "Uncanny Weapon Variants")
         self.assertIn("Uncanny", option.__doc__)
+
+
+class StartingWeaponChoiceTests(unittest.TestCase):
+    def test_choices_are_deterministic_unique_and_independent(self):
+        first = build_starting_weapon_choices("AP_TEST:1")
+        self.assertEqual(first, build_starting_weapon_choices("AP_TEST:1"))
+        self.assertEqual(3, len(first["right_hand"]))
+        self.assertEqual(3, len(set(first["right_hand"])))
+        self.assertEqual(2, len(first["left_hand"]))
+        self.assertEqual(2, len(set(first["left_hand"])))
+
+        expected = {
+            hand: {
+                binding.normalized_item_id for key, binding in ITEM_BINDINGS.items()
+                if key not in UNCANNY_ITEM_KEYS and binding.feed_effect == f"{hand}_weapon"
+            }
+            for hand in ("right_hand", "left_hand")
+        }
+        for hand, values in first.items():
+            self.assertLessEqual(set(values), expected[hand])
+
+    def test_option_defaults_on(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+        option = BloodborneOptions.type_hints["randomize_starting_weapons"]
+        self.assertEqual(1, option.default)
+        self.assertEqual("Randomize Starting Weapons", option.display_name)
+
+    def test_requirement_families_cover_base_and_optionally_uncanny_weapons(self):
+        base = set(build_weapon_requirement_families(False))
+        with_uncanny = set(build_weapon_requirement_families(True))
+        uncanny = {
+            ITEM_BINDINGS[key].normalized_item_id for key in UNCANNY_ITEM_KEYS
+            if ITEM_BINDINGS[key].feed_effect in {"right_hand_weapon", "left_hand_weapon"}
+        }
+        self.assertEqual(uncanny, with_uncanny - base)
+        self.assertTrue(base)
+
+    def test_remove_requirements_option_defaults_on(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+        option = BloodborneOptions.type_hints["remove_weapon_requirements"]
+        self.assertEqual(1, option.default)
+        self.assertEqual("Remove Weapon Requirements", option.display_name)
 
 
 class Wave1WeaponPoolTests(unittest.TestCase):

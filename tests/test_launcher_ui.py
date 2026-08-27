@@ -52,6 +52,7 @@ class Process:
 class FakeToolchain:
     def __init__(self):
         self.calls: list[dict] = []
+        self.starting_calls: list[dict] = []
 
     def build(self, **values):
         self.calls.append(values)
@@ -66,6 +67,10 @@ class FakeToolchain:
         }
         return EnemizerBuild(output, plan, digest(json.dumps(plan).encode()))
 
+    def write_seed_weapons(self, **values):
+        self.starting_calls.append(values)
+        values["output_binder"].write_bytes(values["input_binder"].read_bytes() + b"-starting")
+
 
 class LauncherUiWorkflowTests(unittest.TestCase):
     def setUp(self):
@@ -76,6 +81,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         vanilla = self.install.patch.joinpath(*SUPPRESSION_PATH.split("/"))
         vanilla.parent.mkdir(parents=True)
         vanilla.write_bytes(b"vanilla-gameparam")
+        paramdef = self.install.patch / "dvdroot_ps4" / "paramdef" / "paramdef.paramdefbnd.dcx"
+        paramdef.parent.mkdir(parents=True)
+        paramdef.write_bytes(b"paramdef")
         self.suppression = self.root / "suppressed.parambnd.dcx"
         self.suppression.write_bytes(b"suppressed-gameparam")
         self.suppression_manifest = self.root / "suppression-build.json"
@@ -169,6 +177,55 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(plan.runtime_build, "bb-runtime-r1")
         self.assertEqual(plan.processes[0].executable, self.shad.resolve())
         self.assertEqual(plan.processes[0].expected_sha256, digest(b"shad"))
+
+    def test_starting_weapon_request_composes_seed_specific_binder(self):
+        payload = json.loads(self.request.read_text(encoding="utf-8"))
+        payload.update({
+            "randomize_starting_weapons": True,
+            "starting_weapons": {
+                "right_hand": [9000000, 5100000, 2000000],
+                "left_hand": [6000000, 14000000],
+            },
+        })
+        self.request.write_text(json.dumps(payload), encoding="utf-8")
+        toolchain = FakeToolchain()
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(10), Process(11)],
+        )
+        result = workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(1, len(toolchain.starting_calls))
+        active = self.install.mods.joinpath(*SUPPRESSION_PATH.split("/"))
+        self.assertEqual(b"suppressed-gameparam-starting", active.read_bytes())
+        config = json.loads(result.client_config.read_text(encoding="utf-8"))
+        manifest_path = Path(config["suppression_manifest"])
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(digest(active.read_bytes()), manifest["output_gameparam_sha256"])
+        self.assertEqual(payload["starting_weapons"], manifest["seed_weapon_edits"]["choices"])
+
+    def test_requirement_removal_composes_without_starting_randomization(self):
+        payload = json.loads(self.request.read_text(encoding="utf-8"))
+        payload.update({
+            "remove_weapon_requirements": True,
+            "weapon_requirement_families": [2000000, 2010000],
+        })
+        self.request.write_text(json.dumps(payload), encoding="utf-8")
+        toolchain = FakeToolchain()
+        result = LauncherWorkflow(
+            self.repo, toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(10), Process(11)],
+        ).randomize_and_launch(
+            self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(1, len(toolchain.starting_calls))
+        config = json.loads(result.client_config.read_text(encoding="utf-8"))
+        manifest = json.loads(Path(config["suppression_manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(payload["weapon_requirement_families"],
+                         manifest["seed_weapon_edits"]["requirement_families"])
 
     def test_randomize_enemies_runs_toolchain_caches_maps_activates_and_launches(self):
         toolchain = FakeToolchain()
