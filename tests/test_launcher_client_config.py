@@ -106,6 +106,8 @@ class ClientConfigTests(unittest.TestCase):
             owner=owner,
             suppression_manifest=manifest,
             shad_log=self.root / "shad_log.txt",
+            auto_upgrade=True,
+            auto_equip=True,
         )
         raw = paths.config.read_bytes()
         # The native client rejects a UTF-8 BOM at line 1 column 1.
@@ -117,6 +119,8 @@ class ClientConfigTests(unittest.TestCase):
         self.assertEqual(config["suppression_manifest"], str(manifest.resolve()))
         self.assertEqual(config["shad_log"], str((self.root / "shad_log.txt").resolve()))
         self.assertEqual(config["bridge_root"], str(state.resolve() / "bridge"))
+        self.assertTrue(config["auto_upgrade"])
+        self.assertTrue(config["auto_equip"])
         # Seed-owned tables stay empty: the client replaces them from
         # slot_data on connect, and local config cannot weaken the seed.
         self.assertEqual(

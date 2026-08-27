@@ -586,6 +586,12 @@ def _request_identity(
         raise ValidationError("AP request has no enemizer_seed")
     if not isinstance(suppression, dict) or not isinstance(suppression.get("plan_sha256"), str):
         raise ValidationError("AP request has no suppression plan hash")
+    auto_upgrade = request.get("auto_upgrade", False)
+    auto_equip = request.get("auto_equip", False)
+    if not isinstance(auto_upgrade, bool):
+        raise ValidationError("AP request has invalid auto_upgrade")
+    if not isinstance(auto_equip, bool):
+        raise ValidationError("AP request has invalid auto_equip")
     randomize_starting = request.get("randomize_starting_weapons", False)
     starting_weapons = request.get("starting_weapons")
     if not isinstance(randomize_starting, bool):
@@ -623,6 +629,8 @@ def _request_identity(
         "world_build": f"bloodborne-apworld-{world_version}",
         "enemizer_seed": enemizer_seed,
         "suppression_plan_sha256": suppression["plan_sha256"],
+        "auto_upgrade": auto_upgrade,
+        "auto_equip": auto_equip,
         "starting_weapons": starting_weapons if randomize_starting else None,
         "weapon_requirement_families": requirement_families if remove_requirements else None,
     }
@@ -937,6 +945,8 @@ class LauncherWorkflow:
             owner=owner,
             suppression_manifest=client_manifest,
             shad_log=settings.shad_log or default_shad_log(),
+            auto_upgrade=request["auto_upgrade"],
+            auto_equip=request["auto_equip"],
         )
         progress("Starting shadPS4, bridge, and AP client...")
         resolved = resolve_process_plan(plan, paths, game_path=install.base)

@@ -124,6 +124,8 @@ def write_client_runtime_config(
     owner: Mapping[str, Any],
     suppression_manifest: Path | None,
     shad_log: Path | None,
+    auto_upgrade: bool = False,
+    auto_equip: bool = False,
 ) -> ClientRuntimePaths:
     """Write the native client's runtime config for the *active* overlay.
 
@@ -163,8 +165,8 @@ def write_client_runtime_config(
         "shad_log": log_path,
         "locations": [],
         "items": {},
-        "auto_upgrade": False,
-        "auto_equip": False,
+        "auto_upgrade": bool(auto_upgrade),
+        "auto_equip": bool(auto_equip),
         "expected_save_identity": None,
         "suppression_manifest": None if manifest_path is None else str(manifest_path),
         "installed_gameparam": str(installed),
