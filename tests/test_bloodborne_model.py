@@ -99,14 +99,15 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertTrue(all(LOCATION_BINDINGS[key].event_flag for key in expected))
 
     def test_slice_contains_the_three_maps_and_their_bosses(self):
-        # 161 in-slice fixed pickups + 6 scripted checks. Out of slice seeds:
-        # the two clinic back-yard rows (#124) and the White Messenger Ribbon,
-        # a post-Rom quest reward whose region IS in the slice.
-        self.assertEqual(167, len(NETWORK_LOCATIONS))
+        # 160 in-slice fixed pickups + 6 scripted checks. Out of slice seeds:
+        # the two clinic back-yard rows (#124), the White Messenger Ribbon (a
+        # post-Rom quest reward whose region IS in the slice), and the NG+-only
+        # Bold Hunter's Mark corpse, lot 2410295 (#220).
+        self.assertEqual(166, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
-            {"Central Yharnam": 48, "Cathedral Ward": 62,
+            {"Central Yharnam": 47, "Cathedral Ward": 62,
              "Old Yharnam": 55, "Grand Cathedral": 2},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
@@ -157,11 +158,11 @@ class BloodborneModelTests(unittest.TestCase):
             "Ludwig's Rifle", "Cannon",
         ):
             self.assertEqual(counts[name], 1, name)
-        # 167 locations - 32 one-off items = 135 filler slots, allocated across
+        # 166 locations - 32 one-off items = 134 filler slots, allocated across
         # the weighted mix by largest remainder. The exact shares are restated
         # here so a weight edit is a visible pool change, not a silent one.
         self.assertEqual(counts["Blood Vial"], 26)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 18)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 17)
         self.assertEqual(counts["Blood Stone Shards x2"], 13)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
@@ -177,7 +178,7 @@ class BloodborneModelTests(unittest.TestCase):
         Slice 3 added the Hunter Chief Emblem to this pool because the plaza
         gate is emblem-only, and the Oedon Tomb Key joins it for the same
         reason: with the key shuffled, a pool without it cannot leave Central
-        Yharnam. 167 - 4 one-off items = 163 filler slots over the slice's own
+        Yharnam. 166 - 4 one-off items = 162 filler slots over the slice's own
         five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
@@ -188,8 +189,8 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Oedon Tomb Key"], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
-        # play experience. 167 - 4 one-each = 163 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 58)
+        # play experience. 166 - 4 one-each = 162 slots over five weighted names.
+        self.assertEqual(counts["Blood Vial"], 57)
         self.assertEqual(counts["Quicksilver Bullets x3"], 38)
         self.assertEqual(counts["Blood Stone Shards x2"], 29)
         for name in ("Pebbles x3", "Molotov Cocktails x2"):
@@ -370,10 +371,39 @@ class BloodborneModelTests(unittest.TestCase):
         gated = with_everything - without_key
         self.assertEqual(gated, {l.key for l in locations
                                  if l.region not in ("Central Yharnam", "Hunter's Dream")})
-        # 119 of 167: the key is the single largest gate in the slice, so a
+        # 119 of 166: the key is the single largest gate in the slice, so a
         # seed that could not place it reachably would be mostly unplayable.
         self.assertEqual(len(gated), len(locations) - len(central_yharnam))
         self.assertGreater(len(gated), len(locations) // 2)
+
+    def test_the_ng_plus_only_lot_is_not_a_check_but_its_partner_is(self):
+        """#220: lot 2410295 only spawns on NG+, so it cannot be a check.
+
+        Its param name is `\u5b9d\u6b7b\u4f5319 \u5f8c\u534a\uff082\u5468\u76ee\u4ee5\u964d\uff09` -- "treasure corpse 19, second
+        playthrough onward". It is the substitution partner of the Saw Hunter
+        Badge corpse (2410290) at the same MSB coordinates: in a first
+        playthrough only 2410290 spawns, so a check on flag 52410295 was
+        unobtainable filler in every seed a player could actually reach.
+        """
+        keys = {location.key for location in NETWORK_LOCATIONS}
+        self.assertNotIn("fixed_central_yharnam_lot_2410295", keys)
+        self.assertNotIn(
+            "Central Yharnam - Bold Hunter's Mark", LOCATION_NAME_TO_ID)
+        # Control: the NG(1) half of the same substitution pair is untouched.
+        # Removing both would silently delete a real check.
+        self.assertIn("fixed_saw_hunter_badge", keys)
+        self.assertIn("Central Yharnam - Saw Hunter Badge", LOCATION_NAME_TO_ID)
+
+    def test_the_unseeded_ng_plus_lot_keeps_its_permanent_network_id(self):
+        """Ids are append-only: unseeding a check must never free its id.
+
+        The row stays in fixed_locations.tsv (its vanilla award is still
+        suppressed for NG+ players, see #220), so the key keeps its id and the
+        id can never be handed to a future location.
+        """
+        self.assertIn("fixed_central_yharnam_lot_2410295", LOCATION_ID_BY_KEY)
+        self.assertEqual(0xBB1036,
+                         LOCATION_ID_BY_KEY["fixed_central_yharnam_lot_2410295"])
 
     def test_the_goal_is_behind_the_oedon_tomb_key(self):
         """The Blood-starved Beast is in Old Yharnam, two gates past the key."""

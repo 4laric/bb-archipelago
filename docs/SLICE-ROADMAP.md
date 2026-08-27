@@ -28,8 +28,8 @@ Cathedral, with the Blood-starved Beast as the goal:
 python3 -c "from worlds.bloodborne import data; import collections; \
 print(len(data.SLICE_LOCATION_KEYS)); \
 print(collections.Counter(l.region for l in data.LOCATIONS if l.key in data.SLICE_LOCATION_KEYS))"
-# 167
-# Cathedral Ward 62, Old Yharnam 55, Central Yharnam 48, Grand Cathedral 2
+# 166
+# Cathedral Ward 62, Old Yharnam 55, Central Yharnam 47, Grand Cathedral 2
 ```
 
 ```bash
@@ -37,7 +37,8 @@ python3 tools/plan_vanilla_suppression.py --output /tmp/plan.json
 python3 -c "import json; print(len(json.load(open('/tmp/plan.json'))['edits']))"   # 179
 ```
 
-167 network locations, a 179-edit suppression plan, zero refusals. The world
+166 network locations, a 179-edit suppression plan, zero refusals. (The plan
+is one edit wider than the seed: see step 4 of the checklist below.) The world
 model itself is much larger than the slice — `len(data.LOCATIONS)` is 195 and
 `data.REGIONS` already names all 25 regions including the DLC — and, critically,
 `data.ITEMS` already carries the locked event items for **Shadows of Yharnam,
@@ -498,7 +499,14 @@ slice that skips a step should say why in its commit message.
    refuses a row whose flag/lot pair has no MSB or EMEVD placement reference.
    Reject flags shared by unrelated lots until the coupling is understood — the
    Hunter Hat row (flag 52410610, four lots) is the standing example of a
-   correct refusal.
+   correct refusal. **Grep the candidate lots' `lot_name` for `2\u5468\u76ee` (NG+) and
+   for `\u5dee\u3057\u66ff\u3048\u7528` / substitution-pair names before seeding them.** A lot that
+   only spawns on a second playthrough is an unobtainable check in every run a
+   player can actually reach — #220 shipped one for three slices. Two
+   `start_disabled` treasures at the same MSB coordinates deserve the same look
+   even without the literal tag. Such a row is *unseeded but kept in the TSV*
+   (`data.SLICE_EXCLUDED_FIXED_KEYS`), so its vanilla award stays suppressed
+   for the players who can reach it.
 5. **Script awards.** Any EMEVD `AwardItemLot` in the new maps that awards a
    pooled item, or that has `getItemFlagId = -1`, needs a reviewed
    `SCRIPT_AWARD_SUPPRESSIONS` entry. **Grep `common.emevd` too.**

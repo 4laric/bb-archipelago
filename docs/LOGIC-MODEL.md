@@ -23,9 +23,11 @@ Gascoigne check and then sends Archipelago goal status.
 
 The generated slice is Central Yharnam, Cathedral Ward and Old Yharnam, ending
 at the Blood-starved Beast, plus the Grand Cathedral behind the Hunter Chief
-Emblem. It contains 162 canonical, first-cycle physical pickup flags across
+Emblem. It contains 160 canonical, first-cycle physical pickup flags across
 maps `m24_01_00_00`, `m24_00_00_00` and `m23_00_00_00`, plus six scripted
-checks, for 168 network locations total. Observed replacement flags are
+checks, for 166 network locations total. (This paragraph said 162/168 before
+#220; it was already stale by one — the true count was 161/167 — so the
+correction here is worth two, not one.) Observed replacement flags are
 collapsed into their canonical pickup flags, and each shared-acquisition-flag
 award group (Hunter Set, Top Hat, Black Church, Rumpled Yharnam, Charred Hunter
 Garb) is represented by one location. The shuffled pool stays deliberately

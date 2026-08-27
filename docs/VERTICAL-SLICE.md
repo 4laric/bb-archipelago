@@ -126,12 +126,14 @@ Ward) and `m23_00_00_00` (Old Yharnam). `SLICE_MAPS` in
   46 Central Yharnam, 61 Cathedral Ward (59 from `m24_00` plus the two Tomb of
   Oedon strip rows slice 1 already placed there), and 54 Old Yharnam. Three
   rows stay out of seeds: the Iosefka's Clinic back-yard pair (unchanged from
-  slice 1) and the White Messenger Ribbon, a little-girl quest reward
-  collectible only after Rom's blood moon.
+  slice 1), the White Messenger Ribbon, a little-girl quest reward collectible
+  only after Rom's blood moon, and lot 2410295 (#220), the NG+-only Bold
+  Hunter's Mark corpse that never spawns in a first playthrough. All four keep
+  their vanilla awards suppressed; they are inert pickups, not checks.
 - **6 scripted checks:** Cleric Beast, Father Gascoigne, Blood-starved Beast,
   Vicar Amelia, the Laurence's-skull altar interaction, and the Radiant Sword
   Hunter Badge treasure.
-- **167 network locations total.**
+- **166 network locations total.**
 - **Goal:** the Blood-starved Beast (`12301800`). The client reads the goal
   from slot data's `goal_location`, so this is a seed-owned move, not a client
   rebuild.
