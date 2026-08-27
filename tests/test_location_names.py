@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ast
 import csv
+import re
 import unittest
 from pathlib import Path
 
@@ -100,6 +101,44 @@ DATA_PY_TABLED_CHECKS = {
 # rejected, the row leaves this set and ordinary agreement applies.
 PENDING_PLACEHOLDER_RENAMES: set[str] = set()
 
+# --- landmark hints (#222) -------------------------------------------------
+
+VOCABULARY = ROOT / "docs" / "location_hint_vocabulary.tsv"
+OVERRIDES = ROOT / "docs" / "location_hint_overrides.tsv"
+LOT_ITEMS = ROOT / "research" / "joined" / "lot_items.tsv"
+DOC = ROOT / "docs" / "LOCATION-NAMING.md"
+
+# Witnessed populations, not targets, exactly like the counts above. The pass
+# deliberately leaves rows bare: a name with no landmark yet is honest, and
+# raising this number means new evidence, not new invention.
+HINTED_ROWS = 180
+BARE_ROWS = 491
+
+# The three rows oz hunted with a video guide open and still needed operator
+# support to find (#222). Each must publish a hint naming the area, not an
+# ordinal. The substring is what the player has to read, not the whole hint.
+OZ_HUNTED_HINTS = {
+    "52410110": "sewer",       # Blood Stone Shard x2, the dangling sewer pair
+    "52410130": "backstreets",  # Coldblood Dew (1) #1
+    "52410650": "bridge",      # Blood Stone Shard #8, the "#8"-style name
+}
+
+# Two placements this close in the same map are one prop cluster to a player,
+# so they may not publish contradictory hints. Five units, not twenty: the
+# maps stack vertically and the developers' halves interleave at their
+# boundary, so a wider radius flags honest neighbours (a corpse against the
+# fish-tank's outer wall, one floor of the Research Hall tower above another)
+# as contradictions. Five is the radius at which the committed table is clean.
+CLUSTER_RADIUS = 5.0
+
+
+def place_hint(name: str) -> str | None:
+    """The trailing landmark hint, or None. A bare number is an item name."""
+    if not name.endswith(")"):
+        return None
+    inner = name[name.rindex("(") + 1 : -1]
+    return None if inner.isdigit() else inner
+
 
 def rows(path: Path) -> list[dict[str, str]]:
     with path.open(encoding="utf-8", newline="") as handle:
@@ -124,6 +163,158 @@ def world_regions() -> set[str]:
         ):
             return set(ast.literal_eval(node.value))
     raise AssertionError("REGIONS assignment not found in data.py")
+
+
+class LandmarkHintTests(unittest.TestCase):
+    """Ratchets for the landmark-hint convention (#222)."""
+
+    def test_hint_population_witness(self):
+        names = [row["name"] for row in rows(NAMES)]
+        hinted = [name for name in names if place_hint(name)]
+        self.assertEqual(HINTED_ROWS, len(hinted))
+        self.assertEqual(BARE_ROWS, len(names) - len(hinted))
+        self.assertEqual(TOTAL_TABLE_ROWS, len(names))
+
+    def test_hint_bearing_names_are_unique(self):
+        hinted = [row["name"] for row in rows(NAMES) if place_hint(row["name"])]
+        self.assertEqual(HINTED_ROWS, len(hinted))
+        self.assertEqual(len(hinted), len(set(hinted)))
+        for name in hinted:
+            self.assertTrue(name.isascii(), f"non-ASCII hint: {name!r}")
+
+    def test_documented_vocabulary_matches_the_committed_table(self):
+        """The doc's per-map tables and the vocabulary TSV say the same thing.
+
+        The doc is what a reviewer reads; the TSV is what the generator obeys.
+        A gate that only checked one of them would let them drift.
+        """
+        table = {
+            (row["canonical_map"], row["tag"], row["hint"]) for row in rows(VOCABULARY)
+        }
+        self.assertTrue(table, "empty hint vocabulary")
+        text = DOC.read_text(encoding="utf-8")
+        documented = set()
+        current_map = None
+        for line in text.splitlines():
+            found = re.search(r"#### (m\d\d_\d\d_\d\d_\d\d)", line)
+            if found:
+                current_map = found.group(1)
+                continue
+            if current_map and line.startswith("| `"):
+                cells = [cell.strip() for cell in line.strip("|").split("|")]
+                if len(cells) >= 2 and cells[0].startswith("`"):
+                    documented.add(
+                        (current_map, cells[0].strip("`"), cells[1].strip("`"))
+                    )
+        self.assertEqual(table, documented)
+
+    def test_every_emitted_hint_is_vocabulary_or_carries_provenance(self):
+        """Documented-matches-emitted, the other direction.
+
+        A tag-derived hint must be the vocabulary's word for that map's tag; a
+        hand-written one must name its override row; anything else has to have
+        been reviewed as a place name before this pass.
+        """
+        from tools.build_location_hints import lot_names_by_flag, tag_hint, vocabulary
+
+        vocab = vocabulary()
+        lots = lot_names_by_flag()
+        catalog = {row["location_flag"]: row for row in rows(CATALOG)}
+        overrides = {row["location_flag"]: row["hint"] for row in rows(OVERRIDES)}
+        self.assertTrue(overrides, "empty override table")
+
+        checked = 0
+        wrong = []
+        for row in rows(NAMES):
+            flag = row["location_flag"]
+            hint = place_hint(row["name"])
+            if hint is None:
+                continue
+            if "hint from lot tag" not in row["basis"]:
+                if flag in overrides:
+                    checked += 1
+                    if overrides[flag] not in hint:
+                        wrong.append(f"{flag}: override {overrides[flag]!r} not in {hint!r}")
+                continue
+            checked += 1
+            entry = catalog[flag]
+            expected = tag_hint(lots.get(flag, ""), entry["canonical_map"], vocab)
+            if expected is None:
+                wrong.append(f"{flag}: basis claims a tag hint, vocabulary has none")
+                continue
+            word, tag = expected
+            if word not in hint:
+                wrong.append(f"{flag}: emitted {hint!r}, vocabulary says {word!r}")
+            if f"lot tag {tag} " not in row["basis"]:
+                wrong.append(f"{flag}: basis does not name tag {tag}")
+        self.assertEqual("", "; ".join(wrong))
+        # Witness: the join actually examined the tag-hinted population.
+        self.assertGreaterEqual(checked, 90)
+
+    def test_the_three_rows_oz_hunted_carry_area_hints(self):
+        names = {row["location_flag"]: row["name"] for row in rows(NAMES)}
+        missing = sorted(
+            f"{flag}: {names.get(flag)!r} lacks {word!r}"
+            for flag, word in OZ_HUNTED_HINTS.items()
+            if word not in (place_hint(names.get(flag, "")) or "")
+        )
+        self.assertEqual("", "; ".join(missing))
+
+    def test_neighbouring_placements_do_not_contradict(self):
+        """Lots within CLUSTER_RADIUS of each other share their hint.
+
+        Coordinates come from the catalog, which is the MSB placement join.
+        Two corpses a player cannot tell apart must not be told apart by the
+        name table either.
+        """
+        table = rows(NAMES)
+        catalog = {row["location_flag"]: row for row in rows(CATALOG)}
+        placed = []
+        for row in table:
+            entry = catalog.get(row["location_flag"])
+            if entry is None or not entry["coordinates"]:
+                continue
+            # A multi-placement catalog row lists every copy, ";"-separated;
+            # the first is the canonical map's.
+            first = entry["coordinates"].split(";")[0]
+            point = tuple(float(value) for value in first.split(","))
+            placed.append((entry["canonical_map"], point, place_hint(row["name"]), row))
+        self.assertGreater(len(placed), 600, "coordinate witness collapsed")
+
+        clashes = []
+        for index, (map_a, point_a, hint_a, row_a) in enumerate(placed):
+            if hint_a is None:
+                continue
+            for map_b, point_b, hint_b, row_b in placed[index + 1 :]:
+                if map_a != map_b or hint_b is None or hint_a == hint_b:
+                    continue
+                # "tower" and "tower 3F" are the same claim at two
+                # resolutions, not a contradiction.
+                if hint_a in hint_b or hint_b in hint_a:
+                    continue
+                distance = sum((a - b) ** 2 for a, b in zip(point_a, point_b)) ** 0.5
+                if distance <= CLUSTER_RADIUS:
+                    clashes.append(
+                        f"{row_a['location_flag']}({hint_a}) vs "
+                        f"{row_b['location_flag']}({hint_b}) at {distance:.1f}"
+                    )
+        self.assertEqual("", "; ".join(sorted(clashes)))
+
+    def test_ordinals_survive_hinting(self):
+        """#N is stable on purpose.
+
+        A hint can make a name unique on its own, but dropping the ordinal
+        would churn every tracker pack and every player's memory for no
+        mechanical gain. The pass appends; it never renumbers.
+        """
+        table = {row["location_flag"]: row["name"] for row in rows(NAMES)}
+        ordinal_rows = [name for name in table.values() if re.search(r"#\d+", name)]
+        self.assertEqual(407, len(ordinal_rows))
+        hinted_ordinals = [name for name in ordinal_rows if place_hint(name)]
+        self.assertEqual(98, len(hinted_ordinals))
+        for name in hinted_ordinals:
+            # the ordinal stays ahead of the hint, never replaced by it
+            self.assertRegex(name, r"#\d+ \([^()]+\)$")
 
 
 class LocationNameTableTests(unittest.TestCase):
