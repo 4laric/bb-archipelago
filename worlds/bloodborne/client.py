@@ -29,7 +29,7 @@ LOCATION_NAME_BY_ID = {
 }
 CHECK_JOURNAL = "manual-checks.jsonl"
 BRIDGE_PROTOCOL = "BBGRANT1"
-HARNESS_VERSION = "bb-native-grant-v5"
+HARNESS_VERSION = "bb-native-grant-v7"
 BRIDGE_TIMEOUT_SECONDS = 30
 TERMINAL_GRANT_STATES = {"failed", "command_rejected", "quantity_mismatch", "setup_error", "write_error"}
 

@@ -19,15 +19,15 @@ class GrantHarnessContractTests(unittest.TestCase):
         cls.helper = HELPER.read_text(encoding="utf-8")
 
     def test_wire_and_harness_versions_are_visible_in_state(self):
-        self.assertIn("local build=[[bb-0.1.0-r5]]", self.text)
+        self.assertIn("local build=[[bb-0.1.0-r7]]", self.text)
         self.assertIn("local protocol=[[BBGRANT1]]", self.text)
-        self.assertIn("local harness=[[bb-native-grant-v5]]", self.text)
+        self.assertIn("local harness=[[bb-native-grant-v7]]", self.text)
         self.assertIn('"build=",build', self.text)
         self.assertIn('"\\nprotocol=",protocol', self.text)
         self.assertIn('"\\nharness=",harness', self.text)
-        self.assertIn("$build='bb-0.1.0-r5'", self.helper)
+        self.assertIn("$build='bb-0.1.0-r7'", self.helper)
         self.assertIn("$protocol='BBGRANT1'", self.helper)
-        self.assertIn("$harness='bb-native-grant-v5'", self.helper)
+        self.assertIn("$harness='bb-native-grant-v7'", self.helper)
 
     def test_manual_grant_helper_targets_the_client_bridge_directory(self):
         # The client reads commands from %LOCALAPPDATA%\BloodborneArchipelago\bridge;
@@ -108,6 +108,14 @@ class GrantHarnessContractTests(unittest.TestCase):
         self.assertIn("and eax,F0000000", self.text)
         self.assertIn("cmp eax,80000000", self.text)
         self.assertIn("lea rsi,[bbAutoDescriptor]", self.text)
+        self.assertIn("mov rax,801A87260", self.text)
+        self.assertIn("mov rax,801A87390", self.text)
+        self.assertNotIn("mov rax,801A87590", self.text)
+        self.assertIn("mov rax,801A89070", self.text)
+        self.assertIn("mov rax,801F29AA0", self.text)
+        self.assertIn("movzx ecx,word ptr [rax+BE]", self.text)
+        self.assertIn("mov [rax+18],ecx", self.text)
+        self.assertIn('["80553E990"]=base+0x553E990', self.text)
         self.assertIn("local descriptor=request+0x60", self.text)
         self.assertIn("writeInteger(descriptor+0x10,command.normalized)", self.text)
         self.assertIn('["8050DBE30"]=base+0x50DBE30', self.text)

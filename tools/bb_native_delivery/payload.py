@@ -2,7 +2,7 @@
 
 Provenance: the assembly source below is transcribed instruction-for-instruction
 from the ``autoAssemble`` template in
-``tables/Bloodborne-native-item-grant-auto-v2.CT`` (harness ``bb-native-grant-v5``).
+``tables/Bloodborne-native-item-grant-auto-v2.CT`` (harness ``bb-native-grant-v7``).
 That template is ``validated`` in the sense of RESEARCH-BASELINE.md -- it has been
 installed and exercised live on CUSA03173 01.09 under shadPS4 0.18. The *byte
 encoding* produced here is ``validated`` too, as of 2026-08-24: the caves were
@@ -31,6 +31,13 @@ HEARTBEAT_HOOK_RVA = 0x1BFE882
 HEARTBEAT_RETURN_RVA = 0x1BFE889
 
 ITEM_GRANT_RVA = 0x14DA0A0
+ALLOCATE_EQUIPMENT_INSTANCE_RVA = 0x1A87260
+ALLOCATE_ARMOR_INSTANCE_RVA = 0x1A87390
+RESOLVE_DESCRIPTOR_RVA = 0x1A89070
+LOOKUP_WEAPON_PARAM_RVA = 0x1F29AA0
+# Pointer to the category-instance registry used by the resolver at
+# +0x1A89070. This is an eboot data RVA, not a launch-time absolute.
+EQUIPMENT_INSTANCE_REGISTRY_RVA = 0x553E990
 QUANTITY_DELTA_RVA = 0x14D94A0
 FIND_SLOT_RVA = 0x14DA2C0
 
@@ -187,11 +194,52 @@ def _program_consume() -> list[tuple[str | None, _Insn | None]]:
         (None, _rip_form(b"\x8b\x05", "descriptor")),
         # and eax,F0000000
         (None, _fixed(b"\x25" + struct.pack("<I", 0xF0000000))),
-        # cmp eax,80000000
+        # Dispatch the two validated persistent equipment classes by prefix.
         (None, _fixed(b"\x3d" + struct.pack("<I", 0x80000000))),
-        # jne bbAutoDescriptorReady
-        (None, _rel32_jump(b"\x0f\x85", "descriptor_ready")),
-        # lea rsi,[bbAutoDescriptor]
+        (None, _rel32_jump(b"\x0f\x84", "allocate_weapon")),
+        (None, _fixed(b"\x3d" + struct.pack("<I", 0x90000000))),
+        (None, _rel32_jump(b"\x0f\x84", "allocate_armor")),
+        (None, _rel32_jump(b"\xe9", "descriptor_ready")),
+        ("allocate_weapon", None),
+        (None, _mov_rax_imm64(ALLOCATE_EQUIPMENT_INSTANCE_RVA)),
+        (None, _rel32_jump(b"\xe9", "allocate_instance")),
+        ("allocate_armor", None),
+        (None, _mov_rax_imm64(ALLOCATE_ARMOR_INSTANCE_RVA)),
+        (None, _rel32_jump(b"\xe9", "allocate_instance")),
+        ("allocate_instance", None),
+        # ItemGrant copies the source's first dword into the inventory record.
+        # For equipment that dword must be a dynamically allocated 0x?080....
+        # instance handle, not the 0x80...... catalog descriptor. Allocate the
+        # instance on the game thread before insertion, then restore ItemGrant's
+        # argument registers.
+        (None, _rip_form(b"\x8b\x15", "descriptor")),       # mov edx,[descriptor]
+        (None, _rip_form(b"\x48\x8d\x3d", "descriptor")), # lea rdi,[descriptor]
+        (None, _rip_form(b"\x48\x8b\x35", "equipment_instance_registry")),
+        (None, _fixed(CALL_RAX)),
+        # Only weapons have durability. Armor is ready after its constructor.
+        (None, _rip_form(b"\x8b\x05", "descriptor")),
+        (None, _fixed(b"\x25" + struct.pack("<I", 0xF0000000))),
+        (None, _fixed(b"\x3d" + struct.pack("<I", 0x80000000))),
+        (None, _rel32_jump(b"\x0f\x85", "allocated_instance_ready")),
+        # Resolve the new handle to its backing weapon object.
+        (None, _rip_form(b"\x48\x8d\x3d", "descriptor")),
+        (None, _mov_rax_imm64(RESOLVE_DESCRIPTOR_RVA)),
+        (None, _fixed(CALL_RAX)),
+        # Look up EquipParamWeapon for the normalized row. The row's u16 at
+        # +0xBE is durabilityMax for an unreinforced weapon.
+        (None, _fixed(b"\xc7\x04\x24" + _imm32(0xFFFFFFFF))),
+        (None, _fixed(b"\x48\xc7\x44\x24\x08" + _imm32(0))),
+        (None, _fixed(b"\xc7\x44\x24\x10" + _imm32(0xFFFFFFFF))),
+        (None, _fixed(b"\x48\x8b\xfc")),                  # mov rdi,rsp
+        (None, _rip_form(b"\x8b\x35", "descriptor_normalized")),
+        (None, _mov_rax_imm64(LOOKUP_WEAPON_PARAM_RVA)),
+        (None, _fixed(CALL_RAX)),
+        (None, _fixed(b"\x48\x8b\x44\x24\x08")),       # mov rax,[rsp+8]
+        (None, _fixed(b"\x0f\xb7\x88\xbe\x00\x00\x00")), # movzx ecx,[rax+BE]
+        (None, _rip_form(b"\x48\x8b\x05", "descriptor_pointer")),
+        (None, _fixed(b"\x89\x48\x18")),                # mov [rax+18],ecx
+        ("allocated_instance_ready", None),
+        (None, _fixed(b"\x49\x8b\xfd")),                  # mov rdi,r13
         (None, _rip_form(b"\x48\x8d\x35", "descriptor")),
         ("descriptor_ready", None),
         # mov edx,[bbAutoQuantity]
@@ -286,6 +334,8 @@ _EXTERNAL_LABELS = {
     "manual_trigger": MANUAL_TRIGGER_RVA,
     "descriptor": DESCRIPTOR_RVA,
     "descriptor_normalized": DESCRIPTOR_RVA + 0x10,
+    "descriptor_pointer": DESCRIPTOR_RVA + 0x08,
+    "equipment_instance_registry": EQUIPMENT_INSTANCE_REGISTRY_RVA,
     "consume_return": CONSUME_RETURN_RVA,
     "heartbeat_return": HEARTBEAT_RETURN_RVA,
 }

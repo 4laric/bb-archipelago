@@ -24,8 +24,8 @@ STAGED_SIZE = 32
 GOODS_RAW_PREFIX = 0xB0000000
 GOODS_NORMALIZED_PREFIX = 0x40000000
 
-# Category 4 (goods) uses the in-frame stack source; category 0 (equipment)
-# requires the persistent descriptor. Both are validated; nothing else is.
+# Category 4 goods use the in-frame source. Weapons and armor use a persistent
+# descriptor after native allocation. All other categories remain refused.
 CATEGORY_GOODS = 4
 CATEGORY_EQUIPMENT = 0
 
@@ -49,10 +49,11 @@ def category_of(raw_id: int) -> int:
 def uses_persistent_source(raw_id: int) -> bool:
     """True when the cave takes the ``lea rsi,[bbAutoDescriptor]`` branch.
 
-    The cave compares ``raw & 0xF0000000`` against ``0x80000000``; equipment
-    descriptors (``0x806C5660`` Saw Spear) are the validated case.
+    The cave dispatches the 0x8 weapon and 0x9 armor prefixes to separate native
+    allocators. Every other prefix remains on the in-frame path and is rejected
+    by the descriptor allowlist before it can reach the cave.
     """
-    return (raw_id & 0xF000_0000) == 0x8000_0000
+    return (raw_id & 0xF000_0000) in {0x8000_0000, 0x9000_0000}
 
 
 # -- the descriptor allowlist (issue #146)
@@ -69,6 +70,12 @@ def uses_persistent_source(raw_id: int) -> bool:
 #: id is the live-verified 7100000 (= 0x006C5660). Provenance: ``observed``.
 VALIDATED_EQUIPMENT_ROWS: dict[int, tuple[int, str]] = {
     0x806C_5660: (0x006C_5660, "Saw Spear"),
+}
+
+# Category-1 armor uses its own native allocator. Charred Hunter Garb was
+# inserted, rendered, and equipped successfully on the throwaway live save.
+VALIDATED_ARMOR_ROWS: dict[int, tuple[int, str]] = {
+    0x9000_2AF8: (0x1000_2AF8, "Charred Hunter Garb"),
 }
 
 #: raw -> (normalized, why it is refused); a ``None`` normalized refuses the raw
@@ -135,15 +142,30 @@ def describe_validated_descriptor(raw_id: int, normalized_id: int) -> str:
             f"normalized id is {row[0]:#010x}, not {normalized_id:#010x}. {_CITATION}"
         )
 
+    row = VALIDATED_ARMOR_ROWS.get(raw_id)
+    if row is not None:
+        if normalized_id == row[0]:
+            return f"validated armor row: {row[1]} (observed insert and equip)"
+        raise DescriptorError(
+            f"raw {raw_id:#010x} is the validated {row[1]} armor row, but its "
+            f"live-verified normalized id is {row[0]:#010x}, not "
+            f"{normalized_id:#010x}. {_CITATION}"
+        )
+
     known = ", ".join(
         f"{value:#010x} ({name})"
         for value, (_normalized, name) in sorted(VALIDATED_EQUIPMENT_ROWS.items())
+    )
+    known_armor = ", ".join(
+        f"{value:#010x} ({name})"
+        for value, (_normalized, name) in sorted(VALIDATED_ARMOR_ROWS.items())
     )
     raise DescriptorError(
         f"raw {raw_id:#010x} / normalized {normalized_id:#010x} is not a validated "
         "descriptor. Missing evidence: it is neither a category-4 goods pair "
         "(raw 0xB0000000|id with normalized 0x40000000|id) nor an allowlisted "
-        f"equipment row [{known}]. RESEARCH-BASELINE.md validates equipment "
+        f"equipment row [{known}] nor an allowlisted armor row [{known_armor}]. "
+        "RESEARCH-BASELINE.md validates instance-backed "
         "descriptors one at a time, from a live dump; this pair has no such dump. "
         f"{_CITATION}"
     )

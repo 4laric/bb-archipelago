@@ -451,7 +451,7 @@ class DoctorTests(unittest.TestCase):
         )
         paths.bridge_root.mkdir(parents=True, exist_ok=True)
         (paths.bridge_root / BRIDGE_STATE_NAME).write_text(
-            "build=bb-0.1.0-r5\nprotocol=BBGRANT1\nharness=bb-native-grant-v5\n"
+            "build=bb-0.1.0-r7\nprotocol=BBGRANT1\nharness=bb-native-grant-v7\n"
             "status=executing\npid=5040\n",
             encoding="utf-8",
         )

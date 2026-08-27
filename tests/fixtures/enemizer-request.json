@@ -4,7 +4,7 @@
   "enemizer": true,
   "enemizer_seed": "vertical-slice-test:1",
   "world_version": "0.1.0",
-  "runtime_build": "bb-0.1.0-r5",
+  "runtime_build": "bb-0.1.0-r7",
   "suppression": {
     "required": true,
     "manifest_format": "bb-vanilla-suppression-build-v1",

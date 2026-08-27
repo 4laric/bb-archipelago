@@ -56,9 +56,9 @@ local commandPath=root..[[native-grant-command.txt]]
 local statePath=root..[[native-grant-state.txt]]
 local logPath=root..[[native-grant.log]]
 local shadLog=roamingAppData..[[\shadPS4\log\shad_log.txt]]
-local build=[[bb-0.1.0-r5]]
+local build=[[bb-0.1.0-r7]]
 local protocol=[[BBGRANT1]]
-local harness=[[bb-native-grant-v5]]
+local harness=[[bb-native-grant-v7]]
 local maxVerifyPolls=20
 -- An empty result slot with no inventory stack is "not hydrated yet"
 -- evidence, not failure evidence (observed live 2026-08-24: an Orphanage
@@ -240,6 +240,10 @@ label(bbAutoHeartbeatOriginal)
 label(bbAutoExisting)
 label(bbAutoFinish)
 label(bbAutoDescriptorReady)
+label(bbAutoAllocateWeapon)
+label(bbAutoAllocateArmor)
+label(bbAutoAllocateInstance)
+label(bbAutoAllocatedInstanceReady)
 label(bbAutoRequest)
 label(bbAutoQuantity)
 label(bbAutoResult)
@@ -269,7 +273,41 @@ label(bbAutoManualTrigger)
   mov eax,[bbAutoDescriptor]
   and eax,F0000000
   cmp eax,80000000
-  jne bbAutoDescriptorReady
+  je bbAutoAllocateWeapon
+  cmp eax,90000000
+  je bbAutoAllocateArmor
+  jmp bbAutoDescriptorReady
+bbAutoAllocateWeapon:
+  mov rax,801A87260
+  jmp bbAutoAllocateInstance
+bbAutoAllocateArmor:
+  mov rax,801A87390
+  jmp bbAutoAllocateInstance
+bbAutoAllocateInstance:
+  mov edx,[bbAutoDescriptor]
+  lea rdi,[bbAutoDescriptor]
+  mov rsi,[80553E990]
+  call rax
+  mov eax,[bbAutoDescriptor]
+  and eax,F0000000
+  cmp eax,80000000
+  jne bbAutoAllocatedInstanceReady
+  lea rdi,[bbAutoDescriptor]
+  mov rax,801A89070
+  call rax
+  mov dword ptr [rsp],FFFFFFFF
+  mov qword ptr [rsp+8],0
+  mov dword ptr [rsp+10],FFFFFFFF
+  mov rdi,rsp
+  mov esi,[bbAutoDescriptor+10]
+  mov rax,801F29AA0
+  call rax
+  mov rax,[rsp+8]
+  movzx ecx,word ptr [rax+BE]
+  mov rax,[bbAutoDescriptor+8]
+  mov [rax+18],ecx
+bbAutoAllocatedInstanceReady:
+  mov rdi,r13
   lea rsi,[bbAutoDescriptor]
 bbAutoDescriptorReady:
   mov edx,[bbAutoQuantity]
@@ -329,6 +367,7 @@ bbAutoManualTrigger:
 8050DBE60:
 bbAutoDescriptor:
   dd 0
+
   dd 0
   dq 0
   dd 0
@@ -370,6 +409,10 @@ local relocated={
   ["8014D94A0"]=base+0x14D94A0,
   ["8014DA0A0"]=base+0x14DA0A0,
   ["8014DA2C0"]=base+0x14DA2C0,
+  ["801A87260"]=base+0x1A87260,
+  ["801A87390"]=base+0x1A87390,
+  ["801A89070"]=base+0x1A89070,
+  ["801F29AA0"]=base+0x1F29AA0,
   ["801BFE882"]=base+0x1BFE882,
   ["801BFE889"]=base+0x1BFE889,
   ["8050DBA00"]=base+0x50DBA00,
@@ -380,6 +423,7 @@ local relocated={
   ["8050DBE4C"]=base+0x50DBE4C,
   ["8050DBE50"]=base+0x50DBE50,
   ["8050DBE60"]=base+0x50DBE60,
+  ["80553E990"]=base+0x553E990,
 }
 for old,address in pairs(relocated) do
   install=install:gsub(old,string.format("%X",address))

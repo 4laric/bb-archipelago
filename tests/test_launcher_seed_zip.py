@@ -34,7 +34,7 @@ def request_payload(player: int, name: str, seed: str = "AP_1:1") -> dict:
         "format": REQUEST_FORMAT,
         "player": player,
         "player_name": name,
-        "runtime_build": "bb-0.1.0-r5",
+        "runtime_build": "bb-0.1.0-r7",
         "world_version": "0.1.0",
         "enemizer_seed": seed,
         "seed_name": "AP_1",
