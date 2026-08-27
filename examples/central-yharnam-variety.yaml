@@ -10,3 +10,7 @@ Bloodborne:
   # Uncanny variants of your pooled weapons, normally Chalice-only (#205).
   # They replace filler, so the seed keeps its size. Off by default.
   uncanny_weapons: false
+  # Independent native choices in Hunter's Dream (3 trick weapons, 2 firearms).
+  randomize_starting_weapons: true
+  # Remove Strength, Skill, Bloodtinge, and Arcane equip gates; scaling remains.
+  remove_weapon_requirements: true

@@ -20,6 +20,21 @@ under `Unreleased` and move into a dated version section when released.
   the new instance from `EquipParamWeapon.durabilityMax` before granting it. Live
   playtesting confirmed a delivered Beast Claw at 180/180 durability while the
   save's existing weapons remained intact.
+- **Weapon stat requirements can now be removed.** The default-on
+  `remove_weapon_requirements` YAML option clears Strength, Skill, Bloodtinge,
+  and Arcane requirements across all eleven reinforcement rows for every
+  base-game player weapon. Uncanny families are included when their option is
+  enabled. Attribute scaling, bonuses, damage, and durability are untouched.
+
+- **Starting weapons can now be randomized by seed.** The default-on
+  `randomize_starting_weapons` YAML option deterministically replaces the
+  Hunter's Dream gifts with three unique base-game trick weapons and two
+  unique base-game firearms. These gifts are independent of the shuffled item
+  pool. The launcher writes the choices into native `ShopLineupParam` rows
+  2000–2002 and 2010–2011, preserving Bloodborne's previews, one-choice event
+  flags, inventory insertion, and full durability. Turning the option off
+  leaves the vanilla Saw Cleaver/Hunter Axe/Threaded Cane and firearm choices
+  untouched.
 
 - **The pool is a real Bloodborne pool now: every base-game weapon, and filler
   with variety in it (#207 wave 1).** All fifteen base-game trick weapons (Saw
