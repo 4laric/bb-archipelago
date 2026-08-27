@@ -130,6 +130,17 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn('.EndsWith(".msb", StringComparison.OrdinalIgnoreCase)', writer)
         self.assertIn('bare + ".msb.dcx"', writer)
 
+    def test_release_build_stamps_the_exact_client_checkout(self):
+        workflow = (self.repo / ".github" / "workflows" / "release.yaml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("git -C _client rev-parse HEAD", workflow)
+        self.assertIn("BB_BUILD_SHA: ${{ steps.client-sha.outputs.sha }}", workflow)
+        self.assertLess(
+            workflow.index("git -C _client rev-parse HEAD"),
+            workflow.index("cargo build --release -p bb-archipelago"),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

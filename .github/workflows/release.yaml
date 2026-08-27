@@ -62,7 +62,17 @@ jobs:
           ref: ${{ github.event.inputs.client_ref || 'main' }}
           path: _client
 
+      - name: Resolve the AP client build stamp
+        id: client-sha
+        shell: pwsh
+        run: |
+          $sha = git -C _client rev-parse HEAD
+          "sha=$sha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Build the AP client (cargo release)
+        shell: pwsh
+        env:
+          BB_BUILD_SHA: ${{ steps.client-sha.outputs.sha }}
         run: cargo build --release -p bb-archipelago --manifest-path _client/Cargo.toml
 
       - name: Install the pinned Windows packager
