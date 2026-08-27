@@ -11,6 +11,14 @@ what each slice must contain, what evidence already exists for it, and what
 would have to be mined or witnessed before it could ship. It deliberately does
 not promise that a slice will be built.
 
+**Companion document.** This file is the *content* layer: which rows each slice
+seeds and how the suppression plan grows. The *reachability* layer — which
+pooled item or event flag opens which region, with the EMEVD condition that
+evidences it — is `docs/LOGIC-RULES-ROADMAP.md`. Three findings there correct
+or extend claims made here: the Cainhurst carriage requires the Hemwick boss
+(cited), the Tonsil Stone amygdala is an `m28` character rather than a Cathedral
+Ward one (cited), and the Yahar'gul abduction path is now traced end to end.
+
 ## Where the project actually stands
 
 Slice 3 seeds Central Yharnam, Cathedral Ward, Old Yharnam and the Grand
