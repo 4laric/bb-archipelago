@@ -136,7 +136,12 @@ class LauncherPackageTests(unittest.TestCase):
             self.repo / ".github" / "workflows" / "release.yaml",
         )
         workflow_path = next((path for path in candidates if path.is_file()), None)
-        self.assertIsNotNone(workflow_path, "release workflow is unavailable to its regression gate")
+        if workflow_path is None:
+            # The AP tier copies tests/ into its _ap checkout but deliberately
+            # does not install repository automation. The unit tier runs this
+            # same test against the real checkout and owns this static gate.
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
         workflow = workflow_path.read_text(encoding="utf-8")
         self.assertIn("git -C _client rev-parse HEAD", workflow)
         self.assertIn("BB_BUILD_SHA: ${{ steps.client-sha.outputs.sha }}", workflow)
