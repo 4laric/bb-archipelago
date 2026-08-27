@@ -257,12 +257,27 @@ class RealCorpusTests(unittest.TestCase):
             checked += 1
             self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
-        # 161 in-slice fixed pickups plus the Radiant Sword Hunter Badge carry
+        # 160 in-slice fixed pickups plus the Radiant Sword Hunter Badge carry
         # lots; the three bosses and the skull interaction do not, and the
-        # three out-of-slice rows (clinic pair, post-Rom ribbon) are
-        # suppressed but are not network locations, so they are not iterated
-        # here.
-        self.assertEqual(checked, 162)
+        # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
+        # the NG+-only lot 2410295 from #220) are not network locations, so
+        # they are not iterated here.
+        self.assertEqual(checked, 161)
+
+    def test_the_unseeded_ng_plus_lot_is_still_suppressed(self):
+        """#220 unseeded lot 2410295 but deliberately kept its plan edit.
+
+        The corpse does spawn on NG+. If the edit were dropped, an NG+ player
+        running an Archipelago seed would pick up a vanilla Bold Hunter's Mark
+        from a pickup the multiworld does not know about. Suppression scope is
+        wider than seed scope on purpose, and this is the third row in it.
+        """
+        by_lot = {e.item_lot_id: e for e in self.plan.edits}
+        self.assertIn("2410295", by_lot)
+        self.assertEqual("52410295", by_lot["2410295"].acquisition_flag)
+        from worlds.bloodborne import NETWORK_LOCATIONS
+        self.assertNotIn("fixed_central_yharnam_lot_2410295",
+                         {location.key for location in NETWORK_LOCATIONS})
 
     def test_canonical_plan_digest_matches_the_runtime_contract(self):
         from tools.plan_vanilla_suppression import build_complete_plan, serialize_plan

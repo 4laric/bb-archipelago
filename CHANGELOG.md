@@ -6,6 +6,18 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **One check that no first playthrough could ever complete is gone.** Central
+  Yharnam's `Bold Hunter's Mark` was a corpse that only spawns on NG+ — the
+  param names it "treasure corpse 19, second playthrough onward", and it is the
+  NG+ substitute for the Saw Hunter Badge corpse at the same spot. Seeds placed
+  a check on it anyway, and the tracker called it in logic, so a completionist
+  run had one unreachable filler item. Seeds are now 166 locations instead of
+  167. If you are playing on NG+, the pickup still exists and still hands out a
+  placeholder rather than a vanilla Bold Hunter's Mark, so it cannot hand you
+  anything the multiworld does not know about. Existing seeds are unaffected in
+  the sense that nothing was renumbered: the location's network id is retired in
+  place and will never be reused.
+
 - **Native delivery now constructs armor with the game's category-1 allocator.**
   A live Charred Hunter Garb canary arrived as a proper instance, appeared in
   the inventory, and equipped successfully. Unsupported armor remains blocked

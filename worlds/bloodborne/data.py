@@ -383,8 +383,15 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
 # collected after Rom's blood moon (brooch -> pig's red ribbon -> the sister),
 # which is far past the slice's goal. When the full world models the quest,
 # this row needs an event_rom_defeated rule, not just a region.
+# A third exclusion class is NG+-only rows (#220): lot 2410295 is named
+# 宝死体19 後半（2周目以降） -- "treasure corpse 19, second playthrough onward".
+# It is the substitution partner of the Saw Hunter Badge corpse (2410290) at
+# the same MSB coordinates, and it never spawns in a first playthrough, so a
+# check on flag 52410295 is unobtainable filler in every NG(1) seed. The row
+# stays in the TSV so its vanilla award remains suppressed for NG+ players.
 SLICE_EXCLUDED_FIXED_KEYS = frozenset({
     "fixed_white_messenger_ribbon",
+    "fixed_central_yharnam_lot_2410295",
 })
 SLICE_LOCATION_KEYS = frozenset({
     *SLICE_SCRIPTED_LOCATION_KEYS,
