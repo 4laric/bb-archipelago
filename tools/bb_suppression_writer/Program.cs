@@ -204,8 +204,9 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     {
         List<PARAM.Row> rows = weapons.Rows.Where(row => row.ID >= family && row.ID <= family + 1000
             && (row.ID - family) % 100 == 0).ToList();
-        if (rows.Count != 11)
-            throw new InvalidDataException($"weapon family {family} has {rows.Count} reinforcement rows, expected 11");
+        if (rows.Count is not (1 or 11))
+            throw new InvalidDataException(
+                $"weapon family {family} has {rows.Count} reinforcement rows, expected 1 or 11");
         foreach (PARAM.Row row in rows)
         {
             requirementRows.Add(row.ID);
