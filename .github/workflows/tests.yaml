@@ -68,6 +68,19 @@ jobs:
         run: |
           python tools/bb_inputs.py --verify
           python tools/bb_inputs.py --extract work/inputs
+      - name: The ObjActParam mine reproduces from the bundle
+        shell: pwsh
+        run: |
+          dotnet run --project tools/bb_objact_miner/BBObjActMiner.csproj -c Release `
+            -p:SoulsFormatsNextRoot=$PWD\_soulsformats -- `
+            work/inputs/parambnd/gameparam.parambnd.dcx `
+            work/inputs/parambnd/paramdef.paramdefbnd.dcx `
+            work/objact_params.tsv
+          if ((Get-FileHash work/objact_params.tsv).Hash -ne `
+              (Get-FileHash research/joined/objact_params.tsv).Hash) {
+            Write-Error "research/joined/objact_params.tsv is stale"
+            exit 1
+          }
       - name: Build the binder from bundled inputs, twice
         shell: pwsh
         run: |

@@ -101,10 +101,9 @@ Entrance("Tomb of Oedon gate", "Central Yharnam", "Cathedral Ward",
 ```
 
 Two requirements from two different evidence classes in one clause: the key
-requirement is INFERRED (it lives in `ObjActParam` row 2410080, registered by
-`m24_01_00_00` event `12410110` slot 5 — no `PlayerHasItem(Goods, 4000)` test
-exists anywhere), and the Gascoigne requirement is GEOMETRIC (the door is behind
-his arena). Vanilla hid the coupling by awarding the key on his death.
+requirement is CITED (`research/joined/objact_params.tsv` row 2410080 requires
+goods 4000), and the Gascoigne requirement is GEOMETRIC (the door is behind his
+arena). Vanilla hid the coupling by awarding the key on his death.
 
 ## Goods-id ground truth
 
@@ -114,12 +113,12 @@ names are the params' own; the English identifications are INFERRED from them.
 
 | goods id | param name | identified as | class |
 |---:|---|---|---|
-| 4000 | 聖堂街Bの鍵 | Oedon Tomb Key | INFERRED |
+| 4000 | 聖堂街Bの鍵 | Oedon Tomb Key | **CITED** (ObjAct 2410080) |
 | 4003 | 古城への招待状 | Cainhurst Summons | INFERRED |
-| 4006 | 聖堂街C孤児院1Fの鍵 | Orphanage Key | INFERRED |
-| 4010 | 聖堂街Cへの鍵 | Upper Cathedral Key | INFERRED |
+| 4006 | 聖堂街C孤児院1Fの鍵 | Orphanage Key | **CITED** (ObjAct 2420020) |
+| 4010 | 聖堂街Cへの鍵 | Upper Cathedral Key | **CITED** (ObjAct 2400100) |
 | 4011 | 旧市街への鍵 | Hunter Chief Emblem | **CITED** (see below) |
-| 4012 | 悪夢教室の鍵 | Lecture Building key | INFERRED |
+| 4012 | 悪夢教室の鍵 | Lecture Building key | **CITED** (ObjAct 3200030) |
 | 4017 | 祭壇エレベーター起動アイテム | Eye Pendant (DLC) | INFERRED |
 | 4308 | 古城への招待状（無記名） | Cainhurst Summons, unsigned | INFERRED |
 | 4310 | 邪神投げで故郷へワープできるアイテム | **Tonsil Stone** | **CITED** |
@@ -142,11 +141,11 @@ proposed for AP. Draft clauses are marked `DRAFT` and are **not wired**.
 | item | gates in vanilla | proposed AP rule | evidence |
 |---|---|---|---|
 | Hunter Chief Emblem | Cathedral Ward plaza gate | unchanged (two-hop, emblem OR workshop) | **CITED** |
-| Oedon Tomb Key | Tomb of Oedon door | unchanged | INFERRED + GEOMETRIC |
+| Oedon Tomb Key | Tomb of Oedon door | unchanged | **CITED** + GEOMETRIC |
 | Cainhurst Summons | Hemwick obelisk carriage | **+ `event_witch_of_hemwick_defeated`** | **CITED** |
 | Tonsil Stone | Yahar'gul amygdala -> Lecture 1F | **source region Yahar'gul, not Cathedral Ward** | **CITED** |
-| Orphanage Key | UCW interior orphanage door | unchanged | INFERRED (ObjActParam TO-MINE) |
-| Upper Cathedral Key | Cathedral Ward -> UCW | unchanged | INFERRED + GEOMETRIC |
+| Orphanage Key | UCW interior orphanage door | unchanged | **CITED** |
+| Upper Cathedral Key | Cathedral Ward -> UCW | unchanged | **CITED** + GEOMETRIC |
 | Laurence's Skull | DLC Laurence summon only | unchanged; password stays an EVENT | TO-MINE (woods gate is ESD) |
 | Eye of a Blood-drunk Hunter | Cathedral Ward amygdala -> DLC | unchanged | **CITED** |
 | Eye Pendant | DLC surgery altar (goods 4017) | unchanged; **no UCW role** | INFERRED (negative result) |
@@ -178,9 +177,10 @@ it is the only base-game progression item whose requirement is expressed as a
 
 **Vanilla.** Door 2411304 out of the Tomb of Oedon, into Cathedral Ward.
 
-**Evidence: INFERRED (key) + GEOMETRIC (Gascoigne).** `m24_01_00_00` event
+**Evidence: CITED (key) + GEOMETRIC (Gascoigne).** `m24_01_00_00` event
 `12410110` slot 5: `$InitializeEvent(5, 12410110, 2411304, 12411307, 1, 2410080)`
-— the requirement is `ObjActParam` row 2410080. Already documented in `data.py`.
+— the requirement is `ObjActParam` row 2410080, whose mined `spQualifiedId` is
+goods 4000. Already documented in `data.py`.
 No change proposed.
 
 ## 3. Cainhurst Summons — `cainhurst_summons`
@@ -285,7 +285,7 @@ be upgraded above GEOMETRIC by any further mining of this corpus.
 
 **Vanilla.** Opens the orphanage door inside the Upper Cathedral Ward.
 
-**Evidence: INFERRED, with the door registration CITED.** `m24_02_00_00`
+**Evidence: CITED.** `m24_02_00_00`
 constructor:
 
 ```js
@@ -293,21 +293,11 @@ $InitializeEvent(0, 12420000, 2421201, 1, 2420020, 12420120);
 $InitializeEvent(1, 12420000, 2421223, 1, 2420030, 12420121);
 ```
 
-Two key doors in the whole map, `ObjActParam` rows 2420020 and 2420030. Object
-**2421201 is also registered from `m24_00_00_00`** (`$InitializeEvent(0, 12400070,
-2421201, 1, 2420020, 12420120)` — same object, same param row, registered from
-the Cathedral Ward side). A door registered from both maps is a **map-boundary**
-door; the one registered only from `m24_02` is interior. Combined with the goods
-names — 4010 is "the key **to** Cathedral Ward C", 4006 is "the key to Cathedral
-Ward C **orphanage 1F**" — the assignment is:
-
-- 2421201 / ObjActParam 2420020 -> **Upper Cathedral Key (4010)**, the entrance;
-- 2421223 / ObjActParam 2420030 -> **Orphanage Key (4006)**, interior.
-
-The final step (ObjActParam row -> goods id) is **TO-MINE**: `ObjActParam` is not
-one of the four CSVs in the bundle, though `parambnd/gameparam.parambnd.dcx` is,
-so a committed reader would close it. This is the single highest-value mine in
-this document — it converts *five* INFERRED key rules to CITED at once.
+The mined rows correct the earlier geometric assignment: 2420020 is the keyed
+orphanage 1F door and requires goods 4006; 2420030 is the orphanage 2F door and
+has no item requirement. The Upper Cathedral entrance is instead ObjActParam
+2400100 in Cathedral Ward, and requires goods 4010. These claims are enforced by
+`tests/test_objact_params.py`.
 
 `data.py` already carries `Rule.all("orphanage_key")` on
 `treasure_cosmic_eye_watcher_badge`. No change proposed.
@@ -318,7 +308,7 @@ this document — it converts *five* INFERRED key rules to CITED at once.
 Ward. Its vanilla home is Yahar'gul (52800290, the mummy) — already a `data.py`
 location, per SLICE-ROADMAP.
 
-**Evidence: INFERRED (see above) + the Blood-starved Beast term is GEOMETRIC.**
+**Evidence: CITED (ObjAct 2400100) + the Blood-starved Beast term is GEOMETRIC.**
 `data.py`'s existing rule already carries both terms:
 
 ```python
@@ -468,11 +458,12 @@ among the six bosses with an entity id but no `NpcParam` identity. Per
 
 ## Forbidden Woods (m27)
 
-Entry: the password door, INFERRED (above). Interior: three key doors,
+Entry: the password door, INFERRED (above). Interior: three shortcut doors,
 `$InitializeEvent(n, 12700110, ...)` with `ObjActParam` rows 2700030, 2700010,
 2700010 — the repeated row is the same generic shortcut-door param used across
 `m24_01` (2410010), so these are shortcut doors opened from the far side rather
-than item doors. **TO-MINE** with the same ObjActParam reader.
+than item doors. The mined rows 2700010 and 2700030 have no qualified item, so
+the shortcuts require no inventory rule. **CITED.**
 
 Exit to Byrgenwerth: `Rule.all("event_shadows_defeated")` — GEOMETRIC (the
 Shadows' arena is the gate to the lakeside path). Already in `data.py`.
@@ -516,23 +507,17 @@ $Event(13200310) { WaitFor(ObjActEventFlag(13200124)); ... WarpPlayerToRespawnPo
 $Event(13200311) { WaitFor(ObjActEventFlag(13200123)); ... WarpPlayerToRespawnPoint(3302959); }  // -> Nightmare Frontier
 ```
 
-Both are `ObjActEventFlag` doors, so both may carry an `ObjActParam` item
-requirement — the obvious candidate being goods 4012 (`悪夢教室の鍵`).
-`data.py` currently gives **both** edges no rule:
+The mined exit-door rows 3200000 and 3200001 have no qualified item, so the two
+edges are correctly unruled. Goods 4012 (`悪夢教室の鍵`) instead belongs to the
+interior keyed double door, row 3200030. `data.py` gives both exits no rule:
 
 ```python
 Entrance("Lecture Hall giant door", "Lecture Building 2F", "Nightmare of Mensis"),
 Entrance("Lecture Building frontier door", "Lecture Building 1F", "Nightmare Frontier"),
 ```
 
-**TO-MINE, and it is a real risk**, because if 13200124 needs 4012 then the
-Mensis edge is under-constrained and a seed can require the goal region before
-the key. Until mined, the conservative posture is to keep the edges unruled
-(matching vanilla-if-the-key-is-free) but **not** to place the goal behind them
-in the same slice that first seeds the Lecture Building. Note that
-`treasure_lecture_theatre_key` is already a `data.py` location in Lecture
-Building 2F — i.e. on the far side of the 2F door — which is itself evidence
-that the 2F door is *not* the one that key opens.
+This removes the suspected slice-7 circularity: the route to Mensis is not gated
+by the Lecture Building Key. **CITED.**
 
 Rom: `m32_00_00_00` event `13201800`. Rom's *award* is in `common.emevd` event
 `9410`, gated on `EventFlag(13201803)` (`ボス撃破後花嫁出現`, the post-Rom bride
@@ -549,7 +534,8 @@ GEOMETRIC/world-state (see Part 3).
 `m28 -> Lecture Building 2F` on the mummy: GEOMETRIC on The One Reborn (event
 `12800430` carries no flag test; see Tonsil Stone, above).
 
-`Lecture Building 2F -> Nightmare of Mensis`: the m32 door, TO-MINE, above.
+`Lecture Building 2F -> Nightmare of Mensis`: the m32 exit door, item-free per
+ObjActParam row 3200000, above.
 
 **Micolash before Mergo's Wet Nurse: CITED.** `m26_00_00_00` event `12601853`
 (`悪夢の主_撃破後扉制御`, "Nightmare Lord — post-defeat door control"):
@@ -577,7 +563,7 @@ evidence in the base game and is worth recording as such.
 | 4 (Hemwick + Cainhurst) | Vicar Amelia, unchanged | neither new region is on the critical path; Witch and Logarius are optional |
 | 5 (Forbidden Woods + Byrgenwerth) | **Rom** | first goal with an unambiguous predecessor chain |
 | 6 (Yahar'gul) | **The One Reborn** | |
-| 7 (Lecture + Mensis) | **Mergo's Wet Nurse** | only after the m32 door's ObjActParam is mined — otherwise the goal sits behind an unmodelled key |
+| 7 (Lecture + Mensis) | **Mergo's Wet Nurse** | m32's Mensis exit is cited item-free; Micolash ordering is cited |
 
 Slice 4 keeping the slice-3 goal is deliberate. Advancing the goal into Cainhurst
 would put it behind `cainhurst_summons` **and** the Hemwick boss, i.e. two new
@@ -774,7 +760,7 @@ Ordered by how many rules each one converts.
 
 | # | mine | converts | artefact |
 |---:|---|---|---|
-| 1 | `ObjActParam` reader over the committed `parambnd/gameparam.parambnd.dcx` | 5 key rules INFERRED -> CITED (Oedon Tomb, Orphanage, Upper Cathedral, Lecture, woods shortcuts) | bundle, already committed |
+| 1 | **DONE:** `ObjActParam` reader over the committed `parambnd/gameparam.parambnd.dcx` | 5 key rules INFERRED -> CITED (Oedon Tomb, Orphanage, Upper Cathedral, Lecture, woods shortcuts) | `tools/bb_objact_miner`, `research/joined/objact_params.tsv` |
 | 2 | Hypogean Gaol vs Yahar'gul-proper region split | bounds the abduction verdict; gates slice 6 | `mined/msb_regions.tsv`, already committed |
 | 3 | ESD talk-award corpus (bb#204) | enumerates the check-closing set | owner's machine, not in the bundle |
 | 4 | Boss event ids for Logarius, Witch of Hemwick, Celestial Emissary, Ebrietas | 4 DRAFT locations become commitable | `m22`/`m24_02`/`m25` archives, already committed |
@@ -790,8 +776,8 @@ Of the 31 discrete rule claims in this document:
 
 | class | count |
 |---|---:|
-| CITED | 12 |
-| INFERRED | 8 |
+| CITED | 17 |
+| INFERRED | 3 |
 | GEOMETRIC | 5 |
 | TO-MINE | 6 |
 
