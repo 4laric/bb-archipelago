@@ -20,7 +20,7 @@ from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
-RUNTIME_BUILD = "bb-0.1.0-r8"
+RUNTIME_BUILD = "bb-0.1.0-r7"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
 SUPPRESSION_PLAN_SHA256 = "1213956c115e72346ddad3562251ce1e4a8d4a58a87d608ec50c4b28d4ebefe7"
 ID_BASE = 0xBB0000
