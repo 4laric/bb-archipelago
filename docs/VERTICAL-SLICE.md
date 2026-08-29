@@ -212,6 +212,13 @@ and Mergo's Wet Nurse, bringing the complete base-game chain to **438 network
 locations**. Wet Nurse is the completion goal and retains its cited Micolash
 prerequisite.
 
+## Nightmare Frontier
+
+The optional Nightmare Frontier route branches from Lecture Building 1F. Its
+44 catalog-backed pickups, Messenger's Gift, and Amygdala bring the slice to
+**484 network locations**. Wet Nurse remains the completion goal, so this side
+area adds checks without becoming mandatory progression.
+
 All new fixed rows come from the committed placement catalog. Blood gems are
 valid locations—the item found there is suppressed and replaced by the AP
 item—but blood gems themselves are not added to the receive pool until category

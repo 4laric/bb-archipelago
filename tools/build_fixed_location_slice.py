@@ -14,7 +14,7 @@ the Blood-starved Beast). Slice 4 adds ``m22_00_00_00`` (Hemwick) and
 ``m25_00_00_00`` (Cainhurst). Slice 5 adds ``m27_00_00_00`` (Forbidden
 Woods). Slice 6 adds ``m28_00_00_00`` (Yahar'gul). Slice 7 adds the reviewed
 Lecture Building rows in ``m32_00_00_00`` and ``m26_00_00_00`` (Nightmare of
-Mensis). The map ids are read off
+Mensis). The Nightmare Frontier slice adds ``m33_00_00_00``. The map ids are read off
 ``research/catalog/fixed_location_catalog.tsv``; none of them is guessed.
 
 Player-facing names come from ``worlds/bloodborne/location_names.tsv``, the
@@ -51,6 +51,7 @@ SLICE_MAPS = (
     "m27_00_00_00",
     "m28_00_00_00",
     "m32_00_00_00", "m26_00_00_00",
+    "m33_00_00_00",
 )
 
 # Per-map defaults for the two data-only columns a catalog row cannot supply.
@@ -64,6 +65,7 @@ MAP_DEFAULT_REGION = {
     "m28_00_00_00": "Yahar'gul",
     "m32_00_00_00": "Lecture Building 1F",
     "m26_00_00_00": "Nightmare of Mensis",
+    "m33_00_00_00": "Nightmare Frontier",
 }
 MAP_KEY_PREFIX = {
     "m24_01_00_00": "fixed_central_yharnam_lot_",
@@ -75,6 +77,7 @@ MAP_KEY_PREFIX = {
     "m28_00_00_00": "fixed_yahargul_lot_",
     "m32_00_00_00": "fixed_lecture_building_lot_",
     "m26_00_00_00": "fixed_nightmare_mensis_lot_",
+    "m33_00_00_00": "fixed_nightmare_frontier_lot_",
 }
 
 OUTPUT = REPO / "worlds" / "bloodborne" / "fixed_locations.tsv"
@@ -131,6 +134,9 @@ EXCLUDED_FLAGS = {
     ),
     53200720: (
         "already published by data.py as treasure_lecture_theatre_key"
+    ),
+    53300330: (
+        "already published by data.py as treasure_messengers_gift"
     ),
 }
 

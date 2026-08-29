@@ -220,7 +220,7 @@ class RealCorpusTests(unittest.TestCase):
         # 421 manifest rows and five separately-published slice treasures,
         # minus Saw Spear's lot (already covered by the pool-item edit), plus 27
         # continuation rows in shared-acquisition-flag award groups.
-        self.assertEqual(len(location_edits), 454)
+        self.assertEqual(len(location_edits), 499)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -270,7 +270,7 @@ class RealCorpusTests(unittest.TestCase):
         # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
         # the NG+-only lot 2410295 from #220) are not network locations, so
         # they are not iterated here.
-        self.assertEqual(checked, 426)
+        self.assertEqual(checked, 471)
 
     def test_the_unseeded_ng_plus_lot_is_still_suppressed(self):
         """#220 unseeded lot 2410295 but deliberately kept its plan edit.

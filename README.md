@@ -63,8 +63,9 @@ build and live-test procedure.
 
 Generation emits the complete bounded base-game slice: Central Yharnam, Cathedral Ward,
 Old Yharnam, Hemwick, Cainhurst, Forbidden Woods, Iosefka's Clinic and
-Byrgenwerth, Yahar'gul, the Lecture Building and Nightmare of Mensis. There are
-438 network locations, and Mergo's Wet Nurse is the goal. The fixed-pickup
+Byrgenwerth, Yahar'gul, the Lecture Building, Nightmare of Mensis and the
+optional Nightmare Frontier. There are 484 network locations, and Mergo's Wet
+Nurse remains the goal. The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
 (`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved
 Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed

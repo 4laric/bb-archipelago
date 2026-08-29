@@ -103,7 +103,7 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(438, len(NETWORK_LOCATIONS))
+        self.assertEqual(484, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -112,7 +112,8 @@ class BloodborneModelTests(unittest.TestCase):
              "Hemwick Charnel Lane": 34, "Castle Cainhurst": 28,
              "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
              "Yahar'gul": 51, "Lecture Building 1F": 9,
-             "Lecture Building 2F": 8, "Nightmare of Mensis": 57},
+             "Lecture Building 2F": 8, "Nightmare of Mensis": 57,
+             "Nightmare Frontier": 46},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -124,6 +125,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(12801800, LOCATION_BINDINGS["boss_the_one_reborn"].event_flag)
         self.assertEqual(12601850, LOCATION_BINDINGS["boss_micolash"].event_flag)
         self.assertEqual(12601800, LOCATION_BINDINGS["boss_mergos_wet_nurse"].event_flag)
+        self.assertEqual(13301800, LOCATION_BINDINGS["boss_amygdala"].event_flag)
         self.assertEqual("boss_mergos_wet_nurse", GOAL_LOCATION_KEY)
         self.assertEqual(
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
@@ -172,15 +174,15 @@ class BloodborneModelTests(unittest.TestCase):
         # 438 locations - 32 one-off items = 406 filler slots, allocated across
         # the weighted mix by largest remainder. The exact shares are restated
         # here so a weight edit is a visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 79)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 53)
-        self.assertEqual(counts["Blood Stone Shards x2"], 40)
+        self.assertEqual(counts["Blood Vial"], 87)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 58)
+        self.assertEqual(counts["Blood Stone Shards x2"], 44)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
-            self.assertEqual(counts[name], 26, name)
+            self.assertEqual(counts[name], 29, name)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir"):
-            self.assertEqual(counts[name], 13, name)
+            self.assertEqual(counts[name], 15 if name != "Lead Elixir" else 14, name)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
     def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
@@ -201,11 +203,11 @@ class BloodborneModelTests(unittest.TestCase):
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 438 - 4 one-each = 434 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 153)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 102)
-        self.assertEqual(counts["Blood Stone Shards x2"], 77)
-        self.assertEqual(counts["Pebbles x3"], 51)
-        self.assertEqual(counts["Molotov Cocktails x2"], 51)
+        self.assertEqual(counts["Blood Vial"], 169)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 113)
+        self.assertEqual(counts["Blood Stone Shards x2"], 85)
+        self.assertEqual(counts["Pebbles x3"], 57)
+        self.assertEqual(counts["Molotov Cocktails x2"], 56)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 9)  # eight slice items + Blood Vial

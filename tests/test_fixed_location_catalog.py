@@ -73,6 +73,7 @@ class FixedLocationCatalogTests(unittest.TestCase):
         self.assertEqual(counts["Iosefka's Clinic"], 2)
         self.assertEqual(counts["Hemwick Charnel Lane"], 32)
         self.assertEqual(counts["Castle Cainhurst"], 26)
+        self.assertEqual(counts["Nightmare Frontier"], 44)
 
     def test_manifest_is_the_complete_first_cycle_map_slice(self):
         from tools.build_fixed_location_slice import (
@@ -82,7 +83,7 @@ class FixedLocationCatalogTests(unittest.TestCase):
         )
 
         # Prior 351 rows plus 70 Lecture Building and Mensis rows.
-        self.assertEqual(421, len(FIXED_LOCATIONS))
+        self.assertEqual(465, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [

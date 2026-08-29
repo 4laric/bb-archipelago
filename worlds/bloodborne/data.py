@@ -120,6 +120,7 @@ ITEMS = (
     Item("event_one_reborn_defeated", "The One Reborn Defeated", E),
     Item("event_micolash_defeated", "Micolash Defeated", E),
     Item("event_mergos_wet_nurse_defeated", "Mergo's Wet Nurse Defeated", E),
+    Item("event_amygdala_defeated", "Amygdala Defeated", E),
     Item("event_ludwig_defeated", "Ludwig Defeated", E),
     Item("event_living_failures_defeated", "Living Failures Defeated", E),
     Item("event_lady_maria_defeated", "Lady Maria Defeated", E),
@@ -215,6 +216,8 @@ LOCATIONS = (
     Location("boss_the_one_reborn", location_name(12801800), "Yahar'gul", locked_item="event_one_reborn_defeated"),
     Location("boss_micolash", location_name(12601850), "Nightmare of Mensis", locked_item="event_micolash_defeated"),
     Location("boss_mergos_wet_nurse", location_name(12601800), "Nightmare of Mensis", Rule.all("event_micolash_defeated"), locked_item="event_mergos_wet_nurse_defeated"),
+    Location("boss_amygdala", location_name(13301800), "Nightmare Frontier",
+             locked_item="event_amygdala_defeated"),
     # Scripted checks and bosses with committed flags (runtime_bindings.py);
     # every name comes from the location-name table
     # (docs/LOCATION-NAMING.md).
@@ -287,6 +290,7 @@ SLICE_REGIONS = (
     "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth",
     "Yahar'gul",
     "Lecture Building 1F", "Lecture Building 2F", "Nightmare of Mensis",
+    "Nightmare Frontier",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
@@ -305,6 +309,7 @@ _SLICE_ENTRANCE_NAMES = (
     "Advent Plaza mummy",
     "Lecture Hall giant door",
     "Amygdala's grasp",
+    "Lecture Building frontier door",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -398,8 +403,10 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "pickup_upper_cathedral_key",
     "boss_micolash",
     "boss_mergos_wet_nurse",
+    "boss_amygdala",
     "treasure_augur_of_ebrietas",
     "treasure_lecture_theatre_key",
+    "treasure_messengers_gift",
     "treasure_radiant_sword_hunter_badge",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",

@@ -420,3 +420,47 @@ fixed_nightmare_mensis_lot_2600600	Nightmare of Mensis - Choir Bell (chest)	Nigh
 fixed_nightmare_mensis_lot_2600610	Nightmare of Mensis - Iron Door Key #2	Nightmare of Mensis	52600610	2600610	4	4009	key_or_badge	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2601000	Nightmare of Mensis - Iosefka's Blood Vial (Micolash arena chest)	Nightmare of Mensis	52601000	2601000	4	703	useful	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2601010	Nightmare of Mensis - Yellow Backbone x2 (chest)	Nightmare of Mensis	52601010	2601010	4	7131	filler	treasure	m26_00_00_00	True
+fixed_nightmare_frontier_lot_3300000	Nightmare Frontier - Madman's Knowledge #1	Nightmare Frontier	53300100	3300000	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300010	Nightmare Frontier - Blood Gem #1	Nightmare Frontier	53300110	3300010	8	101401	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300015	Nightmare Frontier - Madman's Knowledge #2	Nightmare Frontier	53300115	3300015	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300020	Nightmare Frontier - Bolt Paper x2	Nightmare Frontier	53300120	3300020	4	1320	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300030	Nightmare Frontier - Lead Elixir x2 #1	Nightmare Frontier	53300130	3300030	4	2030	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300040	Nightmare Frontier - Blood Vial x3 #1	Nightmare Frontier	53300140	3300040	4	1000	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300050	Nightmare Frontier - Blood Gem #2	Nightmare Frontier	53300150	3300050	8	102302	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300055	Nightmare Frontier - Madman's Knowledge #3	Nightmare Frontier	53300155	3300055	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300060	Nightmare Frontier - Frenzied Coldblood (9) #1	Nightmare Frontier	53300160	3300060	4	1518	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300070	Nightmare Frontier - Quicksilver Bullets x5	Nightmare Frontier	53300170	3300070	4	900	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300080	Nightmare Frontier - Thick Coldblood (4) #1	Nightmare Frontier	53300180	3300080	4	1513	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300090	Nightmare Frontier - Antidote x2 #1	Nightmare Frontier	53300190	3300090	4	1100	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300100	Nightmare Frontier - Corpse Pickup	Nightmare Frontier	53300200	3300100	4	6008	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300110	Nightmare Frontier - Thick Coldblood (4) #2	Nightmare Frontier	53300210	3300110	4	1513	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300120	Nightmare Frontier - Madman's Knowledge #4	Nightmare Frontier	53300220	3300120	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300130	Nightmare Frontier - Madman's Knowledge #5	Nightmare Frontier	53300230	3300130	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300140	Nightmare Frontier - Frenzied Coldblood (9) #2	Nightmare Frontier	53300240	3300140	4	1518	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300150	Nightmare Frontier - Blood Vial x2 #1	Nightmare Frontier	53300250	3300150	4	1000	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300160	Nightmare Frontier - Lead Elixir x2 #2	Nightmare Frontier	53300260	3300160	4	2030	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300170	Nightmare Frontier - Madman's Knowledge #6	Nightmare Frontier	53300270	3300170	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300180	Nightmare Frontier - Coldblood Flowerbud #1	Nightmare Frontier	53300280	3300180	4	7012	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300190	Nightmare Frontier - Antidote x2 #2	Nightmare Frontier	53300290	3300190	4	1100	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300200	Nightmare Frontier - Frenzied Coldblood (8) #1	Nightmare Frontier	53300300	3300200	4	1517	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300210	Nightmare Frontier - Antidote x4	Nightmare Frontier	53300310	3300210	4	1100	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300220	Nightmare Frontier - Blood Gem #3	Nightmare Frontier	53300320	3300220	8	102002	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300225	Nightmare Frontier - Madman's Knowledge #7	Nightmare Frontier	53300325	3300225	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300240	Nightmare Frontier - Frenzied Coldblood (8) #2	Nightmare Frontier	53300340	3300240	4	1517	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300250	Nightmare Frontier - Lead Elixir x3	Nightmare Frontier	53300350	3300250	4	2030	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300260	Nightmare Frontier - Madman's Knowledge #8	Nightmare Frontier	53300360	3300260	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300270	Nightmare Frontier - Blood Vial x3 #2	Nightmare Frontier	53300370	3300270	4	1000	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300280	Nightmare Frontier - Madman's Knowledge #9	Nightmare Frontier	53300380	3300280	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300290	Nightmare Frontier - Frenzied Coldblood (9) #3	Nightmare Frontier	53300390	3300290	4	1518	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300300	Nightmare Frontier - Kin Coldblood (10)	Nightmare Frontier	53300400	3300300	4	1519	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300310	Nightmare Frontier - Bold Hunter's Mark x3	Nightmare Frontier	53300410	3300310	4	1400	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300320	Nightmare Frontier - Blood Gem #4	Nightmare Frontier	53300420	3300320	8	100302	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300325	Nightmare Frontier - Madman's Knowledge #10	Nightmare Frontier	53300425	3300325	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300330	Nightmare Frontier - Coldblood Flowerbud x2	Nightmare Frontier	53300430	3300330	4	7012	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300340	Nightmare Frontier - Lead Elixir x2 #3	Nightmare Frontier	53300440	3300340	4	2030	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300350	Nightmare Frontier - Antidote x3	Nightmare Frontier	53300450	3300350	4	1100	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300360	Nightmare Frontier - Coldblood Flowerbud #2	Nightmare Frontier	53300460	3300360	4	7012	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300370	Nightmare Frontier - Blood Vial x2 #2	Nightmare Frontier	53300470	3300370	4	1000	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300380	Nightmare Frontier - Blood Gem #5	Nightmare Frontier	53300480	3300380	8	102102	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300385	Nightmare Frontier - Madman's Knowledge #11	Nightmare Frontier	53300485	3300385	4	1500	filler	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300390	Nightmare Frontier - Madman's Knowledge #12	Nightmare Frontier	53300490	3300390	4	1500	filler	treasure	m33_00_00_00	True
