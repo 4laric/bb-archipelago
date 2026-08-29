@@ -147,15 +147,15 @@ class LocationRuleTests(unittest.TestCase):
                                  "undocumented location requirement")
 
 
-class EmblemIsNotVacuousTests(unittest.TestCase):
-    """The Hunter Chief Emblem has to gate something a seed can feel.
+class CathedralPlazaRouteTests(unittest.TestCase):
+    """The plaza has its two distinct in-game routes.
 
     docs/PROGRESSION-DAG.md audits the plaza as "emblem OR the Healing Church
     Workshop route". Modelled as one two-clause rule it is vacuous: Old Yharnam
     is free from Cathedral Ward and the Blood-starved Beast is free inside it,
     so the second clause is always satisfiable and the emblem never decides
-    anything. Slice 3 keeps the two routes as two edges, and does not seed the
-    workshop -- so in a slice-3 seed the emblem is the only way in.
+    anything. The Amelia slice keeps the two routes as two edges: the emblem
+    is the direct shortcut, while defeating BSB opens the Workshop route.
     """
 
     def test_the_plaza_gate_is_emblem_only(self):
@@ -168,20 +168,22 @@ class EmblemIsNotVacuousTests(unittest.TestCase):
         self.assertIn(("Cathedral Ward", "Healing Church Workshop"), edges)
         self.assertIn(("Healing Church Workshop", "Grand Cathedral"), edges)
 
-    def test_the_seeded_slice_reaches_the_plaza_only_through_the_emblem(self):
+    def test_the_seeded_slice_contains_both_routes_to_the_plaza(self):
         from worlds.bloodborne.data import SLICE_ENTRANCES, SLICE_REGIONS
         into_plaza = [e for e in SLICE_ENTRANCES if e.target == "Grand Cathedral"]
-        self.assertEqual([e.name for e in into_plaza], ["Cathedral Ward plaza gate"])
-        self.assertNotIn("Healing Church Workshop", SLICE_REGIONS)
+        self.assertEqual(
+            [e.name for e in into_plaza],
+            ["Cathedral Ward plaza gate", "Healing Church Workshop plaza route"],
+        )
+        self.assertIn("Healing Church Workshop", SLICE_REGIONS)
 
-    def test_the_emblem_gates_a_non_empty_set_of_seeded_checks(self):
-        """A gate in front of nothing is decoration."""
+    def test_both_routes_lead_to_seeded_checks(self):
         from worlds.bloodborne import NETWORK_LOCATIONS
         behind = [l for l in NETWORK_LOCATIONS if l.region == "Grand Cathedral"]
         self.assertGreaterEqual(len(behind), 2, [l.key for l in behind])
 
     def test_the_emblem_is_in_every_seeded_pool(self):
-        """An emblem-only gate with no emblem in the pool is an unreachable region."""
+        """The direct route remains available as a useful shuffled shortcut."""
         from worlds.bloodborne import FULL_POOL_ITEM_KEYS
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
         self.assertIn("hunter_chief_emblem", SLICE_ITEM_KEYS)
