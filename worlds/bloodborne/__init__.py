@@ -97,6 +97,8 @@ FILLER_WEIGHTS: dict[str, int] = {
     "blood_vial": 6,
     "quicksilver_bullets": 4,
     "blood_stone_shards": 3,
+    "twin_blood_stone_shards": 3,
+    "blood_stone_chunks": 2,
     "pebbles": 2,
     "molotov_cocktails": 2,
     "throwing_knife": 2,
@@ -109,6 +111,17 @@ FILLER_WEIGHTS: dict[str, int] = {
     "blue_elixir": 1,
     "beast_blood_pellet": 1,
     "lead_elixir": 1,
+    "bold_hunters_mark": 2,
+    "oil_urn": 1,
+    "numbing_mist": 1,
+    "pungent_blood_cocktail": 1,
+    "shaman_bone_blade": 1,
+    "madmans_knowledge": 1,
+    "great_ones_wisdom": 1,
+    "coldblood_dew": 1,
+    "thick_coldblood": 1,
+    "frenzied_coldblood": 1,
+    "kin_coldblood": 1,
 }
 FILLER_WEIGHT_DEFAULT = 1
 

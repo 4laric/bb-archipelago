@@ -504,6 +504,15 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "blood_stone_shards": RuntimeItemBinding(
         0x40000BB8, 0xB0000BB8, "catalog id + validated category-4 goods formula"
     ),
+    "twin_blood_stone_shards": RuntimeItemBinding(
+        0x40000BC2, 0xB0000BC2, "catalog id + validated category-4 goods formula"
+    ),
+    "blood_stone_chunks": RuntimeItemBinding(
+        0x40000BCC, 0xB0000BCC, "catalog id + validated category-4 goods formula"
+    ),
+    "blood_rock": RuntimeItemBinding(
+        0x40000BD6, 0xB0000BD6, "catalog id + validated category-4 goods formula"
+    ),
     "augur_of_ebrietas": RuntimeItemBinding(
         0x400007D0, 0xB00007D0, "live grant and inventory persistence observed"
     ),
@@ -557,6 +566,34 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
         "bundled EquipParamGoods row 2030 (ヌルヌル化) + the live-validated category-4 "
         "formula; English name from the save editor's items.json",
     ),
+    "bold_hunters_mark": RuntimeItemBinding(0x40000578, 0xB0000578, "catalog id + validated category-4 goods formula"),
+    "oil_urn": RuntimeItemBinding(0x400004C4, 0xB00004C4, "catalog id + validated category-4 goods formula"),
+    "numbing_mist": RuntimeItemBinding(0x400004F6, 0xB00004F6, "catalog id + validated category-4 goods formula"),
+    "pungent_blood_cocktail": RuntimeItemBinding(0x400004EC, 0xB00004EC, "catalog id + validated category-4 goods formula"),
+    "shaman_bone_blade": RuntimeItemBinding(0x4000082A, 0xB000082A, "catalog id + validated category-4 goods formula"),
+    "madmans_knowledge": RuntimeItemBinding(0x400005DC, 0xB00005DC, "catalog id + validated category-4 goods formula"),
+    "great_ones_wisdom": RuntimeItemBinding(0x400005DD, 0xB00005DD, "catalog id + validated category-4 goods formula"),
+    "coldblood_dew": RuntimeItemBinding(0x400005E8, 0xB00005E8, "catalog id + validated category-4 goods formula"),
+    "thick_coldblood": RuntimeItemBinding(0x400005EB, 0xB00005EB, "catalog id + validated category-4 goods formula"),
+    "frenzied_coldblood": RuntimeItemBinding(0x400005ED, 0xB00005ED, "catalog id + validated category-4 goods formula"),
+    "kin_coldblood": RuntimeItemBinding(0x40000636, 0xB0000636, "catalog id + validated category-4 goods formula"),
+    "beast_roar": RuntimeItemBinding(0x400007E4, 0xB00007E4, "catalog id + validated category-4 goods formula"),
+    "empty_phantasm_shell": RuntimeItemBinding(0x4000051E, 0xB000051E, "catalog id + validated category-4 goods formula"),
+    "old_hunter_bone": RuntimeItemBinding(0x4000080C, 0xB000080C, "catalog id + validated category-4 goods formula"),
+    "executioners_gloves": RuntimeItemBinding(0x40000820, 0xB0000820, "catalog id + validated category-4 goods formula"),
+    "tiny_tonitrus": RuntimeItemBinding(0x40000816, 0xB0000816, "catalog id + validated category-4 goods formula"),
+    "a_call_beyond": RuntimeItemBinding(0x400007DA, 0xB00007DA, "catalog id + validated category-4 goods formula"),
+    "choir_bell": RuntimeItemBinding(0x40000802, 0xB0000802, "catalog id + validated category-4 goods formula"),
+    "blacksky_eye": RuntimeItemBinding(0x40000848, 0xB0000848, "catalog id + validated category-4 goods formula"),
+    "messengers_gift": RuntimeItemBinding(0x4000083E, 0xB000083E, "catalog id + validated category-4 goods formula"),
+    "beasthunter_saif": RuntimeItemBinding(0x015EF3C0, 0x815EF3C0, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "beast_cutter": RuntimeItemBinding(0x016E3600, 0x816E3600, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "amygdalan_arm": RuntimeItemBinding(0x017D7840, 0x817D7840, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "boom_hammer": RuntimeItemBinding(0x01AB3F00, 0x81AB3F00, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "whirligig_saw": RuntimeItemBinding(0x01D905C0, 0x81D905C0, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "church_cannon": RuntimeItemBinding(0x02160EC0, 0x82160EC0, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "fist_of_gratia": RuntimeItemBinding(0x0206CC80, 0x8206CC80, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "loch_shield": RuntimeItemBinding(0x01237160, 0x81237160, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
 }
 
 # Negative canaries are executable exclusions. Keeping them next to the

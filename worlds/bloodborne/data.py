@@ -71,6 +71,9 @@ ITEMS = (
     Item("pebbles", "Pebbles x3", F, 3),
     Item("molotov_cocktails", "Molotov Cocktails x2", F, 2),
     Item("blood_stone_shards", "Blood Stone Shards x2", F, 2),
+    Item("twin_blood_stone_shards", "Twin Blood Stone Shards x2", F, 2),
+    Item("blood_stone_chunks", "Blood Stone Chunk", F, 1),
+    Item("blood_rock", "Blood Rock", U, 1),
     # bb-archipelago#207 wave 1, goods variety. Every id here is read out of
     # the repo's OWN bundled params/EquipParamGoods.csv (the authoritative
     # cat-4 source, `python3 tools/bb_inputs.py --get params/EquipParamGoods.csv`);
@@ -86,6 +89,39 @@ ITEMS = (
     Item("bolt_paper", "Bolt Paper x2", F, 2),
     Item("bone_marrow_ash", "Bone Marrow Ash x3", F, 3),
     Item("lead_elixir", "Lead Elixir", F, 1),
+    Item("bold_hunters_mark", "Bold Hunter's Mark x2", F, 2),
+    Item("oil_urn", "Oil Urn x2", F, 2),
+    Item("numbing_mist", "Numbing Mist x2", F, 2),
+    Item("pungent_blood_cocktail", "Pungent Blood Cocktail x2", F, 2),
+    Item("shaman_bone_blade", "Shaman Bone Blade", F, 1),
+    Item("madmans_knowledge", "Madman's Knowledge", F, 1),
+    Item("great_ones_wisdom", "Great One's Wisdom", F, 1),
+    Item("coldblood_dew", "Coldblood Dew (3)", F, 1),
+    Item("thick_coldblood", "Thick Coldblood (6)", F, 1),
+    Item("frenzied_coldblood", "Frenzied Coldblood (8)", F, 1),
+    Item("kin_coldblood", "Kin Coldblood (11)", F, 1),
+    # Remaining mapped hunter tools. These are category-4 inventory goods and
+    # use the same live-validated delivery formula as Augur of Ebrietas.
+    Item("beast_roar", "Beast Roar", U),
+    Item("empty_phantasm_shell", "Empty Phantasm Shell", U),
+    Item("old_hunter_bone", "Old Hunter Bone", U),
+    Item("executioners_gloves", "Executioner's Gloves", U),
+    Item("tiny_tonitrus", "Tiny Tonitrus", U),
+    Item("a_call_beyond", "A Call Beyond", U),
+    Item("choir_bell", "Choir Bell", U),
+    Item("blacksky_eye", "Blacksky Eye", U),
+    Item("messengers_gift", "Messenger's Gift", U),
+    # The mapped Old Hunters weapon pickups. As with the base-game wave, the
+    # EquipParamWeapon rows are corpus-backed and await promotion by live
+    # delivery diagnostics.
+    Item("beasthunter_saif", "Beasthunter Saif", U),
+    Item("beast_cutter", "Beast Cutter", U),
+    Item("amygdalan_arm", "Amygdalan Arm", U),
+    Item("boom_hammer", "Boom Hammer", U),
+    Item("whirligig_saw", "Whirligig Saw", U),
+    Item("church_cannon", "Church Cannon", U),
+    Item("fist_of_gratia", "Fist of Gratia", U),
+    Item("loch_shield", "Loch Shield", U),
     # Uncanny variants of pooled weapons (bb-archipelago#205). Each is its own
     # EquipParamWeapon row with its own gem-slot layout, so it is a distinct
     # named item rather than a second copy of its base weapon. They are listed
@@ -363,6 +399,10 @@ BASE_GAME_WEAPON_KEYS = frozenset({
     *UNCANNY_WEAPONS,
     "hunter_blunderbuss", "ludwigs_rifle", "hunter_pistol",
     "repeating_pistol", "cannon",
+})
+DLC_WEAPON_KEYS = frozenset({
+    "beasthunter_saif", "beast_cutter", "amygdalan_arm", "boom_hammer",
+    "whirligig_saw", "church_cannon", "fist_of_gratia", "loch_shield",
 })
 GOODS_VARIETY_KEYS = frozenset({
     "antidote", "sedatives", "beast_blood_pellet", "blue_elixir",
