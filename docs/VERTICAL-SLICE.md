@@ -144,9 +144,10 @@ Ward) and `m23_00_00_00` (Old Yharnam). `SLICE_MAPS` in
 
 ```
 Menu -> Hunter's Dream -> Central Yharnam
-Central Yharnam --(Father Gascoigne defeated)--> Cathedral Ward
+Central Yharnam --(Oedon Tomb Key + Father Gascoigne defeated)--> Cathedral Ward
 Cathedral Ward --(free)--> Old Yharnam            [Blood-starved Beast]
-Cathedral Ward --(Hunter Chief Emblem)--> Grand Cathedral
+Cathedral Ward --(Hunter Chief Emblem)--------------------> Grand Cathedral
+Cathedral Ward --(defeat BSB)--> Healing Church Workshop --> Grand Cathedral
 ```
 
 **Why the emblem is modelled as a single-clause gate.** The audited edge in
@@ -156,16 +157,13 @@ Yharnam is free from Cathedral Ward and the Blood-starved Beast is free inside
 it, so the Beast clause is always satisfiable and the emblem can never be the
 requirement. The route is two hops in the game, and it is now two hops in the
 model: the emblem opens the gate directly, while the workshop is entered behind
-the Beast and reaches the same plaza from the other side. Slice 3 does not seed
-the Healing Church Workshop, so inside a slice-3 seed the emblem is the only
-way into the Grand Cathedral and it gates the two checks there.
-`tests/test_bloodborne_gates.py::EmblemIsNotVacuousTests` and the reachability
-test in `tests/test_bloodborne_model.py` hold that claim: withholding the
-emblem must make a non-empty set of seeded checks unreachable.
+the Beast and reaches the same plaza from the other side. The Workshop is a
+transit-only region in the Amelia slice. Defeating Blood-starved Beast therefore
+opens the long route, so the emblem is a shortcut and is not required for Go
+mode.
 
-The Hunter Chief Emblem is therefore in **both** pools — the full pool and the
-reduced `SLICE_ITEM_KEYS` pool — because an emblem-only gate with no emblem in
-the pool is an unreachable region, not a challenge.
+The Hunter Chief Emblem remains in **both** pools — the full pool and the
+reduced `SLICE_ITEM_KEYS` pool — as a useful route shortcut.
 
 ### Evidence and its limits
 
