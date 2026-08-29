@@ -301,3 +301,52 @@ fixed_forbidden_woods_lot_2700930	Forbidden Woods - Frenzied Coldblood (7) #5	Fo
 fixed_forbidden_woods_lot_2700940	Forbidden Woods - Madman's Knowledge #12	Forbidden Woods	52700940	2700940	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700950	Forbidden Woods - Antidote x2	Forbidden Woods	52700945	2700950	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700960	Forbidden Woods - Twin Blood Stone Shards x2 #5	Forbidden Woods	52700960	2700960	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_yahargul_lot_2800000	Yahar'gul - Frenzied Coldblood (8) #1	Yahar'gul	52800000	2800000	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800010	Yahar'gul - Blood Stone Chunk #1	Yahar'gul	52800010	2800010	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800020	Yahar'gul - Blood Gem #1	Yahar'gul	52800020	2800020	8	128000	optional	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800030	Yahar'gul - Bolt Paper x3	Yahar'gul	52800030	2800030	4	1320	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800040	Yahar'gul - Frenzied Coldblood (8) #2	Yahar'gul	52800040	2800040	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800050	Yahar'gul - Blood Gem #2	Yahar'gul	52800050	2800050	8	100802	optional	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800055	Yahar'gul - Madman's Knowledge #1	Yahar'gul	52800055	2800055	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800060	Yahar'gul - Frenzied Coldblood (8) #3	Yahar'gul	52800060	2800060	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800070	Yahar'gul - Frenzied Coldblood (8) #4	Yahar'gul	52800070	2800070	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800080	Yahar'gul - Blood Vial x8	Yahar'gul	52800080	2800080	4	1000	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800090	Yahar'gul - Frenzied Coldblood (9)	Yahar'gul	52800090	2800090	4	1518	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800100	Yahar'gul - Iron Yahar'gul Helm	Yahar'gul	52800100	2800100	1	270000	useful	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800110	Yahar'gul - Blood Stone Chunk #2	Yahar'gul	52800110	2800110	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800120	Yahar'gul - Frenzied Coldblood (8) #5	Yahar'gul	52800120	2800120	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800130	Yahar'gul - Blood Vial x6 #1	Yahar'gul	52800130	2800130	4	1000	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800140	Yahar'gul - Blood Gem #3	Yahar'gul	52800140	2800140	8	101301	optional	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800145	Yahar'gul - Madman's Knowledge #2	Yahar'gul	52800145	2800145	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800150	Yahar'gul - Madman's Knowledge #3	Yahar'gul	52800150	2800150	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800160	Yahar'gul - Madman's Knowledge #4	Yahar'gul	52800160	2800160	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800180	Yahar'gul - Quicksilver Bullets x10 #1	Yahar'gul	52800180	2800180	4	900	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800210	Yahar'gul - Blood Stone Chunk #3	Yahar'gul	52800210	2800210	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800300	Yahar'gul - Pungent Blood Cocktail	Yahar'gul	52800300	2800300	4	1260	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800310	Yahar'gul - Twin Blood Stone Shards	Yahar'gul	52800310	2800310	4	3010	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800330	Yahar'gul - Tonitrus (main street dead end)	Yahar'gul	52800330	2800330	0	13000000	useful	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800340	Yahar'gul - Bolt Paper x5	Yahar'gul	52800340	2800340	4	1320	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800350	Yahar'gul - Blood Gem #4	Yahar'gul	52800350	2800350	8	100001	optional	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800355	Yahar'gul - Madman's Knowledge #5	Yahar'gul	52800355	2800355	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800360	Yahar'gul - Pungent Blood Cocktail x3	Yahar'gul	52800360	2800360	4	1260	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800380	Yahar'gul - Frenzied Coldblood (8) #6	Yahar'gul	52800380	2800380	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800400	Yahar'gul - Blood Stone Chunk x2 #1	Yahar'gul	52800400	2800400	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800410	Yahar'gul - Blood Stone Chunk x2 #2	Yahar'gul	52800410	2800410	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800420	Yahar'gul - Frenzied Coldblood (7) #1	Yahar'gul	52800420	2800420	4	1516	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800430	Yahar'gul - Frenzied Coldblood (7) #2	Yahar'gul	52800430	2800430	4	1516	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800440	Yahar'gul - Blood Stone Chunk x2 #3	Yahar'gul	52800440	2800440	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800450	Yahar'gul - Blood Stone Chunk x2 #4	Yahar'gul	52800450	2800450	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800500	Yahar'gul - Tiny Tonitrus (chest)	Yahar'gul	52800500	2800500	4	2070	useful	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800510	Yahar'gul - Choir Bell (chest)	Yahar'gul	52800510	2800510	4	2050	useful	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800520	Yahar'gul - Bone Ash Mask (chest)	Yahar'gul	52800520	2800520	1	40000	useful	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800530	Yahar'gul - Blood Gem #5 (chest)	Yahar'gul	52800530	2800530	8	228001	optional	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800620	Yahar'gul - Madman's Knowledge #6	Yahar'gul	52800620	2800620	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800630	Yahar'gul - Frenzied Coldblood (7) #3	Yahar'gul	52800630	2800630	4	1516	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800640	Yahar'gul - Thick Coldblood (6)	Yahar'gul	52800640	2800640	4	1515	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800650	Yahar'gul - Blood Vial x6 #2	Yahar'gul	52800650	2800650	4	1000	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800660	Yahar'gul - Quicksilver Bullets x10 #2	Yahar'gul	52800660	2800660	4	900	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800670	Yahar'gul - Lead Elixir x3	Yahar'gul	52800670	2800670	4	2030	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800680	Yahar'gul - Frenzied Coldblood (8) #7	Yahar'gul	52800680	2800680	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800690	Yahar'gul - Madman's Knowledge #7	Yahar'gul	52800690	2800690	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800700	Yahar'gul - Madman's Knowledge #8	Yahar'gul	52800700	2800700	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800710	Yahar'gul - Blood Gem #6	Yahar'gul	52800710	2800710	8	132000	optional	treasure	m28_00_00_00;m28_00_00_01	True

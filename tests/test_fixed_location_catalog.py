@@ -81,8 +81,8 @@ class FixedLocationCatalogTests(unittest.TestCase):
             build_rows,
         )
 
-        # Prior 222 rows plus 80 Forbidden Woods rows.
-        self.assertEqual(302, len(FIXED_LOCATIONS))
+        # Prior 302 rows plus 49 unambiguous Yahar'gul rows.
+        self.assertEqual(351, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [

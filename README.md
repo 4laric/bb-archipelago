@@ -61,15 +61,16 @@ build and live-test procedure.
 
 ## Current boundary
 
-Generation emits the bounded slice-5 scope: Central Yharnam, Cathedral Ward,
+Generation emits the bounded slice-6 scope: Central Yharnam, Cathedral Ward,
 Old Yharnam, Hemwick, Cainhurst, Forbidden Woods, Iosefka's Clinic and
-Byrgenwerth. There are 313 network locations, and Rom is the goal. The fixed-pickup
+Byrgenwerth and Yahar'gul. There are 364 network locations, and The One Reborn
+is the goal. The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
 (`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved
 Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed
 `m23_00_00_00` / `m24_00_00_00` EMEVD decompiles and have not been seen fire.
 
-The complete suppression plan rewrites 329 ItemLotParam rows with zero refusals,
+The complete suppression plan rewrites 382 ItemLotParam rows with zero refusals,
 including Saw Spear, Torch, the Hunter Set award group, and the category-8
 blood-gem pickup. Its slice-1 predecessor (54 edits) was installed and
 playtested on shadPS4 0.18.0: a suppressed pickup awarded the one-Vial

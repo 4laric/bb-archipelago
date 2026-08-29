@@ -103,14 +103,15 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(313, len(NETWORK_LOCATIONS))
+        self.assertEqual(364, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
             {"Central Yharnam": 47, "Cathedral Ward": 62,
              "Old Yharnam": 55, "Grand Cathedral": 2,
              "Hemwick Charnel Lane": 34, "Castle Cainhurst": 28,
-             "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1},
+             "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
+             "Yahar'gul": 51},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -119,7 +120,8 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(12501800, LOCATION_BINDINGS["boss_martyr_logarius"].event_flag)
         self.assertEqual(12701800, LOCATION_BINDINGS["boss_shadows_of_yharnam"].event_flag)
         self.assertEqual(13201800, LOCATION_BINDINGS["boss_rom"].event_flag)
-        self.assertEqual("boss_rom", GOAL_LOCATION_KEY)
+        self.assertEqual(12801800, LOCATION_BINDINGS["boss_the_one_reborn"].event_flag)
+        self.assertEqual("boss_the_one_reborn", GOAL_LOCATION_KEY)
         self.assertEqual(
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
             build_runtime_slot_data()["goal_location"],
@@ -164,18 +166,18 @@ class BloodborneModelTests(unittest.TestCase):
             "Ludwig's Rifle", "Cannon",
         ):
             self.assertEqual(counts[name], 1, name)
-        # 313 locations - 32 one-off items = 281 filler slots, allocated across
+        # 364 locations - 32 one-off items = 332 filler slots, allocated across
         # the weighted mix by largest remainder. The exact shares are restated
         # here so a weight edit is a visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 55)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 37)
-        self.assertEqual(counts["Blood Stone Shards x2"], 27)
+        self.assertEqual(counts["Blood Vial"], 64)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 43)
+        self.assertEqual(counts["Blood Stone Shards x2"], 32)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
-            self.assertEqual(counts[name], 18, name)
+            self.assertEqual(counts[name], 22 if name == "Pebbles x3" else 21, name)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir"):
-            self.assertEqual(counts[name], 9, name)
+            self.assertEqual(counts[name], 11, name)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
     def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
@@ -184,7 +186,7 @@ class BloodborneModelTests(unittest.TestCase):
         Slice 3 added the Hunter Chief Emblem to this pool because the plaza
         gate is emblem-only, and the Oedon Tomb Key joins it for the same
         reason: with the key shuffled, a pool without it cannot leave Central
-        Yharnam. 313 - 4 one-off items = 309 filler slots over the slice's own
+        Yharnam. 364 - 4 one-off items = 360 filler slots over the slice's own
         five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
@@ -195,12 +197,12 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Oedon Tomb Key"], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
-        # play experience. 313 - 4 one-each = 309 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 109)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 73)
-        self.assertEqual(counts["Blood Stone Shards x2"], 55)
-        for name in ("Pebbles x3", "Molotov Cocktails x2"):
-            self.assertEqual(counts[name], 36, name)
+        # play experience. 364 - 4 one-each = 360 slots over five weighted names.
+        self.assertEqual(counts["Blood Vial"], 127)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 85)
+        self.assertEqual(counts["Blood Stone Shards x2"], 64)
+        self.assertEqual(counts["Pebbles x3"], 42)
+        self.assertEqual(counts["Molotov Cocktails x2"], 42)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 9)  # eight slice items + Blood Vial

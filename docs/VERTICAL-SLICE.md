@@ -194,6 +194,14 @@ The m32 fixed-pickup rows are deliberately deferred: their reviewed names and
 regions place them in Lecture Building 1F/2F, which enters in slice 7. Rom's
 boss flag is the only Byrgenwerth check added here.
 
+## Slice 6: Yahar'gul and The One Reborn
+
+Rom's defeat opens the Blood Moon transition into Yahar'gul. This slice adds
+49 unambiguous fixed checks, promotes the already-modelled Upper Cathedral Key
+pickup, and ends at The One Reborn for **364 network locations** total. Two
+shared-flag groups are deliberately excluded because they cannot represent
+independent Archipelago checks.
+
 All new fixed rows come from the committed placement catalog. Blood gems are
 valid locations—the item found there is suppressed and replaced by the AP
 item—but blood gems themselves are not added to the receive pool until category

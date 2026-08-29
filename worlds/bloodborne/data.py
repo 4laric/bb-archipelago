@@ -285,6 +285,7 @@ SLICE_REGIONS = (
     "Old Yharnam", "Healing Church Workshop", "Grand Cathedral",
     "Hemwick Charnel Lane", "Castle Cainhurst",
     "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth",
+    "Yahar'gul",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
@@ -299,6 +300,7 @@ _SLICE_ENTRANCE_NAMES = (
     "Forbidden Woods password door",
     "Forbidden Woods clinic passage",
     "Path to Byrgenwerth",
+    "Blood Moon transition",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -388,6 +390,8 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_shadows_of_yharnam",
     "boss_rom",
     "pickup_cainhurst_summons",
+    "boss_the_one_reborn",
+    "pickup_upper_cathedral_key",
     "treasure_radiant_sword_hunter_badge",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",
