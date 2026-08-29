@@ -228,10 +228,10 @@ fixed_forbidden_woods_lot_2700130	Forbidden Woods - Madman's Knowledge #1	Forbid
 fixed_forbidden_woods_lot_2700140	Forbidden Woods - Molotov Cocktail x11	Forbidden Woods	52700140	2700140	4	1200	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700150	Forbidden Woods - White Church Hat	Forbidden Woods	52700150	2700150	1	290000	useful	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700170	Forbidden Woods - Thick Coldblood (6) #1	Forbidden Woods	52700170	2700170	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700180	Forbidden Woods - Blood Gem #1	Forbidden Woods	52700180	2700180	8	102001	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700180	Forbidden Woods - Blood Gem #1	Forbidden Woods	52700180	2700180	8	102001	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700185	Forbidden Woods - Madman's Knowledge #2	Forbidden Woods	52700185	2700185	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700190	Forbidden Woods - Twin Blood Stone Shards #1	Forbidden Woods	52700190	2700190	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700200	Forbidden Woods - Blood Gem #2	Forbidden Woods	52700200	2700200	8	101601	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700200	Forbidden Woods - Blood Gem #2	Forbidden Woods	52700200	2700200	8	101601	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700205	Forbidden Woods - Madman's Knowledge #3	Forbidden Woods	52700205	2700205	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700210	Forbidden Woods - Madman's Knowledge #4	Forbidden Woods	52700210	2700210	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700220	Forbidden Woods - Twin Blood Stone Shards #2	Forbidden Woods	52700220	2700220	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -241,7 +241,7 @@ fixed_forbidden_woods_lot_2700250	Forbidden Woods - Madman's Knowledge #5	Forbid
 fixed_forbidden_woods_lot_2700260	Forbidden Woods - Madman's Knowledge #6	Forbidden Woods	52700260	2700260	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700270	Forbidden Woods - Madman's Knowledge #7	Forbidden Woods	52700270	2700270	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700290	Forbidden Woods - Madman's Knowledge #8	Forbidden Woods	52700290	2700290	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700300	Forbidden Woods - Blood Gem #3	Forbidden Woods	52700300	2700300	8	127001	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700300	Forbidden Woods - Blood Gem #3	Forbidden Woods	52700300	2700300	8	127001	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700310	Forbidden Woods - Frenzied Coldblood (7) #1	Forbidden Woods	52700310	2700310	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700320	Forbidden Woods - Blood Vial x6 #1	Forbidden Woods	52700320	2700320	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700330	Forbidden Woods - Twin Blood Stone Shards #4	Forbidden Woods	52700330	2700330	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -249,7 +249,7 @@ fixed_forbidden_woods_lot_2700340	Forbidden Woods - Antidote x3	Forbidden Woods	
 fixed_forbidden_woods_lot_2700350	Forbidden Woods - Antidote x4 #1	Forbidden Woods	52700350	2700350	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700360	Forbidden Woods - Twin Blood Stone Shards x2 #1	Forbidden Woods	52700360	2700360	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700370	Forbidden Woods - Blood Stone Chunk	Forbidden Woods	52700370	2700370	4	3020	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700380	Forbidden Woods - Blood Gem #4	Forbidden Woods	52700380	2700380	8	100401	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700380	Forbidden Woods - Blood Gem #4	Forbidden Woods	52700380	2700380	8	100401	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700385	Forbidden Woods - Madman's Knowledge #9	Forbidden Woods	52700385	2700385	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700390	Forbidden Woods - Poison Knife x3	Forbidden Woods	52700390	2700390	4	1210	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700400	Forbidden Woods - Beast Blood Pellet x6	Forbidden Woods	52700400	2700400	4	1110	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -265,22 +265,22 @@ fixed_forbidden_woods_lot_2700490	Forbidden Woods - Twin Blood Stone Shards x2 #
 fixed_forbidden_woods_lot_2700500	Forbidden Woods - Frenzied Coldblood (7) #2	Forbidden Woods	52700500	2700500	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700510	Forbidden Woods - Quicksilver Bullets x6	Forbidden Woods	52700510	2700510	4	900	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700520	Forbidden Woods - Twin Blood Stone Shards #8	Forbidden Woods	52700520	2700520	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700540	Forbidden Woods - Blood Gem #5	Forbidden Woods	52700540	2700540	8	102202	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700540	Forbidden Woods - Blood Gem #5	Forbidden Woods	52700540	2700540	8	102202	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700545	Forbidden Woods - Madman's Knowledge #10	Forbidden Woods	52700545	2700545	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700550	Forbidden Woods - Twin Blood Stone Shards #9	Forbidden Woods	52700550	2700550	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700560	Forbidden Woods - Graveguard Mask	Forbidden Woods	52700560	2700560	1	30000	useful	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700570	Forbidden Woods - Blood Gem #6	Forbidden Woods	52700570	2700570	8	100301	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700570	Forbidden Woods - Blood Gem #6	Forbidden Woods	52700570	2700570	8	100301	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700575	Forbidden Woods - Madman's Knowledge #11	Forbidden Woods	52700575	2700575	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700580	Forbidden Woods - Twin Blood Stone Shards #10	Forbidden Woods	52700580	2700580	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700590	Forbidden Woods - Beast Blood Pellet x3	Forbidden Woods	52700590	2700590	4	1110	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700600	Forbidden Woods - Thick Coldblood (6) #2	Forbidden Woods	52700600	2700600	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700610	Forbidden Woods - Blood Vial x2	Forbidden Woods	52700610	2700610	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700640	Forbidden Woods - Blood Vial x6 #2	Forbidden Woods	52700640	2700640	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700650	Forbidden Woods - Blood Gem #7	Forbidden Woods	52700650	2700650	8	127003	optional	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700660	Forbidden Woods - Blood Gem #8	Forbidden Woods	52700660	2700660	8	127004	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700650	Forbidden Woods - Blood Gem #7	Forbidden Woods	52700650	2700650	8	127003	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700660	Forbidden Woods - Blood Gem #8	Forbidden Woods	52700660	2700660	8	127004	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700670	Forbidden Woods - Frenzied Coldblood (7) #3	Forbidden Woods	52700670	2700670	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700690	Forbidden Woods - Blood Gem #9	Forbidden Woods	52700690	2700690	8	127002	optional	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700700	Forbidden Woods - Blood Gem #10	Forbidden Woods	52700700	2700700	8	127000	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700690	Forbidden Woods - Blood Gem #9	Forbidden Woods	52700690	2700690	8	127002	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700700	Forbidden Woods - Blood Gem #10	Forbidden Woods	52700700	2700700	8	127000	optional	treasure	m27_00_00_00;m27_00_00_01	False
 fixed_forbidden_woods_lot_2700720	Forbidden Woods - Twin Blood Stone Shards #11	Forbidden Woods	52700720	2700720	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700740	Forbidden Woods - Frenzied Coldblood (7) #4	Forbidden Woods	52700740	2700740	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700750	Forbidden Woods - Shining Coins x6	Forbidden Woods	52700750	2700750	4	1410	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -302,12 +302,12 @@ fixed_forbidden_woods_lot_2700940	Forbidden Woods - Madman's Knowledge #12	Forbi
 fixed_forbidden_woods_lot_2700950	Forbidden Woods - Antidote x2	Forbidden Woods	52700945	2700950	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700960	Forbidden Woods - Twin Blood Stone Shards x2 #5	Forbidden Woods	52700960	2700960	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_nightmare_frontier_lot_3300000	Nightmare Frontier - Madman's Knowledge #1	Nightmare Frontier	53300100	3300000	4	1500	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300010	Nightmare Frontier - Blood Gem #1	Nightmare Frontier	53300110	3300010	8	101401	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300010	Nightmare Frontier - Blood Gem #1	Nightmare Frontier	53300110	3300010	8	101401	optional	treasure	m33_00_00_00	False
 fixed_nightmare_frontier_lot_3300015	Nightmare Frontier - Madman's Knowledge #2	Nightmare Frontier	53300115	3300015	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300020	Nightmare Frontier - Bolt Paper x2	Nightmare Frontier	53300120	3300020	4	1320	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300030	Nightmare Frontier - Lead Elixir x2 #1	Nightmare Frontier	53300130	3300030	4	2030	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300040	Nightmare Frontier - Blood Vial x3 #1	Nightmare Frontier	53300140	3300040	4	1000	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300050	Nightmare Frontier - Blood Gem #2	Nightmare Frontier	53300150	3300050	8	102302	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300050	Nightmare Frontier - Blood Gem #2	Nightmare Frontier	53300150	3300050	8	102302	optional	treasure	m33_00_00_00	False
 fixed_nightmare_frontier_lot_3300055	Nightmare Frontier - Madman's Knowledge #3	Nightmare Frontier	53300155	3300055	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300060	Nightmare Frontier - Frenzied Coldblood (9) #1	Nightmare Frontier	53300160	3300060	4	1518	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300070	Nightmare Frontier - Quicksilver Bullets x5	Nightmare Frontier	53300170	3300070	4	900	filler	treasure	m33_00_00_00	True
@@ -325,7 +325,7 @@ fixed_nightmare_frontier_lot_3300180	Nightmare Frontier - Coldblood Flowerbud #1
 fixed_nightmare_frontier_lot_3300190	Nightmare Frontier - Antidote x2 #2	Nightmare Frontier	53300290	3300190	4	1100	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300200	Nightmare Frontier - Frenzied Coldblood (8) #1	Nightmare Frontier	53300300	3300200	4	1517	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300210	Nightmare Frontier - Antidote x4	Nightmare Frontier	53300310	3300210	4	1100	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300220	Nightmare Frontier - Blood Gem #3	Nightmare Frontier	53300320	3300220	8	102002	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300220	Nightmare Frontier - Blood Gem #3	Nightmare Frontier	53300320	3300220	8	102002	optional	treasure	m33_00_00_00	False
 fixed_nightmare_frontier_lot_3300225	Nightmare Frontier - Madman's Knowledge #7	Nightmare Frontier	53300325	3300225	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300240	Nightmare Frontier - Frenzied Coldblood (8) #2	Nightmare Frontier	53300340	3300240	4	1517	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300250	Nightmare Frontier - Lead Elixir x3	Nightmare Frontier	53300350	3300250	4	2030	filler	treasure	m33_00_00_00	True
@@ -335,13 +335,13 @@ fixed_nightmare_frontier_lot_3300280	Nightmare Frontier - Madman's Knowledge #9	
 fixed_nightmare_frontier_lot_3300290	Nightmare Frontier - Frenzied Coldblood (9) #3	Nightmare Frontier	53300390	3300290	4	1518	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300300	Nightmare Frontier - Kin Coldblood (10)	Nightmare Frontier	53300400	3300300	4	1519	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300310	Nightmare Frontier - Bold Hunter's Mark x3	Nightmare Frontier	53300410	3300310	4	1400	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300320	Nightmare Frontier - Blood Gem #4	Nightmare Frontier	53300420	3300320	8	100302	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300320	Nightmare Frontier - Blood Gem #4	Nightmare Frontier	53300420	3300320	8	100302	optional	treasure	m33_00_00_00	False
 fixed_nightmare_frontier_lot_3300325	Nightmare Frontier - Madman's Knowledge #10	Nightmare Frontier	53300425	3300325	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300330	Nightmare Frontier - Coldblood Flowerbud x2	Nightmare Frontier	53300430	3300330	4	7012	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300340	Nightmare Frontier - Lead Elixir x2 #3	Nightmare Frontier	53300440	3300340	4	2030	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300350	Nightmare Frontier - Antidote x3	Nightmare Frontier	53300450	3300350	4	1100	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300360	Nightmare Frontier - Coldblood Flowerbud #2	Nightmare Frontier	53300460	3300360	4	7012	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300370	Nightmare Frontier - Blood Vial x2 #2	Nightmare Frontier	53300470	3300370	4	1000	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300380	Nightmare Frontier - Blood Gem #5	Nightmare Frontier	53300480	3300380	8	102102	optional	treasure	m33_00_00_00	True
+fixed_nightmare_frontier_lot_3300380	Nightmare Frontier - Blood Gem #5	Nightmare Frontier	53300480	3300380	8	102102	optional	treasure	m33_00_00_00	False
 fixed_nightmare_frontier_lot_3300385	Nightmare Frontier - Madman's Knowledge #11	Nightmare Frontier	53300485	3300385	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300390	Nightmare Frontier - Madman's Knowledge #12	Nightmare Frontier	53300490	3300390	4	1500	filler	treasure	m33_00_00_00	True
