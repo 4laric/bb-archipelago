@@ -217,10 +217,10 @@ class RealCorpusTests(unittest.TestCase):
 
     def test_every_physical_pickup_and_award_group_can_be_suppressed(self):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
-        # 352 manifest rows and the three separately-published slice treasures,
-        # minus Saw Spear's lot (already covered by the pool-item edit), plus 25
+        # 421 manifest rows and five separately-published slice treasures,
+        # minus Saw Spear's lot (already covered by the pool-item edit), plus 27
         # continuation rows in shared-acquisition-flag award groups.
-        self.assertEqual(len(location_edits), 380)
+        self.assertEqual(len(location_edits), 454)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -240,6 +240,8 @@ class RealCorpusTests(unittest.TestCase):
                 "2700151", "2700152", "2700153", "2700411", "2700412",
                 # Yahar'gul Black Hood set
                 "2800521", "2800522", "2800523",
+                # Lecture Building Student Uniform continuations
+                "3200541", "3200731",
             },
         )
 
@@ -263,12 +265,12 @@ class RealCorpusTests(unittest.TestCase):
             checked += 1
             self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
-        # 351 in-slice fixed pickups plus three published treasures carry lots;
+        # 421 in-slice fixed pickups plus five published treasures carry lots;
         # bosses and the skull interaction do not, and the
         # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
         # the NG+-only lot 2410295 from #220) are not network locations, so
         # they are not iterated here.
-        self.assertEqual(checked, 354)
+        self.assertEqual(checked, 426)
 
     def test_the_unseeded_ng_plus_lot_is_still_suppressed(self):
         """#220 unseeded lot 2410295 but deliberately kept its plan edit.

@@ -12,8 +12,9 @@ alone (Central Yharnam through Father Gascoigne).  Slice 3 adds
 ``m24_00_00_00`` (Cathedral Ward) and ``m23_00_00_00`` (Old Yharnam through
 the Blood-starved Beast). Slice 4 adds ``m22_00_00_00`` (Hemwick) and
 ``m25_00_00_00`` (Cainhurst). Slice 5 adds ``m27_00_00_00`` (Forbidden
-Woods). Slice 6 adds ``m28_00_00_00`` (Yahar'gul); m32's reviewed fixed rows belong to the Lecture Building and remain
-deferred even though Rom shares that archive. The map ids are read off
+Woods). Slice 6 adds ``m28_00_00_00`` (Yahar'gul). Slice 7 adds the reviewed
+Lecture Building rows in ``m32_00_00_00`` and ``m26_00_00_00`` (Nightmare of
+Mensis). The map ids are read off
 ``research/catalog/fixed_location_catalog.tsv``; none of them is guessed.
 
 Player-facing names come from ``worlds/bloodborne/location_names.tsv``, the
@@ -49,6 +50,7 @@ SLICE_MAPS = (
     "m22_00_00_00", "m25_00_00_00",
     "m27_00_00_00",
     "m28_00_00_00",
+    "m32_00_00_00", "m26_00_00_00",
 )
 
 # Per-map defaults for the two data-only columns a catalog row cannot supply.
@@ -60,6 +62,8 @@ MAP_DEFAULT_REGION = {
     "m25_00_00_00": "Castle Cainhurst",
     "m27_00_00_00": "Forbidden Woods",
     "m28_00_00_00": "Yahar'gul",
+    "m32_00_00_00": "Lecture Building 1F",
+    "m26_00_00_00": "Nightmare of Mensis",
 }
 MAP_KEY_PREFIX = {
     "m24_01_00_00": "fixed_central_yharnam_lot_",
@@ -69,6 +73,8 @@ MAP_KEY_PREFIX = {
     "m25_00_00_00": "fixed_cainhurst_lot_",
     "m27_00_00_00": "fixed_forbidden_woods_lot_",
     "m28_00_00_00": "fixed_yahargul_lot_",
+    "m32_00_00_00": "fixed_lecture_building_lot_",
+    "m26_00_00_00": "fixed_nightmare_mensis_lot_",
 }
 
 OUTPUT = REPO / "worlds" / "bloodborne" / "fixed_locations.tsv"
@@ -84,6 +90,8 @@ REPLACEMENT_FLAGS = {
     52400485: 52400480,   # Item 宝箱01（05 アイテム差し替え）
     52420645: 52420640,   # Item 宝箱03（差し替え用）
     52420695: 52420690,   # Item_宝箱04（差し替え用）
+    53200015: 53200010,   # Lecture Building corpse replacement
+    53200645: 53200640,   # Lecture Building chest replacement
 }
 
 # Catalog rows inside a slice map that deliberately do not become manifest
@@ -118,6 +126,12 @@ EXCLUDED_FLAGS = {
         "already published by data.py as pickup_upper_cathedral_key with its "
         "own permanent network id and runtime binding"
     ),
+    53200600: (
+        "already published by data.py as treasure_augur_of_ebrietas"
+    ),
+    53200720: (
+        "already published by data.py as treasure_lecture_theatre_key"
+    ),
 }
 
 # Stable keys for rows the datapackage published before the name table
@@ -147,6 +161,16 @@ REGION_OVERRIDES = {
     52410640: "Iosefka's Clinic",
     52410920: "Cathedral Ward",
     52411000: "Cathedral Ward",
+    53200010: "Lecture Building 2F",
+    53200015: "Lecture Building 2F",
+    53200110: "Lecture Building 2F",
+    53200500: "Lecture Building 2F",
+    53200540: "Lecture Building 2F",
+    53200640: "Lecture Building 2F",
+    53200645: "Lecture Building 2F",
+    53200720: "Lecture Building 2F",
+    53200730: "Lecture Building 2F",
+    53200750: "Lecture Building 2F",
 }
 
 FIELDS = (

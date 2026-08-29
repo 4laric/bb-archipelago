@@ -2,8 +2,9 @@
 
 The playable scope grows one reviewed step at a time. Slice 1 was Central
 Yharnam through Father Gascoigne; slice 3 extended it through Vicar Amelia;
-slice 4 added Hemwick Charnel Lane and Castle Cainhurst; **slice 5 adds
-Forbidden Woods, Iosefka's Clinic and Byrgenwerth, ending at Rom**. The broader
+slice 4 added Hemwick Charnel Lane and Castle Cainhurst; slice 5 added
+Forbidden Woods, Iosefka's Clinic and Byrgenwerth; slice 6 added Yahar'gul; and
+**slice 7 completes the base game through Mergo's Wet Nurse**. The broader
 model in `data.py` remains research scaffolding; it is not emitted into the
 seed. Slice 3 is specified in its own section at the end of this document; the
 slice-1 sections below still describe the Central Yharnam half exactly.
@@ -201,6 +202,15 @@ Rom's defeat opens the Blood Moon transition into Yahar'gul. This slice adds
 pickup, and ends at The One Reborn for **364 network locations** total. Two
 shared-flag groups are deliberately excluded because they cannot represent
 independent Archipelago checks.
+
+## Slice 7: Lecture Building, Nightmare of Mensis and Wet Nurse
+
+The Advent Plaza mummy opens Lecture Building 2F after The One Reborn. The
+item-free giant door leads to Nightmare of Mensis; the separate Tonsil Stone
+route exposes Lecture Building 1F. This slice adds 70 fixed checks, Micolash,
+and Mergo's Wet Nurse, bringing the complete base-game chain to **438 network
+locations**. Wet Nurse is the completion goal and retains its cited Micolash
+prerequisite.
 
 All new fixed rows come from the committed placement catalog. Blood gems are
 valid locations—the item found there is suppressed and replaced by the AP

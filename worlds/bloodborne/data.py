@@ -286,6 +286,7 @@ SLICE_REGIONS = (
     "Hemwick Charnel Lane", "Castle Cainhurst",
     "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth",
     "Yahar'gul",
+    "Lecture Building 1F", "Lecture Building 2F", "Nightmare of Mensis",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
@@ -301,6 +302,9 @@ _SLICE_ENTRANCE_NAMES = (
     "Forbidden Woods clinic passage",
     "Path to Byrgenwerth",
     "Blood Moon transition",
+    "Advent Plaza mummy",
+    "Lecture Hall giant door",
+    "Amygdala's grasp",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -392,6 +396,10 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "pickup_cainhurst_summons",
     "boss_the_one_reborn",
     "pickup_upper_cathedral_key",
+    "boss_micolash",
+    "boss_mergos_wet_nurse",
+    "treasure_augur_of_ebrietas",
+    "treasure_lecture_theatre_key",
     "treasure_radiant_sword_hunter_badge",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",

@@ -350,3 +350,73 @@ fixed_yahargul_lot_2800680	Yahar'gul - Frenzied Coldblood (8) #7	Yahar'gul	52800
 fixed_yahargul_lot_2800690	Yahar'gul - Madman's Knowledge #7	Yahar'gul	52800690	2800690	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800700	Yahar'gul - Madman's Knowledge #8	Yahar'gul	52800700	2800700	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800710	Yahar'gul - Blood Gem #6	Yahar'gul	52800710	2800710	8	132000	optional	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_lecture_building_lot_3200000	Lecture Building 1F - Madman's Knowledge #1	Lecture Building 1F	53200000	3200000	4	1500	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200010	Lecture Building 2F - Blood Gem (corpse)	Lecture Building 2F	53200010	3200010	8	101302	optional	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200020	Lecture Building 1F - Madman's Knowledge #2	Lecture Building 1F	53200020	3200020	4	1500	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200030	Lecture Building 1F - Great One's Wisdom	Lecture Building 1F	53200030	3200030	4	1501	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200040	Lecture Building 1F - Sedative x5	Lecture Building 1F	53200040	3200040	4	1101	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200100	Lecture Building 1F - Madman's Knowledge #3 (classroom)	Lecture Building 1F	53200100	3200100	4	1500	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200110	Lecture Building 2F - Sedative x6 (classroom)	Lecture Building 2F	53200110	3200110	4	1101	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200500	Lecture Building 2F - Empty Phantasm Shell (observatory chest)	Lecture Building 2F	53200500	3200500	4	1310	useful	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200540	Lecture Building 2F - Student Uniform (Headmaster's Room chest)	Lecture Building 2F	53200540	3200540	1	191000	useful	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200620	Lecture Building 1F - Red Jelly x2 (classroom chest)	Lecture Building 1F	53200620	3200620	4	7110	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200640	Lecture Building 2F - Blood Gem (chest)	Lecture Building 2F	53200640	3200640	8	102902	optional	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200700	Lecture Building 1F - Pearl Slug (chest)	Lecture Building 1F	53200700	3200700	4	7100	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200730	Lecture Building 2F - Student Uniform #2	Lecture Building 2F	53200730	3200730	1	301000	useful	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200740	Lecture Building 1F - Madman's Knowledge #4	Lecture Building 1F	53200740	3200740	4	1500	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_lecture_building_lot_3200750	Lecture Building 2F - Blood Stone Chunk	Lecture Building 2F	53200750	3200750	4	3020	filler	treasure	m32_00_00_00;m32_00_00_01	True
+fixed_nightmare_mensis_lot_2600100	Nightmare of Mensis - Shaman Bone Blade x6	Nightmare of Mensis	52600100	2600100	4	2090	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600110	Nightmare of Mensis - Madman's Knowledge #1	Nightmare of Mensis	52600110	2600110	4	1500	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600120	Nightmare of Mensis - Great One's Wisdom #1	Nightmare of Mensis	52600120	2600120	4	1501	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600130	Nightmare of Mensis - Great One's Wisdom #2	Nightmare of Mensis	52600130	2600130	4	1501	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600140	Nightmare of Mensis - Great One's Wisdom #3	Nightmare of Mensis	52600140	2600140	4	1501	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600150	Nightmare of Mensis - Blood Gem #1	Nightmare of Mensis	52600150	2600150	8	126002	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600160	Nightmare of Mensis - Great One's Wisdom #4	Nightmare of Mensis	52600160	2600160	4	1501	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600170	Nightmare of Mensis - Frenzied Coldblood (9) #1	Nightmare of Mensis	52600170	2600170	4	1518	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600180	Nightmare of Mensis - Frenzied Coldblood (9) #2	Nightmare of Mensis	52600180	2600180	4	1518	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600190	Nightmare of Mensis - Blood Vial x8 #1	Nightmare of Mensis	52600190	2600190	4	1000	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600200	Nightmare of Mensis - Blood Gem #2	Nightmare of Mensis	52600200	2600200	8	126003	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600210	Nightmare of Mensis - Blood Stone Chunk #1	Nightmare of Mensis	52600210	2600210	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600220	Nightmare of Mensis - Blood Gem #3	Nightmare of Mensis	52600220	2600220	8	126000	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600230	Nightmare of Mensis - Quicksilver Bullets x6 #1	Nightmare of Mensis	52600230	2600230	4	900	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600240	Nightmare of Mensis - Madman's Knowledge #2	Nightmare of Mensis	52600240	2600240	4	1500	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600250	Nightmare of Mensis - Lead Elixir x2	Nightmare of Mensis	52600250	2600250	4	2030	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600260	Nightmare of Mensis - Frenzied Coldblood (8) #1	Nightmare of Mensis	52600260	2600260	4	1517	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600270	Nightmare of Mensis - Quicksilver Bullets x6 #2	Nightmare of Mensis	52600270	2600270	4	900	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600280	Nightmare of Mensis - Blood Stone Chunk #2	Nightmare of Mensis	52600280	2600280	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600290	Nightmare of Mensis - Frenzied Coldblood (9) #3	Nightmare of Mensis	52600290	2600290	4	1518	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600300	Nightmare of Mensis - Blood Gem #4	Nightmare of Mensis	52600300	2600300	8	100201	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600305	Nightmare of Mensis - Madman's Knowledge #3	Nightmare of Mensis	52600305	2600305	4	1500	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600310	Nightmare of Mensis - Blood Stone Chunk #3	Nightmare of Mensis	52600310	2600310	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600320	Nightmare of Mensis - Kin Coldblood (10) #1	Nightmare of Mensis	52600320	2600320	4	1519	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600330	Nightmare of Mensis - Frenzied Coldblood (9) #4	Nightmare of Mensis	52600330	2600330	4	1518	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600340	Nightmare of Mensis - Blue Elixir x2	Nightmare of Mensis	52600340	2600340	4	1120	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600350	Nightmare of Mensis - Twin Blood Stone Shards x3	Nightmare of Mensis	52600350	2600350	4	3010	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600360	Nightmare of Mensis - Kin Coldblood (10) #2	Nightmare of Mensis	52600360	2600360	4	1519	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600370	Nightmare of Mensis - Blood Vial x4	Nightmare of Mensis	52600370	2600370	4	1000	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600380	Nightmare of Mensis - Sedative x3	Nightmare of Mensis	52600380	2600380	4	1101	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600390	Nightmare of Mensis - Blood Gem #5	Nightmare of Mensis	52600390	2600390	8	100002	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600395	Nightmare of Mensis - Madman's Knowledge #4	Nightmare of Mensis	52600395	2600395	4	1500	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600400	Nightmare of Mensis - Blood Vial x3	Nightmare of Mensis	52600400	2600400	4	1000	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600410	Nightmare of Mensis - Kin Coldblood (10) #3	Nightmare of Mensis	52600410	2600410	4	1519	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600420	Nightmare of Mensis - Blood Stone Chunk x2 #1	Nightmare of Mensis	52600420	2600420	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600430	Nightmare of Mensis - Frenzied Coldblood (8) #2	Nightmare of Mensis	52600430	2600430	4	1517	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600440	Nightmare of Mensis - Madman's Knowledge #5	Nightmare of Mensis	52600440	2600440	4	1500	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600450	Nightmare of Mensis - Blood Stone Chunk x2 #2	Nightmare of Mensis	52600450	2600450	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600460	Nightmare of Mensis - Kin Coldblood (11) #1	Nightmare of Mensis	52600460	2600460	4	1590	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600470	Nightmare of Mensis - Kin Coldblood (11) #2	Nightmare of Mensis	52600470	2600470	4	1590	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600480	Nightmare of Mensis - Blood Gem #6	Nightmare of Mensis	52600480	2600480	8	126004	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600490	Nightmare of Mensis - Blood Stone Chunk x2 #3	Nightmare of Mensis	52600490	2600490	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600500	Nightmare of Mensis - Kin Coldblood (11) #3	Nightmare of Mensis	52600500	2600500	4	1590	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600510	Nightmare of Mensis - Blood Gem #7	Nightmare of Mensis	52600510	2600510	8	126001	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600520	Nightmare of Mensis - Blood Stone Chunk x2 #4	Nightmare of Mensis	52600520	2600520	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600530	Nightmare of Mensis - Blood Gem #8	Nightmare of Mensis	52600530	2600530	8	126000	optional	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600540	Nightmare of Mensis - Blood Rock	Nightmare of Mensis	52600540	2600540	4	3030	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600550	Nightmare of Mensis - Iron Door Key (Nightmare Host corpse)	Nightmare of Mensis	52600550	2600550	4	4009	key_or_badge	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600560	Nightmare of Mensis - Blood Stone Chunk #4	Nightmare of Mensis	52600560	2600560	4	3020	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600580	Nightmare of Mensis - Blood Vial x8 #2	Nightmare of Mensis	52600580	2600580	4	1000	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600590	Nightmare of Mensis - Inflicted Organ (chest)	Nightmare of Mensis	52600590	2600590	4	7130	filler	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600600	Nightmare of Mensis - Choir Bell (chest)	Nightmare of Mensis	52600600	2600600	4	2050	useful	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2600610	Nightmare of Mensis - Iron Door Key #2	Nightmare of Mensis	52600610	2600610	4	4009	key_or_badge	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2601000	Nightmare of Mensis - Iosefka's Blood Vial (Micolash arena chest)	Nightmare of Mensis	52601000	2601000	4	703	useful	treasure	m26_00_00_00	True
+fixed_nightmare_mensis_lot_2601010	Nightmare of Mensis - Yellow Backbone x2 (chest)	Nightmare of Mensis	52601010	2601010	4	7131	filler	treasure	m26_00_00_00	True
