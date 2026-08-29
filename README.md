@@ -70,7 +70,7 @@ manifest is regenerated from the canonical map catalog, and the two boss flags
 Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed
 `m23_00_00_00` / `m24_00_00_00` EMEVD decompiles and have not been seen fire.
 
-The complete suppression plan rewrites 329 ItemLotParam rows with zero refusals,
+The complete suppression plan rewrites 374 ItemLotParam rows with zero refusals,
 including Saw Spear, Torch, the Hunter Set award group, and the category-8
 blood-gem pickup. Its slice-1 predecessor (54 edits) was installed and
 playtested on shadPS4 0.18.0: a suppressed pickup awarded the one-Vial
