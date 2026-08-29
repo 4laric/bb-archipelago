@@ -124,6 +124,8 @@ GOLDEN_ITEMS = {
     "church_cannon": 0xBB012D,
     "fist_of_gratia": 0xBB012E,
     "loch_shield": 0xBB012F,
+    "blood_gem_workshop_tool": 0xBB0130,
+    "rune_workshop_tool": 0xBB0131,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,

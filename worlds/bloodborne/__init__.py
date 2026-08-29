@@ -35,11 +35,13 @@ SHUFFLABLE_ITEMS = tuple(
     item for item in MODEL.items
     if item.kind is not ItemKind.EVENT
 )
+STARTING_TOOL_KEYS = frozenset({"blood_gem_workshop_tool", "rune_workshop_tool"})
 # Uncanny variants are shufflable (permanent ids, validated bindings) but are
 # opt-in: they enter a pool only through the `uncanny_weapons` option, so the
 # default pool -- and every seed generated before #205 -- is unchanged.
 FULL_POOL_ITEM_KEYS = frozenset(
-    item.key for item in SHUFFLABLE_ITEMS if item.key not in UNCANNY_ITEM_KEYS
+    item.key for item in SHUFFLABLE_ITEMS
+    if item.key not in UNCANNY_ITEM_KEYS and item.key not in STARTING_TOOL_KEYS
 )
 POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
@@ -438,6 +440,9 @@ else:
                 entrance.connect(regions[data.target])
 
         def create_items(self) -> None:
+            for key in sorted(STARTING_TOOL_KEYS):
+                item = next(item for item in SHUFFLABLE_ITEMS if item.key == key)
+                self.multiworld.push_precollected(self.create_item(item.name))
             self.multiworld.itempool.extend(
                 self.create_item(name)
                 for name in build_item_pool_names(
@@ -489,7 +494,7 @@ else:
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
-                **build_runtime_slot_data(self._pool_item_keys()),
+                **build_runtime_slot_data(self._pool_item_keys() | STARTING_TOOL_KEYS),
             }
 
         def generate_output(self, output_directory: str) -> None:
