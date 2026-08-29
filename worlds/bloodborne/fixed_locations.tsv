@@ -45,7 +45,7 @@ fixed_central_yharnam_lot_2410600	Central Yharnam - Coldblood Dew (1) #7 (bridge
 fixed_central_yharnam_lot_2410610	Central Yharnam - Hunter Set (sewer side)	Central Yharnam	52410610	2410610	1	70000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410620	Central Yharnam - Thick Coldblood (5) (sewer side)	Central Yharnam	52410620	2410620	4	1514	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410630	Central Yharnam - Coldblood Dew (1) #8 (sewer side)	Central Yharnam	52410630	2410630	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Blood Gem (chest)	Iosefka's Clinic	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
+fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Blood Gem (chest)	Iosefka's Clinic	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False
 fixed_central_yharnam_lot_2410650	Central Yharnam - Blood Stone Shard #8 (bridge side)	Central Yharnam	52410650	2410650	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_iosefka_courtyard_bullets	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10 (bridge side)	Central Yharnam	52410800	2410800	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410920	Central Yharnam - Red Jeweled Brooch	Cathedral Ward	52410920	2410920	4	4306	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
@@ -69,7 +69,7 @@ fixed_cathedral_ward_lot_2400260	Cathedral Ward - Blood Vial x2	Cathedral Ward	5
 fixed_cathedral_ward_lot_2400270	Cathedral Ward - Black Messenger Hat (rooftop)	Cathedral Ward	52400270	2400270	4	4906	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400280	Cathedral Ward - Numbing Mist x6	Cathedral Ward	52400280	2400280	4	1270	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400290	Cathedral Ward - Black Church Hat (back alley)	Cathedral Ward	52400290	2400290	1	110000	useful	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400300	Cathedral Ward - Blood Gem #1	Cathedral Ward	52400300	2400300	8	124002	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400300	Cathedral Ward - Blood Gem #1	Cathedral Ward	52400300	2400300	8	124002	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2400310	Cathedral Ward - Shining Coins x12	Cathedral Ward	52400310	2400310	4	1410	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400320	Cathedral Ward - Blood Vial x6 #2	Cathedral Ward	52400320	2400320	4	1000	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400330	Cathedral Ward - Blood Stone Shard x3	Cathedral Ward	52400330	2400330	4	3000	filler	treasure	m24_00_00_00;m24_00_00_01	True
@@ -82,12 +82,12 @@ fixed_cathedral_ward_lot_2400390	Cathedral Ward - Molotov Cocktail x4	Cathedral 
 fixed_cathedral_ward_lot_2400400	Cathedral Ward - Coldblood Dew (2)	Cathedral Ward	52400400	2400400	4	1511	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400410	Cathedral Ward - Madman's Knowledge #6 (Grand Cathedral approach)	Cathedral Ward	52400410	2400410	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400420	Cathedral Ward - Thick Coldblood (6) #2 (Grand Cathedral approach)	Cathedral Ward	52400420	2400420	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400430	Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)	Cathedral Ward	52400430	2400430	8	124003	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400430	Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)	Cathedral Ward	52400430	2400430	8	124003	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2400440	Cathedral Ward - Thick Coldblood (6) #3 (Grand Cathedral approach)	Cathedral Ward	52400440	2400440	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400450	Cathedral Ward - Hunter Chief Emblem (plaza entrance)	Cathedral Ward	52400450	2400450	4	4011	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400460	Cathedral Ward - Thick Coldblood (5) #2	Cathedral Ward	52400460	2400460	4	1514	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400470	Cathedral Ward - Thick Coldblood (4) #2	Cathedral Ward	52400470	2400470	4	1513	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400760	Cathedral Ward - Blood Gem #3 (chest)	Cathedral Ward	52410580	2400760	8	124001	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400760	Cathedral Ward - Blood Gem #3 (chest)	Cathedral Ward	52410580	2400760	8	124001	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2400540	Cathedral Ward - Rumpled Yharnam Hat (workshop-tower back alley)	Cathedral Ward	52420540	2400540	1	320000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400550	Cathedral Ward - Wooden Shield	Cathedral Ward	52420550	2400550	0	19000000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400560	Cathedral Ward - Blood Stone Shard x5	Cathedral Ward	52420560	2400560	4	3000	filler	treasure	m24_00_00_00;m24_00_00_01	True
@@ -98,22 +98,22 @@ fixed_cathedral_ward_lot_2400600	Cathedral Ward - Twin Blood Stone Shards x2	Cat
 fixed_cathedral_ward_lot_2400610	Cathedral Ward - Antidote	Cathedral Ward	52420610	2400610	4	1100	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400620	Cathedral Ward - Madman's Knowledge #8	Cathedral Ward	52420620	2400620	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400630	Cathedral Ward - Poison Knife x18	Cathedral Ward	52420630	2400630	4	1210	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400640	Cathedral Ward - Blood Gem #4 (Grand Cathedral approach chest)	Cathedral Ward	52420640	2400640	8	102901	optional	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400650	Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)	Cathedral Ward	52420650	2400650	8	124004	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400640	Cathedral Ward - Blood Gem #4 (Grand Cathedral approach chest)	Cathedral Ward	52420640	2400640	8	102901	optional	treasure	m24_00_00_00;m24_00_00_01	False
+fixed_cathedral_ward_lot_2400650	Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)	Cathedral Ward	52420650	2400650	8	124004	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2400660	Cathedral Ward - Madman's Knowledge #10 (Grand Cathedral approach)	Cathedral Ward	52420660	2400660	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400670	Cathedral Ward - Messenger Top Hat (Grand Cathedral approach)	Cathedral Ward	52420670	2400670	4	4905	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400690	Cathedral Ward - Blood Gem #6 (chest)	Cathedral Ward	52420690	2400690	8	103104	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400690	Cathedral Ward - Blood Gem #6 (chest)	Cathedral Ward	52420690	2400690	8	103104	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2400700	Cathedral Ward - Frenzied Coldblood (7)	Cathedral Ward	52420700	2400700	4	1516	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400710	Cathedral Ward - Twin Blood Stone Shards	Cathedral Ward	52420710	2400710	4	3010	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400720	Cathedral Ward - Madman's Knowledge #12	Cathedral Ward	52420720	2400720	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400730	Cathedral Ward - Messenger Urn Festival	Cathedral Ward	52420730	2400730	4	4908	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400740	Cathedral Ward - Blood Gem #7	Cathedral Ward	52420740	2400740	8	124000	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400740	Cathedral Ward - Blood Gem #7	Cathedral Ward	52420740	2400740	8	124000	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2400750	Cathedral Ward - Bold Hunter's Mark x3	Cathedral Ward	52420750	2400750	4	1400	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_old_yharnam_lot_2300000	Old Yharnam - Antidote #1	Old Yharnam	52300000	2300000	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300010	Old Yharnam - Blood Stone Shard x2 #1	Old Yharnam	52300010	2300010	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300020	Old Yharnam - Blood Stone Shard #1	Old Yharnam	52300020	2300020	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300030	Old Yharnam - Fire Paper x2 #1	Old Yharnam	52300030	2300030	4	1300	filler	treasure	m23_00_00_00;m23_00_00_01	True
-fixed_old_yharnam_lot_2300040	Old Yharnam - Blood Gem (corpse)	Old Yharnam	52300040	2300040	8	123000	optional	treasure	m23_00_00_00;m23_00_00_01	True
+fixed_old_yharnam_lot_2300040	Old Yharnam - Blood Gem (corpse)	Old Yharnam	52300040	2300040	8	123000	optional	treasure	m23_00_00_00;m23_00_00_01	False
 fixed_old_yharnam_lot_2300050	Old Yharnam - Coldblood Dew (3) #1	Old Yharnam	52300050	2300050	4	1512	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300060	Old Yharnam - Blood Stone Shard x2 #2	Old Yharnam	52300060	2300060	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300070	Old Yharnam - Bloody Messenger Head Bandage	Old Yharnam	52300070	2300070	4	4907	key_or_badge	treasure	m23_00_00_00;m23_00_00_01	True
@@ -139,7 +139,7 @@ fixed_old_yharnam_lot_2300260	Old Yharnam - Molotov Cocktail x3	Old Yharnam	5230
 fixed_old_yharnam_lot_2300270	Old Yharnam - Corpse Pickup	Old Yharnam	52300270	2300270	4	6000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300280	Old Yharnam - Antidote x4	Old Yharnam	52300280	2300280	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300290	Old Yharnam - Coldblood Dew (2) #2	Old Yharnam	52300290	2300290	4	1511	filler	treasure	m23_00_00_00;m23_00_00_01	True
-fixed_old_yharnam_lot_2300300	Old Yharnam - Blood Gem (chest)	Old Yharnam	52300300	2300300	8	123001	optional	treasure	m23_00_00_00;m23_00_00_01	True
+fixed_old_yharnam_lot_2300300	Old Yharnam - Blood Gem (chest)	Old Yharnam	52300300	2300300	8	123001	optional	treasure	m23_00_00_00;m23_00_00_01	False
 fixed_old_yharnam_lot_2300310	Old Yharnam - Antidote x3 #1	Old Yharnam	52300310	2300310	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300320	Old Yharnam - Antidote x3 #2	Old Yharnam	52300320	2300320	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300330	Old Yharnam - Quicksilver Bullets x10	Old Yharnam	52300330	2300330	4	900	filler	treasure	m23_00_00_00;m23_00_00_01	True
@@ -172,7 +172,7 @@ fixed_hemwick_lot_2200150	Hemwick Charnel Lane - Blood Vial x2 #1	Hemwick Charne
 fixed_hemwick_lot_2200160	Hemwick Charnel Lane - Bone Marrow Ash x8 #1	Hemwick Charnel Lane	52200160	2200160	4	1330	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200170	Hemwick Charnel Lane - Bone Marrow Ash x8 #2	Hemwick Charnel Lane	52200170	2200170	4	1330	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200180	Hemwick Charnel Lane - Bloodshot Eyeball #1	Hemwick Charnel Lane	52200180	2200180	4	7150	filler	treasure	m22_00_00_00	True
-fixed_hemwick_lot_2200190	Hemwick Charnel Lane - Blood Gem #1	Hemwick Charnel Lane	52200190	2200190	8	122000	optional	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200190	Hemwick Charnel Lane - Blood Gem #1	Hemwick Charnel Lane	52200190	2200190	8	122000	optional	treasure	m22_00_00_00	False
 fixed_hemwick_lot_2200200	Hemwick Charnel Lane - Madman's Knowledge #1	Hemwick Charnel Lane	52200200	2200200	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200210	Hemwick Charnel Lane - Coldblood Dew (3)	Hemwick Charnel Lane	52200210	2200210	4	1512	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200220	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #3	Hemwick Charnel Lane	52200220	2200220	4	3010	filler	treasure	m22_00_00_00	True
@@ -181,7 +181,7 @@ fixed_hemwick_lot_2200240	Hemwick Charnel Lane - Thick Coldblood (4) #2	Hemwick 
 fixed_hemwick_lot_2200250	Hemwick Charnel Lane - Quicksilver Bullets x4 #2	Hemwick Charnel Lane	52200250	2200250	4	900	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200260	Hemwick Charnel Lane - Throwing Knife x3	Hemwick Charnel Lane	52200260	2200260	4	1240	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200270	Hemwick Charnel Lane - Thick Coldblood (4) #3	Hemwick Charnel Lane	52200270	2200270	4	1513	filler	treasure	m22_00_00_00	True
-fixed_hemwick_lot_2200280	Hemwick Charnel Lane - Blood Gem #2 (chest)	Hemwick Charnel Lane	52200280	2200280	8	122001	optional	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200280	Hemwick Charnel Lane - Blood Gem #2 (chest)	Hemwick Charnel Lane	52200280	2200280	8	122001	optional	treasure	m22_00_00_00	False
 fixed_hemwick_lot_2200290	Hemwick Charnel Lane - Madman's Knowledge #2	Hemwick Charnel Lane	52200290	2200290	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200300	Hemwick Charnel Lane - Pebble x4 #2	Hemwick Charnel Lane	52200300	2200300	4	1230	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200310	Hemwick Charnel Lane - Quicksilver Bullets x4 #3	Hemwick Charnel Lane	52200310	2200310	4	900	filler	treasure	m22_00_00_00	True
@@ -191,7 +191,7 @@ fixed_hemwick_lot_2200340	Hemwick Charnel Lane - Thick Coldblood (4) #5	Hemwick 
 fixed_hemwick_lot_2200350	Hemwick Charnel Lane - Blood Vial x2 #2	Hemwick Charnel Lane	52200350	2200350	4	1000	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200365	Hemwick Charnel Lane - Kin Coldblood (12)	Hemwick Charnel Lane	52200365	2200365	4	1591	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200370	Hemwick Charnel Lane - Bloodshot Eyeball #2	Hemwick Charnel Lane	52200370	2200370	4	7150	filler	treasure	m22_00_00_00	True
-fixed_hemwick_lot_2200380	Hemwick Charnel Lane - Blood Gem #3	Hemwick Charnel Lane	52200380	2200380	8	101701	optional	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200380	Hemwick Charnel Lane - Blood Gem #3	Hemwick Charnel Lane	52200380	2200380	8	101701	optional	treasure	m22_00_00_00	False
 fixed_hemwick_lot_2200385	Hemwick Charnel Lane - Madman's Knowledge #3	Hemwick Charnel Lane	52200385	2200385	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200390	Hemwick Charnel Lane - Madman's Knowledge #4	Hemwick Charnel Lane	52200390	2200390	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200400	Hemwick Charnel Lane - Molotov Cocktail x5	Hemwick Charnel Lane	52200400	2200400	4	1200	filler	treasure	m22_00_00_00	True
@@ -216,9 +216,9 @@ fixed_cainhurst_lot_2501000	Castle Cainhurst - Reiterpallasch (chest)	Castle Cai
 fixed_cainhurst_lot_2501010	Castle Cainhurst - Blood Stone Chunk #2	Castle Cainhurst	52501010	2501010	4	3020	filler	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501020	Castle Cainhurst - Executioner Garb	Castle Cainhurst	52501020	2501020	1	151000	useful	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501030	Castle Cainhurst - Blood Stone Chunk #3	Castle Cainhurst	52501030	2501030	4	3020	filler	treasure	m25_00_00_00	True
-fixed_cainhurst_lot_2501040	Castle Cainhurst - Blood Gem #1 (chest)	Castle Cainhurst	52501040	2501040	8	125000	optional	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501040	Castle Cainhurst - Blood Gem #1 (chest)	Castle Cainhurst	52501040	2501040	8	125000	optional	treasure	m25_00_00_00	False
 fixed_cainhurst_lot_2501050	Castle Cainhurst - Knight's Wig	Castle Cainhurst	52501050	2501050	1	80000	useful	treasure	m25_00_00_00	True
-fixed_cainhurst_lot_2501060	Castle Cainhurst - Blood Gem #2	Castle Cainhurst	52501060	2501060	8	125001	optional	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501060	Castle Cainhurst - Blood Gem #2	Castle Cainhurst	52501060	2501060	8	125001	optional	treasure	m25_00_00_00	False
 fixed_cainhurst_lot_2501070	Castle Cainhurst - Knight's Garb (chest)	Castle Cainhurst	52501070	2501070	1	81000	useful	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501080	Castle Cainhurst - Evelyn (chest)	Castle Cainhurst	52501080	2501080	0	14100000	useful	treasure	m25_00_00_00	True
 fixed_forbidden_woods_lot_2700100	Forbidden Woods - Twin Blood Stone Shards x3	Forbidden Woods	52700100	2700100	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True

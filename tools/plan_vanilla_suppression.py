@@ -321,7 +321,11 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
     # binder playtesters already run — bit-identical.
     active_keys = {location.key for location in NETWORK_LOCATIONS}
     active_keys |= {location.key for location in FIXED_LOCATIONS}
+    locations_by_key = {location.key: location for location in FIXED_LOCATIONS}
     for key in sorted(active_keys):
+        fixed = locations_by_key.get(key)
+        if fixed is not None and not fixed.vanilla_award_suppressed:
+            continue
         binding = LOCATION_BINDINGS[key]
         if binding.item_lot_id is None:
             continue
