@@ -347,10 +347,10 @@ class RuntimeItemContractTests(unittest.TestCase):
         # Uncanny variants the option adds. Every id the datapackage publishes
         # must be deliverable in the pool that can place it.
         from worlds.bloodborne.data import UNCANNY_ITEM_KEYS
-        from worlds.bloodborne import FULL_POOL_ITEM_KEYS
+        from worlds.bloodborne import FULL_POOL_ITEM_KEYS, STARTING_TOOL_KEYS
 
         runtime_items = build_runtime_slot_data(
-            FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS)["runtime_items"]
+            FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS | STARTING_TOOL_KEYS)["runtime_items"]
         self.assertEqual(set(runtime_items), {str(value) for value in ITEM_NAME_TO_ID.values()})
         for binding in runtime_items.values():
             self.assertIn("raw_descriptor", binding)
