@@ -159,9 +159,7 @@ ENTRANCES = (
     # (Blood-starved Beast) is free from Cathedral Ward, so the emblem clause
     # could never be the required one. The route is two hops in the game and is
     # now two hops here — the emblem opens the gate directly, the workshop
-    # reaches the same plaza the long way round. Slice 3 seeds Cathedral Ward,
-    # Old Yharnam and the Grand Cathedral but not the Healing Church Workshop,
-    # so inside a slice-3 seed the emblem is the only route to the plaza.
+    # reaches the same plaza the long way round.
     Entrance("Cathedral Ward plaza gate", "Cathedral Ward", "Grand Cathedral",
              Rule.all("hunter_chief_emblem")),
     Entrance("Healing Church Workshop plaza route", "Healing Church Workshop",
@@ -264,28 +262,29 @@ MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 # above remains research scaffolding; none of its later regions enters
 # multidata until its runtime contracts are ready.
 #
-# Slice 3 (Cathedral Ward -> Old Yharnam -> Blood-starved Beast) adds three
+# Amelia slice (Cathedral Ward -> Old Yharnam -> Grand Cathedral) adds four
 # regions to slice 1's Central Yharnam:
 #  - Cathedral Ward, entered with the Oedon Tomb Key after Gascoigne's defeat
 #    (slice 1 already seeded its Tomb of Oedon strip for exactly this reason);
 #    the key is shuffled, so this edge is what makes Central Yharnam a real
 #    sphere 0 rather than a corridor the seed starts on the far side of;
 #  - Old Yharnam, reached freely from the Cathedral Ward lamp, ending at the
-#    Blood-starved Beast, which is the slice goal;
-#  - the Grand Cathedral, behind the Hunter Chief Emblem. The emblem is the
-#    only in-slice route to it: the game's alternative runs through the
-#    Healing Church Workshop, which slice 3 does not seed. That is what stops
-#    the emblem from being a decorative pool item.
+#    Blood-starved Beast;
+#  - the Healing Church Workshop transit route, opened by defeating the Beast;
+#  - the Grand Cathedral, reached either through that route or directly with
+#    the Hunter Chief Emblem, ending at Vicar Amelia.
 SLICE_REGIONS = (
     "Menu", "Hunter's Dream", "Central Yharnam", "Cathedral Ward",
-    "Old Yharnam", "Grand Cathedral",
+    "Old Yharnam", "Healing Church Workshop", "Grand Cathedral",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
     "Awaken in Central Yharnam",
     "Tomb of Oedon gate",
     "Road into Old Yharnam",
+    "Healing Church Workshop door",
     "Cathedral Ward plaza gate",
+    "Healing Church Workshop plaza route",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -296,9 +295,8 @@ assert {e.source for e in SLICE_ENTRANCES} | {e.target for e in SLICE_ENTRANCES}
 assert len(SLICE_ENTRANCES) == len(_SLICE_ENTRANCE_NAMES)
 
 # The reduced pool the first live sessions validated, plus the Hunter Chief
-# Emblem and the Oedon Tomb Key: with the plaza gate emblem-only and the Tomb
-# of Oedon gate key-only, a seed that cannot place either cannot reach the
-# checks behind it at all. Both are in every pool the world can build.
+# Emblem and the Oedon Tomb Key. The emblem remains a useful shortcut while
+# the key is the shuffled progression gate into the Amelia slice.
 SLICE_ITEM_KEYS = frozenset({
     "hunter_chief_emblem",
     "oedon_tomb_key",

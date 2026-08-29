@@ -313,35 +313,28 @@ class BloodborneModelTests(unittest.TestCase):
         for region in MODEL.regions:
             visit(region)
 
-    def test_the_seeded_slice_is_fully_reachable_and_the_emblem_is_load_bearing(self):
+    def test_the_seeded_slice_is_fully_reachable_by_either_cathedral_route(self):
         """Reachability, without needing an Archipelago checkout.
 
-        Two claims, and the second is the one worth having. Every seeded
-        location must be reachable with the seeded pool -- otherwise
-        generation would have to bury real checks under filler. And with the
-        Hunter Chief Emblem withheld, some seeded locations must become
-        unreachable, or the emblem-only plaza gate is decoration.
+        Every seeded location must be reachable with the seeded pool. The
+        emblem is a shortcut, not a Go-mode requirement: after Blood-starved
+        Beast, the Workshop route reaches the same plaza.
         """
         from worlds.bloodborne.data import SLICE_ITEM_KEYS, SLICE_REGIONS
 
         locations = seeded_locations()
         reachable = slice_reachable
 
-        # Menu and Hunter's Dream are transit regions in this slice: the
-        # Dream's own check (the Eye) belongs to the post-Amelia chain.
-        self.assertEqual(set(SLICE_REGIONS) - {"Menu", "Hunter's Dream"},
+        # Menu, Hunter's Dream and the Workshop are transit regions here.
+        self.assertEqual(set(SLICE_REGIONS) - {"Menu", "Hunter's Dream",
+                                               "Healing Church Workshop"},
                          {l.region for l in locations})
         with_everything = reachable(set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS))
         self.assertEqual(with_everything, {l.key for l in locations})
 
         without_emblem = reachable(
             (set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)) - {"hunter_chief_emblem"})
-        gated = with_everything - without_emblem
-        self.assertEqual(
-            gated,
-            {l.key for l in locations if l.region == "Grand Cathedral"},
-        )
-        self.assertTrue(gated, "the Hunter Chief Emblem gates nothing in the seeded slice")
+        self.assertEqual(with_everything, without_emblem)
 
     def test_withholding_the_oedon_tomb_key_strands_the_seed_in_central_yharnam(self):
         """The point of shuffling the key: sphere 0 is a place, not the world.
@@ -409,8 +402,8 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(0xBB1036,
                          LOCATION_ID_BY_KEY["fixed_central_yharnam_lot_2410295"])
 
-    def test_the_goal_is_behind_the_oedon_tomb_key(self):
-        """Vicar Amelia is behind both the Tomb gate and Cathedral plaza gate."""
+    def test_the_goal_requires_the_oedon_key_but_not_the_emblem(self):
+        """BSB opens the Workshop route, making the emblem an optional shortcut."""
         from worlds.bloodborne import GOAL_LOCATION_KEY
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
 
@@ -418,8 +411,8 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertIn(GOAL_LOCATION_KEY, slice_reachable(everything))
         self.assertNotIn(GOAL_LOCATION_KEY,
                          slice_reachable(everything - {"oedon_tomb_key"}))
-        self.assertNotIn(GOAL_LOCATION_KEY,
-                         slice_reachable(everything - {"hunter_chief_emblem"}))
+        self.assertIn(GOAL_LOCATION_KEY,
+                      slice_reachable(everything - {"hunter_chief_emblem"}))
 
     def test_the_key_is_in_every_pool_the_world_can_build(self):
         """A progression item the pool may omit is a generation failure waiting."""
