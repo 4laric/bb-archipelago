@@ -161,18 +161,26 @@ class BloodborneModelTests(unittest.TestCase):
             "Ludwig's Rifle", "Cannon",
         ):
             self.assertEqual(counts[name], 1, name)
-        # 228 locations - 32 one-off items = 196 filler slots, allocated across
-        # the weighted mix by largest remainder. The exact shares are restated
-        # here so a weight edit is a visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 38)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 25)
-        self.assertEqual(counts["Blood Stone Shards x2"], 19)
+        # The exact weighted shares are restated here so an economy edit is a
+        # visible pool change, not a silent one.
+        self.assertEqual(counts["Blood Vial"], 22)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 15)
+        self.assertEqual(counts["Blood Stone Shards x2"], 11)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 11)
+        self.assertEqual(counts["Blood Stone Chunk"], 7)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 7)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
-            self.assertEqual(counts[name], 13, name)
+            self.assertEqual(counts[name], 7, name)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
-                     "Blue Elixir", "Beast Blood Pellet", "Lead Elixir"):
-            self.assertEqual(counts[name], 6, name)
+                     "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
+                     "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
+                     "Shaman Bone Blade", "Madman's Knowledge", "Great One's Wisdom",
+                     "Coldblood Dew (3)", "Thick Coldblood (6)",
+                     "Frenzied Coldblood (8)"):
+            self.assertEqual(counts[name], 4, name)
+        self.assertEqual(counts["Kin Coldblood (11)"], 3)
+        self.assertEqual(counts["Blood Rock"], 1)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
     def test_slice_pool_option_off_preserves_the_original_grant_shapes(self):
@@ -697,8 +705,8 @@ class Wave1WeaponPoolTests(unittest.TestCase):
             self.assertEqual(variant.normalized_item_id, param_id + 10000, key)
             self.assertEqual(variant.descriptor_evidence, "param_id_inferred", key)
 
-    def test_the_dlc_weapons_and_the_torch_stay_excluded(self):
-        """The control for the exclusions, by id block and by name.
+    def test_unmapped_dlc_weapons_and_the_torch_stay_excluded(self):
+        """Mapped DLC pickups enter; the remaining rows and torches do not.
 
         EquipParamWeapon ids from 23000000 up are The Old Hunters block
         (Beasthunter Saif 23000000, Beast Cutter 24000000, Amygdalan Arm
@@ -708,17 +716,19 @@ class Wave1WeaponPoolTests(unittest.TestCase):
         is base game but is a standing negative canary, not an omission.
         """
         names = {item.name for item in MODEL.items}
-        for name in ("Beasthunter Saif", "Beast Cutter", "Amygdalan Arm",
-                     "Holy Moonlight Sword", "Rakuyo", "Boom Hammer",
-                     "Bloodletter", "Church Pick", "Whirligig Saw",
+        for name in ("Holy Moonlight Sword", "Rakuyo",
+                     "Bloodletter", "Church Pick",
                      "Simon's Bowblade", "Kos Parasite",
                      "Torch", "Hunter's Torch", "Evelyn"):
             self.assertNotIn(name, names, name)
-        category_0 = [b for b in ITEM_BINDINGS.values() if b.item_category == 0]
-        self.assertTrue(category_0)  # witness: there are weapons to check
-        for key, binding in ITEM_BINDINGS.items():
-            if binding.item_category == 0:
-                self.assertLess(binding.normalized_item_id, 23000000, key)
+        from worlds.bloodborne.data import DLC_WEAPON_KEYS
+        for key in DLC_WEAPON_KEYS:
+            self.assertEqual(ITEM_BINDINGS[key].item_category, 0, key)
+        self.assertEqual(
+            {key for key, binding in ITEM_BINDINGS.items()
+             if binding.item_category == 0 and binding.normalized_item_id >= 23000000},
+            set(DLC_WEAPON_KEYS) - {"loch_shield"},
+        )
 
 
 class Wave1GoodsVarietyTests(unittest.TestCase):
