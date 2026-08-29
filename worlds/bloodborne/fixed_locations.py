@@ -46,7 +46,13 @@ def _load() -> tuple[FixedLocation, ...]:
             classification=row["classification"],
             source_kind=row["source_kind"],
             source_ref=row["source_ref"],
-            vanilla_award_suppressed=row["vanilla_award_suppressed"] == "True",
+            # Category 8 rows are generated blood-gem recipes, not stable item
+            # identities. They remain AP checks but keep their native award so
+            # the player receives a valid game-constructed gem.
+            vanilla_award_suppressed=(
+                row["vanilla_award_suppressed"] == "True"
+                and int(row["item_category"]) != 8
+            ),
         )
         for row in rows
     )

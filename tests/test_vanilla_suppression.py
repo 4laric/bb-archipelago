@@ -215,12 +215,13 @@ class RealCorpusTests(unittest.TestCase):
         self.assertIn("2410100", reachable)      # witness: a known lot is found this way
         self.assertNotIn("27100000", reachable)
 
-    def test_every_physical_pickup_and_award_group_can_be_suppressed(self):
+    def test_every_replaceable_pickup_and_award_group_can_be_suppressed(self):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
-        # 346 manifest rows and four separately-published slice treasures,
-        # minus Saw Spear's lot (already covered by the pool-item edit), plus 23
-        # continuation rows in shared-acquisition-flag award groups.
-        self.assertEqual(len(location_edits), 372)
+        # The combined Rom + Frontier manifest and separately-published
+        # treasures, minus Saw Spear's lot, plus continuation rows in shared
+        # acquisition-flag award groups, minus the
+        # category-8 generation recipes whose native gem awards stay intact.
+        self.assertEqual(len(location_edits), 341)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -229,9 +230,9 @@ class RealCorpusTests(unittest.TestCase):
                 # Top Hat and Black Church sets (Cathedral Ward)
                 "2400121", "2400122", "2400123",
                 "2400291", "2400292", "2400293",
-                # Rumpled Yharnam set, and the m24_00 chest whose flag is
-                # numbered in the m24_01 range
-                "2400541", "2410580",
+                # Rumpled Yharnam set. Lot 2410580 shares a flag with a
+                # category-8 gem recipe and therefore stays native too.
+                "2400541",
                 # Charred Hunter Garb (Old Yharnam)
                 "2300401", "2300402",
                 # Executioner and Knight sets (Castle Cainhurst)
@@ -255,6 +256,8 @@ class RealCorpusTests(unittest.TestCase):
         by_lot = {e.item_lot_id: e.acquisition_flag for e in self.plan.edits}
         checked = 0
         for location in NETWORK_LOCATIONS:
+            if not location.vanilla_award_suppressed:
+                continue
             binding = LOCATION_BINDINGS[location.key]
             if binding.item_lot_id is None:
                 continue
@@ -266,7 +269,22 @@ class RealCorpusTests(unittest.TestCase):
         # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
         # the NG+-only lot 2410295 from #220) are not network locations, so
         # they are not iterated here.
-        self.assertEqual(checked, 349)
+        self.assertEqual(checked, 314)
+
+    def test_category_eight_checks_keep_their_native_generated_gems(self):
+        from worlds.bloodborne import NETWORK_LOCATIONS
+        from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
+
+        gems = [location for location in NETWORK_LOCATIONS
+                if LOCATION_BINDINGS[location.key].item_category == 8]
+        self.assertEqual(len(gems), 30)
+        planned_lots = {edit.item_lot_id for edit in self.plan.edits}
+        for location in gems:
+            with self.subTest(location=location.key):
+                self.assertFalse(location.vanilla_award_suppressed)
+                self.assertNotIn(
+                    str(LOCATION_BINDINGS[location.key].item_lot_id), planned_lots
+                )
 
     def test_the_unseeded_ng_plus_lot_is_still_suppressed(self):
         """#220 unseeded lot 2410295 but deliberately kept its plan edit.

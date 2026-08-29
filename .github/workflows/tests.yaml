@@ -120,7 +120,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 4laric/from-software-archipelago-clients
-          ref: ${{ github.event.client_payload.ref || inputs.client_ref || 'main' }}
+          # Category-8 research bundle: this stacked branch deliberately pairs
+          # with the passive natural-award capture client until that PR lands.
+          ref: ${{ github.event.client_payload.ref || inputs.client_ref || 'codex/blood-gem-capture' }}
           path: _client
       - name: Build the AP client
         shell: pwsh
@@ -144,7 +146,7 @@ jobs:
         run: ./build.ps1 -Apworld
       - uses: actions/upload-artifact@v4
         with:
-          name: Bloodborne-playtest-${{ github.sha }}
+          name: Bloodborne-gem-diagnostic-${{ github.sha }}
           path: |
             build/BloodborneAPLauncher-win-x64.zip
             build/bloodborne.apworld

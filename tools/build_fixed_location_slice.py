@@ -218,7 +218,11 @@ def build_rows(repo: Path = REPO) -> list[dict[str, str]]:
                 "classification": source["classification"],
                 "source_kind": "treasure",
                 "source_ref": source["map_variants"],
-                "vanilla_award_suppressed": "True",
+                # Category 8 is a generation recipe. Replacing it with filler
+                # deletes the only valid gem construction path; keep the
+                # vanilla award while still using its acquisition flag as the
+                # Archipelago check.
+                "vanilla_award_suppressed": "False" if item["category"] == "8" else "True",
             })
     return output
 
