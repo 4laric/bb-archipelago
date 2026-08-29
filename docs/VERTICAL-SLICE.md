@@ -194,6 +194,15 @@ The m32 fixed-pickup rows are deliberately deferred: their reviewed names and
 regions place them in Lecture Building 1F/2F, which enters in slice 7. Rom's
 boss flag is the only Byrgenwerth check added here.
 
+## Queue-jumped Nightmare Frontier
+
+The optional Nightmare Frontier route branches from Cathedral Ward through
+Lecture Building 1F with the Tonsil Stone. Its 44 catalog-backed pickups,
+Messenger's Gift, and Amygdala bring the playable scope to **359 network
+locations**. Rom remains the completion goal. Yahar'gul, Lecture Building's
+own checks, and Nightmare of Mensis remain deferred; Lecture Building 1F is
+included only as the transit region into the Frontier.
+
 All new fixed rows come from the committed placement catalog. Blood gems are
 valid locations—the item found there is suppressed and replaced by the AP
 item—but blood gems themselves are not added to the receive pool until category

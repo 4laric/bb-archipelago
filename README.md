@@ -63,7 +63,8 @@ build and live-test procedure.
 
 Generation emits the bounded slice-5 scope: Central Yharnam, Cathedral Ward,
 Old Yharnam, Hemwick, Cainhurst, Forbidden Woods, Iosefka's Clinic and
-Byrgenwerth. There are 313 network locations, and Rom is the goal. The fixed-pickup
+Byrgenwerth, plus the optional Nightmare Frontier branch through Lecture
+Building 1F. There are 359 network locations, and Rom remains the goal. The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
 (`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved
 Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed

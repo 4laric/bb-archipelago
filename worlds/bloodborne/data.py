@@ -153,6 +153,7 @@ ITEMS = (
     Item("event_forbidden_woods_password", "Forbidden Woods Password Learned", E),
     Item("event_shadows_defeated", "Shadows of Yharnam Defeated", E),
     Item("event_rom_defeated", "Rom Defeated", E),
+    Item("event_amygdala_defeated", "Amygdala Defeated", E),
     Item("event_one_reborn_defeated", "The One Reborn Defeated", E),
     Item("event_micolash_defeated", "Micolash Defeated", E),
     Item("event_mergos_wet_nurse_defeated", "Mergo's Wet Nurse Defeated", E),
@@ -248,6 +249,8 @@ LOCATIONS = (
              Rule.all("event_amelia_defeated"), locked_item="event_forbidden_woods_password"),
     Location("boss_shadows_of_yharnam", location_name(12701800), "Forbidden Woods", locked_item="event_shadows_defeated"),
     Location("boss_rom", location_name(13201800), "Byrgenwerth", locked_item="event_rom_defeated"),
+    Location("boss_amygdala", location_name(13301800), "Nightmare Frontier",
+             locked_item="event_amygdala_defeated"),
     Location("boss_the_one_reborn", location_name(12801800), "Yahar'gul", locked_item="event_one_reborn_defeated"),
     Location("boss_micolash", location_name(12601850), "Nightmare of Mensis", locked_item="event_micolash_defeated"),
     Location("boss_mergos_wet_nurse", location_name(12601800), "Nightmare of Mensis", Rule.all("event_micolash_defeated"), locked_item="event_mergos_wet_nurse_defeated"),
@@ -321,6 +324,7 @@ SLICE_REGIONS = (
     "Old Yharnam", "Healing Church Workshop", "Grand Cathedral",
     "Hemwick Charnel Lane", "Castle Cainhurst",
     "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth",
+    "Lecture Building 1F", "Nightmare Frontier",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
@@ -335,6 +339,8 @@ _SLICE_ENTRANCE_NAMES = (
     "Forbidden Woods password door",
     "Forbidden Woods clinic passage",
     "Path to Byrgenwerth",
+    "Amygdala's grasp",
+    "Lecture Building frontier door",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -427,7 +433,9 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_martyr_logarius",
     "boss_shadows_of_yharnam",
     "boss_rom",
+    "boss_amygdala",
     "pickup_cainhurst_summons",
+    "treasure_messengers_gift",
     "treasure_radiant_sword_hunter_badge",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",
