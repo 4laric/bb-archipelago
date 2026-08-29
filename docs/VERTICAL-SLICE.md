@@ -2,8 +2,8 @@
 
 The playable scope grows one reviewed step at a time. Slice 1 was Central
 Yharnam through Father Gascoigne; slice 3 extended it through Vicar Amelia;
-**slice 4 adds Hemwick Charnel Lane and Castle Cainhurst as optional spurs**.
-Vicar Amelia remains the goal. The broader
+slice 4 added Hemwick Charnel Lane and Castle Cainhurst; **slice 5 adds
+Forbidden Woods, Iosefka's Clinic and Byrgenwerth, ending at Rom**. The broader
 model in `data.py` remains research scaffolding; it is not emitted into the
 seed. Slice 3 is specified in its own section at the end of this document; the
 slice-1 sections below still describe the Central Yharnam half exactly.
@@ -182,6 +182,26 @@ defeat; the latter is cited by `m22_00_00_00` event `12200130`.
 Grand Cathedral --> Hemwick Charnel Lane [Witch of Hemwick]
 Hemwick --(Cainhurst Summons + Witch defeated)--> Castle Cainhurst [Martyr Logarius]
 ```
+
+## Slice 5: Forbidden Woods, Iosefka's Clinic and Byrgenwerth
+
+The Laurence's Skull interaction supplies the Forbidden Woods password event.
+The free clinic cave passage exposes the two deferred clinic treasures and the
+Cainhurst Summons check. Defeating Shadows of Yharnam opens Byrgenwerth, where
+Rom is the new goal. The slice contains **313 network locations**.
+
+The m32 fixed-pickup rows are deliberately deferred: their reviewed names and
+regions place them in Lecture Building 1F/2F, which enters in slice 7. Rom's
+boss flag is the only Byrgenwerth check added here.
+
+## Queue-jumped Nightmare Frontier
+
+The optional Nightmare Frontier route branches from Cathedral Ward through
+Lecture Building 1F with the Tonsil Stone. Its 44 catalog-backed pickups,
+Messenger's Gift, and Amygdala bring the playable scope to **359 network
+locations**. Rom remains the completion goal. Yahar'gul, Lecture Building's
+own checks, and Nightmare of Mensis remain deferred; Lecture Building 1F is
+included only as the transit region into the Frontier.
 
 All new fixed rows come from the committed placement catalog. Blood gems are
 valid locations—the item found there is suppressed and replaced by the AP

@@ -733,6 +733,15 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
         None,
     ),
+    "boss_amygdala": RuntimeLocationBinding(
+        13301800,
+        "EMEVD boss-completion flag; event 13301800 defeats Amygdala",
+        None,
+        "boss_defeat",
+        "m33_00_00_00.emevd.dcx.js:310-342",
+        None,
+        None,
+    ),
     "boss_ludwig": RuntimeLocationBinding(
         13401800,
         "EMEVD boss-completion flag; event 13401800 defeats entities 3400800/3400801 (ルドウイーク)",

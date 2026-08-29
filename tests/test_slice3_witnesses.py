@@ -126,7 +126,7 @@ class SourceCitationTests(unittest.TestCase):
                 f"{key}: {binding.source_ref} is not the definition of "
                 f"{binding.event_flag}; that line reads {text[first - 1]!r}")
             checked += 1
-        self.assertEqual(17, checked, "every boss and interaction binding must be checked")
+        self.assertEqual(18, checked, "every boss and interaction binding must be checked")
 
     def test_slice3_boss_bindings_say_their_write_is_not_cited(self):
         """The gap has to be visible where a reader will be, not only in a doc."""

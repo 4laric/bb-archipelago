@@ -61,16 +61,16 @@ build and live-test procedure.
 
 ## Current boundary
 
-Generation emits the bounded slice-4 scope: Central Yharnam, Cathedral Ward,
-Old Yharnam, Hemwick Charnel Lane and Castle Cainhurst. There are 228 network
-locations, and Vicar Amelia remains the goal because Hemwick and Cainhurst are
-optional side-spurs. The fixed-pickup
+Generation emits the bounded slice-5 scope: Central Yharnam, Cathedral Ward,
+Old Yharnam, Hemwick, Cainhurst, Forbidden Woods, Iosefka's Clinic and
+Byrgenwerth, plus the optional Nightmare Frontier branch through Lecture
+Building 1F. There are 359 network locations, and Rom remains the goal. The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
 (`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved
 Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed
 `m23_00_00_00` / `m24_00_00_00` EMEVD decompiles and have not been seen fire.
 
-The complete suppression plan rewrites 243 ItemLotParam rows with zero refusals,
+The complete suppression plan rewrites 374 ItemLotParam rows with zero refusals,
 including Saw Spear, Torch, the Hunter Set award group, and the category-8
 blood-gem pickup. Its slice-1 predecessor (54 edits) was installed and
 playtested on shadPS4 0.18.0: a suppressed pickup awarded the one-Vial
