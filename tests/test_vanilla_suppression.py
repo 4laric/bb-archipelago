@@ -279,10 +279,13 @@ class RealCorpusTests(unittest.TestCase):
         gems = [location for location in NETWORK_LOCATIONS
                 if LOCATION_BINDINGS[location.key].item_category == 8]
         self.assertEqual(len(gems), 0)  # populated after combined-scope audit
-        self.assertTrue(all(not location.vanilla_award_suppressed for location in gems))
         planned_lots = {edit.item_lot_id for edit in self.plan.edits}
-        self.assertTrue(all(str(LOCATION_BINDINGS[location.key].item_lot_id) not in planned_lots
-                            for location in gems))
+        for location in gems:
+            with self.subTest(location=location.key):
+                self.assertFalse(location.vanilla_award_suppressed)
+                self.assertNotIn(
+                    str(LOCATION_BINDINGS[location.key].item_lot_id), planned_lots
+                )
 
     def test_the_unseeded_ng_plus_lot_is_still_suppressed(self):
         """#220 unseeded lot 2410295 but deliberately kept its plan edit.
