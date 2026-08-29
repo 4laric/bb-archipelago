@@ -1,8 +1,9 @@
 # Bloodborne Archipelago playable slices
 
 The playable scope grows one reviewed step at a time. Slice 1 was Central
-Yharnam through Father Gascoigne; **slice 3 extends it to Cathedral Ward, Old
-Yharnam, and the Blood-starved Beast**, which is now the goal. The broader
+Yharnam through Father Gascoigne; slice 3 extended it through Vicar Amelia;
+**slice 4 adds Hemwick Charnel Lane and Castle Cainhurst as optional spurs**.
+Vicar Amelia remains the goal. The broader
 model in `data.py` remains research scaffolding; it is not emitted into the
 seed. Slice 3 is specified in its own section at the end of this document; the
 slice-1 sections below still describe the Central Yharnam half exactly.
@@ -164,6 +165,29 @@ mode.
 
 The Hunter Chief Emblem remains in **both** pools — the full pool and the
 reduced `SLICE_ITEM_KEYS` pool — as a useful route shortcut.
+
+## Slice 4: Hemwick Charnel Lane and Castle Cainhurst
+
+Slice 4 adds canonical maps `m22_00_00_00` and `m25_00_00_00`, contributing
+58 generated fixed pickups plus the already-published Rune Workshop Tool and
+Executioner's Gloves treasures. Witch of Hemwick and Martyr Logarius add two
+boss checks, bringing the seed to **228 network locations**.
+
+These regions are optional side-spurs, so **Vicar Amelia remains the goal**.
+The road to Hemwick leaves freely from the Grand Cathedral plaza. The Cainhurst
+carriage requires both the shuffled Cainhurst Summons and Witch of Hemwick's
+defeat; the latter is cited by `m22_00_00_00` event `12200130`.
+
+```
+Grand Cathedral --> Hemwick Charnel Lane [Witch of Hemwick]
+Hemwick --(Cainhurst Summons + Witch defeated)--> Castle Cainhurst [Martyr Logarius]
+```
+
+All new fixed rows come from the committed placement catalog. Blood gems are
+valid locations—the item found there is suppressed and replaced by the AP
+item—but blood gems themselves are not added to the receive pool until category
+8 delivery is mapped in issue #214. NPC/ESD covenant rewards are not claimed as
+checks by this slice.
 
 ### Evidence and its limits
 

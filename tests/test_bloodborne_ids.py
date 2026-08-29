@@ -137,6 +137,8 @@ GOLDEN_LOCATIONS = {
     "fixed_torch": 0xBB1021,
     "fixed_iosefka_courtyard_bullets": 0xBB1023,
     "fixed_blood_gem_workshop_tool": 0xBB1024,
+    "boss_witch_of_hemwick": 0xBB10C5,
+    "boss_martyr_logarius": 0xBB10C6,
 }
 
 
@@ -158,8 +160,10 @@ class GoldenIdTests(unittest.TestCase):
         # order. It must stay exactly where it was when slice 3 appended.
         slice_one = [row.key for row in FIXED_LOCATIONS
                      if row.key not in published and row.key.startswith("fixed_")
-                     and not row.key.startswith(("fixed_cathedral_ward_lot_",
-                                                 "fixed_old_yharnam_lot_"))]
+                    and not row.key.startswith(("fixed_cathedral_ward_lot_",
+                                                 "fixed_old_yharnam_lot_",
+                                                 "fixed_hemwick_lot_",
+                                                 "fixed_cainhurst_lot_"))]
         self.assertEqual(len(slice_one), 45)
         expected = {key: 0xBB1025 + index for index, key in enumerate(slice_one)}
         expected["boss_cleric_beast"] = 0xBB1052
@@ -170,6 +174,11 @@ class GoldenIdTests(unittest.TestCase):
                                               "fixed_old_yharnam_lot_"))]
         self.assertEqual(len(slice_three), 113)
         expected.update({key: 0xBB1054 + index for index, key in enumerate(slice_three)})
+        slice_four = [row.key for row in FIXED_LOCATIONS
+                      if row.key.startswith(("fixed_hemwick_lot_",
+                                             "fixed_cainhurst_lot_"))]
+        self.assertEqual(len(slice_four), 58)
+        expected.update({key: 0xBB10C7 + index for index, key in enumerate(slice_four)})
         self.assertEqual(
             {key: LOCATION_ID_BY_KEY[key] for key in expected},
             expected,
@@ -186,7 +195,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB10C4)
+        self.assertEqual(max(ids), 0xBB1100)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

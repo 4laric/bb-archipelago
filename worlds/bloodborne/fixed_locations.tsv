@@ -163,3 +163,61 @@ fixed_old_yharnam_lot_2300500	Old Yharnam - Coldblood Dew (2) #5	Old Yharnam	523
 fixed_old_yharnam_lot_2300510	Old Yharnam - Blood Stone Shard x2 #6	Old Yharnam	52300510	2300510	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300520	Old Yharnam - Coldblood Dew (3) #4	Old Yharnam	52300520	2300520	4	1512	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300530	Old Yharnam - Antidote x3 #5	Old Yharnam	52300530	2300530	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
+fixed_hemwick_lot_2200100	Hemwick Charnel Lane - Pebble x4 #1	Hemwick Charnel Lane	52200100	2200100	4	1230	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200110	Hemwick Charnel Lane - Twin Blood Stone Shards	Hemwick Charnel Lane	52200110	2200110	4	3010	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200120	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #1	Hemwick Charnel Lane	52200120	2200120	4	3010	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200130	Hemwick Charnel Lane - Thick Coldblood (4) #1	Hemwick Charnel Lane	52200130	2200130	4	1513	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200140	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #2	Hemwick Charnel Lane	52200140	2200140	4	3010	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200150	Hemwick Charnel Lane - Blood Vial x2 #1	Hemwick Charnel Lane	52200150	2200150	4	1000	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200160	Hemwick Charnel Lane - Bone Marrow Ash x8 #1	Hemwick Charnel Lane	52200160	2200160	4	1330	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200170	Hemwick Charnel Lane - Bone Marrow Ash x8 #2	Hemwick Charnel Lane	52200170	2200170	4	1330	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200180	Hemwick Charnel Lane - Bloodshot Eyeball #1	Hemwick Charnel Lane	52200180	2200180	4	7150	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200190	Hemwick Charnel Lane - Blood Gem #1	Hemwick Charnel Lane	52200190	2200190	8	122000	optional	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200200	Hemwick Charnel Lane - Madman's Knowledge #1	Hemwick Charnel Lane	52200200	2200200	4	1500	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200210	Hemwick Charnel Lane - Coldblood Dew (3)	Hemwick Charnel Lane	52200210	2200210	4	1512	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200220	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #3	Hemwick Charnel Lane	52200220	2200220	4	3010	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200230	Hemwick Charnel Lane - Quicksilver Bullets x4 #1	Hemwick Charnel Lane	52200230	2200230	4	900	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200240	Hemwick Charnel Lane - Thick Coldblood (4) #2	Hemwick Charnel Lane	52200240	2200240	4	1513	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200250	Hemwick Charnel Lane - Quicksilver Bullets x4 #2	Hemwick Charnel Lane	52200250	2200250	4	900	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200260	Hemwick Charnel Lane - Throwing Knife x3	Hemwick Charnel Lane	52200260	2200260	4	1240	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200270	Hemwick Charnel Lane - Thick Coldblood (4) #3	Hemwick Charnel Lane	52200270	2200270	4	1513	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200280	Hemwick Charnel Lane - Blood Gem #2 (chest)	Hemwick Charnel Lane	52200280	2200280	8	122001	optional	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200290	Hemwick Charnel Lane - Madman's Knowledge #2	Hemwick Charnel Lane	52200290	2200290	4	1500	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200300	Hemwick Charnel Lane - Pebble x4 #2	Hemwick Charnel Lane	52200300	2200300	4	1230	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200310	Hemwick Charnel Lane - Quicksilver Bullets x4 #3	Hemwick Charnel Lane	52200310	2200310	4	900	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200320	Hemwick Charnel Lane - Thick Coldblood (4) #4	Hemwick Charnel Lane	52200320	2200320	4	1513	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200330	Hemwick Charnel Lane - Bone Marrow Ash x9	Hemwick Charnel Lane	52200330	2200330	4	1330	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200340	Hemwick Charnel Lane - Thick Coldblood (4) #5	Hemwick Charnel Lane	52200340	2200340	4	1513	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200350	Hemwick Charnel Lane - Blood Vial x2 #2	Hemwick Charnel Lane	52200350	2200350	4	1000	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200365	Hemwick Charnel Lane - Kin Coldblood (12)	Hemwick Charnel Lane	52200365	2200365	4	1591	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200370	Hemwick Charnel Lane - Bloodshot Eyeball #2	Hemwick Charnel Lane	52200370	2200370	4	7150	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200380	Hemwick Charnel Lane - Blood Gem #3	Hemwick Charnel Lane	52200380	2200380	8	101701	optional	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200385	Hemwick Charnel Lane - Madman's Knowledge #3	Hemwick Charnel Lane	52200385	2200385	4	1500	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200390	Hemwick Charnel Lane - Madman's Knowledge #4	Hemwick Charnel Lane	52200390	2200390	4	1500	filler	treasure	m22_00_00_00	True
+fixed_hemwick_lot_2200400	Hemwick Charnel Lane - Molotov Cocktail x5	Hemwick Charnel Lane	52200400	2200400	4	1200	filler	treasure	m22_00_00_00	True
+fixed_cainhurst_lot_2500100	Castle Cainhurst - Frenzied Coldblood (9) #1	Castle Cainhurst	52500100	2500100	4	1518	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500110	Castle Cainhurst - Numbing Mist x2	Castle Cainhurst	52500110	2500110	4	1270	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500120	Castle Cainhurst - Numbing Mist x4 #1	Castle Cainhurst	52500120	2500120	4	1270	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500130	Castle Cainhurst - Numbing Mist x4 #2	Castle Cainhurst	52500130	2500130	4	1270	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500140	Castle Cainhurst - Frenzied Coldblood (8)	Castle Cainhurst	52500140	2500140	4	1517	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500150	Castle Cainhurst - Frenzied Coldblood (9) #2	Castle Cainhurst	52500150	2500150	4	1518	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500160	Castle Cainhurst - Noble Dress (chest)	Castle Cainhurst	52500160	2500160	1	311000	useful	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500170	Castle Cainhurst - Vileblood Register (chest)	Castle Cainhurst	52500170	2500170	4	130	useful	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500180	Castle Cainhurst - Quicksilver Bullets x6 #1	Castle Cainhurst	52500180	2500180	4	900	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500190	Castle Cainhurst - Kin Coldblood (10) #1	Castle Cainhurst	52500190	2500190	4	1519	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500200	Castle Cainhurst - Quicksilver Bullets x6 #2	Castle Cainhurst	52500200	2500200	4	900	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500210	Castle Cainhurst - Madman's Knowledge #1	Castle Cainhurst	52500210	2500210	4	1500	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500220	Castle Cainhurst - Madman's Knowledge #2	Castle Cainhurst	52500220	2500220	4	1500	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500230	Castle Cainhurst - Blood Stone Chunk #1	Castle Cainhurst	52500230	2500230	4	3020	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500240	Castle Cainhurst - Quicksilver Bullets x4	Castle Cainhurst	52500240	2500240	4	900	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500260	Castle Cainhurst - Kin Coldblood (10) #2	Castle Cainhurst	52500260	2500260	4	1519	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2500270	Castle Cainhurst - Bold Hunter's Mark x2	Castle Cainhurst	52500270	2500270	4	1400	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501000	Castle Cainhurst - Reiterpallasch (chest)	Castle Cainhurst	52501000	2501000	0	10100000	useful	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501010	Castle Cainhurst - Blood Stone Chunk #2	Castle Cainhurst	52501010	2501010	4	3020	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501020	Castle Cainhurst - Executioner Garb	Castle Cainhurst	52501020	2501020	1	151000	useful	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501030	Castle Cainhurst - Blood Stone Chunk #3	Castle Cainhurst	52501030	2501030	4	3020	filler	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501040	Castle Cainhurst - Blood Gem #1 (chest)	Castle Cainhurst	52501040	2501040	8	125000	optional	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501050	Castle Cainhurst - Knight's Wig	Castle Cainhurst	52501050	2501050	1	80000	useful	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501060	Castle Cainhurst - Blood Gem #2	Castle Cainhurst	52501060	2501060	8	125001	optional	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501070	Castle Cainhurst - Knight's Garb (chest)	Castle Cainhurst	52501070	2501070	1	81000	useful	treasure	m25_00_00_00	True
+fixed_cainhurst_lot_2501080	Castle Cainhurst - Evelyn (chest)	Castle Cainhurst	52501080	2501080	0	14100000	useful	treasure	m25_00_00_00	True

@@ -112,6 +112,8 @@ ITEMS = (
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
     Item("event_blood_starved_beast_defeated", "Blood-starved Beast Defeated", E),
     Item("event_amelia_defeated", "Vicar Amelia Defeated", E),
+    Item("event_witch_of_hemwick_defeated", "Witch of Hemwick Defeated", E),
+    Item("event_martyr_logarius_defeated", "Martyr Logarius Defeated", E),
     Item("event_forbidden_woods_password", "Forbidden Woods Password Learned", E),
     Item("event_shadows_defeated", "Shadows of Yharnam Defeated", E),
     Item("event_rom_defeated", "Rom Defeated", E),
@@ -180,7 +182,8 @@ ENTRANCES = (
     # Blood-starved Beast; the key alone is not sufficient.
     Entrance("Upper Cathedral door", "Cathedral Ward", "Upper Cathedral Ward",
              Rule.all("upper_cathedral_key", "event_blood_starved_beast_defeated")),
-    Entrance("Cainhurst carriage", "Hemwick Charnel Lane", "Castle Cainhurst", Rule.all("cainhurst_summons")),
+    Entrance("Cainhurst carriage", "Hemwick Charnel Lane", "Castle Cainhurst",
+             Rule.all("cainhurst_summons", "event_witch_of_hemwick_defeated")),
     Entrance("Amygdala's DLC grasp", "Cathedral Ward", "Hunter's Nightmare",
              Rule.all("event_forbidden_woods_password", "eye_of_blood_drunk_hunter")),
     Entrance("Ludwig's arena exit", "Hunter's Nightmare", "Underground Corpse Pile",
@@ -201,6 +204,10 @@ LOCATIONS = (
     Location("boss_blood_starved_beast", location_name(12301800), "Old Yharnam",
              locked_item="event_blood_starved_beast_defeated"),
     Location("boss_vicar_amelia", location_name(12401800), "Grand Cathedral", locked_item="event_amelia_defeated"),
+    Location("boss_witch_of_hemwick", location_name(12201800), "Hemwick Charnel Lane",
+             locked_item="event_witch_of_hemwick_defeated"),
+    Location("boss_martyr_logarius", location_name(12501800), "Castle Cainhurst",
+             locked_item="event_martyr_logarius_defeated"),
     Location("interaction_laurences_skull", location_name(12401803), "Grand Cathedral",
              Rule.all("event_amelia_defeated"), locked_item="event_forbidden_woods_password"),
     Location("boss_shadows_of_yharnam", location_name(12701800), "Forbidden Woods", locked_item="event_shadows_defeated"),
@@ -262,8 +269,8 @@ MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 # above remains research scaffolding; none of its later regions enters
 # multidata until its runtime contracts are ready.
 #
-# Amelia slice (Cathedral Ward -> Old Yharnam -> Grand Cathedral) adds four
-# regions to slice 1's Central Yharnam:
+# Slice 4 retains Amelia as the goal and widens the seed with the two optional
+# side-spurs available from the Grand Cathedral plaza: Hemwick and Cainhurst.
 #  - Cathedral Ward, entered with the Oedon Tomb Key after Gascoigne's defeat
 #    (slice 1 already seeded its Tomb of Oedon strip for exactly this reason);
 #    the key is shuffled, so this edge is what makes Central Yharnam a real
@@ -276,6 +283,7 @@ MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 SLICE_REGIONS = (
     "Menu", "Hunter's Dream", "Central Yharnam", "Cathedral Ward",
     "Old Yharnam", "Healing Church Workshop", "Grand Cathedral",
+    "Hemwick Charnel Lane", "Castle Cainhurst",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
@@ -285,6 +293,8 @@ _SLICE_ENTRANCE_NAMES = (
     "Healing Church Workshop door",
     "Cathedral Ward plaza gate",
     "Healing Church Workshop plaza route",
+    "Road to Hemwick",
+    "Cainhurst carriage",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -369,7 +379,11 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_blood_starved_beast",
     "boss_vicar_amelia",
     "interaction_laurences_skull",
+    "boss_witch_of_hemwick",
+    "boss_martyr_logarius",
     "treasure_radiant_sword_hunter_badge",
+    "treasure_rune_workshop_tool",
+    "treasure_executioners_gloves",
 })
 # Fixed rows whose region sits outside the slice (today: the two Iosefka's
 # Clinic back-yard pickups, gated behind the Amelia -> Laurence's-skull
