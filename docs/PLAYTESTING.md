@@ -35,7 +35,8 @@ a running randomized seed, and tells you exactly what to report back.
    in that case your host walks you through opening it and the grant table by
    hand. Otherwise do not install it, and do not go looking for a `.CT` file.
 5. **The launcher package** — `BloodborneAPLauncher-win-x64.zip`, from the
-   release page or sent to you directly. Unzip it anywhere.
+   release page, a `Bloodborne-playtest-<commit>` Actions artifact, or sent to
+   you directly. Unzip it anywhere.
 6. **Two things from your session host** (the person running the seed):
    - the **AP seed file**. The whole `AP_<seed>.zip` Archipelago generated is
      fine — the launcher finds your Bloodborne slot inside it. An already
@@ -271,7 +272,17 @@ tell your host what you're running when you report back.
 
 ## For the host: cutting a release
 
-Playtesters download prereleases; they need no GitHub login. To cut one:
+Every pushed commit now produces a `Bloodborne-playtest-<commit>` Actions
+artifact containing both `BloodborneAPLauncher-win-x64.zip` and
+`bloodborne.apworld`. It is a full player bundle: current client `main`, the
+verified suppression binder, launcher, and native tools. For a client-only
+canary, run the `tests` workflow manually and set `client_ref` to the client
+branch, tag, or SHA. Automation may equivalently send the `client-commit`
+repository-dispatch event with `client_payload.ref`; omitted refs use client
+`main`.
+
+Tagged prereleases remain the stable, public download path and need no GitHub
+login. To cut one:
 
 ```powershell
 git checkout main; git pull

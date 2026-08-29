@@ -44,10 +44,10 @@ FULL_POOL_ITEM_KEYS = frozenset(
 POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
 FILLER_ITEM_NAME = "Blood Vial"
-# Slice 3 ends at the Blood-starved Beast. The client learns the goal from
+# The Amelia playtest slice ends at Vicar Amelia. The client learns the goal from
 # slot data's "goal_location", so moving it is a seed-owned change, not a
 # client rebuild.
-GOAL_LOCATION_KEY = "boss_blood_starved_beast"
+GOAL_LOCATION_KEY = "boss_vicar_amelia"
 
 STARTING_WEAPON_ROWS = {
     "right_hand": (2000, 2001, 2002),

@@ -113,7 +113,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
         self.assertEqual(12301800, LOCATION_BINDINGS["boss_blood_starved_beast"].event_flag)
-        self.assertEqual("boss_blood_starved_beast", GOAL_LOCATION_KEY)
+        self.assertEqual("boss_vicar_amelia", GOAL_LOCATION_KEY)
         self.assertEqual(
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
             build_runtime_slot_data()["goal_location"],
@@ -410,7 +410,7 @@ class BloodborneModelTests(unittest.TestCase):
                          LOCATION_ID_BY_KEY["fixed_central_yharnam_lot_2410295"])
 
     def test_the_goal_is_behind_the_oedon_tomb_key(self):
-        """The Blood-starved Beast is in Old Yharnam, two gates past the key."""
+        """Vicar Amelia is behind both the Tomb gate and Cathedral plaza gate."""
         from worlds.bloodborne import GOAL_LOCATION_KEY
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
 
@@ -418,6 +418,8 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertIn(GOAL_LOCATION_KEY, slice_reachable(everything))
         self.assertNotIn(GOAL_LOCATION_KEY,
                          slice_reachable(everything - {"oedon_tomb_key"}))
+        self.assertNotIn(GOAL_LOCATION_KEY,
+                         slice_reachable(everything - {"hunter_chief_emblem"}))
 
     def test_the_key_is_in_every_pool_the_world_can_build(self):
         """A progression item the pool may omit is a generation failure waiting."""

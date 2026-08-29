@@ -111,7 +111,7 @@ The remaining finite playtest is:
 4. replace operator attestation with a real loaded-save identity before general release.
 
 
-## Slice 3: Cathedral Ward, Old Yharnam, Blood-starved Beast
+## Amelia playtest slice: Cathedral Ward, Old Yharnam, Vicar Amelia
 
 ### Scope
 
@@ -134,9 +134,11 @@ Ward) and `m23_00_00_00` (Old Yharnam). `SLICE_MAPS` in
   Vicar Amelia, the Laurence's-skull altar interaction, and the Radiant Sword
   Hunter Badge treasure.
 - **166 network locations total.**
-- **Goal:** the Blood-starved Beast (`12301800`). The client reads the goal
+- **Goal:** Vicar Amelia (`12401800`). The client reads the goal
   from slot data's `goal_location`, so this is a seed-owned move, not a client
-  rebuild.
+  rebuild. Blood-starved Beast remains in-scope as the Old Yharnam boss and the
+  alternate Healing Church Workshop route prerequisite, but Amelia is the
+  completion boundary.
 
 ### Regions and gates
 
