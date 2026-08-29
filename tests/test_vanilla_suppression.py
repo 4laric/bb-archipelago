@@ -239,6 +239,8 @@ class RealCorpusTests(unittest.TestCase):
                 "2501021", "2501022", "2501071", "2501072",
                 # White Church and Graveguard sets (Forbidden Woods)
                 "2700151", "2700152", "2700153", "2700411", "2700412",
+                # Yahar'gul Black Hood set
+                "2800521", "2800522", "2800523",
             },
         )
 

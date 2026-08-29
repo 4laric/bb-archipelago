@@ -49,7 +49,7 @@ FILLER_ITEM_NAME = "Blood Vial"
 # The Amelia playtest slice ends at Vicar Amelia. The client learns the goal from
 # slot data's "goal_location", so moving it is a seed-owned change, not a
 # client rebuild.
-GOAL_LOCATION_KEY = "boss_rom"
+GOAL_LOCATION_KEY = "boss_the_one_reborn"
 
 STARTING_WEAPON_ROWS = {
     "right_hand": (2000, 2001, 2002),

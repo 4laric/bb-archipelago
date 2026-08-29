@@ -196,7 +196,7 @@ class BloodborneModelTests(unittest.TestCase):
         Slice 3 added the Hunter Chief Emblem to this pool because the plaza
         gate is emblem-only, and the Oedon Tomb Key joins it for the same
         reason: with the key shuffled, a pool without it cannot leave Central
-        Yharnam. 313 - 4 one-off items = 309 filler slots over the slice's own
+        Yharnam. 364 - 4 one-off items = 360 filler slots over the slice's own
         five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
