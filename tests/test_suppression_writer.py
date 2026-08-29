@@ -266,7 +266,9 @@ class EndToEndTests(unittest.TestCase):
         # than merely tolerated. These lots already award one Blood Vial.
         self.assertEqual(
             sorted(a.item_lot_id for a in no_ops),
-            ["2300090", "2300100", "2300110", "2400190"],
+            ["2300090", "2300100", "2300110", "2400190",
+             "3400090", "3400110", "3400150", "3400250", "3400260",
+             "3400330", "3401050"],
         )
 
     def test_every_flag_survived(self):
