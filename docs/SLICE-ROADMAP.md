@@ -261,7 +261,7 @@ both already modelled in `data.py` (`Road to Hemwick`, `Cainhurst carriage`).
 - **Bosses and goal.** Witch of Hemwick (12201800 / 2200800) and Martyr Logarius
   (12501800 / 2500800). Neither is a defensible goal: both are optional in
   vanilla, and a goal on an optional spur makes every non-spur check filler.
-  **Slice 4 should keep the Blood-starved Beast goal and simply widen the seed.**
+  **Slice 4 keeps the Vicar Amelia goal and simply widens the seed.**
   It is a pool-growth slice, not a progression slice, and calling it that is
   more honest than inventing a goal for it.
 - **Witness posture.** Two new boss flags, both `corpus_gap: implicit_write`,

@@ -630,6 +630,27 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
         None,
     ),
+    "boss_witch_of_hemwick": RuntimeLocationBinding(
+        12201800,
+        "EMEVD boss-completion flag; event 12201800 waits on Witch entities "
+        "2200800/2200801 and calls HandleBossDefeat; the event-end flag is also "
+        "read by the cited Cainhurst carriage event 12200130",
+        None,
+        "boss_defeat",
+        "m22_00_00_00.emevd.dcx.js:311-361",
+        None,
+        None,
+    ),
+    "boss_martyr_logarius": RuntimeLocationBinding(
+        12501800,
+        "EMEVD boss-completion flag; event 12501800 waits on entity 2500800 and "
+        "calls HandleBossDefeat(2500800)",
+        None,
+        "boss_defeat",
+        "m25_00_00_00.emevd.dcx.js:1279-1324",
+        None,
+        None,
+    ),
     "boss_shadows_of_yharnam": RuntimeLocationBinding(
         12701800,
         "EMEVD boss-completion flag; event 12701800 defeats entity 2700800 (闇の旅団)",

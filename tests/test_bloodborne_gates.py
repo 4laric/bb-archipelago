@@ -43,7 +43,8 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     # is not sufficient.
     "Upper Cathedral door": {
         frozenset({"upper_cathedral_key", "event_blood_starved_beast_defeated"})},
-    "Cainhurst carriage": {frozenset({"cainhurst_summons"})},
+    "Cainhurst carriage": {
+        frozenset({"cainhurst_summons", "event_witch_of_hemwick_defeated"})},
     "Amygdala's DLC grasp": {
         frozenset({"event_forbidden_woods_password", "eye_of_blood_drunk_hunter"})},
     "Ludwig's arena exit": {frozenset({"event_ludwig_defeated"})},

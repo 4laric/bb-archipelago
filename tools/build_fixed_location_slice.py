@@ -10,7 +10,8 @@ keeps the previously published stable keys.
 ``SLICE_MAPS`` is the whole scope statement.  Slice 1 was ``m24_01_00_00``
 alone (Central Yharnam through Father Gascoigne).  Slice 3 adds
 ``m24_00_00_00`` (Cathedral Ward) and ``m23_00_00_00`` (Old Yharnam through
-the Blood-starved Beast).  The map ids are read off
+the Blood-starved Beast). Slice 4 adds ``m22_00_00_00`` (Hemwick) and
+``m25_00_00_00`` (Cainhurst). The map ids are read off
 ``research/catalog/fixed_location_catalog.tsv``; none of them is guessed.
 
 Player-facing names come from ``worlds/bloodborne/location_names.tsv``, the
@@ -41,18 +42,25 @@ REPO = Path(__file__).resolve().parents[1]
 
 # The playable scope, in emission order. Appending a map appends rows; it never
 # reorders or renumbers the rows already published.
-SLICE_MAPS = ("m24_01_00_00", "m24_00_00_00", "m23_00_00_00")
+SLICE_MAPS = (
+    "m24_01_00_00", "m24_00_00_00", "m23_00_00_00",
+    "m22_00_00_00", "m25_00_00_00",
+)
 
 # Per-map defaults for the two data-only columns a catalog row cannot supply.
 MAP_DEFAULT_REGION = {
     "m24_01_00_00": "Central Yharnam",
     "m24_00_00_00": "Cathedral Ward",
     "m23_00_00_00": "Old Yharnam",
+    "m22_00_00_00": "Hemwick Charnel Lane",
+    "m25_00_00_00": "Castle Cainhurst",
 }
 MAP_KEY_PREFIX = {
     "m24_01_00_00": "fixed_central_yharnam_lot_",
     "m24_00_00_00": "fixed_cathedral_ward_lot_",
     "m23_00_00_00": "fixed_old_yharnam_lot_",
+    "m22_00_00_00": "fixed_hemwick_lot_",
+    "m25_00_00_00": "fixed_cainhurst_lot_",
 }
 
 OUTPUT = REPO / "worlds" / "bloodborne" / "fixed_locations.tsv"
@@ -81,6 +89,14 @@ EXCLUDED_FLAGS = {
         "the acquisition flag is shared between an m24_00 dummy corpse and the "
         "real m24_02 placement; the reviewed name table places the real spot in "
         "Upper Cathedral Ward, outside this slice"
+    ),
+    52200360: (
+        "already published by data.py as treasure_rune_workshop_tool with "
+        "its own permanent network id and runtime binding"
+    ),
+    52500250: (
+        "already published by data.py as treasure_executioners_gloves with "
+        "its own permanent network id and runtime binding"
     ),
 }
 

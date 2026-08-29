@@ -64,13 +64,15 @@ class FixedLocationCatalogTests(unittest.TestCase):
         self.assertEqual(52410800, canary.event_flag)
         self.assertTrue(canary.vanilla_award_suppressed)
 
-    def test_the_slice_three_regions_each_contribute_checks(self):
+    def test_every_seeded_map_contributes_checks(self):
         from collections import Counter
         counts = Counter(row.region for row in FIXED_LOCATIONS)
         self.assertEqual(counts["Cathedral Ward"], 61)   # 59 m24_00 + the two Oedon strip rows
         self.assertEqual(counts["Old Yharnam"], 54)
         self.assertEqual(counts["Central Yharnam"], 47)
         self.assertEqual(counts["Iosefka's Clinic"], 2)
+        self.assertEqual(counts["Hemwick Charnel Lane"], 32)
+        self.assertEqual(counts["Castle Cainhurst"], 26)
 
     def test_manifest_is_the_complete_first_cycle_map_slice(self):
         from tools.build_fixed_location_slice import (
@@ -79,8 +81,9 @@ class FixedLocationCatalogTests(unittest.TestCase):
             build_rows,
         )
 
-        # 51 Central Yharnam (slice 1) + 59 Cathedral Ward + 54 Old Yharnam.
-        self.assertEqual(164, len(FIXED_LOCATIONS))
+        # Prior 164 rows + 32 Hemwick + 26 Cainhurst (two already-published
+        # treasure rows are excluded from the generated manifest).
+        self.assertEqual(222, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [

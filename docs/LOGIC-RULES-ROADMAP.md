@@ -573,8 +573,8 @@ evidence in the base game and is worth recording as such.
 
 | slice | goal | why |
 |---|---|---|
-| 3 *(shipped)* | Blood-starved Beast | current |
-| 4 (Hemwick + Cainhurst + UCW) | Blood-starved Beast, unchanged | neither new region is on the critical path; Logarius and both UCW bosses are optional |
+| 3 *(shipped)* | Vicar Amelia | current |
+| 4 (Hemwick + Cainhurst) | Vicar Amelia, unchanged | neither new region is on the critical path; Witch and Logarius are optional |
 | 5 (Forbidden Woods + Byrgenwerth) | **Rom** | first goal with an unambiguous predecessor chain |
 | 6 (Yahar'gul) | **The One Reborn** | |
 | 7 (Lecture + Mensis) | **Mergo's Wet Nurse** | only after the m32 door's ObjActParam is mined — otherwise the goal sits behind an unmodelled key |
