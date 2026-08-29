@@ -221,3 +221,83 @@ fixed_cainhurst_lot_2501050	Castle Cainhurst - Knight's Wig	Castle Cainhurst	525
 fixed_cainhurst_lot_2501060	Castle Cainhurst - Blood Gem #2	Castle Cainhurst	52501060	2501060	8	125001	optional	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501070	Castle Cainhurst - Knight's Garb (chest)	Castle Cainhurst	52501070	2501070	1	81000	useful	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501080	Castle Cainhurst - Evelyn (chest)	Castle Cainhurst	52501080	2501080	0	14100000	useful	treasure	m25_00_00_00	True
+fixed_forbidden_woods_lot_2700100	Forbidden Woods - Twin Blood Stone Shards x3	Forbidden Woods	52700100	2700100	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700110	Forbidden Woods - Poison Knife x8	Forbidden Woods	52700110	2700110	4	1210	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700120	Forbidden Woods - Cannon	Forbidden Woods	52700120	2700120	0	15000000	useful	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700130	Forbidden Woods - Madman's Knowledge #1	Forbidden Woods	52700130	2700130	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700140	Forbidden Woods - Molotov Cocktail x11	Forbidden Woods	52700140	2700140	4	1200	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700150	Forbidden Woods - White Church Hat	Forbidden Woods	52700150	2700150	1	290000	useful	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700170	Forbidden Woods - Thick Coldblood (6) #1	Forbidden Woods	52700170	2700170	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700180	Forbidden Woods - Blood Gem #1	Forbidden Woods	52700180	2700180	8	102001	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700185	Forbidden Woods - Madman's Knowledge #2	Forbidden Woods	52700185	2700185	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700190	Forbidden Woods - Twin Blood Stone Shards #1	Forbidden Woods	52700190	2700190	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700200	Forbidden Woods - Blood Gem #2	Forbidden Woods	52700200	2700200	8	101601	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700205	Forbidden Woods - Madman's Knowledge #3	Forbidden Woods	52700205	2700205	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700210	Forbidden Woods - Madman's Knowledge #4	Forbidden Woods	52700210	2700210	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700220	Forbidden Woods - Twin Blood Stone Shards #2	Forbidden Woods	52700220	2700220	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700230	Forbidden Woods - Frenzied Coldblood (8)	Forbidden Woods	52700230	2700230	4	1517	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700240	Forbidden Woods - Twin Blood Stone Shards #3	Forbidden Woods	52700240	2700240	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700250	Forbidden Woods - Madman's Knowledge #5	Forbidden Woods	52700250	2700250	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700260	Forbidden Woods - Madman's Knowledge #6	Forbidden Woods	52700260	2700260	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700270	Forbidden Woods - Madman's Knowledge #7	Forbidden Woods	52700270	2700270	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700290	Forbidden Woods - Madman's Knowledge #8	Forbidden Woods	52700290	2700290	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700300	Forbidden Woods - Blood Gem #3	Forbidden Woods	52700300	2700300	8	127001	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700310	Forbidden Woods - Frenzied Coldblood (7) #1	Forbidden Woods	52700310	2700310	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700320	Forbidden Woods - Blood Vial x6 #1	Forbidden Woods	52700320	2700320	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700330	Forbidden Woods - Twin Blood Stone Shards #4	Forbidden Woods	52700330	2700330	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700340	Forbidden Woods - Antidote x3	Forbidden Woods	52700340	2700340	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700350	Forbidden Woods - Antidote x4 #1	Forbidden Woods	52700350	2700350	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700360	Forbidden Woods - Twin Blood Stone Shards x2 #1	Forbidden Woods	52700360	2700360	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700370	Forbidden Woods - Blood Stone Chunk	Forbidden Woods	52700370	2700370	4	3020	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700380	Forbidden Woods - Blood Gem #4	Forbidden Woods	52700380	2700380	8	100401	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700385	Forbidden Woods - Madman's Knowledge #9	Forbidden Woods	52700385	2700385	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700390	Forbidden Woods - Poison Knife x3	Forbidden Woods	52700390	2700390	4	1210	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700400	Forbidden Woods - Beast Blood Pellet x6	Forbidden Woods	52700400	2700400	4	1110	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700410	Forbidden Woods - Graveguard Robe	Forbidden Woods	52700410	2700410	1	31000	useful	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700420	Forbidden Woods - Twin Blood Stone Shards x2 #2	Forbidden Woods	52700420	2700420	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700430	Forbidden Woods - Shining Coins x5	Forbidden Woods	52700430	2700430	4	1410	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700440	Forbidden Woods - Twin Blood Stone Shards #5	Forbidden Woods	52700440	2700440	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700450	Forbidden Woods - Twin Blood Stone Shards #6	Forbidden Woods	52700450	2700450	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700460	Forbidden Woods - Twin Blood Stone Shards x2 #3	Forbidden Woods	52700460	2700460	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700470	Forbidden Woods - Twin Blood Stone Shards #7	Forbidden Woods	52700470	2700470	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700480	Forbidden Woods - Beast Roar	Forbidden Woods	52700480	2700480	4	2020	useful	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700490	Forbidden Woods - Twin Blood Stone Shards x2 #4	Forbidden Woods	52700490	2700490	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700500	Forbidden Woods - Frenzied Coldblood (7) #2	Forbidden Woods	52700500	2700500	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700510	Forbidden Woods - Quicksilver Bullets x6	Forbidden Woods	52700510	2700510	4	900	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700520	Forbidden Woods - Twin Blood Stone Shards #8	Forbidden Woods	52700520	2700520	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700540	Forbidden Woods - Blood Gem #5	Forbidden Woods	52700540	2700540	8	102202	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700545	Forbidden Woods - Madman's Knowledge #10	Forbidden Woods	52700545	2700545	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700550	Forbidden Woods - Twin Blood Stone Shards #9	Forbidden Woods	52700550	2700550	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700560	Forbidden Woods - Graveguard Mask	Forbidden Woods	52700560	2700560	1	30000	useful	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700570	Forbidden Woods - Blood Gem #6	Forbidden Woods	52700570	2700570	8	100301	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700575	Forbidden Woods - Madman's Knowledge #11	Forbidden Woods	52700575	2700575	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700580	Forbidden Woods - Twin Blood Stone Shards #10	Forbidden Woods	52700580	2700580	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700590	Forbidden Woods - Beast Blood Pellet x3	Forbidden Woods	52700590	2700590	4	1110	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700600	Forbidden Woods - Thick Coldblood (6) #2	Forbidden Woods	52700600	2700600	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700610	Forbidden Woods - Blood Vial x2	Forbidden Woods	52700610	2700610	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700640	Forbidden Woods - Blood Vial x6 #2	Forbidden Woods	52700640	2700640	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700650	Forbidden Woods - Blood Gem #7	Forbidden Woods	52700650	2700650	8	127003	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700660	Forbidden Woods - Blood Gem #8	Forbidden Woods	52700660	2700660	8	127004	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700670	Forbidden Woods - Frenzied Coldblood (7) #3	Forbidden Woods	52700670	2700670	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700690	Forbidden Woods - Blood Gem #9	Forbidden Woods	52700690	2700690	8	127002	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700700	Forbidden Woods - Blood Gem #10	Forbidden Woods	52700700	2700700	8	127000	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700720	Forbidden Woods - Twin Blood Stone Shards #11	Forbidden Woods	52700720	2700720	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700740	Forbidden Woods - Frenzied Coldblood (7) #4	Forbidden Woods	52700740	2700740	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700750	Forbidden Woods - Shining Coins x6	Forbidden Woods	52700750	2700750	4	1410	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700760	Forbidden Woods - Twin Blood Stone Shards #12	Forbidden Woods	52700760	2700760	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700770	Forbidden Woods - Thick Coldblood (6) #3	Forbidden Woods	52700770	2700770	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700780	Forbidden Woods - Antidote x4 #2	Forbidden Woods	52700780	2700780	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700790	Forbidden Woods - Quicksilver Bullets x10	Forbidden Woods	52700790	2700790	4	900	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700800	Forbidden Woods - Burial Blade (chest)	Forbidden Woods	52700800	2700800	0	5100000	useful	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700810	Forbidden Woods - Pebble x2	Forbidden Woods	52700810	2700810	4	1230	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700860	Forbidden Woods - Twin Blood Stone Shards #13	Forbidden Woods	52700860	2700860	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700870	Forbidden Woods - Thick Coldblood (6) #4	Forbidden Woods	52700870	2700870	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700880	Forbidden Woods - Blood Vial x5	Forbidden Woods	52700880	2700880	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700890	Forbidden Woods - Blue Elixir x4	Forbidden Woods	52700890	2700890	4	1120	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700900	Forbidden Woods - Pungent Blood Cocktail x3	Forbidden Woods	52700900	2700900	4	1260	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700910	Forbidden Woods - Pungent Blood Cocktail x4	Forbidden Woods	52700910	2700910	4	1260	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700920	Forbidden Woods - Beast Blood Pellet x4	Forbidden Woods	52700920	2700920	4	1110	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700930	Forbidden Woods - Frenzied Coldblood (7) #5	Forbidden Woods	52700930	2700930	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700940	Forbidden Woods - Madman's Knowledge #12	Forbidden Woods	52700940	2700940	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700950	Forbidden Woods - Antidote x2	Forbidden Woods	52700945	2700950	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700960	Forbidden Woods - Twin Blood Stone Shards x2 #5	Forbidden Woods	52700960	2700960	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True

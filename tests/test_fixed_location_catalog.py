@@ -81,9 +81,8 @@ class FixedLocationCatalogTests(unittest.TestCase):
             build_rows,
         )
 
-        # Prior 164 rows + 32 Hemwick + 26 Cainhurst (two already-published
-        # treasure rows are excluded from the generated manifest).
-        self.assertEqual(222, len(FIXED_LOCATIONS))
+        # Prior 222 rows plus 80 Forbidden Woods rows.
+        self.assertEqual(302, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [
