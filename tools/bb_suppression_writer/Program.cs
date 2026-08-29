@@ -2,6 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SoulsFormats;
 
+if (args.Length == 3 && args[0] == "--inspect-starting-attire")
+{
+    InspectStartingAttire(args[1], args[2]);
+    return 0;
+}
+
 if (args.Length == 6 && args[0] == "--seed-weapons" && args[5] == "--apply")
 {
     WriteSeedWeapons(args[1], args[2], args[3], args[4]);
@@ -103,6 +109,34 @@ foreach (Applied change in changes)
         + $"category:item={change.ItemCategory}:{change.GoodsId}->4:{placeholderGoods} "
         + $"flag={change.AcquisitionFlag} unchanged key={change.ItemKey}");
 return 0;
+
+static void InspectStartingAttire(string inputPath, string paramdefPath)
+{
+    BND4 game = BND4.Read(Path.GetFullPath(inputPath));
+    BND4 defs = BND4.Read(Path.GetFullPath(paramdefPath));
+    BinderFile initFile = RequireSingleFile(game, "CharaInitParam.param");
+    PARAM init = PARAM.Read(initFile.Bytes);
+    init.ApplyParamdef(ReadMatchingDefinition(defs, init));
+    string[] attireFields = ["equip_Helm", "equip_Armer", "equip_Gaunt", "equip_Leg"];
+    var referenced = new HashSet<int>();
+    foreach (PARAM.Row row in init.Rows.Where(row =>
+                 (row.ID >= 2000 && row.ID <= 2009) || (row.ID >= 3000 && row.ID <= 3009)))
+    {
+        int[] values = attireFields.Select(field => Convert.ToInt32(RequireCell(row, field).Value)).ToArray();
+        foreach (int value in values.Where(value => value > 0))
+            referenced.Add(value);
+        Console.WriteLine($"CHARA_INIT\t{row.ID}\t{row.Name}\t{String.Join(';', attireFields.Zip(values).Select(pair => $"{pair.First}={pair.Second}"))}");
+    }
+
+    BinderFile protectorFile = RequireSingleFile(game, "EquipParamProtector.param");
+    PARAM protectors = PARAM.Read(protectorFile.Bytes);
+    protectors.ApplyParamdef(ReadMatchingDefinition(defs, protectors));
+    string[] slotFields = ["headEquip", "bodyEquip", "armEquip", "legEquip"];
+    foreach (PARAM.Row row in protectors.Rows.Where(row => referenced.Contains(row.ID)))
+    {
+        Console.WriteLine($"PROTECTOR\t{row.ID}\t{row.Name}\t{String.Join(';', slotFields.Select(field => $"{field}={RequireCell(row, field).Value}"))}");
+    }
+}
 
 static void WriteSeedWeapons(string requestPath, string inputPath, string paramdefPath,
                              string outputPath)
