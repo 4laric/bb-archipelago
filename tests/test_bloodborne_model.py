@@ -98,19 +98,20 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertTrue(expected <= set(LOCATION_BINDINGS))
         self.assertTrue(all(LOCATION_BINDINGS[key].event_flag for key in expected))
 
-    def test_slice_contains_woods_clinic_byrgenwerth_and_rom(self):
+    def test_slice_contains_rom_route_and_queue_jumped_frontier(self):
         # Slice 5 adds the Woods catalog, both clinic backyard rows and their
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(313, len(NETWORK_LOCATIONS))
+        self.assertEqual(359, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
             {"Central Yharnam": 47, "Cathedral Ward": 62,
              "Old Yharnam": 55, "Grand Cathedral": 2,
              "Hemwick Charnel Lane": 34, "Castle Cainhurst": 28,
-             "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1},
+             "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
+             "Nightmare Frontier": 46},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -119,6 +120,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(12501800, LOCATION_BINDINGS["boss_martyr_logarius"].event_flag)
         self.assertEqual(12701800, LOCATION_BINDINGS["boss_shadows_of_yharnam"].event_flag)
         self.assertEqual(13201800, LOCATION_BINDINGS["boss_rom"].event_flag)
+        self.assertEqual(13301800, LOCATION_BINDINGS["boss_amygdala"].event_flag)
         self.assertEqual("boss_rom", GOAL_LOCATION_KEY)
         self.assertEqual(
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
@@ -166,23 +168,25 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 22)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 15)
-        self.assertEqual(counts["Blood Stone Shards x2"], 11)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 11)
-        self.assertEqual(counts["Blood Stone Chunk"], 7)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 7)
+        self.assertEqual(counts["Blood Vial"], 39)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 26)
+        self.assertEqual(counts["Blood Stone Shards x2"], 19)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 19)
+        self.assertEqual(counts["Blood Stone Chunk"], 13)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 13)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
-            self.assertEqual(counts[name], 7, name)
+            self.assertEqual(counts[name], 13, name)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
                      "Shaman Bone Blade", "Madman's Knowledge", "Great One's Wisdom",
                      "Coldblood Dew (3)", "Thick Coldblood (6)",
                      "Frenzied Coldblood (8)"):
-            self.assertEqual(counts[name], 4, name)
-        self.assertEqual(counts["Kin Coldblood (11)"], 3)
+            self.assertEqual(counts[name], 7 if name in (
+                "Poison Knife x3", "Antidote x2", "Sedatives x2",
+                "Blue Elixir", "Beast Blood Pellet", "Lead Elixir") else 6, name)
+        self.assertEqual(counts["Kin Coldblood (11)"], 6)
         self.assertEqual(counts["Blood Rock"], 1)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
@@ -203,12 +207,12 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Oedon Tomb Key"], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
-        # play experience. 313 - 4 one-each = 309 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 109)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 73)
-        self.assertEqual(counts["Blood Stone Shards x2"], 55)
+        # play experience. 359 - 4 one-each = 355 slots over five weighted names.
+        self.assertEqual(counts["Blood Vial"], 125)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 83)
+        self.assertEqual(counts["Blood Stone Shards x2"], 63)
         for name in ("Pebbles x3", "Molotov Cocktails x2"):
-            self.assertEqual(counts[name], 36, name)
+            self.assertEqual(counts[name], 42, name)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 9)  # eight slice items + Blood Vial
@@ -341,7 +345,8 @@ class BloodborneModelTests(unittest.TestCase):
 
         # Menu, Hunter's Dream and the Workshop are transit regions here.
         self.assertEqual(set(SLICE_REGIONS) - {"Menu", "Hunter's Dream",
-                                               "Healing Church Workshop"},
+                                               "Healing Church Workshop",
+                                               "Lecture Building 1F"},
                          {l.region for l in locations})
         with_everything = reachable(set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS))
         self.assertEqual(with_everything, {l.key for l in locations})

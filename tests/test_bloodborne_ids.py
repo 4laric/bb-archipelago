@@ -195,7 +195,8 @@ class GoldenIdTests(unittest.TestCase):
                                                  "fixed_old_yharnam_lot_",
                                                  "fixed_hemwick_lot_",
                                                  "fixed_cainhurst_lot_",
-                                                 "fixed_forbidden_woods_lot_"))]
+                                                 "fixed_forbidden_woods_lot_",
+                                                 "fixed_nightmare_frontier_lot_"))]
         self.assertEqual(len(slice_one), 45)
         expected = {key: 0xBB1025 + index for index, key in enumerate(slice_one)}
         expected["boss_cleric_beast"] = 0xBB1052
@@ -215,6 +216,11 @@ class GoldenIdTests(unittest.TestCase):
                       if row.key.startswith("fixed_forbidden_woods_lot_")]
         self.assertEqual(len(slice_five), 80)
         expected.update({key: 0xBB1101 + index for index, key in enumerate(slice_five)})
+        expected["boss_amygdala"] = 0xBB1151
+        nightmare_frontier = [row.key for row in FIXED_LOCATIONS
+                              if row.key.startswith("fixed_nightmare_frontier_lot_")]
+        self.assertEqual(len(nightmare_frontier), 44)
+        expected.update({key: 0xBB1152 + index for index, key in enumerate(nightmare_frontier)})
         self.assertEqual(
             {key: LOCATION_ID_BY_KEY[key] for key in expected},
             expected,
@@ -231,7 +237,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB1150)
+        self.assertEqual(max(ids), 0xBB117D)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""
