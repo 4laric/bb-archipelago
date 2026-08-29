@@ -352,6 +352,9 @@ SLICE_REGIONS = (
     "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth", "Yahar'gul",
     "Lecture Building 1F", "Lecture Building 2F", "Nightmare Frontier",
     "Nightmare of Mensis",
+    "Hunter's Nightmare", "Underground Corpse Pile", "Research Hall",
+    "Lumenwood Garden", "Astral Clocktower", "Fishing Hamlet",
+    "Nightmare Grand Cathedral",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
@@ -371,6 +374,13 @@ _SLICE_ENTRANCE_NAMES = (
     "Lecture Hall giant door",
     "Amygdala's grasp",
     "Lecture Building frontier door",
+    "Amygdala's DLC grasp",
+    "Ludwig's arena exit",
+    "Surgery altar",
+    "Research Hall summit",
+    "Astral Clocktower door",
+    "Astral clock",
+    "Nightmare Grand Cathedral",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -478,6 +488,16 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "treasure_augur_of_ebrietas",
     "treasure_lecture_theatre_key",
     "treasure_messengers_gift",
+    "pickup_eye_of_blood_drunk_hunter",
+    "pickup_eye_pendant",
+    "boss_ludwig",
+    "boss_living_failures",
+    "boss_lady_maria",
+    "boss_orphan_of_kos",
+    "pickup_laurences_skull",
+    "treasure_underground_jail_chunk",
+    "treasure_underground_cell_inner_chamber_key",
+    "boss_laurence",
     "treasure_radiant_sword_hunter_badge",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",

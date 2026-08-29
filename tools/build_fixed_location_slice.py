@@ -15,7 +15,8 @@ the Blood-starved Beast). Slice 4 adds ``m22_00_00_00`` (Hemwick) and
 Woods). Slice 6 adds ``m28_00_00_00`` (Yahar'gul). Slice 7 adds the reviewed
 Lecture Building rows in ``m32_00_00_00`` and ``m26_00_00_00`` (Nightmare of
 Mensis). The queue-jumped optional Nightmare Frontier slice adds
-``m33_00_00_00``. The map ids are read off
+``m33_00_00_00``. The DLC adds ``m34_00_00_00`` through
+``m36_00_00_00``. The map ids are read off
 ``research/catalog/fixed_location_catalog.tsv``; none of them is guessed.
 
 Player-facing names come from ``worlds/bloodborne/location_names.tsv``, the
@@ -53,6 +54,7 @@ SLICE_MAPS = (
     "m28_00_00_00",
     "m32_00_00_00", "m26_00_00_00",
     "m33_00_00_00",
+    "m34_00_00_00", "m35_00_00_00", "m36_00_00_00",
 )
 
 # Per-map defaults for the two data-only columns a catalog row cannot supply.
@@ -67,6 +69,9 @@ MAP_DEFAULT_REGION = {
     "m32_00_00_00": "Lecture Building 1F",
     "m26_00_00_00": "Nightmare of Mensis",
     "m33_00_00_00": "Nightmare Frontier",
+    "m34_00_00_00": "Hunter's Nightmare",
+    "m35_00_00_00": "Research Hall",
+    "m36_00_00_00": "Fishing Hamlet",
 }
 MAP_KEY_PREFIX = {
     "m24_01_00_00": "fixed_central_yharnam_lot_",
@@ -79,6 +84,9 @@ MAP_KEY_PREFIX = {
     "m32_00_00_00": "fixed_lecture_building_lot_",
     "m26_00_00_00": "fixed_nightmare_mensis_lot_",
     "m33_00_00_00": "fixed_nightmare_frontier_lot_",
+    "m34_00_00_00": "fixed_hunters_nightmare_lot_",
+    "m35_00_00_00": "fixed_research_hall_lot_",
+    "m36_00_00_00": "fixed_fishing_hamlet_lot_",
 }
 
 OUTPUT = REPO / "worlds" / "bloodborne" / "fixed_locations.tsv"
@@ -138,6 +146,16 @@ EXCLUDED_FLAGS = {
     ),
     53300330: (
         "already published by data.py as treasure_messengers_gift"
+    ),
+    53500630: (
+        "already published by data.py as treasure_underground_jail_chunk"
+    ),
+    50002360: (
+        "already published by data.py as treasure_underground_cell_inner_chamber_key"
+    ),
+    53400600: (
+        "two unrelated Hunter's Nightmare corpses (lots 3400600 and 3400610) "
+        "share one acquisition flag and cannot be separate Archipelago checks"
     ),
 }
 
