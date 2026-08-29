@@ -11,7 +11,9 @@ keeps the previously published stable keys.
 alone (Central Yharnam through Father Gascoigne).  Slice 3 adds
 ``m24_00_00_00`` (Cathedral Ward) and ``m23_00_00_00`` (Old Yharnam through
 the Blood-starved Beast). Slice 4 adds ``m22_00_00_00`` (Hemwick) and
-``m25_00_00_00`` (Cainhurst). The map ids are read off
+``m25_00_00_00`` (Cainhurst). Slice 5 adds ``m27_00_00_00`` (Forbidden
+Woods); m32's reviewed fixed rows belong to the Lecture Building and remain
+deferred even though Rom shares that archive. The map ids are read off
 ``research/catalog/fixed_location_catalog.tsv``; none of them is guessed.
 
 Player-facing names come from ``worlds/bloodborne/location_names.tsv``, the
@@ -45,6 +47,7 @@ REPO = Path(__file__).resolve().parents[1]
 SLICE_MAPS = (
     "m24_01_00_00", "m24_00_00_00", "m23_00_00_00",
     "m22_00_00_00", "m25_00_00_00",
+    "m27_00_00_00",
 )
 
 # Per-map defaults for the two data-only columns a catalog row cannot supply.
@@ -54,6 +57,7 @@ MAP_DEFAULT_REGION = {
     "m23_00_00_00": "Old Yharnam",
     "m22_00_00_00": "Hemwick Charnel Lane",
     "m25_00_00_00": "Castle Cainhurst",
+    "m27_00_00_00": "Forbidden Woods",
 }
 MAP_KEY_PREFIX = {
     "m24_01_00_00": "fixed_central_yharnam_lot_",
@@ -61,6 +65,7 @@ MAP_KEY_PREFIX = {
     "m23_00_00_00": "fixed_old_yharnam_lot_",
     "m22_00_00_00": "fixed_hemwick_lot_",
     "m25_00_00_00": "fixed_cainhurst_lot_",
+    "m27_00_00_00": "fixed_forbidden_woods_lot_",
 }
 
 OUTPUT = REPO / "worlds" / "bloodborne" / "fixed_locations.tsv"
