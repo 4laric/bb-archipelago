@@ -81,8 +81,8 @@ class FixedLocationCatalogTests(unittest.TestCase):
             build_rows,
         )
 
-        # Through-Mensis plus the queue-jumped Frontier branch.
-        self.assertEqual(465, len(FIXED_LOCATIONS))
+        # Base game, queue-jumped Frontier, and all three DLC maps.
+        self.assertEqual(606, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [

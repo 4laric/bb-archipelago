@@ -544,7 +544,7 @@ DLC_ENTRANCE_NAMES = frozenset({
 })
 DLC_ITEM_KEYS = frozenset({
     "eye_of_blood_drunk_hunter", "eye_pendant", "astral_clocktower_key",
-    "celestial_dial", "laurences_skull",
+    "celestial_dial", "laurences_skull", "blacksky_eye", *DLC_WEAPON_KEYS,
 })
 DLC_LOCATION_KEYS = frozenset(
     location.key for location in LOCATIONS
