@@ -28,7 +28,7 @@ module	test_ce_table_inventory	3
 module	test_launcher_client_config	6
 module	test_launcher_core	61
 module	test_launcher_readiness	7
-module	test_launcher_ui	45
+module	test_launcher_ui	47
 module	test_launcher_seed_zip	23
 module	test_launcher_package	5
 module	test_launcher_plan	12

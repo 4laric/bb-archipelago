@@ -1080,6 +1080,57 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             self.assertNotIn("suppression_binder", values)
             self.assertNotIn("suppression_manifest", values)
 
+    def test_a_deleted_old_package_repairs_the_suppression_pair_atomically(self):
+        from bb_launcher.ui import repair_stale_packaged_suppression_paths
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            current = root / "current" / "work" / "vanilla-suppression-build"
+            current.mkdir(parents=True)
+            binder = current / "gameparam.parambnd.dcx"
+            manifest = current / "build-manifest.json"
+            binder.write_bytes(b"binder")
+            manifest.write_text("{}", encoding="utf-8")
+            old = root / "deleted-playtest"
+
+            repairs = repair_stale_packaged_suppression_paths(
+                {
+                    "suppression_binder": str(old / "gameparam.parambnd.dcx"),
+                    "suppression_manifest": str(old / "build-manifest.json"),
+                },
+                {
+                    "suppression_binder": str(binder),
+                    "suppression_manifest": str(manifest),
+                },
+            )
+            self.assertEqual(
+                repairs,
+                {"suppression_binder": str(binder), "suppression_manifest": str(manifest)},
+            )
+
+    def test_a_valid_operator_suppression_pair_is_preserved(self):
+        from bb_launcher.ui import repair_stale_packaged_suppression_paths
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            selected_binder = root / "selected.parambnd.dcx"
+            selected_manifest = root / "selected.json"
+            selected_binder.write_bytes(b"selected")
+            selected_manifest.write_text("{}", encoding="utf-8")
+            self.assertEqual(
+                {},
+                repair_stale_packaged_suppression_paths(
+                    {
+                        "suppression_binder": str(selected_binder),
+                        "suppression_manifest": str(selected_manifest),
+                    },
+                    {
+                        "suppression_binder": str(root / "bundled.parambnd.dcx"),
+                        "suppression_manifest": str(root / "bundled.json"),
+                    },
+                ),
+            )
+
     def test_derive_game_root_from_the_shad_executable(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
