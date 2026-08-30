@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Seeds can select any of Bloodborne's three endings.** The `goal` YAML
+  option accepts `submit_to_gehrman` (Mergo's Wet Nurse), `refuse_gehrman`
+  (defeat Gehrman), or the default `moon_presence` (receive any three of four
+  shuffled Third Umbilical Cords, then defeat Gehrman and Moon Presence).
 - **The launcher now keeps its plumbing out of the normal setup flow.** The
   Setup tab contains the seed, game, shadPS4, server, and player identity;
   cache, state, log, suppression, MapStudio, and operator paths live on their

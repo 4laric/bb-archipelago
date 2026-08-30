@@ -19,6 +19,7 @@ from worlds.bloodborne import (
     FILLER_WEIGHTS,
     FULL_POOL_ITEM_KEYS,
     GOAL_LOCATION_KEY,
+    GOAL_LOCATION_KEYS,
     ITEM_ID_BY_KEY,
     ITEM_NAME_TO_ID,
     LOCATION_ID_BY_KEY,
@@ -134,6 +135,11 @@ class BloodborneModelTests(unittest.TestCase):
             LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
             build_runtime_slot_data()["goal_location"],
         )
+        for location_key in GOAL_LOCATION_KEYS.values():
+            self.assertEqual(
+                LOCATION_ID_BY_KEY[location_key],
+                build_runtime_slot_data(goal_location_key=location_key)["goal_location"],
+            )
 
     def test_slice_excludes_out_of_slice_fixed_rows(self):
         keys = {location.key for location in NETWORK_LOCATIONS}
@@ -657,6 +663,30 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         option = BloodborneOptions.type_hints["remove_weapon_requirements"]
         self.assertEqual(1, option.default)
         self.assertEqual("Remove Weapon Requirements", option.display_name)
+
+    def test_goal_option_tracks_the_three_endings(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["goal"]
+        self.assertEqual(2, option.default)
+        self.assertEqual(
+            {
+                "submit_to_gehrman": 0,
+                "refuse_gehrman": 1,
+                "moon_presence": 2,
+            },
+            option.options,
+        )
+        self.assertEqual(
+            {
+                0: "boss_mergos_wet_nurse",
+                1: "boss_gehrman",
+                2: "boss_moon_presence",
+            },
+            GOAL_LOCATION_KEYS,
+        )
 
 
 class Wave1WeaponPoolTests(unittest.TestCase):

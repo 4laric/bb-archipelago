@@ -14,3 +14,5 @@ Bloodborne:
   randomize_starting_weapons: true
   # Remove Strength, Skill, Bloodtinge, and Arcane equip gates; scaling remains.
   remove_weapon_requirements: true
+  # Ending goal: submit_to_gehrman, refuse_gehrman, or moon_presence.
+  goal: moon_presence

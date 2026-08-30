@@ -51,6 +51,11 @@ STARTING_TOOL_KEYS = frozenset({"blood_gem_workshop_tool", "rune_workshop_tool"}
 # Gehrman, then use any three of four shuffled cord pieces to expose Moon Presence.
 # The client learns this from slot_data, so no client rebuild is required.
 GOAL_LOCATION_KEY = "boss_moon_presence"
+GOAL_LOCATION_KEYS = {
+    0: "boss_mergos_wet_nurse",
+    1: "boss_gehrman",
+    2: "boss_moon_presence",
+}
 
 STARTING_WEAPON_ROWS = {
     "right_hand": (2000, 2001, 2002),
@@ -255,7 +260,10 @@ LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in MODEL.l
 LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS}
 
 
-def build_runtime_slot_data(item_keys: Iterable[str] | None = None) -> dict[str, Any]:
+def build_runtime_slot_data(
+    item_keys: Iterable[str] | None = None,
+    goal_location_key: str = GOAL_LOCATION_KEY,
+) -> dict[str, Any]:
     """Return the address-free world/client contract for this seed.
 
     `item_keys` is the pool actually placed (the full validated pool by
@@ -316,12 +324,12 @@ def build_runtime_slot_data(item_keys: Iterable[str] | None = None) -> dict[str,
             "manifest_format": SUPPRESSION_MANIFEST_FORMAT,
             "plan_sha256": SUPPRESSION_PLAN_SHA256,
         },
-        "goal_location": LOCATION_ID_BY_KEY[GOAL_LOCATION_KEY],
+        "goal_location": LOCATION_ID_BY_KEY[goal_location_key],
     }
 
 try:
     from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region
-    from Options import PerGameCommonOptions, Toggle
+    from Options import Choice, PerGameCommonOptions, Toggle
     from worlds.AutoWorld import World
 except ImportError:
     __all__ = ["MODEL"]
@@ -367,6 +375,19 @@ else:
         display_name = "Remove Weapon Requirements"
         default = 1
 
+    class Goal(Choice):
+        """Choose which of Bloodborne's three endings completes the seed.
+
+        Submit to Gehrman ends after Mergo's Wet Nurse; refusing his offer
+        requires defeating Gehrman; Moon Presence additionally requires any
+        three of the four shuffled Third Umbilical Cords.
+        """
+        display_name = "Goal"
+        option_submit_to_gehrman = 0
+        option_refuse_gehrman = 1
+        option_moon_presence = 2
+        default = 2
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
@@ -375,6 +396,7 @@ else:
         uncanny_weapons: UncannyWeapons
         randomize_starting_weapons: RandomizeStartingWeapons
         remove_weapon_requirements: RemoveWeaponRequirements
+        goal: Goal
 
     class BloodborneItem(APItem):
         game = GAME
@@ -469,9 +491,12 @@ else:
             # Oedon Tomb Key. Leaving this unconditional would let fill bury the
             # key behind itself in a multiworld and call the seed complete.
             goal_name = next(location.name for location in NETWORK_LOCATIONS
-                             if location.key == GOAL_LOCATION_KEY)
+                             if location.key == self._goal_location_key())
             self.multiworld.completion_condition[self.player] = (
                 lambda state: state.can_reach_location(goal_name, self.player))
+
+        def _goal_location_key(self) -> str:
+            return GOAL_LOCATION_KEYS[int(self.options.goal)]
 
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"
@@ -493,9 +518,13 @@ else:
                 "randomize_starting_weapons": bool(self.options.randomize_starting_weapons),
                 "starting_weapons": starting_weapons,
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
+                "goal": self.options.goal.current_key,
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
-                **build_runtime_slot_data(self._pool_item_keys() | STARTING_TOOL_KEYS),
+                **build_runtime_slot_data(
+                    self._pool_item_keys() | STARTING_TOOL_KEYS,
+                    self._goal_location_key(),
+                ),
             }
 
         def generate_output(self, output_directory: str) -> None:
