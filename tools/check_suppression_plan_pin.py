@@ -53,7 +53,7 @@ EXPECTED_SOURCE_SHA256 = "581e28302a231a10ad333806dfc90f41425db4f9f146799dca625f
 # the writer's byte-faithful round-trip verification guards content, and the
 # client checks a binder against its OWN manifest, so this value is playable
 # by construction. Owed: one live session on a CI-built binder (#200).
-EXPECTED_OUTPUT_SHA256 = "1ca46c2dde79579abffdd31674e1a5dcb2dd041d7d8f09bfecef7da5e123c72e"
+EXPECTED_OUTPUT_SHA256 = "e6919adafea79175c65ade07fcc7da8879aaf1928c3f56b1fd372ea81a89bf33"
 
 
 def read_bundle_source_sha(bundle: Path) -> str:
