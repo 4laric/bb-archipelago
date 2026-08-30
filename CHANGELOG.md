@@ -17,7 +17,9 @@ under `Unreleased` and move into a dated version section when released.
   than a free-text trap: single-player seeds select themselves, and archives
   with several Bloodborne slots present only those valid names. A compact
   seed/player/runtime summary and automatic readiness refresh make a wrong
-  selection visible before launch.
+  selection visible before launch. Single-slot seeds now hide the redundant
+  player selector, uncommon enemy controls are collapsed by default, and the
+  launch button names any missing setup pieces instead of failing later.
 - **One check that no first playthrough could ever complete is gone.** Central
   Yharnam's `Bold Hunter's Mark` was a corpse that only spawns on NG+ — the
   param names it "treasure corpse 19, second playthrough onward", and it is the

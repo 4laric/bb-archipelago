@@ -1001,6 +1001,24 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn('bind("<<ComboboxSelected>>"', source)
         self.assertIn('bind("<FocusOut>"', source)
 
+    def test_everyday_launch_controls_disclose_only_when_needed(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn('text="Advanced enemy options"', source)
+        self.assertIn("self._enemy_advanced_widgets", source)
+        self.assertIn("widget.grid_remove()", source)
+        self.assertIn("self._show_player_choice(len(names) > 1)", source)
+        self.assertIn("self._show_player_choice(False)", source)
+
+    def test_launch_gate_names_missing_setup_instead_of_failing_late(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        gate = source.split("def _refresh_launch_gate")[1].split("def _state_root")[0]
+        self.assertIn('("AP seed", self.fields["ap_request"]', gate)
+        self.assertIn('("shadPS4", self.fields["shad_executable"]', gate)
+        self.assertIn('("game folder", self.fields["game_root"]', gate)
+        self.assertIn('missing.append("player")', gate)
+        self.assertIn('self.launch_hint.set("Needed: "', gate)
+        self.assertIn('self.launch_button.configure(state="disabled")', gate)
+
     def test_ui_contract_wires_the_secondary_actions(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         for label in (

@@ -195,16 +195,20 @@ that discovery is unambiguous. The normal **Setup** tab asks for only:
   re-selecting the same zip reuses it;
 - the validated shadPS4 game root and `shadPS4.exe`;
 - the Archipelago server; the seed supplies the player name when it identifies
-  one Bloodborne slot, while a multi-Bloodborne archive presents a read-only
-  list of the Bloodborne slots it actually contains. The setup shows the
-  resolved player, seed, and required runtime before launch.
+  one Bloodborne slot and hides the unnecessary selector, while a
+  multi-Bloodborne archive presents a read-only list of the Bloodborne slots
+  it actually contains. The setup shows the resolved player, seed, and
+  required runtime before launch.
 
-MapStudio and the guarded enemy options live under **Enemy randomization**.
+MapStudio and the guarded enemy options live under **Enemy randomization**;
+the uncommon seed and tier controls stay collapsed until **Advanced enemy
+options** is selected.
 Suppression, cache, state, log, and explicit process-plan overrides live under
 **Troubleshooting**; packaged players do not need to touch them. Setup is saved
 automatically whenever an action starts.
 Changing the seed, player, game, shadPS4 path, or server refreshes the
-readiness view so ordinary setup problems are visible before pressing Launch.
+readiness view. Launch stays unavailable and names the missing setup pieces
+until the seed, game, shadPS4, and any required player choice are present.
 
 A **Session status** panel below the setup shows, read-only and on demand: the
 active overlay's seed/slot, cache key, suppression hash, and enemizer state;
