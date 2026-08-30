@@ -255,6 +255,7 @@ class LauncherApp:
         # _save_settings and _load_settings_if_present: it is per-session by
         # construction, so it can never be left on and forgotten.
         self.allow_suppression_mismatch = tk.BooleanVar(value=False)
+        self.show_session_details = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
         self._enemy_widgets: list[Any] = []
         self._enemy_advanced_widgets: list[Any] = []
@@ -526,6 +527,7 @@ class LauncherApp:
         # Launch/build progress, not an enemizer concern: it lives outside the
         # notebook so no tab selection can hide it.
         log_frame = ttk.LabelFrame(outer, text="Progress", padding=10)
+        self.log_frame = log_frame
         log_frame.grid(row=3, column=0, sticky="nsew", pady=(12, 0))
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
@@ -540,6 +542,7 @@ class LauncherApp:
         self.log.configure(yscrollcommand=scrollbar.set)
 
         status_frame = ttk.LabelFrame(outer, text="Session status", padding=10)
+        self.status_frame = status_frame
         status_frame.grid(row=4, column=0, sticky="ew", pady=(12, 0))
         status_frame.columnconfigure(0, weight=1)
         self.status_text = self.tk.Text(
@@ -578,17 +581,21 @@ class LauncherApp:
         self.vanilla_button = ttk.Button(actions, text="Launch Vanilla", command=self._start_vanilla)
         self.vanilla_button.grid(row=0, column=0, padx=(0, 8))
         self.restore_button = ttk.Button(
-            actions, text="Restore Previous", command=self._start_restore
+            actions, text="Undo Last Build", command=self._start_restore
         )
         self.restore_button.grid(row=0, column=1, padx=(0, 8))
-        self.rebuild_button = ttk.Button(actions, text="Rebuild Seed", command=self._start_rebuild)
+        self.rebuild_button = ttk.Button(actions, text="Rebuild", command=self._start_rebuild)
         self.rebuild_button.grid(row=0, column=2, padx=(0, 8))
         self.diagnostics_button = ttk.Button(
             actions, text="Open Logs & Diagnostics", command=self._open_diagnostics
         )
         self.diagnostics_button.grid(row=0, column=3)
-        self.doctor_button = ttk.Button(actions, text="Doctor", command=self._start_doctor)
+        self.doctor_button = ttk.Button(actions, text="Check Setup", command=self._start_doctor)
         self.doctor_button.grid(row=0, column=4, padx=(8, 0))
+        self.details_button = ttk.Button(
+            actions, text="Show Details", command=self._toggle_session_details
+        )
+        self.details_button.grid(row=0, column=5, padx=(8, 0))
         self._action_buttons = (
             self.vanilla_button,
             self.restore_button,
@@ -599,6 +606,22 @@ class LauncherApp:
         ttk.Label(outer, textvariable=self.status, style="Muted.TLabel").grid(
             row=6, column=0, sticky="w", pady=(8, 0)
         )
+        self._set_session_details_visible(False)
+
+    def _set_session_details_visible(self, visible: bool) -> None:
+        """Keep routine launches compact; retain full evidence one click away."""
+        self.show_session_details.set(visible)
+        if visible:
+            self.log_frame.grid()
+            self.status_frame.grid()
+            self.details_button.configure(text="Hide Details")
+        else:
+            self.log_frame.grid_remove()
+            self.status_frame.grid_remove()
+            self.details_button.configure(text="Show Details")
+
+    def _toggle_session_details(self) -> None:
+        self._set_session_details_visible(not self.show_session_details.get())
 
     def _browse(self, name: str, selector: str) -> None:
         current = self.fields[name].get().strip()
@@ -830,6 +853,8 @@ class LauncherApp:
             return False
 
     def _append_log(self, message: str) -> None:
+        if message.lstrip().upper().startswith(("REFUSED", "WARNING", "EARLY EXIT", "ERROR")):
+            self._set_session_details_visible(True)
         self.log.configure(state="normal")
         self.log.insert("end", message.rstrip() + "\n")
         self.log.see("end")
@@ -837,6 +862,8 @@ class LauncherApp:
         self.status.set(message.rstrip())
 
     def _set_status_text(self, text: str) -> None:
+        if text.startswith("Status unavailable:"):
+            self._set_session_details_visible(True)
         self.status_text.configure(state="normal")
         self.status_text.delete("1.0", "end")
         self.status_text.insert("end", text.rstrip() + "\n")
@@ -1009,7 +1036,7 @@ class LauncherApp:
             self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
             return
         self._set_busy(True)
-        self._append_log("Doctor: checking the whole player chain...")
+        self._append_log("Checking the whole player chain...")
         threading.Thread(
             target=self._run_doctor,
             args=(
@@ -1041,7 +1068,7 @@ class LauncherApp:
             )
             text = format_report(report)
         except Exception as exc:
-            self.root.after(0, self._action_failed, "Doctor", exc)
+            self.root.after(0, self._action_failed, "Check Setup", exc)
         else:
             self.root.after(0, self._doctor_finished, text, report.ok)
 
@@ -1051,8 +1078,8 @@ class LauncherApp:
             self._append_log(line)
         if not ok:
             self.messagebox.showwarning(
-                "Doctor found problems",
-                text + "\n\nFix the FAIL lines above and run Doctor again.",
+                "Setup problems found",
+                text + "\n\nFix the FAIL lines above and run Check Setup again.",
                 parent=self.root,
             )
 
@@ -1075,13 +1102,13 @@ class LauncherApp:
     def _start_restore(self) -> None:
         if self._busy:
             return
-        settings = self._setup_for_action("Restore Previous")
+        settings = self._setup_for_action("Undo Last Build")
         if settings is None:
             return
         threading.Thread(
             target=self._run_action,
             args=(
-                "Restore Previous",
+                "Undo Last Build",
                 lambda: self.workflow.restore_previous(settings, progress=self._progress_message),
             ),
             daemon=True,
@@ -1094,7 +1121,7 @@ class LauncherApp:
         if not self._generate_plan():
             return
         if not self.messagebox.askyesno(
-            "Rebuild Seed",
+            "Rebuild",
             "Evict the verified cache for this seed and build it again from the game files?",
             parent=self.root,
         ):
@@ -1121,7 +1148,7 @@ class LauncherApp:
             self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
             return
         self._set_busy(True)
-        self._append_log("Starting Rebuild Seed...")
+        self._append_log("Starting Rebuild...")
         threading.Thread(
             target=self._run_rebuild,
             args=(settings, options, override),
