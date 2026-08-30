@@ -9,7 +9,7 @@ import csv
 import json
 import tempfile
 import unittest
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from tools.build_emevd_entity_usage import (
@@ -103,6 +103,13 @@ class CoverageDeltaTests(unittest.TestCase):
         swaps, _ = plan_swaps(self.slots, policies, self.tags, EnemizerConfig(seed))
         return swaps
 
+    def _plan(self, config):
+        policies = {
+            s.key: apply_archetype_tag(classify_slot(s, self.overrides), self.tags.get(s.archetype.key))
+            for s in self.slots
+        }
+        return plan_swaps(self.slots, policies, self.tags, config), policies
+
     def _relaxed_overrides(self):
         grouped = _by_logical(_census_rows())
         relaxable = {
@@ -150,6 +157,73 @@ class CoverageDeltaTests(unittest.TestCase):
             self.assertEqual([s.json() for s in forward], [s.json() for s in reverse])
             counts.add(len(forward))
         self.assertEqual({336}, counts)
+
+    def test_tier_mixing_has_its_own_determinism_and_effect_pin(self):
+        counts = set()
+        for index in range(6):
+            config = EnemizerConfig(f"tier-mix-{index}", preserve_tier=False)
+            (forward, _), _policies = self._plan(config)
+            policies = {
+                s.key: apply_archetype_tag(
+                    classify_slot(s, self.overrides), self.tags.get(s.archetype.key)
+                )
+                for s in self.slots
+            }
+            reverse, _ = plan_swaps(list(reversed(self.slots)), policies, self.tags, config)
+            self.assertEqual([s.json() for s in forward], [s.json() for s in reverse])
+            counts.add(len(forward))
+        self.assertEqual({308}, counts)
+
+        (mixed, _), policies = self._plan(
+            EnemizerConfig("12345", preserve_tier=False)
+        )
+        (default, _), _default_policies = self._plan(EnemizerConfig("12345"))
+        default_by_slot = {swap.logical_key: swap for swap in default}
+        slots_by_key = {slot.key: slot for slot in self.slots}
+        changed_by_map = Counter(
+            slots_by_key[swap.destination_keys[0]].map_name
+            for swap in mixed
+            if swap.target.key != default_by_slot[swap.logical_key].target.key
+        )
+        self.assertEqual(32, sum(changed_by_map.values()))
+        self.assertEqual(
+            {
+                "m24_02_00_00": 3,
+                "m25_00_00_00": 1,
+                "m26_00_00_00": 2,
+                "m27_00_00_00": 8,
+                "m32_00_00_00": 1,
+                "m33_00_00_00": 10,
+                "m34_00_00_00": 7,
+            },
+            dict(changed_by_map),
+        )
+        cross_tier = Counter(
+            (policies[swap.destination_keys[0]].tier, self.tags[swap.target.key].tier)
+            for swap in mixed
+            if policies[swap.destination_keys[0]].tier != self.tags[swap.target.key].tier
+        )
+        self.assertEqual({("common", "elite"): 7, ("elite", "common"): 7}, dict(cross_tier))
+
+    def test_locomotion_preservation_has_its_own_determinism_and_effect_pin(self):
+        counts = set()
+        for index in range(6):
+            config = EnemizerConfig(f"locomotion-{index}", preserve_locomotion=True)
+            (forward, _), policies = self._plan(config)
+            reverse, _ = plan_swaps(list(reversed(self.slots)), policies, self.tags, config)
+            self.assertEqual([s.json() for s in forward], [s.json() for s in reverse])
+            counts.add(len(forward))
+        self.assertEqual({305}, counts)
+
+        (swaps, rejections), _policies = self._plan(
+            EnemizerConfig("12345", preserve_locomotion=True)
+        )
+        self.assertEqual(305, len(swaps))
+        locomotion_rejections = [
+            row for row in rejections
+            if any(reason.startswith("locomotion mismatch") for reason in row.get("denied", {}))
+        ]
+        self.assertEqual(3, len(locomotion_rejections))
 
 
 class CatalogBuilderOptInTests(unittest.TestCase):

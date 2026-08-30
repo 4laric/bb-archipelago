@@ -6,6 +6,11 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Advanced enemy controls now say what is experimental about them.** Tier
+  mixing warns that enemy scaling is not normalized, while locomotion
+  preservation warns that its roster tags are incomplete. Offline regression
+  fixtures now pin both modes and verify deterministic plans independently of
+  the default 308-placement policy.
 - **The Old Hunters is selectable per seed.** Set `include_dlc: true` in the
   player YAML to add its regions, bosses, fixed pickups, and five DLC-only
   progression items. It defaults off so players without the DLC receive a
