@@ -69,14 +69,15 @@ The Cathedral Ward door itself is untouched. Object 2411304 is the generic key
 door: `m24_01_00_00.emevd.dcx.js:168` initializes event 12410110 slot 5 with
 `objParameterId 2410080` and persistent flag 12411307, so the item requirement
 lives in `ObjActParam` row 2410080 and no `PlayerHasItem(Goods, 4000)` condition
-exists anywhere in the event files. Suppressing the award changes what the
-player receives, not what the door asks for.
+exists anywhere in the event files. The committed mine records goods 4000 in
+that row's `spQualifiedId`; `tests/test_objact_params.py` locks the relationship
+down. Suppressing the award changes what the player receives, not what the door
+asks for.
 
-### Owner validation checklist (both claims are `inferred`)
+### Owner validation checklist (runtime behaviour)
 
-Neither of these has been seen live. They are the two facts that decide whether
-a shuffled Oedon Tomb Key is playable, and until a session records them the
-world ships them labelled `inferred`, per `docs/RESEARCH-BASELINE.md`.
+The param relationship is now cited. These runtime checks still decide whether
+the complete shuffled-key path behaves correctly in the running game.
 
 1. **A suppressed script-award lot awards the placeholder without breaking the
    event.** Kill Father Gascoigne on a suppressed binder and confirm: one Blood
@@ -86,8 +87,8 @@ world ships them labelled `inferred`, per `docs/RESEARCH-BASELINE.md`.
    the award ahead of it changed would be silent and would strand the seed.
 2. **An AP-granted goods 4000 opens door 2411304.** With no vanilla key ever
    received, take the key from Archipelago and confirm the Tomb of Oedon door
-   opens and sets flag 12411307. This is the inventory-keyed `ObjActParam`
-   assumption — true of the DS family, not yet witnessed here. If the door
+   opens and sets flag 12411307. The item relationship is mined; this validates
+   that a client-granted copy behaves like a native copy at runtime. If the door
    instead reads an event flag, suppression is not enough on its own and the
    door needs its own edit.
 3. **The grant survives an absent stack.** Goods 4000 is `maxNum 1`,

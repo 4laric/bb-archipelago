@@ -36,3 +36,4 @@ module	test_launcher_workflow	11
 module	test_location_names	16
 module	test_death_signal_candidates	8
 module	test_slice3_witnesses	9
+module	test_objact_params	4
