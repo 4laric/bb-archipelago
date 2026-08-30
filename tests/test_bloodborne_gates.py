@@ -128,6 +128,17 @@ class LocationRuleTests(unittest.TestCase):
     EXPECTED = {
         "interaction_laurences_skull": {frozenset({"event_amelia_defeated"})},
         "boss_mergos_wet_nurse": {frozenset({"event_micolash_defeated"})},
+        "boss_gehrman": {frozenset({"event_mergos_wet_nurse_defeated"})},
+        "boss_moon_presence": {
+            frozenset({"event_gehrman_defeated", "third_umbilical_cord_1",
+                       "third_umbilical_cord_2", "third_umbilical_cord_3"}),
+            frozenset({"event_gehrman_defeated", "third_umbilical_cord_1",
+                       "third_umbilical_cord_2", "third_umbilical_cord_4"}),
+            frozenset({"event_gehrman_defeated", "third_umbilical_cord_1",
+                       "third_umbilical_cord_3", "third_umbilical_cord_4"}),
+            frozenset({"event_gehrman_defeated", "third_umbilical_cord_2",
+                       "third_umbilical_cord_3", "third_umbilical_cord_4"}),
+        },
         "pickup_eye_of_blood_drunk_hunter": {frozenset({"event_forbidden_woods_password"})},
         "boss_laurence": {frozenset({"laurences_skull"})},
         "treasure_cosmic_eye_watcher_badge": {frozenset({"orphanage_key"})},

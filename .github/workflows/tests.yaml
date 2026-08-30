@@ -356,11 +356,12 @@ jobs:
                   assert len(weapons) == expected_weapons, (
                       name, payload["player_name"], len(weapons))
                   # Upgrade materials, hunter tools, the two guaranteed
-                  # workshop tools, and the expanded filler mix are all
-                  # explicit category-4 delivery contracts.
+                  # workshop tools, four independently placed Umbilical Cord
+                  # items, and the expanded filler mix are all explicit
+                  # category-4 delivery contracts.
                   goods = [row for row in payload["runtime_items"].values()
                            if row["item_category"] == 4]
-                  assert len(goods) == 52, (name, payload["player_name"], len(goods))
+                  assert len(goods) == 56, (name, payload["player_name"], len(goods))
                   for item_id in (0xBB0130, 0xBB0131):
                       assert str(item_id) in payload["runtime_items"], (
                           name, payload["player_name"], hex(item_id))

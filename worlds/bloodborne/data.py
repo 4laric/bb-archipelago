@@ -31,6 +31,13 @@ ITEMS = (
     Item("eye_pendant", "Eye Pendant", P),
     Item("astral_clocktower_key", "Astral Clocktower Key", P),
     Item("celestial_dial", "Celestial Dial", P),
+    # Three independently placed progression pieces, all delivered as the
+    # game's real Third Umbilical Cord (goods 4323). Distinct AP names make
+    # the 3/3 Go Mode requirement visible to trackers and generation logic.
+    Item("third_umbilical_cord_1", "Third Umbilical Cord #1", P),
+    Item("third_umbilical_cord_2", "Third Umbilical Cord #2", P),
+    Item("third_umbilical_cord_3", "Third Umbilical Cord #3", P),
+    Item("third_umbilical_cord_4", "Third Umbilical Cord #4", P),
     Item("laurences_skull", "Laurence's Skull", P),
     # Equipment is admitted only after its runtime descriptor has been
     # observed through the native grant path and allowlisted separately from
@@ -159,6 +166,8 @@ ITEMS = (
     Item("event_one_reborn_defeated", "The One Reborn Defeated", E),
     Item("event_micolash_defeated", "Micolash Defeated", E),
     Item("event_mergos_wet_nurse_defeated", "Mergo's Wet Nurse Defeated", E),
+    Item("event_gehrman_defeated", "Gehrman Defeated", E),
+    Item("event_moon_presence_defeated", "Moon Presence Defeated", E),
     Item("event_ludwig_defeated", "Ludwig Defeated", E),
     Item("event_living_failures_defeated", "Living Failures Defeated", E),
     Item("event_lady_maria_defeated", "Lady Maria Defeated", E),
@@ -256,6 +265,21 @@ LOCATIONS = (
     Location("boss_the_one_reborn", location_name(12801800), "Yahar'gul", locked_item="event_one_reborn_defeated"),
     Location("boss_micolash", location_name(12601850), "Nightmare of Mensis", locked_item="event_micolash_defeated"),
     Location("boss_mergos_wet_nurse", location_name(12601800), "Nightmare of Mensis", Rule.all("event_micolash_defeated"), locked_item="event_mergos_wet_nurse_defeated"),
+    Location("boss_gehrman", location_name(12101800), "Hunter's Dream",
+             Rule.all("event_mergos_wet_nurse_defeated"),
+             locked_item="event_gehrman_defeated"),
+    Location("boss_moon_presence", location_name(12101850), "Hunter's Dream",
+             Rule.any(
+                 ("event_gehrman_defeated", "third_umbilical_cord_1",
+                  "third_umbilical_cord_2", "third_umbilical_cord_3"),
+                 ("event_gehrman_defeated", "third_umbilical_cord_1",
+                  "third_umbilical_cord_2", "third_umbilical_cord_4"),
+                 ("event_gehrman_defeated", "third_umbilical_cord_1",
+                  "third_umbilical_cord_3", "third_umbilical_cord_4"),
+                 ("event_gehrman_defeated", "third_umbilical_cord_2",
+                  "third_umbilical_cord_3", "third_umbilical_cord_4"),
+             ),
+             locked_item="event_moon_presence_defeated"),
     # Scripted checks and bosses with committed flags (runtime_bindings.py);
     # every name comes from the location-name table
     # (docs/LOCATION-NAMING.md).
@@ -368,6 +392,10 @@ SLICE_ITEM_KEYS = frozenset({
     "pebbles",
     "molotov_cocktails",
     "blood_stone_shards",
+    "third_umbilical_cord_1",
+    "third_umbilical_cord_2",
+    "third_umbilical_cord_3",
+    "third_umbilical_cord_4",
 })
 # Pool membership and global vanilla-item suppression are different contracts.
 # Repeatable consumables may remain elsewhere in the game; the Saw Spear's
@@ -442,6 +470,8 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_the_one_reborn",
     "boss_micolash",
     "boss_mergos_wet_nurse",
+    "boss_gehrman",
+    "boss_moon_presence",
     "boss_amygdala",
     "pickup_cainhurst_summons",
     "pickup_upper_cathedral_key",

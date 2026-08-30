@@ -83,6 +83,8 @@ location_flag	region	name	basis
 53500870	Research Hall	Research Hall - Decorative Old Hunter Garb	event tag 時計塔_2F右四足部屋ハンター
 53600700	Underground Corpse Pile	Underground Corpse Pile - Harrowed Hood	event tag 宝死体_ハンター
 52100000	Hunter's Dream	Hunter's Dream - Pebble	map m21_00; MSB NPC anchors 拠点老人/人形のヒロイン (Gehrman and the Doll) place m21_00 as the Hunter's Dream hub; lot name アイテム使用チュートリアル
+12101800	Hunter's Dream	Gehrman, the First Hunter	m21_00 EMEVD boss-completion event 12101800
+12101850	Hunter's Dream	Moon Presence	m21_00 EMEVD boss-completion event 12101850
 52200100	Hemwick Charnel Lane	Hemwick Charnel Lane - Pebble x4 #1	map m22_00; unestablished
 52200110	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards	map m22_00
 52200120	Hemwick Charnel Lane	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #1	map m22_00; unestablished

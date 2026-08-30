@@ -112,6 +112,18 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "eye_pendant": RuntimeItemBinding(0x40000FB1, 0xB0000FB1, "FMG/param + validated goods formula"),
     "astral_clocktower_key": RuntimeItemBinding(0x40000FB4, 0xB0000FB4, "FMG/param + validated goods formula"),
     "celestial_dial": RuntimeItemBinding(0x40000FB5, 0xB0000FB5, "FMG/param + validated goods formula"),
+    "third_umbilical_cord_1": RuntimeItemBinding(
+        0x400010E3, 0xB00010E3,
+        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
+    "third_umbilical_cord_2": RuntimeItemBinding(
+        0x400010E3, 0xB00010E3,
+        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
+    "third_umbilical_cord_3": RuntimeItemBinding(
+        0x400010E3, 0xB00010E3,
+        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
+    "third_umbilical_cord_4": RuntimeItemBinding(
+        0x400010E3, 0xB00010E3,
+        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
     "laurences_skull": RuntimeItemBinding(0x40000FAE, 0xB0000FAE, "FMG/param + validated goods formula"),
     # Category-0 equipment has no ItemLot-to-runtime formula. Each row here is
     # a live canary, not a derivation from fixed_locations.tsv.
@@ -732,6 +744,24 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
         "boss_defeat",
         "m26_00_00_00.emevd.dcx.js:537-587",
+        None,
+        None,
+    ),
+    "boss_gehrman": RuntimeLocationBinding(
+        12101800,
+        "EMEVD boss-completion flag; m21_00 event 12101800 (Gehrman)",
+        None,
+        "boss_defeat",
+        "m21_00_00_00.emevd.dcx.js:1423-1460",
+        None,
+        None,
+    ),
+    "boss_moon_presence": RuntimeLocationBinding(
+        12101850,
+        "EMEVD boss-completion flag; m21_00 event 12101850 (Moon Presence)",
+        None,
+        "boss_defeat",
+        "m21_00_00_00.emevd.dcx.js:1665-1690",
         None,
         None,
     ),
