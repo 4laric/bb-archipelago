@@ -75,6 +75,7 @@ def make_build(root: Path, seed: str, content: bytes) -> Path:
         source_hashes={SUPPRESSION_PATH: hashlib.sha256(content + b"-source").hexdigest()},
         options={"enemy_randomizer": False},
         suppression_plan_sha256=hashlib.sha256(b"plan").hexdigest(),
+        suppression_binder_sha256=hashlib.sha256(content).hexdigest(),
     )
     return SeedCache(root / "cache").build(identity, binder).path
 

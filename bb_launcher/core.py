@@ -352,6 +352,7 @@ class SeedIdentity:
     options: Mapping[str, Any] = field(default_factory=dict)
     enemizer_seed: str | None = None
     suppression_plan_sha256: str | None = None
+    suppression_binder_sha256: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         for label, value in (
@@ -374,6 +375,11 @@ class SeedIdentity:
             plan_hash = _require_sha256(
                 self.suppression_plan_sha256, "suppression_plan_sha256"
             )
+        binder_hash = None
+        if self.suppression_binder_sha256 is not None:
+            binder_hash = _require_sha256(
+                self.suppression_binder_sha256, "suppression_binder_sha256"
+            )
         value = {
             "seed": self.seed,
             "slot": self.slot,
@@ -384,13 +390,21 @@ class SeedIdentity:
             "options": dict(self.options),
             "enemizer_seed": self.enemizer_seed,
             "suppression_plan_sha256": plan_hash,
+            "suppression_binder_sha256": binder_hash,
         }
         canonical_json(value)
         return value
 
     @property
     def cache_key(self) -> str:
-        return hashlib.sha256(canonical_json(self.as_dict())).hexdigest()
+        return hashlib.sha256(canonical_json(self.cache_material())).hexdigest()
+
+    def cache_material(self) -> dict[str, Any]:
+        """Inputs that can change overlay bytes, excluding AP session identity."""
+        value = self.as_dict()
+        value.pop("seed")
+        value.pop("slot")
+        return value
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any]) -> "SeedIdentity":
@@ -417,6 +431,11 @@ class SeedIdentity:
                 None
                 if value.get("suppression_plan_sha256") is None
                 else str(value["suppression_plan_sha256"])
+            ),
+            suppression_binder_sha256=(
+                None
+                if value.get("suppression_binder_sha256") is None
+                else str(value["suppression_binder_sha256"])
             ),
         )
         identity.as_dict()
@@ -454,7 +473,8 @@ class SeedCache:
         destination = self.path_for(key)
         if destination.exists():
             result = self.verify(destination)
-            if result.manifest["identity"] != identity.as_dict():
+            existing_identity = SeedIdentity.from_dict(result.manifest["identity"])
+            if existing_identity.cache_material() != identity.cache_material():
                 raise ValidationError(f"cache key collision or identity drift at {destination}")
             return BuildResult(destination, result.manifest, True)
 
@@ -1159,9 +1179,11 @@ def _stage_overlay(
     build: BuildResult,
     stage: Path,
     previous_cache_key: str | None,
+    previous_identity: Mapping[str, Any] | None = None,
     user_sources: Mapping[str, Path] | None = None,
     merge: UserModMerge | None = None,
     suppression_override: Sequence[str] | None = None,
+    activation_identity: SeedIdentity | None = None,
 ) -> dict[str, Any]:
     stage.mkdir()
     for record in build.manifest["files"]:
@@ -1196,7 +1218,14 @@ def _stage_overlay(
         "app_version": APP_VERSION,
         "cache_key": build.cache_key,
         "previous_cache_key": previous_cache_key,
-        "identity": build.manifest["identity"],
+        "previous_identity": (
+            None if previous_identity is None else dict(previous_identity)
+        ),
+        "identity": (
+            build.manifest["identity"]
+            if activation_identity is None
+            else activation_identity.as_dict()
+        ),
         "build_manifest_sha256": sha256_file(build.path / SEED_MANIFEST_NAME),
         "files": build.manifest["files"],
         "suppression": build.manifest["suppression"],
@@ -1246,6 +1275,7 @@ def activate_build(
     process_is_running: Callable[[], bool] | None = None,
     failpoint: Callable[[str], None] | None = None,
     suppression_override: Sequence[str] | None = None,
+    identity: SeedIdentity | None = None,
 ) -> dict[str, Any]:
     """Atomically activate a verified build, preserving any owned predecessor.
 
@@ -1257,6 +1287,10 @@ def activate_build(
     _require_shad_stopped(process_is_running)
     recover_activation(install, process_is_running=process_is_running)
     build = SeedCache(Path(build_path).resolve().parent).verify(build_path)
+    if identity is not None:
+        built_identity = SeedIdentity.from_dict(build.manifest["identity"])
+        if identity.cache_material() != built_identity.cache_material():
+            raise ValidationError("activation identity does not describe the cached overlay")
     user_sources, merge = plan_activation_merge(install, build)
     previous_owner = None
     if install.mods.exists():
@@ -1272,6 +1306,7 @@ def activate_build(
         # build is identical, so it must run a full transaction, not short out.
         if (
             previous_owner["cache_key"] == build.cache_key
+            and (identity is None or previous_owner.get("identity") == identity.as_dict())
             and active_fingerprint == merge.fingerprint
         ):
             return previous_owner
@@ -1290,9 +1325,11 @@ def activate_build(
             build,
             stage,
             None if previous_owner is None else str(previous_owner["cache_key"]),
+            None if previous_owner is None else previous_owner.get("identity"),
             user_sources,
             merge,
             suppression_override,
+            identity,
         )
     except Exception:
         if stage.exists():
@@ -1499,10 +1536,17 @@ def restore_previous_build(
         raise ValidationError("the active overlay has no previous seed build")
     previous_path = cache.path_for(str(previous))
     cache.verify(previous_path, expected_key=str(previous))
+    previous_identity_value = owner.get("previous_identity")
+    previous_identity = None
+    if previous_identity_value is not None:
+        if not isinstance(previous_identity_value, dict):
+            raise ValidationError("active overlay previous_identity is not an object")
+        previous_identity = SeedIdentity.from_dict(previous_identity_value)
     return activate_build(
         install,
         previous_path,
         process_is_running=process_is_running,
+        identity=previous_identity,
     )
 
 
