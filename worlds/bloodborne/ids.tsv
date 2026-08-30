@@ -523,6 +523,12 @@ item	fist_of_gratia	0xBB012E
 item	loch_shield	0xBB012F
 item	blood_gem_workshop_tool	0xBB0130
 item	rune_workshop_tool	0xBB0131
+item	third_umbilical_cord_1	0xBB0132
+item	third_umbilical_cord_2	0xBB0133
+item	third_umbilical_cord_3	0xBB0134
+item	third_umbilical_cord_4	0xBB0135
+location	boss_gehrman	0xBB11F5
+location	boss_moon_presence	0xBB11F6
 location	fixed_lecture_building_lot_3200000	0xBB11AF
 location	fixed_lecture_building_lot_3200010	0xBB11B0
 location	fixed_lecture_building_lot_3200020	0xBB11B1

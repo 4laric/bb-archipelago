@@ -23,6 +23,10 @@ Underground Cell Inner Chamber Key	4015	npc_reward	Simon	43221	50002360	treasure
 Underground Cell Key	4018	treasure	Research Hall	3500800	53500800	treasure	m35_00_00_00			source_type_matches
 Blood Gem Workshop Tool	4103	treasure	Central Yharnam	2411000	52411000	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11			source_type_matches
 Rune Workshop Tool	4104	treasure	Hemwick Charnel Lane	2200360	52200360	treasure	m22_00_00_00			source_type_matches
+Third Umbilical Cord #1	4323	boss_reward	Nightmare of Mensis	55100000	50000305	script_award			m26_00_00_00.emevd.dcx.js	script_source_compatible
+Third Umbilical Cord #2	4323	boss_reward	Nightmare of Mensis	55100000	50000305	script_award			m26_00_00_00.emevd.dcx.js	script_source_compatible
+Third Umbilical Cord #3	4323	boss_reward	Nightmare of Mensis	55100000	50000305	script_award			m26_00_00_00.emevd.dcx.js	script_source_compatible
+Third Umbilical Cord #4	4323	quest_reward	Iosefka/Arianna questlines			script_award				quest_esd_source_pending
 Cainhurst Badge	4117	npc_reward	Annalise	17001	50000205	lot_only				script_or_quest_review
 Cosmic Eye Watcher Badge	4119	treasure	Upper Cathedral Ward	2420270;2420280	52420270;52420280	treasure	m24_02_00_00;m24_02_00_01			source_type_matches
 Crow Hunter Badge	4111	npc_or_enemy	Eileen	35012;35020;35030	50001900	enemy_drop		m24_00_00_00;m24_00_00_01;m24_01_00_00;m24_01_00_01;m24_01_00_11		source_type_compatible

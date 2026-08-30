@@ -47,10 +47,10 @@ POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
 FILLER_ITEM_NAME = "Blood Vial"
 STARTING_TOOL_KEYS = frozenset({"blood_gem_workshop_tool", "rune_workshop_tool"})
-# The Amelia playtest slice ends at Vicar Amelia. The client learns the goal from
-# slot data's "goal_location", so moving it is a seed-owned change, not a
-# client rebuild.
-GOAL_LOCATION_KEY = "boss_mergos_wet_nurse"
+# The full base-game ending: return to the Dream after Wet Nurse, defeat
+# Gehrman, then use any three of four shuffled cord pieces to expose Moon Presence.
+# The client learns this from slot_data, so no client rebuild is required.
+GOAL_LOCATION_KEY = "boss_moon_presence"
 
 STARTING_WEAPON_ROWS = {
     "right_hand": (2000, 2001, 2002),
@@ -468,10 +468,10 @@ else:
             # Cathedral Ward, and therefore Old Yharnam, is behind the shuffled
             # Oedon Tomb Key. Leaving this unconditional would let fill bury the
             # key behind itself in a multiworld and call the seed complete.
-            goal_region = next(location.region for location in NETWORK_LOCATIONS
-                               if location.key == GOAL_LOCATION_KEY)
+            goal_name = next(location.name for location in NETWORK_LOCATIONS
+                             if location.key == GOAL_LOCATION_KEY)
             self.multiworld.completion_condition[self.player] = (
-                lambda state: state.can_reach_region(goal_region, self.player))
+                lambda state: state.can_reach_location(goal_name, self.player))
 
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"
