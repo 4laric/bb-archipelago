@@ -993,6 +993,14 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("result.client_config", source)
         self.assertIn("result.ledger", source)
 
+    def test_seed_identity_is_selected_from_the_seed_not_free_typed(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn('state="readonly"', source)
+        self.assertIn("archive_slots(chosen)", source)
+        self.assertIn("self.seed_summary.set", source)
+        self.assertIn('bind("<<ComboboxSelected>>"', source)
+        self.assertIn('bind("<FocusOut>"', source)
+
     def test_ui_contract_wires_the_secondary_actions(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         for label in (

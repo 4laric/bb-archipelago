@@ -25,6 +25,7 @@ from .readiness import format_readiness, gather_readiness, grants_watchdog_warni
 from .resources import application_root, resource_root
 from .seed_request import (
     archive_player_name,
+    archive_slots,
     looks_like_archive,
     resolve_request_source,
 )
@@ -245,6 +246,7 @@ class LauncherApp:
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
         self.player_name = tk.StringVar()
+        self.seed_summary = tk.StringVar(value="Choose a seed to see its player and build.")
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
         # Operator override (bb-archipelago#183).  Deliberately absent from
@@ -263,6 +265,9 @@ class LauncherApp:
         self._build()
         self._load_settings_if_present()
         self._apply_default_fields()
+        remembered_seed = self.fields["ap_request"].get().strip()
+        if remembered_seed:
+            self._accept_ap_request(remembered_seed, show_error=False)
         self._toggle_enemy_fields()
         self.root.after(0, self._refresh_status)
 
@@ -445,7 +450,10 @@ class LauncherApp:
         ttk.Label(setup, text="Archipelago server").grid(
             row=server_row, column=0, sticky="w", padx=(0, 8), pady=3
         )
-        ttk.Entry(setup, textvariable=self.ap_server).grid(row=server_row, column=1, sticky="ew", pady=3)
+        server_entry = ttk.Entry(setup, textvariable=self.ap_server)
+        server_entry.grid(row=server_row, column=1, sticky="ew", pady=3)
+        server_entry.bind("<FocusOut>", lambda _event: self._refresh_status())
+        server_entry.bind("<Return>", lambda _event: self._refresh_status())
         ttk.Label(setup, text=f"default {DEFAULT_SERVER}").grid(
             row=server_row, column=2, sticky="w", padx=(8, 0), pady=3
         )
@@ -453,11 +461,16 @@ class LauncherApp:
         ttk.Label(setup, text="Your AP player name").grid(
             row=name_row, column=0, sticky="w", padx=(0, 8), pady=3
         )
-        ttk.Entry(setup, textvariable=self.player_name).grid(
-            row=name_row, column=1, sticky="ew", pady=3
+        self.player_combo = ttk.Combobox(
+            setup, textvariable=self.player_name, state="readonly", values=()
         )
-        ttk.Label(setup, text="the slot name your host gave you").grid(
+        self.player_combo.grid(row=name_row, column=1, sticky="ew", pady=3)
+        self.player_combo.bind("<<ComboboxSelected>>", self._player_selected)
+        ttk.Label(setup, text="read from the selected seed").grid(
             row=name_row, column=2, sticky="w", padx=(8, 0), pady=3
+        )
+        ttk.Label(setup, textvariable=self.seed_summary, style="Muted.TLabel").grid(
+            row=name_row + 1, column=0, columnspan=3, sticky="w", pady=(8, 0)
         )
         # Outside the enemy-randomization widget group on purpose: it stays
         # usable with Randomize Enemies off, and it is never saved.
@@ -584,8 +597,9 @@ class LauncherApp:
             self._cascade_map_studio()
         if name == "ap_request":
             self._accept_ap_request(selected)
+        self._refresh_status()
 
-    def _accept_ap_request(self, selected: str) -> None:
+    def _accept_ap_request(self, selected: str, *, show_error: bool = True) -> None:
         """Resolve the chosen seed file and fill in what it tells us.
 
         A multiworld zip with exactly one Bloodborne slot also prefills the
@@ -593,14 +607,24 @@ class LauncherApp:
         empty field is what makes the Doctor's slot-agreement check a warning.
         """
         chosen = Path(selected).expanduser()
-        if not self.player_name.get().strip():
-            detected = (
-                archive_player_name(chosen)
-                if looks_like_archive(chosen)
-                else _request_player_name(chosen)
-            )
-            if detected is not None:
-                self.player_name.set(detected)
+        if looks_like_archive(chosen):
+            try:
+                names = tuple(sorted({name for _member, name in archive_slots(chosen)}))
+            except LauncherError as exc:
+                if show_error:
+                    self.messagebox.showerror("Invalid AP seed file", str(exc), parent=self.root)
+                return
+        else:
+            detected = _request_player_name(chosen)
+            names = () if detected is None else (detected,)
+        self.player_combo.configure(values=names)
+        if len(names) == 1:
+            self.player_name.set(names[0])
+        elif self.player_name.get().strip() not in names:
+            self.player_name.set("")
+        if len(names) > 1 and not self.player_name.get().strip():
+            self.seed_summary.set("Choose which Bloodborne player you are.")
+            return
         try:
             self.enemy_seed.set(
                 request_enemy_seed(
@@ -609,8 +633,24 @@ class LauncherApp:
                     state_root=self._state_root(),
                 )
             )
+            request = _request_identity(
+                chosen,
+                player_name=self.player_name.get().strip(),
+                state_root=self._state_root(),
+            )
+            self.seed_summary.set(
+                f"Player {request['slot']} · seed {request['seed']} · "
+                f"runtime {request['runtime_build']}"
+            )
         except LauncherError as exc:
-            self.messagebox.showerror("Invalid AP seed file", str(exc), parent=self.root)
+            if show_error:
+                self.messagebox.showerror("Invalid AP seed file", str(exc), parent=self.root)
+
+    def _player_selected(self, _event: Any = None) -> None:
+        selected = self.fields["ap_request"].get().strip()
+        if selected:
+            self._accept_ap_request(selected)
+        self._refresh_status()
 
     def _cascade_map_studio(self) -> None:
         """Fill the MapStudio source from the game folder when unset."""

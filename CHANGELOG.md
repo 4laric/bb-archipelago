@@ -13,6 +13,11 @@ under `Unreleased` and move into a dated version section when released.
   its hash-pinned process plan automatically before launch, saves setup as part
   of every action, and groups recovery controls under Troubleshooting. The old
   Save Setup and Generate Launch Plan chores are gone.
+  Player identity is now a read-only choice populated from the seed rather
+  than a free-text trap: single-player seeds select themselves, and archives
+  with several Bloodborne slots present only those valid names. A compact
+  seed/player/runtime summary and automatic readiness refresh make a wrong
+  selection visible before launch.
 - **One check that no first playthrough could ever complete is gone.** Central
   Yharnam's `Bold Hunter's Mark` was a corpse that only spawns on NG+ — the
   param names it "treasure corpse 19, second playthrough onward", and it is the
