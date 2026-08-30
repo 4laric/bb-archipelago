@@ -112,6 +112,29 @@ def default_field_values(
     return values
 
 
+def repair_stale_packaged_suppression_paths(
+    current: Mapping[str, str], derived: Mapping[str, str]
+) -> dict[str, str]:
+    """Replace a vanished saved suppression pair with this package's pair.
+
+    Settings outlive extracted playtest directories. A saved binder/manifest
+    path can therefore point into yesterday's deleted package even though the
+    current package ships a verified replacement under ``work``. Keep valid
+    operator-selected paths, but repair the pair atomically when either saved
+    file has disappeared so binder and manifest can never come from different
+    builds.
+    """
+    names = ("suppression_binder", "suppression_manifest")
+    if not all(name in derived for name in names):
+        return {}
+    missing = any(
+        not current.get(name, "").strip()
+        or not Path(current[name]).expanduser().is_file()
+        for name in names
+    )
+    return {name: derived[name] for name in names} if missing else {}
+
+
 def _request_player_name(path: Path) -> str | None:
     try:
         value = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -373,14 +396,19 @@ class LauncherApp:
             pass
 
     def _apply_default_fields(self) -> None:
-        """Fill empty fields the launcher can derive; saved/user values win."""
+        """Fill derived fields and repair suppression paths from old packages."""
         derived = default_field_values(
             state_root=default_state_root(),
             package_roots=(application_root(), resource_root()),
             repo_root=self.repo_root,
             player_name=self.player_name.get(),
         )
+        current = {name: variable.get() for name, variable in self.fields.items()}
+        repairs = repair_stale_packaged_suppression_paths(current, derived)
         for name, value in derived.items():
+            if name in repairs:
+                self.fields[name].set(repairs[name])
+                continue
             if not self.fields[name].get().strip():
                 self.fields[name].set(value)
 
