@@ -352,6 +352,9 @@ SLICE_REGIONS = (
     "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth", "Yahar'gul",
     "Lecture Building 1F", "Lecture Building 2F", "Nightmare Frontier",
     "Nightmare of Mensis",
+    "Hunter's Nightmare", "Underground Corpse Pile", "Research Hall",
+    "Lumenwood Garden", "Astral Clocktower", "Fishing Hamlet",
+    "Nightmare Grand Cathedral",
 )
 _SLICE_ENTRANCE_NAMES = (
     "Begin the Hunt",
@@ -371,6 +374,13 @@ _SLICE_ENTRANCE_NAMES = (
     "Lecture Hall giant door",
     "Amygdala's grasp",
     "Lecture Building frontier door",
+    "Amygdala's DLC grasp",
+    "Ludwig's arena exit",
+    "Surgery altar",
+    "Research Hall summit",
+    "Astral Clocktower door",
+    "Astral clock",
+    "Nightmare Grand Cathedral",
 )
 SLICE_ENTRANCES = tuple(
     entrance for entrance in ENTRANCES if entrance.name in _SLICE_ENTRANCE_NAMES
@@ -478,6 +488,16 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "treasure_augur_of_ebrietas",
     "treasure_lecture_theatre_key",
     "treasure_messengers_gift",
+    "pickup_eye_of_blood_drunk_hunter",
+    "pickup_eye_pendant",
+    "boss_ludwig",
+    "boss_living_failures",
+    "boss_lady_maria",
+    "boss_orphan_of_kos",
+    "pickup_laurences_skull",
+    "treasure_underground_jail_chunk",
+    "treasure_underground_cell_inner_chamber_key",
+    "boss_laurence",
     "treasure_radiant_sword_hunter_badge",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",
@@ -508,3 +528,25 @@ SLICE_LOCATION_KEYS = frozenset({
       if location.region in SLICE_REGIONS
       and location.key not in SLICE_EXCLUDED_FIXED_KEYS),
 })
+
+# The Old Hunters is one optional branch of the seeded graph. These explicit
+# sets let generation remove the complete branch without changing permanent
+# item or location IDs.
+DLC_REGIONS = frozenset({
+    "Hunter's Nightmare", "Underground Corpse Pile", "Research Hall",
+    "Lumenwood Garden", "Astral Clocktower", "Fishing Hamlet",
+    "Nightmare Grand Cathedral",
+})
+DLC_ENTRANCE_NAMES = frozenset({
+    "Amygdala's DLC grasp", "Ludwig's arena exit", "Surgery altar",
+    "Research Hall summit", "Astral Clocktower door", "Astral clock",
+    "Nightmare Grand Cathedral",
+})
+DLC_ITEM_KEYS = frozenset({
+    "eye_of_blood_drunk_hunter", "eye_pendant", "astral_clocktower_key",
+    "celestial_dial", "laurences_skull", "blacksky_eye", *DLC_WEAPON_KEYS,
+})
+DLC_LOCATION_KEYS = frozenset(
+    location.key for location in LOCATIONS
+    if location.key in SLICE_LOCATION_KEYS and location.region in DLC_REGIONS
+) | frozenset({"pickup_eye_of_blood_drunk_hunter"})

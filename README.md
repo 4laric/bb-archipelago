@@ -61,11 +61,14 @@ build and live-test procedure.
 
 ## Current boundary
 
-Generation emits the complete base-game scope through Mergo's Wet Nurse:
+Generation emits the complete base-game scope plus the optional Old Hunters
+route through Fishing Hamlet:
 Central Yharnam, Cathedral Ward, Old Yharnam, Hemwick, Cainhurst, Forbidden
 Woods, Iosefka's Clinic, Byrgenwerth, Yahar'gul, both Lecture Building floors,
-and Nightmare of Mensis, plus the optional Nightmare Frontier branch. There
-are 486 network locations. The `goal` YAML option follows Bloodborne's three
+Nightmare of Mensis, and Nightmare Frontier. Set `include_dlc: true` in the
+player YAML to add all seven DLC regions, their progression items, bosses, and
+checks; it defaults off. With DLC enabled there are 635 network locations.
+The `goal` YAML option follows Bloodborne's three
 endings: `submit_to_gehrman` completes after Mergo's Wet Nurse,
 `refuse_gehrman` requires Gehrman, and the default `moon_presence` requires
 Gehrman plus any three of the four shuffled Third Umbilical Cords. The fixed-pickup

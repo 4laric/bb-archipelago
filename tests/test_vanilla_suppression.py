@@ -217,11 +217,11 @@ class RealCorpusTests(unittest.TestCase):
 
     def test_every_replaceable_pickup_and_award_group_can_be_suppressed(self):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
-        # The combined Rom + Frontier manifest and separately-published
+        # The combined base-game, Frontier, and DLC manifest and separately-published
         # treasures, minus Saw Spear's lot, plus continuation rows in shared
         # acquisition-flag award groups, minus the
         # category-8 generation recipes whose native gem awards stay intact.
-        self.assertEqual(len(location_edits), 452)
+        self.assertEqual(len(location_edits), 594)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -243,6 +243,10 @@ class RealCorpusTests(unittest.TestCase):
                 "2800521", "2800522", "2800523",
                 # Lecture Building student sets
                 "3200541", "3200731",
+                # DLC armor groups sharing their leading pickup's flag
+                "3400511", "3400512", "3400513",
+                "3500871",
+                "3600701", "3600702", "3600703",
             },
         )
 
@@ -268,12 +272,12 @@ class RealCorpusTests(unittest.TestCase):
             checked += 1
             self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
-        # 345 in-slice fixed pickups plus four published treasures carry lots;
-        # bosses and the skull interaction do not, and the
+        # The base-game and DLC fixed pickups plus published treasures carry
+        # lots; bosses and the skull interaction do not, and the
         # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
         # the NG+-only lot 2410295 from #220) are not network locations, so
         # they are not iterated here.
-        self.assertEqual(checked, 417)
+        self.assertEqual(checked, 547)
 
     def test_category_eight_checks_keep_their_native_generated_gems(self):
         from worlds.bloodborne import NETWORK_LOCATIONS
@@ -281,7 +285,7 @@ class RealCorpusTests(unittest.TestCase):
 
         gems = [location for location in NETWORK_LOCATIONS
                 if LOCATION_BINDINGS[location.key].item_category == 8]
-        self.assertEqual(len(gems), 46)
+        self.assertEqual(len(gems), 57)
         planned_lots = {edit.item_lot_id for edit in self.plan.edits}
         for location in gems:
             with self.subTest(location=location.key):

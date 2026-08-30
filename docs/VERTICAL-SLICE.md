@@ -211,6 +211,21 @@ Mensis checks, ending at Mergo's Wet Nurse. Together with the queue-jumped
 Nightmare Frontier branch, the complete base-game scope contains **484 network
 locations**.
 
+## The Old Hunters DLC
+
+The Eye of a Blood-drunk Hunter opens the optional DLC route after the
+Forbidden Woods password is learned. Ludwig and the Eye Pendant gate Research
+Hall; Living Failures plus the Astral Clocktower Key gate Maria; Maria plus the
+Celestial Dial gate Fishing Hamlet. Laurence branches independently from
+Hunter's Nightmare and requires his skull from Research Hall.
+
+The DLC contributes 141 catalog-backed fixed checks and ten separately mapped
+scripted, boss, or treasure checks, bringing the slice to **635 network
+locations**. The m34 shared acquisition flag `53400600` is excluded because it
+belongs to two different corpses; it cannot truthfully represent two AP checks.
+The reviewed m36 catalog names and regions are corrected to Fishing Hamlet.
+Wet Nurse remains the completion goal, leaving all DLC content optional.
+
 All new fixed rows come from the committed placement catalog. Blood gems are
 valid locations—the item found there is suppressed and replaced by the AP
 item—but blood gems themselves are not added to the receive pool until category

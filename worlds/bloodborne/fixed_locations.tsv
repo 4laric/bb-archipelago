@@ -464,3 +464,144 @@ fixed_nightmare_frontier_lot_3300370	Nightmare Frontier - Blood Vial x2 #2	Night
 fixed_nightmare_frontier_lot_3300380	Nightmare Frontier - Blood Gem #5	Nightmare Frontier	53300480	3300380	8	102102	optional	treasure	m33_00_00_00	False
 fixed_nightmare_frontier_lot_3300385	Nightmare Frontier - Madman's Knowledge #11	Nightmare Frontier	53300485	3300385	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300390	Nightmare Frontier - Madman's Knowledge #12	Nightmare Frontier	53300490	3300390	4	1500	filler	treasure	m33_00_00_00	True
+fixed_hunters_nightmare_lot_3400000	Hunter's Nightmare - Twin Blood Stone Shards #1	Hunter's Nightmare	53400000	3400000	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400010	Hunter's Nightmare - Frenzied Coldblood (9) #1	Hunter's Nightmare	53400010	3400010	4	1518	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400020	Hunter's Nightmare - Old Hunter Trousers	Hunter's Nightmare	53400020	3400020	1	353000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400030	Hunter's Nightmare - Molotov Cocktail x4	Hunter's Nightmare	53400030	3400030	4	1200	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400040	Hunter's Nightmare - Old Hunter Garb	Hunter's Nightmare	53400040	3400040	1	351000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400050	Hunter's Nightmare - Blood Vial x3 #1	Hunter's Nightmare	53400050	3400050	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400060	Hunter's Nightmare - Beast Cutter	Hunter's Nightmare	53400060	3400060	0	24000000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400070	Hunter's Nightmare - Madman's Knowledge #1	Hunter's Nightmare	53400070	3400070	4	1500	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400080	Hunter's Nightmare - Blood Vial x6 #1	Hunter's Nightmare	53400080	3400080	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400090	Hunter's Nightmare - Blood Vial #1	Hunter's Nightmare	53400090	3400090	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400100	Hunter's Nightmare - Blood Vial x6 #2	Hunter's Nightmare	53400100	3400100	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400110	Hunter's Nightmare - Blood Vial #2	Hunter's Nightmare	53400110	3400110	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400120	Hunter's Nightmare - Delayed Molotov x5 #1	Hunter's Nightmare	53400120	3400120	4	1201	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400130	Hunter's Nightmare - Boom Hammer	Hunter's Nightmare	53400130	3400130	0	28000000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400140	Hunter's Nightmare - Beast Blood Pellet x3	Hunter's Nightmare	53400140	3400140	4	1110	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400150	Hunter's Nightmare - Blood Vial #3	Hunter's Nightmare	53400150	3400150	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400160	Hunter's Nightmare - Old Hunter Top Hat	Hunter's Nightmare	53400160	3400160	1	360000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400170	Hunter's Nightmare - Blood Stone Chunk #1	Hunter's Nightmare	53400170	3400170	4	3020	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400180	Hunter's Nightmare - Twin Blood Stone Shards #2	Hunter's Nightmare	53400180	3400180	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400190	Hunter's Nightmare - Blood Stone Chunk #2	Hunter's Nightmare	53400190	3400190	4	3020	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400200	Hunter's Nightmare - Twin Blood Stone Shards x2 #1	Hunter's Nightmare	53400200	3400200	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400210	Hunter's Nightmare - Twin Blood Stone Shards x2 #2	Hunter's Nightmare	53400210	3400210	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400220	Hunter's Nightmare - Amygdalan Arm	Hunter's Nightmare	53400220	3400220	0	25000000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400230	Hunter's Nightmare - Frenzied Coldblood (8) #1	Hunter's Nightmare	53400230	3400230	4	1517	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400240	Hunter's Nightmare - Quicksilver Bullets x6	Hunter's Nightmare	53400240	3400240	4	900	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400250	Hunter's Nightmare - Blood Vial #4	Hunter's Nightmare	53400250	3400250	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400260	Hunter's Nightmare - Blood Vial #5	Hunter's Nightmare	53400260	3400260	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400270	Hunter's Nightmare - Constable's Garb	Hunter's Nightmare	53400270	3400270	1	381000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400280	Hunter's Nightmare - Whirligig Saw	Hunter's Nightmare	53400280	3400280	0	31000000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400330	Hunter's Nightmare - Blood Vial #6	Hunter's Nightmare	53400330	3400330	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400350	Hunter's Nightmare - Constable's Gloves	Hunter's Nightmare	53400350	3400350	1	382000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400360	Hunter's Nightmare - Constable's Trousers	Hunter's Nightmare	53400360	3400360	1	383000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400370	Hunter's Nightmare - Madman's Knowledge #2	Hunter's Nightmare	53400370	3400370	4	1500	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400380	Hunter's Nightmare - Blood Vial x3 #2	Hunter's Nightmare	53400380	3400380	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400390	Hunter's Nightmare - Twin Blood Stone Shards x3 #1	Hunter's Nightmare	53400390	3400390	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400400	Hunter's Nightmare - Twin Blood Stone Shards #3	Hunter's Nightmare	53400400	3400400	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400410	Hunter's Nightmare - Blood Vial x3 #3	Hunter's Nightmare	53400410	3400410	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400420	Hunter's Nightmare - Blood Vial x3 #4	Hunter's Nightmare	53400420	3400420	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400430	Hunter's Nightmare - Frenzied Coldblood (9) #2	Hunter's Nightmare	53400430	3400430	4	1518	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400440	Hunter's Nightmare - Beasthunter Saif	Hunter's Nightmare	53400440	3400440	0	23000000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400450	Hunter's Nightmare - Madman's Knowledge #3	Hunter's Nightmare	53400450	3400450	4	1500	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400460	Hunter's Nightmare - Blood Vial x6 #3	Hunter's Nightmare	53400460	3400460	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400470	Hunter's Nightmare - Pebble #1	Hunter's Nightmare	53400470	3400470	4	1230	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400480	Hunter's Nightmare - Twin Blood Stone Shards x2 #3	Hunter's Nightmare	53400480	3400480	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400490	Hunter's Nightmare - Blood Vial x2 #1	Hunter's Nightmare	53400490	3400490	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400500	Hunter's Nightmare - Oil Urn x3 #1	Hunter's Nightmare	53400500	3400500	4	1220	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400510	Hunter's Nightmare - Butcher Mask	Hunter's Nightmare	53400510	3400510	1	330000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400520	Hunter's Nightmare - Quicksilver Bullets x4	Hunter's Nightmare	53400520	3400520	4	900	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400530	Hunter's Nightmare - Frenzied Coldblood (8) #2	Hunter's Nightmare	53400530	3400530	4	1517	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400540	Hunter's Nightmare - Molotov Cocktail x3	Hunter's Nightmare	53400540	3400540	4	1200	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400580	Hunter's Nightmare - Old Hunter Cap	Hunter's Nightmare	53400580	3400580	1	350000	useful	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3400590	Hunter's Nightmare - Twin Blood Stone Shards x3 #2	Hunter's Nightmare	53400590	3400590	4	3010	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401000	Hunter's Nightmare - Delayed Molotov x5 #2	Hunter's Nightmare	53401000	3401000	4	1201	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401010	Hunter's Nightmare - Oil Urn x3 #2	Hunter's Nightmare	53401010	3401010	4	1220	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401020	Hunter's Nightmare - Bone Marrow Ash x3	Hunter's Nightmare	53401020	3401020	4	1330	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401030	Hunter's Nightmare - Fire Paper x3	Hunter's Nightmare	53401030	3401030	4	1300	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401040	Hunter's Nightmare - Blood Vial x2 #2	Hunter's Nightmare	53401040	3401040	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401050	Hunter's Nightmare - Blood Vial #7	Hunter's Nightmare	53401050	3401050	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401060	Hunter's Nightmare - Oil Urn x4	Hunter's Nightmare	53401060	3401060	4	1220	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401070	Hunter's Nightmare - Quicksilver Bullets x8	Hunter's Nightmare	53401070	3401070	4	900	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401080	Hunter's Nightmare - Quicksilver Bullets x10 #1	Hunter's Nightmare	53401080	3401080	4	900	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401090	Hunter's Nightmare - Blood Vial x10	Hunter's Nightmare	53401090	3401090	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401100	Hunter's Nightmare - Blood Vial x4	Hunter's Nightmare	53401100	3401100	4	1000	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401110	Hunter's Nightmare - Pebble #2	Hunter's Nightmare	53401110	3401110	4	1230	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401120	Hunter's Nightmare - Fire Paper	Hunter's Nightmare	53401120	3401120	4	1300	filler	treasure	m34_00_00_00	True
+fixed_hunters_nightmare_lot_3401130	Hunter's Nightmare - Quicksilver Bullets x10 #2	Hunter's Nightmare	53401130	3401130	4	900	filler	treasure	m34_00_00_00	True
+fixed_research_hall_lot_3500000	Research Hall - Kin Coldblood (10) #1 (sunflower patient room)	Research Hall	53500000	3500000	4	1519	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500110	Research Hall - Blood Vial x2 #1 (tower 2F)	Research Hall	53500110	3500110	4	1000	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500120	Research Hall - Blue Elixir x2 (tower)	Research Hall	53500120	3500120	4	1120	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500130	Research Hall - Frenzied Coldblood (9) #1 (underground cell)	Research Hall	53500130	3500130	4	1518	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500140	Research Hall - Blood Stone Chunk #1 (tower)	Research Hall	53500140	3500140	4	3020	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500150	Research Hall - Blue Elixir #1 (tower)	Research Hall	53500150	3500150	4	1120	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500160	Research Hall - Blood Gem #1 (tower)	Research Hall	53500160	3500160	8	135000	optional	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500180	Research Hall - Blue Elixir #2 (tower)	Research Hall	53500180	3500180	4	1120	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500190	Research Hall - Blood Gem #2 (tower)	Research Hall	53500190	3500190	8	135004	optional	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500200	Research Hall - Kin Coldblood (10) #2 (tower)	Research Hall	53500200	3500200	4	1519	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500210	Research Hall - Frenzied Coldblood (9) #2 (tower 2F)	Research Hall	53500210	3500210	4	1518	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500220	Research Hall - Sedative x3 (tower 2F)	Research Hall	53500220	3500220	4	1101	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500230	Research Hall - Madman's Knowledge (tower 3F)	Research Hall	53500230	3500230	4	1500	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500250	Research Hall - Beast Blood Pellet x6 (tower 3F)	Research Hall	53500250	3500250	4	1110	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500260	Research Hall - Quicksilver Bullets x3 (tower 4F)	Research Hall	53500260	3500260	4	900	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500270	Research Hall - Blood Vial x5 (tower)	Research Hall	53500270	3500270	4	1000	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500280	Research Hall - Blood Vial x2 #2 (tower 5F)	Research Hall	53500280	3500280	4	1000	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500290	Research Hall - Frenzied Coldblood (9) #3 (tower)	Research Hall	53500290	3500290	4	1518	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500300	Research Hall - Antidote x2 (tower 4F)	Research Hall	53500300	3500300	4	1100	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500310	Research Hall - Quicksilver Bullets x4 (tower 3F)	Research Hall	53500310	3500310	4	900	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500500	Research Hall - Kin Coldblood (10) #3 (chapel)	Research Hall	53500500	3500500	4	1519	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500530	Research Hall - Blood Stone Chunk #2 (chapel)	Research Hall	53500530	3500530	4	3020	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500540	Research Hall - Great One's Wisdom #1 (chapel)	Research Hall	53500540	3500540	4	1501	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500600	Research Hall - Frenzied Coldblood (9) #4 (underground cell)	Research Hall	53500600	3500600	4	1518	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500620	Research Hall - Blue Elixir x4 (tower 5F)	Research Hall	53500620	3500620	4	1120	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500800	Research Hall - Underground Cell Key	Research Hall	53500800	3500800	4	4018	key_or_badge	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500810	Research Hall - Fist of Gratia (underground cell)	Research Hall	53500810	3500810	0	34000000	useful	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500820	Research Hall - Enlarged Head	Research Hall	53500820	3500820	1	430000	useful	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500830	Research Hall - Blacksky Eye (sunflower patient room)	Research Hall	53500830	3500830	4	2120	useful	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500840	Research Hall - Great One's Wisdom #2 (chapel)	Research Hall	53500840	3500840	4	1501	filler	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500850	Research Hall - Church Cannon (lower sanctum chest)	Research Hall	53500850	3500850	0	35000000	useful	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500860	Research Hall - Loch Shield (tower)	Research Hall	53500860	3500860	0	19100000	useful	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3500870	Research Hall - Decorative Old Hunter Garb	Research Hall	53500870	3500870	1	361000	useful	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3501100	Research Hall - Blood Gem #3 (tower 6.5F chest)	Research Hall	53501100	3501100	8	134000	optional	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3501500	Research Hall - Blood Gem #4 (chapel chest)	Research Hall	53501500	3501500	8	135005	optional	treasure	m35_00_00_00	True
+fixed_fishing_hamlet_lot_3600000	Fishing Hamlet - Lead Elixir #1 (shoreline)	Fishing Hamlet	53600000	3600000	4	2030	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600010	Fishing Hamlet - Madman's Knowledge #1 (shoreline)	Fishing Hamlet	53600010	3600010	4	1500	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600100	Fishing Hamlet - Blood Vial x3 #1 (upper hamlet)	Fishing Hamlet	53600100	3600100	4	1000	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600110	Fishing Hamlet - Lead Elixir x2 #1 (upper hamlet)	Fishing Hamlet	53600110	3600110	4	2030	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600120	Fishing Hamlet - Kin Coldblood (10) #1 (upper hamlet)	Fishing Hamlet	53600120	3600120	4	1519	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600130	Fishing Hamlet - Oil Urn x4 #1 (upper hamlet)	Fishing Hamlet	53600130	3600130	4	1220	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600140	Fishing Hamlet - Blood Gem #1 (upper hamlet)	Fishing Hamlet	53600140	3600140	8	134001	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600150	Fishing Hamlet - Great One's Wisdom #1 (upper hamlet)	Fishing Hamlet	53600150	3600150	4	1501	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600160	Fishing Hamlet - Blood Gem #2 (upper hamlet)	Fishing Hamlet	53600160	3600160	8	136002	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600170	Fishing Hamlet - Blood Stone Chunk #1 (upper hamlet)	Fishing Hamlet	53600170	3600170	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600200	Fishing Hamlet - Blood Stone Chunk #2 (mountain path)	Fishing Hamlet	53600200	3600200	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600210	Fishing Hamlet - Great One's Wisdom #2 (mountain path)	Fishing Hamlet	53600210	3600210	4	1501	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600220	Fishing Hamlet - Kin Coldblood (10) #2 (lighthouse)	Fishing Hamlet	53600220	3600220	4	1519	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600230	Fishing Hamlet - Kin Coldblood (10) #3 (lighthouse)	Fishing Hamlet	53600230	3600230	4	1519	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600300	Fishing Hamlet - Blood Stone Chunk x2 (lower hamlet)	Fishing Hamlet	53600300	3600300	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600310	Fishing Hamlet - Blood Vial x3 #2 (lower hamlet)	Fishing Hamlet	53600310	3600310	4	1000	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600320	Fishing Hamlet - Blood Stone Chunk #3 (lower hamlet)	Fishing Hamlet	53600320	3600320	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600330	Fishing Hamlet - Blood Stone Chunk #4 (lower hamlet)	Fishing Hamlet	53600330	3600330	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600340	Fishing Hamlet - Blood Gem #3 (lower hamlet)	Fishing Hamlet	53600340	3600340	8	136001	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600350	Fishing Hamlet - Kin Coldblood (10) #4 (lower hamlet)	Fishing Hamlet	53600350	3600350	4	1519	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600360	Fishing Hamlet - Kin Coldblood (10) #5 (lower hamlet)	Fishing Hamlet	53600360	3600360	4	1519	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600400	Fishing Hamlet - Oil Urn x4 #2 (fish tank upper)	Fishing Hamlet	53600400	3600400	4	1220	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600410	Fishing Hamlet - Blood Vial x6 (fish tank upper)	Fishing Hamlet	53600410	3600410	4	1000	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600420	Fishing Hamlet - Madman's Knowledge #2 (fish tank upper)	Fishing Hamlet	53600420	3600420	4	1500	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600430	Fishing Hamlet - Blood Gem #4 (fish tank middle)	Fishing Hamlet	53600430	3600430	8	136004	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600440	Fishing Hamlet - Twin Blood Stone Shards x3 (fish tank middle)	Fishing Hamlet	53600440	3600440	4	3010	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600450	Fishing Hamlet - Blood Stone Chunk #5 (fish tank middle)	Fishing Hamlet	53600450	3600450	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600460	Fishing Hamlet - Blood Stone Chunk #6 (fish tank middle)	Fishing Hamlet	53600460	3600460	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600470	Fishing Hamlet - Blood Stone Chunk #7 (fish tank middle)	Fishing Hamlet	53600470	3600470	4	3020	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600500	Fishing Hamlet - Lead Elixir #2 (culvert middle)	Fishing Hamlet	53600500	3600500	4	2030	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600510	Fishing Hamlet - Kin Coldblood (11) #1 (culvert middle)	Fishing Hamlet	53600510	3600510	4	1590	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600520	Fishing Hamlet - Madman's Knowledge #3 (culvert middle)	Fishing Hamlet	53600520	3600520	4	1500	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600530	Fishing Hamlet - Great One's Wisdom #3 (culvert lower)	Fishing Hamlet	53600530	3600530	4	1501	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600540	Fishing Hamlet - Lead Elixir x2 #2 (culvert lower)	Fishing Hamlet	53600540	3600540	4	2030	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600550	Fishing Hamlet - Kin Coldblood (11) #2 (culvert lower)	Fishing Hamlet	53600550	3600550	4	1590	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600560	Fishing Hamlet - Blood Gem #5 (culvert lower)	Fishing Hamlet	53600560	3600560	8	136003	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600570	Fishing Hamlet - Blood Gem #6 (culvert lower)	Fishing Hamlet	53600570	3600570	8	136006	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600600	Fishing Hamlet - Blood Rock (fish tank lower)	Fishing Hamlet	53600600	3600600	4	3030	filler	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600610	Fishing Hamlet - Blood Gem #7 (fish tank lower)	Fishing Hamlet	53600610	3600610	8	136005	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600700	Fishing Hamlet - Harrowed Hood	Fishing Hamlet	53600700	3600700	1	340000	useful	treasure	m36_00_00_00	True
