@@ -21,6 +21,7 @@ from worlds.bloodborne import (
     LOCATION_ID_BY_KEY,
     LOCATION_NAME_TO_ID,
     NETWORK_LOCATIONS,
+    RUNTIME_BUILD,
     SHUFFLABLE_ITEMS,
     FILLER_ITEM_NAME,
     IdRegistryError,
@@ -354,6 +355,31 @@ class FillerTests(unittest.TestCase):
 
 
 class RuntimeItemContractTests(unittest.TestCase):
+    def test_runtime_vocabulary_is_pinned_to_the_client_build(self):
+        """A new strict-client enum value requires a runtime build bump.
+
+        Keep the accepted vocabulary beside the build that understands it.
+        Extending slot_data while merely widening another allowlist recreated
+        the opaque pre-r6 connect failure tracked by #212.
+        """
+        accepted_by_build = {
+            "bb-0.1.0-r7": {
+                "goods_formula_observed",
+                "live_grant_inventory_ui",
+                "param_id_inferred",
+            },
+        }
+        self.assertIn(
+            RUNTIME_BUILD,
+            accepted_by_build,
+            "register a new runtime build before changing slot_data vocabulary",
+        )
+        emitted = {
+            binding["descriptor_evidence"]
+            for binding in build_runtime_slot_data()["runtime_items"].values()
+        }
+        self.assertEqual(emitted, accepted_by_build[RUNTIME_BUILD])
+
     def test_every_runtime_item_declares_receive_policy_metadata(self):
         # The widest pool a seed can ask for: the default full pool plus the
         # Uncanny variants the option adds. Every id the datapackage publishes
