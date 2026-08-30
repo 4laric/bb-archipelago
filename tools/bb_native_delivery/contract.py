@@ -23,7 +23,7 @@ from .process import ASSERTS, CONSUME_SIGNATURE
 
 CONTRACT_VERSION = "bb-native-grant-contract-v5"
 HARNESS = "bb-native-grant-v7"
-BUILD = "bb-0.1.0-r7"
+BUILD = "bb-0.1.0-r8"
 PROTOCOL = "BBGRANT1"
 
 ROOT_CANDIDATES = ("research/runtime/bb-native-grant-contract.v5.json",)
