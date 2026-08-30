@@ -81,8 +81,8 @@ class FixedLocationCatalogTests(unittest.TestCase):
             build_rows,
         )
 
-        # Through-Rom's 302 rows, 49 Yahar'gul rows, and 44 Frontier rows.
-        self.assertEqual(395, len(FIXED_LOCATIONS))
+        # Through-Mensis plus the queue-jumped Frontier branch.
+        self.assertEqual(465, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [

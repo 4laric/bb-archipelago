@@ -199,6 +199,8 @@ class GoldenIdTests(unittest.TestCase):
                                                  "fixed_cainhurst_lot_",
                                                  "fixed_forbidden_woods_lot_",
                                                  "fixed_yahargul_lot_",
+                                                 "fixed_lecture_building_lot_",
+                                                 "fixed_nightmare_mensis_lot_",
                                                  "fixed_nightmare_frontier_lot_"))]
         self.assertEqual(len(slice_one), 45)
         expected = {key: 0xBB1025 + index for index, key in enumerate(slice_one)}
@@ -240,7 +242,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB11AE)
+        self.assertEqual(max(ids), 0xBB11F4)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

@@ -203,6 +203,14 @@ locations**. Rom remains the completion goal. Yahar'gul, Lecture Building's
 own checks, and Nightmare of Mensis remain deferred; Lecture Building 1F is
 included only as the transit region into the Frontier.
 
+## Slices 6–7: Yahar'gul through Mergo's Wet Nurse
+
+Rom's defeat opens Yahar'gul, followed by Lecture Building 2F and Nightmare
+of Mensis. These slices add the reviewed Yahar'gul, Lecture Building, and
+Mensis checks, ending at Mergo's Wet Nurse. Together with the queue-jumped
+Nightmare Frontier branch, the complete base-game scope contains **484 network
+locations**.
+
 All new fixed rows come from the committed placement catalog. Blood gems are
 valid locations—the item found there is suppressed and replaced by the AP
 item—but blood gems themselves are not added to the receive pool until category
