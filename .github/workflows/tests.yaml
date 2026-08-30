@@ -342,11 +342,15 @@ jobs:
                   expected_weapons = 43 if payload["player_name"] == "NoEnemizer" else 28
                   assert len(weapons) == expected_weapons, (
                       name, payload["player_name"], len(weapons))
-                  # Upgrade materials, hunter tools, and the expanded filler
-                  # mix are all explicit category-4 delivery contracts.
+                  # Upgrade materials, hunter tools, the two guaranteed
+                  # workshop tools, and the expanded filler mix are all
+                  # explicit category-4 delivery contracts.
                   goods = [row for row in payload["runtime_items"].values()
                            if row["item_category"] == 4]
-                  assert len(goods) == 50, (name, payload["player_name"], len(goods))
+                  assert len(goods) == 52, (name, payload["player_name"], len(goods))
+                  for item_id in (0xBB0130, 0xBB0131):
+                      assert str(item_id) in payload["runtime_items"], (
+                          name, payload["player_name"], hex(item_id))
                   seen.add(payload["player_name"])
               assert seen == expected, (path, seen)
           print(f"{len(zips)} seed(s): one request per slot, enemizer on and off")

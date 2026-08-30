@@ -19,6 +19,8 @@ E = ItemKind.EVENT
 
 ITEMS = (
     # Shufflable inventory/key items. Runtime grant semantics remain unvalidated.
+    Item("blood_gem_workshop_tool", "Blood Gem Workshop Tool", P),
+    Item("rune_workshop_tool", "Rune Workshop Tool", P),
     Item("hunter_chief_emblem", "Hunter Chief Emblem", P),
     Item("oedon_tomb_key", "Oedon Tomb Key", P),
     Item("cainhurst_summons", "Cainhurst Summons", P),

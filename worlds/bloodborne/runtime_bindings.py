@@ -92,6 +92,8 @@ class RuntimeLocationBinding:
 
 
 ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
+    "blood_gem_workshop_tool": RuntimeItemBinding(0x40001007, 0xB0001007, "bundled ItemLot + validated category-4 goods formula"),
+    "rune_workshop_tool": RuntimeItemBinding(0x40001008, 0xB0001008, "bundled ItemLot + validated category-4 goods formula"),
     # Category-4 goods descriptors. The formula is validated against four live inventory records;
     # key-item gate side effects still require end-to-end runtime testing.
     "hunter_chief_emblem": RuntimeItemBinding(0x40000FAB, 0xB0000FAB, "FMG/param + validated goods formula"),
