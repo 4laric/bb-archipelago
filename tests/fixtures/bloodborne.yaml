@@ -8,4 +8,5 @@ Bloodborne:
   auto_upgrade: false
   randomize_starting_weapons: true
   remove_weapon_requirements: true
+  goal: moon_presence
   auto_equip: false

@@ -65,7 +65,10 @@ Generation emits the complete base-game scope through Mergo's Wet Nurse:
 Central Yharnam, Cathedral Ward, Old Yharnam, Hemwick, Cainhurst, Forbidden
 Woods, Iosefka's Clinic, Byrgenwerth, Yahar'gul, both Lecture Building floors,
 and Nightmare of Mensis, plus the optional Nightmare Frontier branch. There
-are 484 network locations, and Mergo's Wet Nurse is the goal. The fixed-pickup
+are 486 network locations. The `goal` YAML option follows Bloodborne's three
+endings: `submit_to_gehrman` completes after Mergo's Wet Nurse,
+`refuse_gehrman` requires Gehrman, and the default `moon_presence` requires
+Gehrman plus any three of the four shuffled Third Umbilical Cords. The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
 (`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved
 Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed
