@@ -25,6 +25,7 @@ from .readiness import format_readiness, gather_readiness, grants_watchdog_warni
 from .resources import application_root, resource_root
 from .seed_request import (
     archive_player_name,
+    archive_slots,
     looks_like_archive,
     resolve_request_source,
 )
@@ -60,6 +61,8 @@ FIELD_DEFINITIONS = (
     ("shad_log", "shadPS4 log (optional)", "file"),
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
+PRIMARY_FIELDS = {"ap_request", "game_root", "shad_executable"}
+ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 
 # Bloodborne palette: hunter's-dream night blues, bone parchment text,
 # blood-red accents, lamp-light gold headers.
@@ -240,9 +243,12 @@ class LauncherApp:
         self.packaged_toolchain = self.workflow.toolchain.is_bundled
         self.fields = {name: tk.StringVar() for name, _label, _kind in FIELD_DEFINITIONS}
         self.randomize_enemies = tk.BooleanVar(value=True)
+        self.show_enemy_advanced = tk.BooleanVar(value=False)
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
         self.player_name = tk.StringVar()
+        self.seed_summary = tk.StringVar(value="Choose a seed to see its player and build.")
+        self.launch_hint = tk.StringVar(value="Choose a seed and shadPS4 to continue.")
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
         # Operator override (bb-archipelago#183).  Deliberately absent from
@@ -251,6 +257,7 @@ class LauncherApp:
         self.allow_suppression_mismatch = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
         self._enemy_widgets: list[Any] = []
+        self._enemy_advanced_widgets: list[Any] = []
         self._busy = False
 
         root.title("Bloodborne AP Launcher")
@@ -259,9 +266,15 @@ class LauncherApp:
         root.rowconfigure(0, weight=1)
         self._apply_theme()
         self._build()
+        self._show_player_choice(False)
         self._load_settings_if_present()
         self._apply_default_fields()
+        remembered_seed = self.fields["ap_request"].get().strip()
+        if remembered_seed:
+            self._accept_ap_request(remembered_seed, show_error=False)
         self._toggle_enemy_fields()
+        self._toggle_enemy_advanced()
+        self._refresh_launch_gate()
         self.root.after(0, self._refresh_status)
 
     def _apply_theme(self) -> None:
@@ -405,22 +418,31 @@ class LauncherApp:
         options.columnconfigure(1, weight=1)
         notebook.add(options, text="Enemy randomization")
 
-        # The enemizer's own input paths live on the enemizer tab; everything
-        # else stays on Setup. Same variables, same commands, same
-        # _enemy_widgets group -- only the parent frame differs.
-        enemy_fields = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
+        troubleshooting = ttk.Frame(notebook, padding=10)
+        troubleshooting.columnconfigure(1, weight=1)
+        notebook.add(troubleshooting, text="Troubleshooting")
+
+        # Player choices stay on Setup, enemizer inputs live with their toggle,
+        # and launcher-owned/operator paths remain available under
+        # Troubleshooting. Same variables and browse commands; only their
+        # presentation changes.
         setup_row = 0
         enemy_row = 4
+        troubleshooting_row = 0
         for name, label, kind in FIELD_DEFINITIONS:
             if self.packaged_toolchain and name in DEVELOPMENT_FIELDS:
                 continue
-            if name in enemy_fields:
+            if name in ENEMY_FIELDS:
                 parent, row = options, enemy_row
                 enemy_row += 1
-            else:
+            elif name in PRIMARY_FIELDS:
                 parent, row = setup, setup_row
                 setup_row += 1
-            ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
+            else:
+                parent, row = troubleshooting, troubleshooting_row
+                troubleshooting_row += 1
+            field_label = ttk.Label(parent, text=label)
+            field_label.grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
             entry = ttk.Entry(parent, textvariable=self.fields[name])
             entry.grid(row=row, column=1, sticky="ew", pady=3)
             button = ttk.Button(
@@ -429,41 +451,61 @@ class LauncherApp:
                 command=lambda key=name, selector=kind: self._browse(key, selector),
             )
             button.grid(row=row, column=2, padx=(8, 0), pady=3)
-            if name in enemy_fields:
+            if name in ENEMY_FIELDS:
                 self._enemy_widgets.extend((entry, button))
+                self._enemy_advanced_widgets.extend((field_label, entry, button))
         server_row = setup_row
         ttk.Label(setup, text="Archipelago server").grid(
             row=server_row, column=0, sticky="w", padx=(0, 8), pady=3
         )
-        ttk.Entry(setup, textvariable=self.ap_server).grid(row=server_row, column=1, sticky="ew", pady=3)
+        server_entry = ttk.Entry(setup, textvariable=self.ap_server)
+        server_entry.grid(row=server_row, column=1, sticky="ew", pady=3)
+        server_entry.bind("<FocusOut>", self._setup_changed)
+        server_entry.bind("<Return>", self._setup_changed)
         ttk.Label(setup, text=f"default {DEFAULT_SERVER}").grid(
             row=server_row, column=2, sticky="w", padx=(8, 0), pady=3
         )
         name_row = server_row + 1
-        ttk.Label(setup, text="Your AP player name").grid(
+        self.player_label = ttk.Label(setup, text="Your AP player name")
+        self.player_label.grid(
             row=name_row, column=0, sticky="w", padx=(0, 8), pady=3
         )
-        ttk.Entry(setup, textvariable=self.player_name).grid(
-            row=name_row, column=1, sticky="ew", pady=3
+        self.player_combo = ttk.Combobox(
+            setup, textvariable=self.player_name, state="readonly", values=()
         )
-        ttk.Label(setup, text="the slot name your host gave you").grid(
+        self.player_combo.grid(row=name_row, column=1, sticky="ew", pady=3)
+        self.player_combo.bind("<<ComboboxSelected>>", self._player_selected)
+        self.player_help = ttk.Label(setup, text="read from the selected seed")
+        self.player_help.grid(
             row=name_row, column=2, sticky="w", padx=(8, 0), pady=3
+        )
+        ttk.Label(setup, textvariable=self.seed_summary, style="Muted.TLabel").grid(
+            row=name_row + 1, column=0, columnspan=3, sticky="w", pady=(8, 0)
         )
         # Outside the enemy-randomization widget group on purpose: it stays
         # usable with Randomize Enemies off, and it is never saved.
         ttk.Checkbutton(
-            setup,
+            troubleshooting,
             text="Allow suppression binder mismatch (operators only, not saved)",
             variable=self.allow_suppression_mismatch,
-        ).grid(row=name_row + 1, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        ).grid(
+            row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
+        )
 
         ttk.Checkbutton(
             options,
             text="Randomize Enemies",
             variable=self.randomize_enemies,
             command=self._toggle_enemy_fields,
-        ).grid(row=0, column=0, columnspan=2, sticky="w")
-        ttk.Label(options, text="Enemy seed").grid(row=1, column=0, sticky="w", padx=(24, 8), pady=4)
+        ).grid(row=0, column=0, sticky="w")
+        ttk.Checkbutton(
+            options,
+            text="Advanced enemy options",
+            variable=self.show_enemy_advanced,
+            command=self._toggle_enemy_advanced,
+        ).grid(row=0, column=1, sticky="e")
+        seed_label = ttk.Label(options, text="Enemy seed")
+        seed_label.grid(row=1, column=0, sticky="w", padx=(24, 8), pady=4)
         seed_entry = ttk.Entry(options, textvariable=self.enemy_seed)
         seed_entry.grid(row=1, column=1, sticky="ew", pady=4)
         tier = ttk.Checkbutton(
@@ -479,6 +521,7 @@ class LauncherApp:
         )
         locomotion.grid(row=2, column=1, sticky="w")
         self._enemy_widgets.extend((seed_entry, tier, locomotion))
+        self._enemy_advanced_widgets.extend((seed_label, seed_entry, tier, locomotion))
 
         # Launch/build progress, not an enemizer concern: it lives outside the
         # notebook so no tab selection can hide it.
@@ -513,21 +556,25 @@ class LauncherApp:
 
         controls = ttk.Frame(outer)
         controls.grid(row=5, column=0, sticky="ew", pady=(12, 0))
-        controls.columnconfigure(1, weight=1)
-        self.save_button = ttk.Button(controls, text="Save Setup", command=self._save_settings)
-        self.save_button.grid(row=0, column=0, sticky="w")
+        controls.columnconfigure(0, weight=1)
         self.progress = ttk.Progressbar(controls, mode="indeterminate")
-        self.progress.grid(row=0, column=1, sticky="ew", padx=12)
+        self.progress.grid(row=0, column=0, sticky="ew", padx=(0, 12))
         self.launch_button = ttk.Button(
             controls,
             text="Randomize & Launch",
             command=self._start,
             style="Accent.TButton",
         )
-        self.launch_button.grid(row=0, column=2, sticky="e")
+        self.launch_button.grid(row=0, column=1, sticky="e")
+        ttk.Label(controls, textvariable=self.launch_hint, style="Muted.TLabel").grid(
+            row=1, column=0, columnspan=2, sticky="e", pady=(6, 0)
+        )
 
-        actions = ttk.Frame(controls)
-        actions.grid(row=1, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        actions = ttk.LabelFrame(troubleshooting, text="Recovery actions", padding=10)
+        actions.grid(
+            row=troubleshooting_row + 1, column=0, columnspan=3,
+            sticky="ew", pady=(12, 0),
+        )
         self.vanilla_button = ttk.Button(actions, text="Launch Vanilla", command=self._start_vanilla)
         self.vanilla_button.grid(row=0, column=0, padx=(0, 8))
         self.restore_button = ttk.Button(
@@ -537,15 +584,11 @@ class LauncherApp:
         self.rebuild_button = ttk.Button(actions, text="Rebuild Seed", command=self._start_rebuild)
         self.rebuild_button.grid(row=0, column=2, padx=(0, 8))
         self.diagnostics_button = ttk.Button(
-            actions, text="Open Diagnostics", command=self._open_diagnostics
+            actions, text="Open Logs & Diagnostics", command=self._open_diagnostics
         )
         self.diagnostics_button.grid(row=0, column=3)
-        self.plan_button = ttk.Button(
-            actions, text="Generate Launch Plan", command=self._generate_plan
-        )
-        self.plan_button.grid(row=0, column=4, padx=(8, 0))
         self.doctor_button = ttk.Button(actions, text="Doctor", command=self._start_doctor)
-        self.doctor_button.grid(row=0, column=5, padx=(8, 0))
+        self.doctor_button.grid(row=0, column=4, padx=(8, 0))
         self._action_buttons = (
             self.vanilla_button,
             self.restore_button,
@@ -575,8 +618,10 @@ class LauncherApp:
             self._cascade_map_studio()
         if name == "ap_request":
             self._accept_ap_request(selected)
+        self._refresh_status()
+        self._refresh_launch_gate()
 
-    def _accept_ap_request(self, selected: str) -> None:
+    def _accept_ap_request(self, selected: str, *, show_error: bool = True) -> None:
         """Resolve the chosen seed file and fill in what it tells us.
 
         A multiworld zip with exactly one Bloodborne slot also prefills the
@@ -584,10 +629,26 @@ class LauncherApp:
         empty field is what makes the Doctor's slot-agreement check a warning.
         """
         chosen = Path(selected).expanduser()
-        if looks_like_archive(chosen) and not self.player_name.get().strip():
-            only = archive_player_name(chosen)
-            if only is not None:
-                self.player_name.set(only)
+        if looks_like_archive(chosen):
+            try:
+                names = tuple(sorted({name for _member, name in archive_slots(chosen)}))
+            except LauncherError as exc:
+                if show_error:
+                    self.messagebox.showerror("Invalid AP seed file", str(exc), parent=self.root)
+                return
+        else:
+            detected = _request_player_name(chosen)
+            names = () if detected is None else (detected,)
+        self.player_combo.configure(values=names)
+        self._show_player_choice(len(names) > 1)
+        if len(names) == 1:
+            self.player_name.set(names[0])
+        elif self.player_name.get().strip() not in names:
+            self.player_name.set("")
+        if len(names) > 1 and not self.player_name.get().strip():
+            self.seed_summary.set("Choose which Bloodborne player you are.")
+            self._refresh_launch_gate()
+            return
         try:
             self.enemy_seed.set(
                 request_enemy_seed(
@@ -596,8 +657,30 @@ class LauncherApp:
                     state_root=self._state_root(),
                 )
             )
+            request = _request_identity(
+                chosen,
+                player_name=self.player_name.get().strip(),
+                state_root=self._state_root(),
+            )
+            self.seed_summary.set(
+                f"Player {request['slot']} · seed {request['seed']} · "
+                f"runtime {request['runtime_build']}"
+            )
         except LauncherError as exc:
-            self.messagebox.showerror("Invalid AP seed file", str(exc), parent=self.root)
+            if show_error:
+                self.messagebox.showerror("Invalid AP seed file", str(exc), parent=self.root)
+        self._refresh_launch_gate()
+
+    def _player_selected(self, _event: Any = None) -> None:
+        selected = self.fields["ap_request"].get().strip()
+        if selected:
+            self._accept_ap_request(selected)
+        self._refresh_status()
+        self._refresh_launch_gate()
+
+    def _setup_changed(self, _event: Any = None) -> None:
+        self._refresh_status()
+        self._refresh_launch_gate()
 
     def _cascade_map_studio(self) -> None:
         """Fill the MapStudio source from the game folder when unset."""
@@ -617,6 +700,43 @@ class LauncherApp:
         self.launch_button.configure(
             text="Randomize & Launch" if self.randomize_enemies.get() else "Build & Launch"
         )
+
+    def _toggle_enemy_advanced(self) -> None:
+        visible = self.show_enemy_advanced.get()
+        for widget in self._enemy_advanced_widgets:
+            if visible:
+                widget.grid()
+            else:
+                widget.grid_remove()
+
+    def _show_player_choice(self, visible: bool) -> None:
+        for widget in (self.player_label, self.player_combo, self.player_help):
+            if visible:
+                widget.grid()
+            else:
+                widget.grid_remove()
+
+    def _refresh_launch_gate(self) -> None:
+        required = (
+            ("AP seed", self.fields["ap_request"].get().strip()),
+            ("shadPS4", self.fields["shad_executable"].get().strip()),
+            ("game folder", self.fields["game_root"].get().strip()),
+        )
+        missing = [label for label, value in required if not value]
+        raw_seed = self.fields["ap_request"].get().strip()
+        if raw_seed and looks_like_archive(raw_seed):
+            try:
+                if len(archive_slots(Path(raw_seed).expanduser())) > 1 and not self.player_name.get().strip():
+                    missing.append("player")
+            except LauncherError:
+                missing.append("valid seed")
+        if missing:
+            self.launch_hint.set("Needed: " + ", ".join(missing) + ".")
+            self.launch_button.configure(state="disabled")
+        else:
+            self.launch_hint.set("Ready to validate and launch.")
+            if not self._busy:
+                self.launch_button.configure(state="normal")
 
     def _state_root(self) -> Path:
         """The launcher-owned state directory, whether or not it is typed in."""
@@ -669,7 +789,7 @@ class LauncherApp:
         except (OSError, UnicodeError, json.JSONDecodeError, LauncherError) as exc:
             self.messagebox.showwarning("Saved setup ignored", str(exc), parent=self.root)
 
-    def _generate_plan(self) -> None:
+    def _generate_plan(self, *, show_error: bool = True) -> bool:
         try:
             request_raw = self.fields["ap_request"].get().strip()
             if not request_raw:
@@ -700,9 +820,14 @@ class LauncherApp:
             )
             write_process_plan(output, document, force=True)
             self.fields["process_plan"].set(str(output))
-            self.status.set(f"Launch plan generated at {output}")
+            self._append_log("Prepared the launch components automatically.")
+            return True
         except (OSError, LauncherError) as exc:
-            self.messagebox.showerror("Could not generate launch plan", str(exc), parent=self.root)
+            if show_error:
+                self.messagebox.showerror(
+                    "Could not prepare launch", str(exc), parent=self.root
+                )
+            return False
 
     def _append_log(self, message: str) -> None:
         self.log.configure(state="normal")
@@ -776,16 +901,18 @@ class LauncherApp:
     def _set_busy(self, busy: bool) -> None:
         self._busy = busy
         self.launch_button.configure(state="disabled" if busy else "normal")
-        self.save_button.configure(state="disabled" if busy else "normal")
         for button in self._action_buttons:
             button.configure(state="disabled" if busy else "normal")
         if busy:
             self.progress.start(12)
         else:
             self.progress.stop()
+            self._refresh_launch_gate()
 
     def _start(self) -> None:
         if self._busy:
+            return
+        if not self._generate_plan():
             return
         try:
             settings = self._settings()
@@ -839,6 +966,8 @@ class LauncherApp:
         )
 
     def _setup_for_action(self, label: str) -> LauncherSettings | None:
+        if label == "Launch Vanilla" and not self._generate_plan():
+            return None
         try:
             settings = self._settings()
             self._save_settings()
@@ -871,6 +1000,8 @@ class LauncherApp:
     def _start_doctor(self) -> None:
         """Preflight the whole chain (bb-archipelago#103) without launching."""
         if self._busy:
+            return
+        if not self._generate_plan():
             return
         try:
             settings = self._settings()
@@ -959,6 +1090,8 @@ class LauncherApp:
 
     def _start_rebuild(self) -> None:
         if self._busy:
+            return
+        if not self._generate_plan():
             return
         if not self.messagebox.askyesno(
             "Rebuild Seed",

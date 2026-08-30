@@ -19,6 +19,7 @@ from bb_launcher.core import (
 from bb_launcher.core import EarlyExit
 from bb_launcher.plan import DEFAULT_SERVER
 from bb_launcher.ui import (
+    ENEMY_FIELDS,
     FIELD_DEFINITIONS,
     LauncherApp,
     default_field_values,
@@ -833,15 +834,16 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         return tabs, parent_of, texts_by_parent
 
     def test_ui_contract_tabs_the_setup_and_the_enemizer(self):
-        """bb-archipelago#190: two tabs, and the enemizer controls are on one.
+        """The normal flow stays small; advanced controls have their own tab.
 
         A single tall column let Tk crush the only weighted row to zero on a
         short display, taking the Randomize Enemies toggle with it.
         """
         tabs, parent_of, texts_by_parent = self._build_widget_tree()
-        self.assertEqual(set(tabs), {"Setup", "Enemy randomization"})
+        self.assertEqual(set(tabs), {"Setup", "Enemy randomization", "Troubleshooting"})
         enemy_tab = tabs["Enemy randomization"]
         setup_tab = tabs["Setup"]
+        troubleshooting_tab = tabs["Troubleshooting"]
         self.assertEqual(parent_of[enemy_tab], "notebook")
         self.assertEqual(parent_of[setup_tab], "notebook")
         self.assertLessEqual(
@@ -853,10 +855,10 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             },
             texts_by_parent[enemy_tab],
         )
-        # The control: the #184 override stays in Setup and did not ride along.
+        # The operator override is available without cluttering normal setup.
         self.assertIn(
             "Allow suppression binder mismatch (operators only, not saved)",
-            texts_by_parent[setup_tab],
+            texts_by_parent[troubleshooting_tab],
         )
         self.assertNotIn(
             "Allow suppression binder mismatch (operators only, not saved)",
@@ -970,11 +972,13 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         """The enemizer path fields moved tabs; the disable group must follow."""
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         build = source.split("def _build")[1].split("def _browse")[0]
-        for name in ("map_studio_source", "enemy_inventory", "soulsformats_next"):
-            self.assertIn(f'"{name}"', build)
+        self.assertIn("if name in ENEMY_FIELDS", build)
+        self.assertEqual(
+            ENEMY_FIELDS, {"map_studio_source", "enemy_inventory", "soulsformats_next"}
+        )
         self.assertIn("self._enemy_widgets.extend((entry, button))", build)
         self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion))", build)
-        toggle = source.split("def _toggle_enemy_fields")[1].split("def _settings")[0]
+        toggle = source.split("def _toggle_enemy_fields")[1].split("def _state_root")[0]
         self.assertIn("for widget in self._enemy_widgets", toggle)
         self.assertIn('widget.configure(state=state)', toggle)
         # Neither weighted panel can be starved to nothing again.
@@ -989,20 +993,50 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("result.client_config", source)
         self.assertIn("result.ledger", source)
 
+    def test_seed_identity_is_selected_from_the_seed_not_free_typed(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn('state="readonly"', source)
+        self.assertIn("archive_slots(chosen)", source)
+        self.assertIn("self.seed_summary.set", source)
+        self.assertIn('bind("<<ComboboxSelected>>"', source)
+        self.assertIn('bind("<FocusOut>"', source)
+
+    def test_everyday_launch_controls_disclose_only_when_needed(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn('text="Advanced enemy options"', source)
+        self.assertIn("self._enemy_advanced_widgets", source)
+        self.assertIn("widget.grid_remove()", source)
+        self.assertIn("self._show_player_choice(len(names) > 1)", source)
+        self.assertIn("self._show_player_choice(False)", source)
+
+    def test_launch_gate_names_missing_setup_instead_of_failing_late(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        gate = source.split("def _refresh_launch_gate")[1].split("def _state_root")[0]
+        self.assertIn('("AP seed", self.fields["ap_request"]', gate)
+        self.assertIn('("shadPS4", self.fields["shad_executable"]', gate)
+        self.assertIn('("game folder", self.fields["game_root"]', gate)
+        self.assertIn('missing.append("player")', gate)
+        self.assertIn('self.launch_hint.set("Needed: "', gate)
+        self.assertIn('self.launch_button.configure(state="disabled")', gate)
+
     def test_ui_contract_wires_the_secondary_actions(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        for label in ("Launch Vanilla", "Restore Previous", "Rebuild Seed", "Open Diagnostics"):
+        for label in (
+            "Launch Vanilla", "Restore Previous", "Rebuild Seed", "Open Logs & Diagnostics"
+        ):
             self.assertIn(f'text="{label}"', source)
         for method in ("launch_vanilla", "restore_previous", "force_rebuild"):
             self.assertIn(method, source)
 
     def test_ui_contract_can_generate_the_launch_plan(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('text="Generate Launch Plan"', source)
+        self.assertNotIn('text="Generate Launch Plan"', source)
         self.assertIn('"shad_executable"', source)
         self.assertNotIn('"ce_executable"', source)  # bb-archipelago#153
         self.assertIn("ap_server", source)
         self.assertIn("generate_process_plan", source)
+        start = source.split("def _start(self)")[1].split("def _confirm_elevation")[0]
+        self.assertIn("self._generate_plan()", start)
         self.assertIn('application_root() / "tools" / "bb-ap-client.exe"', source)
 
     def test_ui_contract_has_a_bloodborne_theme(self):
