@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Bosses no longer leak duplicate vanilla payouts alongside their AP checks.**
+  Sixteen payout-only award lots are now suppressed, including Amelia's Gold
+  Pendant and the weapon, material, and Insight rewards attached to later
+  bosses. Stateful rewards remain vanilla: Cleric Beast's and Gehrman's shop
+  badges, plus the Pthumeru, Ailing Loran, and Isz chalices, still perform the
+  progression and shop-unlock jobs the base game expects.
 - **Advanced enemy controls now say what is experimental about them.** Tier
   mixing warns that enemy scaling is not normalized, while locomotion
   preservation warns that its roster tags are incomplete. Offline regression

@@ -975,6 +975,25 @@ class ScriptAwardSuppression:
     evidence: str
 
 
+@dataclass(frozen=True)
+class BossAwardSuppression:
+    """One reviewed boss-award lot whose payout has no required side effect.
+
+    Unlike ``ScriptAwardSuppression``, this declaration identifies the exact
+    lot row directly. Boss filler, armour, runes and weapons commonly share an
+    item with unrelated sources, so a global goods-to-lot census is the wrong
+    ownership rule. The planner still verifies every declared field against
+    the committed corpus before editing anything.
+    """
+
+    boss: str
+    item_lot_id: int
+    item_category: int
+    item_id: int
+    acquisition_flag: int
+    evidence: str
+
+
 SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
     "oedon_tomb_key": ScriptAwardSuppression(
         item_key="oedon_tomb_key",
@@ -1014,6 +1033,33 @@ SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
             "vanilla Wet Nurse copy is removed while the lot flag remains intact."
         ),
     ),
+}
+
+
+# Badges (Cleric Beast 50000010; Gehrman 15000) and chalices (BSB
+# 80000000; Amygdala 80000200; Ebrietas 80000300) intentionally stay vanilla:
+# possessing the badge is the shop-unlock mechanism, while chalice progression
+# is outside the randomized world. Everything below is a payout-only duplicate.
+BOSS_AWARD_SUPPRESSIONS: dict[str, BossAwardSuppression] = {
+    key: BossAwardSuppression(key, lot, category, item, flag, evidence)
+    for key, lot, category, item, flag, evidence in (
+        ("witch_of_hemwick", 21002950, 4, 7150, -1, "m22 event 12201800 AwardItemLot(21002950)"),
+        ("vicar_amelia", 50000001, 4, 4001, -1, "m24_00 event 12401800 AwardItemLot(50000001)"),
+        ("celestial_emissary_gem", 25700000, 8, 102904, -1, "m24_02 event 12421700 AwardItemLot(25700000)"),
+        ("celestial_emissary_insight", 25700005, 4, 1500, -1, "m24_02 event 12421700 AwardItemLot(25700005)"),
+        ("micolash", 21000, 1, 190000, -1, "m26 event 12601850 AwardItemLot(21000)"),
+        ("shadows_of_yharnam", 2700990, 8, 100601, 52700950, "m27 event 12701800 AwardItemLot(2700990)"),
+        ("shadows_of_yharnam_repeat", 2700995, 4, 1500, 52700955, "m27 event 12701800 AwardItemLot(2700995)"),
+        ("the_one_reborn", 50700000, 4, 7131, -1, "m28 event 12801800 AwardItemLot(50700000)"),
+        ("rom_coldblood", 51001900, 4, 1591, -1, "m32 event 13201800 AwardItemLot(51001900)"),
+        ("rom_spawned_reward", 3200800, 8, 102202, 53200800, "common EMEVD AwardItemLot(3200800) after Rom"),
+        ("gehrman_repeat", 15005, 4, 1400, -1, "m21 event 12101800 AwardItemLot(15005) when the badge is already owned"),
+        ("ludwig", 3401800, 8, 104001, 6674, "m34 event 13401800 AwardItemLot(3401800)"),
+        ("ludwig_repeat", 3401802, 4, 1500, -1, "m34 event 13401800 AwardItemLot(3401802)"),
+        ("laurence", 3401850, 8, 200040, 6673, "m34 event 13401850 AwardItemLot(3401850)"),
+        ("laurence_repeat", 3401852, 4, 1500, -1, "m34 event 13401850 AwardItemLot(3401852)"),
+        ("orphan_of_kos", 3601800, 0, 38000000, 53601800, "m36 event 13601800 AwardItemLot(3601800)"),
+    )
 }
 
 
