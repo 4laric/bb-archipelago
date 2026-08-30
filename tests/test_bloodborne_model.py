@@ -198,8 +198,9 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Blood Stone Chunk"], 25)
         self.assertEqual(counts["Bold Hunter's Mark x2"], 24)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
-                     "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
+                     "Fire Paper x2", "Bolt Paper x2"):
             self.assertEqual(counts[name], 25, name)
+        self.assertEqual(counts["Bone Marrow Ash x3"], 24)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
@@ -234,11 +235,11 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Blood Vial"], 223)
         self.assertEqual(counts["Quicksilver Bullets x3"], 149)
         self.assertEqual(counts["Blood Stone Shards x2"], 112)
-        self.assertEqual(counts["Pebbles x3"], 75)
+        self.assertEqual(counts["Pebbles x3"], 74)
         self.assertEqual(counts["Molotov Cocktails x2"], 74)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
-        self.assertEqual(len(slot_data["runtime_items"]), 14)  # thirteen slice items + Blood Vial
+        self.assertEqual(len(slot_data["runtime_items"]), 15)  # fourteen slice items + Blood Vial
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
@@ -504,6 +505,8 @@ class BloodborneModelTests(unittest.TestCase):
                          slice_reachable(everything - {"oedon_tomb_key"}))
         self.assertNotIn(GOAL_LOCATION_KEY,
                          slice_reachable(everything - {"lunarium_key"}))
+        self.assertNotIn(GOAL_LOCATION_KEY,
+                         slice_reachable(everything - {"forbidden_woods_password"}))
         self.assertIn(GOAL_LOCATION_KEY,
                       slice_reachable(everything - {"hunter_chief_emblem"}))
 
@@ -517,6 +520,8 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn("Oedon Tomb Key", build_item_pool_names(keys))
             self.assertIn("lunarium_key", keys)
             self.assertIn("Lunarium Key", build_item_pool_names(keys))
+            self.assertIn("forbidden_woods_password", keys)
+            self.assertIn("Forbidden Woods Password", build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}

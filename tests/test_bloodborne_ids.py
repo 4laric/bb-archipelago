@@ -132,6 +132,7 @@ GOLDEN_ITEMS = {
     "third_umbilical_cord_3": 0xBB0134,
     "third_umbilical_cord_4": 0xBB0135,
     "lunarium_key": 0xBB0136,
+    "forbidden_woods_password": 0xBB0137,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -373,6 +374,12 @@ class RuntimeItemContractTests(unittest.TestCase):
                 "live_grant_inventory_ui",
                 "param_id_inferred",
             },
+            "bb-0.1.0-r8": {
+                "goods_formula_observed",
+                "live_grant_inventory_ui",
+                "param_id_inferred",
+                "event_flag_effect",
+            },
         }
         self.assertIn(
             RUNTIME_BUILD,
@@ -399,10 +406,11 @@ class RuntimeItemContractTests(unittest.TestCase):
             self.assertIn("raw_descriptor", binding)
             self.assertIn("item_category", binding)
             self.assertIn("descriptor_evidence", binding)
-            self.assertIn(binding["item_category"], {0, 4})
+            self.assertIn(binding["item_category"], {0, 4, 255})
             self.assertIn(binding["descriptor_evidence"], {
                 "goods_formula_observed", "live_grant_inventory_ui",
                 "param_id_inferred",
+                "event_flag_effect",
             })
             self.assertIn("feed_effect", binding)
             self.assertIn("reinforcement_level", binding)

@@ -77,6 +77,13 @@ def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantit
         if binding.feed_effect not in {"right_hand_weapon", "left_hand_weapon"}:
             raise ValueError(f"{key}: category-0 weapon has incompatible feed policy")
         return
+    if binding.item_category == 255:
+        if (binding.normalized_item_id != binding.raw_descriptor
+                or binding.descriptor_evidence != "event_flag_effect"
+                or quantity != 1
+                or binding.reinforcement_level is not None):
+            raise ValueError(f"{key}: invalid event-flag receive effect")
+        return
     raise ValueError(f"{key}: unsupported item category {binding.item_category}")
 
 
@@ -107,6 +114,10 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "lunarium_key": RuntimeItemBinding(
         0x40000FAD, 0xB0000FAD,
         "EquipParamGoods 4013 + ItemLotParam 3200810; validated category-4 goods formula"),
+    "forbidden_woods_password": RuntimeItemBinding(
+        12401803, 12401803,
+        "vanilla Grand Cathedral memory event flag; delivered as an idempotent event-flag effect",
+        item_category=255, descriptor_evidence="event_flag_effect"),
     "cainhurst_summons": RuntimeItemBinding(0x40000FA3, 0xB0000FA3, "FMG/param + validated goods formula"),
     "tonsil_stone": RuntimeItemBinding(0x400010D6, 0xB00010D6, "FMG/param + validated goods formula"),
     "upper_cathedral_key": RuntimeItemBinding(0x40000FAA, 0xB0000FAA, "FMG/param + validated goods formula"),
@@ -823,8 +834,10 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
     ),
     "interaction_laurences_skull": RuntimeLocationBinding(
-        12401803,
-        "EMEVD one-shot interaction flag; $Event(12401803) (学長の記憶ポリ劇) waits on "
+        12401898,
+        "AP overlay witness flag 12401898 set only after the Grand Cathedral altar interaction. "
+        "The vanilla $Event(12401803) flag is reserved for the shuffled password receive effect; "
+        "$Event(12401803) (学長の記憶ポリ劇) waits on "
         "Amelia (12401800), then on ActionButtonInArea(2400010, 2401801) at the Grand "
         "Cathedral altar, and ends. `inferred` on two counts: nothing writes the flag "
         "explicitly, and the event's `EndIf(HasMultiplayerState(Client))` at :4390 "
@@ -832,7 +845,7 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         "flag without the interaction. See research/validation/slice3_witness_audit.tsv",
         None,
         "interaction",
-        "m24_00_00_00.emevd.dcx.js:4382-4398",
+        "managed m24_00_00_00.emevd.dcx patch of event 12401803",
         None,
         None,
     ),

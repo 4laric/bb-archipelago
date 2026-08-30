@@ -132,22 +132,22 @@ The following names may appear in spoiler logic, but they are locked to their
 own in-game checks and are never shuffled to another player:
 
 Cleric Beast Defeated; Father Gascoigne Defeated; Blood-starved Beast Defeated;
-Vicar Amelia Defeated; Witch of Hemwick Defeated; Martyr Logarius Defeated;
+Vicar Amelia Defeated; Laurence's Skull Inspected; Witch of Hemwick Defeated; Martyr Logarius Defeated;
 Shadows of Yharnam Defeated; Rom Defeated; Amygdala Defeated;
 The One Reborn Defeated; Micolash Defeated; Mergo's Wet Nurse Defeated;
 Gehrman Defeated; Moon Presence Defeated;
 Ludwig Defeated; Living Failures Defeated; Lady Maria Defeated;
 Orphan of Kos Defeated; and Laurence Defeated.
 
-**Forbidden Woods Password Learned** is also a local event item. Defeat Vicar
+**Forbidden Woods Password** is a shuffled progression item. Defeat Vicar
 Amelia and inspect Laurence's Skull on the Grand Cathedral altar to complete
-the **Grand Cathedral - Laurence's Skull** check. That interaction locks the
-password event in place; the password is not an inventory item that can be
-sent by another world.
+the **Grand Cathedral - Laurence's Skull** check; its placed item may be
+anything. Receiving the password automatically teaches it to the character and
+opens the password conversation at the Forbidden Woods door. It is not consumed.
 
 <!-- ITEM-DOC-KEYS
 blood_vial blood_gem_workshop_tool rune_workshop_tool hunter_chief_emblem
-oedon_tomb_key lunarium_key cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
+oedon_tomb_key lunarium_key forbidden_woods_password cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
 eye_of_blood_drunk_hunter eye_pendant astral_clocktower_key celestial_dial
 laurences_skull third_umbilical_cord_1 third_umbilical_cord_2
 third_umbilical_cord_3 third_umbilical_cord_4 saw_spear chikage blade_of_mercy hunter_axe burial_blade
@@ -171,7 +171,7 @@ uncanny_stake_driver uncanny_logarius_wheel uncanny_tonitrus
 uncanny_threaded_cane event_cleric_beast_defeated event_gascoigne_defeated
 event_blood_starved_beast_defeated event_amelia_defeated
 event_witch_of_hemwick_defeated event_martyr_logarius_defeated
-event_forbidden_woods_password event_shadows_defeated event_rom_defeated
+event_laurences_skull_inspected event_shadows_defeated event_rom_defeated
 event_amygdala_defeated event_one_reborn_defeated event_micolash_defeated
 event_mergos_wet_nurse_defeated event_gehrman_defeated
 event_moon_presence_defeated event_ludwig_defeated

@@ -34,7 +34,7 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     # second clause here: folding it in made the emblem clause unreachable as a
     # requirement, because Blood-starved Beast is free from Cathedral Ward.
     "Cathedral Ward plaza gate": {frozenset({"hunter_chief_emblem"})},
-    "Forbidden Woods password door": {frozenset({"event_forbidden_woods_password"})},
+    "Forbidden Woods password door": {frozenset({"forbidden_woods_password"})},
     "Path to Byrgenwerth": {frozenset({"event_shadows_defeated"})},
     "Lunarium door": {frozenset({"lunarium_key"})},
     "Blood Moon transition": {frozenset({"event_rom_defeated"})},
@@ -47,7 +47,7 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     "Cainhurst carriage": {
         frozenset({"cainhurst_summons", "event_witch_of_hemwick_defeated"})},
     "Amygdala's DLC grasp": {
-        frozenset({"event_forbidden_woods_password", "eye_of_blood_drunk_hunter"})},
+        frozenset({"forbidden_woods_password", "eye_of_blood_drunk_hunter"})},
     "Ludwig's arena exit": {frozenset({"event_ludwig_defeated"})},
     "Surgery altar": {frozenset({"eye_pendant"})},
     "Astral Clocktower door": {
@@ -140,7 +140,7 @@ class LocationRuleTests(unittest.TestCase):
             frozenset({"event_gehrman_defeated", "third_umbilical_cord_2",
                        "third_umbilical_cord_3", "third_umbilical_cord_4"}),
         },
-        "pickup_eye_of_blood_drunk_hunter": {frozenset({"event_forbidden_woods_password"})},
+        "pickup_eye_of_blood_drunk_hunter": {frozenset({"event_laurences_skull_inspected"})},
         "boss_laurence": {frozenset({"laurences_skull"})},
         "treasure_cosmic_eye_watcher_badge": {frozenset({"orphanage_key"})},
     }

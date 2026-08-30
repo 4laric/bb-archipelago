@@ -38,8 +38,9 @@ class BloodborneItemDocumentationTests(unittest.TestCase):
 
     def test_local_events_are_not_described_as_shuffled(self):
         self.assertIn("never shuffled to another player", self.text)
-        self.assertIn("Forbidden Woods Password Learned", self.text)
-        self.assertIn("not an inventory item", self.text)
+        self.assertIn("Laurence's Skull Inspected", self.text)
+        self.assertIn("Forbidden Woods Password", self.text)
+        self.assertIn("automatically teaches it", self.text)
 
 
 if __name__ == "__main__":
