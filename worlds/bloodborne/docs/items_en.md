@@ -29,6 +29,10 @@ interaction as owning its vanilla counterpart unless noted below.
 | Astral Clocktower Key | Opens the Astral Clocktower after the Living Failures. Both the boss event and key are required. |
 | Celestial Dial | Operates the Astral Clock after Lady Maria and opens the route to the Fishing Hamlet. |
 | Laurence's Skull | Enables the optional Laurence encounter in the Hunter's Nightmare. This inventory item is not the Grand Cathedral skull interaction used to learn the Forbidden Woods password. |
+| Third Umbilical Cord #1 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
+| Third Umbilical Cord #2 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
+| Third Umbilical Cord #3 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
+| Third Umbilical Cord #4 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
 
 The two Workshop Tools are part of the public item catalog because the client
 must be able to deliver them, but current seeds precollect them for the player.
@@ -130,6 +134,7 @@ Cleric Beast Defeated; Father Gascoigne Defeated; Blood-starved Beast Defeated;
 Vicar Amelia Defeated; Witch of Hemwick Defeated; Martyr Logarius Defeated;
 Shadows of Yharnam Defeated; Rom Defeated; Amygdala Defeated;
 The One Reborn Defeated; Micolash Defeated; Mergo's Wet Nurse Defeated;
+Gehrman Defeated; Moon Presence Defeated;
 Ludwig Defeated; Living Failures Defeated; Lady Maria Defeated;
 Orphan of Kos Defeated; and Laurence Defeated.
 
@@ -143,7 +148,8 @@ sent by another world.
 blood_vial blood_gem_workshop_tool rune_workshop_tool hunter_chief_emblem
 oedon_tomb_key cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
 eye_of_blood_drunk_hunter eye_pendant astral_clocktower_key celestial_dial
-laurences_skull saw_spear chikage blade_of_mercy hunter_axe burial_blade
+laurences_skull third_umbilical_cord_1 third_umbilical_cord_2
+third_umbilical_cord_3 third_umbilical_cord_4 saw_spear chikage blade_of_mercy hunter_axe burial_blade
 saw_cleaver kirkhammer ludwigs_holy_blade beast_claw rifle_spear reiterpallasch
 stake_driver logarius_wheel tonitrus threaded_cane hunter_blunderbuss
 ludwigs_rifle hunter_pistol repeating_pistol cannon augur_of_ebrietas
@@ -166,7 +172,8 @@ event_blood_starved_beast_defeated event_amelia_defeated
 event_witch_of_hemwick_defeated event_martyr_logarius_defeated
 event_forbidden_woods_password event_shadows_defeated event_rom_defeated
 event_amygdala_defeated event_one_reborn_defeated event_micolash_defeated
-event_mergos_wet_nurse_defeated event_ludwig_defeated
+event_mergos_wet_nurse_defeated event_gehrman_defeated
+event_moon_presence_defeated event_ludwig_defeated
 event_living_failures_defeated event_lady_maria_defeated
 event_orphan_of_kos_defeated event_laurence_defeated
 -->
