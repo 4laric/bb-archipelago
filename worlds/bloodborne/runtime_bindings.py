@@ -960,6 +960,22 @@ SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
             "recorded here as reviewed-and-unreachable rather than edited."
         ),
     ),
+    "third_umbilical_cord_wet_nurse": ScriptAwardSuppression(
+        item_key="third_umbilical_cord_1",
+        item_category=4,
+        item_id=4323,
+        item_lot_ids=(55100000,),
+        acquisition_flag=50000305,
+        unreferenced_lot_ids=(),
+        evidence=(
+            "m26_00_00_00.emevd.dcx.js:565-573 - Wet Nurse defeat event "
+            "12601800 calls HandleBossDefeat(2600803), then AwardItemLot(55100000). "
+            "That lot awards category 4 item 4323 in slot 01 and carries "
+            "getItemFlagId 50000305 (ItemLotParam.csv; research/joined/lot_items.tsv). "
+            "All four logical Third Umbilical Cord items use goods 4323, so the "
+            "vanilla Wet Nurse copy is removed while the lot flag remains intact."
+        ),
+    ),
 }
 
 

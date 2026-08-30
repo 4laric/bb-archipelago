@@ -992,6 +992,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("gather_readiness", source)
         self.assertIn("result.client_config", source)
         self.assertIn("result.ledger", source)
+        self.assertIn("self._set_session_details_visible(False)", source)
+        self.assertIn('text="Show Details"', source)
+        self.assertIn("self._set_session_details_visible(True)", source)
 
     def test_seed_identity_is_selected_from_the_seed_not_free_typed(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
@@ -1022,7 +1025,8 @@ class LauncherUiWorkflowTests(unittest.TestCase):
     def test_ui_contract_wires_the_secondary_actions(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         for label in (
-            "Launch Vanilla", "Restore Previous", "Rebuild Seed", "Open Logs & Diagnostics"
+            "Launch Vanilla", "Undo Last Build", "Rebuild", "Open Logs & Diagnostics",
+            "Check Setup",
         ):
             self.assertIn(f'text="{label}"', source)
         for method in ("launch_vanilla", "restore_previous", "force_rebuild"):
