@@ -11,6 +11,10 @@ under `Unreleased` and move into a dated version section when released.
   preservation warns that its roster tags are incomplete. Offline regression
   fixtures now pin both modes and verify deterministic plans independently of
   the default 308-placement policy.
+- **The Lunarium Key is now a real progression gate.** Its Byrgenwerth attic
+  pickup is randomized, the vanilla award is suppressed, and Rom's Moonside
+  Lake arena requires receiving the shuffled key. This closes the missing
+  vanilla gate that previously made Rom free immediately after Shadows.
 - **Overlay caching now follows the bytes it builds.** Different AP players
   reuse an identical verified overlay when their suppression and enemizer
   inputs match, while changing the suppression binder necessarily creates a

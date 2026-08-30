@@ -122,7 +122,7 @@ no-op.
    spots only where 1 and 2 fail. Every one carries its evidence in the `note`
    column and lands in the row's `basis`, exactly like the #75 rename rows.
 
-**Coverage is deliberately partial.** 182 of 678 rows carry a hint; 496 do
+**Coverage is deliberately partial.** 183 of 679 rows carry a hint; 496 do
 not, and a name with no landmark yet is honest rather than unfinished. The
 pass prioritised the collision groups (98 of the 407 `#N` rows now carry a
 hint) and the rows the playtesters actually hunted. Both numbers are witnessed

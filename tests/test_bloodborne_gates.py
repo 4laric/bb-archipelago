@@ -36,6 +36,7 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     "Cathedral Ward plaza gate": {frozenset({"hunter_chief_emblem"})},
     "Forbidden Woods password door": {frozenset({"event_forbidden_woods_password"})},
     "Path to Byrgenwerth": {frozenset({"event_shadows_defeated"})},
+    "Lunarium door": {frozenset({"lunarium_key"})},
     "Blood Moon transition": {frozenset({"event_rom_defeated"})},
     "Advent Plaza mummy": {frozenset({"event_one_reborn_defeated"})},
     "Amygdala's grasp": {frozenset({"tonsil_stone"})},

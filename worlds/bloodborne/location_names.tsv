@@ -664,7 +664,8 @@ location_flag	region	name	basis
 12301800	Old Yharnam	Blood-starved Beast	published (data.py boss_blood_starved_beast); boss-defeat event flag committed in runtime_bindings.py
 12401800	Grand Cathedral	Vicar Amelia	published (data.py boss_vicar_amelia); boss-defeat event flag committed in runtime_bindings.py
 12701800	Forbidden Woods	Shadows of Yharnam	published (data.py boss_shadows_of_yharnam); boss-defeat event flag committed in runtime_bindings.py
-13201800	Byrgenwerth	Rom, the Vacuous Spider	published (data.py boss_rom); boss-defeat event flag committed in runtime_bindings.py
+13201800	Moonside Lake	Rom, the Vacuous Spider	published (data.py boss_rom); boss-defeat event flag committed in runtime_bindings.py
+53200810	Byrgenwerth	Byrgenwerth - Lunarium Key (Headmaster's Room attic desk)	published (bloodborne-wiki.com Lunarium Key); lot tag 学長室屋根裏　机の角 (Headmaster's Room attic, desk corner); script award m32_00_00_00 event
 12801800	Yahar'gul	The One Reborn	published (data.py boss_the_one_reborn); boss-defeat event flag committed in runtime_bindings.py
 12601850	Nightmare of Mensis	Micolash, Host of the Nightmare	published (data.py boss_micolash); boss-defeat event flag committed in runtime_bindings.py
 12601800	Nightmare of Mensis	Mergo's Wet Nurse	published (data.py boss_mergos_wet_nurse); boss-defeat event flag committed in runtime_bindings.py

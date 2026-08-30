@@ -20,6 +20,7 @@ interaction as owning its vanilla counterpart unless noted below.
 | Rune Workshop Tool | Enables Caryll Rune use at the Memory Altar. It is currently given at the start, not placed in the multiworld. |
 | Hunter Chief Emblem | Opens the round-plaza gate in Cathedral Ward. The current game also permits the longer route through the Healing Church Workshop after Blood-starved Beast; that bypass is tracked for removal in issue #243. |
 | Oedon Tomb Key | Opens the gate beyond Father Gascoigne's arena. Defeating Gascoigne and receiving the key are separate requirements. |
+| Lunarium Key | Opens Byrgenwerth's second-floor terrace door, giving access to Provost Willem and the Moonside Lake arena where Rom is fought. |
 | Cainhurst Summons | Enables the Cainhurst carriage at the Hemwick obelisk after the Witch of Hemwick has been defeated. |
 | Tonsil Stone | Lets the Amygdala at the chapel-side grab take you to Lecture Building 1F, whose large door leads to Nightmare Frontier. It does not open Lecture Building 2F. |
 | Upper Cathedral Key | Opens the locked entrance to Upper Cathedral Ward. Reaching that door also requires the Healing Church Workshop route opened by defeating Blood-starved Beast. |
@@ -146,7 +147,7 @@ sent by another world.
 
 <!-- ITEM-DOC-KEYS
 blood_vial blood_gem_workshop_tool rune_workshop_tool hunter_chief_emblem
-oedon_tomb_key cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
+oedon_tomb_key lunarium_key cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
 eye_of_blood_drunk_hunter eye_pendant astral_clocktower_key celestial_dial
 laurences_skull third_umbilical_cord_1 third_umbilical_cord_2
 third_umbilical_cord_3 third_umbilical_cord_4 saw_spear chikage blade_of_mercy hunter_axe burial_blade

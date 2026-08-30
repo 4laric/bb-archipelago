@@ -18,7 +18,8 @@ flowchart LR
     GC -->|Vicar Amelia defeated; inspect Laurence's Skull| FW[Forbidden Woods]
     FW --> Clinic[Iosefka's Clinic]
     FW -->|Shadows of Yharnam defeated| Byrgenwerth
-    Byrgenwerth -->|Rom defeated| Yahar["Yahar'gul (Blood Moon)"]
+    Byrgenwerth -->|Lunarium Key| Lake["Moonside Lake / Rom"]
+    Lake -->|Rom defeated| Yahar["Yahar'gul (Blood Moon)"]
     Yahar -->|The One Reborn defeated; inspect mummy| L2[Lecture Building 2F]
     L2 --> Mensis[Nightmare of Mensis]
     Mensis -->|Micolash defeated| WetNurse[Mergo's Wet Nurse]
@@ -45,6 +46,7 @@ flowchart LR
 | Cathedral plaza | **Corrected 2026-08-24** | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. The disjunction is real, but modelling it as one two-clause rule made the emblem clause dead: Old Yharnam is free from Cathedral Ward and Blood-starved Beast is free inside it, so the other clause was always satisfiable. It is now two edges — `Cathedral Ward --emblem--> Grand Cathedral` and `Healing Church Workshop --> Grand Cathedral` — which is what the game does and what lets a bounded slice make the emblem matter. |
 | Amelia -> Forbidden Woods | Corrected | Amelia must be defeated and Laurence's Skull inspected to learn the password. |
 | Forbidden Woods -> Byrgenwerth | Matches | Defeating Shadows of Yharnam opens the path. |
+| Byrgenwerth -> Moonside Lake | **Corrected 2026-08-30** | The Lunarium Key opens the second-floor terrace door leading past Willem to Moonside Lake and Rom. Vanilla requires it; only a geometry exploit bypasses the door. The key is now shuffled and its attic-desk award is an AP check. |
 | Rom -> Blood Moon Yahar'gul | Matches | Rom's death is the Blood Moon trigger. |
 | One Reborn -> Lecture 2F | Matches | Inspecting the mummy after The One Reborn transports to Lecture Building 2F. |
 | Tonsil Stone route | Corrected | The Cathedral Ward grab transports to Lecture Building 1F; its door reaches the Frontier. |

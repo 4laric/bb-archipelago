@@ -109,7 +109,7 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(641, len(NETWORK_LOCATIONS))
+        self.assertEqual(642, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -117,6 +117,7 @@ class BloodborneModelTests(unittest.TestCase):
              "Old Yharnam": 55, "Grand Cathedral": 2,
              "Hemwick Charnel Lane": 34, "Castle Cainhurst": 28,
              "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
+             "Moonside Lake": 1,
             "Yahar'gul": 51, "Lecture Building 1F": 9,
              "Lecture Building 2F": 8, "Nightmare Frontier": 46,
              "Nightmare of Mensis": 57, "Hunter's Dream": 3,
@@ -237,7 +238,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Molotov Cocktails x2"], 74)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
-        self.assertEqual(len(slot_data["runtime_items"]), 13)  # twelve slice items + Blood Vial
+        self.assertEqual(len(slot_data["runtime_items"]), 14)  # thirteen slice items + Blood Vial
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
@@ -492,7 +493,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(0xBB1036,
                          LOCATION_ID_BY_KEY["fixed_central_yharnam_lot_2410295"])
 
-    def test_the_goal_requires_the_oedon_key_but_not_the_emblem(self):
+    def test_the_goal_requires_the_oedon_and_lunarium_keys_but_not_the_emblem(self):
         """BSB opens the Workshop route, making the emblem an optional shortcut."""
         from worlds.bloodborne import GOAL_LOCATION_KEY
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
@@ -501,10 +502,12 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertIn(GOAL_LOCATION_KEY, slice_reachable(everything))
         self.assertNotIn(GOAL_LOCATION_KEY,
                          slice_reachable(everything - {"oedon_tomb_key"}))
+        self.assertNotIn(GOAL_LOCATION_KEY,
+                         slice_reachable(everything - {"lunarium_key"}))
         self.assertIn(GOAL_LOCATION_KEY,
                       slice_reachable(everything - {"hunter_chief_emblem"}))
 
-    def test_the_key_is_in_every_pool_the_world_can_build(self):
+    def test_the_progression_keys_are_in_every_pool_the_world_can_build(self):
         """A progression item the pool may omit is a generation failure waiting."""
         from worlds.bloodborne import build_item_pool_names
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
@@ -512,6 +515,8 @@ class BloodborneModelTests(unittest.TestCase):
         for keys in (FULL_POOL_ITEM_KEYS, SLICE_ITEM_KEYS):
             self.assertIn("oedon_tomb_key", keys)
             self.assertIn("Oedon Tomb Key", build_item_pool_names(keys))
+            self.assertIn("lunarium_key", keys)
+            self.assertIn("Lunarium Key", build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}

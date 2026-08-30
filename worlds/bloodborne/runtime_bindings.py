@@ -104,6 +104,9 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     # observed, and no live confirmation that an AP-granted copy satisfies
     # ObjActParam 2410080 on door 2411304 -- see docs/VANILLA-SUPPRESSION.md.
     "oedon_tomb_key": RuntimeItemBinding(0x40000FA0, 0xB0000FA0, "FMG/param + validated goods formula"),
+    "lunarium_key": RuntimeItemBinding(
+        0x40000FAD, 0xB0000FAD,
+        "EquipParamGoods 4013 + ItemLotParam 3200810; validated category-4 goods formula"),
     "cainhurst_summons": RuntimeItemBinding(0x40000FA3, 0xB0000FA3, "FMG/param + validated goods formula"),
     "tonsil_stone": RuntimeItemBinding(0x400010D6, 0xB00010D6, "FMG/param + validated goods formula"),
     "upper_cathedral_key": RuntimeItemBinding(0x40000FAA, 0xB0000FAA, "FMG/param + validated goods formula"),
@@ -839,6 +842,10 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "pickup_upper_cathedral_key": RuntimeLocationBinding(
         52800290, "MSB treasure m28_00_00_00/m28_00_00_01 + ItemLotParam 2800290 acquisition flag",
         2800290, "treasure", "m28_00_00_00;m28_00_00_01", 4, 4010),
+    "pickup_lunarium_key": RuntimeLocationBinding(
+        53200810,
+        "EMEVD award m32_00_00_00:636 + ItemLotParam 3200810 acquisition flag",
+        3200810, "script_award", "m32_00_00_00.emevd.dcx.js:636", 4, 4013),
     "script_award_orphanage_key": RuntimeLocationBinding(
         52420900, "EMEVD award m24_02_00_00:252 + ItemLotParam 2420900 acquisition flag",
         2420900, "script_award", "m24_02_00_00.emevd.dcx.js:252", 4, 4006),

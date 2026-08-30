@@ -743,3 +743,5 @@ location	fixed_fishing_hamlet_lot_3600700	0xBB1283
 location	treasure_doll_set_chest	0xBB1284
 location	pickup_small_hair_ornament	0xBB1285
 location	pickup_workshop_umbilical_cord	0xBB1286
+item	lunarium_key	0xBB0136
+location	pickup_lunarium_key	0xBB1287
