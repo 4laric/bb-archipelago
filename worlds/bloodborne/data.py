@@ -528,3 +528,25 @@ SLICE_LOCATION_KEYS = frozenset({
       if location.region in SLICE_REGIONS
       and location.key not in SLICE_EXCLUDED_FIXED_KEYS),
 })
+
+# The Old Hunters is one optional branch of the seeded graph. These explicit
+# sets let generation remove the complete branch without changing permanent
+# item or location IDs.
+DLC_REGIONS = frozenset({
+    "Hunter's Nightmare", "Underground Corpse Pile", "Research Hall",
+    "Lumenwood Garden", "Astral Clocktower", "Fishing Hamlet",
+    "Nightmare Grand Cathedral",
+})
+DLC_ENTRANCE_NAMES = frozenset({
+    "Amygdala's DLC grasp", "Ludwig's arena exit", "Surgery altar",
+    "Research Hall summit", "Astral Clocktower door", "Astral clock",
+    "Nightmare Grand Cathedral",
+})
+DLC_ITEM_KEYS = frozenset({
+    "eye_of_blood_drunk_hunter", "eye_pendant", "astral_clocktower_key",
+    "celestial_dial", "laurences_skull",
+})
+DLC_LOCATION_KEYS = frozenset(
+    location.key for location in LOCATIONS
+    if location.key in SLICE_LOCATION_KEYS and location.region in DLC_REGIONS
+) | frozenset({"pickup_eye_of_blood_drunk_hunter"})

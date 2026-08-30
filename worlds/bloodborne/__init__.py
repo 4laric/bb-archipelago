@@ -5,6 +5,10 @@ from pathlib import Path
 from random import Random
 from typing import Any, Iterable
 from .data import (
+    DLC_ENTRANCE_NAMES,
+    DLC_ITEM_KEYS,
+    DLC_LOCATION_KEYS,
+    DLC_REGIONS,
     SLICE_ENTRANCES,
     SLICE_ITEM_KEYS,
     SLICE_LOCATION_KEYS,
@@ -162,7 +166,9 @@ def _weighted_filler(candidates: list[tuple[str, str]], count: int, seed: str) -
     return names
 
 
-def build_item_pool_names(item_keys: Iterable[str], seed: str = "") -> list[str]:
+def build_item_pool_names(
+    item_keys: Iterable[str], seed: str = "", capacity: int | None = None
+) -> list[str]:
     """Build the varied-grant pool for the live slice's network locations.
 
     `item_keys` selects which validated items are placed once each; a weighted
@@ -189,7 +195,7 @@ def build_item_pool_names(item_keys: Iterable[str], seed: str = "") -> list[str]
     useful = [item.name for item in selected
               if item.kind is ItemKind.USEFUL and item.key not in UNCANNY_ITEM_KEYS]
     uncanny = [item.name for item in selected if item.key in UNCANNY_ITEM_KEYS]
-    capacity = len(NETWORK_LOCATIONS)
+    capacity = len(NETWORK_LOCATIONS) if capacity is None else capacity
     if len(progression) > capacity:
         raise ValueError(
             f"{len(progression)} progression items do not fit {capacity} locations; "
@@ -263,6 +269,7 @@ LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_
 def build_runtime_slot_data(
     item_keys: Iterable[str] | None = None,
     goal_location_key: str = GOAL_LOCATION_KEY,
+    location_keys: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Return the address-free world/client contract for this seed.
 
@@ -275,7 +282,14 @@ def build_runtime_slot_data(
     objects.  The client validates and converts them back to signed 64-bit ids.
     """
     active_keys = FULL_POOL_ITEM_KEYS if item_keys is None else frozenset(item_keys)
-    locations_by_key = {location.key: location for location in NETWORK_LOCATIONS}
+    active_location_keys = (
+        frozenset(location.key for location in NETWORK_LOCATIONS)
+        if location_keys is None else frozenset(location_keys)
+    )
+    locations_by_key = {
+        location.key: location for location in NETWORK_LOCATIONS
+        if location.key in active_location_keys
+    }
     items_by_key = {item.key: item for item in SHUFFLABLE_ITEMS if item.key in active_keys}
     active_item_bindings = {
         key: ITEM_BINDINGS[key] for key in items_by_key
@@ -388,6 +402,11 @@ else:
         option_moon_presence = 2
         default = 2
 
+    class IncludeDLC(Toggle):
+        """Include The Old Hunters regions, checks, and progression items."""
+        display_name = "Include The Old Hunters DLC"
+        default = 0
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
@@ -397,6 +416,7 @@ else:
         randomize_starting_weapons: RandomizeStartingWeapons
         remove_weapon_requirements: RemoveWeaponRequirements
         goal: Goal
+        include_dlc: IncludeDLC
 
     class BloodborneItem(APItem):
         game = GAME
@@ -437,12 +457,15 @@ else:
             return BloodborneItem(name, classification, ITEM_NAME_TO_ID[name], self.player)
 
         def create_regions(self) -> None:
+            active_regions = set(SLICE_REGIONS)
+            if not self.options.include_dlc:
+                active_regions -= DLC_REGIONS
             regions = {
                 name: Region(name, self.player, self.multiworld)
-                for name in SLICE_REGIONS
+                for name in SLICE_REGIONS if name in active_regions
             }
             self.multiworld.regions.extend(regions.values())
-            for data in NETWORK_LOCATIONS:
+            for data in self._active_locations():
                 location = BloodborneLocation(self.player, data.name, LOCATION_ID_BY_KEY[data.key], regions[data.region])
                 location.access_rule = _rule(data.rule, self.player)
                 regions[data.region].locations.append(location)
@@ -458,6 +481,8 @@ else:
                         BloodborneItem(event.name, ItemClassification.progression, None, self.player))
                     regions[data.region].locations.append(event_location)
             for data in SLICE_ENTRANCES:
+                if data.name in DLC_ENTRANCE_NAMES and not self.options.include_dlc:
+                    continue
                 entrance = regions[data.source].create_exit(data.name)
                 entrance.access_rule = _rule(data.rule, self.player)
                 entrance.connect(regions[data.target])
@@ -469,11 +494,21 @@ else:
             self.multiworld.itempool.extend(
                 self.create_item(name)
                 for name in build_item_pool_names(
-                    self._pool_item_keys(), f"{self.multiworld.seed_name}:{self.player}")
+                    self._pool_item_keys(), f"{self.multiworld.seed_name}:{self.player}",
+                    capacity=len(self._active_locations()),
+                )
+            )
+
+        def _active_locations(self):
+            return tuple(
+                location for location in NETWORK_LOCATIONS
+                if self.options.include_dlc or location.key not in DLC_LOCATION_KEYS
             )
 
         def _pool_item_keys(self) -> frozenset[str]:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
+            if not self.options.include_dlc:
+                base -= DLC_ITEM_KEYS
             if not self.options.uncanny_weapons:
                 return base
             # One Uncanny variant per weapon this pool already places. A
@@ -519,11 +554,13 @@ else:
                 "starting_weapons": starting_weapons,
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
                 "goal": self.options.goal.current_key,
+                "include_dlc": bool(self.options.include_dlc),
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
                 **build_runtime_slot_data(
                     self._pool_item_keys() | STARTING_TOOL_KEYS,
                     self._goal_location_key(),
+                    (location.key for location in self._active_locations()),
                 ),
             }
 

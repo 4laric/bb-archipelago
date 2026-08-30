@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The Old Hunters is selectable per seed.** Set `include_dlc: true` in the
+  player YAML to add its regions, bosses, fixed pickups, and five DLC-only
+  progression items. It defaults off so players without the DLC receive a
+  complete base-game seed with no checks or required items in DLC content.
 - **Seeds can select any of Bloodborne's three endings.** The `goal` YAML
   option accepts `submit_to_gehrman` (Mergo's Wet Nurse), `refuse_gehrman`
   (defeat Gehrman), or the default `moon_presence` (receive any three of four

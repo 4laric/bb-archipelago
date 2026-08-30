@@ -6,6 +6,10 @@ from pathlib import Path
 
 from worlds.bloodborne.data import (
     BASE_GAME_WEAPON_KEYS,
+    DLC_ENTRANCE_NAMES,
+    DLC_ITEM_KEYS,
+    DLC_LOCATION_KEYS,
+    DLC_REGIONS,
     GOODS_VARIETY_KEYS,
     SLICE_ITEM_KEYS,
     UNCANNY_ITEM_KEYS,
@@ -588,9 +592,10 @@ class UncannyOptionWiringTests(unittest.TestCase):
     """The option is the only door into the Uncanny keys."""
 
     class _Options:
-        def __init__(self, full_item_pool, uncanny_weapons):
+        def __init__(self, full_item_pool, uncanny_weapons, include_dlc=1):
             self.full_item_pool = full_item_pool
             self.uncanny_weapons = uncanny_weapons
+            self.include_dlc = include_dlc
 
     def _keys(self, *, full, uncanny):
         from worlds.bloodborne import BloodborneWorld
@@ -617,6 +622,49 @@ class UncannyOptionWiringTests(unittest.TestCase):
         self.assertEqual(option.default, 0)
         self.assertEqual(option.display_name, "Uncanny Weapon Variants")
         self.assertIn("Uncanny", option.__doc__)
+
+
+@unittest.skipUnless(AP_AVAILABLE, "requires an Archipelago checkout on sys.path")
+class DlcOptionWiringTests(unittest.TestCase):
+    class _Options:
+        full_item_pool = 1
+        uncanny_weapons = 0
+
+        def __init__(self, include_dlc):
+            self.include_dlc = include_dlc
+
+    def _world(self, include_dlc):
+        from worlds.bloodborne import BloodborneWorld
+
+        world = BloodborneWorld.__new__(BloodborneWorld)
+        world.options = self._Options(include_dlc)
+        return world
+
+    def test_the_dlc_option_defaults_off(self):
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["include_dlc"]
+        self.assertEqual(0, option.default)
+        self.assertEqual("Include The Old Hunters DLC", option.display_name)
+
+    def test_disabling_dlc_removes_its_items_and_locations_together(self):
+        off = self._world(0)
+        on = self._world(1)
+        self.assertEqual(DLC_ITEM_KEYS, on._pool_item_keys() - off._pool_item_keys())
+        self.assertEqual(
+            DLC_LOCATION_KEYS,
+            {location.key for location in on._active_locations()}
+            - {location.key for location in off._active_locations()},
+        )
+
+    def test_the_declared_dlc_boundary_is_complete(self):
+        from worlds.bloodborne.data import SLICE_ENTRANCES
+
+        self.assertEqual(
+            DLC_ENTRANCE_NAMES,
+            {entrance.name for entrance in SLICE_ENTRANCES
+             if entrance.source in DLC_REGIONS or entrance.target in DLC_REGIONS},
+        )
 
 
 class StartingWeaponChoiceTests(unittest.TestCase):
