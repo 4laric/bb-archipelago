@@ -15,16 +15,19 @@ flowchart LR
     CW -->|Hunter Chief Emblem| GC[Grand Cathedral]
     HCW --> GC
     GC --> Hemwick[Hemwick Charnel Lane]
-    GC -->|Vicar Amelia defeated; inspect Laurence's Skull| FW[Forbidden Woods]
+    GC -->|Forbidden Woods Password| FW[Forbidden Woods]
     FW --> Clinic[Iosefka's Clinic]
     FW -->|Shadows of Yharnam defeated| Byrgenwerth
-    Byrgenwerth -->|Rom defeated| Yahar["Yahar'gul (Blood Moon)"]
+    Byrgenwerth -->|Lunarium Key| Lake["Moonside Lake / Rom"]
+    Lake -->|Rom defeated| Yahar["Yahar'gul (Blood Moon)"]
     Yahar -->|The One Reborn defeated; inspect mummy| L2[Lecture Building 2F]
     L2 --> Mensis[Nightmare of Mensis]
     Mensis -->|Micolash defeated| WetNurse[Mergo's Wet Nurse]
     CW -->|Tonsil Stone; Amygdala grab| L1[Lecture Building 1F]
     L1 --> Frontier[Nightmare Frontier]
     CW -->|Upper Cathedral Key; Blood-starved Beast defeated| Upper[Upper Cathedral Ward]
+    Upper --> Emissary[Celestial Emissary]
+    Upper --> Ebrietas[Ebrietas]
     Hemwick -->|Cainhurst Summons| Cainhurst[Castle Cainhurst]
 
     CW -->|Password learned + Eye of a Blood-drunk Hunter| HN[Hunter's Nightmare]
@@ -43,13 +46,14 @@ flowchart LR
 |---|---|---|
 | Gascoigne -> Cathedral Ward | Matches | Two requirements, not one. The door out of the Tomb of Oedon (object 2411304) is the generic key door: `m24_01_00_00.emevd.dcx.js:168` initializes event 12410110 slot 5 with `objParameterId 2410080`, so the item requirement is an ObjActParam property and no `PlayerHasItem` condition exists in EMEVD. The door also sits behind Gascoigne's arena. Vanilla hid the coupling by awarding the key on his death (`:1394`, `AwardItemLot(31000)`); with the key shuffled the edge costs both. |
 | Cathedral plaza | **Corrected 2026-08-24** | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. The disjunction is real, but modelling it as one two-clause rule made the emblem clause dead: Old Yharnam is free from Cathedral Ward and Blood-starved Beast is free inside it, so the other clause was always satisfiable. It is now two edges — `Cathedral Ward --emblem--> Grand Cathedral` and `Healing Church Workshop --> Grand Cathedral` — which is what the game does and what lets a bounded slice make the emblem matter. |
-| Amelia -> Forbidden Woods | Corrected | Amelia must be defeated and Laurence's Skull inspected to learn the password. |
+| Amelia -> Forbidden Woods | **Strengthened 2026-08-30** | Inspecting Laurence's Skull after Amelia remains an AP check, but no longer grants access directly. The independently shuffled Forbidden Woods Password teaches the vanilla password when received and gates the woods door. |
 | Forbidden Woods -> Byrgenwerth | Matches | Defeating Shadows of Yharnam opens the path. |
+| Byrgenwerth -> Moonside Lake | **Corrected 2026-08-30** | The Lunarium Key opens the second-floor terrace door leading past Willem to Moonside Lake and Rom. Vanilla requires it; only a geometry exploit bypasses the door. The key is now shuffled and its attic-desk award is an AP check. |
 | Rom -> Blood Moon Yahar'gul | Matches | Rom's death is the Blood Moon trigger. |
 | One Reborn -> Lecture 2F | Matches | Inspecting the mummy after The One Reborn transports to Lecture Building 2F. |
 | Tonsil Stone route | Corrected | The Cathedral Ward grab transports to Lecture Building 1F; its door reaches the Frontier. |
 | Cainhurst branch | Matches | Cainhurst Summons plus the Hemwick obelisk summons the carriage. |
-| Upper Cathedral branch | **Corrected** | The Upper Cathedral Key opens the seal, but the chapel side doors that reach it only open after Blood-starved Beast. The key alone is not sufficient. |
+| Upper Cathedral branch | **Corrected** | The Upper Cathedral Key opens the seal, but the chapel side doors that reach it only open after Blood-starved Beast. Celestial Emissary and Ebrietas are optional checks inside the area; the cited lift has no boss or item condition. |
 | Hemwick branch | **Corrected 2026-08-18, re-sourced 2026-08-24** | The road to Hemwick starts left of the Grand Cathedral entrance, so it sits behind the plaza. It used to carry a *copy* of the plaza's requirement; it now leaves from the Grand Cathedral itself, so there is one place the plaza rule lives. This edge was modelled as free and **was absent from this table**, which is how it survived the original audit. |
 | DLC access | Matches | After Amelia and the altar interaction, the Dream supplies the Eye; the Oedon Chapel grab enters Hunter's Nightmare. |
 | Ludwig -> Research Hall | Matches | Ludwig gates the recovery-room route and the Eye Pendant operates its surgery altar. |

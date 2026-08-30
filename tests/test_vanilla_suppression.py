@@ -237,7 +237,7 @@ class RealCorpusTests(unittest.TestCase):
         # treasures, minus Saw Spear's lot, plus continuation rows in shared
         # acquisition-flag award groups, minus the
         # category-8 generation recipes whose native gem awards stay intact.
-        self.assertEqual(len(location_edits), 601)
+        self.assertEqual(len(location_edits), 602)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -271,6 +271,12 @@ class RealCorpusTests(unittest.TestCase):
     def test_the_slice_plan_has_no_refusals(self):
         self.assertEqual([], self.plan.refusals)
 
+    def test_lunarium_key_award_is_replaced_at_its_check(self):
+        by_lot = {edit.item_lot_id: edit for edit in self.plan.edits}
+        edit = by_lot["3200810"]
+        self.assertEqual("location:pickup_lunarium_key", edit.item_key)
+        self.assertEqual("53200810", edit.acquisition_flag)
+
     def test_every_pool_item_resolves_to_exactly_one_lot(self):
         lots = [e.item_lot_id for e in self.plan.edits]
         self.assertEqual(len(lots), len(set(lots)))
@@ -295,7 +301,7 @@ class RealCorpusTests(unittest.TestCase):
         # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
         # the NG+-only lot 2410295 from #220) are not network locations, so
         # they are not iterated here.
-        self.assertEqual(checked, 547)
+        self.assertEqual(checked, 548)
 
     def test_category_eight_checks_keep_their_native_generated_gems(self):
         from worlds.bloodborne import NETWORK_LOCATIONS

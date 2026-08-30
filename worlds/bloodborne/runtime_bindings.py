@@ -77,6 +77,13 @@ def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantit
         if binding.feed_effect not in {"right_hand_weapon", "left_hand_weapon"}:
             raise ValueError(f"{key}: category-0 weapon has incompatible feed policy")
         return
+    if binding.item_category == 255:
+        if (binding.normalized_item_id != binding.raw_descriptor
+                or binding.descriptor_evidence != "event_flag_effect"
+                or quantity != 1
+                or binding.reinforcement_level is not None):
+            raise ValueError(f"{key}: invalid event-flag receive effect")
+        return
     raise ValueError(f"{key}: unsupported item category {binding.item_category}")
 
 
@@ -104,6 +111,13 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     # observed, and no live confirmation that an AP-granted copy satisfies
     # ObjActParam 2410080 on door 2411304 -- see docs/VANILLA-SUPPRESSION.md.
     "oedon_tomb_key": RuntimeItemBinding(0x40000FA0, 0xB0000FA0, "FMG/param + validated goods formula"),
+    "lunarium_key": RuntimeItemBinding(
+        0x40000FAD, 0xB0000FAD,
+        "EquipParamGoods 4013 + ItemLotParam 3200810; validated category-4 goods formula"),
+    "forbidden_woods_password": RuntimeItemBinding(
+        12401803, 12401803,
+        "vanilla Grand Cathedral memory event flag; delivered as an idempotent event-flag effect",
+        item_category=255, descriptor_evidence="event_flag_effect"),
     "cainhurst_summons": RuntimeItemBinding(0x40000FA3, 0xB0000FA3, "FMG/param + validated goods formula"),
     "tonsil_stone": RuntimeItemBinding(0x400010D6, 0xB00010D6, "FMG/param + validated goods formula"),
     "upper_cathedral_key": RuntimeItemBinding(0x40000FAA, 0xB0000FAA, "FMG/param + validated goods formula"),
@@ -702,6 +716,24 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
         None,
     ),
+    "boss_celestial_emissary": RuntimeLocationBinding(
+        12421700,
+        "EMEVD boss-completion flag 12421700; m24_02 Celestial Emissary event calls HandleBossDefeat",
+        None,
+        "boss_defeat",
+        "m24_02_00_00.emevd.dcx:12421700",
+        None,
+        None,
+    ),
+    "boss_ebrietas": RuntimeLocationBinding(
+        12421800,
+        "EMEVD boss-completion flag 12421800; m24_02 Ebrietas event calls HandleBossDefeat",
+        None,
+        "boss_defeat",
+        "m24_02_00_00.emevd.dcx:12421800",
+        None,
+        None,
+    ),
     "boss_shadows_of_yharnam": RuntimeLocationBinding(
         12701800,
         "EMEVD boss-completion flag; event 12701800 defeats entity 2700800 (闇の旅団)",
@@ -820,8 +852,10 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
     ),
     "interaction_laurences_skull": RuntimeLocationBinding(
-        12401803,
-        "EMEVD one-shot interaction flag; $Event(12401803) (学長の記憶ポリ劇) waits on "
+        12401898,
+        "AP overlay witness flag 12401898 set only after the Grand Cathedral altar interaction. "
+        "The vanilla $Event(12401803) flag is reserved for the shuffled password receive effect; "
+        "$Event(12401803) (学長の記憶ポリ劇) waits on "
         "Amelia (12401800), then on ActionButtonInArea(2400010, 2401801) at the Grand "
         "Cathedral altar, and ends. `inferred` on two counts: nothing writes the flag "
         "explicitly, and the event's `EndIf(HasMultiplayerState(Client))` at :4390 "
@@ -829,7 +863,7 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         "flag without the interaction. See research/validation/slice3_witness_audit.tsv",
         None,
         "interaction",
-        "m24_00_00_00.emevd.dcx.js:4382-4398",
+        "managed m24_00_00_00.emevd.dcx patch of event 12401803",
         None,
         None,
     ),
@@ -839,6 +873,10 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "pickup_upper_cathedral_key": RuntimeLocationBinding(
         52800290, "MSB treasure m28_00_00_00/m28_00_00_01 + ItemLotParam 2800290 acquisition flag",
         2800290, "treasure", "m28_00_00_00;m28_00_00_01", 4, 4010),
+    "pickup_lunarium_key": RuntimeLocationBinding(
+        53200810,
+        "EMEVD award m32_00_00_00:636 + ItemLotParam 3200810 acquisition flag",
+        3200810, "script_award", "m32_00_00_00.emevd.dcx.js:636", 4, 4013),
     "script_award_orphanage_key": RuntimeLocationBinding(
         52420900, "EMEVD award m24_02_00_00:252 + ItemLotParam 2420900 acquisition flag",
         2420900, "script_award", "m24_02_00_00.emevd.dcx.js:252", 4, 4006),

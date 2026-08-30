@@ -131,6 +131,8 @@ GOLDEN_ITEMS = {
     "third_umbilical_cord_2": 0xBB0133,
     "third_umbilical_cord_3": 0xBB0134,
     "third_umbilical_cord_4": 0xBB0135,
+    "lunarium_key": 0xBB0136,
+    "forbidden_woods_password": 0xBB0137,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -142,6 +144,8 @@ GOLDEN_ITEMS = {
 GOLDEN_LOCATIONS = {
     "boss_gehrman": 0xBB11F5,
     "boss_moon_presence": 0xBB11F6,
+    "boss_celestial_emissary": 0xBB1288,
+    "boss_ebrietas": 0xBB1289,
     "boss_father_gascoigne": 0xBB1001,
     "boss_blood_starved_beast": 0xBB1002,
     "boss_vicar_amelia": 0xBB1003,
@@ -182,6 +186,7 @@ GOLDEN_LOCATIONS = {
     "treasure_doll_set_chest": 0xBB1284,
     "pickup_small_hair_ornament": 0xBB1285,
     "pickup_workshop_umbilical_cord": 0xBB1286,
+    "pickup_lunarium_key": 0xBB1287,
 }
 
 
@@ -255,7 +260,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB1286)
+        self.assertEqual(max(ids), 0xBB1289)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""
@@ -371,6 +376,12 @@ class RuntimeItemContractTests(unittest.TestCase):
                 "live_grant_inventory_ui",
                 "param_id_inferred",
             },
+            "bb-0.1.0-r8": {
+                "goods_formula_observed",
+                "live_grant_inventory_ui",
+                "param_id_inferred",
+                "event_flag_effect",
+            },
         }
         self.assertIn(
             RUNTIME_BUILD,
@@ -397,10 +408,11 @@ class RuntimeItemContractTests(unittest.TestCase):
             self.assertIn("raw_descriptor", binding)
             self.assertIn("item_category", binding)
             self.assertIn("descriptor_evidence", binding)
-            self.assertIn(binding["item_category"], {0, 4})
+            self.assertIn(binding["item_category"], {0, 4, 255})
             self.assertIn(binding["descriptor_evidence"], {
                 "goods_formula_observed", "live_grant_inventory_ui",
                 "param_id_inferred",
+                "event_flag_effect",
             })
             self.assertIn("feed_effect", binding)
             self.assertIn("reinforcement_level", binding)

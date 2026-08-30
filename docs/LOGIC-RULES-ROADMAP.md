@@ -347,7 +347,7 @@ condition and no boss condition on the lift.** So:
   unsupported by the corpus.** Label it out-of-logic for the base game.
 
 ```python
-# DRAFT — UCW mini-slice. Both bosses gated only by region entry.
+# SHIPPED — UCW mini-slice. Both bosses are gated only by region entry.
 # Cited: m24_02_00_00 events 12421700, 12421800; lift 12420150-12420152.
 Location("boss_celestial_emissary", location_name(12421700), "Upper Cathedral Ward",
          locked_item="event_celestial_emissary_defeated"),
@@ -363,33 +363,31 @@ Both inherit `corpus_gap: implicit_write` per `docs/SLICE3-WITNESS-PASS.md`.
 Vicar Amelia, teaches the Forbidden Woods password. **Vanilla (DLC).** A separate
 item that summons Laurence in the Nightmare Grand Cathedral.
 
-**The brief asks whether the password is an item rule or an event rule. It is an
-event rule, the two roles are already correctly separated in `data.py`, and they
-must not be merged.**
+**Archipelago policy update (2026-08-30).** The password is now an independently
+shuffled progression item. It is still not inventory goods: runtime build r8
+applies the vanilla event flag as an idempotent receive effect. The altar
+interaction remains a separate AP check through a managed witness flag, so
+receiving the password cannot falsely collect the altar location.
 
 ```python
 Location("interaction_laurences_skull", location_name(12401803), "Grand Cathedral",
-         Rule.all("event_amelia_defeated"), locked_item="event_forbidden_woods_password"),
+         Rule.all("event_amelia_defeated"), locked_item="event_laurences_skull_inspected"),
 Location("pickup_laurences_skull", location_name(53502000), "Research Hall"),
 Location("boss_laurence", location_name(13401850), "Nightmare Grand Cathedral",
          Rule.all("laurences_skull"), locked_item="event_laurence_defeated"),
 ```
 
 - The **base-game skull** is a fixed *interaction* at the Grand Cathedral altar
-  that yields a locked event, `event_forbidden_woods_password`. It is not
-  shuffled. Its own rule is `event_amelia_defeated` — you cannot stand at the
+  and remains a shuffled AP location. Its own rule is `event_amelia_defeated` — you cannot stand at the
   altar until the arena is clear (GEOMETRIC).
 - The **pooled `laurences_skull`** is the DLC summoning item from the Research
   Hall. It gates a DLC boss and nothing else.
 
 They share an English name and nothing else.
 
-**Why the password must stay an event** — a reason specific to this engine, not a
-style preference. The woods door has no `PlayerHasItem` test anywhere in the
-corpus; the password is delivered through NPC dialogue, i.e. ESD, which
-`plan_vanilla_suppression.py` cannot see (bb#204). An event with a cited *source
-location* is honest about that. An item would claim a grant path we can neither
-implement through the native grant hook nor suppress in vanilla.
+The woods door has no `PlayerHasItem` test anywhere in the corpus; the password
+is delivered through NPC dialogue, i.e. ESD. That is why the AP item uses a
+declared event-flag receive effect rather than a fabricated goods descriptor.
 
 **TO-MINE:** the woods gate itself. There is no `m24_00_00_00` event that opens
 a Forbidden Woods door on a flag or an item. Until the ESD corpus lands,
@@ -763,7 +761,7 @@ Ordered by how many rules each one converts.
 | 1 | **DONE:** `ObjActParam` reader over the committed `parambnd/gameparam.parambnd.dcx` | 5 key rules INFERRED -> CITED (Oedon Tomb, Orphanage, Upper Cathedral, Lecture, woods shortcuts) | `tools/bb_objact_miner`, `research/joined/objact_params.tsv` |
 | 2 | Hypogean Gaol vs Yahar'gul-proper region split | bounds the abduction verdict; gates slice 6 | `mined/msb_regions.tsv`, already committed |
 | 3 | ESD talk-award corpus (bb#204) | enumerates the check-closing set | owner's machine, not in the bundle |
-| 4 | Boss event ids for Logarius, Witch of Hemwick, Celestial Emissary, Ebrietas | 4 DRAFT locations become commitable | `m22`/`m24_02`/`m25` archives, already committed |
+| 4 | **DONE:** boss event ids for Logarius, Witch of Hemwick, Celestial Emissary, Ebrietas | 4 boss locations committed | `m22`/`m24_02`/`m25` archives, already committed |
 | 5 | Goods 4308 (unsigned summons) consumption path | closes a pool question | ESD or `goodsUseAnim`, TO-MINE |
 
 Items 1, 2 and 4 need no game session and no new inputs. They are
