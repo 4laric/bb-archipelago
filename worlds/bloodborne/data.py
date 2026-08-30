@@ -325,7 +325,7 @@ SLICE_REGIONS = (
     "Menu", "Hunter's Dream", "Central Yharnam", "Cathedral Ward",
     "Old Yharnam", "Healing Church Workshop", "Grand Cathedral",
     "Hemwick Charnel Lane", "Castle Cainhurst",
-    "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth",
+    "Forbidden Woods", "Iosefka's Clinic", "Byrgenwerth", "Yahar'gul",
     "Lecture Building 1F", "Nightmare Frontier",
 )
 _SLICE_ENTRANCE_NAMES = (
@@ -341,6 +341,7 @@ _SLICE_ENTRANCE_NAMES = (
     "Forbidden Woods password door",
     "Forbidden Woods clinic passage",
     "Path to Byrgenwerth",
+    "Blood Moon transition",
     "Amygdala's grasp",
     "Lecture Building frontier door",
 )
@@ -435,8 +436,10 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_martyr_logarius",
     "boss_shadows_of_yharnam",
     "boss_rom",
+    "boss_the_one_reborn",
     "boss_amygdala",
     "pickup_cainhurst_summons",
+    "pickup_upper_cathedral_key",
     "treasure_messengers_gift",
     "treasure_radiant_sword_hunter_badge",
     "treasure_rune_workshop_tool",
