@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The launcher now keeps its plumbing out of the normal setup flow.** The
+  Setup tab contains the seed, game, shadPS4, server, and player identity;
+  cache, state, log, suppression, MapStudio, and operator paths live on their
+  relevant Enemy randomization or Troubleshooting tabs. The launcher generates
+  its hash-pinned process plan automatically before launch, saves setup as part
+  of every action, and groups recovery controls under Troubleshooting. The old
+  Save Setup and Generate Launch Plan chores are gone.
 - **One check that no first playthrough could ever complete is gone.** Central
   Yharnam's `Bold Hunter's Mark` was a corpse that only spawns on NG+ — the
   param names it "treasure corpse 19, second playthrough onward", and it is the

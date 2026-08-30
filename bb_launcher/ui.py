@@ -60,6 +60,8 @@ FIELD_DEFINITIONS = (
     ("shad_log", "shadPS4 log (optional)", "file"),
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
+PRIMARY_FIELDS = {"ap_request", "game_root", "shad_executable"}
+ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 
 # Bloodborne palette: hunter's-dream night blues, bone parchment text,
 # blood-red accents, lamp-light gold headers.
@@ -405,21 +407,29 @@ class LauncherApp:
         options.columnconfigure(1, weight=1)
         notebook.add(options, text="Enemy randomization")
 
-        # The enemizer's own input paths live on the enemizer tab; everything
-        # else stays on Setup. Same variables, same commands, same
-        # _enemy_widgets group -- only the parent frame differs.
-        enemy_fields = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
+        troubleshooting = ttk.Frame(notebook, padding=10)
+        troubleshooting.columnconfigure(1, weight=1)
+        notebook.add(troubleshooting, text="Troubleshooting")
+
+        # Player choices stay on Setup, enemizer inputs live with their toggle,
+        # and launcher-owned/operator paths remain available under
+        # Troubleshooting. Same variables and browse commands; only their
+        # presentation changes.
         setup_row = 0
         enemy_row = 4
+        troubleshooting_row = 0
         for name, label, kind in FIELD_DEFINITIONS:
             if self.packaged_toolchain and name in DEVELOPMENT_FIELDS:
                 continue
-            if name in enemy_fields:
+            if name in ENEMY_FIELDS:
                 parent, row = options, enemy_row
                 enemy_row += 1
-            else:
+            elif name in PRIMARY_FIELDS:
                 parent, row = setup, setup_row
                 setup_row += 1
+            else:
+                parent, row = troubleshooting, troubleshooting_row
+                troubleshooting_row += 1
             ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
             entry = ttk.Entry(parent, textvariable=self.fields[name])
             entry.grid(row=row, column=1, sticky="ew", pady=3)
@@ -429,7 +439,7 @@ class LauncherApp:
                 command=lambda key=name, selector=kind: self._browse(key, selector),
             )
             button.grid(row=row, column=2, padx=(8, 0), pady=3)
-            if name in enemy_fields:
+            if name in ENEMY_FIELDS:
                 self._enemy_widgets.extend((entry, button))
         server_row = setup_row
         ttk.Label(setup, text="Archipelago server").grid(
@@ -452,10 +462,12 @@ class LauncherApp:
         # Outside the enemy-randomization widget group on purpose: it stays
         # usable with Randomize Enemies off, and it is never saved.
         ttk.Checkbutton(
-            setup,
+            troubleshooting,
             text="Allow suppression binder mismatch (operators only, not saved)",
             variable=self.allow_suppression_mismatch,
-        ).grid(row=name_row + 1, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        ).grid(
+            row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
+        )
 
         ttk.Checkbutton(
             options,
@@ -513,21 +525,22 @@ class LauncherApp:
 
         controls = ttk.Frame(outer)
         controls.grid(row=5, column=0, sticky="ew", pady=(12, 0))
-        controls.columnconfigure(1, weight=1)
-        self.save_button = ttk.Button(controls, text="Save Setup", command=self._save_settings)
-        self.save_button.grid(row=0, column=0, sticky="w")
+        controls.columnconfigure(0, weight=1)
         self.progress = ttk.Progressbar(controls, mode="indeterminate")
-        self.progress.grid(row=0, column=1, sticky="ew", padx=12)
+        self.progress.grid(row=0, column=0, sticky="ew", padx=(0, 12))
         self.launch_button = ttk.Button(
             controls,
             text="Randomize & Launch",
             command=self._start,
             style="Accent.TButton",
         )
-        self.launch_button.grid(row=0, column=2, sticky="e")
+        self.launch_button.grid(row=0, column=1, sticky="e")
 
-        actions = ttk.Frame(controls)
-        actions.grid(row=1, column=0, columnspan=3, sticky="w", pady=(8, 0))
+        actions = ttk.LabelFrame(troubleshooting, text="Recovery actions", padding=10)
+        actions.grid(
+            row=troubleshooting_row + 1, column=0, columnspan=3,
+            sticky="ew", pady=(12, 0),
+        )
         self.vanilla_button = ttk.Button(actions, text="Launch Vanilla", command=self._start_vanilla)
         self.vanilla_button.grid(row=0, column=0, padx=(0, 8))
         self.restore_button = ttk.Button(
@@ -537,15 +550,11 @@ class LauncherApp:
         self.rebuild_button = ttk.Button(actions, text="Rebuild Seed", command=self._start_rebuild)
         self.rebuild_button.grid(row=0, column=2, padx=(0, 8))
         self.diagnostics_button = ttk.Button(
-            actions, text="Open Diagnostics", command=self._open_diagnostics
+            actions, text="Open Logs & Diagnostics", command=self._open_diagnostics
         )
         self.diagnostics_button.grid(row=0, column=3)
-        self.plan_button = ttk.Button(
-            actions, text="Generate Launch Plan", command=self._generate_plan
-        )
-        self.plan_button.grid(row=0, column=4, padx=(8, 0))
         self.doctor_button = ttk.Button(actions, text="Doctor", command=self._start_doctor)
-        self.doctor_button.grid(row=0, column=5, padx=(8, 0))
+        self.doctor_button.grid(row=0, column=4, padx=(8, 0))
         self._action_buttons = (
             self.vanilla_button,
             self.restore_button,
@@ -584,10 +593,14 @@ class LauncherApp:
         empty field is what makes the Doctor's slot-agreement check a warning.
         """
         chosen = Path(selected).expanduser()
-        if looks_like_archive(chosen) and not self.player_name.get().strip():
-            only = archive_player_name(chosen)
-            if only is not None:
-                self.player_name.set(only)
+        if not self.player_name.get().strip():
+            detected = (
+                archive_player_name(chosen)
+                if looks_like_archive(chosen)
+                else _request_player_name(chosen)
+            )
+            if detected is not None:
+                self.player_name.set(detected)
         try:
             self.enemy_seed.set(
                 request_enemy_seed(
@@ -669,7 +682,7 @@ class LauncherApp:
         except (OSError, UnicodeError, json.JSONDecodeError, LauncherError) as exc:
             self.messagebox.showwarning("Saved setup ignored", str(exc), parent=self.root)
 
-    def _generate_plan(self) -> None:
+    def _generate_plan(self, *, show_error: bool = True) -> bool:
         try:
             request_raw = self.fields["ap_request"].get().strip()
             if not request_raw:
@@ -700,9 +713,14 @@ class LauncherApp:
             )
             write_process_plan(output, document, force=True)
             self.fields["process_plan"].set(str(output))
-            self.status.set(f"Launch plan generated at {output}")
+            self._append_log("Prepared the launch components automatically.")
+            return True
         except (OSError, LauncherError) as exc:
-            self.messagebox.showerror("Could not generate launch plan", str(exc), parent=self.root)
+            if show_error:
+                self.messagebox.showerror(
+                    "Could not prepare launch", str(exc), parent=self.root
+                )
+            return False
 
     def _append_log(self, message: str) -> None:
         self.log.configure(state="normal")
@@ -776,7 +794,6 @@ class LauncherApp:
     def _set_busy(self, busy: bool) -> None:
         self._busy = busy
         self.launch_button.configure(state="disabled" if busy else "normal")
-        self.save_button.configure(state="disabled" if busy else "normal")
         for button in self._action_buttons:
             button.configure(state="disabled" if busy else "normal")
         if busy:
@@ -786,6 +803,8 @@ class LauncherApp:
 
     def _start(self) -> None:
         if self._busy:
+            return
+        if not self._generate_plan():
             return
         try:
             settings = self._settings()
@@ -839,6 +858,8 @@ class LauncherApp:
         )
 
     def _setup_for_action(self, label: str) -> LauncherSettings | None:
+        if label == "Launch Vanilla" and not self._generate_plan():
+            return None
         try:
             settings = self._settings()
             self._save_settings()
@@ -871,6 +892,8 @@ class LauncherApp:
     def _start_doctor(self) -> None:
         """Preflight the whole chain (bb-archipelago#103) without launching."""
         if self._busy:
+            return
+        if not self._generate_plan():
             return
         try:
             settings = self._settings()
@@ -959,6 +982,8 @@ class LauncherApp:
 
     def _start_rebuild(self) -> None:
         if self._busy:
+            return
+        if not self._generate_plan():
             return
         if not self.messagebox.askyesno(
             "Rebuild Seed",
