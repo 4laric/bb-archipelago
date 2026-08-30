@@ -390,8 +390,13 @@ class BloodborneModelTests(unittest.TestCase):
             "pickup_workshop_umbilical_cord",
         }
         locations = {location.key: location for location in seeded_locations()}
-        self.assertTrue(workshop_keys <= set(locations))
-        self.assertTrue(all(locations[key].locked_item is None for key in workshop_keys))
+        self.assertTrue(workshop_keys <= set(locations), sorted(set(locations)))
+        locked_workshop = {
+            key: locations[key].locked_item
+            for key in workshop_keys
+            if locations[key].locked_item is not None
+        }
+        self.assertFalse(locked_workshop, locked_workshop)
 
         inventory = set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)
         without_beast = slice_reachable(
@@ -399,9 +404,9 @@ class BloodborneModelTests(unittest.TestCase):
             locations=[location for location in locations.values()
                        if location.key != "boss_blood_starved_beast"],
         )
-        self.assertTrue(workshop_keys.isdisjoint(without_beast))
+        self.assertTrue(workshop_keys.isdisjoint(without_beast), sorted(without_beast))
         with_beast = slice_reachable(inventory)
-        self.assertTrue(workshop_keys <= with_beast)
+        self.assertTrue(workshop_keys <= with_beast, sorted(with_beast))
 
     def test_withholding_the_oedon_tomb_key_strands_the_seed_in_central_yharnam(self):
         """The point of shuffling the key: sphere 0 is a place, not the world.
