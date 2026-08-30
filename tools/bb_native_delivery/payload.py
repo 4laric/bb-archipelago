@@ -168,6 +168,11 @@ def _program_consume() -> list[tuple[str | None, _Insn | None]]:
         (None, _rip_form(b"\x83\x3d", "request", b"\x00")),
         # je bbAutoConsumeOriginal
         (None, _rel32_jump(b"\x0f\x84", "consume_original")),
+        # request 3 is a read-only diagnostic: resolve a naturally-created
+        # category instance and publish its backing-object pointer.  It never
+        # calls ItemGrant and never writes through the returned pointer.
+        (None, _rip_form(b"\x83\x3d", "request", b"\x03")),
+        (None, _rel32_jump(b"\x0f\x84", "resolve_probe")),
         # cmp dword ptr [bbAutoRequest],2
         (None, _rip_form(b"\x83\x3d", "request", b"\x02")),
         # je bbAutoExisting
@@ -248,6 +253,18 @@ def _program_consume() -> list[tuple[str | None, _Insn | None]]:
         (None, _mov_rax_imm64(ITEM_GRANT_RVA)),
         (None, _fixed(CALL_RAX)),
         # jmp bbAutoFinish
+        (None, _rel32_jump(b"\xe9", "finish")),
+        ("resolve_probe", None),
+        (None, _rip_form(b"\xc7\x05", "request", _imm32(0))),
+        (None, _rip_form(b"\x48\x8d\x3d", "descriptor")),
+        (None, _mov_rax_imm64(RESOLVE_DESCRIPTOR_RVA)),
+        (None, _fixed(CALL_RAX)),
+        # Reuse the pointer cell only while no delivery request is active.
+        (None, _rip_form(b"\x48\x89\x05", "item_quantity_pointer")),
+        # Preserve a compact success witness in the ordinary result cell.
+        (None, _fixed(b"\x85\xc0")),
+        (None, _rel32_jump(b"\x0f\x84", "finish")),
+        (None, _fixed(b"\xb8" + _imm32(0))),
         (None, _rel32_jump(b"\xe9", "finish")),
         ("existing", None),
         # mov dword ptr [bbAutoRequest],0
