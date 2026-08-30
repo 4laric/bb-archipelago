@@ -3,7 +3,9 @@
 Bloodborne support for Archipelago: an apworld, a deterministic enemy randomizer, and the
 runtime research that has to exist before either can report checks automatically.
 
-Target: `CUSA00900` / `CUSA03173`, AppVer `01.09`, running under shadPS4.
+Supported target: `CUSA03173`, AppVer `01.09`, running under shadPS4.
+`CUSA00900` support is still an evidence-gathering task tracked in issue #115;
+the launcher intentionally refuses it today.
 
 This project does not reuse or adapt the existing Bloodborne randomizer. Its code, binaries,
 extracted datasets, address tables, and patches are out of scope. See `docs/RESEARCH-BASELINE.md`
