@@ -1,9 +1,11 @@
 location_flag	region	name	basis
 50002200	Central Yharnam	Central Yharnam - White Messenger Ribbon	published (fixed_locations.tsv)
 50002360	Underground Corpse Pile	Underground Corpse Pile - Underground Cell Inner Chamber Key	event tag 宝死体_地下牢の鍵
-52110000	Healing Church Workshop	Healing Church Workshop - Old Hunter Bone	published (data.py treasure_old_hunter_bone); Abandoned Old Workshop is map m21_01
+52110000	Healing Church Workshop	Abandoned Old Workshop - Old Hunter Bone (grave)	published (data.py treasure_old_hunter_bone); map m21_01 grave pickup
 52110010	Healing Church Workshop	Healing Church Workshop - Gehrman's Hunter Cap (Abandoned Old Workshop)	map m21_01 is the workshop replica; event tag 宝01
-52110020	Healing Church Workshop	Healing Church Workshop - Doll Hat (Abandoned Old Workshop chest)	map m21_01; event tag 宝箱00
+52110020	Healing Church Workshop	Abandoned Old Workshop - Doll Set Chest	map m21_01 chest ObjAct 2111000; ItemLot family 2110020..2110023
+52110800	Healing Church Workshop	Abandoned Old Workshop - Small Hair Ornament (cabinet)	EMEVD event 12110300; AwardItemLot 2110800
+52110810	Healing Church Workshop	Abandoned Old Workshop - One Third of Umbilical Cord (altar)	EMEVD event 12110301; AwardItemLot 2110810
 52200360	Hemwick Charnel Lane	Hemwick Charnel Lane - Rune Workshop Tool	published (data.py treasure_rune_workshop_tool)
 52300070	Old Yharnam	Old Yharnam - Bloody Messenger Head Bandage	map m23_00
 52300200	Old Yharnam	Old Yharnam - Hunter's Torch	map m23_00

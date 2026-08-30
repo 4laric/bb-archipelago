@@ -25,7 +25,7 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 676  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 678  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 606
 
@@ -58,6 +58,8 @@ SCRIPTED_CHECK_FLAGS = {
     "50000100",   # pickup_eye_of_blood_drunk_hunter
     "9470",       # pickup_eye_pendant
     "53502000",   # pickup_laurences_skull
+    "52110800",   # pickup_small_hair_ornament
+    "52110810",   # pickup_workshop_umbilical_cord
 }
 
 # data.py checks that draw their name from the table: key -> the flag its
@@ -93,6 +95,9 @@ DATA_PY_TABLED_CHECKS = {
     "pickup_laurences_skull": 53502000,
     "treasure_radiant_sword_hunter_badge": 52400480,
     "treasure_old_hunter_bone": 52110000,
+    "treasure_doll_set_chest": 52110020,
+    "pickup_small_hair_ornament": 52110800,
+    "pickup_workshop_umbilical_cord": 52110810,
     "treasure_rune_workshop_tool": 52200360,
     "treasure_augur_of_ebrietas": 53200600,
     "treasure_lecture_theatre_key": 53200720,
@@ -121,7 +126,7 @@ DOC = ROOT / "docs" / "LOCATION-NAMING.md"
 # Witnessed populations, not targets, exactly like the counts above. The pass
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
-HINTED_ROWS = 180
+HINTED_ROWS = 182
 BARE_ROWS = 496
 
 # The three rows oz hunted with a video guide open and still needed operator

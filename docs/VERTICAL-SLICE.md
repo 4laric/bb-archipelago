@@ -220,7 +220,7 @@ Celestial Dial gate Fishing Hamlet. Laurence branches independently from
 Hunter's Nightmare and requires his skull from Research Hall.
 
 The DLC contributes 141 catalog-backed fixed checks and ten separately mapped
-scripted, boss, or treasure checks, bringing the slice to **635 network
+scripted, boss, or treasure checks, bringing the slice to **641 network
 locations**. The m34 shared acquisition flag `53400600` is excluded because it
 belongs to two different corpses; it cannot truthfully represent two AP checks.
 The reviewed m36 catalog names and regions are corrected to Fishing Hamlet.
