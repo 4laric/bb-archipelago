@@ -675,6 +675,8 @@ location_flag	region	name	basis
 13501800	Astral Clocktower	Lady Maria of the Astral Clocktower	published (data.py boss_lady_maria); boss-defeat event flag committed in runtime_bindings.py
 13601800	Fishing Hamlet	Orphan of Kos	published (data.py boss_orphan_of_kos); boss-defeat event flag committed in runtime_bindings.py
 13401850	Nightmare Grand Cathedral	Laurence, the First Vicar	published (data.py boss_laurence); boss-defeat event flag committed in runtime_bindings.py
-12401803	Grand Cathedral	Grand Cathedral - Laurence's Skull	published (data.py interaction_laurences_skull); one-shot interaction flag committed in runtime_bindings.py
+12401898	Grand Cathedral	Grand Cathedral - Laurence's Skull	published (data.py interaction_laurences_skull); managed one-shot interaction witness committed in runtime_bindings.py
 12201800	Hemwick Charnel Lane	Witch of Hemwick	published (data.py boss_witch_of_hemwick); boss-defeat event flag committed in runtime_bindings.py
 12501800	Castle Cainhurst	Martyr Logarius	published (data.py boss_martyr_logarius); boss-defeat event flag committed in runtime_bindings.py
+12421700	Upper Cathedral Ward	Celestial Emissary	published (data.py boss_celestial_emissary); boss-defeat event flag committed in runtime_bindings.py
+12421800	Upper Cathedral Ward	Ebrietas, Daughter of the Cosmos	published (data.py boss_ebrietas); boss-defeat event flag committed in runtime_bindings.py

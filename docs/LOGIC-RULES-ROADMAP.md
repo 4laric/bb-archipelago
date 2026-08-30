@@ -347,7 +347,7 @@ condition and no boss condition on the lift.** So:
   unsupported by the corpus.** Label it out-of-logic for the base game.
 
 ```python
-# DRAFT — UCW mini-slice. Both bosses gated only by region entry.
+# SHIPPED — UCW mini-slice. Both bosses are gated only by region entry.
 # Cited: m24_02_00_00 events 12421700, 12421800; lift 12420150-12420152.
 Location("boss_celestial_emissary", location_name(12421700), "Upper Cathedral Ward",
          locked_item="event_celestial_emissary_defeated"),
@@ -761,7 +761,7 @@ Ordered by how many rules each one converts.
 | 1 | **DONE:** `ObjActParam` reader over the committed `parambnd/gameparam.parambnd.dcx` | 5 key rules INFERRED -> CITED (Oedon Tomb, Orphanage, Upper Cathedral, Lecture, woods shortcuts) | `tools/bb_objact_miner`, `research/joined/objact_params.tsv` |
 | 2 | Hypogean Gaol vs Yahar'gul-proper region split | bounds the abduction verdict; gates slice 6 | `mined/msb_regions.tsv`, already committed |
 | 3 | ESD talk-award corpus (bb#204) | enumerates the check-closing set | owner's machine, not in the bundle |
-| 4 | Boss event ids for Logarius, Witch of Hemwick, Celestial Emissary, Ebrietas | 4 DRAFT locations become commitable | `m22`/`m24_02`/`m25` archives, already committed |
+| 4 | **DONE:** boss event ids for Logarius, Witch of Hemwick, Celestial Emissary, Ebrietas | 4 boss locations committed | `m22`/`m24_02`/`m25` archives, already committed |
 | 5 | Goods 4308 (unsigned summons) consumption path | closes a pool question | ESD or `goodsUseAnim`, TO-MINE |
 
 Items 1, 2 and 4 need no game session and no new inputs. They are

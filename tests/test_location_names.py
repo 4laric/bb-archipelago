@@ -25,7 +25,7 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 679  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 681  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 606
 
@@ -37,7 +37,9 @@ SCRIPTED_CHECK_FLAGS = {
     "12411800",   # boss_father_gascoigne
     "12301800",   # boss_blood_starved_beast
     "12401800",   # boss_vicar_amelia
-    "12401803",   # interaction_laurences_skull
+    "12401898",   # interaction_laurences_skull
+    "12421700",   # boss_celestial_emissary
+    "12421800",   # boss_ebrietas
     "12201800",   # boss_witch_of_hemwick
     "12501800",   # boss_martyr_logarius
     "12701800",   # boss_shadows_of_yharnam
@@ -74,7 +76,9 @@ DATA_PY_TABLED_CHECKS = {
     "boss_vicar_amelia": 12401800,
     "boss_witch_of_hemwick": 12201800,
     "boss_martyr_logarius": 12501800,
-    "interaction_laurences_skull": 12401803,
+    "interaction_laurences_skull": 12401898,
+    "boss_celestial_emissary": 12421700,
+    "boss_ebrietas": 12421800,
     "boss_shadows_of_yharnam": 12701800,
     "boss_rom": 13201800,
     "boss_the_one_reborn": 12801800,
@@ -129,7 +133,7 @@ DOC = ROOT / "docs" / "LOCATION-NAMING.md"
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
 HINTED_ROWS = 183
-BARE_ROWS = 496
+BARE_ROWS = 498
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an

@@ -26,6 +26,8 @@ flowchart LR
     CW -->|Tonsil Stone; Amygdala grab| L1[Lecture Building 1F]
     L1 --> Frontier[Nightmare Frontier]
     CW -->|Upper Cathedral Key; Blood-starved Beast defeated| Upper[Upper Cathedral Ward]
+    Upper --> Emissary[Celestial Emissary]
+    Upper --> Ebrietas[Ebrietas]
     Hemwick -->|Cainhurst Summons| Cainhurst[Castle Cainhurst]
 
     CW -->|Password learned + Eye of a Blood-drunk Hunter| HN[Hunter's Nightmare]
@@ -51,7 +53,7 @@ flowchart LR
 | One Reborn -> Lecture 2F | Matches | Inspecting the mummy after The One Reborn transports to Lecture Building 2F. |
 | Tonsil Stone route | Corrected | The Cathedral Ward grab transports to Lecture Building 1F; its door reaches the Frontier. |
 | Cainhurst branch | Matches | Cainhurst Summons plus the Hemwick obelisk summons the carriage. |
-| Upper Cathedral branch | **Corrected** | The Upper Cathedral Key opens the seal, but the chapel side doors that reach it only open after Blood-starved Beast. The key alone is not sufficient. |
+| Upper Cathedral branch | **Corrected** | The Upper Cathedral Key opens the seal, but the chapel side doors that reach it only open after Blood-starved Beast. Celestial Emissary and Ebrietas are optional checks inside the area; the cited lift has no boss or item condition. |
 | Hemwick branch | **Corrected 2026-08-18, re-sourced 2026-08-24** | The road to Hemwick starts left of the Grand Cathedral entrance, so it sits behind the plaza. It used to carry a *copy* of the plaza's requirement; it now leaves from the Grand Cathedral itself, so there is one place the plaza rule lives. This edge was modelled as free and **was absent from this table**, which is how it survived the original audit. |
 | DLC access | Matches | After Amelia and the altar interaction, the Dream supplies the Eye; the Oedon Chapel grab enters Hunter's Nightmare. |
 | Ludwig -> Research Hall | Matches | Ludwig gates the recovery-room route and the Eye Pendant operates its surgery altar. |

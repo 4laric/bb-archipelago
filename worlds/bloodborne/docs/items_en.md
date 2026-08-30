@@ -133,6 +133,7 @@ own in-game checks and are never shuffled to another player:
 
 Cleric Beast Defeated; Father Gascoigne Defeated; Blood-starved Beast Defeated;
 Vicar Amelia Defeated; Laurence's Skull Inspected; Witch of Hemwick Defeated; Martyr Logarius Defeated;
+Celestial Emissary Defeated; Ebrietas, Daughter of the Cosmos Defeated;
 Shadows of Yharnam Defeated; Rom Defeated; Amygdala Defeated;
 The One Reborn Defeated; Micolash Defeated; Mergo's Wet Nurse Defeated;
 Gehrman Defeated; Moon Presence Defeated;
@@ -171,6 +172,7 @@ uncanny_stake_driver uncanny_logarius_wheel uncanny_tonitrus
 uncanny_threaded_cane event_cleric_beast_defeated event_gascoigne_defeated
 event_blood_starved_beast_defeated event_amelia_defeated
 event_witch_of_hemwick_defeated event_martyr_logarius_defeated
+event_celestial_emissary_defeated event_ebrietas_defeated
 event_laurences_skull_inspected event_shadows_defeated event_rom_defeated
 event_amygdala_defeated event_one_reborn_defeated event_micolash_defeated
 event_mergos_wet_nurse_defeated event_gehrman_defeated

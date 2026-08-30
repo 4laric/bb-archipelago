@@ -746,3 +746,5 @@ location	pickup_workshop_umbilical_cord	0xBB1286
 item	lunarium_key	0xBB0136
 item	forbidden_woods_password	0xBB0137
 location	pickup_lunarium_key	0xBB1287
+location	boss_celestial_emissary	0xBB1288
+location	boss_ebrietas	0xBB1289
