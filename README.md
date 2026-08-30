@@ -67,7 +67,7 @@ Central Yharnam, Cathedral Ward, Old Yharnam, Hemwick, Cainhurst, Forbidden
 Woods, Iosefka's Clinic, Byrgenwerth, Yahar'gul, both Lecture Building floors,
 Nightmare of Mensis, and Nightmare Frontier. Set `include_dlc: true` in the
 player YAML to add all seven DLC regions, their progression items, bosses, and
-checks; it defaults off. With DLC enabled there are 635 network locations.
+checks; it defaults off. There are 490 base-game locations and 641 with DLC enabled.
 The `goal` YAML option follows Bloodborne's three
 endings: `submit_to_gehrman` completes after Mergo's Wet Nurse,
 `refuse_gehrman` requires Gehrman, and the default `moon_presence` requires
@@ -89,7 +89,7 @@ installed-binder hash witness before the native client arms.
 The apworld's Python client remains a manual-check fallback. The native client
 in `from-software-archipelago-clients` consumes every runtime flag binding the seed sends,
 debounces true reads three times, delivers the Saw Spear and category-4 goods
-through the durable r5 grant bridge, and sends Archipelago goal status for the seed's
+through the durable r7 grant bridge, and sends Archipelago goal status for the seed's
 `goal_location`. Its explicit `--assume-correct-save` MVP mode has reported
 three pickups automatically and acknowledged their AP rewards in order during
 a live run. This mode is operator-attested, not real save identification: never
