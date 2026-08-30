@@ -175,14 +175,14 @@ Open the player-facing surface from a checkout with:
 python -m bb_launcher ui
 ```
 
-The setup panel remembers paths under
+The launcher remembers setup under
 `%LOCALAPPDATA%\BloodborneArchipelago\launcher-settings.json`. Fields the
 launcher can derive are filled automatically on empty: the seed cache
 defaults to a `seeds` directory under the launcher state root, the
 suppression binder/manifest pair is offered when
 `work\vanilla-suppression-build` exists beside the package or checkout, and
 choosing a `shadPS4.exe` derives the game root from its `games` sibling when
-that discovery is unambiguous. Select:
+that discovery is unambiguous. The normal **Setup** tab asks for only:
 
 - the seed file: either the `AP_<seed>.zip` Archipelago generation emits for
   the whole multiworld, or the `.bbseed.json` request inside it (generation
@@ -193,14 +193,22 @@ that discovery is unambiguous. Select:
   require it, and a zip with none is refused by name -- and extracts that
   member once under `<state root>/seed-requests`, keyed by content so
   re-selecting the same zip reuses it;
-- the validated shadPS4 game root;
-- the generated suppression binder and its `build-manifest.json`;
-- the player's source `MapStudio` (automatically discovered in the Windows package);
-- for checkout-only development, an `msb_enemies.tsv` extraction and pinned
-  SoulsFormatsNEXT checkout;
-- the hash-pinned process plan and external seed-cache directory;
-- optionally, the launcher state root and shadPS4 log path (the portable
-  `%LOCALAPPDATA%`/`%APPDATA%` defaults fit a standard install).
+- the validated shadPS4 game root and `shadPS4.exe`;
+- the Archipelago server; the seed supplies the player name when it identifies
+  one Bloodborne slot and hides the unnecessary selector, while a
+  multi-Bloodborne archive presents a read-only list of the Bloodborne slots
+  it actually contains. The setup shows the resolved player, seed, and
+  required runtime before launch.
+
+MapStudio and the guarded enemy options live under **Enemy randomization**;
+the uncommon seed and tier controls stay collapsed until **Advanced enemy
+options** is selected.
+Suppression, cache, state, log, and explicit process-plan overrides live under
+**Troubleshooting**; packaged players do not need to touch them. Setup is saved
+automatically whenever an action starts.
+Changing the seed, player, game, shadPS4 path, or server refreshes the
+readiness view. Launch stays unavailable and names the missing setup pieces
+until the seed, game, shadPS4, and any required player choice are present.
 
 A **Session status** panel below the setup shows, read-only and on demand: the
 active overlay's seed/slot, cache key, suppression hash, and enemizer state;
@@ -270,7 +278,7 @@ The packaged path calls `BBEnemizerPlanner.exe`, `MSBBMiner.exe`, and
 checkout, repository checkout, or pre-extracted enemy inventory. The checkout
 path retains the original Python/`dotnet` fallback for development.
 
-Secondary actions sit beside the main button, each running the same guarded
+Secondary actions live under **Troubleshooting**, each running the same guarded
 core operations as the CLI:
 
 - **Launch Vanilla** resolves the plan first (a plan still carrying client
@@ -281,16 +289,15 @@ core operations as the CLI:
 - **Rebuild Seed** (with a confirmation) evicts exactly this seed's
   hash-addressed cache directory and runs the full build/activate/launch
   again; without it, a matching cache is reused.
-- **Open Diagnostics** opens the launcher state root (client configs,
+- **Open Logs & Diagnostics** opens the launcher state root (client configs,
   per-session ledgers, bridge directory).
-- **Generate Launch Plan** writes a fresh hash-pinned process plan into the
-  launcher state root and selects it. It reads the slot and runtime build from
-  the selected AP request, pins the chosen `shadPS4.exe` and the packaged
-  `tools/bb-ap-client.exe` (plus the bundled CE grant table when a Cheat
-  Engine executable is selected), and uses the **Archipelago server** field
-  (default `localhost:38281`). Packaged players never hand-write the launch
-  plan; from a checkout, where no client is bundled, the CLI `plan` command
-  does the same job with `--client`.
+
+Every launch, Doctor run, rebuild, and vanilla launch writes a fresh
+hash-pinned process plan automatically. It reads the slot and runtime build
+from the selected seed, pins the chosen `shadPS4.exe` and packaged
+`tools/bb-ap-client.exe`, and uses the **Archipelago server** field (default
+`localhost:38281`). From a checkout, where no client is bundled, the CLI
+`plan` command remains the explicit developer path.
 
 ## Windows package
 
