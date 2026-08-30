@@ -740,3 +740,6 @@ location	fixed_fishing_hamlet_lot_3600570	0xBB1280
 location	fixed_fishing_hamlet_lot_3600600	0xBB1281
 location	fixed_fishing_hamlet_lot_3600610	0xBB1282
 location	fixed_fishing_hamlet_lot_3600700	0xBB1283
+location	treasure_doll_set_chest	0xBB1284
+location	pickup_small_hair_ornament	0xBB1285
+location	pickup_workshop_umbilical_cord	0xBB1286

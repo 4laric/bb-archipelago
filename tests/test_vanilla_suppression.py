@@ -221,10 +221,12 @@ class RealCorpusTests(unittest.TestCase):
         # treasures, minus Saw Spear's lot, plus continuation rows in shared
         # acquisition-flag award groups, minus the
         # category-8 generation recipes whose native gem awards stay intact.
-        self.assertEqual(len(location_edits), 594)
+        self.assertEqual(len(location_edits), 601)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
+                # Doll Set (Abandoned Old Workshop)
+                "2110021", "2110022", "2110023",
                 # Hunter Set (Central Yharnam)
                 "2410611", "2410612", "2410613",
                 # Top Hat and Black Church sets (Cathedral Ward)

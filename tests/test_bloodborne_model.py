@@ -109,7 +109,7 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(637, len(NETWORK_LOCATIONS))
+        self.assertEqual(641, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -123,7 +123,7 @@ class BloodborneModelTests(unittest.TestCase):
              "Hunter's Nightmare": 68, "Underground Corpse Pile": 1,
              "Research Hall": 37, "Lumenwood Garden": 1,
              "Astral Clocktower": 1, "Fishing Hamlet": 41,
-             "Nightmare Grand Cathedral": 1},
+             "Nightmare Grand Cathedral": 1, "Healing Church Workshop": 4},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -198,7 +198,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Bold Hunter's Mark x2"], 24)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Bone Marrow Ash x3", "Fire Paper x2", "Bolt Paper x2"):
-            self.assertEqual(counts[name], 24 if name not in {"Pebbles x3", "Molotov Cocktails x2"} else 25, name)
+            self.assertEqual(counts[name], 25, name)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
@@ -230,10 +230,10 @@ class BloodborneModelTests(unittest.TestCase):
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 222)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 148)
-        self.assertEqual(counts["Blood Stone Shards x2"], 111)
-        self.assertEqual(counts["Pebbles x3"], 74)
+        self.assertEqual(counts["Blood Vial"], 223)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 149)
+        self.assertEqual(counts["Blood Stone Shards x2"], 112)
+        self.assertEqual(counts["Pebbles x3"], 75)
         self.assertEqual(counts["Molotov Cocktails x2"], 74)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
@@ -290,7 +290,12 @@ class BloodborneModelTests(unittest.TestCase):
                 self.assertIn(str(binding.event_flag), binding.evidence)
                 continue
             if binding.source_kind == "script_award":
-                row = rows_by_name[names_by_key[key]]
+                candidates = [
+                    row for row in rows_by_name.values()
+                    if str(binding.item_lot_id) in row["item_lot_ids"].split(";")
+                ]
+                self.assertEqual(1, len(candidates), key)
+                row = candidates[0]
                 self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
                 self.assertIn(str(binding.event_flag), row["acquisition_flags"], key)
                 self.assertIn(binding.source_kind, row["observed_sources"].split(";"), key)
@@ -366,7 +371,7 @@ class BloodborneModelTests(unittest.TestCase):
         reachable = slice_reachable
 
         # The Dream now contributes the two ending bosses.
-        self.assertEqual(set(SLICE_REGIONS) - {"Menu", "Healing Church Workshop"},
+        self.assertEqual(set(SLICE_REGIONS) - {"Menu"},
                          {l.region for l in locations})
         with_everything = reachable(set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS))
         self.assertEqual(with_everything, {l.key for l in locations})
@@ -374,6 +379,29 @@ class BloodborneModelTests(unittest.TestCase):
         without_emblem = reachable(
             (set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)) - {"hunter_chief_emblem"})
         self.assertEqual(with_everything, without_emblem)
+
+    def test_abandoned_workshop_checks_open_after_blood_starved_beast(self):
+        from worlds.bloodborne.data import SLICE_ITEM_KEYS
+
+        workshop_keys = {
+            "treasure_old_hunter_bone",
+            "treasure_doll_set_chest",
+            "pickup_small_hair_ornament",
+            "pickup_workshop_umbilical_cord",
+        }
+        locations = {location.key: location for location in seeded_locations()}
+        self.assertTrue(workshop_keys <= set(locations))
+        self.assertTrue(all(locations[key].locked_item is None for key in workshop_keys))
+
+        inventory = set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)
+        without_beast = slice_reachable(
+            inventory - {"event_blood_starved_beast_defeated"},
+            locations=[location for location in locations.values()
+                       if location.key != "boss_blood_starved_beast"],
+        )
+        self.assertTrue(workshop_keys.isdisjoint(without_beast))
+        with_beast = slice_reachable(inventory)
+        self.assertTrue(workshop_keys <= with_beast)
 
     def test_withholding_the_oedon_tomb_key_strands_the_seed_in_central_yharnam(self):
         """The point of shuffling the key: sphere 0 is a place, not the world.
