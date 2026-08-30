@@ -96,6 +96,7 @@ def identity(
         options=options or {"enemy_randomizer": enemizer_seed is not None},
         enemizer_seed=enemizer_seed,
         suppression_plan_sha256=hashlib.sha256(b"plan").hexdigest(),
+        suppression_binder_sha256=hashlib.sha256(source).hexdigest(),
     )
 
 
@@ -259,7 +260,19 @@ class LauncherCoreTests(unittest.TestCase):
         changed = identity("seed", options={"a": 1, "b": 3})
         self.assertEqual(first.cache_key, second.cache_key)
         self.assertNotEqual(first.cache_key, changed.cache_key)
-        self.assertNotEqual(first.cache_key, identity("other").cache_key)
+        self.assertEqual(
+            first.cache_key,
+            identity("other", options={"b": 2, "a": 1}).cache_key,
+        )
+
+    def test_cache_identity_tracks_binder_bytes_but_not_seed_or_slot(self):
+        first = identity("seed-a", b"binder-a")
+        other_seed = identity("seed-b", b"binder-a")
+        other_slot = SeedIdentity.from_dict({**first.as_dict(), "slot": "Other Hunter"})
+        changed_binder = identity("seed-a", b"binder-b")
+        self.assertEqual(first.cache_key, other_seed.cache_key)
+        self.assertEqual(first.cache_key, other_slot.cache_key)
+        self.assertNotEqual(first.cache_key, changed_binder.cache_key)
 
     def test_cache_composes_only_suppression_and_optional_map_outputs(self):
         cache, build_path = make_build(self.root, "seed", b"suppressed", with_maps=True)

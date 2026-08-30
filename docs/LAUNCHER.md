@@ -18,11 +18,15 @@ base directory.
 Every randomized build lives in an external hash-addressed cache. Its key
 commits to:
 
-- AP seed and slot;
 - world, native runtime, and shadPS4 builds;
 - source game hashes;
 - options and enemizer seed;
-- the suppression plan hash.
+- the suppression plan hash and exact suppression-binder bytes.
+
+AP seed and slot remain in the activation ownership record and continue to
+isolate client ledgers, but they are deliberately not cache terms: two players
+whose inputs produce identical overlay bytes share one verified build. Changing
+the binder always changes the key, even when the plan and installed game do not.
 
 The build contains only the suppressed binder and optional enemizer maps:
 

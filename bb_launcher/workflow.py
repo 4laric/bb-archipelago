@@ -832,6 +832,7 @@ class LauncherWorkflow:
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
+            suppression_binder_sha256=sha256_file(binder),
         )
         cache = SeedCache(settings.cache_root)
         existing = cache.path_for(identity.cache_key)
@@ -918,6 +919,7 @@ class LauncherWorkflow:
             build.path,
             process_is_running=process_is_running,
             suppression_override=suppression.bypassed,
+            identity=identity,
         )
         if owner["suppression"]["sha256"] != build.manifest["suppression"]["sha256"]:
             raise ValidationError("activated suppression witness does not match the seed build")

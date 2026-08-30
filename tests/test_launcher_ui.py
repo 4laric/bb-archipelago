@@ -1268,9 +1268,10 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             EnemizerOptions(enabled=False),
             process_is_running=lambda: False,
         )
-        self.assertNotEqual(first.cache_key, second.cache_key)
+        self.assertEqual(first.cache_key, second.cache_key)
         active = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
         self.assertEqual(active["cache_key"], second.cache_key)
+        self.assertEqual(active["identity"]["seed"], "other-seed")
 
         restored = workflow.restore_previous(
             self.settings(enemy_inputs=False), process_is_running=lambda: False
@@ -1278,6 +1279,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(restored, first.cache_key)
         active = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
         self.assertEqual(active["cache_key"], first.cache_key)
+        self.assertNotEqual(active["identity"]["seed"], "other-seed")
 
     def test_force_rebuild_evicts_the_cache_and_replans(self):
         toolchain = FakeToolchain()
