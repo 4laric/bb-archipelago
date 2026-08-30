@@ -179,6 +179,9 @@ GOLDEN_LOCATIONS = {
     "fixed_blood_gem_workshop_tool": 0xBB1024,
     "boss_witch_of_hemwick": 0xBB10C5,
     "boss_martyr_logarius": 0xBB10C6,
+    "treasure_doll_set_chest": 0xBB1284,
+    "pickup_small_hair_ornament": 0xBB1285,
+    "pickup_workshop_umbilical_cord": 0xBB1286,
 }
 
 
@@ -252,7 +255,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB1283)
+        self.assertEqual(max(ids), 0xBB1286)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

@@ -122,7 +122,7 @@ no-op.
    spots only where 1 and 2 fail. Every one carries its evidence in the `note`
    column and lands in the row's `basis`, exactly like the #75 rename rows.
 
-**Coverage is deliberately partial.** 180 of 671 rows carry a hint; 491 do
+**Coverage is deliberately partial.** 182 of 678 rows carry a hint; 496 do
 not, and a name with no landmark yet is honest rather than unfinished. The
 pass prioritised the collision groups (98 of the 407 `#N` rows now carry a
 hint) and the rows the playtesters actually hunted. Both numbers are witnessed
@@ -217,7 +217,7 @@ such.
   their table names, and this table feeds `tools/build_fixed_location_slice.py`.
   Quantities follow the owner ruling: `x1` is dropped, `xN` for N > 1 stays.
 - #222 is decided and landed: the landmark-hint convention above, its
-  committed per-map vocabulary, and the 180 hinted rows. The remaining 491
+  committed per-map vocabulary, and the 182 hinted rows. The remaining 496
   bare rows are open work, not a defect; a new hint needs a vocabulary row or
   an override row with evidence, never a guess. `52410295` is exempt from the
   pass: it is the NG+ replacement corpse retired by #221, so no first

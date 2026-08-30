@@ -302,6 +302,10 @@ LOCATIONS = (
     # regions contribute checks without inventing placement or flag IDs.
     Location("treasure_radiant_sword_hunter_badge", location_name(52400480), "Cathedral Ward"),
     Location("treasure_old_hunter_bone", location_name(52110000), "Healing Church Workshop"),
+    Location("treasure_doll_set_chest", location_name(52110020), "Healing Church Workshop"),
+    Location("pickup_small_hair_ornament", location_name(52110800), "Healing Church Workshop"),
+    Location("pickup_workshop_umbilical_cord", location_name(52110810),
+             "Healing Church Workshop"),
     Location("treasure_rune_workshop_tool", location_name(52200360), "Hemwick Charnel Lane"),
     Location("treasure_augur_of_ebrietas", location_name(53200600), "Lecture Building 1F"),
     Location("treasure_lecture_theatre_key", location_name(53200720), "Lecture Building 2F"),
@@ -499,6 +503,10 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "treasure_underground_cell_inner_chamber_key",
     "boss_laurence",
     "treasure_radiant_sword_hunter_badge",
+    "treasure_old_hunter_bone",
+    "treasure_doll_set_chest",
+    "pickup_small_hair_ornament",
+    "pickup_workshop_umbilical_cord",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",
 })

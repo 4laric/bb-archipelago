@@ -50,7 +50,7 @@ under `Unreleased` and move into a dated version section when released.
   Two playtesters in one day could not locate their checks: one hunted
   `Central Yharnam - Blood Stone Shard x2` with a video guide open and still
   needed operator support, and the other asked outright for names that say
-  where the item is. 180 of the 671 names gained a parenthetical hint, among
+  where the item is. 182 of the 678 tabled names carry a parenthetical hint, among
   them `Central Yharnam - Blood Stone Shard x2 (sewer channel beam)`,
   `Central Yharnam - Coldblood Dew (1) #1 (clinic backstreets)` and
   `Central Yharnam - Blood Stone Shard #8 (bridge side)`. Hints come from the
@@ -59,7 +59,7 @@ under `Unreleased` and move into a dated version section when released.
   handful of spots -- by hand with the evidence recorded in the row's
   `basis`. Existing `#N` disambiguators are unchanged on purpose, so tracker
   packs and spoiler logs keep working; the datapackage is regenerated per
-  seed, so seeds already in flight are unaffected. The remaining 491 names
+  seed, so seeds already in flight are unaffected. The remaining 496 names
   carry no hint yet, which is honest rather than unfinished. See
   docs/LOCATION-NAMING.md.
 

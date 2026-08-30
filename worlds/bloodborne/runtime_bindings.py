@@ -854,6 +854,18 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "treasure_old_hunter_bone": RuntimeLocationBinding(
         52110000, "MSB treasure m21_01_00_00 + ItemLotParam 2110000 acquisition flag",
         2110000, "treasure", "m21_01_00_00", 4, 2060),
+    "treasure_doll_set_chest": RuntimeLocationBinding(
+        52110020,
+        "MSB chest m21_01_00_00 + ItemLotParam 2110020-2110023 shared acquisition flag",
+        2110020, "treasure", "m21_01_00_00", 1, 220000),
+    "pickup_small_hair_ornament": RuntimeLocationBinding(
+        52110800,
+        "EMEVD event 12110300 cabinet interaction + ItemLotParam 2110800 acquisition flag",
+        2110800, "script_award", "m21_01_00_00.emevd.dcx.js:61", 4, 4300),
+    "pickup_workshop_umbilical_cord": RuntimeLocationBinding(
+        52110810,
+        "EMEVD event 12110301 altar interaction + ItemLotParam 2110810 acquisition flag",
+        2110810, "script_award", "m21_01_00_00.emevd.dcx.js:72", 4, 4320),
     "treasure_rune_workshop_tool": RuntimeLocationBinding(
         52200360, "MSB treasure m22_00_00_00 + ItemLotParam 2200360 acquisition flag",
         2200360, "treasure", "m22_00_00_00", 4, 4104),
