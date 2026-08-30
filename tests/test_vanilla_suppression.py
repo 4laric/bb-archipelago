@@ -150,7 +150,7 @@ class RealCorpusTests(unittest.TestCase):
     def test_the_slice_pool_item_can_be_suppressed(self):
         item_edits = [edit for edit in self.plan.edits if not edit.item_key.startswith("location:")]
         self.assertEqual(sorted(edit.item_key for edit in item_edits),
-                         ["oedon_tomb_key", "saw_spear"])
+                         ["oedon_tomb_key", "saw_spear", "third_umbilical_cord_wet_nurse"])
         by_key = {edit.item_key: edit for edit in item_edits}
         self.assertEqual(by_key["saw_spear"].item_category, "0")
 
@@ -171,6 +171,19 @@ class RealCorpusTests(unittest.TestCase):
                           edit.acquisition_flag))
         self.assertEqual(0, edit.placements)  # script-awarded: no MSB or drop placement
 
+    def test_wet_nurses_randomized_cord_is_suppressed_without_moving_its_flag(self):
+        edits = [
+            edit for edit in self.plan.edits
+            if edit.item_key == "third_umbilical_cord_wet_nurse"
+        ]
+        self.assertEqual(1, len(edits))
+        edit = edits[0]
+        self.assertEqual(
+            ("4", "4323", "55100000", "50000305"),
+            (edit.item_category, edit.goods_id, edit.item_lot_id, edit.acquisition_flag),
+        )
+        self.assertEqual(0, edit.placements)
+
     def test_a_stale_script_award_review_is_refused_rather_than_planned(self):
         """The declaration is checked against the corpus, not trusted.
 
@@ -190,7 +203,10 @@ class RealCorpusTests(unittest.TestCase):
         finally:
             SCRIPT_AWARD_SUPPRESSIONS["oedon_tomb_key"] = declared
         self.assertEqual(["review_is_stale"], [r.problem for r in plan.refusals])
-        self.assertEqual(0, len(plan.edits))
+        self.assertEqual(
+            ["third_umbilical_cord_wet_nurse"],
+            [edit.item_key for edit in plan.edits],
+        )
         self.assertIn("27100000", plan.refusals[0].detail)  # witness: the dropped row
 
     def test_the_reviewed_unreferenced_lot_is_reachable_from_nothing(self):
