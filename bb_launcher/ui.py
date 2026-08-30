@@ -511,13 +511,13 @@ class LauncherApp:
         seed_entry.grid(row=1, column=1, sticky="ew", pady=4)
         tier = ttk.Checkbutton(
             options,
-            text="Allow tier mixing (experimental)",
+            text="Allow tier mixing (experimental: no scaling)",
             variable=self.allow_tier_mixing,
         )
         tier.grid(row=2, column=0, sticky="w", padx=(24, 8))
         locomotion = ttk.Checkbutton(
             options,
-            text="Preserve locomotion class",
+            text="Preserve locomotion (experimental: incomplete tags)",
             variable=self.preserve_locomotion,
         )
         locomotion.grid(row=2, column=1, sticky="w")

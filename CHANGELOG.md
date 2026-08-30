@@ -6,13 +6,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Advanced enemy controls now say what is experimental about them.** Tier
+  mixing warns that enemy scaling is not normalized, while locomotion
+  preservation warns that its roster tags are incomplete. Offline regression
+  fixtures now pin both modes and verify deterministic plans independently of
+  the default 308-placement policy.
 - **Overlay caching now follows the bytes it builds.** Different AP players
   reuse an identical verified overlay when their suppression and enemizer
   inputs match, while changing the suppression binder necessarily creates a
   new cache entry. Seed/slot identity remains attached to the active overlay
   and its isolated delivery ledger; it no longer causes duplicate builds or
   hides a replaced binder behind a stale cache hit.
-
 - **The Old Hunters is selectable per seed.** Set `include_dlc: true` in the
   player YAML to add its regions, bosses, fixed pickups, and five DLC-only
   progression items. It defaults off so players without the DLC receive a

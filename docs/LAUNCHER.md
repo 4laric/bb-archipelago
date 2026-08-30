@@ -224,8 +224,21 @@ launch the panel refreshes and the log names the written config and ledger
 paths.
 
 **Randomize Enemies** is enabled by default. Its enemy seed comes from the AP
-request but can be overridden explicitly. **Allow tier mixing** and **Preserve
-locomotion class** map directly to the planner's guarded policy switches.
+request but can be overridden explicitly. Both advanced policy switches remain
+experimental and default off:
+
+- **Allow tier mixing** removes the common/elite boundary. It keeps the default
+  plan at 308 placements, but the pinned test seed changes 32 assignments and
+  makes 14 cross-tier swaps (seven in each direction). Enemy scaling is not
+  normalized yet, so mixed enemies keep their authored HP and damage.
+- **Preserve locomotion** requires the source and replacement to share a known
+  locomotion class. Current annotations make this a real but incomplete guard:
+  the pinned test seed falls from 308 to 305 placements, with three placements
+  losing every compatible target. Missing annotations are not treated as a
+  mismatch.
+
+Each mode has an independent forward/reversed-inventory determinism fixture.
+Neither changes the default 308-plan regression pin.
 
 When the player chooses **Randomize & Launch**, the workflow:
 

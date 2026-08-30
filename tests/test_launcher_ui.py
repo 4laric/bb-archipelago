@@ -849,8 +849,8 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertLessEqual(
             {
                 "Randomize Enemies",
-                "Allow tier mixing (experimental)",
-                "Preserve locomotion class",
+                "Allow tier mixing (experimental: no scaling)",
+                "Preserve locomotion (experimental: incomplete tags)",
                 "Enemy seed",
             },
             texts_by_parent[enemy_tab],
