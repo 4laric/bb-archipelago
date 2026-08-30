@@ -221,7 +221,7 @@ class RealCorpusTests(unittest.TestCase):
         # treasures, minus Saw Spear's lot, plus continuation rows in shared
         # acquisition-flag award groups, minus the
         # category-8 generation recipes whose native gem awards stay intact.
-        self.assertEqual(len(location_edits), 341)
+        self.assertEqual(len(location_edits), 388)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -239,6 +239,8 @@ class RealCorpusTests(unittest.TestCase):
                 "2501021", "2501022", "2501071", "2501072",
                 # White Church and Graveguard sets (Forbidden Woods)
                 "2700151", "2700152", "2700153", "2700411", "2700412",
+                # Yahar'gul Black Hood set
+                "2800521", "2800522", "2800523",
             },
         )
 
@@ -269,7 +271,7 @@ class RealCorpusTests(unittest.TestCase):
         # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
         # the NG+-only lot 2410295 from #220) are not network locations, so
         # they are not iterated here.
-        self.assertEqual(checked, 314)
+        self.assertEqual(checked, 357)
 
     def test_category_eight_checks_keep_their_native_generated_gems(self):
         from worlds.bloodborne import NETWORK_LOCATIONS
@@ -277,7 +279,7 @@ class RealCorpusTests(unittest.TestCase):
 
         gems = [location for location in NETWORK_LOCATIONS
                 if LOCATION_BINDINGS[location.key].item_category == 8]
-        self.assertEqual(len(gems), 30)
+        self.assertEqual(len(gems), 36)
         planned_lots = {edit.item_lot_id for edit in self.plan.edits}
         for location in gems:
             with self.subTest(location=location.key):

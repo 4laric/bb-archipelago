@@ -61,7 +61,7 @@ build and live-test procedure.
 
 ## Current boundary
 
-Generation emits the bounded slice-5 scope: Central Yharnam, Cathedral Ward,
+Generation emits the bounded slice-6 scope: Central Yharnam, Cathedral Ward,
 Old Yharnam, Hemwick, Cainhurst, Forbidden Woods, Iosefka's Clinic and
 Byrgenwerth, plus the optional Nightmare Frontier branch through Lecture
 Building 1F. There are 359 network locations, and Rom remains the goal. The fixed-pickup
