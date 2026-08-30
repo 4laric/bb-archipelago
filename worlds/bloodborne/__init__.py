@@ -22,7 +22,7 @@ GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r7"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
-SUPPRESSION_PLAN_SHA256 = "64d94a46db98afe1ddd88861a10d49cf88fa5785970b415708a297fe762d12d1"
+SUPPRESSION_PLAN_SHA256 = "f52aa8197517b0ea1f4db4caeca1d1b3ba5eba29771b57ac0be935f7aa9da9bd"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(
     location for location in MODEL.locations
@@ -50,7 +50,7 @@ STARTING_TOOL_KEYS = frozenset({"blood_gem_workshop_tool", "rune_workshop_tool"}
 # The Amelia playtest slice ends at Vicar Amelia. The client learns the goal from
 # slot data's "goal_location", so moving it is a seed-owned change, not a
 # client rebuild.
-GOAL_LOCATION_KEY = "boss_the_one_reborn"
+GOAL_LOCATION_KEY = "boss_mergos_wet_nurse"
 
 STARTING_WEAPON_ROWS = {
     "right_hand": (2000, 2001, 2002),
