@@ -280,6 +280,47 @@ def plan_script_awards(plan: Plan, research: Path, occupied_lots: set[str]) -> N
             occupied_lots.add(lot)
 
 
+def plan_boss_awards(plan: Plan, research: Path, occupied_lots: set[str]) -> None:
+    """Plan exact, reviewed boss payouts without suppressing badges/chalices."""
+    sys.path.insert(0, str(REPO))
+    from worlds.bloodborne.runtime_bindings import BOSS_AWARD_SUPPRESSIONS
+
+    rows = read_tsv(research / "joined" / "lot_items.tsv")
+    facts = collect_lot_facts(research)
+    for key, declared in sorted(BOSS_AWARD_SUPPRESSIONS.items()):
+        lot = str(declared.item_lot_id)
+        matches = [row for row in rows if row["item_lot_id"] == lot]
+        exact = [row for row in matches
+                 if row["item_category"] == str(declared.item_category)
+                 and row["item_id"] == str(declared.item_id)]
+        if len(matches) != 1 or len(exact) != 1:
+            plan.refusals.append(Refusal(
+                f"boss:{key}", str(declared.item_category), str(declared.item_id),
+                "boss_award_declaration_mismatch",
+                f"lot {lot} expected exactly one declared payout row; corpus has "
+                f"{len(matches)} row(s), {len(exact)} exact match(es)"))
+            continue
+        actual_flag = (exact[0].get("generic_acquisition_flag") or "").strip()
+        if actual_flag != str(declared.acquisition_flag):
+            plan.refusals.append(Refusal(
+                f"boss:{key}", str(declared.item_category), str(declared.item_id),
+                "boss_award_flag_mismatch",
+                f"lot {lot} carries getItemFlagId {actual_flag}; declaration says "
+                f"{declared.acquisition_flag}"))
+            continue
+        if lot in occupied_lots:
+            plan.refusals.append(Refusal(
+                f"boss:{key}", str(declared.item_category), str(declared.item_id),
+                "lot_already_planned", f"lot {lot} is already edited by another plan entry"))
+            continue
+        fact = facts[lot]
+        plan.edits.append(PlannedEdit(
+            f"boss:{key}", str(declared.item_category), str(declared.item_id),
+            lot, fact.lot_name, actual_flag, fact.placements,
+            f"reviewed boss payout; {declared.evidence}; acquisition flag preserved"))
+        occupied_lots.add(lot)
+
+
 def load_item_goods() -> dict[str, tuple[str, str]]:
     """Map each randomized item key to its param category/id pair."""
     sys.path.insert(0, str(REPO))
@@ -305,6 +346,7 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
     plan = build_plan(load_item_goods(), research, placeholder)
     occupied_lots = {edit.item_lot_id for edit in plan.edits}
     plan_script_awards(plan, research, occupied_lots)
+    plan_boss_awards(plan, research, occupied_lots)
     facts = collect_lot_facts(research)
     rows = read_tsv(research / "joined" / "lot_items.tsv")
 

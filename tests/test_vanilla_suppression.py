@@ -148,11 +148,22 @@ class RealCorpusTests(unittest.TestCase):
         cls.plan = build_complete_plan(REPO / "research", PLACEHOLDER)
 
     def test_the_slice_pool_item_can_be_suppressed(self):
-        item_edits = [edit for edit in self.plan.edits if not edit.item_key.startswith("location:")]
+        item_edits = [edit for edit in self.plan.edits
+                      if not edit.item_key.startswith(("location:", "boss:"))]
         self.assertEqual(sorted(edit.item_key for edit in item_edits),
                          ["oedon_tomb_key", "saw_spear", "third_umbilical_cord_wet_nurse"])
         by_key = {edit.item_key: edit for edit in item_edits}
         self.assertEqual(by_key["saw_spear"].item_category, "0")
+
+    def test_reviewed_boss_payouts_are_suppressed_but_stateful_rewards_are_not(self):
+        boss_lots = {edit.item_lot_id for edit in self.plan.edits
+                     if edit.item_key.startswith("boss:")}
+        self.assertEqual(16, len(boss_lots))
+        self.assertTrue({"50000001", "21002950", "51001900", "3601800"} <= boss_lots)
+        # Badge ownership stocks shops; chalices are an out-of-scope progression
+        # system. Neither may be junked as if it were a payout-only duplicate.
+        self.assertTrue({"50000010", "15000", "80000000", "80000200", "80000300"}
+                        .isdisjoint(boss_lots))
 
     def test_the_script_award_key_is_suppressed_on_its_flagless_lot(self):
         """The shape the automatic search cannot plan, planned deliberately.
