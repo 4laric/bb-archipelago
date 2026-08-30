@@ -28,13 +28,13 @@ var output = new StringBuilder();
 output.Append("row_id\trow_name");
 foreach (string field in fields)
     output.Append('\t').Append(field);
-output.AppendLine();
+output.Append('\n');
 foreach (PARAM.Row row in param.Rows.OrderBy(row => row.ID))
 {
     output.Append(row.ID).Append('\t').Append(Clean(row.Name));
     foreach (string field in fields)
         output.Append('\t').Append(Format(row[field]?.Value));
-    output.AppendLine();
+    output.Append('\n');
 }
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 File.WriteAllText(outputPath, output.ToString(), new UTF8Encoding(false));
