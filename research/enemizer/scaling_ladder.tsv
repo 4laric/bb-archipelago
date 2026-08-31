@@ -1,0 +1,14 @@
+level	sp_effect_id	area_evidence	max_hp_rate	physical_attack_rate	physical_defense_rate
+1	7401	Cathedral B / start	8.735	2.555	1.500
+2	7402	ruins	4.553	2.118	1.351
+3	7403	Cathedral A / Vicar	4.118	1.683	1.326
+4	7404	Cathedral C / first half	4.946	1.776	1.367
+5	7405	graveyard	4.534	1.588	1.350
+6	7406	forest	3.967	1.402	1.243
+7	7407	old home / first half	4.022	1.397	1.220
+8	7408	university	2.496	1.334	1.176
+9	7409	old castle	1.887	1.283	1.156
+10	7410	sacrifice village	1.883	1.248	1.137
+11	7411	Cathedral C / second half	1.591	1.209	1.118
+12	7412	trap road / nightmare host	1.456	1.143	1.080
+13	7413	hub / final boss	1.340	1.089	1.016

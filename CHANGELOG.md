@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Enemy transplant scaling now has a deterministic offline plan, still off
+  by default.** An explicit experimental flag derives Bloodborne's 13-rung
+  native area curve from bundled params, emits collision-checked NpcParam and
+  echo-neutral SpEffect clone requests, clamps multipliers, and records every
+  unknown-tier or full-effect-slot skip. The game-file writer is intentionally
+  not enabled yet; this is reviewable scaffolding for the construction canary.
 - **Extracting a new playtest build no longer leaves the launcher pointing at
   yesterday's deleted suppression manifest.** When either saved suppression
   path has vanished, startup now replaces the binder and manifest together

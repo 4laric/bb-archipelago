@@ -1,10 +1,17 @@
 # Enemizer scaling design
 
-Status: **design**, written 2026-08-24 from committed data (`research/bb_inputs.db`:
+Status: **offline planner prototype, disabled by default**, written 2026-08-24 from committed data (`research/bb_inputs.db`:
 `params/NpcParam.csv`, `params/SpEffectParam.csv`) and from the Elden Ring client's
 shipped scaling stack (`from-software-archipelago-clients/crates/er-logic/src/{scaling,
-native_tiers,rescale_watch,scaling_settle}.rs`). No prototype exists. Every number
-below regenerates from the bundle; every game-behavior claim is labelled.
+native_tiers,rescale_watch,scaling_settle}.rs`). Every number below regenerates
+from the bundle; every game-behavior claim is labelled.
+
+`tools/bb_enemizer/scaling.py` now regenerates and asserts the ladder, map
+oracle, collision-free claimed ranges, free-slot boundary, deterministic
+clone/effect plan, clamp, and reward-preserving clone contract. It is emitted
+only with the explicit `--normalize-scaling` flag. The guarded binary writer
+does not yet apply the scaling section, so this remains non-shipping scaffolding
+for #186 rather than a player option.
 
 ## Two consumers, one mechanism
 
@@ -120,6 +127,11 @@ Why not in-place `hp` edits: `hp` covers only HP (no attack lever — that lives
 AtkParam/behavior space), and 267 rows carry `hp = 0` (engine-default), where a
 multiplier on 0 is meaningless. Rate-based SpEffects scale whatever the engine
 computes, cover attack and defense, and match the game's own NG+ mechanism.
+
+The prototype claims NpcParam IDs `6000000..6099999` and SpEffect IDs
+`60000..60168`. Tests prove both ranges are empty in the bundled params and
+fail closed on any collision. SpEffect IDs encode the 13x13 source/destination
+tier pair, while NpcParam clones are assigned in sorted logical-slot order.
 
 Pipeline placement: the planner (`tools/bb_enemizer`) emits a **scaling manifest**
 beside the swap manifest, same `enemizer_seed`, deterministic (its own fixture, not the
