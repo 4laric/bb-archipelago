@@ -126,6 +126,15 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "eye_pendant": RuntimeItemBinding(0x40000FB1, 0xB0000FB1, "FMG/param + validated goods formula"),
     "astral_clocktower_key": RuntimeItemBinding(0x40000FB4, 0xB0000FB4, "FMG/param + validated goods formula"),
     "celestial_dial": RuntimeItemBinding(0x40000FB5, 0xB0000FB5, "FMG/param + validated goods formula"),
+    "sword_hunter_badge": RuntimeItemBinding(
+        0x40001012, 0xB0001012,
+        "EquipParamGoods 4114 + Cleric Beast lot 50000010; validated category-4 goods formula"),
+    "old_hunter_badge": RuntimeItemBinding(
+        0x40001011, 0xB0001011,
+        "EquipParamGoods 4113 + Gehrman lots 15000/2100500; validated category-4 goods formula"),
+    "gold_pendant": RuntimeItemBinding(
+        0x40000FA1, 0xB0000FA1,
+        "EquipParamGoods 4001 + Vicar Amelia lot 50000001; validated category-4 goods formula"),
     "third_umbilical_cord_1": RuntimeItemBinding(
         0x400010E3, 0xB00010E3,
         "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
@@ -1036,15 +1045,19 @@ SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
 }
 
 
-# Badges (Cleric Beast 50000010; Gehrman 15000) and chalices (BSB
-# 80000000; Amygdala 80000200; Ebrietas 80000300) intentionally stay vanilla:
-# possessing the badge is the shop-unlock mechanism, while chalice progression
-# is outside the randomized world. Everything below is a payout-only duplicate.
+# The two boss badges and Amelia's Pendant are AP items: every reviewed natural
+# source is suppressed so their shop/consume effects follow AP receipt. Chalices
+# (BSB 80000000; Amygdala 80000200; Ebrietas 80000300) intentionally stay
+# vanilla because Chalice Dungeon progression is outside this world.
 BOSS_AWARD_SUPPRESSIONS: dict[str, BossAwardSuppression] = {
     key: BossAwardSuppression(key, lot, category, item, flag, evidence)
     for key, lot, category, item, flag, evidence in (
         ("witch_of_hemwick", 21002950, 4, 7150, -1, "m22 event 12201800 AwardItemLot(21002950)"),
         ("vicar_amelia", 50000001, 4, 4001, -1, "m24_00 event 12401800 AwardItemLot(50000001)"),
+        ("cleric_beast_badge", 50000010, 4, 4114, -1, "m24_01 event 12411700 AwardItemLot(50000010)"),
+        ("gehrman_badge_awake", 15000, 4, 4113, -1, "m21 event 12101800 awards the Old Hunter Badge"),
+        ("gehrman_badge_boss", 2100500, 4, 4113, 52100500, "m21 Gehrman defeat reward"),
+        ("old_hunter_badge_corpse", 2110015, 4, 4113, 52110030, "m21 Hunter's Dream corpse fallback"),
         ("celestial_emissary_gem", 25700000, 8, 102904, -1, "m24_02 event 12421700 AwardItemLot(25700000)"),
         ("celestial_emissary_insight", 25700005, 4, 1500, -1, "m24_02 event 12421700 AwardItemLot(25700005)"),
         ("micolash", 21000, 1, 190000, -1, "m26 event 12601850 AwardItemLot(21000)"),

@@ -26,7 +26,7 @@ GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r9"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
-SUPPRESSION_PLAN_SHA256 = "24307769d376903378a8d3858f65f7c305acb8e22e7d3be711ca0678748b464c"
+SUPPRESSION_PLAN_SHA256 = "23eec391e3ce3f06dbc8e9464a47bf262a69b49eff1bfe45577244e23dba1a94"
 ID_BASE = 0xBB0000
 NETWORK_LOCATIONS = tuple(
     location for location in MODEL.locations
