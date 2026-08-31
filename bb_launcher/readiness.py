@@ -12,6 +12,7 @@ is a visible note rather than a crash in a status display.
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,6 +21,8 @@ from .core import GameInstall, LauncherError, _load_owner
 
 
 BRIDGE_STATE_NAME = "native-grant-state.txt"
+CLIENT_HEALTH_FORMAT = "bb-client-health-v1"
+CLIENT_HEALTH_STALE_SECONDS = 8.0
 
 
 def grants_watchdog_warning(
@@ -75,11 +78,26 @@ class BridgeStatus:
 
 
 @dataclass(frozen=True)
+class ClientHealthStatus:
+    process_alive: bool
+    ap_connected: bool
+    delivery_armed: bool
+    detail: str
+    age_seconds: float
+    stale: bool
+
+    @property
+    def ready(self) -> bool:
+        return not self.stale and self.process_alive and self.ap_connected and self.delivery_armed
+
+
+@dataclass(frozen=True)
 class LauncherReadiness:
     paths: ClientRuntimePaths
     overlay: OverlayStatus | None
     ledger: LedgerStatus | None
     bridge: BridgeStatus | None
+    client_health: ClientHealthStatus | None
     notes: tuple[str, ...]
 
 
@@ -169,12 +187,50 @@ def _bridge_status(paths: ClientRuntimePaths, notes: list[str]) -> BridgeStatus 
     )
 
 
+def _client_health_status(
+    paths: ClientRuntimePaths, notes: list[str], *, now: float
+) -> ClientHealthStatus | None:
+    if not paths.client_health.is_file():
+        return None
+    try:
+        value = json.loads(paths.client_health.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        notes.append(f"client health is unreadable: {exc}")
+        return None
+    if not isinstance(value, dict) or value.get("format") != CLIENT_HEALTH_FORMAT:
+        notes.append(f"client health {paths.client_health} has an unsupported format")
+        return None
+    updated = value.get("updated_unix_ms")
+    process_alive = value.get("process_alive")
+    ap_connected = value.get("ap_connected")
+    delivery_armed = value.get("delivery_armed")
+    if (
+        not isinstance(updated, (int, float))
+        or isinstance(updated, bool)
+        or not isinstance(process_alive, bool)
+        or not isinstance(ap_connected, bool)
+        or not isinstance(delivery_armed, bool)
+    ):
+        notes.append(f"client health {paths.client_health} is missing typed status fields")
+        return None
+    age = max(0.0, now - float(updated) / 1000.0)
+    return ClientHealthStatus(
+        process_alive=process_alive,
+        ap_connected=ap_connected,
+        delivery_armed=delivery_armed,
+        detail=str(value.get("detail", "")),
+        age_seconds=age,
+        stale=age > CLIENT_HEALTH_STALE_SECONDS,
+    )
+
+
 def gather_readiness(
     install: GameInstall,
     state_root: Path | str,
     *,
     seed: str,
     slot: str,
+    now: float | None = None,
 ) -> LauncherReadiness:
     """Snapshot everything the status panel shows, without writing anything."""
 
@@ -185,14 +241,28 @@ def gather_readiness(
         overlay=_overlay_status(install, notes),
         ledger=_ledger_status(paths, seed, slot, notes),
         bridge=_bridge_status(paths, notes),
+        client_health=_client_health_status(paths, notes, now=time.time() if now is None else now),
         notes=tuple(notes),
     )
+
+
+def format_client_health(readiness: LauncherReadiness) -> str:
+    """One honest player-facing line for the live client contract."""
+    health = readiness.client_health
+    if health is None:
+        return "Client: not running (no live status)"
+    if health.stale:
+        return f"Client: stopped or unresponsive (last update {health.age_seconds:.0f}s ago)"
+    game = "running" if health.process_alive else "stopped"
+    ap = "AP connected" if health.ap_connected else "AP disconnected"
+    delivery = "delivery ready" if health.delivery_armed else "delivery not ready"
+    return f"Client: {game} · {ap} · {delivery}"
 
 
 def format_readiness(readiness: LauncherReadiness) -> str:
     """Render the snapshot as the panel's plain-text lines."""
 
-    lines: list[str] = []
+    lines: list[str] = [format_client_health(readiness)]
     overlay = readiness.overlay
     if overlay is None:
         lines.append("Overlay: none active (vanilla search path)")

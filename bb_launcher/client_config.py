@@ -52,6 +52,7 @@ CLIENT_LOG_NAME = "client.log"
 # (bb-archipelago#175).  Distinct from ``shad_log``, the emulator's internal
 # log file that the client config points at.
 SHAD_LOG_NAME = "shadps4.log"
+CLIENT_HEALTH_NAME = "client-health.json"
 
 # Placeholders that only a randomized launch can satisfy: they name files the
 # client runtime configuration writer produces.
@@ -82,6 +83,7 @@ class ClientRuntimePaths:
     client_log: Path
     # Where shadPS4's own stdout/stderr is appended for this session.
     shad_process_log: Path
+    client_health: Path
 
 
 def default_state_root() -> Path:
@@ -112,6 +114,7 @@ def session_paths(state_root: Path | str, *, seed: str, slot: str) -> ClientRunt
         bridge_root=root / "bridge",
         client_log=session / CLIENT_LOG_NAME,
         shad_process_log=session / SHAD_LOG_NAME,
+        client_health=session / CLIENT_HEALTH_NAME,
     )
 
 
