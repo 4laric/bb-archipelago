@@ -762,6 +762,15 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         self.assertEqual(1, option.default)
         self.assertEqual("Remove Weapon Requirements", option.display_name)
 
+    def test_death_link_is_explicitly_opt_in_and_receive_only(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["death_link"]
+        self.assertEqual(0, option.default)
+        self.assertEqual("DeathLink (Receive Only)", option.display_name)
+
     def test_goal_option_tracks_the_three_endings(self):
         if not AP_AVAILABLE:
             self.skipTest("requires Archipelago options")
