@@ -124,14 +124,41 @@ if (param.Rows.Select(row => row.ID).Distinct().Count() != param.Rows.Count)
 var game = new BND4 { Compression = DCX.Type.DCX_EDGE };
 game.Files.Add(new BinderFile(
     Binder.FileFlags.Flag1, 0, @"N:\synthetic\param\ItemLotParam.param", param.Write()));
+
+var goodsDefinition = new PARAMDEF {
+    ParamType = "EquipParamGoods", DataVersion = 1, BigEndian = false, Unicode = true,
+};
+goodsDefinition.Fields.Add(new PARAMDEF.Field(
+    goodsDefinition, PARAMDEF.DefType.s32, "yesNoDialogMessageId"));
+goodsDefinition.Fields.Add(new PARAMDEF.Field(
+    goodsDefinition, PARAMDEF.DefType.u8, "isOnlyOne"));
+var goods = new PARAM { ParamType = "EquipParamGoods", ParamdefDataVersion = 1, Rows = [] };
+goods.ApplyParamdef(goodsDefinition);
+var vial = new PARAM.Row(1000, "Synthetic Blood Vial", goodsDefinition);
+vial["yesNoDialogMessageId"].Value = 0;
+vial["isOnlyOne"].Value = (byte)0;
+goods.Rows.Add(vial);
+game.Files.Add(new BinderFile(
+    Binder.FileFlags.Flag1, 1, @"N:\synthetic\param\EquipParamGoods.param", goods.Write()));
 string gameparamPath = Path.Combine(outputRoot, "param", "gameparam.parambnd.dcx");
 game.Write(gameparamPath);
 
 var defs = new BND4 { Compression = DCX.Type.DCX_EDGE };
 defs.Files.Add(new BinderFile(
     Binder.FileFlags.Flag1, 0, @"N:\synthetic\paramdef\ItemLotParam.paramdef", definition.Write()));
+defs.Files.Add(new BinderFile(
+    Binder.FileFlags.Flag1, 1, @"N:\synthetic\paramdef\EquipParamGoods.paramdef", goodsDefinition.Write()));
 string paramdefPath = Path.Combine(outputRoot, "paramdef", "paramdef.paramdefbnd.dcx");
 defs.Write(paramdefPath);
+
+var names = new FMG(FMG.FMGVersion.DarkSouls3);
+names[1000] = "Blood Vial";
+var messages = new BND4 { Compression = DCX.Type.DCX_EDGE };
+messages.Files.Add(new BinderFile(
+    Binder.FileFlags.Flag1, 0, @"N:\synthetic\msg\アイテム名.fmg", names.Write()));
+string messagePath = Path.Combine(outputRoot, "msg", "engus", "item.msgbnd.dcx");
+Directory.CreateDirectory(Path.GetDirectoryName(messagePath)!);
+messages.Write(messagePath);
 
 // Re-read everything before declaring success; the next tools in the chain
 // trust these bytes.
@@ -143,6 +170,9 @@ foreach (string mapName in new[] { "m99_00_00_00", "m99_00_00_01" })
 }
 BND4 gameCheck = BND4.Read(gameparamPath);
 BND4 defsCheck = BND4.Read(paramdefPath);
+FMG namesCheck = FMG.Read(BND4.Read(messagePath).Files.Single().Bytes);
+if (namesCheck[1000] != "Blood Vial")
+    throw new InvalidDataException("synthetic item-name FMG did not round-trip");
 PARAM paramCheck = PARAM.Read(gameCheck.Files.Single(file =>
     file.Name is not null && file.Name.EndsWith("ItemLotParam.param", StringComparison.OrdinalIgnoreCase)).Bytes);
 PARAMDEF defCheck = PARAMDEF.Read(defsCheck.Files.Single(file =>

@@ -1,0 +1,14 @@
+{
+  "format": "bb-toast-placeholder-plan-v1",
+  "enabled": true,
+  "source_goods_id": 1000,
+  "entries": [
+    {
+      "location_key": "synthetic_cainhurst_badge",
+      "location_id": 1,
+      "item_lot_id": 17001,
+      "goods_id": 900000,
+      "display_name": "Fire Paper x2 (oz)"
+    }
+  ]
+}
