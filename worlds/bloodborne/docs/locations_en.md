@@ -612,7 +612,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Old Yharnam - Bloody Messenger Head Bandage
 - Old Yharnam - Bold Hunter's Mark x2
 - Old Yharnam - Charred Hunter Garb
-- Old Yharnam - Coldblood Dew (2) #1
+- Old Yharnam - Coldblood Dew (2) #1 (bell-tower ladder off the right path from the lamp) — bell-tower ladder off the right path from the lamp.
 - Old Yharnam - Coldblood Dew (2) #2
 - Old Yharnam - Coldblood Dew (2) #3
 - Old Yharnam - Coldblood Dew (2) #4

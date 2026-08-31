@@ -126,7 +126,7 @@ location_flag	region	name	basis
 52300040	Old Yharnam	Old Yharnam - Blood Gem (corpse)	map m23_00; category-8 blood gem (gem param 123000); specific gem name not in committed data; event tag 宝死体
 52300050	Old Yharnam	Old Yharnam - Coldblood Dew (3) #1	map m23_00; unestablished
 52300060	Old Yharnam	Old Yharnam - Blood Stone Shard x2 #2	map m23_00; unestablished
-52300080	Old Yharnam	Old Yharnam - Coldblood Dew (2) #1	map m23_00; unestablished
+52300080	Old Yharnam	Old Yharnam - Coldblood Dew (2) #1 (bell-tower ladder off the right path from the lamp)	Bloodborne Wiki Old Yharnam treasure table identifies the first Coldblood Dew (2) as the pickup up the ladder on the right-side path from the lamp; ledger flag 52300080
 52300090	Old Yharnam	Old Yharnam - Blood Vial #1	map m23_00; unestablished
 52300100	Old Yharnam	Old Yharnam - Blood Vial #2	map m23_00; unestablished
 52300110	Old Yharnam	Old Yharnam - Blood Vial #3	map m23_00; unestablished

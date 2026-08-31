@@ -10,8 +10,10 @@ under `Unreleased` and move into a dated version section when released.
   wiki-backed landmark upgrades.** Central Yharnam's Saw Spear, Saw Hunter
   Badge, Torch, Hunter Set, and the tightly clustered Plaza-gate pickups now
   name recognizable places instead of the broad `bridge side` / `sewer side`
-  halves. Exact flags, lots, map parts, coordinates, sources, and confidence
-  are retained in a reviewable evidence ledger.
+  halves. Old Yharnam's first Coldblood Dew (2) now points to the bell-tower
+  ladder off the right path from the lamp. Exact flags, lots, map parts,
+  coordinates, sources, and confidence are retained in a reviewable evidence
+  ledger.
 - **Extracting a new playtest build no longer leaves the launcher pointing at
   yesterday's deleted suppression manifest.** When either saved suppression
   path has vanished, startup now replaces the binder and manifest together

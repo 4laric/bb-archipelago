@@ -134,8 +134,8 @@ LANDMARK_EVIDENCE = ROOT / "docs" / "location_landmark_evidence.tsv"
 # Witnessed populations, not targets, exactly like the counts above. The pass
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
-HINTED_ROWS = 183
-BARE_ROWS = 498
+HINTED_ROWS = 184
+BARE_ROWS = 497
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an
@@ -334,7 +334,7 @@ class LandmarkHintTests(unittest.TestCase):
         ordinal_rows = [name for name in table.values() if re.search(r"#\d+", name)]
         self.assertEqual(407, len(ordinal_rows))
         hinted_ordinals = [name for name in ordinal_rows if place_hint(name)]
-        self.assertEqual(98, len(hinted_ordinals))
+        self.assertEqual(99, len(hinted_ordinals))
         for name in hinted_ordinals:
             # the ordinal stays ahead of the hint, never replaced by it
             self.assertRegex(name, r"#\d+ \([^()]+\)$")
@@ -457,7 +457,7 @@ class PlayerLocationDocsTests(unittest.TestCase):
         self.assertEqual(render(), PLAYER_DOC.read_text(encoding="utf-8"))
         page = PLAYER_DOC.read_text(encoding="utf-8")
         missing = [row["name"] for row in rows(NAMES) if row["name"] not in page]
-        self.assertEqual([], missing)
+        self.assertEqual(0, len(missing), missing)
 
     def test_landmark_ledger_joins_back_to_names_catalog_and_ids(self):
         names = {row["location_flag"]: row for row in rows(NAMES)}

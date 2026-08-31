@@ -117,7 +117,7 @@ fixed_old_yharnam_lot_2300040	Old Yharnam - Blood Gem (corpse)	Old Yharnam	52300
 fixed_old_yharnam_lot_2300050	Old Yharnam - Coldblood Dew (3) #1	Old Yharnam	52300050	2300050	4	1512	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300060	Old Yharnam - Blood Stone Shard x2 #2	Old Yharnam	52300060	2300060	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300070	Old Yharnam - Bloody Messenger Head Bandage	Old Yharnam	52300070	2300070	4	4907	key_or_badge	treasure	m23_00_00_00;m23_00_00_01	True
-fixed_old_yharnam_lot_2300080	Old Yharnam - Coldblood Dew (2) #1	Old Yharnam	52300080	2300080	4	1511	filler	treasure	m23_00_00_00;m23_00_00_01	True
+fixed_old_yharnam_lot_2300080	Old Yharnam - Coldblood Dew (2) #1 (bell-tower ladder off the right path from the lamp)	Old Yharnam	52300080	2300080	4	1511	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300090	Old Yharnam - Blood Vial #1	Old Yharnam	52300090	2300090	4	1000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300100	Old Yharnam - Blood Vial #2	Old Yharnam	52300100	2300100	4	1000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300110	Old Yharnam - Blood Vial #3	Old Yharnam	52300110	2300110	4	1000	filler	treasure	m23_00_00_00;m23_00_00_01	True
