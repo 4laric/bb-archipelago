@@ -161,8 +161,9 @@ def write_client_runtime_config(
     # Exactly the native client's RuntimeConfig shape.  Locations, items, and
     # the seed-owned suppression requirement are deliberately empty/default:
     # the client replaces them from slot_data when it connects, and local
-    # configuration cannot weaken the seed's terms.  expected_save_identity
-    # stays unset here; --assume-correct-save overrides it explicitly.
+    # configuration cannot weaken the seed's terms. expected_save_identity
+    # stays unset because the native client discovers the active shadPS4
+    # character slot and binds it durably on first verified use.
     config = {
         "bridge_root": str(paths.bridge_root),
         "shad_log": log_path,

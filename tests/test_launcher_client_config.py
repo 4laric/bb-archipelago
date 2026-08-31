@@ -297,7 +297,6 @@ class ClientConfigTests(unittest.TestCase):
                                 "Hunter",
                                 "{runtime_config}",
                                 "{ledger}",
-                                "--assume-correct-save",
                             ],
                         }
                     ],
@@ -340,7 +339,6 @@ class ClientConfigTests(unittest.TestCase):
                     "Hunter",
                     str(result.client_config),
                     str(result.ledger),
-                    "--assume-correct-save",
                 )
             ],
         )
