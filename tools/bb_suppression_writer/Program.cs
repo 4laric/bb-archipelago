@@ -8,6 +8,12 @@ if (args.Length == 3 && args[0] == "--inspect-starting-attire")
     return 0;
 }
 
+if (args.Length == 9 && args[0] == "--write-starting-attire-canary" && args[8] == "--apply")
+{
+    WriteStartingAttireCanary(args[1], args[2], args[3], args[4..8]);
+    return 0;
+}
+
 if (args.Length == 3 && args[0] == "--inspect-shops")
 {
     InspectShops(args[1], args[2]);
@@ -142,6 +148,96 @@ static void InspectStartingAttire(string inputPath, string paramdefPath)
     {
         Console.WriteLine($"PROTECTOR\t{row.ID}\t{row.Name}\t{String.Join(';', slotFields.Select(field => $"{field}={RequireCell(row, field).Value}"))}");
     }
+}
+
+static void WriteStartingAttireCanary(string inputPath, string paramdefPath,
+                                      string outputPath, string[] rawProtectorIds)
+{
+    inputPath = Path.GetFullPath(inputPath);
+    outputPath = Path.GetFullPath(outputPath);
+    if (StringComparer.OrdinalIgnoreCase.Equals(inputPath, outputPath))
+        throw new InvalidDataException("input and output paths must differ");
+    if (File.Exists(outputPath))
+        throw new IOException($"refusing to overwrite existing output: {outputPath}");
+    if (rawProtectorIds.Length != 4
+        || rawProtectorIds.Any(value => !Int32.TryParse(value, out int id) || id <= 0))
+        throw new InvalidDataException("starting attire requires four positive protector ids");
+
+    string[] attireFields = ["equip_Helm", "equip_Armer", "equip_Gaunt", "equip_Leg"];
+    string[] slotFields = ["headEquip", "bodyEquip", "armEquip", "legEquip"];
+    int[] protectorIds = rawProtectorIds.Select(Int32.Parse).ToArray();
+    BND4 game = BND4.Read(inputPath);
+    BND4 defs = BND4.Read(Path.GetFullPath(paramdefPath));
+    BinderFile initFile = RequireSingleFile(game, "CharaInitParam.param");
+    PARAM init = PARAM.Read(initFile.Bytes);
+    PARAMDEF initDefinition = ReadMatchingDefinition(defs, init);
+    init.ApplyParamdef(initDefinition);
+    BinderFile protectorFile = RequireSingleFile(game, "EquipParamProtector.param");
+    PARAM protectors = PARAM.Read(protectorFile.Bytes);
+    protectors.ApplyParamdef(ReadMatchingDefinition(defs, protectors));
+
+    for (int index = 0; index < protectorIds.Length; index++)
+    {
+        List<PARAM.Row> matches = protectors.Rows.Where(row => row.ID == protectorIds[index]).ToList();
+        if (matches.Count != 1)
+            throw new InvalidDataException(
+                $"expected one EquipParamProtector row {protectorIds[index]}, found {matches.Count}");
+        PARAM.Row row = matches[0];
+        for (int slot = 0; slot < slotFields.Length; slot++)
+        {
+            int actual = Convert.ToInt32(RequireCell(row, slotFields[slot]).Value);
+            int expected = slot == index ? 1 : 0;
+            if (actual != expected)
+                throw new InvalidDataException(
+                    $"protector {protectorIds[index]} is not exclusively a {slotFields[index]} row");
+        }
+    }
+
+    List<PARAM.Row> initialRows = init.Rows.Where(row => row.ID is >= 2000 and <= 2009).ToList();
+    if (initialRows.Count != 10)
+        throw new InvalidDataException($"expected ten initial-character rows, found {initialRows.Count}");
+    var originalFiles = game.Files.Select(file =>
+        new FileState(file.ID, file.Name, (byte[])file.Bytes.Clone())).ToList();
+    var originalRows = init.Rows.Select(RowState.Capture).ToList();
+    foreach (PARAM.Row row in initialRows)
+        for (int index = 0; index < attireFields.Length; index++)
+            RequireCell(row, attireFields[index]).Value = protectorIds[index];
+
+    initFile.Bytes = init.Write();
+    Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+    game.Write(outputPath);
+
+    BND4 check = BND4.Read(outputPath);
+    BinderFile checkedInitFile = RequireSingleFile(check, "CharaInitParam.param");
+    for (int index = 0; index < check.Files.Count; index++)
+    {
+        BinderFile file = check.Files[index];
+        FileState before = originalFiles[index];
+        if (file.ID != before.Id || file.Name != before.Name)
+            throw new InvalidDataException($"round-trip changed binder identity at index {index}");
+        if (file != checkedInitFile && !file.Bytes.SequenceEqual(before.Bytes))
+            throw new InvalidDataException($"round-trip changed unrelated binder file {file.Name}");
+    }
+    PARAM checkedInit = PARAM.Read(checkedInitFile.Bytes);
+    checkedInit.ApplyParamdef(initDefinition);
+    var changedRows = initialRows.Select(row => row.ID).ToHashSet();
+    if (checkedInit.Rows.Count != originalRows.Count)
+        throw new InvalidDataException("round-trip changed CharaInitParam row count");
+    for (int index = 0; index < checkedInit.Rows.Count; index++)
+    {
+        PARAM.Row row = checkedInit.Rows[index];
+        originalRows[index].RequireEqualExcept(
+            RowState.Capture(row), changedRows.Contains(row.ID)
+                ? attireFields.ToHashSet() : new HashSet<string>(),
+            $"CharaInitParam row {row.ID}");
+    }
+    foreach (PARAM.Row row in checkedInit.Rows.Where(row => changedRows.Contains(row.ID)))
+        for (int index = 0; index < attireFields.Length; index++)
+            if (Convert.ToInt32(RequireCell(row, attireFields[index]).Value) != protectorIds[index])
+                throw new InvalidDataException(
+                    $"initial-character row {row.ID} did not retain {attireFields[index]}={protectorIds[index]}");
+    Console.WriteLine(
+        $"starting_attire_canary={String.Join(',', protectorIds)} rows={changedRows.Count} output={outputPath}");
 }
 
 static void InspectShops(string inputPath, string paramdefPath)

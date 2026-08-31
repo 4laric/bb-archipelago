@@ -57,3 +57,29 @@ reviewed four-piece set, then create a fresh character and verify:
 
 Only after that witness should the implementation add deterministic seed
 choices and the `randomize_starting_attire` option.
+
+## Packaged canary writer
+
+The native writer now builds that exact canary without weakening the launcher
+or publishing an unvalidated YAML option. The command is refusal-safe: input
+and output must differ, an existing output is never overwritten, every target
+must be one real `EquipParamProtector` row exclusively marked for the requested
+body slot, and all ten `2000..2009` origin rows must exist. It edits only the
+four attire fields on those ten rows and verifies every unrelated row, field,
+and binder file after serialization.
+
+The first witness uses the coherent Charred Hunter set. Its four protector rows
+are `10000`, `11000`, `12000`, and `13000`; the writer has validated their
+literal head/body/arms/legs slot flags against the installed Paramdef.
+
+```powershell
+dotnet run --project tools/bb_suppression_writer/BBSuppressionWriter.csproj -- `
+  --write-starting-attire-canary gameparam.parambnd.dcx paramdef.paramdefbnd.dcx `
+  charred-canary.parambnd.dcx 10000 11000 12000 13000 --apply
+```
+
+The canary deliberately leaves the `3000..3009` character-creation preview
+rows unchanged. A fresh character should therefore show the vanilla preview,
+then either receive and equip the Charred Hunter set when the real origin row
+is consumed or remain vanilla. That single transition answers the consumption
+timing question without risking duplicate preview grants.
