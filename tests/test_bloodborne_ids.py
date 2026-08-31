@@ -385,6 +385,12 @@ class RuntimeItemContractTests(unittest.TestCase):
                 "param_id_inferred",
                 "event_flag_effect",
             },
+            "bb-0.1.0-r9": {
+                "goods_formula_observed",
+                "live_grant_inventory_ui",
+                "param_id_inferred",
+                "event_flag_effect",
+            },
         }
         self.assertIn(
             RUNTIME_BUILD,
