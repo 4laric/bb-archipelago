@@ -55,6 +55,22 @@ update trees for writing.
 
 ## Player mods: `CUSA03173-mods-user`
 
+### Players coming from BB_Launcher
+
+BB_Launcher (rainmakerv3) uses its own managed `dvdroot_ps4/MODS` layout and
+may write activated files into `CUSA03173-mods`. Archipelago owns that latter
+directory transactionally, so do not leave BB_Launcher mod activation enabled
+for an AP session. The Doctor recognizes the managed `MODS` signature and names
+BB_Launcher directly instead of presenting the resulting files as an unknown
+ownership failure.
+
+Deactivate the mods in BB_Launcher, then copy each mod you want to keep into
+`CUSA03173-mods-user` with `dvdroot_ps4` at the top. Archipelago reads that
+directory and merges non-conflicting files into its seed overlay. Mods whose
+effect is deleting a vanilla file are unsupported: the additive user-mod lane
+cannot represent deletion, and a deletion may conflict with an AP-owned map or
+parameter replacement.
+
 shadPS4 resolves loose files `mods > patch > base`, and that documented search
 path names exactly one mods location per game. The launcher owns it, so a file
 dropped into `CUSA03173-mods` by hand or by a third-party tool is carried aside

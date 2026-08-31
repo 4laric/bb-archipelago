@@ -193,6 +193,12 @@ with every mod merged into that one `dvdroot_ps4` tree and no mod-name folders
 left. The launcher will not merge files outside `dvdroot_ps4\` and the Doctor
 says so by name, but it is easier to lay it out right the first time (#173).
 
+**If you use BB_Launcher:** deactivate its mods before an Archipelago session.
+The Doctor warns when it finds BB_Launcher's `dvdroot_ps4\MODS` layout. Move
+wanted additive mods into `CUSA03173-mods-user` instead. BB_Launcher deletion
+mods are not compatible because Archipelago's user-mod merge cannot express
+removing a vanilla file (and the removed file may be one AP replaces).
+
 Two rules on top of that:
 
 - The randomizer's own files win. If your mod ships

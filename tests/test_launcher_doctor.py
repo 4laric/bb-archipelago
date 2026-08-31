@@ -201,6 +201,7 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(report.count(FAIL), 0)
         for name in (
             "game installation",
+            "BB_Launcher mods",
             "AP seed file",
             "launch plan",
             "runtime build agreement",
@@ -212,6 +213,37 @@ class DoctorTests(unittest.TestCase):
             "blocking processes",
         ):
             self.assertEqual(finding(report, name).status, PASS, name)
+
+    def test_bblauncher_mod_layout_names_the_tool_and_safe_migration(self):
+        signature = (
+            self.fixture.root
+            / "game"
+            / f"{SERIAL}-mods"
+            / "dvdroot_ps4"
+            / "MODS"
+        )
+        signature.mkdir(parents=True)
+        report = run(self.fixture)
+        result = finding(report, "BB_Launcher mods")
+        self.assertEqual(result.status, WARN)
+        self.assertIn("BB_Launcher", result.name)
+        self.assertIn(str(signature), result.detail)
+        self.assertIn("deactivate BB_Launcher mods", result.remedy)
+        self.assertIn(USER_MODS_DIR_NAME, result.remedy)
+        self.assertIn("deletion mods", result.remedy)
+
+    def test_bblauncher_patch_layout_is_detected_without_guessing_activation(self):
+        signature = (
+            self.fixture.root
+            / "game"
+            / f"{SERIAL}-patch"
+            / "dvdroot_ps4"
+            / "MODS"
+        )
+        signature.mkdir(parents=True)
+        result = finding(run(self.fixture), "BB_Launcher mods")
+        self.assertEqual(result.status, WARN)
+        self.assertIn("managed MODS layout", result.detail)
 
     def test_a_pre_177_plan_is_reported_stale_instead_of_dying_at_runtime(self):
         # bb-archipelago#177: the plan the launcher used to generate invokes
