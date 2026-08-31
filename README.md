@@ -73,7 +73,13 @@ checks; it defaults off. There are 491 base-game locations and 642 with DLC enab
 The `goal` YAML option follows Bloodborne's three
 endings: `submit_to_gehrman` completes after Mergo's Wet Nurse,
 `refuse_gehrman` requires Gehrman, and the default `moon_presence` requires
-Gehrman plus any three of the four shuffled Third Umbilical Cords. The fixed-pickup
+Gehrman plus any three of the four shuffled Third Umbilical Cords.
+Set `alternate_hypogean_gaol_routes: true` to add Darkbeast Paarl and its
+alternate progression graph. It defaults off because the late Blood Moon path
+can bypass the expected Blood-starved Beast route into Old Yharnam. Early
+abduction still requires Blood-starved Beast, and enemy randomization preserves
+an authored Cathedral Ward Snatcher so access never depends on a lucky roll.
+The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
 (`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved
 Beast (`12301800`) and Vicar Amelia (`12401800`) flags come from the committed

@@ -25,7 +25,7 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 681  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 682  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 606
 
@@ -36,6 +36,7 @@ SCRIPTED_CHECK_FLAGS = {
     "12411700",   # boss_cleric_beast
     "12411800",   # boss_father_gascoigne
     "12301800",   # boss_blood_starved_beast
+    "12301700",   # boss_darkbeast_paarl
     "12401800",   # boss_vicar_amelia
     "12401898",   # interaction_laurences_skull
     "12421700",   # boss_celestial_emissary
@@ -128,12 +129,14 @@ VOCABULARY = ROOT / "docs" / "location_hint_vocabulary.tsv"
 OVERRIDES = ROOT / "docs" / "location_hint_overrides.tsv"
 LOT_ITEMS = ROOT / "research" / "joined" / "lot_items.tsv"
 DOC = ROOT / "docs" / "LOCATION-NAMING.md"
+PLAYER_DOC = ROOT / "worlds" / "bloodborne" / "docs" / "locations_en.md"
+LANDMARK_EVIDENCE = ROOT / "docs" / "location_landmark_evidence.tsv"
 
 # Witnessed populations, not targets, exactly like the counts above. The pass
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
-HINTED_ROWS = 183
-BARE_ROWS = 498
+HINTED_ROWS = 184
+BARE_ROWS = 497
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an
@@ -332,7 +335,7 @@ class LandmarkHintTests(unittest.TestCase):
         ordinal_rows = [name for name in table.values() if re.search(r"#\d+", name)]
         self.assertEqual(407, len(ordinal_rows))
         hinted_ordinals = [name for name in ordinal_rows if place_hint(name)]
-        self.assertEqual(98, len(hinted_ordinals))
+        self.assertEqual(99, len(hinted_ordinals))
         for name in hinted_ordinals:
             # the ordinal stays ahead of the hint, never replaced by it
             self.assertRegex(name, r"#\d+ \([^()]+\)$")
@@ -445,6 +448,39 @@ class LocationNameTableTests(unittest.TestCase):
             if "(Lot " in name and flag in names_by_flag
         )
         self.assertEqual(lot_suffixed, sorted(PENDING_PLACEHOLDER_RENAMES))
+
+
+class PlayerLocationDocsTests(unittest.TestCase):
+    def test_player_locations_page_is_current_and_exhaustive(self):
+        from tools.build_location_docs import render
+
+        self.assertTrue(PLAYER_DOC.is_file())
+        self.assertEqual(render(), PLAYER_DOC.read_text(encoding="utf-8"))
+        page = PLAYER_DOC.read_text(encoding="utf-8")
+        missing = [row["name"] for row in rows(NAMES) if row["name"] not in page]
+        self.assertEqual(0, len(missing), missing)
+
+    def test_landmark_ledger_joins_back_to_names_catalog_and_ids(self):
+        names = {row["location_flag"]: row for row in rows(NAMES)}
+        catalog = {row["location_flag"]: row for row in rows(CATALOG)}
+        ids = {
+            row["key"]: row["id"]
+            for row in rows(ROOT / "worlds/bloodborne/ids.tsv")
+        }
+        evidence = rows(LANDMARK_EVIDENCE)
+        self.assertGreaterEqual(len(evidence), 6)
+        for row in evidence:
+            with self.subTest(flag=row["location_flag"]):
+                self.assertIn(row["location_flag"], names)
+                self.assertIn(row["location_flag"], catalog)
+                self.assertIn(
+                    row["item_lot"],
+                    catalog[row["location_flag"]]["item_lot_ids"].split(";"),
+                )
+                self.assertEqual(row["network_id"], ids[row["location_key"]])
+                self.assertIn(row["landmark"], names[row["location_flag"]]["name"])
+                self.assertTrue(row["source"])
+                self.assertTrue(row["confidence"])
 
 
 if __name__ == "__main__":

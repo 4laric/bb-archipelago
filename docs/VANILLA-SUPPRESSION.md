@@ -24,13 +24,13 @@ runes/gems, repeat-cycle Insight substitutes, Amelia's Gold Pendant and the
 Orphan's Kos Parasite. The boss defeat event remains the AP check and every lot
 acquisition flag is preserved byte-for-byte.
 
-Five stateful rewards deliberately remain vanilla. Cleric Beast's Sword Hunter
-Badge and Gehrman's Old Hunter Badge stock their shops through badge ownership;
-the `4114` associated with Cleric Beast is the **goods id**, not the lot's
-`getItemFlagId` (which is `-1`). Blood-starved Beast, Amygdala and Ebrietas keep
-their chalices because chalice progression is outside the randomized world.
-Suppressing those without replacing their side effects would be a progression
-regression, not a leak fix.
+The Sword Hunter Badge, Old Hunter Badge, and Gold Pendant are randomized
+category-4 goods. Their reviewed natural award rows are suppressed, so badge
+shop stock and Pendant conversion unlock on AP receipt rather than boss death.
+The `4114` associated with Cleric Beast is the badge's **goods id**, not the
+lot's `getItemFlagId` (which is `-1`). Blood-starved Beast, Amygdala and
+Ebrietas deliberately keep their chalices because Chalice Dungeon progression
+is outside the randomized world.
 
 ## Slice plan
 
@@ -45,7 +45,8 @@ than the whole future model. The current full-world canonical plan contains
   chest whose flag is numbered in the m24_01 range);
 - lot 31000, the Oedon Tomb Key's EMEVD award (see below);
 - lot 55100000, Wet Nurse's shuffled Umbilical Cord award;
-- 16 reviewed payout-only boss awards;
+- 20 reviewed boss awards, including every natural source of the two randomized
+  boss badges and Amelia's randomized Gold Pendant;
 - every seeded fixed-location award and its related shared-flag rows.
 
 ## The script-award lane, and a lot with no flag

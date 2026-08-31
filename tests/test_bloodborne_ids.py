@@ -133,6 +133,9 @@ GOLDEN_ITEMS = {
     "third_umbilical_cord_4": 0xBB0135,
     "lunarium_key": 0xBB0136,
     "forbidden_woods_password": 0xBB0137,
+    "sword_hunter_badge": 0xBB0138,
+    "old_hunter_badge": 0xBB0139,
+    "gold_pendant": 0xBB013A,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -146,6 +149,7 @@ GOLDEN_LOCATIONS = {
     "boss_moon_presence": 0xBB11F6,
     "boss_celestial_emissary": 0xBB1288,
     "boss_ebrietas": 0xBB1289,
+    "boss_darkbeast_paarl": 0xBB128A,
     "boss_father_gascoigne": 0xBB1001,
     "boss_blood_starved_beast": 0xBB1002,
     "boss_vicar_amelia": 0xBB1003,
@@ -260,7 +264,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB1289)
+        self.assertEqual(max(ids), 0xBB128A)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

@@ -231,3 +231,9 @@ such.
   (50002360) keeps the Underground Corpse Pile contributing a check — and the
   skull interaction keys on its evidenced one-shot flag 12401803. No inline
   names remain in `data.py`.
+`docs/location_landmark_evidence.tsv` is the evidence join for wiki-backed
+landmarks. Each row pins the stable AP key and ID, acquisition flag, item lot,
+MSB part and coordinates, vanilla contents, source URL, paraphrased landmark,
+and confidence. `tools/build_location_docs.py` renders the complete standard
+Archipelago `locations_en.md` page from the reviewed table and this ledger;
+tests require the checked-in page to be current and exhaustive.

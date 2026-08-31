@@ -13,6 +13,29 @@ under `Unreleased` and move into a dated version section when released.
   unknown-tier or full-effect-slot skip. The game-file writer is intentionally
   not enabled yet; this is reviewable scaffolding for the construction canary.
 
+- **The tracker now has a complete Locations reference page and its first
+  wiki-backed landmark upgrades.** Central Yharnam's Saw Spear, Saw Hunter
+  Badge, Torch, Hunter Set, and the tightly clustered Plaza-gate pickups now
+  name recognizable places instead of the broad `bridge side` / `sewer side`
+  halves. Old Yharnam's first Coldblood Dew (2) now points to the bell-tower
+  ladder off the right path from the lamp. Exact flags, lots, map parts,
+  coordinates, sources, and confidence are retained in a reviewable evidence
+  ledger.
+
+- **Hypogean Gaol and Darkbeast Paarl can join the progression graph.** The
+  new `alternate_hypogean_gaol_routes` YAML option is off by default. When on,
+  it models post-BSB Snatcher abduction, the independent Blood Moon entrance,
+  Paarl's check, and the rear Old Yharnam gate. The enemizer explicitly
+  preserves a Cathedral Ward Snatcher so early access never rests on chance.
+
+### Changed
+
+- Cleric Beast's Sword Hunter Badge, Gehrman's Old Hunter Badge, and Vicar
+  Amelia's Gold Pendant are now shuffled category-4 items. Their reviewed
+  natural award rows are suppressed, so shop unlocks and Pendant conversion
+  follow AP receipt. Pthumeru, Ailing Loran, and Isz chalices remain vanilla
+  while Chalice Dungeons are out of scope.
+
 - **DeathLink now has an opt-in receive-only YAML option.** Seeds can enable
   `death_link`; the native client then joins the DeathLink channel and accepts
   incoming linked deaths. Sending remains off until the live player-death
@@ -28,11 +51,10 @@ under `Unreleased` and move into a dated version section when released.
   with the verified pair shipped under the current package's `work` directory.
   A valid operator-selected pair is still preserved.
 - **Bosses no longer leak duplicate vanilla payouts alongside their AP checks.**
-  Sixteen payout-only award lots are now suppressed, including Amelia's Gold
-  Pendant and the weapon, material, and Insight rewards attached to later
-  bosses. Stateful rewards remain vanilla: Cleric Beast's and Gehrman's shop
-  badges, plus the Pthumeru, Ailing Loran, and Isz chalices, still perform the
-  progression and shop-unlock jobs the base game expects.
+  Twenty reviewed award lots are now suppressed, including every natural source
+  of the shuffled boss badges and Gold Pendant plus the weapon, material, and
+  Insight rewards attached to later bosses. The three out-of-scope chalices
+  remain vanilla.
 - **Advanced enemy controls now say what is experimental about them.** Tier
   mixing warns that enemy scaling is not normalized, while locomotion
   preservation warns that its roster tags are incomplete. Offline regression
