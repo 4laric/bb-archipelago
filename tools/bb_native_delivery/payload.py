@@ -30,7 +30,7 @@ CONSUME_RETURN_RVA = 0x14D957C
 HEARTBEAT_HOOK_RVA = 0x1BFE882
 HEARTBEAT_RETURN_RVA = 0x1BFE889
 HP_HOOK_RVA = 0x1BFC5F7
-HP_RETURN_RVA = 0x1BFC5FD
+HP_RETURN_RVA = HP_HOOK_RVA + 6
 
 ITEM_GRANT_RVA = 0x14DA0A0
 ALLOCATE_EQUIPMENT_INSTANCE_RVA = 0x1A87260
@@ -46,8 +46,8 @@ FIND_SLOT_RVA = 0x14DA2C0
 CONSUME_CAVE_RVA = 0x50DBA00
 HEARTBEAT_CAVE_RVA = 0x50DBC00
 HP_CAVE_RVA = 0x50DBD00
-STATE_RVA = 0x50DBE00
 PLAYER_STATUS_RVA = HP_CAVE_RVA + 0x30
+STATE_RVA = 0x50DBE00
 
 # Cells inside the state region, as eboot RVAs.
 REQUEST_RVA = STATE_RVA + 0x00
@@ -403,11 +403,20 @@ def heartbeat_cave() -> AssembledBlob:
 
 
 def hp_cave() -> AssembledBlob:
-    """Published r9 DeathLink capture cave; not part of the grant harness."""
-    data = bytes.fromhex(
-        "48 89 3D 29 00 00 00 8B 97 F8 00 00 00 E9 EB 08 B2 FC"
-    ) + bytes(38)
-    return AssembledBlob(name="hp_cave", rva=HP_CAVE_RVA, data=data)
+    """Capture RDI, replay ``mov edx,[rdi+F8]``, and return.
+
+    The 0x38-byte blob includes its own zero-initialized pointer cell at +0x30.
+    Unlike the item-grant caves this is deliberately ``inferred`` until the
+    first r9 live attach reads back and exercises it.
+    """
+    store_disp = PLAYER_STATUS_RVA - (HP_CAVE_RVA + 7)
+    return_disp = HP_RETURN_RVA - (HP_CAVE_RVA + 7 + len(HP_ORIGINAL) + 5)
+    data = (
+        b"\x48\x89\x3D" + struct.pack("<i", store_disp)
+        + HP_ORIGINAL
+        + b"\xE9" + struct.pack("<i", return_disp)
+    )
+    return AssembledBlob("hp_cave", HP_CAVE_RVA, data.ljust(0x38, b"\0"))
 
 
 def _detour(name: str, hook_rva: int, cave_rva: int, original: bytes) -> AssembledBlob:
@@ -445,7 +454,7 @@ def state_region() -> AssembledBlob:
 def blobs() -> list[AssembledBlob]:
     """Everything the installer writes, in install order.
 
-    Data and caves first; detours last, because a detour that lands
+    Data and caves first; the two detours last, because a detour that lands
     before its cave points a live guest thread at zeroed memory.
     """
     return [
