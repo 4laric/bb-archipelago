@@ -782,6 +782,17 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         self.assertEqual(0, option.default)
         self.assertEqual("DeathLink (Receive Only)", option.display_name)
 
+    def test_death_link_amnesty_is_independent_and_defaults_off(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["death_link_amnesty"]
+        self.assertEqual(0, option.default)
+        self.assertEqual(0, option.range_start)
+        self.assertGreater(option.range_end, 1)
+        self.assertIn("Local Deaths Forgiven", option.display_name)
+
     def test_goal_option_tracks_the_three_endings(self):
         if not AP_AVAILABLE:
             self.skipTest("requires Archipelago options")

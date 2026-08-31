@@ -346,7 +346,7 @@ def build_runtime_slot_data(
 
 try:
     from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region
-    from Options import Choice, PerGameCommonOptions, Toggle
+    from Options import Choice, PerGameCommonOptions, Range, Toggle
     from worlds.AutoWorld import World
 except ImportError:
     __all__ = ["MODEL"]
@@ -371,6 +371,18 @@ else:
         in the receive half of DeathLink only.
         """
         display_name = "DeathLink (Receive Only)"
+        default = 0
+
+    class DeathLinkAmnesty(Range):
+        """Forgive this many qualifying local deaths before sending DeathLink.
+
+        The counter resets after a DeathLink is sent. Incoming DeathLinks do
+        not consume amnesty. This seed-owned setting is inert while DeathLink
+        is disabled and while the client is receive-only.
+        """
+        display_name = "DeathLink Amnesty (Local Deaths Forgiven per Cycle)"
+        range_start = 0
+        range_end = 255
         default = 0
 
     class FullItemPool(Toggle):
@@ -447,6 +459,7 @@ else:
         auto_upgrade: AutoUpgrade
         auto_equip: AutoEquip
         death_link: DeathLink
+        death_link_amnesty: DeathLinkAmnesty
         full_item_pool: FullItemPool
         uncanny_weapons: UncannyWeapons
         randomize_starting_weapons: RandomizeStartingWeapons
@@ -604,6 +617,7 @@ else:
                 "auto_upgrade": bool(self.options.auto_upgrade),
                 "auto_equip": bool(self.options.auto_equip),
                 "death_link": bool(self.options.death_link),
+                "death_link_amnesty": int(self.options.death_link_amnesty),
                 "full_item_pool": bool(self.options.full_item_pool),
                 "randomize_starting_weapons": bool(self.options.randomize_starting_weapons),
                 "starting_weapons": starting_weapons,

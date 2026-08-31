@@ -1,5 +1,9 @@
 # Changelog
 
+* Add the independent `death_link_amnesty` YAML option. It is seed-owned,
+  defaults to zero, and tells future outbound DeathLink clients how many local
+  deaths to forgive per cycle without changing incoming DeathLinks.
+
 Player-visible changes to Bloodborne Archipelago are recorded here. The project
 uses semantic versioning for the apworld contract; unreleased changes accumulate
 under `Unreleased` and move into a dated version section when released.
