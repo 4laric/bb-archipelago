@@ -283,6 +283,8 @@ class LauncherApp:
         # _save_settings and _load_settings_if_present: it is per-session by
         # construction, so it can never be left on and forgotten.
         self.allow_suppression_mismatch = tk.BooleanVar(value=False)
+        # Diagnostic probes are an explicit, per-session playtest aid.
+        self.research_captures = tk.BooleanVar(value=False)
         self.show_session_details = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
         self.client_health = tk.StringVar(value="Client: not running (no live status)")
@@ -524,6 +526,14 @@ class LauncherApp:
             troubleshooting,
             text="Allow suppression binder mismatch (operators only, not saved)",
             variable=self.allow_suppression_mismatch,
+        ).grid(
+            row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
+        )
+        troubleshooting_row += 1
+        ttk.Checkbutton(
+            troubleshooting,
+            text="Enable research captures (playtest diagnostics, not saved)",
+            variable=self.research_captures,
         ).grid(
             row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
         )
@@ -1008,6 +1018,7 @@ class LauncherApp:
                 preserve_locomotion=self.preserve_locomotion.get(),
             )
             override = self.allow_suppression_mismatch.get()
+            research_captures = self.research_captures.get()
             self._save_settings()
         except LauncherError as exc:
             self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
@@ -1018,7 +1029,7 @@ class LauncherApp:
         self._append_log("Starting Randomize & Launch...")
         threading.Thread(
             target=self._run,
-            args=(settings, options, override),
+            args=(settings, options, override, research_captures),
             daemon=True,
             name="bloodborne-randomize-launch",
         ).start()
@@ -1193,6 +1204,7 @@ class LauncherApp:
                 preserve_locomotion=self.preserve_locomotion.get(),
             )
             override = self.allow_suppression_mismatch.get()
+            research_captures = self.research_captures.get()
             self._save_settings()
         except LauncherError as exc:
             self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
@@ -1201,7 +1213,7 @@ class LauncherApp:
         self._append_log("Starting Rebuild...")
         threading.Thread(
             target=self._run_rebuild,
-            args=(settings, options, override),
+            args=(settings, options, override, research_captures),
             daemon=True,
             name="bloodborne-rebuild-seed",
         ).start()
@@ -1211,6 +1223,7 @@ class LauncherApp:
         settings: LauncherSettings,
         options: EnemizerOptions,
         allow_suppression_mismatch: bool = False,
+        research_captures: bool = False,
     ) -> None:
         try:
             result = self.workflow.randomize_and_launch(
@@ -1218,6 +1231,7 @@ class LauncherApp:
                 options,
                 force_rebuild=True,
                 allow_suppression_mismatch=allow_suppression_mismatch,
+                research_captures=research_captures,
                 player_name=self.player_name.get().strip(),
                 progress=self._progress_message,
             )
@@ -1245,12 +1259,14 @@ class LauncherApp:
         settings: LauncherSettings,
         options: EnemizerOptions,
         allow_suppression_mismatch: bool = False,
+        research_captures: bool = False,
     ) -> None:
         try:
             result = self.workflow.randomize_and_launch(
                 settings,
                 options,
                 allow_suppression_mismatch=allow_suppression_mismatch,
+                research_captures=research_captures,
                 player_name=self.player_name.get().strip(),
                 progress=self._progress_message,
             )

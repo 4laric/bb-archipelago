@@ -129,6 +129,7 @@ def write_client_runtime_config(
     shad_log: Path | None,
     auto_upgrade: bool = False,
     auto_equip: bool = False,
+    research_captures: bool = False,
 ) -> ClientRuntimePaths:
     """Write the native client's runtime config for the *active* overlay.
 
@@ -171,6 +172,12 @@ def write_client_runtime_config(
         "items": {},
         "auto_upgrade": bool(auto_upgrade),
         "auto_equip": bool(auto_equip),
+        "pickup_notification_probe": bool(research_captures),
+        "boss_flag_census": bool(research_captures),
+        "rune_capture": bool(research_captures),
+        # Deliberately remains off until a reviewed Insight-offset manifest exists.
+        "insight_probe": False,
+        "readiness_durations": bool(research_captures),
         "expected_save_identity": None,
         "suppression_manifest": None if manifest_path is None else str(manifest_path),
         "installed_gameparam": str(installed),

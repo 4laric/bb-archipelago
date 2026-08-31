@@ -781,6 +781,15 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertNotIn("allow_suppression_mismatch", save)
         self.assertNotIn("allow_suppression_mismatch", load)
 
+    def test_ui_contract_offers_research_captures_and_never_persists_it(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn("Enable research captures (playtest diagnostics, not saved)", source)
+        self.assertIn("research_captures=research_captures", source)
+        save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
+        load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
+        self.assertNotIn("research_captures", save)
+        self.assertNotIn("research_captures", load)
+
     def _build_widget_tree(self):
         """(parent-of-var, widgets-by-parent-var) read out of `_build` itself.
 
