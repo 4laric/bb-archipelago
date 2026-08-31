@@ -40,8 +40,10 @@ CONSUME_SIGNATURE = "44 89 E0 48 83 C4 28 5B 41 5C 41 5D 41 5E 41 5F"
 ASSERTS: tuple[tuple[str, int, str], ...] = (
     ("consume_hook", payload.CONSUME_HOOK_RVA, "44 89 E0 48 83 C4 28"),
     ("heartbeat_hook", payload.HEARTBEAT_HOOK_RVA, "48 81 C4 E8 07 00 00"),
+    ("hp_hook", payload.HP_HOOK_RVA, "8B 97 F8 00 00 00"),
     ("consume_cave", payload.CONSUME_CAVE_RVA, "00 " * 16),
     ("heartbeat_cave", payload.HEARTBEAT_CAVE_RVA, "00 " * 16),
+    ("hp_cave", payload.HP_CAVE_RVA, "00 " * 56),
     ("state_region", payload.STATE_RVA, "00 " * 16),
     ("descriptor", payload.DESCRIPTOR_RVA, "00 " * 24),
 )
