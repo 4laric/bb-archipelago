@@ -1021,7 +1021,7 @@
   },
   "m24_00_00_00:c2020_0000": {
     "randomize": false,
-    "reason": "entity ID referenced by area EMEVD"
+    "reason": "guaranteed Snatcher for opt-in Hypogean Gaol progression; entity ID referenced by area EMEVD"
   },
   "m24_00_00_00:c2020_0001": {
     "randomize": false,
