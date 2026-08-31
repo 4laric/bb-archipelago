@@ -29,6 +29,12 @@ currency, respawn, and collider signals form conservative common/elite/boss
 tiers. A slot is protected when its entity ID occurs in its area's EMEVD. Areas
 whose fixed-map EMEVD was not extracted fail closed: every slot stays vanilla.
 
+One protection is also a progression contract: Cathedral Ward Snatcher
+`m24_00_00_00:c2020_0000` remains vanilla for the opt-in Hypogean Gaol route.
+Its alternate-state copy shares the same logical slot. Do not relax that row
+without simultaneously removing early abduction from world logic; a merely
+possible randomized Snatcher is not logical access.
+
 ### EMEVD usage census
 
 The phrase "entity ID referenced by area EMEVD" describes the current lexical

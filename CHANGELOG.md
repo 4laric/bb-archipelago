@@ -6,6 +6,11 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Hypogean Gaol and Darkbeast Paarl can join the progression graph.** The
+  new `alternate_hypogean_gaol_routes` YAML option is off by default. When on,
+  it models post-BSB Snatcher abduction, the independent Blood Moon entrance,
+  Paarl's check, and the rear Old Yharnam gate. The enemizer explicitly
+  preserves a Cathedral Ward Snatcher so early access never rests on chance.
 - **Extracting a new playtest build no longer leaves the launcher pointing at
   yesterday's deleted suppression manifest.** When either saved suppression
   path has vanished, startup now replaces the binder and manifest together

@@ -5,6 +5,9 @@ from pathlib import Path
 from random import Random
 from typing import Any, Iterable
 from .data import (
+    ALTERNATE_GAOL_ENTRANCE_NAMES,
+    ALTERNATE_GAOL_LOCATION_KEYS,
+    ALTERNATE_GAOL_REGIONS,
     DLC_ENTRANCE_NAMES,
     DLC_ITEM_KEYS,
     DLC_LOCATION_KEYS,
@@ -407,6 +410,17 @@ else:
         display_name = "Include The Old Hunters DLC"
         default = 0
 
+    class AlternateHypogeanGaolRoutes(Toggle):
+        """Enable Snatcher abduction, Darkbeast Paarl, and the rear Old Yharnam gate.
+
+        This intentionally permits nonstandard progression after the Blood
+        Moon. It is off by default. Early abduction still requires defeating
+        Blood-starved Beast and uses an authored Snatcher that enemy
+        randomization is required to preserve.
+        """
+        display_name = "Alternate Hypogean Gaol Routes"
+        default = 0
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
@@ -417,6 +431,7 @@ else:
         remove_weapon_requirements: RemoveWeaponRequirements
         goal: Goal
         include_dlc: IncludeDLC
+        alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
 
     class BloodborneItem(APItem):
         game = GAME
@@ -458,11 +473,14 @@ else:
 
         def create_regions(self) -> None:
             active_regions = set(SLICE_REGIONS)
+            if self._alternate_gaol_enabled():
+                active_regions |= ALTERNATE_GAOL_REGIONS
             if not self.options.include_dlc:
                 active_regions -= DLC_REGIONS
             regions = {
                 name: Region(name, self.player, self.multiworld)
-                for name in SLICE_REGIONS if name in active_regions
+                for name in (*SLICE_REGIONS, *sorted(ALTERNATE_GAOL_REGIONS))
+                if name in active_regions
             }
             self.multiworld.regions.extend(regions.values())
             for data in self._active_locations():
@@ -486,6 +504,13 @@ else:
                 entrance = regions[data.source].create_exit(data.name)
                 entrance.access_rule = _rule(data.rule, self.player)
                 entrance.connect(regions[data.target])
+            if self._alternate_gaol_enabled():
+                for data in MODEL.entrances:
+                    if data.name not in ALTERNATE_GAOL_ENTRANCE_NAMES:
+                        continue
+                    entrance = regions[data.source].create_exit(data.name)
+                    entrance.access_rule = _rule(data.rule, self.player)
+                    entrance.connect(regions[data.target])
 
         def create_items(self) -> None:
             for key in sorted(STARTING_TOOL_KEYS):
@@ -503,7 +528,14 @@ else:
             return tuple(
                 location for location in NETWORK_LOCATIONS
                 if self.options.include_dlc or location.key not in DLC_LOCATION_KEYS
+                if (self._alternate_gaol_enabled()
+                    or location.key not in ALTERNATE_GAOL_LOCATION_KEYS)
             )
+
+        def _alternate_gaol_enabled(self) -> bool:
+            # getattr keeps small unit-test world doubles and old generated
+            # option objects fail-closed during the transition to this option.
+            return bool(getattr(self.options, "alternate_hypogean_gaol_routes", False))
 
         def _pool_item_keys(self) -> frozenset[str]:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
@@ -555,6 +587,8 @@ else:
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
                 "goal": self.options.goal.current_key,
                 "include_dlc": bool(self.options.include_dlc),
+                "alternate_hypogean_gaol_routes": bool(
+                    self._alternate_gaol_enabled()),
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
                 **build_runtime_slot_data(
