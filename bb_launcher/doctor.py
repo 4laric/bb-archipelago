@@ -86,6 +86,12 @@ WARNING_PROCESSES = (
     ("bb-launcher.exe", _BBLAUNCHER_REMEDY),  # alternate spelling of the same tool
 )
 
+_BBLAUNCHER_LAYOUT_REMEDY = (
+    "deactivate BB_Launcher mods while playing Archipelago; copy mods you still "
+    f"want into {USER_MODS_DIR_NAME} with dvdroot_ps4 at the top, then rebuild "
+    "the seed overlay; deletion mods are not compatible"
+)
+
 
 @dataclass(frozen=True)
 class DoctorFinding:
@@ -202,6 +208,36 @@ def _check_plan(settings: LauncherSettings, chain: _Chain) -> DoctorFinding:
         PASS,
         "launch plan",
         f"{len(chain.processes)} process(es) pinned and present: {names}",
+    )
+
+
+def _check_bblauncher_layout(chain: _Chain) -> DoctorFinding:
+    """Name BB_Launcher's on-disk convention instead of reporting mystery files.
+
+    BB_Launcher stores its managed set below a ``dvdroot_ps4/MODS`` directory.
+    It has been observed both in the game content tree and in the active mods
+    overlay, depending on launcher/version.  Presence is not proof that every
+    contained mod is active, so this is a warning; AP's ownership checks remain
+    the authoritative fail-closed gate for an actual collision.
+    """
+
+    if chain.install is None:
+        return DoctorFinding(SKIP, "BB_Launcher mods", "upstream check failed")
+    candidates = [
+        chain.install.mods / "dvdroot_ps4" / "MODS",
+        chain.install.base / "dvdroot_ps4" / "MODS",
+    ]
+    if chain.install.patch is not None:
+        candidates.append(chain.install.patch / "dvdroot_ps4" / "MODS")
+    found = [path for path in candidates if path.is_dir()]
+    if not found:
+        return DoctorFinding(PASS, "BB_Launcher mods", "no managed MODS layout detected")
+    rendered = ", ".join(str(path) for path in found)
+    return DoctorFinding(
+        WARN,
+        "BB_Launcher mods",
+        f"detected third-party managed MODS layout at {rendered}",
+        _BBLAUNCHER_LAYOUT_REMEDY,
     )
 
 
@@ -844,6 +880,7 @@ def run_doctor(
     chain = _Chain()
     findings = [
         _safely(lambda: _check_install(settings, chain)),
+        _safely(lambda: _check_bblauncher_layout(chain)),
         _safely(lambda: _check_request(settings, chain, player_name)),
         _safely(lambda: _check_slot_agreement(chain, player_name)),
         _safely(lambda: _check_plan(settings, chain)),
