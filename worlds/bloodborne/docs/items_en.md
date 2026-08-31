@@ -140,7 +140,7 @@ Gehrman Defeated; Moon Presence Defeated;
 Ludwig Defeated; Living Failures Defeated; Lady Maria Defeated;
 Orphan of Kos Defeated; and Laurence Defeated.
 
-**Forbidden Woods Password** is a shuffled progression item. Defeat Vicar
+**"Fear the Old Blood"** is a shuffled progression item. Defeat Vicar
 Amelia and inspect Laurence's Skull on the Grand Cathedral altar to complete
 the **Grand Cathedral - Laurence's Skull** check; its placed item may be
 anything. Receiving the password automatically teaches it to the character and
