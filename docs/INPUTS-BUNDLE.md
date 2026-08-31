@@ -44,6 +44,7 @@ python tools/bb_inputs.py --build <path to the extracted game>
 | `event/` | 27 | decompiled `*.emevd.dcx.js` |
 | `mined/` | 4 | `msbb_miner` output — MSB treasures, enemies, regions, failures |
 | `parambnd/` | 2 | patch-layer `gameparam.parambnd.dcx` + `paramdef.paramdefbnd.dcx` — the suppression binder builds from exactly these bytes, so CI can rebuild the binder and hold its plan to the pin (#138) |
+| `talk/` | pending | ESDLang-decompiled talk Python; required by `--check-esd-coverage` and `mine_esd_awards.py`, but absent from the current bundle pending an owner rebuild (#204) |
 
 **Only inputs a committed tool actually reads.** `--check-coverage` scans
 `tools/` for every `*.csv` it names and fails if the bundle is missing one, so
