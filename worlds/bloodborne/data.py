@@ -24,7 +24,7 @@ ITEMS = (
     Item("hunter_chief_emblem", "Hunter Chief Emblem", P),
     Item("oedon_tomb_key", "Oedon Tomb Key", P),
     Item("lunarium_key", "Lunarium Key", P),
-    Item("forbidden_woods_password", "Forbidden Woods Password", P),
+    Item("forbidden_woods_password", "Fear the Old Blood", P),
     Item("cainhurst_summons", "Cainhurst Summons", P),
     Item("tonsil_stone", "Tonsil Stone", P),
     Item("upper_cathedral_key", "Upper Cathedral Key", P),
