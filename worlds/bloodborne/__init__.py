@@ -363,6 +363,16 @@ else:
         display_name = "Auto Equip Received Gear"
         default = 0
 
+    class DeathLink(Toggle):
+        """Receive linked deaths from other players.
+
+        Sending your own deaths remains disabled until Bloodborne's live death
+        signal has been validated; enabling this option currently participates
+        in the receive half of DeathLink only.
+        """
+        display_name = "DeathLink (Receive Only)"
+        default = 0
+
     class FullItemPool(Toggle):
         """Place every validated item in the Yharnam slice, not only the six slice items.
 
@@ -405,6 +415,17 @@ else:
         option_moon_presence = 2
         default = 2
 
+        _display_labels = {
+            0: "Submit to Gehrman (Mergo's Wet Nurse)",
+            1: "Refuse Gehrman (Gehrman)",
+            2: "Moon Presence (Three Umbilical Cords)",
+        }
+
+        @classmethod
+        def get_option_name(cls, value: int) -> str:
+            """Explain the completion trigger without changing YAML keys."""
+            return cls._display_labels[value]
+
     class IncludeDLC(Toggle):
         """Include The Old Hunters regions, checks, and progression items."""
         display_name = "Include The Old Hunters DLC"
@@ -425,6 +446,7 @@ else:
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
         auto_equip: AutoEquip
+        death_link: DeathLink
         full_item_pool: FullItemPool
         uncanny_weapons: UncannyWeapons
         randomize_starting_weapons: RandomizeStartingWeapons
@@ -581,6 +603,7 @@ else:
                 "runtime_build": RUNTIME_BUILD,
                 "auto_upgrade": bool(self.options.auto_upgrade),
                 "auto_equip": bool(self.options.auto_equip),
+                "death_link": bool(self.options.death_link),
                 "full_item_pool": bool(self.options.full_item_pool),
                 "randomize_starting_weapons": bool(self.options.randomize_starting_weapons),
                 "starting_weapons": starting_weapons,

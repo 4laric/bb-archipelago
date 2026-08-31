@@ -11,6 +11,16 @@ under `Unreleased` and move into a dated version section when released.
   it models post-BSB Snatcher abduction, the independent Blood Moon entrance,
   Paarl's check, and the rear Old Yharnam gate. The enemizer explicitly
   preserves a Cathedral Ward Snatcher so early access never rests on chance.
+
+- **DeathLink now has an opt-in receive-only YAML option.** Seeds can enable
+  `death_link`; the native client then joins the DeathLink channel and accepts
+  incoming linked deaths. Sending remains off until the live player-death
+  signal is validated, so ordinary deaths cannot produce false links.
+
+- **The YAML wizard now names each ending's actual completion trigger.** Goal
+  choices display as `Submit to Gehrman (Mergo's Wet Nurse)`, `Refuse Gehrman
+  (Gehrman)`, and `Moon Presence (Three Umbilical Cords)`. Existing YAML keys
+  are unchanged.
 - **Extracting a new playtest build no longer leaves the launcher pointing at
   yesterday's deleted suppression manifest.** When either saved suppression
   path has vanished, startup now replaces the binder and manifest together

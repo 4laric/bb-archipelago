@@ -98,10 +98,15 @@ def build_contract() -> dict:
                 ),
             },
             {
-                "name": "hp_capture", "rva": payload.HP_HOOK_RVA,
+                "name": "hp_capture",
+                "rva": payload.HP_HOOK_RVA,
                 "original_bytes": payload.HP_ORIGINAL.hex(" ").upper(),
-                "return_rva": payload.HP_RETURN_RVA, "provenance": "published",
-                "note": "captures the validated player status pointer; incoming DeathLink writes current HP at +0xF8",
+                "return_rva": payload.HP_RETURN_RVA,
+                "provenance": "published",
+                "note": (
+                    "captures the validated player status pointer; incoming DeathLink "
+                    "writes current HP at +0xF8"
+                ),
             },
         ],
         "native_routines": [
@@ -216,7 +221,8 @@ def build_contract() -> dict:
                 _blob_entry(payload.state_region(), "validated", "initial request/state block"),
                 _blob_entry(payload.consume_cave(), "validated", "consume-return detour cave"),
                 _blob_entry(payload.heartbeat_cave(), "validated", "idle-heartbeat detour cave"),
-                _blob_entry(payload.hp_cave(), "inferred", "capture RDI, replay mov edx,[rdi+F8], return; pointer cell is at cave+0x30"),
+                _blob_entry(payload.hp_cave(), "inferred",
+                            "capture RDI, replay mov edx,[rdi+F8], return; pointer cell is at cave+0x30"),
                 _blob_entry(payload.consume_detour(), "validated", "E9 rel32 + NOP pad over the original"),
                 _blob_entry(payload.heartbeat_detour(), "validated", "E9 rel32 + NOP pad over the original"),
                 _blob_entry(payload.hp_detour(), "inferred", "E9 rel32 + NOP over the HP read"),
