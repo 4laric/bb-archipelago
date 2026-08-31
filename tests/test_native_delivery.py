@@ -922,6 +922,8 @@ class ContractTests(unittest.TestCase):
     def test_the_contract_original_bytes_agree_with_the_cheat_engine_asserts(self):
         text = TABLE.read_text(encoding="utf-8")
         for site in self.committed["hook_sites"]:
+            if site["name"] == "hp_capture":
+                continue  # r9 DeathLink is installed by the native client, not the CE grant table.
             self.assertIn(f"assert(80{site['rva']:X},{site['original_bytes'].lower().upper()})",
                           text.replace(", ", ","))
 
@@ -949,7 +951,10 @@ class ContractTests(unittest.TestCase):
         byte-identical to what CE emits. `validated` is earned, not asserted."""
         self.assertEqual("validated", self.committed["payload"]["provenance"])
         for blob in self.committed["payload"]["blobs"]:
-            self.assertEqual("validated", blob["provenance"], blob["name"])
+            if blob["name"].startswith("hp_"):
+                self.assertEqual("inferred", blob["provenance"], blob["name"])
+            else:
+                self.assertEqual("validated", blob["provenance"], blob["name"])
 
     def test_the_contract_names_only_the_validated_serial(self):
         self.assertEqual("CUSA03173", self.committed["target"]["serial"])
@@ -967,7 +972,7 @@ class ContractTests(unittest.TestCase):
 class _FakeImage:
     """A sparse guest image: reads default to zero, writes are recorded in order.
 
-    Seeded with the two validated hook originals so require_validated_image
+    Seeded with the three contract hook originals so require_validated_image
     passes; every cave/state region is zero, which is exactly what the CE asserts
     demand ("this space is still unused"). base is 0 so address == rva.
     """
@@ -978,6 +983,7 @@ class _FakeImage:
         self.write_order = []
         self._seed(payload.CONSUME_HOOK_RVA, payload.CONSUME_ORIGINAL)
         self._seed(payload.HEARTBEAT_HOOK_RVA, payload.HEARTBEAT_ORIGINAL)
+        self._seed(payload.HP_HOOK_RVA, payload.HP_ORIGINAL)
 
     def _seed(self, address, data):
         for index, byte in enumerate(data):
@@ -1083,12 +1089,13 @@ class InstallRoutingTests(unittest.TestCase):
         return {
             payload.CONSUME_HOOK_RVA: payload.consume_detour().data,
             payload.HEARTBEAT_HOOK_RVA: payload.heartbeat_detour().data,
+            payload.HP_HOOK_RVA: payload.hp_detour().data,
         }
 
     def test_dry_run_writes_nothing_and_needs_no_controller(self):
         image = _FakeImage()
         plan = install(image, 0, dry_run=True)
-        self.assertEqual(5, len(plan))
+        self.assertEqual(7, len(plan))
         self.assertFalse(image.write_order, "dry run wrote nothing")
 
     def test_arming_without_a_controller_fails_closed(self):
@@ -1101,9 +1108,15 @@ class InstallRoutingTests(unittest.TestCase):
         image = _FakeImage()
         controller = FakeThreadController(rips={1: 0x40})  # far from both hooks
         install(image, 0, dry_run=False, controller=controller)
-        detour_addrs = {payload.CONSUME_HOOK_RVA, payload.HEARTBEAT_HOOK_RVA}
+        detour_addrs = {
+            payload.CONSUME_HOOK_RVA, payload.HEARTBEAT_HOOK_RVA,
+            payload.HP_HOOK_RVA,
+        }
         first_detour = min(image.write_order.index(a) for a in detour_addrs)
-        prelude = {payload.STATE_RVA, payload.CONSUME_CAVE_RVA, payload.HEARTBEAT_CAVE_RVA}
+        prelude = {
+            payload.STATE_RVA, payload.CONSUME_CAVE_RVA,
+            payload.HEARTBEAT_CAVE_RVA, payload.HP_CAVE_RVA,
+        }
         last_prelude = max(image.write_order.index(a) for a in prelude)
         self.assertLess(last_prelude, first_detour, "every cave/state write precedes any detour")
         for address, data in self._detour_addrs().items():
