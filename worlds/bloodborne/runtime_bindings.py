@@ -689,7 +689,7 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         "2301/9454. MSB places 2300810 with NpcParam 508000 (Darkbeast Paarl)",
         None,
         "boss_defeat",
-        "m23_00_00_00.emevd.dcx.js:758-806",
+        "m23_00_00_00.emevd.dcx.js:756-806",
         None,
         None,
     ),

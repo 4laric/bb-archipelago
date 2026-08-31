@@ -131,7 +131,7 @@ the world.
 The following names may appear in spoiler logic, but they are locked to their
 own in-game checks and are never shuffled to another player:
 
-Cleric Beast Defeated; Father Gascoigne Defeated; Blood-starved Beast Defeated;
+Cleric Beast Defeated; Father Gascoigne Defeated; Blood-starved Beast Defeated; Darkbeast Paarl Defeated;
 Vicar Amelia Defeated; Laurence's Skull Inspected; Witch of Hemwick Defeated; Martyr Logarius Defeated;
 Celestial Emissary Defeated; Ebrietas, Daughter of the Cosmos Defeated;
 Shadows of Yharnam Defeated; Rom Defeated; Amygdala Defeated;
@@ -170,7 +170,7 @@ uncanny_saw_cleaver uncanny_kirkhammer uncanny_ludwigs_holy_blade
 uncanny_beast_claw uncanny_rifle_spear uncanny_reiterpallasch
 uncanny_stake_driver uncanny_logarius_wheel uncanny_tonitrus
 uncanny_threaded_cane event_cleric_beast_defeated event_gascoigne_defeated
-event_blood_starved_beast_defeated event_amelia_defeated
+event_blood_starved_beast_defeated event_darkbeast_paarl_defeated event_amelia_defeated
 event_witch_of_hemwick_defeated event_martyr_logarius_defeated
 event_celestial_emissary_defeated event_ebrietas_defeated
 event_laurences_skull_inspected event_shadows_defeated event_rom_defeated
