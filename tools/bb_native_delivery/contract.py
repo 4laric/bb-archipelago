@@ -23,7 +23,7 @@ from .process import ASSERTS, CONSUME_SIGNATURE
 
 CONTRACT_VERSION = "bb-native-grant-contract-v5"
 HARNESS = "bb-native-grant-v7"
-BUILD = "bb-0.1.0-r8"
+BUILD = "bb-0.1.0-r9"
 PROTOCOL = "BBGRANT1"
 
 ROOT_CANDIDATES = ("research/runtime/bb-native-grant-contract.v5.json",)
@@ -97,6 +97,12 @@ def build_contract() -> dict:
                     "atomicity hazard."
                 ),
             },
+            {
+                "name": "hp_capture", "rva": payload.HP_HOOK_RVA,
+                "original_bytes": payload.HP_ORIGINAL.hex(" ").upper(),
+                "return_rva": payload.HP_RETURN_RVA, "provenance": "published",
+                "note": "captures the validated player status pointer; incoming DeathLink writes current HP at +0xF8",
+            },
         ],
         "native_routines": [
             {"name": "allocate_equipment_instance", "rva": payload.ALLOCATE_EQUIPMENT_INSTANCE_RVA,
@@ -168,6 +174,8 @@ def build_contract() -> dict:
                  "note": "Bullets: raw B0000384, normalized 40000384, delta arg at +0xC"},
                 {"name": "manual_trigger", "rva": payload.MANUAL_TRIGGER_RVA, "width": 4},
                 {"name": "descriptor", "rva": payload.DESCRIPTOR_RVA, "width": STAGED_SIZE},
+                {"name": "player_status", "rva": payload.PLAYER_STATUS_RVA, "width": 8,
+                 "note": "latest RDI observed at the HP hook; current HP is player_status+0xF8"},
             ],
             "provenance": "validated",
         },
@@ -178,8 +186,16 @@ def build_contract() -> dict:
         },
         "asserts": [
             {"name": name, "rva": rva, "bytes": " ".join(text.split()), "provenance":
-             "validated" if name.endswith("hook") else "observed",
-             "note": "hook originals are validated; zeroed cave regions are an unused-space claim"}
+             ("published" if name == "hp_hook" else
+              "validated" if name.endswith("hook") else
+              "inferred" if name == "hp_cave" else "observed"),
+             "note": (
+                 "instruction observed by the validated HP capture table; install fails closed until it matches the live image"
+                 if name == "hp_hook" else
+                 "spare gap between the heartbeat cave and state region; a mismatch refuses the native install"
+                 if name == "hp_cave" else
+                 "hook originals are validated; zeroed cave regions are an unused-space claim"
+             )}
             for name, rva, text in ASSERTS
         ],
         "payload": {
@@ -200,8 +216,10 @@ def build_contract() -> dict:
                 _blob_entry(payload.state_region(), "validated", "initial request/state block"),
                 _blob_entry(payload.consume_cave(), "validated", "consume-return detour cave"),
                 _blob_entry(payload.heartbeat_cave(), "validated", "idle-heartbeat detour cave"),
+                _blob_entry(payload.hp_cave(), "inferred", "capture RDI, replay mov edx,[rdi+F8], return; pointer cell is at cave+0x30"),
                 _blob_entry(payload.consume_detour(), "validated", "E9 rel32 + NOP pad over the original"),
                 _blob_entry(payload.heartbeat_detour(), "validated", "E9 rel32 + NOP pad over the original"),
+                _blob_entry(payload.hp_detour(), "inferred", "E9 rel32 + NOP over the HP read"),
             ],
         },
         "policy": {
