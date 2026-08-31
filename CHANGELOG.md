@@ -1,5 +1,10 @@
 # Changelog
 
+- Completed the Bath Messenger gate audit for shop randomization: all ten
+  `qwcId` groups now have badge/goods/stock witnesses and an executable
+  fail-closed readiness check. The check confirms the feature is not yet safe
+  to expose because eight required badges are absent from the AP world model.
+
 * Add the independent `death_link_amnesty` YAML option. It is seed-owned,
   defaults to zero, and tells future outbound DeathLink clients how many local
   deaths to forgive per cycle without changing incoming DeathLinks.

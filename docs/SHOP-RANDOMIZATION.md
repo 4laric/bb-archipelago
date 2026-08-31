@@ -36,11 +36,39 @@ The first playable version should:
 6. include the permutation in the seed request and seed-cache identity; and
 7. refuse malformed, incomplete, duplicate, or out-of-domain mappings.
 
-Before enabling the toggle in a playtest bundle, the ten flags still need a
-goods-to-gate witness table. This matters because suppression removes the
-natural award at randomized checks: a badge that is absent from the AP item
-pool can no longer set its shop gate. Shipping a permutation before auditing
-that table could create permanently unavailable stock while appearing healthy.
+The goods-to-gate audit is now complete. `research/validation/shop_gate_witnesses.tsv`
+ties every gate to a representative stock row and to the independently mined
+badge goods id:
+
+| Gate | Badge | Goods | Representative stock |
+|---|---|---:|---|
+| 12101000 | Saw Hunter Badge | 4110 | Saw Cleaver |
+| 12101001 | Crow Hunter Badge | 4111 | Blade of Mercy |
+| 12101002 | Powder Keg Hunter Badge | 4112 | Stake Driver |
+| 12101003 | Old Hunter Badge | 4113 | Burial Blade |
+| 12101004 | Sword Hunter Badge | 4114 | Kirkhammer |
+| 12101005 | Radiant Sword Hunter Badge | 4115 | Ludwig's Holy Blade |
+| 12101006 | Wheel Hunter Badge | 4116 | Logarius' Wheel |
+| 12101007 | Cainhurst Badge | 4117 | Reiterpallasch |
+| 12101008 | Spark Hunter Badge | 4118 | Tonitrus |
+| 12101009 | Cosmic Eye Watcher Badge | 4119 | Rosmarinus |
+
+The audit also found a hard pool-safety blocker: only the Old Hunter and Sword
+Hunter Badges are modeled as AP items. Enabling a permutation would therefore
+make eight stock groups depend on badges the server can never send. The YAML
+option remains intentionally absent until those eight badges, their checks,
+and their vanilla-award suppression are added.
+
+Run the executable gate before working on the option:
+
+```powershell
+python tools/audit_shop_randomization.py
+```
+
+It exits non-zero until all ten badges are present, rejects duplicate or missing
+gate/goods identities, and cross-checks each goods id against the independent
+progression-item mine. `--json --allow-incomplete` produces machine-readable
+diagnostics without treating the known blocker as a command failure.
 
 ## Inspection
 
@@ -55,3 +83,13 @@ It emits every `ShopLineupParam` row and every decoded field as a tab-separated
 record. This makes the gate audit reproducible against the same installed
 binder the launcher will eventually edit.
 
+The committed witnesses can be checked directly against that binder too:
+
+```powershell
+dotnet run --project tools/bb_suppression_writer -- `
+  --audit-shop-gates research/validation/shop_gate_witnesses.tsv `
+  gameparam.parambnd.dcx paramdef.paramdefbnd.dcx
+```
+
+This refuses a missing or duplicate gate, a changed representative row, a
+non-Blood-Echo-shop witness, or a mismatched item identity.
