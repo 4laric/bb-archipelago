@@ -38,6 +38,14 @@ ITEMS = (
     # follow the AP item instead of the boss kill.
     Item("sword_hunter_badge", "Sword Hunter Badge", U),
     Item("old_hunter_badge", "Old Hunter Badge", U),
+    Item("saw_hunter_badge", "Saw Hunter Badge", U),
+    Item("crow_hunter_badge", "Crow Hunter Badge", U),
+    Item("powder_keg_hunter_badge", "Powder Keg Hunter Badge", U),
+    Item("radiant_sword_hunter_badge", "Radiant Sword Hunter Badge", U),
+    Item("wheel_hunter_badge", "Wheel Hunter Badge", U),
+    Item("cainhurst_badge", "Cainhurst Badge", U),
+    Item("spark_hunter_badge", "Spark Hunter Badge", U),
+    Item("cosmic_eye_watcher_badge", "Cosmic Eye Watcher Badge", U),
     Item("gold_pendant", "Gold Pendant", U),
     # Three independently placed progression pieces, all delivered as the
     # game's real Third Umbilical Cord (goods 4323). Distinct AP names make
@@ -352,6 +360,17 @@ LOCATIONS = (
              "Underground Corpse Pile"),
     Location("treasure_cosmic_eye_watcher_badge", location_name(52420270),
              "Upper Cathedral Ward", Rule.all("orphanage_key")),
+    # Quest/NPC badge awards use the goods acquisition flag as their check.
+    # Their alternative award lots share that flag and are all suppressed by
+    # the reviewed badge suppression declarations below.
+    Location("award_crow_hunter_badge", location_name(50001900), "Cathedral Ward",
+             vanilla_award_suppressed=True),
+    Location("award_powder_keg_hunter_badge", location_name(50001700), "Old Yharnam",
+             vanilla_award_suppressed=True),
+    Location("award_wheel_hunter_badge", location_name(50001810), "Cathedral Ward",
+             vanilla_award_suppressed=True),
+    Location("award_cainhurst_badge", location_name(50000205), "Castle Cainhurst",
+             vanilla_award_suppressed=True),
     Location("boss_laurence", location_name(13401850), "Nightmare Grand Cathedral",
              Rule.all("laurences_skull"), locked_item="event_laurence_defeated"),
 ) + tuple(
@@ -461,7 +480,10 @@ SLICE_ITEM_KEYS = frozenset({
 # placement, so it cannot be resolved by the goods -> lot search this set
 # drives. It is suppressed by the reviewed declaration in runtime_bindings.py
 # (SCRIPT_AWARD_SUPPRESSIONS) instead.
-SLICE_POOL_SUPPRESSION_KEYS = frozenset({"saw_spear"})
+SLICE_POOL_SUPPRESSION_KEYS = frozenset({
+    "saw_spear",
+    "saw_hunter_badge", "radiant_sword_hunter_badge", "cainhurst_badge",
+})
 
 # bb-archipelago#205. Base weapon key -> its Uncanny variant key. The Uncanny
 # rows are shufflable items with permanent network ids like any other, but they
@@ -553,6 +575,10 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "pickup_workshop_umbilical_cord",
     "treasure_rune_workshop_tool",
     "treasure_executioners_gloves",
+    "award_crow_hunter_badge",
+    "award_powder_keg_hunter_badge",
+    "award_wheel_hunter_badge",
+    "award_cainhurst_badge",
 })
 # Fixed rows whose region sits outside the slice (today: the two Iosefka's
 # Clinic back-yard pickups, gated behind the Amelia -> Laurence's-skull

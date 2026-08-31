@@ -150,15 +150,22 @@ class RealCorpusTests(unittest.TestCase):
     def test_the_slice_pool_item_can_be_suppressed(self):
         item_edits = [edit for edit in self.plan.edits
                       if not edit.item_key.startswith(("location:", "boss:"))]
-        self.assertEqual(sorted(edit.item_key for edit in item_edits),
-                         ["oedon_tomb_key", "saw_spear", "third_umbilical_cord_wet_nurse"])
+        self.assertEqual(sorted(edit.item_key for edit in item_edits), [
+            "cainhurst_badge",
+            "crow_hunter_badge", "crow_hunter_badge", "crow_hunter_badge",
+            "oedon_tomb_key",
+            "powder_keg_hunter_badge", "powder_keg_hunter_badge",
+            "radiant_sword_hunter_badge", "saw_hunter_badge", "saw_spear",
+            "spark_hunter_badge", "third_umbilical_cord_wet_nurse",
+            "wheel_hunter_badge", "wheel_hunter_badge",
+        ])
         by_key = {edit.item_key: edit for edit in item_edits}
         self.assertEqual(by_key["saw_spear"].item_category, "0")
 
     def test_reviewed_boss_payouts_and_randomized_trophies_are_suppressed(self):
         boss_lots = {edit.item_lot_id for edit in self.plan.edits
                      if edit.item_key.startswith("boss:")}
-        self.assertEqual(20, len(boss_lots))
+        self.assertEqual(21, len(boss_lots))
         self.assertTrue({"50000001", "50000010", "15000", "2100500", "2110015",
                          "21002950", "51001900", "3601800"} <= boss_lots)
         # Chalices remain vanilla while their dungeon progression is out of scope.
@@ -213,10 +220,10 @@ class RealCorpusTests(unittest.TestCase):
         finally:
             SCRIPT_AWARD_SUPPRESSIONS["oedon_tomb_key"] = declared
         self.assertEqual(["review_is_stale"], [r.problem for r in plan.refusals])
-        self.assertEqual(
-            ["third_umbilical_cord_wet_nurse"],
-            [edit.item_key for edit in plan.edits],
-        )
+        self.assertEqual(8, len([edit for edit in plan.edits
+                                if edit.item_key.endswith("hunter_badge")]))
+        self.assertIn("third_umbilical_cord_wet_nurse",
+                      [edit.item_key for edit in plan.edits])
         self.assertIn("27100000", plan.refusals[0].detail)  # witness: the dropped row
 
     def test_the_reviewed_unreferenced_lot_is_reachable_from_nothing(self):
@@ -247,7 +254,7 @@ class RealCorpusTests(unittest.TestCase):
         # treasures, minus Saw Spear's lot, plus continuation rows in shared
         # acquisition-flag award groups, minus the
         # category-8 generation recipes whose native gem awards stay intact.
-        self.assertEqual(len(location_edits), 626)
+        self.assertEqual(len(location_edits), 624)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {

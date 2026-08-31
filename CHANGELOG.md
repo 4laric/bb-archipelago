@@ -18,6 +18,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **All ten ordinary Bath Messenger badges now exist as randomized items.**
+  Eileen, Djura, Alfred, and Annalise's badge awards are checks, every reviewed
+  natural badge lot is suppressed, and the shop-randomization pool-safety gate
+  is green. The actual shop permutation remains hidden until the launcher can
+  compose it into the seed-owned binder and cache identity atomically.
+
 - **Upper Cathedral Ward's ordinary pickups are now randomized.** Nineteen
   weapons, attire pieces, consumables, and upgrade-material pickups join its
   existing boss and scripted checks. Its natural Blood Gem remains intact

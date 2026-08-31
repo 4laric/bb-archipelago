@@ -45,7 +45,7 @@ than the whole future model. The current full-world canonical plan contains
   chest whose flag is numbered in the m24_01 range);
 - lot 31000, the Oedon Tomb Key's EMEVD award (see below);
 - lot 55100000, Wet Nurse's shuffled Umbilical Cord award;
-- 20 reviewed boss awards, including every natural source of the two randomized
+- 21 reviewed boss/exact awards, including every natural source of the randomized
   boss badges and Amelia's randomized Gold Pendant;
 - every seeded fixed-location award and its related shared-flag rows.
 

@@ -53,11 +53,17 @@ badge goods id:
 | 12101008 | Spark Hunter Badge | 4118 | Tonitrus |
 | 12101009 | Cosmic Eye Watcher Badge | 4119 | Rosmarinus |
 
-The audit also found a hard pool-safety blocker: only the Old Hunter and Sword
-Hunter Badges are modeled as AP items. Enabling a permutation would therefore
-make eight stock groups depend on badges the server can never send. The YAML
-option remains intentionally absent until those eight badges, their checks,
-and their vanilla-award suppression are added.
+All ten badge goods are now modeled as AP items. Saw, Radiant Sword, Cosmic Eye
+Watcher, and Spark use their existing treasure/boss checks; Eileen, Djura,
+Alfred, and Annalise expose their shared acquisition flags as checks. Every
+reviewed natural badge lot is in the global suppression plan. The pool-safety
+gate is therefore green.
+
+The YAML option remains intentionally absent in this slice. A seed-specific
+permutation must be composed into the launcher's suppression binder, manifest,
+cache identity, and doctor checks as one transaction. Merely emitting a mapping
+in slot data would advertise a feature that the installed binder does not
+apply, violating the refusal-safe contract above.
 
 Run the executable gate before working on the option:
 

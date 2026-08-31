@@ -19,16 +19,11 @@ class ShopRandomizationAuditTests(unittest.TestCase):
         self.assertEqual(set(range(4110, 4120)),
                          {row["goods_id"] for row in report["gates"]})
 
-    def test_feature_refuses_until_every_badge_is_in_the_world_model(self):
+    def test_all_badges_are_in_the_world_model(self):
         report = audit(REPO)
-        self.assertFalse(report["ready"])
-        self.assertEqual(2, report["modeled_badge_count"])
-        self.assertEqual(
-            ["Saw Hunter Badge", "Crow Hunter Badge", "Powder Keg Hunter Badge",
-             "Radiant Sword Hunter Badge", "Wheel Hunter Badge", "Cainhurst Badge",
-             "Spark Hunter Badge", "Cosmic Eye Watcher Badge"],
-            report["missing_badges"],
-        )
+        self.assertTrue(report["ready"])
+        self.assertEqual(10, report["modeled_badge_count"])
+        self.assertEqual([], report["missing_badges"])
 
 
 if __name__ == "__main__":

@@ -112,13 +112,13 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(664, len(NETWORK_LOCATIONS))
+        self.assertEqual(668, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
-            {"Central Yharnam": 47, "Cathedral Ward": 62,
-             "Old Yharnam": 55, "Grand Cathedral": 2,
-             "Hemwick Charnel Lane": 34, "Castle Cainhurst": 28,
+            {"Central Yharnam": 47, "Cathedral Ward": 64,
+             "Old Yharnam": 56, "Grand Cathedral": 2,
+             "Hemwick Charnel Lane": 34, "Castle Cainhurst": 29,
              "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
              "Moonside Lake": 1,
             "Yahar'gul": 51, "Lecture Building 1F": 9,
@@ -185,6 +185,14 @@ class BloodborneModelTests(unittest.TestCase):
             "Sword Hunter Badge",
             "Old Hunter Badge",
             "Gold Pendant",
+            "Saw Hunter Badge",
+            "Crow Hunter Badge",
+            "Powder Keg Hunter Badge",
+            "Radiant Sword Hunter Badge",
+            "Wheel Hunter Badge",
+            "Cainhurst Badge",
+            "Spark Hunter Badge",
+            "Cosmic Eye Watcher Badge",
         ):
             self.assertEqual(counts[name], 1, name)
         # bb-archipelago#207 wave 1: the rest of the base-game trick weapons
@@ -200,7 +208,7 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 76)
+        self.assertEqual(counts["Blood Vial"], 75)
         self.assertEqual(counts["Quicksilver Bullets x3"], 50)
         self.assertEqual(counts["Blood Stone Shards x2"], 38)
         self.assertEqual(counts["Twin Blood Stone Shards x2"], 38)
@@ -213,9 +221,12 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Bone Marrow Ash x3"], 25)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
-                     "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
-                     "Shaman Bone Blade", "Madman's Knowledge"):
+                     "Oil Urn x2", "Numbing Mist x2",
+                     ):
             self.assertEqual(counts[name], 13, name)
+        for name in ("Pungent Blood Cocktail x2", "Shaman Bone Blade",
+                     "Madman's Knowledge"):
+            self.assertEqual(counts[name], 12, name)
         self.assertEqual(counts["Great One's Wisdom"], 12)
         self.assertEqual(counts["Coldblood Dew (3)"], 12)
         self.assertEqual(counts["Thick Coldblood (6)"], 12)
@@ -246,11 +257,11 @@ class BloodborneModelTests(unittest.TestCase):
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 230)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 153)
-        self.assertEqual(counts["Blood Stone Shards x2"], 115)
+        self.assertEqual(counts["Blood Vial"], 231)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 154)
+        self.assertEqual(counts["Blood Stone Shards x2"], 116)
         self.assertEqual(counts["Pebbles x3"], 77)
-        self.assertEqual(counts["Molotov Cocktails x2"], 76)
+        self.assertEqual(counts["Molotov Cocktails x2"], 77)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 18)  # seventeen slice items + Blood Vial
@@ -305,17 +316,23 @@ class BloodborneModelTests(unittest.TestCase):
                 self.assertIsNone(binding.item_lot_id)
                 self.assertIn(str(binding.event_flag), binding.evidence)
                 continue
-            if binding.source_kind == "script_award":
+            if binding.source_kind in ("script_award", "npc_or_enemy_award", "npc_award"):
                 candidates = [
                     row for row in rows_by_name.values()
-                    if str(binding.item_lot_id) in row["item_lot_ids"].split(";")
+                    if (binding.item_lot_id is not None
+                        and str(binding.item_lot_id) in row["item_lot_ids"].split(";"))
+                    or (binding.item_lot_id is None
+                        and str(binding.event_flag) in row["acquisition_flags"].split(";"))
                 ]
                 self.assertEqual(1, len(candidates), key)
                 row = candidates[0]
-                self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
                 self.assertIn(str(binding.event_flag), row["acquisition_flags"], key)
-                self.assertIn(binding.source_kind, row["observed_sources"].split(";"), key)
-                expected_ref = row["script_awards"]
+                if binding.item_lot_id is not None:
+                    self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
+                    self.assertIn(binding.source_kind, row["observed_sources"].split(";"), key)
+                    expected_ref = row["script_awards"]
+                else:
+                    expected_ref = binding.source_ref
             else:
                 matches = [row for row in catalog_items
                            if row["location_flag"] == str(binding.event_flag)
@@ -325,7 +342,8 @@ class BloodborneModelTests(unittest.TestCase):
                 self.assertEqual(1, len(matches), key)
                 expected_ref = catalog_locations[str(binding.event_flag)]["map_variants"]
             self.assertEqual(expected_ref, binding.source_ref, key)
-            self.assertIn(str(binding.item_lot_id), binding.evidence, key)
+            if binding.item_lot_id is not None:
+                self.assertIn(str(binding.item_lot_id), binding.evidence, key)
 
     def test_progression_validation_covers_every_pool_item(self):
         from tools.validate_progression_items import EXPECTED

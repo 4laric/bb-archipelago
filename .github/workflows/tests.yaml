@@ -362,8 +362,9 @@ jobs:
                   # category-4 delivery contracts.
                   goods = [row for row in payload["runtime_items"].values()
                            if row["item_category"] == 4]
-                  # Three newly randomized boss trophies are ordinary goods.
-                  assert len(goods) == 60, (name, payload["player_name"], len(goods))
+                  # The three boss trophies and all ten ordinary Bath badges
+                  # are randomized category-4 goods.
+                  assert len(goods) == 68, (name, payload["player_name"], len(goods))
                   for item_id in (0xBB0130, 0xBB0131):
                       assert str(item_id) in payload["runtime_items"], (
                           name, payload["player_name"], hex(item_id))
