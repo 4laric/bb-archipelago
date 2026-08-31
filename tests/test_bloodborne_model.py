@@ -87,7 +87,8 @@ def slice_reachable(held: set[str], *, locations=None) -> set[str]:
 
 class BloodborneModelTests(unittest.TestCase):
     def test_model_references_are_valid(self):
-        self.assertEqual([], MODEL.validate())
+        errors = MODEL.validate()
+        self.assertFalse(errors, "invalid model references: " + "; ".join(errors))
 
     def test_rule_dnf(self):
         rule = Rule.any(("a", "b"), ("c",))
