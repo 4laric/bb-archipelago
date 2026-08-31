@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The YAML wizard now names each ending's actual completion trigger.** Goal
+  choices display as `Submit to Gehrman (Mergo's Wet Nurse)`, `Refuse Gehrman
+  (Gehrman)`, and `Moon Presence (Three Umbilical Cords)`. Existing YAML keys
+  are unchanged.
 - **Extracting a new playtest build no longer leaves the launcher pointing at
   yesterday's deleted suppression manifest.** When either saved suppression
   path has vanished, startup now replaces the binder and manifest together

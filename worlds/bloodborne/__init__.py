@@ -402,6 +402,17 @@ else:
         option_moon_presence = 2
         default = 2
 
+        _display_labels = {
+            0: "Submit to Gehrman (Mergo's Wet Nurse)",
+            1: "Refuse Gehrman (Gehrman)",
+            2: "Moon Presence (Three Umbilical Cords)",
+        }
+
+        @classmethod
+        def get_option_name(cls, value: int) -> str:
+            """Explain the completion trigger without changing YAML keys."""
+            return cls._display_labels[value]
+
     class IncludeDLC(Toggle):
         """Include The Old Hunters regions, checks, and progression items."""
         display_name = "Include The Old Hunters DLC"

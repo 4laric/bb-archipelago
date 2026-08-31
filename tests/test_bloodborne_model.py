@@ -778,6 +778,13 @@ class StartingWeaponChoiceTests(unittest.TestCase):
             option.options,
         )
         self.assertEqual(
+            "Submit to Gehrman (Mergo's Wet Nurse)", option.get_option_name(0)
+        )
+        self.assertEqual("Refuse Gehrman (Gehrman)", option.get_option_name(1))
+        self.assertEqual(
+            "Moon Presence (Three Umbilical Cords)", option.get_option_name(2)
+        )
+        self.assertEqual(
             {
                 0: "boss_mergos_wet_nurse",
                 1: "boss_gehrman",
