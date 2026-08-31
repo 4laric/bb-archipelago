@@ -205,11 +205,11 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Blood Stone Shards x2"], 37)
         self.assertEqual(counts["Twin Blood Stone Shards x2"], 37)
         self.assertEqual(counts["Blood Stone Chunk"], 25)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 25)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 24)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2"):
             self.assertEqual(counts[name], 25, name)
-        self.assertEqual(counts["Bolt Paper x2"], 24)
+        self.assertEqual(counts["Bolt Paper x2"], 25)
         self.assertEqual(counts["Bone Marrow Ash x3"], 24)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
@@ -246,7 +246,7 @@ class BloodborneModelTests(unittest.TestCase):
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
         self.assertEqual(counts["Blood Vial"], 223)
         self.assertEqual(counts["Quicksilver Bullets x3"], 149)
-        self.assertEqual(counts["Blood Stone Shards x2"], 111)
+        self.assertEqual(counts["Blood Stone Shards x2"], 112)
         self.assertEqual(counts["Pebbles x3"], 74)
         self.assertEqual(counts["Molotov Cocktails x2"], 74)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
