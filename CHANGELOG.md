@@ -6,17 +6,24 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+### Changed
+
+- Cleric Beast's Sword Hunter Badge, Gehrman's Old Hunter Badge, and Vicar
+  Amelia's Gold Pendant are now shuffled category-4 items. Their reviewed
+  natural award rows are suppressed, so shop unlocks and Pendant conversion
+  follow AP receipt. Pthumeru, Ailing Loran, and Isz chalices remain vanilla
+  while Chalice Dungeons are out of scope.
+
 - **Extracting a new playtest build no longer leaves the launcher pointing at
   yesterday's deleted suppression manifest.** When either saved suppression
   path has vanished, startup now replaces the binder and manifest together
   with the verified pair shipped under the current package's `work` directory.
   A valid operator-selected pair is still preserved.
 - **Bosses no longer leak duplicate vanilla payouts alongside their AP checks.**
-  Sixteen payout-only award lots are now suppressed, including Amelia's Gold
-  Pendant and the weapon, material, and Insight rewards attached to later
-  bosses. Stateful rewards remain vanilla: Cleric Beast's and Gehrman's shop
-  badges, plus the Pthumeru, Ailing Loran, and Isz chalices, still perform the
-  progression and shop-unlock jobs the base game expects.
+  Twenty reviewed award lots are now suppressed, including every natural source
+  of the shuffled boss badges and Gold Pendant plus the weapon, material, and
+  Insight rewards attached to later bosses. The three out-of-scope chalices
+  remain vanilla.
 - **Advanced enemy controls now say what is experimental about them.** Tier
   mixing warns that enemy scaling is not normalized, while locomotion
   preservation warns that its roster tags are incomplete. Offline regression
