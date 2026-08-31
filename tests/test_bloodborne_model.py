@@ -524,7 +524,7 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn("lunarium_key", keys)
             self.assertIn("Lunarium Key", build_item_pool_names(keys))
             self.assertIn("forbidden_woods_password", keys)
-            self.assertIn("Fear the Old Blood", build_item_pool_names(keys))
+            self.assertIn('"Fear the Old Blood"', build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}
