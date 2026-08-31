@@ -762,6 +762,7 @@ class LauncherWorkflow:
         *,
         force_rebuild: bool = False,
         allow_suppression_mismatch: bool = False,
+        research_captures: bool = False,
         player_name: str = "",
         progress: Progress = lambda _message: None,
         process_is_running: Callable[[], bool] | None = None,
@@ -949,6 +950,7 @@ class LauncherWorkflow:
             shad_log=settings.shad_log or default_shad_log(),
             auto_upgrade=request["auto_upgrade"],
             auto_equip=request["auto_equip"],
+            research_captures=research_captures,
         )
         progress("Starting shadPS4, bridge, and AP client...")
         resolved = resolve_process_plan(plan, paths, game_path=install.base)
