@@ -131,12 +131,13 @@ LOT_ITEMS = ROOT / "research" / "joined" / "lot_items.tsv"
 DOC = ROOT / "docs" / "LOCATION-NAMING.md"
 PLAYER_DOC = ROOT / "worlds" / "bloodborne" / "docs" / "locations_en.md"
 LANDMARK_EVIDENCE = ROOT / "docs" / "location_landmark_evidence.tsv"
+LANDMARK_UNRESOLVED = ROOT / "docs" / "location_landmark_unresolved.tsv"
 
 # Witnessed populations, not targets, exactly like the counts above. The pass
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
-HINTED_ROWS = 184
-BARE_ROWS = 498
+HINTED_ROWS = 188
+BARE_ROWS = 494
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an
@@ -481,6 +482,21 @@ class PlayerLocationDocsTests(unittest.TestCase):
                 self.assertIn(row["landmark"], names[row["location_flag"]]["name"])
                 self.assertTrue(row["source"])
                 self.assertTrue(row["confidence"])
+
+    def test_unresolved_landmarks_are_explicit_catalog_rows(self):
+        catalog = {row["location_flag"] for row in rows(CATALOG)}
+        unresolved = rows(LANDMARK_UNRESOLVED)
+        self.assertTrue(unresolved)
+        witnessed = set()
+        for row in unresolved:
+            self.assertEqual("unresolved_duplicate", row["status"])
+            self.assertTrue(row["reason"])
+            self.assertTrue(row["source"])
+            for flag in row["location_flags"].split(";"):
+                self.assertIn(flag, catalog)
+                self.assertNotIn(flag, witnessed)
+                witnessed.add(flag)
+        self.assertGreaterEqual(len(witnessed), 18)
 
 
 if __name__ == "__main__":

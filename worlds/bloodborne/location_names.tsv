@@ -11,9 +11,9 @@ location_flag	region	name	basis
 52300200	Old Yharnam	Old Yharnam - Hunter's Torch	map m23_00
 52300390	Old Yharnam	Old Yharnam - Rifle Spear	map m23_00
 52300400	Old Yharnam	Old Yharnam - Charred Hunter Garb	map m23_00
-52400120	Cathedral Ward	Cathedral Ward - Top Hat (small plaza)	event tag A小広場邪神
-52400270	Cathedral Ward	Cathedral Ward - Black Messenger Hat (rooftop)	event tag A屋根の上
-52400290	Cathedral Ward	Cathedral Ward - Black Church Hat (back alley)	event tag A裏路地
+52400120	Cathedral Ward	Cathedral Ward - Top Hat (candlelit corpse by Oedon Chapel well)	wiki landmark + event tag A小広場邪神
+52400270	Cathedral Ward	Cathedral Ward - Black Messenger Hat (second rooftop past Oedon Chapel Gate)	wiki landmark + event tag A屋根の上
+52400290	Cathedral Ward	Cathedral Ward - Black Church Hat (Foggy Alley alcove)	wiki landmark + event tag A裏路地
 52400450	Cathedral Ward	Cathedral Ward - Hunter Chief Emblem (plaza entrance)	event tag A広場入口脇
 52400480	Cathedral Ward	Cathedral Ward - Radiant Sword Hunter Badge (Grand Cathedral approach chest)	published (data.py treasure_radiant_sword_hunter_badge); event tag C_接続塔_終点; hint from lot tag 聖C前 (m24_00_00_00); hint from MSB in_chest
 52410100	Central Yharnam	Central Yharnam - Saw Spear (Dry Dock hanging corpse)	published (fixed_locations.tsv); exact item/area unique match to Bloodborne Wiki Central Yharnam treasure table and Saw Spear page; ledger flag 52410100
@@ -28,7 +28,7 @@ location_flag	region	name	basis
 52420270	Upper Cathedral Ward	Upper Cathedral Ward - Cosmic Eye Watcher Badge	published (data.py treasure_cosmic_eye_watcher_badge)
 52420320	Upper Cathedral Ward	Upper Cathedral Ward - A Call Beyond	flag is shared between a m24_00 dummy corpse and the real m24_02 placement; named for the real one
 52420540	Cathedral Ward	Cathedral Ward - Rumpled Yharnam Hat (workshop-tower back alley)	event tag C_路地裏 脇道; sub-area assignment open
-52420550	Cathedral Ward	Cathedral Ward - Wooden Shield	map m24_00
+52420550	Cathedral Ward	Cathedral Ward - Wooden Shield (base of Oedon Chapel Gate)	wiki landmark + map m24_00
 52420670	Cathedral Ward	Cathedral Ward - Messenger Top Hat (Grand Cathedral approach)	map m24_00; hint from lot tag 聖C前 (m24_00_00_00)
 52420730	Cathedral Ward	Cathedral Ward - Messenger Urn Festival	map m24_00
 52500160	Castle Cainhurst	Castle Cainhurst - Noble Dress (chest)	map m25_00; hint from MSB in_chest
@@ -175,16 +175,16 @@ location_flag	region	name	basis
 52400150	Cathedral Ward	Cathedral Ward - Thick Coldblood (5) #1	map m24_00; unestablished
 52400160	Cathedral Ward	Cathedral Ward - Quicksilver Bullets x2	map m24_00
 52400170	Cathedral Ward	Cathedral Ward - Madman's Knowledge #2	map m24_00; unestablished
-52400180	Cathedral Ward	Cathedral Ward - Bloodshot Eyeball	map m24_00
+52400180	Cathedral Ward	Cathedral Ward - Bloodshot Eyeball (Hemwick path from Grand Cathedral)	wiki landmark + map m24_00
 52400190	Cathedral Ward	Cathedral Ward - Blood Vial	map m24_00
 52400200	Cathedral Ward	Cathedral Ward - Madman's Knowledge #3	map m24_00; unestablished
 52400210	Cathedral Ward	Cathedral Ward - Poison Knife x12	map m24_00
 52400220	Cathedral Ward	Cathedral Ward - Madman's Knowledge #4	map m24_00; unestablished
 52400230	Cathedral Ward	Cathedral Ward - Blood Vial x6 #1	map m24_00; unestablished
-52400240	Cathedral Ward	Cathedral Ward - Monocular	map m24_00
+52400240	Cathedral Ward	Cathedral Ward - Monocular (Yharnam Path dead-end cliff)	wiki landmark + map m24_00
 52400250	Cathedral Ward	Cathedral Ward - Pebble	map m24_00
 52400260	Cathedral Ward	Cathedral Ward - Blood Vial x2	map m24_00
-52400280	Cathedral Ward	Cathedral Ward - Numbing Mist x6	map m24_00
+52400280	Cathedral Ward	Cathedral Ward - Numbing Mist x6 (ladder above Oedon Chapel Gate)	wiki landmark + map m24_00
 52400300	Cathedral Ward	Cathedral Ward - Blood Gem #1	map m24_00; category-8 blood gem (gem param 124002); specific gem name not in committed data; unestablished
 52400310	Cathedral Ward	Cathedral Ward - Shining Coins x12	map m24_00
 52400320	Cathedral Ward	Cathedral Ward - Blood Vial x6 #2	map m24_00; unestablished
