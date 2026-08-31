@@ -58,6 +58,36 @@ reviewed four-piece set, then create a fresh character and verify:
 Only after that witness should the implementation add deterministic seed
 choices and the `randomize_starting_attire` option.
 
+## Reviewed choice catalog (not activated)
+
+`worlds/bloodborne/starting_attire_catalog.tsv` is the bounded player-facing
+catalog for the next canary. It contains 17 coherent four-piece sets (68 rows),
+with one `EquipParamProtector` id per literal slot and an explicit native grant
+descriptor (`category:item:quantity`, always `1:<protector id>:1`). Names were
+cross-checked against the English item names already present in the fixed-lot
+catalog; a set is admitted only when the remaining ids form the same contiguous
+head/body/arms/legs parameter family. Incomplete families, transformation
+pieces, wandering/NPC duplicates, bloodied NPC variants, and naked/system rows
+are excluded rather than guessed into completeness.
+
+The native corpus audit proves that every reviewed id still exists and that its
+four literal slot flags identify exactly the catalogued slot:
+
+```powershell
+dotnet run --project tools/bb_suppression_writer/BBSuppressionWriter.csproj -- `
+  --audit-starting-attire-catalog `
+  worlds/bloodborne/starting_attire_catalog.tsv `
+  gameparam.parambnd.dcx paramdef.paramdefbnd.dcx
+```
+
+`build_starting_attire_choice()` supplies a domain-separated SHA-256 selection
+over complete sets. The same AP seed/slot string always selects the same set;
+pieces can never be mixed between sets, and the loader refuses malformed slot
+orders, duplicate ids, or mismatched grant descriptors. This is deliberately a
+library layer only: slot data does not call it, there is no YAML option, and the
+writer's existing canary is still the only write path until a fresh-save witness
+establishes consumption and persistence.
+
 ## Packaged canary writer
 
 The native writer now builds that exact canary without weakening the launcher

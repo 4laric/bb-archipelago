@@ -1,0 +1,69 @@
+set_key	protector_id	slot	name	grant_descriptor
+charred_hunter	10000	head	Charred Hunter Hood	1:10000:1
+charred_hunter	11000	body	Charred Hunter Garb	1:11000:1
+charred_hunter	12000	arms	Charred Hunter Gloves	1:12000:1
+charred_hunter	13000	legs	Charred Hunter Trousers	1:13000:1
+yharnam_hunter	70000	head	Yharnam Hunter Cap	1:70000:1
+yharnam_hunter	71000	body	Yharnam Hunter Garb	1:71000:1
+yharnam_hunter	72000	arms	Yharnam Hunter Gloves	1:72000:1
+yharnam_hunter	73000	legs	Yharnam Hunter Trousers	1:73000:1
+knight	80000	head	Knight's Wig	1:80000:1
+knight	81000	body	Knight's Garb	1:81000:1
+knight	82000	arms	Knight's Gloves	1:82000:1
+knight	83000	legs	Knight's Trousers	1:83000:1
+cainhurst	100000	head	Cainhurst Helmet	1:100000:1
+cainhurst	101000	body	Cainhurst Armor	1:101000:1
+cainhurst	102000	arms	Cainhurst Gauntlets	1:102000:1
+cainhurst	103000	legs	Cainhurst Leggings	1:103000:1
+black_church	110000	head	Black Church Hat	1:110000:1
+black_church	111000	body	Black Church Garb	1:111000:1
+black_church	112000	arms	Surgical Long Gloves	1:112000:1
+black_church	113000	legs	Black Church Trousers	1:113000:1
+choir	120000	head	Blindfold Cap	1:120000:1
+choir	121000	body	Choir Garb	1:121000:1
+choir	122000	arms	Choir Gloves	1:122000:1
+choir	123000	legs	Choir Trousers	1:123000:1
+gascoigne	130000	head	Gascoigne's Cap	1:130000:1
+gascoigne	131000	body	Gascoigne's Garb	1:131000:1
+gascoigne	132000	arms	Gascoigne's Gloves	1:132000:1
+gascoigne	133000	legs	Gascoigne's Trousers	1:133000:1
+tomb_prospector	140000	head	Tomb Prospector Hood	1:140000:1
+tomb_prospector	141000	body	Tomb Prospector Garb	1:141000:1
+tomb_prospector	142000	arms	Tomb Prospector Gloves	1:142000:1
+tomb_prospector	143000	legs	Tomb Prospector Trousers	1:143000:1
+executioner	150000	head	Gold Ardeo	1:150000:1
+executioner	151000	body	Executioner Garb	1:151000:1
+executioner	152000	arms	Executioner Gauntlets	1:152000:1
+executioner	153000	legs	Executioner Trousers	1:153000:1
+crowfeather	180000	head	Beak Mask	1:180000:1
+crowfeather	181000	body	Crowfeather Garb	1:181000:1
+crowfeather	182000	arms	Crowfeather Manchettes	1:182000:1
+crowfeather	183000	legs	Crowfeather Trousers	1:183000:1
+madman	210000	head	Madman Hood	1:210000:1
+madman	211000	body	Madman Garb	1:211000:1
+madman	212000	arms	Madman Manchettes	1:212000:1
+madman	213000	legs	Madman Leggings	1:213000:1
+doll	220000	head	Doll Hat	1:220000:1
+doll	221000	body	Doll Clothes	1:221000:1
+doll	222000	arms	Doll Gloves	1:222000:1
+doll	223000	legs	Doll Skirt	1:223000:1
+foreign	230000	head	Foreign Hood	1:230000:1
+foreign	231000	body	Foreign Garb	1:231000:1
+foreign	232000	arms	Foreign Manchettes	1:232000:1
+foreign	233000	legs	Foreign Trousers	1:233000:1
+old_hunter	350000	head	Old Hunter Cap	1:350000:1
+old_hunter	351000	body	Old Hunter Garb	1:351000:1
+old_hunter	352000	arms	Old Hunter Gloves	1:352000:1
+old_hunter	353000	legs	Old Hunter Trousers	1:353000:1
+maria_hunter	370000	head	Maria Hunter Cap	1:370000:1
+maria_hunter	371000	body	Maria Hunter Garb	1:371000:1
+maria_hunter	372000	arms	Maria Hunter Gloves	1:372000:1
+maria_hunter	373000	legs	Maria Hunter Trousers	1:373000:1
+constable	380000	head	Constable's Helmet	1:380000:1
+constable	381000	body	Constable's Garb	1:381000:1
+constable	382000	arms	Constable's Gloves	1:382000:1
+constable	383000	legs	Constable's Trousers	1:383000:1
+yamamura	400000	head	Yamamura Hunter Hat	1:400000:1
+yamamura	401000	body	Yamamura Hunter Garb	1:401000:1
+yamamura	402000	arms	Yamamura Hunter Gloves	1:402000:1
+yamamura	403000	legs	Yamamura Hunter Trousers	1:403000:1
