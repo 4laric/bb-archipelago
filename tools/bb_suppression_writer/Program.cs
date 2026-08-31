@@ -8,6 +8,18 @@ if (args.Length == 3 && args[0] == "--inspect-starting-attire")
     return 0;
 }
 
+if (args.Length == 3 && args[0] == "--inspect-starting-attire-catalog")
+{
+    InspectStartingAttireCatalog(args[1], args[2]);
+    return 0;
+}
+
+if (args.Length == 4 && args[0] == "--audit-starting-attire-catalog")
+{
+    AuditStartingAttireCatalog(args[1], args[2], args[3]);
+    return 0;
+}
+
 if (args.Length == 9 && args[0] == "--write-starting-attire-canary" && args[8] == "--apply")
 {
     WriteStartingAttireCanary(args[1], args[2], args[3], args[4..8]);
@@ -154,6 +166,66 @@ static void InspectStartingAttire(string inputPath, string paramdefPath)
     {
         Console.WriteLine($"PROTECTOR\t{row.ID}\t{row.Name}\t{String.Join(';', slotFields.Select(field => $"{field}={RequireCell(row, field).Value}"))}");
     }
+}
+
+static void InspectStartingAttireCatalog(string inputPath, string paramdefPath)
+{
+    BND4 game = BND4.Read(Path.GetFullPath(inputPath));
+    BND4 defs = BND4.Read(Path.GetFullPath(paramdefPath));
+    PARAM protectors = PARAM.Read(RequireSingleFile(game, "EquipParamProtector.param").Bytes);
+    protectors.ApplyParamdef(ReadMatchingDefinition(defs, protectors));
+    string[] slotFields = ["headEquip", "bodyEquip", "armEquip", "legEquip"];
+    foreach (PARAM.Row row in protectors.Rows)
+    {
+        int[] flags = slotFields.Select(field => Convert.ToInt32(RequireCell(row, field).Value)).ToArray();
+        if (flags.Count(value => value == 1) != 1 || flags.Any(value => value is not (0 or 1)))
+            continue;
+        int slot = Array.IndexOf(flags, 1);
+        Console.WriteLine($"PROTECTOR\t{row.ID}\t{slotFields[slot]}\t{row.Name}");
+    }
+}
+
+static void AuditStartingAttireCatalog(string catalogPath, string inputPath, string paramdefPath)
+{
+    string[] lines = File.ReadAllLines(Path.GetFullPath(catalogPath));
+    const string header = "set_key\tprotector_id\tslot\tname\tgrant_descriptor";
+    if (lines.Length < 5 || lines[0] != header)
+        throw new InvalidDataException("starting-attire catalog has an invalid header or no complete set");
+    var rows = lines.Skip(1).Select(line => line.Split('\t')).ToList();
+    if (rows.Any(row => row.Length != 5))
+        throw new InvalidDataException("starting-attire catalog row does not contain five fields");
+
+    BND4 game = BND4.Read(Path.GetFullPath(inputPath));
+    BND4 defs = BND4.Read(Path.GetFullPath(paramdefPath));
+    PARAM protectors = PARAM.Read(RequireSingleFile(game, "EquipParamProtector.param").Bytes);
+    protectors.ApplyParamdef(ReadMatchingDefinition(defs, protectors));
+    string[] slots = ["head", "body", "arms", "legs"];
+    string[] slotFields = ["headEquip", "bodyEquip", "armEquip", "legEquip"];
+    foreach (IGrouping<string, string[]> set in rows.GroupBy(row => row[0]))
+    {
+        List<string[]> pieces = set.ToList();
+        if (pieces.Count != 4 || !pieces.Select(row => row[2]).SequenceEqual(slots))
+            throw new InvalidDataException($"{set.Key}: expected one ordered piece for every attire slot");
+        foreach (string[] piece in pieces)
+        {
+            if (!Int32.TryParse(piece[1], out int id) || piece[4] != $"1:{id}:1")
+                throw new InvalidDataException($"{set.Key}: invalid protector/grant descriptor {piece[1]}/{piece[4]}");
+            List<PARAM.Row> matches = protectors.Rows.Where(row => row.ID == id).ToList();
+            if (matches.Count != 1)
+                throw new InvalidDataException($"{set.Key}: expected one EquipParamProtector row {id}");
+            int expectedSlot = Array.IndexOf(slots, piece[2]);
+            for (int slot = 0; slot < slots.Length; slot++)
+            {
+                int actual = Convert.ToInt32(RequireCell(matches[0], slotFields[slot]).Value);
+                if (actual != (slot == expectedSlot ? 1 : 0))
+                    throw new InvalidDataException(
+                        $"{set.Key}: protector {id} is not exclusively a {piece[2]} row");
+            }
+        }
+    }
+    if (rows.Select(row => row[1]).Distinct().Count() != rows.Count)
+        throw new InvalidDataException("starting-attire catalog repeats a protector id");
+    Console.WriteLine($"starting_attire_sets={rows.Count / 4} pieces={rows.Count} catalog={catalogPath}");
 }
 
 static void WriteStartingAttireCanary(string inputPath, string paramdefPath,

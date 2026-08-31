@@ -117,6 +117,13 @@ class RoundTripTests(unittest.TestCase):
         self.assertIn('expected one EquipParamProtector row', source)
         self.assertIn('is not exclusively a {slotFields[index]} row', source)
 
+    def test_starting_attire_catalog_has_a_native_corpus_audit(self):
+        source = NATIVE_WRITER.read_text(encoding="utf-8")
+        self.assertIn('args[0] == "--audit-starting-attire-catalog"', source)
+        self.assertIn('set_key\\tprotector_id\\tslot\\tname\\tgrant_descriptor', source)
+        self.assertIn('protector {id} is not exclusively a {piece[2]} row', source)
+        self.assertIn('starting-attire catalog repeats a protector id', source)
+
 
 class ApplyTests(unittest.TestCase):
     def test_the_planned_slot_is_replaced_and_the_flag_is_not(self):
