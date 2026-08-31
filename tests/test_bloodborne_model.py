@@ -87,7 +87,8 @@ def slice_reachable(held: set[str], *, locations=None) -> set[str]:
 
 class BloodborneModelTests(unittest.TestCase):
     def test_model_references_are_valid(self):
-        self.assertEqual([], MODEL.validate())
+        errors = MODEL.validate()
+        self.assertEqual(0, len(errors), errors)
 
     def test_rule_dnf(self):
         rule = Rule.any(("a", "b"), ("c",))
@@ -109,7 +110,7 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(644, len(NETWORK_LOCATIONS))
+        self.assertEqual(663, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -125,7 +126,7 @@ class BloodborneModelTests(unittest.TestCase):
              "Research Hall": 37, "Lumenwood Garden": 1,
              "Astral Clocktower": 1, "Fishing Hamlet": 41,
              "Nightmare Grand Cathedral": 1, "Healing Church Workshop": 4,
-             "Upper Cathedral Ward": 2},
+             "Upper Cathedral Ward": 21},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -194,12 +195,12 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 74)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 49)
-        self.assertEqual(counts["Blood Stone Shards x2"], 37)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 37)
+        self.assertEqual(counts["Blood Vial"], 76)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 50)
+        self.assertEqual(counts["Blood Stone Shards x2"], 38)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 38)
         self.assertEqual(counts["Blood Stone Chunk"], 25)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 24)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 25)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2", "Bolt Paper x2"):
             self.assertEqual(counts[name], 25, name)
@@ -208,9 +209,10 @@ class BloodborneModelTests(unittest.TestCase):
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
                      "Shaman Bone Blade", "Madman's Knowledge", "Great One's Wisdom",
-                     "Coldblood Dew (3)", "Thick Coldblood (6)",
-                     "Frenzied Coldblood (8)"):
-            self.assertEqual(counts[name], 12, name)
+                     "Coldblood Dew (3)"):
+            self.assertEqual(counts[name], 13, name)
+        self.assertEqual(counts["Thick Coldblood (6)"], 12)
+        self.assertEqual(counts["Frenzied Coldblood (8)"], 12)
         self.assertEqual(counts["Kin Coldblood (11)"], 12)
         self.assertEqual(counts["Blood Rock"], 1)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
@@ -235,11 +237,11 @@ class BloodborneModelTests(unittest.TestCase):
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 224)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 149)
-        self.assertEqual(counts["Blood Stone Shards x2"], 112)
-        self.assertEqual(counts["Pebbles x3"], 75)
-        self.assertEqual(counts["Molotov Cocktails x2"], 74)
+        self.assertEqual(counts["Blood Vial"], 230)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 154)
+        self.assertEqual(counts["Blood Stone Shards x2"], 115)
+        self.assertEqual(counts["Pebbles x3"], 77)
+        self.assertEqual(counts["Molotov Cocktails x2"], 77)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 15)  # fourteen slice items + Blood Vial

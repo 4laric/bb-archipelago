@@ -204,10 +204,16 @@ class GoldenIdTests(unittest.TestCase):
 
         from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
         published = set(GOLDEN_LOCATIONS)
+        new_upper = {
+            row.key for row in FIXED_LOCATIONS
+            if row.key.startswith("fixed_upper_cathedral_lot_")
+            or row.key == "fixed_cathedral_ward_lot_2420320"
+        }
         # Slice 1's Central Yharnam block, assigned 2026-08-18 in manifest
         # order. It must stay exactly where it was when slice 3 appended.
         slice_one = [row.key for row in FIXED_LOCATIONS
-                     if row.key not in published and row.key.startswith("fixed_")
+                     if row.key not in published and row.key not in new_upper
+                    and row.key.startswith("fixed_")
                     and not row.key.startswith(("fixed_cathedral_ward_lot_",
                                                  "fixed_old_yharnam_lot_",
                                                  "fixed_hemwick_lot_",
@@ -227,7 +233,8 @@ class GoldenIdTests(unittest.TestCase):
         # Slice 3's block, appended after the last id slice 1 handed out.
         slice_three = [row.key for row in FIXED_LOCATIONS
                        if row.key.startswith(("fixed_cathedral_ward_lot_",
-                                              "fixed_old_yharnam_lot_"))]
+                                              "fixed_old_yharnam_lot_"))
+                       and row.key not in new_upper]
         self.assertEqual(len(slice_three), 113)
         expected.update({key: 0xBB1054 + index for index, key in enumerate(slice_three)})
         slice_four = [row.key for row in FIXED_LOCATIONS
@@ -244,6 +251,12 @@ class GoldenIdTests(unittest.TestCase):
                               if row.key.startswith("fixed_nightmare_frontier_lot_")]
         self.assertEqual(len(nightmare_frontier), 44)
         expected.update({key: 0xBB1152 + index for index, key in enumerate(nightmare_frontier)})
+        ordered_upper = ["fixed_cathedral_ward_lot_2420320", *sorted(
+            new_upper - {"fixed_cathedral_ward_lot_2420320"},
+            key=lambda key: int(key.rsplit("_", 1)[1]),
+        )]
+        self.assertEqual(19, len(ordered_upper))
+        expected.update({key: 0xBB128B + index for index, key in enumerate(ordered_upper)})
         self.assertEqual(
             {key: LOCATION_ID_BY_KEY[key] for key in expected},
             expected,
@@ -260,7 +273,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB1289)
+        self.assertEqual(max(ids), 0xBB129D)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

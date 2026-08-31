@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Upper Cathedral Ward's ordinary pickups are now randomized.** Nineteen
+  weapons, attire pieces, consumables, and upgrade-material pickups join its
+  existing boss and scripted checks. Its natural Blood Gem remains intact
+  while also reporting an AP check.
 - **Extracting a new playtest build no longer leaves the launcher pointing at
   yesterday's deleted suppression manifest.** When either saved suppression
   path has vanished, startup now replaces the binder and manifest together
