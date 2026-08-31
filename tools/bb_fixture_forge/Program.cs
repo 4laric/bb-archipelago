@@ -176,7 +176,8 @@ if (namesCheck[1000] != "Blood Vial")
 PARAM paramCheck = PARAM.Read(gameCheck.Files.Single(file =>
     file.Name is not null && file.Name.EndsWith("ItemLotParam.param", StringComparison.OrdinalIgnoreCase)).Bytes);
 PARAMDEF defCheck = PARAMDEF.Read(defsCheck.Files.Single(file =>
-    file.Name is not null && file.Name.EndsWith(".paramdef", StringComparison.OrdinalIgnoreCase)).Bytes);
+    file.Name is not null
+    && file.Name.EndsWith("ItemLotParam.paramdef", StringComparison.OrdinalIgnoreCase)).Bytes);
 if (!paramCheck.ApplyParamdefCarefully(defCheck))
     throw new InvalidDataException("forged param does not accept its forged paramdef");
 if (paramCheck.Rows.Count != plan.Edits.Count)
