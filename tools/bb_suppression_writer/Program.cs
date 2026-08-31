@@ -20,6 +20,12 @@ if (args.Length == 3 && args[0] == "--inspect-shops")
     return 0;
 }
 
+if (args.Length == 4 && args[0] == "--audit-shop-gates")
+{
+    AuditShopGates(args[1], args[2], args[3]);
+    return 0;
+}
+
 if (args.Length == 6 && args[0] == "--seed-weapons" && args[5] == "--apply")
 {
     WriteSeedWeapons(args[1], args[2], args[3], args[4]);
@@ -251,6 +257,53 @@ static void InspectShops(string inputPath, string paramdefPath)
     {
         Console.WriteLine($"SHOP\t{row.ID}\t{row.Name}\t{String.Join(';', row.Cells.Select(cell => $"{cell.Def.InternalName}={cell.Value}"))}");
     }
+}
+
+static void AuditShopGates(string witnessPath, string inputPath, string paramdefPath)
+{
+    string[] lines = File.ReadAllLines(Path.GetFullPath(witnessPath));
+    if (lines.Length != 11 || lines[0] != "qwc_id\tbadge_name\tgoods_id\trepresentative_row\tequip_type\tequip_id\tstock_witness")
+        throw new InvalidDataException("shop witness table must contain its header and ten rows");
+    var witnesses = lines.Skip(1).Select(line => line.Split('\t')).ToList();
+    if (witnesses.Any(fields => fields.Length != 7))
+        throw new InvalidDataException("shop witness row does not contain seven fields");
+    int[] gates = witnesses.Select(fields => Int32.Parse(fields[0])).ToArray();
+    if (!gates.ToHashSet().SetEquals(Enumerable.Range(12101000, 10))
+        || gates.Distinct().Count() != 10)
+        throw new InvalidDataException("shop witnesses must name every ordinary Bath gate once");
+
+    BND4 game = BND4.Read(Path.GetFullPath(inputPath));
+    BND4 defs = BND4.Read(Path.GetFullPath(paramdefPath));
+    BinderFile shopFile = RequireSingleFile(game, "ShopLineupParam.param");
+    PARAM shops = PARAM.Read(shopFile.Bytes);
+    shops.ApplyParamdef(ReadMatchingDefinition(defs, shops));
+    foreach (string[] fields in witnesses)
+    {
+        int gate = Int32.Parse(fields[0]);
+        int rowId = Int32.Parse(fields[3]);
+        int equipType = Int32.Parse(fields[4]);
+        int equipId = Int32.Parse(fields[5]);
+        List<PARAM.Row> matches = shops.Rows.Where(row => row.ID == rowId).ToList();
+        if (matches.Count != 1)
+            throw new InvalidDataException($"gate {gate}: representative row {rowId} is not unique");
+        PARAM.Row row = matches[0];
+        if (Convert.ToInt32(RequireCell(row, "qwcId").Value) != gate
+            || Convert.ToInt32(RequireCell(row, "shopType").Value) != 0
+            || Convert.ToInt32(RequireCell(row, "equipType").Value) != equipType
+            || Convert.ToInt32(RequireCell(row, "equipId").Value) != equipId)
+            throw new InvalidDataException(
+                $"gate {gate}: representative row {rowId} no longer matches its stock witness");
+    }
+    var counts = shops.Rows
+        .Where(row => Convert.ToInt32(RequireCell(row, "shopType").Value) == 0
+            && gates.Contains(Convert.ToInt32(RequireCell(row, "qwcId").Value)))
+        .GroupBy(row => Convert.ToInt32(RequireCell(row, "qwcId").Value))
+        .ToDictionary(group => group.Key, group => group.Count());
+    if (!counts.Keys.ToHashSet().SetEquals(gates))
+        throw new InvalidDataException("ordinary Bath gate groups are incomplete in ShopLineupParam");
+    Console.WriteLine("shop_gate_witnesses=10 status=verified");
+    foreach (string[] fields in witnesses)
+        Console.WriteLine($"  qwc={fields[0]} badge={fields[1]} goods={fields[2]} rows={counts[Int32.Parse(fields[0])]} witness={fields[3]}:{fields[6]}");
 }
 
 static void WriteSeedWeapons(string requestPath, string inputPath, string paramdefPath,

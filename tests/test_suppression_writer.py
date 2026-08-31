@@ -95,6 +95,13 @@ class RoundTripTests(unittest.TestCase):
         self.assertIn('RequireSingleFile(game, "ShopLineupParam.param")', source)
         self.assertIn('cell.Def.InternalName', source)
 
+    def test_native_writer_can_verify_the_committed_shop_gate_witnesses(self):
+        source = NATIVE_WRITER.read_text(encoding="utf-8")
+        self.assertIn('args[0] == "--audit-shop-gates"', source)
+        self.assertIn('Enumerable.Range(12101000, 10)', source)
+        self.assertIn('representative row {rowId} no longer matches its stock witness', source)
+        self.assertIn('ordinary Bath gate groups are incomplete', source)
+
     def test_starting_attire_canary_is_explicit_and_refusal_safe(self):
         source = NATIVE_WRITER.read_text(encoding="utf-8")
         self.assertIn('args[0] == "--write-starting-attire-canary"', source)
