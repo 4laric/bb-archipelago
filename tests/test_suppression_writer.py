@@ -29,6 +29,7 @@ from tools.apply_vanilla_suppression import (  # noqa: E402
 )
 
 BUNDLE = REPO / "research" / "bb_inputs.db"
+NATIVE_WRITER = REPO / "tools" / "bb_suppression_writer" / "Program.cs"
 
 # A miniature ItemLotParam with the same shape as the real one: a header with a
 # trailing empty field, and data rows one field shorter.
@@ -87,6 +88,12 @@ class RoundTripTests(unittest.TestCase):
     def test_a_fixture_round_trips(self):
         text = ",".join(COLUMNS) + "\n" + row("1", "a", {1: ("4001", "4")}, "500") + "\n"
         self.assertEqual(Table.load(text).dump(), text)
+
+    def test_native_writer_exposes_read_only_shop_inspection(self):
+        source = NATIVE_WRITER.read_text(encoding="utf-8")
+        self.assertIn('args[0] == "--inspect-shops"', source)
+        self.assertIn('RequireSingleFile(game, "ShopLineupParam.param")', source)
+        self.assertIn('cell.Def.InternalName', source)
 
 
 class ApplyTests(unittest.TestCase):

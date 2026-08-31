@@ -8,6 +8,12 @@ if (args.Length == 3 && args[0] == "--inspect-starting-attire")
     return 0;
 }
 
+if (args.Length == 3 && args[0] == "--inspect-shops")
+{
+    InspectShops(args[1], args[2]);
+    return 0;
+}
+
 if (args.Length == 6 && args[0] == "--seed-weapons" && args[5] == "--apply")
 {
     WriteSeedWeapons(args[1], args[2], args[3], args[4]);
@@ -135,6 +141,19 @@ static void InspectStartingAttire(string inputPath, string paramdefPath)
     foreach (PARAM.Row row in protectors.Rows.Where(row => referenced.Contains(row.ID)))
     {
         Console.WriteLine($"PROTECTOR\t{row.ID}\t{row.Name}\t{String.Join(';', slotFields.Select(field => $"{field}={RequireCell(row, field).Value}"))}");
+    }
+}
+
+static void InspectShops(string inputPath, string paramdefPath)
+{
+    BND4 game = BND4.Read(Path.GetFullPath(inputPath));
+    BND4 defs = BND4.Read(Path.GetFullPath(paramdefPath));
+    BinderFile shopFile = RequireSingleFile(game, "ShopLineupParam.param");
+    PARAM shops = PARAM.Read(shopFile.Bytes);
+    shops.ApplyParamdef(ReadMatchingDefinition(defs, shops));
+    foreach (PARAM.Row row in shops.Rows)
+    {
+        Console.WriteLine($"SHOP\t{row.ID}\t{row.Name}\t{String.Join(';', row.Cells.Select(cell => $"{cell.Def.InternalName}={cell.Value}"))}");
     }
 }
 
