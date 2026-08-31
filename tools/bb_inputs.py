@@ -62,6 +62,8 @@ SOURCES: tuple[Source, ...] = (
            "param tables; the joins and the enemizer catalog read these"),
     Source("event", "bloodborne_artifacts/event", "*.emevd.dcx.js", True,
            "decompiled event scripts; the award and protection analyses read these"),
+    Source("talk", "bloodborne_artifacts/talk", "**/*.py", False,
+           "ESDLang-decompiled talk scripts; optional until the owner rebuilds the corpus"),
     Source("mined", "../research/mined", "*.tsv", False,
            "msbb_miner output. Derived rather than raw, but the MSBs themselves "
            "are not bundled, so without it the joins cannot be re-run."),
@@ -234,6 +236,22 @@ def check_coverage(bundle: Path) -> int:
     return 0
 
 
+def check_esd_coverage(bundle: Path) -> int:
+    """Require the complete Bloodborne talk corpus when doing ESD award work."""
+    db = connect(bundle)
+    rows = db.execute(
+        "SELECT path, size FROM files WHERE path LIKE 'talk/%' ORDER BY path"
+    ).fetchall()
+    db.close()
+    nonempty = [path for path, size in rows if size > 0]
+    if not nonempty:
+        print("GATE FAILED: bundle has no talk/*.py corpus; rebuild it from the dump ",
+              "before making ESD award or suppression claims", file=sys.stderr)
+        return 1
+    print(f"ESD coverage ok: {len(nonempty)} non-empty talk scripts")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -245,6 +263,7 @@ def main(argv: list[str] | None = None) -> int:
     action.add_argument("--list", action="store_true")
     action.add_argument("--verify", action="store_true")
     action.add_argument("--check-coverage", action="store_true")
+    action.add_argument("--check-esd-coverage", action="store_true")
     args = parser.parse_args(argv)
 
     if args.build:
@@ -257,6 +276,8 @@ def main(argv: list[str] | None = None) -> int:
         return listing(args.bundle)
     if args.verify:
         return verify(args.bundle)
+    if args.check_esd_coverage:
+        return check_esd_coverage(args.bundle)
     return check_coverage(args.bundle)
 
 

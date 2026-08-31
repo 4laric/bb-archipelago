@@ -29,6 +29,7 @@ from tools.bb_inputs import (  # noqa: E402
     PARAM_ALLOWLIST,
     SOURCES,
     check_coverage,
+    check_esd_coverage,
     extract,
     referenced_csvs,
     verify,
@@ -68,7 +69,13 @@ class CommittedBundleTests(unittest.TestCase):
         db = sqlite3.connect(BUNDLE)
         prefixes = {path.split("/", 1)[0] for (path,) in db.execute("SELECT path FROM files")}
         db.close()
-        self.assertEqual(prefixes, {s.prefix for s in SOURCES})
+        required = {s.prefix for s in SOURCES if s.required}
+        known = {s.prefix for s in SOURCES}
+        self.assertTrue(required <= prefixes)
+        self.assertTrue(prefixes <= known)
+
+    def test_missing_esd_corpus_is_an_explicit_failed_gate(self):
+        self.assertEqual(check_esd_coverage(BUNDLE), 1)
 
     def test_extraction_round_trips(self):
         with tempfile.TemporaryDirectory() as tmp:
