@@ -1,10 +1,10 @@
 # Generated fixed-location checks
 
-Status: all first-cycle Central Yharnam, Cathedral Ward and Old Yharnam fixed
-pickups generated (164 manifest rows, 161 seeded). Suppression, automatic AP
-reporting, and ordered reward delivery are validated live on three Central
-Yharnam lots only; no Cathedral Ward or Old Yharnam flag has a runtime witness
-yet, and neither region's boss flag has been seen fire.
+Status: 625 reviewed fixed pickups are generated across the current base-game
+world. Upper Cathedral Ward contributes 19 ordinary pickup checks in addition
+to its existing boss and scripted-award checks. Eighteen of those pickups have
+their vanilla awards suppressed; the category-8 Blood Gem remains a natural
+gem while also reporting its AP check, pending full gem delivery support.
 
 ## Source contract
 

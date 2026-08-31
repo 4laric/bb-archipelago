@@ -16,7 +16,7 @@ Woods). Slice 6 adds ``m28_00_00_00`` (Yahar'gul). Slice 7 adds the reviewed
 Lecture Building rows in ``m32_00_00_00`` and ``m26_00_00_00`` (Nightmare of
 Mensis). The queue-jumped optional Nightmare Frontier slice adds
 ``m33_00_00_00``. The DLC adds ``m34_00_00_00`` through
-``m36_00_00_00``. The map ids are read off
+``m36_00_00_00``. Upper Cathedral Ward adds ``m24_02_00_00``. The map ids are read off
 ``research/catalog/fixed_location_catalog.tsv``; none of them is guessed.
 
 Player-facing names come from ``worlds/bloodborne/location_names.tsv``, the
@@ -54,6 +54,7 @@ SLICE_MAPS = (
     "m28_00_00_00",
     "m32_00_00_00", "m26_00_00_00",
     "m33_00_00_00",
+    "m24_02_00_00",
     "m34_00_00_00", "m35_00_00_00", "m36_00_00_00",
 )
 
@@ -69,6 +70,7 @@ MAP_DEFAULT_REGION = {
     "m32_00_00_00": "Lecture Building 1F",
     "m26_00_00_00": "Nightmare of Mensis",
     "m33_00_00_00": "Nightmare Frontier",
+    "m24_02_00_00": "Upper Cathedral Ward",
     "m34_00_00_00": "Hunter's Nightmare",
     "m35_00_00_00": "Research Hall",
     "m36_00_00_00": "Fishing Hamlet",
@@ -84,6 +86,7 @@ MAP_KEY_PREFIX = {
     "m32_00_00_00": "fixed_lecture_building_lot_",
     "m26_00_00_00": "fixed_nightmare_mensis_lot_",
     "m33_00_00_00": "fixed_nightmare_frontier_lot_",
+    "m24_02_00_00": "fixed_upper_cathedral_lot_",
     "m34_00_00_00": "fixed_hunters_nightmare_lot_",
     "m35_00_00_00": "fixed_research_hall_lot_",
     "m36_00_00_00": "fixed_fishing_hamlet_lot_",
@@ -104,6 +107,8 @@ REPLACEMENT_FLAGS = {
     52420695: 52420690,   # Item_宝箱04（差し替え用）
     53200015: 53200010,   # Lecture Building corpse replacement
     53200645: 53200640,   # Lecture Building chest replacement
+    52420125: 52420120,   # Upper Cathedral corpse replacement
+    52420285: 52420270,   # Cosmic Eye Watcher Badge corpse replacement
 }
 
 # Catalog rows inside a slice map that deliberately do not become manifest
@@ -113,10 +118,9 @@ EXCLUDED_FLAGS = {
         "already published by data.py as treasure_radiant_sword_hunter_badge "
         "with its own permanent network id and runtime binding"
     ),
-    52420320: (
-        "the acquisition flag is shared between an m24_00 dummy corpse and the "
-        "real m24_02 placement; the reviewed name table places the real spot in "
-        "Upper Cathedral Ward, outside this slice"
+    52420270: (
+        "already published by data.py as treasure_cosmic_eye_watcher_badge "
+        "with its own permanent network id and runtime binding"
     ),
     52200360: (
         "already published by data.py as treasure_rune_workshop_tool with "
@@ -182,6 +186,9 @@ PUBLISHED_KEYS = {
 # The clinic front courtyard (52410800) stays in Central Yharnam: it is
 # reachable at sphere 1 on the way out of the clinic.
 REGION_OVERRIDES = {
+    # Shared with an m24_00 dummy corpse; the real pickup is the reviewed
+    # m24_02 A Call Beyond placement.
+    52420320: "Upper Cathedral Ward",
     52410140: "Iosefka's Clinic",
     52410640: "Iosefka's Clinic",
     52410920: "Cathedral Ward",

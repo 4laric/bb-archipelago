@@ -6,6 +6,11 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Upper Cathedral Ward's ordinary pickups are now randomized.** Nineteen
+  weapons, attire pieces, consumables, and upgrade-material pickups join its
+  existing boss and scripted checks. Its natural Blood Gem remains intact
+  while also reporting an AP check.
+
 - **Enemy transplant scaling now has a deterministic offline plan, still off
   by default.** An explicit experimental flag derives Bloodborne's 13-rung
   native area curve from bundled params, emits collision-checked NpcParam and

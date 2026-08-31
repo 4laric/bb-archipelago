@@ -27,7 +27,7 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 TOTAL_CATALOG_ROWS = 651
 TOTAL_TABLE_ROWS = 682  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
-SHIPPED_NAMED_ROWS = 606
+SHIPPED_NAMED_ROWS = 625
 
 # Non-catalog checks the table names: boss defeats, EMEVD script awards, and
 # the one evidenced interaction, each keyed by the check flag committed in
@@ -136,7 +136,7 @@ LANDMARK_EVIDENCE = ROOT / "docs" / "location_landmark_evidence.tsv"
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
 HINTED_ROWS = 184
-BARE_ROWS = 497
+BARE_ROWS = 498
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an
