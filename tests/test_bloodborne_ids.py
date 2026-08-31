@@ -376,7 +376,7 @@ class RuntimeItemContractTests(unittest.TestCase):
                 "live_grant_inventory_ui",
                 "param_id_inferred",
             },
-            "bb-0.1.0-r8": {
+            "bb-0.1.0-r9": {
                 "goods_formula_observed",
                 "live_grant_inventory_ui",
                 "param_id_inferred",
