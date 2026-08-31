@@ -24,6 +24,7 @@ from .data import (
 from .model import ItemKind, Rule
 from .resource_data import read_resource_text
 from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime_item_binding
+from .toast_placeholders import ToastPlacement, build_toast_placeholder_plan
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
@@ -628,12 +629,33 @@ else:
                     self._alternate_gaol_enabled()),
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
+                "toast_placeholders": self._toast_placeholder_plan(),
                 **build_runtime_slot_data(
                     self._pool_item_keys() | STARTING_TOOL_KEYS,
                     self._goal_location_key(),
                     (location.key for location in self._active_locations()),
                 ),
             }
+
+        def _toast_placeholder_plan(self) -> dict[str, Any]:
+            placements = []
+            important_mask = ItemClassification.progression | ItemClassification.useful
+            for data in self._active_locations():
+                binding = LOCATION_BINDINGS[data.key]
+                if not data.vanilla_award_suppressed or binding.item_lot_id is None:
+                    continue
+                placed = self.multiworld.get_location(data.name, self.player).item
+                if placed is None:
+                    continue
+                placements.append(ToastPlacement(
+                    location_key=data.key,
+                    location_id=LOCATION_ID_BY_KEY[data.key],
+                    item_lot_id=binding.item_lot_id,
+                    item_name=placed.name,
+                    recipient=self.multiworld.player_name[placed.player],
+                    important=bool(placed.classification & important_mask),
+                ))
+            return build_toast_placeholder_plan(placements)
 
         def generate_output(self, output_directory: str) -> None:
             # The request file is the seed's identity document for the

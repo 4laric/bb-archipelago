@@ -88,6 +88,7 @@ New-Item -ItemType Directory -Path $native -Force | Out-Null
 $projects = @(
     @{ Project = "tools\bb_enemizer_writer\BBEnemizerWriter.csproj"; Name = "BBEnemizerWriter.exe" },
     @{ Project = "tools\bb_suppression_writer\BBSuppressionWriter.csproj"; Name = "BBSuppressionWriter.exe" },
+    @{ Project = "tools\bb_toast_writer\BBToastWriter.csproj"; Name = "BBToastWriter.exe" },
     @{ Project = "tools\msbb_miner\MSBBMiner.csproj"; Name = "MSBBMiner.exe" }
 )
 foreach ($item in $projects) {

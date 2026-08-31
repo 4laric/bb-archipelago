@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Seed generation now emits an inert, collision-checked plan for truthful
+  in-game names on useful and progression pickups. A packaged build tool can
+  clone the non-modal Blood Vial goods shape, repoint the corresponding lots,
+  and add bounded `Item (player)` FMG names. The writer is deliberately double
+  gated and the plans remain disabled until a live test proves that Bloodborne
+  reads the replacement `item.msgbnd` and uses the non-blocking popup path.
+
 - Replace seven broad Cathedral Ward tracker labels with wiki-backed landmarks
   joined to their exact item-lot flags and MSB treasure placements.
 

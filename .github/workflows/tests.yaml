@@ -37,10 +37,9 @@ jobs:
           git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
       - name: Build the native binder writer
         shell: pwsh
-        run: >-
-          dotnet build tools/bb_suppression_writer/BBSuppressionWriter.csproj
-          -p:SoulsFormatsNextRoot=$PWD\_soulsformats
-          -v:minimal
+        run: |
+          dotnet build tools/bb_suppression_writer/BBSuppressionWriter.csproj -p:SoulsFormatsNextRoot=$PWD\_soulsformats -v:minimal
+          dotnet build tools/bb_toast_writer/BBToastWriter.csproj -p:SoulsFormatsNextRoot=$PWD\_soulsformats -v:minimal
 
   # The binder the launcher validates, rebuilt from the repo alone (#138). The
   # world pins SUPPRESSION_PLAN_SHA256 into every seed and the launcher refuses
@@ -406,7 +405,8 @@ jobs:
             tools/bb_fixture_forge/BBFixtureForge.csproj \
             tools/msbb_miner/MSBBMiner.csproj \
             tools/bb_enemizer_writer/BBEnemizerWriter.csproj \
-            tools/bb_suppression_writer/BBSuppressionWriter.csproj; do
+            tools/bb_suppression_writer/BBSuppressionWriter.csproj \
+            tools/bb_toast_writer/BBToastWriter.csproj; do
             dotnet build "$project" -c Release \
               -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -v:minimal
           done
@@ -486,6 +486,31 @@ jobs:
           work/integration/fixtures/param/gameparam.parambnd.dcx
           work/integration/fixtures/paramdef/paramdef.paramdefbnd.dcx
           work/integration/gameparam.suppressed.parambnd.dcx --apply
+      - name: Build and apply a guarded toast plan to both forged archives
+        run: |
+          python - <<'PY'
+          import json
+          suppression = json.load(open("work/integration/suppression-plan.json", encoding="utf-8"))
+          edit = suppression["edits"][0]
+          plan = {
+              "format": "bb-toast-placeholder-plan-v1", "enabled": True,
+              "source_goods_id": 1000,
+              "entries": [{
+                  "location_key": "synthetic", "location_id": 1,
+                  "item_lot_id": int(edit["item_lot_id"]), "goods_id": 900000,
+                  "display_name": "Fire Paper x2 (oz)",
+              }],
+          }
+          json.dump(plan, open("work/integration/toast-plan.json", "w", encoding="utf-8"))
+          PY
+          dotnet run --project tools/bb_toast_writer -c Release --no-build \
+            -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- \
+            work/integration/toast-plan.json \
+            work/integration/gameparam.suppressed.parambnd.dcx \
+            work/integration/fixtures/paramdef/paramdef.paramdefbnd.dcx \
+            work/integration/fixtures/msg/engus/item.msgbnd.dcx \
+            work/integration/gameparam.toast.parambnd.dcx \
+            work/integration/item.toast.msgbnd.dcx --probe-confirmed --apply
 
   # The control that makes the inputs bundle trustworthy: extract it, re-run the
   # derivation, and require the committed research to be exactly what came out.
