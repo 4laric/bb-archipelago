@@ -31,6 +31,14 @@ interaction as owning its vanilla counterpart unless noted below.
 | Celestial Dial | Operates the Astral Clock after Lady Maria and opens the route to the Fishing Hamlet. |
 | Sword Hunter Badge | Unlocks the Cleric Beast weapon stock at the Bath Messengers when received. The boss no longer awards a vanilla extra copy. |
 | Old Hunter Badge | Unlocks Gehrman's weapon stock at the Bath Messengers when received. |
+| Saw Hunter Badge | Unlocks the Saw Hunter weapon stock at the Bath Messengers when received. |
+| Crow Hunter Badge | Unlocks Eileen's Crow Hunter weapon stock at the Bath Messengers when received. |
+| Powder Keg Hunter Badge | Unlocks Powder Keg weapon stock at the Bath Messengers when received. |
+| Radiant Sword Hunter Badge | Unlocks the Healing Church's advanced weapon stock at the Bath Messengers when received. |
+| Wheel Hunter Badge | Unlocks Executioner weapon stock at the Bath Messengers when received. |
+| Cainhurst Badge | Unlocks Cainhurst weapon stock at the Bath Messengers when received. |
+| Spark Hunter Badge | Unlocks the Tonitrus and related stock at the Bath Messengers when received. |
+| Cosmic Eye Watcher Badge | Unlocks Choir weapon stock at the Bath Messengers when received. |
 | Gold Pendant | A randomized Vicar Amelia trophy. It can still be consumed to obtain its Blood Gem. |
 | Laurence's Skull | Enables the optional Laurence encounter in the Hunter's Nightmare. This inventory item is not the Grand Cathedral skull interaction used to learn the Forbidden Woods password. |
 | Third Umbilical Cord #1 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
@@ -153,7 +161,9 @@ opens the password conversation at the Forbidden Woods door. It is not consumed.
 blood_vial blood_gem_workshop_tool rune_workshop_tool hunter_chief_emblem
 oedon_tomb_key lunarium_key forbidden_woods_password cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
 eye_of_blood_drunk_hunter eye_pendant astral_clocktower_key celestial_dial
- sword_hunter_badge old_hunter_badge gold_pendant
+ sword_hunter_badge old_hunter_badge saw_hunter_badge crow_hunter_badge
+powder_keg_hunter_badge radiant_sword_hunter_badge wheel_hunter_badge
+cainhurst_badge spark_hunter_badge cosmic_eye_watcher_badge gold_pendant
 laurences_skull third_umbilical_cord_1 third_umbilical_cord_2
 third_umbilical_cord_3 third_umbilical_cord_4 saw_spear chikage blade_of_mercy hunter_axe burial_blade
 saw_cleaver kirkhammer ludwigs_holy_blade beast_claw rifle_spear reiterpallasch

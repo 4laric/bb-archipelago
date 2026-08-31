@@ -663,6 +663,10 @@ location_flag	region	name	basis
 53502000	Research Hall	Research Hall - Laurence's Skull	published (data.py pickup_laurences_skull); EMEVD script-award flag committed in runtime_bindings.py
 12301800	Old Yharnam	Blood-starved Beast	published (data.py boss_blood_starved_beast); boss-defeat event flag committed in runtime_bindings.py
 12301700	Graveyard of the Darkbeast	Darkbeast Paarl	published (data.py boss_darkbeast_paarl); m23_00 EMEVD event 12301700 defeats entity 2300810
+50001900	Cathedral Ward	Cathedral Ward - Eileen's Crow Hunter Badge award	progression_items.tsv; shared acquisition flag for Eileen lots 35012/35020/35030
+50001700	Old Yharnam	Old Yharnam - Djura's Powder Keg Hunter Badge award	progression_items.tsv; shared acquisition flag for Djura lots 33000/33010
+50001810	Cathedral Ward	Cathedral Ward - Alfred's Wheel Hunter Badge award	progression_items.tsv; shared acquisition flag for Alfred lots 34010/34031
+50000205	Castle Cainhurst	Castle Cainhurst - Vileblood oath Cainhurst Badge award	progression_items.tsv; Annalise oath lot 17001 acquisition flag
 12401800	Grand Cathedral	Vicar Amelia	published (data.py boss_vicar_amelia); boss-defeat event flag committed in runtime_bindings.py
 12701800	Forbidden Woods	Shadows of Yharnam	published (data.py boss_shadows_of_yharnam); boss-defeat event flag committed in runtime_bindings.py
 13201800	Moonside Lake	Rom, the Vacuous Spider	published (data.py boss_rom); boss-defeat event flag committed in runtime_bindings.py

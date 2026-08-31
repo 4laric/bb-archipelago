@@ -25,7 +25,7 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 682  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 686  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 625
 
@@ -64,6 +64,10 @@ SCRIPTED_CHECK_FLAGS = {
     "52110800",   # pickup_small_hair_ornament
     "52110810",   # pickup_workshop_umbilical_cord
     "53200810",   # pickup_lunarium_key
+    "50001900",   # award_crow_hunter_badge
+    "50001700",   # award_powder_keg_hunter_badge
+    "50001810",   # award_wheel_hunter_badge
+    "50000205",   # award_cainhurst_badge
 }
 
 # data.py checks that draw their name from the table: key -> the flag its
@@ -113,6 +117,10 @@ DATA_PY_TABLED_CHECKS = {
     "treasure_underground_jail_chunk": 53500630,
     "treasure_underground_cell_inner_chamber_key": 50002360,
     "treasure_cosmic_eye_watcher_badge": 52420270,
+    "award_crow_hunter_badge": 50001900,
+    "award_powder_keg_hunter_badge": 50001700,
+    "award_wheel_hunter_badge": 50001810,
+    "award_cainhurst_badge": 50000205,
 }
 
 # Published slice names that still carry a "(Lot NNN)" research placeholder.
@@ -137,7 +145,7 @@ LANDMARK_UNRESOLVED = ROOT / "docs" / "location_landmark_unresolved.tsv"
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
 HINTED_ROWS = 188
-BARE_ROWS = 494
+BARE_ROWS = 498
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an

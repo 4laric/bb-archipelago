@@ -132,6 +132,30 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "old_hunter_badge": RuntimeItemBinding(
         0x40001011, 0xB0001011,
         "EquipParamGoods 4113 + Gehrman lots 15000/2100500; validated category-4 goods formula"),
+    "saw_hunter_badge": RuntimeItemBinding(
+        0x4000100E, 0xB000100E,
+        "EquipParamGoods 4110 + ItemLotParam 2410290; validated category-4 goods formula"),
+    "crow_hunter_badge": RuntimeItemBinding(
+        0x4000100F, 0xB000100F,
+        "EquipParamGoods 4111 + Eileen lots 35012/35020/35030; validated category-4 goods formula"),
+    "powder_keg_hunter_badge": RuntimeItemBinding(
+        0x40001010, 0xB0001010,
+        "EquipParamGoods 4112 + Djura lots 33000/33010; validated category-4 goods formula"),
+    "radiant_sword_hunter_badge": RuntimeItemBinding(
+        0x40001013, 0xB0001013,
+        "EquipParamGoods 4115 + ItemLotParam 2400480; validated category-4 goods formula"),
+    "wheel_hunter_badge": RuntimeItemBinding(
+        0x40001014, 0xB0001014,
+        "EquipParamGoods 4116 + Alfred lots 34010/34031; validated category-4 goods formula"),
+    "cainhurst_badge": RuntimeItemBinding(
+        0x40001015, 0xB0001015,
+        "EquipParamGoods 4117 + Annalise oath lot 17001; validated category-4 goods formula"),
+    "spark_hunter_badge": RuntimeItemBinding(
+        0x40001016, 0xB0001016,
+        "EquipParamGoods 4118 + Darkbeast Paarl lot 50800000; validated category-4 goods formula"),
+    "cosmic_eye_watcher_badge": RuntimeItemBinding(
+        0x40001017, 0xB0001017,
+        "EquipParamGoods 4119 + ItemLotParam 2420270/2420280; validated category-4 goods formula"),
     "gold_pendant": RuntimeItemBinding(
         0x40000FA1, 0xB0000FA1,
         "EquipParamGoods 4001 + Vicar Amelia lot 50000001; validated category-4 goods formula"),
@@ -933,6 +957,18 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "treasure_cosmic_eye_watcher_badge": RuntimeLocationBinding(
         52420270, "MSB treasure m24_02_00_00/m24_02_00_01 + ItemLotParam 2420270 acquisition flag",
         2420270, "treasure", "m24_02_00_00;m24_02_00_01", 4, 4119),
+    "award_crow_hunter_badge": RuntimeLocationBinding(
+        50001900, "Eileen badge acquisition flag shared by lots 35012/35020/35030",
+        None, "npc_or_enemy_award", "ItemLotParam + common event 9910", None, None),
+    "award_powder_keg_hunter_badge": RuntimeLocationBinding(
+        50001700, "Djura badge acquisition flag shared by lots 33000/33010",
+        None, "npc_or_enemy_award", "ItemLotParam + common event 9910", None, None),
+    "award_wheel_hunter_badge": RuntimeLocationBinding(
+        50001810, "Alfred badge acquisition flag shared by lots 34010/34031",
+        None, "npc_or_enemy_award", "ItemLotParam + common event 9910", None, None),
+    "award_cainhurst_badge": RuntimeLocationBinding(
+        50000205, "Annalise Vileblood-oath badge acquisition flag from lot 17001",
+        None, "npc_award", "ItemLotParam 17001 + common event 9910", None, None),
     "treasure_executioners_gloves": RuntimeLocationBinding(
         52500250, "MSB treasure m25_00_00_00 + ItemLotParam 2500250 acquisition flag",
         2500250, "treasure", "m25_00_00_00", 4, 2080),
@@ -1015,6 +1051,26 @@ class BossAwardSuppression:
 
 
 SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
+    "crow_hunter_badge": ScriptAwardSuppression(
+        item_key="crow_hunter_badge", item_category=4, item_id=4111,
+        item_lot_ids=(35012, 35020, 35030), acquisition_flag=50001900,
+        unreferenced_lot_ids=(),
+        evidence="Eileen quest/death alternatives share goods 4111 and acquisition flag 50001900"),
+    "powder_keg_hunter_badge": ScriptAwardSuppression(
+        item_key="powder_keg_hunter_badge", item_category=4, item_id=4112,
+        item_lot_ids=(33000, 33010), acquisition_flag=50001700,
+        unreferenced_lot_ids=(),
+        evidence="Djura friendship/death alternatives share goods 4112 and acquisition flag 50001700"),
+    "wheel_hunter_badge": ScriptAwardSuppression(
+        item_key="wheel_hunter_badge", item_category=4, item_id=4116,
+        item_lot_ids=(34010, 34031), acquisition_flag=50001810,
+        unreferenced_lot_ids=(),
+        evidence="Alfred quest/death alternatives share goods 4116 and acquisition flag 50001810"),
+    "spark_hunter_badge": ScriptAwardSuppression(
+        item_key="spark_hunter_badge", item_category=4, item_id=4118,
+        item_lot_ids=(50800000,), acquisition_flag=-1,
+        unreferenced_lot_ids=(),
+        evidence="m23 Darkbeast Paarl defeat event awards lot 50800000; boss flag 12301700 is the check"),
     "oedon_tomb_key": ScriptAwardSuppression(
         item_key="oedon_tomb_key",
         item_category=4,
@@ -1066,6 +1122,8 @@ BOSS_AWARD_SUPPRESSIONS: dict[str, BossAwardSuppression] = {
         ("witch_of_hemwick", 21002950, 4, 7150, -1, "m22 event 12201800 AwardItemLot(21002950)"),
         ("vicar_amelia", 50000001, 4, 4001, -1, "m24_00 event 12401800 AwardItemLot(50000001)"),
         ("cleric_beast_badge", 50000010, 4, 4114, -1, "m24_01 event 12411700 AwardItemLot(50000010)"),
+        ("cosmic_eye_watcher_badge_alt", 2420280, 4, 4119, 52420280,
+         "alternate Upper Cathedral map-state treasure for the Cosmic Eye Watcher Badge"),
         ("gehrman_badge_awake", 15000, 4, 4113, -1, "m21 event 12101800 awards the Old Hunter Badge"),
         ("gehrman_badge_boss", 2100500, 4, 4113, 52100500, "m21 Gehrman defeat reward"),
         ("old_hunter_badge_corpse", 2110015, 4, 4113, 52110030, "m21 Hunter's Dream corpse fallback"),

@@ -46,10 +46,12 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Castle Cainhurst - Quicksilver Bullets x6 #2
 - Castle Cainhurst - Reiterpallasch (chest)
 - Castle Cainhurst - Vileblood Register (chest)
+- Castle Cainhurst - Vileblood oath Cainhurst Badge award
 - Martyr Logarius
 
 ## Cathedral Ward
 
+- Cathedral Ward - Alfred's Wheel Hunter Badge award
 - Cathedral Ward - Antidote
 - Cathedral Ward - Black Church Hat (Foggy Alley alcove) — Foggy Alley alcove.
 - Cathedral Ward - Black Messenger Hat (second rooftop past Oedon Chapel Gate) — second rooftop past Oedon Chapel Gate.
@@ -71,6 +73,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Cathedral Ward - Bold Hunter's Mark (Grand Cathedral approach chest)
 - Cathedral Ward - Bold Hunter's Mark x3
 - Cathedral Ward - Coldblood Dew (2)
+- Cathedral Ward - Eileen's Crow Hunter Badge award
 - Cathedral Ward - Frenzied Coldblood (7)
 - Cathedral Ward - Hunter Chief Emblem (plaza entrance)
 - Cathedral Ward - Madman's Knowledge #1
@@ -626,6 +629,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Old Yharnam - Coldblood Dew (3) #3
 - Old Yharnam - Coldblood Dew (3) #4
 - Old Yharnam - Corpse Pickup
+- Old Yharnam - Djura's Powder Keg Hunter Badge award
 - Old Yharnam - Fire Paper x2 #1
 - Old Yharnam - Fire Paper x2 #2
 - Old Yharnam - Hunter's Torch

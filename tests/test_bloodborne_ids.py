@@ -136,6 +136,14 @@ GOLDEN_ITEMS = {
     "sword_hunter_badge": 0xBB0138,
     "old_hunter_badge": 0xBB0139,
     "gold_pendant": 0xBB013A,
+    "saw_hunter_badge": 0xBB013B,
+    "crow_hunter_badge": 0xBB013C,
+    "powder_keg_hunter_badge": 0xBB013D,
+    "radiant_sword_hunter_badge": 0xBB013E,
+    "wheel_hunter_badge": 0xBB013F,
+    "cainhurst_badge": 0xBB0140,
+    "spark_hunter_badge": 0xBB0141,
+    "cosmic_eye_watcher_badge": 0xBB0142,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -191,6 +199,10 @@ GOLDEN_LOCATIONS = {
     "pickup_small_hair_ornament": 0xBB1285,
     "pickup_workshop_umbilical_cord": 0xBB1286,
     "pickup_lunarium_key": 0xBB1287,
+    "award_crow_hunter_badge": 0xBB129E,
+    "award_powder_keg_hunter_badge": 0xBB129F,
+    "award_wheel_hunter_badge": 0xBB12A0,
+    "award_cainhurst_badge": 0xBB12A1,
 }
 
 
@@ -277,7 +289,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB129D)
+        self.assertEqual(max(ids), 0xBB12A1)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

@@ -771,3 +771,15 @@ location	fixed_upper_cathedral_lot_2420250	0xBB129A
 location	fixed_upper_cathedral_lot_2420260	0xBB129B
 location	fixed_upper_cathedral_lot_2420300	0xBB129C
 location	fixed_upper_cathedral_lot_2420310	0xBB129D
+item	saw_hunter_badge	0xBB013B
+item	crow_hunter_badge	0xBB013C
+item	powder_keg_hunter_badge	0xBB013D
+item	radiant_sword_hunter_badge	0xBB013E
+item	wheel_hunter_badge	0xBB013F
+item	cainhurst_badge	0xBB0140
+item	spark_hunter_badge	0xBB0141
+item	cosmic_eye_watcher_badge	0xBB0142
+location	award_crow_hunter_badge	0xBB129E
+location	award_powder_keg_hunter_badge	0xBB129F
+location	award_wheel_hunter_badge	0xBB12A0
+location	award_cainhurst_badge	0xBB12A1
