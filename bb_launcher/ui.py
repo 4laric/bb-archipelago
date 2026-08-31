@@ -21,7 +21,12 @@ from .core import (
 )
 from .doctor import _process_running, format_report, run_doctor
 from .plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
-from .readiness import format_readiness, gather_readiness, grants_watchdog_warning
+from .readiness import (
+    format_client_health,
+    format_readiness,
+    gather_readiness,
+    grants_watchdog_warning,
+)
 from .resources import application_root, resource_root
 from .seed_request import (
     archive_player_name,
@@ -280,6 +285,8 @@ class LauncherApp:
         self.allow_suppression_mismatch = tk.BooleanVar(value=False)
         self.show_session_details = tk.BooleanVar(value=False)
         self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
+        self.client_health = tk.StringVar(value="Client: not running (no live status)")
+        self._health_monitoring = False
         self._enemy_widgets: list[Any] = []
         self._enemy_advanced_widgets: list[Any] = []
         self._busy = False
@@ -631,8 +638,15 @@ class LauncherApp:
             self.diagnostics_button,
             self.doctor_button,
         )
+        live = ttk.Frame(outer)
+        live.grid(row=6, column=0, sticky="ew", pady=(8, 0))
+        live.columnconfigure(0, weight=1)
+        ttk.Label(live, textvariable=self.client_health).grid(row=0, column=0, sticky="w")
+        ttk.Button(live, text="Open Diagnostics", command=self._open_diagnostics).grid(
+            row=0, column=1, sticky="e"
+        )
         ttk.Label(outer, textvariable=self.status, style="Muted.TLabel").grid(
-            row=6, column=0, sticky="w", pady=(8, 0)
+            row=7, column=0, sticky="w", pady=(8, 0)
         )
         self._set_session_details_visible(False)
 
@@ -920,6 +934,14 @@ class LauncherApp:
             self._set_status_text(f"Status unavailable: {exc}")
             return
         self._set_status_text(format_readiness(readiness))
+        self.client_health.set(format_client_health(readiness))
+
+    def _refresh_live_health(self) -> None:
+        """Refresh the heartbeat while a launched session may still be alive."""
+        if not getattr(self, "_health_monitoring", False):
+            return
+        self._refresh_status()
+        self.root.after(2000, lambda: LauncherApp._refresh_live_health(self))
 
     def _check_grants_armed(self) -> None:
         """One-shot watchdog: did the CE grant harness ever report in?"""
@@ -1255,6 +1277,9 @@ class LauncherApp:
         if shad_log is not None:
             self._append_log(f"shadPS4 log: {shad_log}")
         self._refresh_status()
+        if isinstance(self, LauncherApp) and not getattr(self, "_health_monitoring", False):
+            self._health_monitoring = True
+            self.root.after(2000, lambda: LauncherApp._refresh_live_health(self))
         early_exit = getattr(result, "early_exit", None)
         if early_exit is not None:
             # The overlay is active but the component died at startup: report

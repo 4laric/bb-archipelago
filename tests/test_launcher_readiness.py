@@ -9,6 +9,7 @@ from bb_launcher.client_config import session_paths
 from bb_launcher.core import SUPPRESSION_PATH, activate_build, sha256_file
 from bb_launcher.readiness import (
     BRIDGE_STATE_NAME,
+    format_client_health,
     format_readiness,
     gather_readiness,
     grants_watchdog_warning,
@@ -171,6 +172,65 @@ class ReadinessTests(unittest.TestCase):
         readiness = gather_readiness(self.install, self.root / "state", seed="s", slot="Hunter")
         self.assertIsNone(readiness.bridge)
         self.assertIsNone(grants_watchdog_warning(readiness, bridge_expected=False))
+
+    def test_fresh_health_requires_all_three_live_signals(self):
+        paths = session_paths(self.root / "state", seed="s", slot="Hunter")
+        paths.session.mkdir(parents=True)
+        paths.client_health.write_text(
+            json.dumps(
+                {
+                    "format": "bb-client-health-v1",
+                    "updated_unix_ms": 10_000,
+                    "pid": 42,
+                    "process_alive": True,
+                    "ap_connected": True,
+                    "delivery_armed": True,
+                    "detail": "ready",
+                }
+            ),
+            encoding="utf-8",
+        )
+        readiness = gather_readiness(
+            self.install, self.root / "state", seed="s", slot="Hunter", now=12.0
+        )
+        assert readiness.client_health is not None
+        self.assertTrue(readiness.client_health.ready)
+        self.assertEqual(
+            format_client_health(readiness), "Client: running · AP connected · delivery ready"
+        )
+
+    def test_stale_health_fails_closed(self):
+        paths = session_paths(self.root / "state", seed="s", slot="Hunter")
+        paths.session.mkdir(parents=True)
+        paths.client_health.write_text(
+            json.dumps(
+                {
+                    "format": "bb-client-health-v1",
+                    "updated_unix_ms": 1_000,
+                    "pid": 42,
+                    "process_alive": True,
+                    "ap_connected": True,
+                    "delivery_armed": True,
+                    "detail": "old ready state",
+                }
+            ),
+            encoding="utf-8",
+        )
+        readiness = gather_readiness(
+            self.install, self.root / "state", seed="s", slot="Hunter", now=20.0
+        )
+        assert readiness.client_health is not None
+        self.assertFalse(readiness.client_health.ready)
+        self.assertIn("stopped or unresponsive", format_client_health(readiness))
+
+    def test_malformed_health_never_looks_ready(self):
+        paths = session_paths(self.root / "state", seed="s", slot="Hunter")
+        paths.session.mkdir(parents=True)
+        paths.client_health.write_text('{"format":"bb-client-health-v1"}', encoding="utf-8")
+        readiness = gather_readiness(self.install, self.root / "state", seed="s", slot="Hunter")
+        self.assertIsNone(readiness.client_health)
+        self.assertEqual(format_client_health(readiness), "Client: not running (no live status)")
+        self.assertTrue(any("typed status fields" in note for note in readiness.notes))
 
 
 if __name__ == "__main__":
