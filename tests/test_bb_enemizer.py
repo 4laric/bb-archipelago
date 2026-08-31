@@ -70,7 +70,7 @@ class BloodborneEnemizerTests(unittest.TestCase):
         policies = {s.key: SlotPolicy(True, "test") for s in slots}
         first, rejected = plan_swaps(slots, policies, {}, EnemizerConfig("12345"))
         second, _ = plan_swaps(list(reversed(slots)), policies, {}, EnemizerConfig("12345"))
-        self.assertEqual([], rejected)
+        self.assertEqual(0, len(rejected))
         self.assertEqual([s.json() for s in first], [s.json() for s in second])
         coupled = next(s for s in first if s.logical_key.startswith("m24_01"))
         self.assertEqual(2, len(coupled.destination_keys))

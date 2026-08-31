@@ -5,6 +5,7 @@ from itertools import combinations
 from pathlib import Path
 
 from worlds.bloodborne.data import (
+    ALTERNATE_GAOL_LOCATION_KEYS,
     BASE_GAME_WEAPON_KEYS,
     DLC_ENTRANCE_NAMES,
     DLC_ITEM_KEYS,
@@ -49,7 +50,8 @@ except ImportError:                      # pragma: no cover - environment depend
 
 def seeded_locations():
     from worlds.bloodborne import NETWORK_LOCATIONS
-    seeded = {n.key for n in NETWORK_LOCATIONS}
+    # Default YAML leaves the progression-changing Gaol route disabled.
+    seeded = {n.key for n in NETWORK_LOCATIONS} - ALTERNATE_GAOL_LOCATION_KEYS
     return [location for location in MODEL.locations if location.key in seeded]
 
 
@@ -110,7 +112,7 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(663, len(NETWORK_LOCATIONS))
+        self.assertEqual(664, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -126,7 +128,7 @@ class BloodborneModelTests(unittest.TestCase):
              "Research Hall": 37, "Lumenwood Garden": 1,
              "Astral Clocktower": 1, "Fishing Hamlet": 41,
              "Nightmare Grand Cathedral": 1, "Healing Church Workshop": 4,
-             "Upper Cathedral Ward": 21},
+             "Upper Cathedral Ward": 21, "Graveyard of the Darkbeast": 1},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -180,6 +182,9 @@ class BloodborneModelTests(unittest.TestCase):
             "Saw Spear",
             "Augur of Ebrietas",
             "Oedon Tomb Key",
+            "Sword Hunter Badge",
+            "Old Hunter Badge",
+            "Gold Pendant",
         ):
             self.assertEqual(counts[name], 1, name)
         # bb-archipelago#207 wave 1: the rest of the base-game trick weapons
@@ -202,15 +207,17 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Blood Stone Chunk"], 25)
         self.assertEqual(counts["Bold Hunter's Mark x2"], 25)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
-                     "Fire Paper x2", "Bolt Paper x2"):
+                     "Fire Paper x2"):
             self.assertEqual(counts[name], 25, name)
+        self.assertEqual(counts["Bolt Paper x2"], 25)
         self.assertEqual(counts["Bone Marrow Ash x3"], 25)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
-                     "Shaman Bone Blade", "Madman's Knowledge", "Great One's Wisdom",
-                     "Coldblood Dew (3)"):
+                     "Shaman Bone Blade", "Madman's Knowledge"):
             self.assertEqual(counts[name], 13, name)
+        self.assertEqual(counts["Great One's Wisdom"], 12)
+        self.assertEqual(counts["Coldblood Dew (3)"], 12)
         self.assertEqual(counts["Thick Coldblood (6)"], 12)
         self.assertEqual(counts["Frenzied Coldblood (8)"], 12)
         self.assertEqual(counts["Kin Coldblood (11)"], 12)
@@ -234,17 +241,19 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Oedon Tomb Key"], 1)
         for number in range(1, 5):
             self.assertEqual(counts[f"Third Umbilical Cord #{number}"], 1)
+        for name in ("Sword Hunter Badge", "Old Hunter Badge", "Gold Pendant"):
+            self.assertEqual(counts[name], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
         self.assertEqual(counts["Blood Vial"], 230)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 154)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 153)
         self.assertEqual(counts["Blood Stone Shards x2"], 115)
         self.assertEqual(counts["Pebbles x3"], 77)
-        self.assertEqual(counts["Molotov Cocktails x2"], 77)
+        self.assertEqual(counts["Molotov Cocktails x2"], 76)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
-        self.assertEqual(len(slot_data["runtime_items"]), 15)  # fourteen slice items + Blood Vial
+        self.assertEqual(len(slot_data["runtime_items"]), 18)  # seventeen slice items + Blood Vial
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
@@ -526,11 +535,11 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn("lunarium_key", keys)
             self.assertIn("Lunarium Key", build_item_pool_names(keys))
             self.assertIn("forbidden_woods_password", keys)
-            self.assertIn("Forbidden Woods Password", build_item_pool_names(keys))
+            self.assertIn('"Fear the Old Blood"', build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}
-        self.assertEqual({"Menu"}, set(MODEL.regions) - populated)
+        self.assertEqual({"Menu", "Hypogean Gaol"}, set(MODEL.regions) - populated)
 
 
 class UncannyWeaponPoolTests(unittest.TestCase):

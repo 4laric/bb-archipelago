@@ -745,9 +745,13 @@ location	pickup_small_hair_ornament	0xBB1285
 location	pickup_workshop_umbilical_cord	0xBB1286
 item	lunarium_key	0xBB0136
 item	forbidden_woods_password	0xBB0137
+item	sword_hunter_badge	0xBB0138
+item	old_hunter_badge	0xBB0139
+item	gold_pendant	0xBB013A
 location	pickup_lunarium_key	0xBB1287
 location	boss_celestial_emissary	0xBB1288
 location	boss_ebrietas	0xBB1289
+location	boss_darkbeast_paarl	0xBB128A
 location	fixed_cathedral_ward_lot_2420320	0xBB128B
 location	fixed_upper_cathedral_lot_2420110	0xBB128C
 location	fixed_upper_cathedral_lot_2420120	0xBB128D

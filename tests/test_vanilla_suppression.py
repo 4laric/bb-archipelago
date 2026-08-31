@@ -155,15 +155,14 @@ class RealCorpusTests(unittest.TestCase):
         by_key = {edit.item_key: edit for edit in item_edits}
         self.assertEqual(by_key["saw_spear"].item_category, "0")
 
-    def test_reviewed_boss_payouts_are_suppressed_but_stateful_rewards_are_not(self):
+    def test_reviewed_boss_payouts_and_randomized_trophies_are_suppressed(self):
         boss_lots = {edit.item_lot_id for edit in self.plan.edits
                      if edit.item_key.startswith("boss:")}
-        self.assertEqual(16, len(boss_lots))
-        self.assertTrue({"50000001", "21002950", "51001900", "3601800"} <= boss_lots)
-        # Badge ownership stocks shops; chalices are an out-of-scope progression
-        # system. Neither may be junked as if it were a payout-only duplicate.
-        self.assertTrue({"50000010", "15000", "80000000", "80000200", "80000300"}
-                        .isdisjoint(boss_lots))
+        self.assertEqual(20, len(boss_lots))
+        self.assertTrue({"50000001", "50000010", "15000", "2100500", "2110015",
+                         "21002950", "51001900", "3601800"} <= boss_lots)
+        # Chalices remain vanilla while their dungeon progression is out of scope.
+        self.assertTrue({"80000000", "80000200", "80000300"}.isdisjoint(boss_lots))
 
     def test_the_script_award_key_is_suppressed_on_its_flagless_lot(self):
         """The shape the automatic search cannot plan, planned deliberately.
