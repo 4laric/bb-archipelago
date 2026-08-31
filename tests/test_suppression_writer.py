@@ -95,6 +95,21 @@ class RoundTripTests(unittest.TestCase):
         self.assertIn('RequireSingleFile(game, "ShopLineupParam.param")', source)
         self.assertIn('cell.Def.InternalName', source)
 
+    def test_starting_attire_canary_is_explicit_and_refusal_safe(self):
+        source = NATIVE_WRITER.read_text(encoding="utf-8")
+        self.assertIn('args[0] == "--write-starting-attire-canary"', source)
+        self.assertIn('args[8] == "--apply"', source)
+        self.assertIn('input and output paths must differ', source)
+        self.assertIn('refusing to overwrite existing output', source)
+        self.assertIn('row.ID is >= 2000 and <= 2009', source)
+        self.assertIn('round-trip changed unrelated binder file', source)
+
+    def test_starting_attire_canary_validates_literal_protector_slots(self):
+        source = NATIVE_WRITER.read_text(encoding="utf-8")
+        self.assertIn('"headEquip", "bodyEquip", "armEquip", "legEquip"', source)
+        self.assertIn('expected one EquipParamProtector row', source)
+        self.assertIn('is not exclusively a {slotFields[index]} row', source)
+
 
 class ApplyTests(unittest.TestCase):
     def test_the_planned_slot_is_replaced_and_the_flag_is_not(self):
