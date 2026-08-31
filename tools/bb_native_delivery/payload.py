@@ -29,6 +29,8 @@ CONSUME_HOOK_RVA = 0x14D9575
 CONSUME_RETURN_RVA = 0x14D957C
 HEARTBEAT_HOOK_RVA = 0x1BFE882
 HEARTBEAT_RETURN_RVA = 0x1BFE889
+HP_HOOK_RVA = 0x1BFC5F7
+HP_RETURN_RVA = HP_HOOK_RVA + 6
 
 ITEM_GRANT_RVA = 0x14DA0A0
 ALLOCATE_EQUIPMENT_INSTANCE_RVA = 0x1A87260
@@ -43,6 +45,8 @@ FIND_SLOT_RVA = 0x14DA2C0
 
 CONSUME_CAVE_RVA = 0x50DBA00
 HEARTBEAT_CAVE_RVA = 0x50DBC00
+HP_CAVE_RVA = 0x50DBD00
+PLAYER_STATUS_RVA = HP_CAVE_RVA + 0x30
 STATE_RVA = 0x50DBE00
 
 # Cells inside the state region, as eboot RVAs.
@@ -61,6 +65,7 @@ DESCRIPTOR_RVA = STATE_RVA + 0x60
 
 CONSUME_ORIGINAL = bytes((0x44, 0x89, 0xE0, 0x48, 0x83, 0xC4, 0x28))
 HEARTBEAT_ORIGINAL = bytes((0x48, 0x81, 0xC4, 0xE8, 0x07, 0x00, 0x00))
+HP_ORIGINAL = bytes((0x8B, 0x97, 0xF8, 0x00, 0x00, 0x00))
 
 
 class AssemblyError(Exception):
@@ -397,6 +402,23 @@ def heartbeat_cave() -> AssembledBlob:
     return _assemble("heartbeat_cave", HEARTBEAT_CAVE_RVA, _program_heartbeat())
 
 
+def hp_cave() -> AssembledBlob:
+    """Capture RDI, replay ``mov edx,[rdi+F8]``, and return.
+
+    The 0x38-byte blob includes its own zero-initialized pointer cell at +0x30.
+    Unlike the item-grant caves this is deliberately ``inferred`` until the
+    first r9 live attach reads back and exercises it.
+    """
+    store_disp = PLAYER_STATUS_RVA - (HP_CAVE_RVA + 7)
+    return_disp = HP_RETURN_RVA - (HP_CAVE_RVA + 7 + len(HP_ORIGINAL) + 5)
+    data = (
+        b"\x48\x89\x3D" + struct.pack("<i", store_disp)
+        + HP_ORIGINAL
+        + b"\xE9" + struct.pack("<i", return_disp)
+    )
+    return AssembledBlob("hp_cave", HP_CAVE_RVA, data.ljust(0x38, b"\0"))
+
+
 def _detour(name: str, hook_rva: int, cave_rva: int, original: bytes) -> AssembledBlob:
     # E9 rel32 + 0x90 padding to exactly cover the displaced original bytes,
     # matching the table's `jmp <cave>` / `nop 2`.
@@ -411,6 +433,10 @@ def consume_detour() -> AssembledBlob:
 
 def heartbeat_detour() -> AssembledBlob:
     return _detour("heartbeat_detour", HEARTBEAT_HOOK_RVA, HEARTBEAT_CAVE_RVA, HEARTBEAT_ORIGINAL)
+
+
+def hp_detour() -> AssembledBlob:
+    return _detour("hp_detour", HP_HOOK_RVA, HP_CAVE_RVA, HP_ORIGINAL)
 
 
 def state_region() -> AssembledBlob:
@@ -431,4 +457,7 @@ def blobs() -> list[AssembledBlob]:
     Data and caves first; the two detours last, because a detour that lands
     before its cave points a live guest thread at zeroed memory.
     """
-    return [state_region(), consume_cave(), heartbeat_cave(), consume_detour(), heartbeat_detour()]
+    return [
+        state_region(), consume_cave(), heartbeat_cave(), hp_cave(),
+        consume_detour(), heartbeat_detour(), hp_detour(),
+    ]
