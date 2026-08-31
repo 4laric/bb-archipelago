@@ -88,7 +88,7 @@ def slice_reachable(held: set[str], *, locations=None) -> set[str]:
 class BloodborneModelTests(unittest.TestCase):
     def test_model_references_are_valid(self):
         errors = MODEL.validate()
-        self.assertEqual(0, len(errors), errors)
+        self.assertFalse(errors, "invalid model references: " + "; ".join(errors))
 
     def test_rule_dnf(self):
         rule = Rule.any(("a", "b"), ("c",))
@@ -764,6 +764,15 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         self.assertEqual(1, option.default)
         self.assertEqual("Remove Weapon Requirements", option.display_name)
 
+    def test_death_link_is_explicitly_opt_in_and_receive_only(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["death_link"]
+        self.assertEqual(0, option.default)
+        self.assertEqual("DeathLink (Receive Only)", option.display_name)
+
     def test_goal_option_tracks_the_three_endings(self):
         if not AP_AVAILABLE:
             self.skipTest("requires Archipelago options")
@@ -778,6 +787,13 @@ class StartingWeaponChoiceTests(unittest.TestCase):
                 "moon_presence": 2,
             },
             option.options,
+        )
+        self.assertEqual(
+            "Submit to Gehrman (Mergo's Wet Nurse)", option.get_option_name(0)
+        )
+        self.assertEqual("Refuse Gehrman (Gehrman)", option.get_option_name(1))
+        self.assertEqual(
+            "Moon Presence (Three Umbilical Cords)", option.get_option_name(2)
         )
         self.assertEqual(
             {
