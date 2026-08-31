@@ -16,10 +16,10 @@ location_flag	region	name	basis
 52400290	Cathedral Ward	Cathedral Ward - Black Church Hat (back alley)	event tag A裏路地
 52400450	Cathedral Ward	Cathedral Ward - Hunter Chief Emblem (plaza entrance)	event tag A広場入口脇
 52400480	Cathedral Ward	Cathedral Ward - Radiant Sword Hunter Badge (Grand Cathedral approach chest)	published (data.py treasure_radiant_sword_hunter_badge); event tag C_接続塔_終点; hint from lot tag 聖C前 (m24_00_00_00); hint from MSB in_chest
-52410100	Central Yharnam	Central Yharnam - Saw Spear (sewer side)	published (fixed_locations.tsv); hint from lot tag 後半 (m24_01_00_00)
-52410290	Central Yharnam	Central Yharnam - Saw Hunter Badge (sewer side)	published (fixed_locations.tsv); hint from lot tag 後半 (m24_01_00_00)
-52410520	Central Yharnam	Central Yharnam - Torch (bridge side)	published (fixed_locations.tsv); hint from lot tag 前半 (m24_01_00_00)
-52410610	Central Yharnam	Central Yharnam - Hunter Set (sewer side)	published (fixed_locations.tsv); replaced the "(Lot 2410610)" placeholder under the #75 rename; hint from lot tag 後半 (m24_01_00_00)
+52410100	Central Yharnam	Central Yharnam - Saw Spear (Dry Dock hanging corpse)	published (fixed_locations.tsv); exact item/area unique match to Bloodborne Wiki Central Yharnam treasure table and Saw Spear page; ledger flag 52410100
+52410290	Central Yharnam	Central Yharnam - Saw Hunter Badge (Maneater Boar tunnel)	published (fixed_locations.tsv); exact item/area unique match to Bloodborne Wiki Central Yharnam treasure table and Saw Hunter Badge page; ledger flag 52410290
+52410520	Central Yharnam	Central Yharnam - Torch (Plaza gate)	published (fixed_locations.tsv); exact item/area unique match to Bloodborne Wiki Central Yharnam treasure table; ledger flag 52410520
+52410610	Central Yharnam	Central Yharnam - Hunter Set (Aqueduct drop near Large Huntsman)	published (fixed_locations.tsv); exact item/area unique match to Bloodborne Wiki Central Yharnam treasure table; ledger flag 52410610
 52411000	Central Yharnam	Central Yharnam - Blood Gem Workshop Tool (chest)	published (fixed_locations.tsv); hint from MSB in_chest
 52420150	Upper Cathedral Ward	Upper Cathedral Ward - Choir Garb	map m24_02
 52420190	Upper Cathedral Ward	Upper Cathedral Ward - Blindfold Cap	map m24_02
@@ -212,7 +212,7 @@ location_flag	region	name	basis
 52410170	Central Yharnam	Central Yharnam - Blood Stone Shard #1 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410170)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
 52410180	Central Yharnam	Central Yharnam - Blood Stone Shard #2 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410180)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
 52410190	Central Yharnam	Central Yharnam - Blood Vial x2 #2 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410190)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
-52410200	Central Yharnam	Central Yharnam - Molotov Cocktail x4 #1 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410200)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
+52410200	Central Yharnam	Central Yharnam - Molotov Cocktail x4 #1 (Plaza gate)	published (fixed_locations.tsv); Bloodborne Wiki Central Yharnam treasure table places the x4 stack at the rumbling Plaza gate; ledger flag 52410200
 52410210	Central Yharnam	Central Yharnam - Blood Stone Shard #3 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410210)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
 52410220	Central Yharnam	Central Yharnam - Pungent Blood Cocktail x2 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410220)" placeholder under the #75 rename; map m24_01; hint from lot tag 前半 (m24_01_00_00)
 52410240	Central Yharnam	Central Yharnam - Coldblood Dew (3) (sewer side)	published (fixed_locations.tsv); replaced the "(Lot 2410240)" placeholder under the #75 rename; map m24_01; hint from lot tag 後半 (m24_01_00_00)
@@ -226,7 +226,7 @@ location_flag	region	name	basis
 52410340	Central Yharnam	Central Yharnam - Blood Vial x4 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410340)" placeholder under the #75 rename; map m24_01; hint from lot tag 前半 (m24_01_00_00)
 52410360	Central Yharnam	Central Yharnam - Blood Vial x2 #3 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410360)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
 52410370	Central Yharnam	Central Yharnam - Oil Urn x2 #1 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410370)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
-52410380	Central Yharnam	Central Yharnam - Blood Vial x2 #4 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410380)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
+52410380	Central Yharnam	Central Yharnam - Blood Vial x2 #4 (Plaza gate)	published (fixed_locations.tsv); MSB coordinates place it in the same three-prop Plaza gate cluster as lots 2410200 and 2410520; ledger flag 52410380
 52410390	Central Yharnam	Central Yharnam - Blood Vial x6 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410390)" placeholder under the #75 rename; map m24_01; hint from lot tag 前半 (m24_01_00_00)
 52410400	Central Yharnam	Central Yharnam - Blood Stone Shard #5 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410400)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
 52410430	Central Yharnam	Central Yharnam - Quicksilver Bullets x10 #2 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410430)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)

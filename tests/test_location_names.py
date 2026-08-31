@@ -128,6 +128,8 @@ VOCABULARY = ROOT / "docs" / "location_hint_vocabulary.tsv"
 OVERRIDES = ROOT / "docs" / "location_hint_overrides.tsv"
 LOT_ITEMS = ROOT / "research" / "joined" / "lot_items.tsv"
 DOC = ROOT / "docs" / "LOCATION-NAMING.md"
+PLAYER_DOC = ROOT / "worlds" / "bloodborne" / "docs" / "locations_en.md"
+LANDMARK_EVIDENCE = ROOT / "docs" / "location_landmark_evidence.tsv"
 
 # Witnessed populations, not targets, exactly like the counts above. The pass
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
@@ -445,6 +447,39 @@ class LocationNameTableTests(unittest.TestCase):
             if "(Lot " in name and flag in names_by_flag
         )
         self.assertEqual(lot_suffixed, sorted(PENDING_PLACEHOLDER_RENAMES))
+
+
+class PlayerLocationDocsTests(unittest.TestCase):
+    def test_player_locations_page_is_current_and_exhaustive(self):
+        from tools.build_location_docs import render
+
+        self.assertTrue(PLAYER_DOC.is_file())
+        self.assertEqual(render(), PLAYER_DOC.read_text(encoding="utf-8"))
+        page = PLAYER_DOC.read_text(encoding="utf-8")
+        missing = [row["name"] for row in rows(NAMES) if row["name"] not in page]
+        self.assertEqual([], missing)
+
+    def test_landmark_ledger_joins_back_to_names_catalog_and_ids(self):
+        names = {row["location_flag"]: row for row in rows(NAMES)}
+        catalog = {row["location_flag"]: row for row in rows(CATALOG)}
+        ids = {
+            row["key"]: row["id"]
+            for row in rows(ROOT / "worlds/bloodborne/ids.tsv")
+        }
+        evidence = rows(LANDMARK_EVIDENCE)
+        self.assertGreaterEqual(len(evidence), 6)
+        for row in evidence:
+            with self.subTest(flag=row["location_flag"]):
+                self.assertIn(row["location_flag"], names)
+                self.assertIn(row["location_flag"], catalog)
+                self.assertIn(
+                    row["item_lot"],
+                    catalog[row["location_flag"]]["item_lot_ids"].split(";"),
+                )
+                self.assertEqual(row["network_id"], ids[row["location_key"]])
+                self.assertIn(row["landmark"], names[row["location_flag"]]["name"])
+                self.assertTrue(row["source"])
+                self.assertTrue(row["confidence"])
 
 
 if __name__ == "__main__":
