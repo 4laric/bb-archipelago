@@ -302,6 +302,10 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Grand Cathedral - Laurence's Skull
 - Vicar Amelia
 
+## Graveyard of the Darkbeast
+
+- Darkbeast Paarl
+
 ## Healing Church Workshop
 
 - Abandoned Old Workshop - Doll Set Chest
