@@ -10,6 +10,7 @@ from tools.bb_enemizer.inventory import (
     apply_archetype_tag, classify_slot, load_slot_overrides, load_slots, load_tags,
 )
 from tools.bb_enemizer.planner import EnemizerConfig, plan_swaps
+from tools.build_emevd_entity_usage import materialize_bundle
 from tools.bb_enemizer.scaling import (
     MAX_MULTIPLIER, MIN_MULTIPLIER, NPC_CLONE_END, NPC_CLONE_START,
     SPEFFECT_END, SPEFFECT_START, derive_ladder, free_effect_slot, load_params,
@@ -24,7 +25,11 @@ class StaticScalingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.npcs, cls.effects = load_params(ROOT / "research/bb_inputs.db")
-        cls.slots = load_slots(ROOT / "research/mined/msb_enemies.tsv")
+        cls._tmp = tempfile.TemporaryDirectory()
+        inventory, _events = materialize_bundle(
+            ROOT / "research/bb_inputs.db", Path(cls._tmp.name)
+        )
+        cls.slots = load_slots(inventory)
         tags = load_tags(ROOT / "research/enemizer/enemy_tags.json")
         overrides = load_slot_overrides(ROOT / "research/enemizer/slot_policy.json")
         policies = {
@@ -37,6 +42,10 @@ class StaticScalingTests(unittest.TestCase):
             cls.slots, policies, tags, EnemizerConfig("scaling-fixture")
         )
 
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
     def test_native_ladder_is_regenerated_with_pinned_invariants(self):
         ladder = derive_ladder(self.effects)
         self.assertEqual(13, len(ladder))
@@ -44,8 +53,8 @@ class StaticScalingTests(unittest.TestCase):
         self.assertAlmostEqual(1.340, ladder[13].max_hp_rate)
         self.assertAlmostEqual(2.555, ladder[1].attack_rate)
         self.assertAlmostEqual(1.016, ladder[13].defense_rate)
-        self.assertTrue(all("周回パワーアップ" in rung.source_name
-                            for rung in ladder.values()))
+        named = [rung for rung in ladder.values() if "周回パワーアップ" in rung.source_name]
+        self.assertEqual(len(ladder), len(named))
         with (ROOT / "research/enemizer/scaling_ladder.tsv").open(
             encoding="utf-8", newline=""
         ) as handle:
@@ -137,7 +146,7 @@ class StaticScalingTests(unittest.TestCase):
             default = json.loads(default_path.read_text(encoding="utf-8"))
             enabled = json.loads(enabled_path.read_text(encoding="utf-8"))
             self.assertFalse(default["scaling"]["enabled"])
-            self.assertEqual([], default["scaling"]["changes"])
+            self.assertEqual(0, len(default["scaling"]["changes"]))
             self.assertTrue(enabled["scaling"]["enabled"])
             self.assertEqual(237, enabled["scaling"]["change_count"])
 
