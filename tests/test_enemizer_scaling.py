@@ -29,6 +29,7 @@ class StaticScalingTests(unittest.TestCase):
         inventory, _events = materialize_bundle(
             ROOT / "research/bb_inputs.db", Path(cls._tmp.name)
         )
+        cls.inventory = inventory
         cls.slots = load_slots(inventory)
         tags = load_tags(ROOT / "research/enemizer/enemy_tags.json")
         overrides = load_slot_overrides(ROOT / "research/enemizer/slot_policy.json")
@@ -137,10 +138,12 @@ class StaticScalingTests(unittest.TestCase):
             default_path = Path(directory) / "default.json"
             enabled_path = Path(directory) / "enabled.json"
             self.assertEqual(0, enemizer_main([
-                "--seed", "scaling-fixture", "--output", str(default_path),
+                "--seed", "scaling-fixture", "--inventory", str(self.inventory),
+                "--output", str(default_path),
             ]))
             self.assertEqual(0, enemizer_main([
-                "--seed", "scaling-fixture", "--output", str(enabled_path),
+                "--seed", "scaling-fixture", "--inventory", str(self.inventory),
+                "--output", str(enabled_path),
                 "--normalize-scaling",
             ]))
             default = json.loads(default_path.read_text(encoding="utf-8"))
