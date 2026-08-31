@@ -13,6 +13,7 @@ from .inventory import (
     load_tags,
 )
 from .planner import EnemizerConfig, plan_swaps
+from .scaling import load_params, plan_scaling
 
 
 def parser() -> argparse.ArgumentParser:
@@ -31,6 +32,11 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--output", required=True, help="manifest JSON path")
     result.add_argument("--allow-tier-mixing", action="store_true")
     result.add_argument("--preserve-locomotion", action="store_true")
+    result.add_argument(
+        "--normalize-scaling", action="store_true",
+        help="emit inferred static-scaling clones (experimental; off by default)",
+    )
+    result.add_argument("--bundle", default="research/bb_inputs.db")
     return result
 
 
@@ -62,6 +68,10 @@ def main(argv: list[str] | None = None) -> int:
         preserve_locomotion=args.preserve_locomotion,
     )
     swaps, rejections = plan_swaps(slots, policies, tags, config)
+    scaling, scaling_skips = [], []
+    if args.normalize_scaling:
+        npcs, effects = load_params(Path(args.bundle))
+        scaling, scaling_skips = plan_scaling(swaps, slots, npcs, effects)
     payload = {
         "format": "bb-enemizer-plan-v2",
         "seed": args.seed,
@@ -71,6 +81,14 @@ def main(argv: list[str] | None = None) -> int:
         "rejection_count": len(rejections),
         "swaps": [swap.json() for swap in swaps],
         "rejections": rejections,
+        "scaling": {
+            "enabled": bool(args.normalize_scaling),
+            "mechanism": "inferred_static_npc_clone_sp_effect",
+            "change_count": len(scaling),
+            "skip_count": len(scaling_skips),
+            "changes": [change.json() for change in scaling],
+            "skips": scaling_skips,
+        },
     }
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Enemy transplant scaling now has a deterministic offline plan, still off
+  by default.** An explicit experimental flag derives Bloodborne's 13-rung
+  native area curve from bundled params, emits collision-checked NpcParam and
+  echo-neutral SpEffect clone requests, clamps multipliers, and records every
+  unknown-tier or full-effect-slot skip. The game-file writer is intentionally
+  not enabled yet; this is reviewable scaffolding for the construction canary.
+
 - **The tracker now has a complete Locations reference page and its first
   wiki-backed landmark upgrades.** Central Yharnam's Saw Spear, Saw Hunter
   Badge, Torch, Hunter Set, and the tightly clustered Plaza-gate pickups now
