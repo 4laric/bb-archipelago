@@ -71,7 +71,8 @@ class AttachReportTests(unittest.TestCase):
         lines = bb_client.attach_report_lines()
         self.assertIsInstance(lines, list)
         self.assertTrue(lines)
-        self.assertTrue(all(isinstance(line, str) for line in lines))
+        for index, line in enumerate(lines):
+            self.assertIsInstance(line, str, f"attach report line {index}")
 
     def test_reports_the_reason_when_it_cannot_inspect(self):
         """Off Windows, or with no shadPS4 running, it explains rather than dying."""

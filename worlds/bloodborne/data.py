@@ -24,7 +24,7 @@ ITEMS = (
     Item("hunter_chief_emblem", "Hunter Chief Emblem", P),
     Item("oedon_tomb_key", "Oedon Tomb Key", P),
     Item("lunarium_key", "Lunarium Key", P),
-    Item("forbidden_woods_password", "Forbidden Woods Password", P),
+    Item("forbidden_woods_password", '"Fear the Old Blood"', P),
     Item("cainhurst_summons", "Cainhurst Summons", P),
     Item("tonsil_stone", "Tonsil Stone", P),
     Item("upper_cathedral_key", "Upper Cathedral Key", P),
@@ -33,6 +33,12 @@ ITEMS = (
     Item("eye_pendant", "Eye Pendant", P),
     Item("astral_clocktower_key", "Astral Clocktower Key", P),
     Item("celestial_dial", "Celestial Dial", P),
+    # Boss trophies are ordinary category-4 goods once received. Their vanilla
+    # award lots are suppressed so the shop unlocks and Pendant conversion
+    # follow the AP item instead of the boss kill.
+    Item("sword_hunter_badge", "Sword Hunter Badge", U),
+    Item("old_hunter_badge", "Old Hunter Badge", U),
+    Item("gold_pendant", "Gold Pendant", U),
     # Three independently placed progression pieces, all delivered as the
     # game's real Third Umbilical Cord (goods 4323). Distinct AP names make
     # the 3/3 Go Mode requirement visible to trackers and generation logic.
@@ -158,6 +164,7 @@ ITEMS = (
     Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
     Item("event_blood_starved_beast_defeated", "Blood-starved Beast Defeated", E),
+    Item("event_darkbeast_paarl_defeated", "Darkbeast Paarl Defeated", E),
     Item("event_amelia_defeated", "Vicar Amelia Defeated", E),
     Item("event_laurences_skull_inspected", "Laurence's Skull Inspected", E),
     Item("event_witch_of_hemwick_defeated", "Witch of Hemwick Defeated", E),
@@ -187,7 +194,7 @@ REGIONS = (
     "Upper Cathedral Ward", "Castle Cainhurst",
     "Hunter's Nightmare", "Underground Corpse Pile", "Research Hall",
     "Lumenwood Garden", "Astral Clocktower", "Fishing Hamlet",
-    "Nightmare Grand Cathedral",
+    "Nightmare Grand Cathedral", "Hypogean Gaol", "Graveyard of the Darkbeast",
 )
 
 ENTRANCES = (
@@ -205,6 +212,17 @@ ENTRANCES = (
     Entrance("Tomb of Oedon gate", "Central Yharnam", "Cathedral Ward",
              Rule.all("oedon_tomb_key", "event_gascoigne_defeated")),
     Entrance("Road into Old Yharnam", "Cathedral Ward", "Old Yharnam"),
+    # Optional alternate progression (#259). Cathedral Ward's four authored
+    # Snatchers are script-bound and therefore protected by the enemizer. The
+    # explicit policy witness lives in research/enemizer/slot_policy.json and
+    # is tested alongside this graph. They spawn only after BSB, so abduction
+    # is not an early BSB bypass; the later Blood Moon route is independent.
+    Entrance("Snatcher abduction", "Cathedral Ward", "Hypogean Gaol",
+             Rule.all("event_blood_starved_beast_defeated")),
+    Entrance("Blood Moon path to Hypogean Gaol", "Yahar'gul", "Hypogean Gaol"),
+    Entrance("Descent to Paarl", "Hypogean Gaol", "Graveyard of the Darkbeast"),
+    Entrance("Paarl's rear gate", "Graveyard of the Darkbeast", "Old Yharnam",
+             Rule.all("event_darkbeast_paarl_defeated")),
     Entrance("Healing Church Workshop door", "Cathedral Ward", "Healing Church Workshop",
              Rule.all("event_blood_starved_beast_defeated")),
     # The audited edge is "Hunter Chief Emblem OR the Healing Church Workshop
@@ -256,6 +274,9 @@ LOCATIONS = (
     Location("boss_father_gascoigne", location_name(12411800), "Central Yharnam", locked_item="event_gascoigne_defeated"),
     Location("boss_blood_starved_beast", location_name(12301800), "Old Yharnam",
              locked_item="event_blood_starved_beast_defeated"),
+    Location("boss_darkbeast_paarl", location_name(12301700),
+             "Graveyard of the Darkbeast",
+             locked_item="event_darkbeast_paarl_defeated"),
     Location("boss_vicar_amelia", location_name(12401800), "Grand Cathedral", locked_item="event_amelia_defeated"),
     Location("boss_witch_of_hemwick", location_name(12201800), "Hemwick Charnel Lane",
              locked_item="event_witch_of_hemwick_defeated"),
@@ -426,6 +447,9 @@ SLICE_ITEM_KEYS = frozenset({
     "third_umbilical_cord_2",
     "third_umbilical_cord_3",
     "third_umbilical_cord_4",
+    "sword_hunter_badge",
+    "old_hunter_badge",
+    "gold_pendant",
 })
 # Pool membership and global vanilla-item suppression are different contracts.
 # Repeatable consumables may remain elsewhere in the game; the Saw Spear's
@@ -491,6 +515,7 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_cleric_beast",
     "boss_father_gascoigne",
     "boss_blood_starved_beast",
+    "boss_darkbeast_paarl",
     "boss_vicar_amelia",
     "interaction_laurences_skull",
     "boss_witch_of_hemwick",
@@ -577,3 +602,14 @@ DLC_LOCATION_KEYS = frozenset(
     location.key for location in LOCATIONS
     if location.key in SLICE_LOCATION_KEYS and location.region in DLC_REGIONS
 ) | frozenset({"pickup_eye_of_blood_drunk_hunter"})
+
+# Opt-in alternate progression (#259). These are deliberately outside
+# SLICE_REGIONS/SLICE_ENTRANCES: generation adds the complete subgraph only
+# when the YAML option is enabled, preserving vanilla-shaped progression by
+# default while retaining permanent network IDs for the optional boss check.
+ALTERNATE_GAOL_REGIONS = frozenset({"Hypogean Gaol", "Graveyard of the Darkbeast"})
+ALTERNATE_GAOL_ENTRANCE_NAMES = frozenset({
+    "Snatcher abduction", "Blood Moon path to Hypogean Gaol",
+    "Descent to Paarl", "Paarl's rear gate",
+})
+ALTERNATE_GAOL_LOCATION_KEYS = frozenset({"boss_darkbeast_paarl"})
