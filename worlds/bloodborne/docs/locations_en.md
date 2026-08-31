@@ -51,8 +51,8 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 ## Cathedral Ward
 
 - Cathedral Ward - Antidote
-- Cathedral Ward - Black Church Hat (back alley)
-- Cathedral Ward - Black Messenger Hat (rooftop)
+- Cathedral Ward - Black Church Hat (Foggy Alley alcove) — Foggy Alley alcove.
+- Cathedral Ward - Black Messenger Hat (second rooftop past Oedon Chapel Gate) — second rooftop past Oedon Chapel Gate.
 - Cathedral Ward - Blood Gem #1
 - Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)
 - Cathedral Ward - Blood Gem #3 (chest)
@@ -67,7 +67,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Cathedral Ward - Blood Vial x2
 - Cathedral Ward - Blood Vial x6 #1
 - Cathedral Ward - Blood Vial x6 #2
-- Cathedral Ward - Bloodshot Eyeball
+- Cathedral Ward - Bloodshot Eyeball (Hemwick path from Grand Cathedral) — Hemwick path from Grand Cathedral.
 - Cathedral Ward - Bold Hunter's Mark (Grand Cathedral approach chest)
 - Cathedral Ward - Bold Hunter's Mark x3
 - Cathedral Ward - Coldblood Dew (2)
@@ -88,8 +88,8 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Cathedral Ward - Messenger Top Hat (Grand Cathedral approach)
 - Cathedral Ward - Messenger Urn Festival
 - Cathedral Ward - Molotov Cocktail x4
-- Cathedral Ward - Monocular
-- Cathedral Ward - Numbing Mist x6
+- Cathedral Ward - Monocular (Yharnam Path dead-end cliff) — Yharnam Path dead-end cliff.
+- Cathedral Ward - Numbing Mist x6 (ladder above Oedon Chapel Gate) — ladder above Oedon Chapel Gate.
 - Cathedral Ward - Pebble
 - Cathedral Ward - Poison Knife x12
 - Cathedral Ward - Poison Knife x18
@@ -109,10 +109,10 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Cathedral Ward - Thick Coldblood (6) #2 (Grand Cathedral approach)
 - Cathedral Ward - Thick Coldblood (6) #3 (Grand Cathedral approach)
 - Cathedral Ward - Throwing Knife x3
-- Cathedral Ward - Top Hat (small plaza)
+- Cathedral Ward - Top Hat (candlelit corpse by Oedon Chapel well) — candlelit corpse by Oedon Chapel well.
 - Cathedral Ward - Twin Blood Stone Shards
 - Cathedral Ward - Twin Blood Stone Shards x2
-- Cathedral Ward - Wooden Shield
+- Cathedral Ward - Wooden Shield (base of Oedon Chapel Gate) — base of Oedon Chapel Gate.
 
 ## Central Yharnam
 

@@ -51,24 +51,24 @@ fixed_iosefka_courtyard_bullets	Central Yharnam - Iosefka Courtyard Quicksilver 
 fixed_central_yharnam_lot_2410920	Central Yharnam - Red Jeweled Brooch	Cathedral Ward	52410920	2410920	4	4306	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_blood_gem_workshop_tool	Central Yharnam - Blood Gem Workshop Tool (chest)	Cathedral Ward	52411000	2411000	4	4103	key_or_badge	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_cathedral_ward_lot_2400100	Cathedral Ward - Pungent Blood Cocktail x2 (Grand Cathedral approach chest)	Cathedral Ward	52400100	2400100	4	1260	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400120	Cathedral Ward - Top Hat (small plaza)	Cathedral Ward	52400120	2400120	1	280000	useful	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400120	Cathedral Ward - Top Hat (candlelit corpse by Oedon Chapel well)	Cathedral Ward	52400120	2400120	1	280000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400130	Cathedral Ward - Blood Stone Shard x2	Cathedral Ward	52400130	2400130	4	3000	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400140	Cathedral Ward - Madman's Knowledge #1	Cathedral Ward	52400140	2400140	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400150	Cathedral Ward - Thick Coldblood (5) #1	Cathedral Ward	52400150	2400150	4	1514	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400160	Cathedral Ward - Quicksilver Bullets x2	Cathedral Ward	52400160	2400160	4	900	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400170	Cathedral Ward - Madman's Knowledge #2	Cathedral Ward	52400170	2400170	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400180	Cathedral Ward - Bloodshot Eyeball	Cathedral Ward	52400180	2400180	4	7150	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400180	Cathedral Ward - Bloodshot Eyeball (Hemwick path from Grand Cathedral)	Cathedral Ward	52400180	2400180	4	7150	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400190	Cathedral Ward - Blood Vial	Cathedral Ward	52400190	2400190	4	1000	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400200	Cathedral Ward - Madman's Knowledge #3	Cathedral Ward	52400200	2400200	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400210	Cathedral Ward - Poison Knife x12	Cathedral Ward	52400210	2400210	4	1210	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400220	Cathedral Ward - Madman's Knowledge #4	Cathedral Ward	52400220	2400220	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400230	Cathedral Ward - Blood Vial x6 #1	Cathedral Ward	52400230	2400230	4	1000	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400240	Cathedral Ward - Monocular	Cathedral Ward	52400240	2400240	4	1411	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400240	Cathedral Ward - Monocular (Yharnam Path dead-end cliff)	Cathedral Ward	52400240	2400240	4	1411	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400250	Cathedral Ward - Pebble	Cathedral Ward	52400250	2400250	4	1230	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400260	Cathedral Ward - Blood Vial x2	Cathedral Ward	52400260	2400260	4	1000	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400270	Cathedral Ward - Black Messenger Hat (rooftop)	Cathedral Ward	52400270	2400270	4	4906	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400280	Cathedral Ward - Numbing Mist x6	Cathedral Ward	52400280	2400280	4	1270	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400290	Cathedral Ward - Black Church Hat (back alley)	Cathedral Ward	52400290	2400290	1	110000	useful	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400270	Cathedral Ward - Black Messenger Hat (second rooftop past Oedon Chapel Gate)	Cathedral Ward	52400270	2400270	4	4906	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400280	Cathedral Ward - Numbing Mist x6 (ladder above Oedon Chapel Gate)	Cathedral Ward	52400280	2400280	4	1270	filler	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400290	Cathedral Ward - Black Church Hat (Foggy Alley alcove)	Cathedral Ward	52400290	2400290	1	110000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400300	Cathedral Ward - Blood Gem #1	Cathedral Ward	52400300	2400300	8	124002	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2400310	Cathedral Ward - Shining Coins x12	Cathedral Ward	52400310	2400310	4	1410	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400320	Cathedral Ward - Blood Vial x6 #2	Cathedral Ward	52400320	2400320	4	1000	filler	treasure	m24_00_00_00;m24_00_00_01	True
@@ -90,7 +90,7 @@ fixed_cathedral_ward_lot_2400470	Cathedral Ward - Thick Coldblood (4) #2	Cathedr
 fixed_cathedral_ward_lot_2400760	Cathedral Ward - Blood Gem #3 (chest)	Cathedral Ward	52410580	2400760	8	124001	optional	treasure	m24_00_00_00;m24_00_00_01	False
 fixed_cathedral_ward_lot_2420320	Upper Cathedral Ward - A Call Beyond	Upper Cathedral Ward	52420320	2420320	4	2010	useful	treasure	m24_00_00_00;m24_00_00_01;m24_02_00_00;m24_02_00_01	True
 fixed_cathedral_ward_lot_2400540	Cathedral Ward - Rumpled Yharnam Hat (workshop-tower back alley)	Cathedral Ward	52420540	2400540	1	320000	useful	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400550	Cathedral Ward - Wooden Shield	Cathedral Ward	52420550	2400550	0	19000000	useful	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400550	Cathedral Ward - Wooden Shield (base of Oedon Chapel Gate)	Cathedral Ward	52420550	2400550	0	19000000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400560	Cathedral Ward - Blood Stone Shard x5	Cathedral Ward	52420560	2400560	4	3000	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400570	Cathedral Ward - Thick Coldblood (5) #3	Cathedral Ward	52420570	2400570	4	1514	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400580	Cathedral Ward - Thick Coldblood (5) #4	Cathedral Ward	52420580	2400580	4	1514	filler	treasure	m24_00_00_00;m24_00_00_01	True

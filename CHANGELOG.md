@@ -1,5 +1,8 @@
 # Changelog
 
+- Replace seven broad Cathedral Ward tracker labels with wiki-backed landmarks
+  joined to their exact item-lot flags and MSB treasure placements.
+
 - Completed the Bath Messenger gate audit for shop randomization: all ten
   `qwcId` groups now have badge/goods/stock witnesses and an executable
   fail-closed readiness check. The check confirms the feature is not yet safe
