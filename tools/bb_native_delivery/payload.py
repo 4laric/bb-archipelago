@@ -29,6 +29,8 @@ CONSUME_HOOK_RVA = 0x14D9575
 CONSUME_RETURN_RVA = 0x14D957C
 HEARTBEAT_HOOK_RVA = 0x1BFE882
 HEARTBEAT_RETURN_RVA = 0x1BFE889
+HP_HOOK_RVA = 0x1BFC5F7
+HP_RETURN_RVA = 0x1BFC5FD
 
 ITEM_GRANT_RVA = 0x14DA0A0
 ALLOCATE_EQUIPMENT_INSTANCE_RVA = 0x1A87260
@@ -43,7 +45,9 @@ FIND_SLOT_RVA = 0x14DA2C0
 
 CONSUME_CAVE_RVA = 0x50DBA00
 HEARTBEAT_CAVE_RVA = 0x50DBC00
+HP_CAVE_RVA = 0x50DBD00
 STATE_RVA = 0x50DBE00
+PLAYER_STATUS_RVA = HP_CAVE_RVA + 0x30
 
 # Cells inside the state region, as eboot RVAs.
 REQUEST_RVA = STATE_RVA + 0x00
@@ -61,6 +65,7 @@ DESCRIPTOR_RVA = STATE_RVA + 0x60
 
 CONSUME_ORIGINAL = bytes((0x44, 0x89, 0xE0, 0x48, 0x83, 0xC4, 0x28))
 HEARTBEAT_ORIGINAL = bytes((0x48, 0x81, 0xC4, 0xE8, 0x07, 0x00, 0x00))
+HP_ORIGINAL = bytes((0x8B, 0x97, 0xF8, 0x00, 0x00, 0x00))
 
 
 class AssemblyError(Exception):
@@ -397,6 +402,14 @@ def heartbeat_cave() -> AssembledBlob:
     return _assemble("heartbeat_cave", HEARTBEAT_CAVE_RVA, _program_heartbeat())
 
 
+def hp_cave() -> AssembledBlob:
+    """Published r9 DeathLink capture cave; not part of the grant harness."""
+    data = bytes.fromhex(
+        "48 89 3D 29 00 00 00 8B 97 F8 00 00 00 E9 EB 08 B2 FC"
+    ) + bytes(38)
+    return AssembledBlob(name="hp_cave", rva=HP_CAVE_RVA, data=data)
+
+
 def _detour(name: str, hook_rva: int, cave_rva: int, original: bytes) -> AssembledBlob:
     # E9 rel32 + 0x90 padding to exactly cover the displaced original bytes,
     # matching the table's `jmp <cave>` / `nop 2`.
@@ -411,6 +424,10 @@ def consume_detour() -> AssembledBlob:
 
 def heartbeat_detour() -> AssembledBlob:
     return _detour("heartbeat_detour", HEARTBEAT_HOOK_RVA, HEARTBEAT_CAVE_RVA, HEARTBEAT_ORIGINAL)
+
+
+def hp_detour() -> AssembledBlob:
+    return _detour("hp_detour", HP_HOOK_RVA, HP_CAVE_RVA, HP_ORIGINAL)
 
 
 def state_region() -> AssembledBlob:
@@ -428,7 +445,10 @@ def state_region() -> AssembledBlob:
 def blobs() -> list[AssembledBlob]:
     """Everything the installer writes, in install order.
 
-    Data and caves first; the two detours last, because a detour that lands
+    Data and caves first; detours last, because a detour that lands
     before its cave points a live guest thread at zeroed memory.
     """
-    return [state_region(), consume_cave(), heartbeat_cave(), consume_detour(), heartbeat_detour()]
+    return [
+        state_region(), consume_cave(), heartbeat_cave(), hp_cave(),
+        consume_detour(), heartbeat_detour(), hp_detour(),
+    ]
