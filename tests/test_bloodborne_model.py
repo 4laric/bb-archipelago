@@ -182,6 +182,9 @@ class BloodborneModelTests(unittest.TestCase):
             "Saw Spear",
             "Augur of Ebrietas",
             "Oedon Tomb Key",
+            "Sword Hunter Badge",
+            "Old Hunter Badge",
+            "Gold Pendant",
         ):
             self.assertEqual(counts[name], 1, name)
         # bb-archipelago#207 wave 1: the rest of the base-game trick weapons
@@ -197,16 +200,17 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 74)
+        self.assertEqual(counts["Blood Vial"], 73)
         self.assertEqual(counts["Quicksilver Bullets x3"], 49)
         self.assertEqual(counts["Blood Stone Shards x2"], 37)
         self.assertEqual(counts["Twin Blood Stone Shards x2"], 37)
         self.assertEqual(counts["Blood Stone Chunk"], 25)
         self.assertEqual(counts["Bold Hunter's Mark x2"], 25)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
-                     "Fire Paper x2", "Bolt Paper x2"):
+                     "Fire Paper x2"):
             self.assertEqual(counts[name], 25, name)
-        self.assertEqual(counts["Bone Marrow Ash x3"], 25)
+        self.assertEqual(counts["Bolt Paper x2"], 24)
+        self.assertEqual(counts["Bone Marrow Ash x3"], 24)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2", "Pungent Blood Cocktail x2",
@@ -235,17 +239,19 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(counts["Oedon Tomb Key"], 1)
         for number in range(1, 5):
             self.assertEqual(counts[f"Third Umbilical Cord #{number}"], 1)
+        for name in ("Sword Hunter Badge", "Old Hunter Badge", "Gold Pendant"):
+            self.assertEqual(counts[name], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 224)
+        self.assertEqual(counts["Blood Vial"], 223)
         self.assertEqual(counts["Quicksilver Bullets x3"], 149)
-        self.assertEqual(counts["Blood Stone Shards x2"], 112)
-        self.assertEqual(counts["Pebbles x3"], 75)
-        self.assertEqual(counts["Molotov Cocktails x2"], 75)
+        self.assertEqual(counts["Blood Stone Shards x2"], 111)
+        self.assertEqual(counts["Pebbles x3"], 74)
+        self.assertEqual(counts["Molotov Cocktails x2"], 74)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
-        self.assertEqual(len(slot_data["runtime_items"]), 15)  # fourteen slice items + Blood Vial
+        self.assertEqual(len(slot_data["runtime_items"]), 18)  # seventeen slice items + Blood Vial
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
@@ -527,7 +533,7 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn("lunarium_key", keys)
             self.assertIn("Lunarium Key", build_item_pool_names(keys))
             self.assertIn("forbidden_woods_password", keys)
-            self.assertIn("Forbidden Woods Password", build_item_pool_names(keys))
+            self.assertIn('"Fear the Old Blood"', build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}

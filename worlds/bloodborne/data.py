@@ -24,7 +24,7 @@ ITEMS = (
     Item("hunter_chief_emblem", "Hunter Chief Emblem", P),
     Item("oedon_tomb_key", "Oedon Tomb Key", P),
     Item("lunarium_key", "Lunarium Key", P),
-    Item("forbidden_woods_password", "Forbidden Woods Password", P),
+    Item("forbidden_woods_password", '"Fear the Old Blood"', P),
     Item("cainhurst_summons", "Cainhurst Summons", P),
     Item("tonsil_stone", "Tonsil Stone", P),
     Item("upper_cathedral_key", "Upper Cathedral Key", P),
@@ -33,6 +33,12 @@ ITEMS = (
     Item("eye_pendant", "Eye Pendant", P),
     Item("astral_clocktower_key", "Astral Clocktower Key", P),
     Item("celestial_dial", "Celestial Dial", P),
+    # Boss trophies are ordinary category-4 goods once received. Their vanilla
+    # award lots are suppressed so the shop unlocks and Pendant conversion
+    # follow the AP item instead of the boss kill.
+    Item("sword_hunter_badge", "Sword Hunter Badge", U),
+    Item("old_hunter_badge", "Old Hunter Badge", U),
+    Item("gold_pendant", "Gold Pendant", U),
     # Three independently placed progression pieces, all delivered as the
     # game's real Third Umbilical Cord (goods 4323). Distinct AP names make
     # the 3/3 Go Mode requirement visible to trackers and generation logic.
@@ -441,6 +447,9 @@ SLICE_ITEM_KEYS = frozenset({
     "third_umbilical_cord_2",
     "third_umbilical_cord_3",
     "third_umbilical_cord_4",
+    "sword_hunter_badge",
+    "old_hunter_badge",
+    "gold_pendant",
 })
 # Pool membership and global vanilla-item suppression are different contracts.
 # Repeatable consumables may remain elsewhere in the game; the Saw Spear's

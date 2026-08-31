@@ -25,7 +25,7 @@ EXPECTED = [
     ("Lunarium Key", "treasure", "Byrgenwerth"),
     # Synthetic AP progression item: the client applies the vanilla memory
     # event flag rather than inserting nonexistent inventory goods.
-    ("Forbidden Woods Password", "event_effect", "Grand Cathedral altar"),
+    ('"Fear the Old Blood"', "event_effect", "Grand Cathedral altar"),
     ("Oedon Tomb Key", "boss_reward", "Father Gascoigne"),
     ("Old Hunter Bell", "treasure", "Hunter's Dream"),
     ("Orphanage Key", "enemy_drop", "Upper Cathedral Ward Brainsucker"),
