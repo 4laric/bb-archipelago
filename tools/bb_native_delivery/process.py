@@ -40,8 +40,10 @@ CONSUME_SIGNATURE = "44 89 E0 48 83 C4 28 5B 41 5C 41 5D 41 5E 41 5F"
 ASSERTS: tuple[tuple[str, int, str], ...] = (
     ("consume_hook", payload.CONSUME_HOOK_RVA, "44 89 E0 48 83 C4 28"),
     ("heartbeat_hook", payload.HEARTBEAT_HOOK_RVA, "48 81 C4 E8 07 00 00"),
+    ("hp_hook", payload.HP_HOOK_RVA, "8B 97 F8 00 00 00"),
     ("consume_cave", payload.CONSUME_CAVE_RVA, "00 " * 16),
     ("heartbeat_cave", payload.HEARTBEAT_CAVE_RVA, "00 " * 16),
+    ("hp_cave", payload.HP_CAVE_RVA, "00 " * 56),
     ("state_region", payload.STATE_RVA, "00 " * 16),
     ("descriptor", payload.DESCRIPTOR_RVA, "00 " * 24),
 )
@@ -95,8 +97,8 @@ class AssertResult:
 def owned_write_ranges(base: int) -> tuple[tuple[str, int, int], ...]:
     """(name, start, end) for every region this tool is allowed to write.
 
-    The five contract regions come straight from :func:`payload.blobs` -- the
-    state block, both caves and both detour sites -- so the guard cannot drift
+    The contract regions come straight from :func:`payload.blobs` -- the state
+    block, caves, and detour sites -- so the guard cannot drift
     away from what the installer actually writes. The descriptor span is added
     explicitly because it reaches past the end of the state blob (see
     :data:`STATE_SPAN`).
@@ -359,7 +361,7 @@ def install(
     """Write the static payload. Inert unless ``dry_run=False``.
 
     Ordering is the safety contract (see docs/INSTALL-ATOMICITY.md). The state
-    region and both caves are written first; only then are the two ``E9`` detours
+    region and caves are written first; only then are the ``E9`` detours
     written, and they are the commit point -- nothing in the guest jumps to a cave
     until a detour exists, so everything before the detours is harmless. The
     structural half of this ordering is pinned by ``payload.blobs()`` and its
@@ -368,8 +370,8 @@ def install(
     The heartbeat hook executes every frame, so writing its detour is not atomic
     against a guest thread mid-fetch. When arming, the two detours are therefore
     committed through :func:`threadcontrol.install_detours_atomically`: suspend
-    every guest thread, verify no RIP is inside either seven-byte window, write
-    both detours under that one suspend, resume. Arming requires a ``controller``;
+    every guest thread, verify no RIP is inside any patch window, write all
+    detours under that one suspend, resume. Arming requires a ``controller``;
     without one this fails closed rather than write a detour blind. The live
     suspend/RIP read was validated against the game on 2026-08-24 (owner checklist
     item 5a).
