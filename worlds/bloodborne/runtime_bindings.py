@@ -691,6 +691,17 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         None,
         None,
     ),
+    "boss_darkbeast_paarl": RuntimeLocationBinding(
+        12301700,
+        "EMEVD boss-completion flag; $Event(12301700) waits CharacterDead(2300810), "
+        "calls HandleBossDefeat(2300810), awards lot 50800000/50800005 and sets "
+        "2301/9454. MSB places 2300810 with NpcParam 508000 (Darkbeast Paarl)",
+        None,
+        "boss_defeat",
+        "m23_00_00_00.emevd.dcx.js:756-806",
+        None,
+        None,
+    ),
     "boss_vicar_amelia": RuntimeLocationBinding(
         12401800,
         "EMEVD boss-completion flag; $Event(12401800) waits CharacterDead(2400800) and "

@@ -5,6 +5,7 @@ from itertools import combinations
 from pathlib import Path
 
 from worlds.bloodborne.data import (
+    ALTERNATE_GAOL_LOCATION_KEYS,
     BASE_GAME_WEAPON_KEYS,
     DLC_ENTRANCE_NAMES,
     DLC_ITEM_KEYS,
@@ -49,7 +50,8 @@ except ImportError:                      # pragma: no cover - environment depend
 
 def seeded_locations():
     from worlds.bloodborne import NETWORK_LOCATIONS
-    seeded = {n.key for n in NETWORK_LOCATIONS}
+    # Default YAML leaves the progression-changing Gaol route disabled.
+    seeded = {n.key for n in NETWORK_LOCATIONS} - ALTERNATE_GAOL_LOCATION_KEYS
     return [location for location in MODEL.locations if location.key in seeded]
 
 
@@ -110,7 +112,7 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(644, len(NETWORK_LOCATIONS))
+        self.assertEqual(645, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -126,7 +128,7 @@ class BloodborneModelTests(unittest.TestCase):
              "Research Hall": 37, "Lumenwood Garden": 1,
              "Astral Clocktower": 1, "Fishing Hamlet": 41,
              "Nightmare Grand Cathedral": 1, "Healing Church Workshop": 4,
-             "Upper Cathedral Ward": 2},
+             "Upper Cathedral Ward": 2, "Graveyard of the Darkbeast": 1},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -207,7 +209,7 @@ class BloodborneModelTests(unittest.TestCase):
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2"):
             self.assertEqual(counts[name], 25, name)
-        self.assertEqual(counts["Bolt Paper x2"], 24)
+        self.assertEqual(counts["Bolt Paper x2"], 25)
         self.assertEqual(counts["Bone Marrow Ash x3"], 24)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
@@ -244,7 +246,7 @@ class BloodborneModelTests(unittest.TestCase):
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
         self.assertEqual(counts["Blood Vial"], 223)
         self.assertEqual(counts["Quicksilver Bullets x3"], 149)
-        self.assertEqual(counts["Blood Stone Shards x2"], 111)
+        self.assertEqual(counts["Blood Stone Shards x2"], 112)
         self.assertEqual(counts["Pebbles x3"], 74)
         self.assertEqual(counts["Molotov Cocktails x2"], 74)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
@@ -535,7 +537,7 @@ class BloodborneModelTests(unittest.TestCase):
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}
-        self.assertEqual({"Menu"}, set(MODEL.regions) - populated)
+        self.assertEqual({"Menu", "Hypogean Gaol"}, set(MODEL.regions) - populated)
 
 
 class UncannyWeaponPoolTests(unittest.TestCase):

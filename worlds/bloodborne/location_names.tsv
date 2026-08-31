@@ -662,6 +662,7 @@ location_flag	region	name	basis
 9470	Hunter's Nightmare	Hunter's Nightmare - Eye Pendant	published (data.py pickup_eye_pendant); EMEVD script-award flag committed in runtime_bindings.py
 53502000	Research Hall	Research Hall - Laurence's Skull	published (data.py pickup_laurences_skull); EMEVD script-award flag committed in runtime_bindings.py
 12301800	Old Yharnam	Blood-starved Beast	published (data.py boss_blood_starved_beast); boss-defeat event flag committed in runtime_bindings.py
+12301700	Graveyard of the Darkbeast	Darkbeast Paarl	published (data.py boss_darkbeast_paarl); m23_00 EMEVD event 12301700 defeats entity 2300810
 12401800	Grand Cathedral	Vicar Amelia	published (data.py boss_vicar_amelia); boss-defeat event flag committed in runtime_bindings.py
 12701800	Forbidden Woods	Shadows of Yharnam	published (data.py boss_shadows_of_yharnam); boss-defeat event flag committed in runtime_bindings.py
 13201800	Moonside Lake	Rom, the Vacuous Spider	published (data.py boss_rom); boss-defeat event flag committed in runtime_bindings.py

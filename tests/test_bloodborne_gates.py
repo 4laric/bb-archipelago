@@ -29,6 +29,8 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     # key on his death, which hid the second requirement inside the first.
     "Tomb of Oedon gate": {frozenset({"oedon_tomb_key", "event_gascoigne_defeated"})},
     "Healing Church Workshop door": {frozenset({"event_blood_starved_beast_defeated"})},
+    "Snatcher abduction": {frozenset({"event_blood_starved_beast_defeated"})},
+    "Paarl's rear gate": {frozenset({"event_darkbeast_paarl_defeated"})},
     # The emblem opens the gate itself. The game's other way in is the Healing
     # Church Workshop route, which is its own entrance below rather than a
     # second clause here: folding it in made the emblem clause unreachable as a
@@ -61,6 +63,8 @@ DOCUMENTED_FREE = {
     "Begin the Hunt",
     "Awaken in Central Yharnam",
     "Road into Old Yharnam",
+    "Blood Moon path to Hypogean Gaol",
+    "Descent to Paarl",
     "Forbidden Woods clinic passage",
     # The workshop's own door already costs Blood-starved Beast; the walk from
     # it to the plaza costs nothing more.
