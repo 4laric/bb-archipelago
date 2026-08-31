@@ -81,13 +81,12 @@ class PlanGenerationTests(unittest.TestCase):
         self.assertEqual(client_args[1], "Alice")
         self.assertIn("{runtime_config}", client_args)
         self.assertIn("{ledger}", client_args)
-        self.assertIn("--assume-correct-save", client_args)
+        self.assertNotIn("--assume-correct-save", client_args)
         self.assertEqual(
             client_args[2:],
             [
                 "{runtime_config}",
                 "{ledger}",
-                "--assume-correct-save",
                 "--log-file",
                 "{client_log}",
             ],

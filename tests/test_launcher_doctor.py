@@ -135,7 +135,6 @@ class DoctorFixture:
                                 "Hunter",
                                 "{runtime_config}",
                                 "{ledger}",
-                                "--assume-correct-save",
                             ],
                         },
                     ],

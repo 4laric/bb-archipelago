@@ -98,7 +98,7 @@ The apworld's Python client remains a manual-check fallback. The native client
 in `from-software-archipelago-clients` consumes every runtime flag binding the seed sends,
 debounces true reads three times, delivers the Saw Spear and category-4 goods
 through the durable r7 grant bridge, and sends Archipelago goal status for the seed's
-`goal_location`. Its explicit `--assume-correct-save` MVP mode has reported
-three pickups automatically and acknowledged their AP rewards in order during
-a live run. This mode is operator-attested, not real save identification: never
-switch characters while connected. Normal live mode remains fail closed.
+`goal_location`. The client resolves fresh shadPS4 character-save writes,
+requires three stable gameplay-ready observations, and durably binds the first
+verified character slot before checks or delivery can arm. Later character
+switches are refused.

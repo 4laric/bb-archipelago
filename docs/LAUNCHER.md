@@ -182,10 +182,10 @@ python -m bb_launcher plan `
   --ap-request seed.bbseed.json
 ```
 
-The client entry carries `--assume-correct-save`, the explicitly unsafe MVP
-mode, because real save identity is still #56 — generating the plan does not
-change that boundary. An existing plan is never overwritten without
-`--force`.
+The client waits for a fresh shadPS4 character-save write, confirms the same
+slot across three gameplay-ready polls, and durably binds that character to
+the AP seed and slot before checks or delivery can arm. An existing plan is
+never overwritten without `--force`.
 
 ## Desktop Randomize & Launch
 
@@ -459,8 +459,7 @@ arguments. Regenerating is one click.
         "localhost:38281",
         "VarietyTester",
         "{runtime_config}",
-        "{ledger}",
-        "--assume-correct-save"
+        "{ledger}"
       ]
     }
   ]

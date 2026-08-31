@@ -19,9 +19,8 @@ from discovered or selected components:
   found". Passing the directory keeps shadPS4's `CUSA03173-patch` and
   `CUSA03173-mods` overlay resolution intact: the emulator derives both from
   the booted eboot's own parent folder, not from its library config;
-- the client entry carries `--assume-correct-save`, the explicitly unsafe MVP
-  mode, because real save identity is still #56 -- generating the plan does
-  not change that boundary.
+- the client derives the active character from fresh shadPS4 save-write events
+  and durably binds that verified slot before checks or deliveries can arm.
 
 A generated plan has exactly two children: shadPS4 and the AP client
 (bb-archipelago#153). Item delivery is the client's own native path, which is
@@ -102,7 +101,6 @@ def generate_process_plan(
                 slot,
                 "{runtime_config}",
                 "{ledger}",
-                "--assume-correct-save",
                 # The client tees its own output to the console AND this file
                 # (clients#425): the console stays live for the player while
                 # client.log keeps the evidence a startup refusal needs. The
