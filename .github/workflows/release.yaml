@@ -128,7 +128,7 @@ jobs:
           files: |
             ${{ github.workspace }}\build\BloodborneAPLauncher\BloodborneAPLauncher.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\bb-ap-client.exe
-            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEnemizerPlanner.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEnemizerPlanner\BBEnemizerPlanner.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEnemizerWriter.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBSuppressionWriter.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBToastWriter.exe
@@ -154,7 +154,7 @@ jobs:
           $catalog = @(
             "BloodborneAPLauncher.exe",
             "tools\bb-ap-client.exe",
-            "tools\BBEnemizerPlanner.exe",
+            "tools\BBEnemizerPlanner\BBEnemizerPlanner.exe",
             "tools\BBEnemizerWriter.exe",
             "tools\BBSuppressionWriter.exe",
             "tools\BBToastWriter.exe",
@@ -284,7 +284,7 @@ jobs:
             [pscustomobject]@{ Label = "bloodborne.apworld"; Path = (Join-Path $PWD "scan\bloodborne.apworld") },
             [pscustomobject]@{ Label = "BloodborneAPLauncher.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\BloodborneAPLauncher.exe") },
             [pscustomobject]@{ Label = "tools/bb-ap-client.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\bb-ap-client.exe") },
-            [pscustomobject]@{ Label = "tools/BBEnemizerPlanner.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEnemizerPlanner.exe") },
+            [pscustomobject]@{ Label = "tools/BBEnemizerPlanner/BBEnemizerPlanner.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEnemizerPlanner\BBEnemizerPlanner.exe") },
             [pscustomobject]@{ Label = "tools/BBSuppressionWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBSuppressionWriter.exe") },
             [pscustomobject]@{ Label = "tools/BBEnemizerWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEnemizerWriter.exe") },
             [pscustomobject]@{ Label = "tools/BBToastWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBToastWriter.exe") },

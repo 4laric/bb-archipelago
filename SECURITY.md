@@ -28,7 +28,7 @@ gh attestation verify BloodborneAPLauncher-win-x64.zip --repo 4laric/bb-archipel
 ```
 
 Compare its SHA-256 hash with the value in the same release's notes. A small
-number of heuristic detections can be expected for unsigned tooling that reads
+number of heuristic detections can still occur for signed tooling that reads
 another process's memory; watch the major engines, consistency between
 releases, and the provenance checks above.
 
