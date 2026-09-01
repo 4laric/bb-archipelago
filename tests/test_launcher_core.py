@@ -947,6 +947,40 @@ class UserModMergeActivationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "hash changed"):
             activate_build(self.install, build_b, process_is_running=lambda: False)
 
+    def test_game_manager_file_link_is_accepted_only_when_owned_bytes_match(self):
+        _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
+        _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
+        activate_build(self.install, build_a, process_is_running=lambda: False)
+        owned = self.install.mods / SUPPRESSION_PATH
+        backing = self.root / "game-manager-copy.dcx"
+        backing.write_bytes(owned.read_bytes())
+        owned.unlink()
+        try:
+            owned.symlink_to(backing)
+        except (OSError, NotImplementedError):
+            self.skipTest("this platform does not allow creating symbolic links")
+
+        # The existing overlay still verifies and can be replaced atomically;
+        # the freshly staged overlay contains regular files again.
+        activate_build(self.install, build_b, process_is_running=lambda: False)
+        self.assertFalse((self.install.mods / SUPPRESSION_PATH).is_symlink())
+
+    def test_game_manager_file_link_with_changed_bytes_fails_closed(self):
+        _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
+        _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
+        activate_build(self.install, build_a, process_is_running=lambda: False)
+        owned = self.install.mods / SUPPRESSION_PATH
+        backing = self.root / "game-manager-copy.dcx"
+        backing.write_bytes(b"tampered")
+        owned.unlink()
+        try:
+            owned.symlink_to(backing)
+        except (OSError, NotImplementedError):
+            self.skipTest("this platform does not allow creating symbolic links")
+
+        with self.assertRaisesRegex(ValidationError, "owned overlay file size changed"):
+            activate_build(self.install, build_b, process_is_running=lambda: False)
+
     def test_deactivate_and_restore_leave_the_user_directory_untouched(self):
         write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
         before = snapshot_tree(self.install.user_mods)
