@@ -658,7 +658,7 @@ location_flag	region	name	basis
 12411800	Central Yharnam	Father Gascoigne	published (data.py boss_father_gascoigne); boss-defeat event flag committed in runtime_bindings.py
 52410990	Iosefka's Clinic	Iosefka's Clinic - Cainhurst Summons	published (data.py pickup_cainhurst_summons); EMEVD script-award flag committed in runtime_bindings.py
 52420900	Upper Cathedral Ward	Upper Cathedral Ward - Orphanage Key	published (data.py script_award_orphanage_key); EMEVD script-award flag committed in runtime_bindings.py
-50000100	Hunter's Dream	Hunter's Dream - Eye of a Blood-drunk Hunter	published (data.py pickup_eye_of_blood_drunk_hunter); EMEVD script-award flag committed in runtime_bindings.py
+12101028	Hunter's Dream	Hunter's Dream - Eye of a Blood-drunk Hunter	published (data.py pickup_eye_of_blood_drunk_hunter); EMEVD gift-event completion flag committed in runtime_bindings.py; lot 10040 retains suppression flag 50000100
 9470	Hunter's Nightmare	Hunter's Nightmare - Eye Pendant	published (data.py pickup_eye_pendant); EMEVD script-award flag committed in runtime_bindings.py
 53502000	Research Hall	Research Hall - Laurence's Skull	published (data.py pickup_laurences_skull); EMEVD script-award flag committed in runtime_bindings.py
 12301800	Old Yharnam	Blood-starved Beast	published (data.py boss_blood_starved_beast); boss-defeat event flag committed in runtime_bindings.py

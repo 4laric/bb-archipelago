@@ -314,7 +314,8 @@ class RealCorpusTests(unittest.TestCase):
             if binding.item_lot_id is None:
                 continue
             checked += 1
-            self.assertEqual(int(by_lot[str(binding.item_lot_id)]), binding.event_flag,
+            item_lot_flag = binding.item_lot_flag or binding.event_flag
+            self.assertEqual(int(by_lot[str(binding.item_lot_id)]), item_lot_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
         # The base-game and DLC fixed pickups plus published treasures carry
         # lots; bosses and the skull interaction do not, and the

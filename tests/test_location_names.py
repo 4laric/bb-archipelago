@@ -58,7 +58,7 @@ SCRIPTED_CHECK_FLAGS = {
     "13401850",   # boss_laurence
     "52410990",   # pickup_cainhurst_summons
     "52420900",   # script_award_orphanage_key
-    "50000100",   # pickup_eye_of_blood_drunk_hunter
+    "12101028",   # pickup_eye_of_blood_drunk_hunter
     "9470",       # pickup_eye_pendant
     "53502000",   # pickup_laurences_skull
     "52110800",   # pickup_small_hair_ornament
@@ -101,7 +101,7 @@ DATA_PY_TABLED_CHECKS = {
     "pickup_upper_cathedral_key": 52800290,
     "pickup_lunarium_key": 53200810,
     "script_award_orphanage_key": 52420900,
-    "pickup_eye_of_blood_drunk_hunter": 50000100,
+    "pickup_eye_of_blood_drunk_hunter": 12101028,
     "pickup_eye_pendant": 9470,
     "pickup_laurences_skull": 53502000,
     "treasure_radiant_sword_hunter_badge": 52400480,
