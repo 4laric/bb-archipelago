@@ -190,6 +190,24 @@ class LauncherPackageTests(unittest.TestCase):
             workflow.index("gh release create"),
         )
 
+    def test_release_virustotal_scan_is_bounded_and_non_blocking(self):
+        workflow_path = Path.cwd() / ".github" / "workflows" / "release.yaml"
+        if not workflow_path.is_file():
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        scan = workflow[workflow.index("  virustotal:") :]
+        self.assertIn("needs: package", scan)
+        self.assertIn("continue-on-error: true", scan)
+        self.assertIn("secrets.VIRUSTOTAL_API_KEY", scan)
+        self.assertIn("if: env.VIRUSTOTAL_API_KEY != ''", scan)
+        self.assertIn("/api/v3/files/upload_url", scan)
+        self.assertIn("/api/v3/files\"", scan)
+        self.assertIn("$attempt -le 12", scan)
+        self.assertIn("Start-Sleep -Seconds 15", scan)
+        self.assertIn("gh release edit", scan)
+        self.assertIn("https://www.virustotal.com/gui/file/$sha256", scan)
+
 
 if __name__ == "__main__":
     unittest.main()
