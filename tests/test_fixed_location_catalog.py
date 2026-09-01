@@ -55,8 +55,10 @@ class FixedLocationCatalogTests(unittest.TestCase):
         ]
         self.assertEqual(36, len(genuine_gems))
         seeded = {location.key for location in NETWORK_LOCATIONS}
-        self.assertEqual({row.key for row in genuine_gems}, {row.key for row in genuine_gems} & seeded)
-        self.assertTrue(all(not row.vanilla_award_suppressed for row in genuine_gems))
+        for gem in genuine_gems:
+            with self.subTest(param=gem.item_id, location=gem.key):
+                self.assertIn(gem.key, seeded)
+                self.assertFalse(gem.vanilla_award_suppressed)
 
     def test_selected_rows_are_exact_catalog_rows_with_item_evidence(self):
         catalog = {
