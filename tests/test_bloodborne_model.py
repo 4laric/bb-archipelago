@@ -686,6 +686,7 @@ class UncannyOptionWiringTests(unittest.TestCase):
             self.full_item_pool = full_item_pool
             self.uncanny_weapons = uncanny_weapons
             self.include_dlc = include_dlc
+            self.randomize_armor = 0
 
     def _keys(self, *, full, uncanny):
         from worlds.bloodborne import BloodborneWorld
@@ -719,6 +720,7 @@ class DlcOptionWiringTests(unittest.TestCase):
     class _Options:
         full_item_pool = 1
         uncanny_weapons = 0
+        randomize_armor = 0
 
         def __init__(self, include_dlc):
             self.include_dlc = include_dlc

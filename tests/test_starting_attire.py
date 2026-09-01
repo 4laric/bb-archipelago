@@ -8,6 +8,8 @@ from worlds.bloodborne.starting_attire import (
     STARTING_ATTIRE_CATALOG,
     build_starting_attire_choice,
 )
+from worlds.bloodborne.data import ATTIRE_ITEM_KEYS, MODEL
+from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, validate_runtime_item_binding
 
 
 class StartingAttireCatalogTests(unittest.TestCase):
@@ -37,6 +39,26 @@ class StartingAttireCatalogTests(unittest.TestCase):
         world_source = (Path(__file__).parents[1] / "worlds" / "bloodborne" / "__init__.py").read_text(
             encoding="utf-8")
         self.assertNotIn("randomize_starting_attire", world_source)
+
+    def test_every_reviewed_piece_is_a_distinct_general_pool_item(self):
+        expected = {piece.item_key for piece in STARTING_ATTIRE_CATALOG}
+        self.assertEqual(expected, ATTIRE_ITEM_KEYS)
+        modeled = {item.key: item for item in MODEL.items}
+        self.assertEqual(expected, expected & modeled.keys())
+        self.assertEqual(len(expected), len(STARTING_ATTIRE_CATALOG))
+
+    def test_every_reviewed_piece_has_an_explicit_category_one_descriptor(self):
+        feed_effect = {
+            "head": "attire_head", "body": "attire_chest",
+            "arms": "attire_hands", "legs": "attire_legs",
+        }
+        for piece in STARTING_ATTIRE_CATALOG:
+            binding = ITEM_BINDINGS[piece.item_key]
+            self.assertEqual(1, binding.item_category)
+            self.assertEqual(0x10000000 | piece.protector_id, binding.normalized_item_id)
+            self.assertEqual(0x90000000 | piece.protector_id, binding.raw_descriptor)
+            self.assertEqual(feed_effect[piece.slot], binding.feed_effect)
+            validate_runtime_item_binding(piece.item_key, binding, 1)
 
 
 if __name__ == "__main__":
