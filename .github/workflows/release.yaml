@@ -23,6 +23,10 @@ on:
       client_ref:
         description: "from-software-archipelago-clients ref to build"
         default: "main"
+      scan_only:
+        description: "Rescan an existing release without rebuilding it"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,6 +36,7 @@ permissions:
 jobs:
   package:
     name: player prerelease package
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.scan_only }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -142,6 +147,7 @@ jobs:
   virustotal:
     name: publish VirusTotal results
     needs: package
+    if: ${{ always() && (needs.package.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.scan_only)) }}
     runs-on: windows-latest
     continue-on-error: true
     env:
@@ -183,11 +189,25 @@ jobs:
               $uploadUrl = "https://www.virustotal.com/api/v3/files"
             }
 
-            $upload = Invoke-RestMethod `
-              -Method Post `
-              -Uri $uploadUrl `
-              -Headers $headers `
-              -Form @{ file = $path }
+            # PowerShell 7.5's multipart encoder produced a body VirusTotal
+            # rejected as malformed for the signed large-file upload URL.
+            # curl's file form encoder is available on windows-latest and is
+            # also the request shape documented by VirusTotal.
+            $uploadJson = & curl.exe `
+              --silent `
+              --show-error `
+              --fail-with-body `
+              --request POST `
+              --url $uploadUrl `
+              --header "x-apikey: $env:VIRUSTOTAL_API_KEY" `
+              --form "file=@$($path.FullName)"
+            if ($LASTEXITCODE -ne 0) {
+              throw "VirusTotal upload failed for $($path.Name) (curl exit $LASTEXITCODE)"
+            }
+            $upload = $uploadJson | ConvertFrom-Json
+            if (-not $upload.data.id) {
+              throw "VirusTotal upload returned no analysis id for $($path.Name)"
+            }
             $analysisId = $upload.data.id
             $analysis = $null
             for ($attempt = 1; $attempt -le 12; $attempt++) {
