@@ -5,6 +5,7 @@ param(
     [string]$ClientPath,
     [string]$OutputRoot,
     [string]$SuppressionBuild,
+    [string]$ReleaseVersion,
     [switch]$SkipClient,
     [switch]$NoArchive
 )
@@ -66,6 +67,21 @@ New-Item -ItemType Directory -Path $resolvedOutput -Force | Out-Null
 New-Item -ItemType Directory -Path $work -Force | Out-Null
 New-Item -ItemType Directory -Path (Join-Path $work "spec") -Force | Out-Null
 
+$worldMetadata = Get-Content -LiteralPath (Join-Path $repo "worlds\bloodborne\archipelago.json") -Raw | ConvertFrom-Json
+if (-not $ReleaseVersion) {
+    $ReleaseVersion = "$($worldMetadata.world_version)-dev.0"
+}
+$versionRoot = Join-Path $work "version"
+& python (Join-Path $repo "packaging\version_metadata.py") `
+    --release-version $ReleaseVersion --output $versionRoot
+if ($LASTEXITCODE -ne 0) { throw "Windows version metadata generation failed." }
+$versionMetadata = Get-Content -LiteralPath (Join-Path $versionRoot "version-metadata.json") -Raw | ConvertFrom-Json
+$runtimeVersion = [string]$worldMetadata.world_version
+$releaseRuntimeVersion = @($versionMetadata.file_version_tuple)[0..2] -join "."
+if ($releaseRuntimeVersion -ne $runtimeVersion) {
+    throw "Release version $ReleaseVersion does not match world runtime version $runtimeVersion."
+}
+
 $pyinstaller = @(
     "-m", "PyInstaller", "--noconfirm", "--clean", "--paths", $repo,
     "--workpath", (Join-Path $work "pyi-work"),
@@ -73,6 +89,7 @@ $pyinstaller = @(
 )
 & python @pyinstaller --windowed --onedir --name BloodborneAPLauncher `
     --distpath (Join-Path $work "launcher-dist") `
+    --version-file (Join-Path $versionRoot "launcher-version.txt") `
     --add-data "$(Join-Path $repo 'research\enemizer\enemy_tags.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\slot_policy.json');research\enemizer" `
     (Join-Path $repo "packaging\launcher_entry.py")
@@ -80,22 +97,33 @@ if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }
 
 & python @pyinstaller --console --onedir --name BBEnemizerPlanner `
     --distpath (Join-Path $work "planner-dist") `
+    --version-file (Join-Path $versionRoot "planner-version.txt") `
     (Join-Path $repo "packaging\enemizer_planner_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller planner build failed." }
 
 $native = Join-Path $work "native"
 New-Item -ItemType Directory -Path $native -Force | Out-Null
 $projects = @(
-    @{ Project = "tools\bb_enemizer_writer\BBEnemizerWriter.csproj"; Name = "BBEnemizerWriter.exe" },
-    @{ Project = "tools\bb_suppression_writer\BBSuppressionWriter.csproj"; Name = "BBSuppressionWriter.exe" },
-    @{ Project = "tools\bb_toast_writer\BBToastWriter.csproj"; Name = "BBToastWriter.exe" },
-    @{ Project = "tools\msbb_miner\MSBBMiner.csproj"; Name = "MSBBMiner.exe" }
+    @{ Project = "tools\bb_enemizer_writer\BBEnemizerWriter.csproj"; Name = "BBEnemizerWriter.exe"; Description = "Bloodborne Enemy Map Writer" },
+    @{ Project = "tools\bb_suppression_writer\BBSuppressionWriter.csproj"; Name = "BBSuppressionWriter.exe"; Description = "Bloodborne Vanilla Award Suppression Writer" },
+    @{ Project = "tools\bb_toast_writer\BBToastWriter.csproj"; Name = "BBToastWriter.exe"; Description = "Bloodborne Pickup Toast Writer" },
+    @{ Project = "tools\msbb_miner\MSBBMiner.csproj"; Name = "MSBBMiner.exe"; Description = "Bloodborne Map Inventory Miner" }
 )
 foreach ($item in $projects) {
     $project = Join-Path $repo $item.Project
     $publish = Join-Path $native ([IO.Path]::GetFileNameWithoutExtension($item.Name))
     & dotnet publish $project -c Release -r win-x64 --self-contained true `
         -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+        "-p:Version=$($versionMetadata.product_version)" `
+        "-p:FileVersion=$($versionMetadata.file_version)" `
+        "-p:AssemblyVersion=$($versionMetadata.file_version_tuple[0]).$($versionMetadata.file_version_tuple[1]).$($versionMetadata.file_version_tuple[2]).0" `
+        "-p:InformationalVersion=$($versionMetadata.product_version)" `
+        -p:IncludeSourceRevisionInInformationalVersion=false `
+        "-p:Product=$($versionMetadata.product_name)" `
+        "-p:Company=$($versionMetadata.publisher)" `
+        "-p:Copyright=$($versionMetadata.copyright)" `
+        "-p:AssemblyTitle=$($item.Description)" `
+        "-p:Description=$($item.Description)" `
         "-p:SoulsFormatsNextRoot=$soulsRoot" -o $publish -v:minimal
     if ($LASTEXITCODE -ne 0) { throw "Native publish failed: $project" }
     if (-not (Test-Path -LiteralPath (Join-Path $publish $item.Name) -PathType Leaf)) {
@@ -169,6 +197,8 @@ $manifest = [ordered]@{
     includes_client = (-not $SkipClient)
     includes_suppression = [bool]$SuppressionBuild
     includes_game_files = $false
+    runtime_version = $runtimeVersion
+    version = $versionMetadata
     client = $clientRecord
     files = @($records)
 }

@@ -1,12 +1,25 @@
 from __future__ import annotations
 
 import json
+import importlib.util
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 from bb_launcher.resources import application_root, resource_root
 from bb_launcher.workflow import EnemizerToolchain, ValidationError
+
+
+def load_version_metadata_module():
+    path = Path(__file__).resolve().parents[1] / "packaging" / "version_metadata.py"
+    spec = importlib.util.spec_from_file_location("bb_version_metadata", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 class LauncherPackageTests(unittest.TestCase):
@@ -133,6 +146,70 @@ class LauncherPackageTests(unittest.TestCase):
         )
         self.assertIn('.EndsWith(".msb", StringComparison.OrdinalIgnoreCase)', writer)
         self.assertIn('bare + ".msb.dcx"', writer)
+
+    def test_release_tag_maps_to_display_and_numeric_windows_versions(self):
+        module = load_version_metadata_module()
+        version = module.parse_release_version("v0.1.0-playtest.35")
+        self.assertEqual(version.product_version, "0.1.0-playtest.35")
+        self.assertEqual(version.file_version, "0.1.0.35")
+        self.assertEqual(version.file_version_tuple, (0, 1, 0, 35))
+        self.assertTrue(version.prerelease)
+
+    def test_signing_canary_and_stable_tags_are_versioned_deterministically(self):
+        module = load_version_metadata_module()
+        canary = module.parse_release_version("v0.1.0-signing-canary.2")
+        stable = module.parse_release_version("v1.2.3")
+        self.assertEqual(canary.file_version, "0.1.0.2")
+        self.assertEqual(canary.product_version, "0.1.0-signing-canary.2")
+        self.assertEqual(stable.file_version, "1.2.3.0")
+        self.assertFalse(stable.prerelease)
+
+    def test_invalid_or_unrepresentable_release_versions_are_rejected(self):
+        module = load_version_metadata_module()
+        for value in ("playtest.35", "v0.1", "v0.1.0-playtest", "v65536.0.0"):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                module.parse_release_version(value)
+
+    def test_release_verifies_every_executable_version_before_signing(self):
+        candidates = (
+            Path.cwd() / ".github" / "workflows" / "release.yaml",
+            self.repo / ".github" / "workflows" / "release.yaml",
+        )
+        workflow_path = next((path for path in candidates if path.is_file()), None)
+        if workflow_path is None:
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        verifier = (self.repo / "packaging" / "verify_version_metadata.ps1").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("BB_RELEASE_VERSION: ${{ env.RELEASE_TAG }}", workflow)
+        self.assertIn("-ReleaseVersion $env:RELEASE_TAG", workflow)
+        self.assertIn("releaseRuntimeVersion", verifier)
+        self.assertIn("manifest.runtime_version", verifier)
+        metadata_gate = workflow.index("- name: Verify Windows version metadata")
+        signing = workflow.index("- name: Authenticode-sign first-party executables")
+        self.assertLess(metadata_gate, signing)
+        for target in (
+            "BloodborneAPLauncher.exe",
+            "tools\\bb-ap-client.exe",
+            "tools\\BBEnemizerPlanner\\BBEnemizerPlanner.exe",
+            "tools\\BBEnemizerWriter.exe",
+            "tools\\BBSuppressionWriter.exe",
+            "tools\\BBToastWriter.exe",
+            "tools\\MSBBMiner.exe",
+        ):
+            self.assertIn(target, verifier)
+        for field in (
+            "ProductName",
+            "FileDescription",
+            "CompanyName",
+            "ProductVersion",
+            "FileVersion",
+            "OriginalFilename",
+            "LegalCopyright",
+        ):
+            self.assertIn(field, verifier)
 
     def test_release_build_stamps_the_exact_client_checkout(self):
         candidates = (
