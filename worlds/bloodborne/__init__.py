@@ -8,6 +8,8 @@ from .data import (
     ALTERNATE_GAOL_ENTRANCE_NAMES,
     ALTERNATE_GAOL_LOCATION_KEYS,
     ALTERNATE_GAOL_REGIONS,
+    ATTIRE_ITEM_KEYS,
+    DLC_ATTIRE_ITEM_KEYS,
     DLC_ENTRANCE_NAMES,
     DLC_ITEM_KEYS,
     DLC_LOCATION_KEYS,
@@ -49,7 +51,9 @@ STARTING_TOOL_KEYS = frozenset({"blood_gem_workshop_tool", "rune_workshop_tool"}
 # default pool -- and every seed generated before #205 -- is unchanged.
 FULL_POOL_ITEM_KEYS = frozenset(
     item.key for item in SHUFFLABLE_ITEMS
-    if item.key not in UNCANNY_ITEM_KEYS and item.key not in STARTING_TOOL_KEYS
+    if item.key not in UNCANNY_ITEM_KEYS
+    and item.key not in STARTING_TOOL_KEYS
+    and item.key not in ATTIRE_ITEM_KEYS
 )
 POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
@@ -415,6 +419,16 @@ else:
         display_name = "Uncanny Weapon Variants"
         default = 0
 
+    class RandomizeArmor(Toggle):
+        """Add each reviewed attire piece once to the general item pool.
+
+        Armor replaces filler and does not create additional checks. This is
+        opt-in while most category-1 delivery rows remain inferred; Old
+        Hunters attire additionally requires the DLC option.
+        """
+        display_name = "Randomize Armor"
+        default = 0
+
     class RandomizeStartingWeapons(Toggle):
         """Randomize the independent weapon and firearm choices in Hunter's Dream."""
         display_name = "Randomize Starting Weapons"
@@ -483,6 +497,7 @@ else:
         death_link_amnesty: DeathLinkAmnesty
         full_item_pool: FullItemPool
         uncanny_weapons: UncannyWeapons
+        randomize_armor: RandomizeArmor
         randomize_starting_weapons: RandomizeStartingWeapons
         remove_weapon_requirements: RemoveWeaponRequirements
         randomize_shops: RandomizeShops
@@ -598,6 +613,11 @@ else:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
             if not self.options.include_dlc:
                 base -= DLC_ITEM_KEYS
+            if bool(getattr(self.options, "randomize_armor", False)):
+                armor = ATTIRE_ITEM_KEYS
+                if not self.options.include_dlc:
+                    armor -= DLC_ATTIRE_ITEM_KEYS
+                base |= armor
             if not self.options.uncanny_weapons:
                 return base
             # One Uncanny variant per weapon this pool already places. A
@@ -645,6 +665,7 @@ else:
                 "death_link": bool(self.options.death_link),
                 "death_link_amnesty": int(self.options.death_link_amnesty),
                 "full_item_pool": bool(self.options.full_item_pool),
+                "randomize_armor": bool(getattr(self.options, "randomize_armor", False)),
                 "randomize_starting_weapons": bool(self.options.randomize_starting_weapons),
                 "starting_weapons": starting_weapons,
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),

@@ -5,7 +5,11 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from worlds.bloodborne.data import ATTIRE_ITEM_KEYS, SLICE_POOL_SUPPRESSION_KEYS
+from worlds.bloodborne.data import (
+    ATTIRE_ITEM_KEYS,
+    DLC_ATTIRE_ITEM_KEYS,
+    SLICE_POOL_SUPPRESSION_KEYS,
+)
 from worlds.bloodborne.runtime_bindings import (
     INFERRED_CATEGORY_1_EVIDENCE,
     ITEM_BINDINGS,
@@ -78,6 +82,35 @@ class ArmorPoolSafetyTests(unittest.TestCase):
         dlc_sets = {"old_hunter", "maria_hunter", "constable", "yamamura"}
         self.assertTrue(dlc_sets <= catalog_sets)
         self.assertEqual(4, len(dlc_sets))
+
+    @unittest.skipUnless(hasattr(__import__("worlds.bloodborne", fromlist=["BloodborneOptions"]),
+                                 "BloodborneOptions"),
+                         "requires an Archipelago checkout on sys.path")
+    def test_yaml_option_is_opt_in_and_respects_the_dlc_boundary(self):
+        from worlds.bloodborne import BloodborneOptions, BloodborneWorld, FULL_POOL_ITEM_KEYS
+
+        option = BloodborneOptions.type_hints["randomize_armor"]
+        self.assertEqual(0, option.default)
+        self.assertEqual("Randomize Armor", option.display_name)
+
+        class Options:
+            full_item_pool = 1
+            uncanny_weapons = 0
+
+            def __init__(self, armor: int, dlc: int):
+                self.randomize_armor = armor
+                self.include_dlc = dlc
+
+        def keys(armor: int, dlc: int):
+            world = BloodborneWorld.__new__(BloodborneWorld)
+            world.options = Options(armor, dlc)
+            return world._pool_item_keys()
+
+        self.assertEqual(FULL_POOL_ITEM_KEYS, keys(0, 1))
+        self.assertEqual(ATTIRE_ITEM_KEYS, keys(1, 1) - keys(0, 1))
+        self.assertEqual(ATTIRE_ITEM_KEYS - DLC_ATTIRE_ITEM_KEYS,
+                         keys(1, 0) - keys(0, 0))
+        self.assertTrue(DLC_ATTIRE_ITEM_KEYS.isdisjoint(keys(1, 0)))
 
     def test_armor_pool_design_contract_is_documented(self):
         text = (ROOT / "docs" / "ARMOR-POOL.md").read_text(encoding="utf-8")

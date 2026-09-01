@@ -396,6 +396,11 @@ LOCATIONS = (
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 
 ATTIRE_ITEM_KEYS = frozenset(piece.item_key for piece in STARTING_ATTIRE_CATALOG)
+DLC_ATTIRE_SET_KEYS = frozenset({"old_hunter", "maria_hunter", "constable", "yamamura"})
+DLC_ATTIRE_ITEM_KEYS = frozenset(
+    piece.item_key for piece in STARTING_ATTIRE_CATALOG
+    if piece.set_key in DLC_ATTIRE_SET_KEYS
+)
 
 # The generated player exposes one honest, bounded slice. The broader model
 # above remains research scaffolding; none of its later regions enters
