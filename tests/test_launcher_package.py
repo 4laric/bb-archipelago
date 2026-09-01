@@ -217,8 +217,10 @@ class LauncherPackageTests(unittest.TestCase):
         for target in (
             "BloodborneAPLauncher.exe",
             "tools/bb-ap-client.exe",
+            "tools/BBEnemizerPlanner.exe",
             "tools/BBSuppressionWriter.exe",
             "tools/BBEnemizerWriter.exe",
+            "tools/BBToastWriter.exe",
             "tools/MSBBMiner.exe",
         ):
             self.assertIn(f'Label = "{target}"', scan)

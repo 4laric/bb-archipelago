@@ -186,8 +186,10 @@ jobs:
             [pscustomobject]@{ Label = "bloodborne.apworld"; Path = (Join-Path $PWD "scan\bloodborne.apworld") },
             [pscustomobject]@{ Label = "BloodborneAPLauncher.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\BloodborneAPLauncher.exe") },
             [pscustomobject]@{ Label = "tools/bb-ap-client.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\bb-ap-client.exe") },
+            [pscustomobject]@{ Label = "tools/BBEnemizerPlanner.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEnemizerPlanner.exe") },
             [pscustomobject]@{ Label = "tools/BBSuppressionWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBSuppressionWriter.exe") },
             [pscustomobject]@{ Label = "tools/BBEnemizerWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEnemizerWriter.exe") },
+            [pscustomobject]@{ Label = "tools/BBToastWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBToastWriter.exe") },
             [pscustomobject]@{ Label = "tools/MSBBMiner.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\MSBBMiner.exe") }
           )
           foreach ($target in $scanTargets) {
