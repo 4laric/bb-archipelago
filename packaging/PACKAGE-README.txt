@@ -30,3 +30,6 @@ bloodborne.apworld is attached alongside the zip. Only the person
 GENERATING seeds needs it: drop it in Archipelago\custom_worlds (or
 lib\worlds for a source install) before running Generate. Players who
 connect to a hosted server do not need it.
+
+Verify that the launcher archive was built by this repository's public CI:
+gh attestation verify BloodborneAPLauncher-win-x64.zip --repo 4laric/bb-archipelago

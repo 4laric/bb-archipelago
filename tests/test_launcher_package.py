@@ -150,6 +150,26 @@ class LauncherPackageTests(unittest.TestCase):
             workflow.index("cargo build --release -p bb-archipelago"),
         )
 
+    def test_release_attests_both_artifacts_before_upload(self):
+        candidates = (
+            Path.cwd() / ".github" / "workflows" / "release.yaml",
+            self.repo / ".github" / "workflows" / "release.yaml",
+        )
+        workflow_path = next((path for path in candidates if path.is_file()), None)
+        if workflow_path is None:
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("id-token: write", workflow)
+        self.assertIn("attestations: write", workflow)
+        self.assertIn("uses: actions/attest-build-provenance@v2", workflow)
+        self.assertIn("build/BloodborneAPLauncher-win-x64.zip", workflow)
+        self.assertIn("build/bloodborne.apworld", workflow)
+        self.assertLess(
+            workflow.index("uses: actions/attest-build-provenance@v2"),
+            workflow.index('gh release create "$env:RELEASE_TAG"'),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
