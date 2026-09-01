@@ -25,6 +25,16 @@ writes to your base or update game trees; every change lives in a verified
 overlay the launcher owns and can roll back.
 
 See docs\LAUNCHER.md for the safety model and file formats.
+See https://github.com/4laric/bb-archipelago/security/policy for the security
+model, release-provenance checks, and private vulnerability reporting.
+
+Every release links its VirusTotal scan. The client reads game-process memory,
+so a few heuristic engines routinely flag unsigned tooling of this kind; the
+signal to watch is the major engines and that results stay consistent release
+to release. The artifact hashes below and this command prove any download is
+exactly what this public CI built from this public source:
+
+  gh attestation verify BloodborneAPLauncher-win-x64.zip --repo 4laric/bb-archipelago
 
 bloodborne.apworld is attached alongside the zip. Only the person
 GENERATING seeds needs it: drop it in Archipelago\custom_worlds (or

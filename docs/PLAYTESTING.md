@@ -3,6 +3,9 @@
 This guide is for playtesters, not developers. It takes you from a zip file to
 a running randomized seed, and tells you exactly what to report back.
 
+For the client and launcher's security boundaries, release verification, and
+private vulnerability reporting, see [SECURITY.md](../SECURITY.md).
+
 ## What you need
 
 1. **A Windows PC.**

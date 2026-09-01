@@ -116,6 +116,16 @@ jobs:
             build/BloodborneAPLauncher-win-x64.zip
             build/bloodborne.apworld
 
+      - name: Hash the release artifacts
+        shell: pwsh
+        run: |
+          $lines = @("", "## Artifact hashes (SHA-256, built by this workflow run: $env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID)")
+          foreach ($f in "build\BloodborneAPLauncher-win-x64.zip","build\bloodborne.apworld") {
+            $h = (Get-FileHash $f -Algorithm SHA256).Hash.ToLower()
+            $lines += "``$h``  $(Split-Path $f -Leaf)"
+          }
+          Add-Content packaging\PACKAGE-README.txt ($lines -join "`n")
+
       - name: Create the prerelease with the package zip
         shell: pwsh
         run: >-
@@ -128,3 +138,91 @@ jobs:
           build\bloodborne.apworld
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  virustotal:
+    name: publish VirusTotal results
+    needs: package
+    runs-on: windows-latest
+    continue-on-error: true
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+    steps:
+      - name: Resolve the release tag
+        shell: pwsh
+        run: |
+          $tag = "${{ github.event.inputs.tag }}"
+          if ("${{ github.ref_type }}" -eq "tag") { $tag = "${{ github.ref_name }}" }
+          if (-not $tag.StartsWith("v")) { throw "release tags must start with v: $tag" }
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: VirusTotal API key is not configured
+        if: env.VIRUSTOTAL_API_KEY == ''
+        shell: pwsh
+        run: Write-Warning "Skipping VirusTotal publication because VIRUSTOTAL_API_KEY is unavailable."
+
+      - name: Scan release artifacts and publish permalinks
+        if: env.VIRUSTOTAL_API_KEY != ''
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path scan -Force | Out-Null
+          gh release download "$env:RELEASE_TAG" `
+            --repo "${{ github.repository }}" `
+            --dir scan `
+            --pattern BloodborneAPLauncher-win-x64.zip `
+            --pattern bloodborne.apworld
+
+          $headers = @{ "x-apikey" = $env:VIRUSTOTAL_API_KEY }
+          $lines = @("", "## VirusTotal")
+          foreach ($path in Get-ChildItem scan -File | Sort-Object Name) {
+            if ($path.Length -gt 32MB) {
+              $uploadUrl = (Invoke-RestMethod `
+                -Uri "https://www.virustotal.com/api/v3/files/upload_url" `
+                -Headers $headers).data
+            } else {
+              $uploadUrl = "https://www.virustotal.com/api/v3/files"
+            }
+
+            $upload = Invoke-RestMethod `
+              -Method Post `
+              -Uri $uploadUrl `
+              -Headers $headers `
+              -Form @{ file = $path }
+            $analysisId = $upload.data.id
+            $analysis = $null
+            for ($attempt = 1; $attempt -le 12; $attempt++) {
+              $analysis = Invoke-RestMethod `
+                -Uri "https://www.virustotal.com/api/v3/analyses/$analysisId" `
+                -Headers $headers
+              if ($analysis.data.attributes.status -eq "completed") { break }
+              Start-Sleep -Seconds 15
+            }
+
+            $sha256 = (Get-FileHash $path.FullName -Algorithm SHA256).Hash.ToLower()
+            $permalink = "https://www.virustotal.com/gui/file/$sha256"
+            $stats = $analysis.data.attributes.stats
+            if ($stats) {
+              $detections = [int]$stats.malicious + [int]$stats.suspicious
+              $total = 0
+              foreach ($property in $stats.PSObject.Properties) {
+                $total += [int]$property.Value
+              }
+              $summary = "$detections/$total engines at publish time"
+            } else {
+              $summary = "analysis still running at publish time"
+            }
+            $lines += "- $($path.Name): $permalink ($summary)"
+          }
+
+          $notesPath = Join-Path $PWD "release-notes.md"
+          gh release view "$env:RELEASE_TAG" `
+            --repo "${{ github.repository }}" `
+            --json body `
+            --jq .body | Set-Content $notesPath
+          $notes = Get-Content $notesPath -Raw
+          $notes = $notes -replace '(?ms)\r?\n## VirusTotal\s*\r?\n.*\z', ''
+          Set-Content $notesPath $notes.TrimEnd()
+          Add-Content $notesPath ($lines -join "`n")
+          gh release edit "$env:RELEASE_TAG" `
+            --repo "${{ github.repository }}" `
+            --notes-file $notesPath

@@ -102,6 +102,7 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn("-p:PublishSingleFile=true", script)
         self.assertIn('includes_game_files = $false', script)
         self.assertIn("package-manifest.json", script)
+        self.assertIn('Join-Path $repo "SECURITY.md"', script)
         self.assertIn('Join-Path $tools "bb-ap-client.exe"', script)
         self.assertIn('path = "tools/bb-ap-client.exe"', script)
         self.assertIn("$clientRecord", script)
@@ -169,6 +170,43 @@ class LauncherPackageTests(unittest.TestCase):
             workflow.index("uses: actions/attest-build-provenance@v2"),
             workflow.index('gh release create "$env:RELEASE_TAG"'),
         )
+
+    def test_release_notes_hash_both_artifacts_before_release_creation(self):
+        candidates = (
+            Path.cwd() / ".github" / "workflows" / "release.yaml",
+            self.repo / ".github" / "workflows" / "release.yaml",
+        )
+        workflow_path = next((path for path in candidates if path.is_file()), None)
+        if workflow_path is None:
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("Get-FileHash $f -Algorithm SHA256", workflow)
+        self.assertIn("$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID", workflow)
+        self.assertIn('"build\\BloodborneAPLauncher-win-x64.zip"', workflow)
+        self.assertIn('"build\\bloodborne.apworld"', workflow)
+        self.assertLess(
+            workflow.index("- name: Hash the release artifacts"),
+            workflow.index("gh release create"),
+        )
+
+    def test_release_virustotal_scan_is_bounded_and_non_blocking(self):
+        workflow_path = Path.cwd() / ".github" / "workflows" / "release.yaml"
+        if not workflow_path.is_file():
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        scan = workflow[workflow.index("  virustotal:") :]
+        self.assertIn("needs: package", scan)
+        self.assertIn("continue-on-error: true", scan)
+        self.assertIn("secrets.VIRUSTOTAL_API_KEY", scan)
+        self.assertIn("if: env.VIRUSTOTAL_API_KEY != ''", scan)
+        self.assertIn("/api/v3/files/upload_url", scan)
+        self.assertIn("/api/v3/files\"", scan)
+        self.assertIn("$attempt -le 12", scan)
+        self.assertIn("Start-Sleep -Seconds 15", scan)
+        self.assertIn("gh release edit", scan)
+        self.assertIn("https://www.virustotal.com/gui/file/$sha256", scan)
 
 
 if __name__ == "__main__":
