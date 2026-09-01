@@ -38,6 +38,7 @@ jobs:
     name: player prerelease package
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.scan_only }}
     runs-on: windows-latest
+    environment: release-signing
     steps:
       - uses: actions/checkout@v4
 
@@ -109,6 +110,103 @@ jobs:
           -SoulsFormatsNextRoot $PWD\_soulsformats
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
           -SuppressionBuild $PWD\work\release-binder
+          -NoArchive
+
+      - name: Azure login for Artifact Signing
+        uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Authenticode-sign first-party executables
+        uses: azure/artifact-signing-action@c0ae2c1d0c1847ab81ac0ab8521bee597cfedd30
+        with:
+          endpoint: ${{ vars.ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ vars.ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
+          files: |
+            ${{ github.workspace }}\build\BloodborneAPLauncher\BloodborneAPLauncher.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\bb-ap-client.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEnemizerPlanner.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEnemizerWriter.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBSuppressionWriter.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBToastWriter.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\MSBBMiner.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+          exclude-environment-credential: true
+          exclude-workload-identity-credential: true
+          exclude-managed-identity-credential: true
+          exclude-shared-token-cache-credential: true
+          exclude-visual-studio-credential: true
+          exclude-visual-studio-code-credential: true
+          exclude-azure-cli-credential: false
+          exclude-azure-powershell-credential: true
+          exclude-azure-developer-cli-credential: true
+          exclude-interactive-browser-credential: true
+
+      - name: Verify signatures and create the final signed archive
+        shell: pwsh
+        run: |
+          $package = Join-Path $PWD "build\BloodborneAPLauncher"
+          $catalog = @(
+            "BloodborneAPLauncher.exe",
+            "tools\bb-ap-client.exe",
+            "tools\BBEnemizerPlanner.exe",
+            "tools\BBEnemizerWriter.exe",
+            "tools\BBSuppressionWriter.exe",
+            "tools\BBToastWriter.exe",
+            "tools\MSBBMiner.exe"
+          )
+          $expected = $env:EXPECTED_SIGNER_SUBJECT
+          foreach ($relative in $catalog) {
+            $path = Join-Path $package $relative
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Signing catalog file is missing: $relative"
+            }
+            $signature = Get-AuthenticodeSignature -LiteralPath $path
+            if ($signature.Status -ne "Valid") {
+              throw "Authenticode verification failed for ${relative}: $($signature.Status) $($signature.StatusMessage)"
+            }
+            if (-not $signature.TimeStamperCertificate) {
+              throw "Authenticode timestamp is missing for $relative"
+            }
+            if ($expected -and $signature.SignerCertificate.Subject -ne $expected) {
+              throw "Unexpected signer for ${relative}: $($signature.SignerCertificate.Subject)"
+            }
+            Write-Host "VERIFIED $relative | $($signature.SignerCertificate.Subject) | timestamp $($signature.TimeStamperCertificate.Subject)"
+          }
+
+          # Signing changes executable bytes, so refresh the package's own hash inventory before
+          # creating the ZIP that will be hashed, attested, released, and submitted to VirusTotal.
+          $manifestPath = Join-Path $package "package-manifest.json"
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+          $manifest.files = @(
+            Get-ChildItem -LiteralPath $package -File -Recurse |
+              Where-Object FullName -ne $manifestPath |
+              Sort-Object FullName |
+              ForEach-Object {
+                [ordered]@{
+                  path = $_.FullName.Substring($package.Length + 1).Replace("\", "/")
+                  size = $_.Length
+                  sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+                }
+              }
+          )
+          $client = Join-Path $package "tools\bb-ap-client.exe"
+          $manifest.client.sha256 = (Get-FileHash -LiteralPath $client -Algorithm SHA256).Hash.ToLowerInvariant()
+          [IO.File]::WriteAllText(
+            $manifestPath,
+            ($manifest | ConvertTo-Json -Depth 8),
+            [Text.UTF8Encoding]::new($false)
+          )
+          Compress-Archive -LiteralPath $package `
+            -DestinationPath "build\BloodborneAPLauncher-win-x64.zip" `
+            -CompressionLevel Optimal
+        env:
+          EXPECTED_SIGNER_SUBJECT: ${{ vars.ARTIFACT_SIGNING_EXPECTED_SUBJECT }}
 
       - name: Package the apworld
         shell: pwsh

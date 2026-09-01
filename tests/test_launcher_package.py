@@ -190,6 +190,41 @@ class LauncherPackageTests(unittest.TestCase):
             workflow.index("gh release create"),
         )
 
+    def test_release_signs_and_verifies_the_explicit_catalog_before_archiving(self):
+        workflow_path = Path.cwd() / ".github" / "workflows" / "release.yaml"
+        if not workflow_path.is_file():
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        self.assertIn("environment: release-signing", workflow)
+        self.assertIn("azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac", workflow)
+        self.assertIn(
+            "azure/artifact-signing-action@c0ae2c1d0c1847ab81ac0ab8521bee597cfedd30",
+            workflow,
+        )
+        self.assertIn("-NoArchive", workflow)
+        for target in (
+            "BloodborneAPLauncher.exe",
+            "tools\\bb-ap-client.exe",
+            "tools\\BBEnemizerPlanner.exe",
+            "tools\\BBSuppressionWriter.exe",
+            "tools\\BBEnemizerWriter.exe",
+            "tools\\BBToastWriter.exe",
+            "tools\\MSBBMiner.exe",
+        ):
+            self.assertIn(target, workflow)
+        signing = workflow.index("- name: Authenticode-sign first-party executables")
+        verification = workflow.index("- name: Verify signatures and create the final signed archive")
+        archive = workflow.index("Compress-Archive", verification)
+        attestation = workflow.index("uses: actions/attest-build-provenance@v2")
+        release = workflow.index('gh release create "$env:RELEASE_TAG"')
+        self.assertLess(signing, verification)
+        self.assertLess(verification, archive)
+        self.assertLess(archive, attestation)
+        self.assertLess(attestation, release)
+        self.assertIn('$signature.Status -ne "Valid"', workflow)
+        self.assertIn("TimeStamperCertificate", workflow)
+
     def test_release_virustotal_scan_is_bounded_and_non_blocking(self):
         workflow_path = Path.cwd() / ".github" / "workflows" / "release.yaml"
         if not workflow_path.is_file():
