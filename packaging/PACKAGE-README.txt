@@ -25,6 +25,8 @@ writes to your base or update game trees; every change lives in a verified
 overlay the launcher owns and can roll back.
 
 See docs\LAUNCHER.md for the safety model and file formats.
+See https://github.com/4laric/bb-archipelago/security/policy for the security
+model, release-provenance checks, and private vulnerability reporting.
 
 bloodborne.apworld is attached alongside the zip. Only the person
 GENERATING seeds needs it: drop it in Archipelago\custom_worlds (or

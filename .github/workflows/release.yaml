@@ -116,6 +116,16 @@ jobs:
             build/BloodborneAPLauncher-win-x64.zip
             build/bloodborne.apworld
 
+      - name: Hash the release artifacts
+        shell: pwsh
+        run: |
+          $lines = @("", "## Artifact hashes (SHA-256, built by this workflow run: $env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID)")
+          foreach ($f in "build\BloodborneAPLauncher-win-x64.zip","build\bloodborne.apworld") {
+            $h = (Get-FileHash $f -Algorithm SHA256).Hash.ToLower()
+            $lines += "``$h``  $(Split-Path $f -Leaf)"
+          }
+          Add-Content packaging\PACKAGE-README.txt ($lines -join "`n")
+
       - name: Create the prerelease with the package zip
         shell: pwsh
         run: >-

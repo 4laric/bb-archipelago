@@ -124,6 +124,7 @@ if (-not $SkipClient) {
 New-Item -ItemType Directory -Path (Join-Path $package "docs") -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo "docs\LAUNCHER.md") -Destination (Join-Path $package "docs\LAUNCHER.md")
 Copy-Item -LiteralPath (Join-Path $repo "docs\PLAYTESTING.md") -Destination (Join-Path $package "docs\PLAYTESTING.md")
+Copy-Item -LiteralPath (Join-Path $repo "SECURITY.md") -Destination (Join-Path $package "SECURITY.md")
 Copy-Item -LiteralPath (Join-Path $repo "packaging\PACKAGE-README.txt") -Destination (Join-Path $package "README.txt")
 Copy-Item -LiteralPath (Join-Path $repo "tables\Bloodborne-native-item-grant-auto-v2.CT") -Destination (Join-Path $package "tools")
 
