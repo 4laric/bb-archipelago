@@ -1113,15 +1113,18 @@ SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
 
 
 # The two boss badges and Amelia's Pendant are AP items: every reviewed natural
-# source is suppressed so their shop/consume effects follow AP receipt. Chalices
-# (BSB 80000000; Amygdala 80000200; Ebrietas 80000300) intentionally stay
-# vanilla because Chalice Dungeon progression is outside this world.
+# source is suppressed so their shop/consume effects follow AP receipt. The
+# BSB Pthumeru Chalice is also suppressed: live playtest.32 proved that it leaks
+# alongside the randomized boss reward. Amygdala and Ebrietas chalices remain
+# vanilla while Chalice Dungeon progression is outside this world.
 BOSS_AWARD_SUPPRESSIONS: dict[str, BossAwardSuppression] = {
     key: BossAwardSuppression(key, lot, category, item, flag, evidence)
     for key, lot, category, item, flag, evidence in (
         ("witch_of_hemwick", 21002950, 4, 7150, -1, "m22 event 12201800 AwardItemLot(21002950)"),
         ("vicar_amelia", 50000001, 4, 4001, -1, "m24_00 event 12401800 AwardItemLot(50000001)"),
         ("cleric_beast_badge", 50000010, 4, 4114, -1, "m24_01 event 12411700 AwardItemLot(50000010)"),
+        ("blood_starved_beast_chalice", 80000000, 4, 6109, 5000,
+         "m23 event 12301800 AwardItemLot(80000000); live-confirmed vanilla leak in playtest.32"),
         ("cosmic_eye_watcher_badge_alt", 2420280, 4, 4119, 52420280,
          "alternate Upper Cathedral map-state treasure for the Cosmic Eye Watcher Badge"),
         ("gehrman_badge_awake", 15000, 4, 4113, -1, "m21 event 12101800 awards the Old Hunter Badge"),
