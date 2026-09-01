@@ -26,6 +26,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   package:
@@ -106,6 +108,13 @@ jobs:
       - name: Package the apworld
         shell: pwsh
         run: ./build.ps1 -Apworld
+
+      - name: Attest the release artifacts
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            build/BloodborneAPLauncher-win-x64.zip
+            build/bloodborne.apworld
 
       - name: Create the prerelease with the package zip
         shell: pwsh
