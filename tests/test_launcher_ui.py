@@ -228,6 +228,31 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(payload["weapon_requirement_families"],
                          manifest["seed_weapon_edits"]["requirement_families"])
 
+    def test_shop_randomization_composes_without_weapon_edits(self):
+        payload = json.loads(self.request.read_text(encoding="utf-8"))
+        gates = list(range(12101000, 12101010))
+        payload.update({
+            "randomize_shops": True,
+            "shop_gate_permutation": {
+                str(stock): unlock for stock, unlock in zip(gates, reversed(gates))
+            },
+        })
+        self.request.write_text(json.dumps(payload), encoding="utf-8")
+        toolchain = FakeToolchain()
+        result = LauncherWorkflow(
+            self.repo, toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(10), Process(11)],
+        ).randomize_and_launch(
+            self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(1, len(toolchain.starting_calls))
+        manifest = json.loads(Path(json.loads(
+            result.client_config.read_text(encoding="utf-8")
+        )["suppression_manifest"]).read_text(encoding="utf-8"))
+        self.assertEqual(payload["shop_gate_permutation"],
+                         manifest["seed_weapon_edits"]["shop_gate_permutation"])
+
     def test_randomize_enemies_runs_toolchain_caches_maps_activates_and_launches(self):
         toolchain = FakeToolchain()
         launched = []

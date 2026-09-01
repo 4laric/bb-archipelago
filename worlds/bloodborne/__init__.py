@@ -70,6 +70,8 @@ STARTING_WEAPON_ROWS = {
     "left_hand": (2010, 2011),
 }
 
+SHOP_GATE_IDS = tuple(range(12101000, 12101010))
+
 
 def build_starting_weapon_choices(seed: str) -> dict[str, list[int]]:
     """Choose the native Dream gift lineup independently of the AP item pool."""
@@ -98,6 +100,14 @@ def build_weapon_requirement_families(include_uncanny: bool) -> list[int]:
         and binding.normalized_item_id is not None
         and (include_uncanny or key not in UNCANNY_ITEM_KEYS)
     )
+
+
+def build_shop_gate_permutation(seed: str) -> dict[str, int]:
+    """Assign each ordinary Bath stock group to exactly one shuffled badge gate."""
+    shuffled = list(SHOP_GATE_IDS)
+    Random(f"bloodborne-bath-shops:{seed}").shuffle(shuffled)
+    return {str(stock_gate): unlock_gate
+            for stock_gate, unlock_gate in zip(SHOP_GATE_IDS, shuffled)}
 
 
 # bb-archipelago#207 wave 1. The filler top-up used to cycle a five-name list,
@@ -415,6 +425,16 @@ else:
         display_name = "Remove Weapon Requirements"
         default = 1
 
+    class RandomizeShops(Toggle):
+        """Shuffle which hunter badge unlocks each ordinary Bath stock group.
+
+        Prices, stock contents, NG-cycle copies, Insight shops, and Chalice
+        shops are unchanged. This is opt-in because it deliberately changes
+        familiar Bloodborne shop progression.
+        """
+        display_name = "Randomize Bath Messenger Shops"
+        default = 0
+
     class Goal(Choice):
         """Choose which of Bloodborne's three endings completes the seed.
 
@@ -465,6 +485,7 @@ else:
         uncanny_weapons: UncannyWeapons
         randomize_starting_weapons: RandomizeStartingWeapons
         remove_weapon_requirements: RemoveWeaponRequirements
+        randomize_shops: RandomizeShops
         goal: Goal
         include_dlc: IncludeDLC
         alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
@@ -611,6 +632,10 @@ else:
                 build_weapon_requirement_families(bool(self.options.uncanny_weapons))
                 if self.options.remove_weapon_requirements else None
             )
+            shop_gate_permutation = (
+                build_shop_gate_permutation(seed)
+                if self.options.randomize_shops else None
+            )
             return {
                 "version": 4,
                 "world_version": WORLD_VERSION,
@@ -623,6 +648,8 @@ else:
                 "randomize_starting_weapons": bool(self.options.randomize_starting_weapons),
                 "starting_weapons": starting_weapons,
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
+                "randomize_shops": bool(self.options.randomize_shops),
+                "shop_gate_permutation": shop_gate_permutation,
                 "goal": self.options.goal.current_key,
                 "include_dlc": bool(self.options.include_dlc),
                 "alternate_hypogean_gaol_routes": bool(

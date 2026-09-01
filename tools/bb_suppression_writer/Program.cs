@@ -394,8 +394,10 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         && start.ValueKind == JsonValueKind.True;
     bool removeRequirements = root.TryGetProperty("remove_weapon_requirements", out JsonElement remove)
         && remove.ValueKind == JsonValueKind.True;
-    if (!randomizeStarting && !removeRequirements)
-        throw new InvalidDataException("request contains no seed weapon edits");
+    bool randomizeShops = root.TryGetProperty("randomize_shops", out JsonElement randomizeShopElement)
+        && randomizeShopElement.ValueKind == JsonValueKind.True;
+    if (!randomizeStarting && !removeRequirements && !randomizeShops)
+        throw new InvalidDataException("request contains no seed parameter edits");
     int[] right = [];
     int[] left = [];
     if (randomizeStarting)
@@ -413,6 +415,25 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     if (removeRequirements && (families.Length == 0 || families.Distinct().Count() != families.Length
                                || families.Any(id => id <= 0)))
         throw new InvalidDataException("weapon requirement families must be unique positive ids");
+    int[] shopGates = Enumerable.Range(12101000, 10).ToArray();
+    Dictionary<int, int> shopPermutation = [];
+    if (randomizeShops)
+    {
+        JsonElement permutation = root.GetProperty("shop_gate_permutation");
+        if (permutation.ValueKind != JsonValueKind.Object)
+            throw new InvalidDataException("shop gate permutation must be an object");
+        foreach (JsonProperty property in permutation.EnumerateObject())
+        {
+            if (!Int32.TryParse(property.Name, out int stockGate)
+                || property.Value.ValueKind != JsonValueKind.Number
+                || !property.Value.TryGetInt32(out int unlockGate)
+                || !shopPermutation.TryAdd(stockGate, unlockGate))
+                throw new InvalidDataException("shop gate permutation contains an invalid entry");
+        }
+        if (!shopPermutation.Keys.ToHashSet().SetEquals(shopGates)
+            || !shopPermutation.Values.ToHashSet().SetEquals(shopGates))
+            throw new InvalidDataException("shop gate permutation must be a bijection over the ten ordinary Bath gates");
+    }
 
     BND4 game = BND4.Read(inputPath);
     BND4 defs = BND4.Read(paramdefPath);
@@ -437,6 +458,20 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     {
         PARAM.Row row = shops.Rows.Single(candidate => candidate.ID == rowId);
         RequireCell(row, "equipId").Value = equipId;
+    }
+    var shopRows = new HashSet<int>();
+    if (randomizeShops)
+    {
+        foreach (PARAM.Row row in shops.Rows.Where(row =>
+            Convert.ToInt32(RequireCell(row, "shopType").Value) == 0
+            && shopPermutation.ContainsKey(Convert.ToInt32(RequireCell(row, "qwcId").Value))))
+        {
+            int stockGate = Convert.ToInt32(RequireCell(row, "qwcId").Value);
+            shopRows.Add(row.ID);
+            RequireCell(row, "qwcId").Value = shopPermutation[stockGate];
+        }
+        if (shopRows.Count == 0)
+            throw new InvalidDataException("ordinary Bath gate permutation matched no ShopLineupParam rows");
     }
     string[] requirementFields = ["properStrength", "properAgility", "properMagic", "properFaith"];
     var requirementRows = new HashSet<int>();
@@ -473,17 +508,33 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     }
     PARAM checkedShops = PARAM.Read(checkedShopFile.Bytes);
     checkedShops.ApplyParamdef(shopDefinition);
-    var changedRows = assignments.Select(pair => pair.First).ToHashSet();
+    var startingRows = assignments.Select(pair => pair.First).ToHashSet();
     foreach (PARAM.Row row in checkedShops.Rows)
+    {
+        var allowed = new HashSet<string>();
+        if (startingRows.Contains(row.ID))
+            allowed.Add("equipId");
+        if (shopRows.Contains(row.ID))
+            allowed.Add("qwcId");
         originalShopRows[row.ID].RequireEqualExcept(
-            RowState.Capture(row), changedRows.Contains(row.ID)
-                ? new HashSet<string> { "equipId" } : new HashSet<string>(),
+            RowState.Capture(row), allowed,
             $"ShopLineupParam row {row.ID}");
+    }
     foreach ((int rowId, int equipId) in assignments)
     {
         PARAM.Row row = checkedShops.Rows.Single(candidate => candidate.ID == rowId);
         if (Convert.ToInt32(RequireCell(row, "equipId").Value) != equipId)
             throw new InvalidDataException($"starting row {rowId} did not retain equipId {equipId}");
+    }
+    if (randomizeShops)
+    {
+        foreach (PARAM.Row row in checkedShops.Rows.Where(row => shopRows.Contains(row.ID)))
+        {
+            int originalGate = Convert.ToInt32(originalShopRows[row.ID].Cells["qwcId"]);
+            int actualGate = Convert.ToInt32(RequireCell(row, "qwcId").Value);
+            if (actualGate != shopPermutation[originalGate])
+                throw new InvalidDataException($"shop row {row.ID} did not retain its shuffled gate");
+        }
     }
     PARAM checkedWeapons = PARAM.Read(checkedWeaponFile.Bytes);
     checkedWeapons.ApplyParamdef(weaponDefinition);
@@ -497,7 +548,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             && requirementFields.Any(field => Convert.ToInt32(RequireCell(row, field).Value) != 0))
             throw new InvalidDataException($"weapon row {row.ID} retained a stat requirement");
     }
-    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} output={outputPath}");
+    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} output={outputPath}");
 }
 
 static BinderFile RequireSingleFile(BND4 binder, string suffix)

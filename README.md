@@ -79,6 +79,9 @@ alternate progression graph. It defaults off because the late Blood Moon path
 can bypass the expected Blood-starved Beast route into Old Yharnam. Early
 abduction still requires Blood-starved Beast, and enemy randomization preserves
 an authored Cathedral Ward Snatcher so access never depends on a lucky roll.
+Set `randomize_shops: true` to shuffle which of the ten hunter badges unlocks
+each ordinary Blood Echo Bath Messenger stock group. It defaults off and does
+not alter prices, stock contents, Insight shops, or Chalice shops.
 The fixed-pickup
 manifest is regenerated from the canonical map catalog, and the two boss flags
 (`12411700`, `12411800`) come from Central Yharnam EMEVD; the Blood-starved

@@ -102,6 +102,20 @@ jobs:
           $b = (Get-Content work/binder2/build-manifest.json | ConvertFrom-Json).output_gameparam_sha256
           if ($a -ne $b) { Write-Error "binder output is not reproducible: $a vs $b"; exit 1 }
           Write-Host "binder $a reproduced"
+      - name: Compose and verify a seed-specific Bath shop permutation
+        shell: pwsh
+        run: |
+          dotnet run --project tools/bb_suppression_writer/BBSuppressionWriter.csproj `
+            -p:SoulsFormatsNextRoot=$PWD\_soulsformats --no-build -- `
+            --seed-weapons tests/fixtures/shop-seed-request.json `
+            work/binder1/gameparam.parambnd.dcx `
+            work/inputs/parambnd/paramdef.paramdefbnd.dcx `
+            work/shop-seed-gameparam.parambnd.dcx --apply
+          if ($LASTEXITCODE -ne 0 -or `
+              -not (Test-Path work/shop-seed-gameparam.parambnd.dcx -PathType Leaf)) {
+            Write-Error "seed-specific Bath shop composition failed"
+            exit 1
+          }
       - uses: actions/upload-artifact@v4
         with:
           name: vanilla-suppression-binder

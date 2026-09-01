@@ -102,6 +102,13 @@ class RoundTripTests(unittest.TestCase):
         self.assertIn('representative row {rowId} no longer matches its stock witness', source)
         self.assertIn('ordinary Bath gate groups are incomplete', source)
 
+    def test_native_writer_applies_only_a_bijective_ordinary_bath_permutation(self):
+        source = NATIVE_WRITER.read_text(encoding="utf-8")
+        self.assertIn('shop_gate_permutation', source)
+        self.assertIn('bijection over the ten ordinary Bath gates', source)
+        self.assertIn('Convert.ToInt32(RequireCell(row, "shopType").Value) == 0', source)
+        self.assertIn('allowed.Add("qwcId")', source)
+
     def test_starting_attire_canary_is_explicit_and_refusal_safe(self):
         source = NATIVE_WRITER.read_text(encoding="utf-8")
         self.assertIn('args[0] == "--write-starting-attire-canary"', source)
