@@ -78,7 +78,7 @@ $pyinstaller = @(
     (Join-Path $repo "packaging\launcher_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }
 
-& python @pyinstaller --console --onefile --name BBEnemizerPlanner `
+& python @pyinstaller --console --onedir --name BBEnemizerPlanner `
     --distpath (Join-Path $work "planner-dist") `
     (Join-Path $repo "packaging\enemizer_planner_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller planner build failed." }
@@ -106,7 +106,8 @@ foreach ($item in $projects) {
 Copy-Item -LiteralPath (Join-Path $work "launcher-dist\BloodborneAPLauncher") -Destination $package -Recurse
 $tools = Join-Path $package "tools"
 New-Item -ItemType Directory -Path $tools -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $work "planner-dist\BBEnemizerPlanner.exe") -Destination $tools
+$plannerPackage = Join-Path $tools "BBEnemizerPlanner"
+Copy-Item -LiteralPath (Join-Path $work "planner-dist\BBEnemizerPlanner") -Destination $plannerPackage -Recurse
 foreach ($item in $projects) {
     $publish = Join-Path $native ([IO.Path]::GetFileNameWithoutExtension($item.Name))
     Copy-Item -LiteralPath (Join-Path $publish $item.Name) -Destination $tools

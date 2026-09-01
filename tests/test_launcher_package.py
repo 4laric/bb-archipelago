@@ -17,8 +17,11 @@ class LauncherPackageTests(unittest.TestCase):
         self.app = self.root / "app"
         tools = self.app / "tools"
         tools.mkdir(parents=True)
-        for name in ("BBEnemizerPlanner.exe", "BBEnemizerWriter.exe", "MSBBMiner.exe"):
+        for name in ("BBEnemizerWriter.exe", "MSBBMiner.exe"):
             (tools / name).write_bytes(b"fake executable")
+        planner = tools / "BBEnemizerPlanner"
+        planner.mkdir()
+        (planner / "BBEnemizerPlanner.exe").write_bytes(b"fake executable")
         self.maps = self.root / "MapStudio"
         self.maps.mkdir()
         (self.maps / "m24_01_00_00.msb.dcx").write_bytes(b"compressed map")
@@ -206,7 +209,7 @@ class LauncherPackageTests(unittest.TestCase):
         for target in (
             "BloodborneAPLauncher.exe",
             "tools\\bb-ap-client.exe",
-            "tools\\BBEnemizerPlanner.exe",
+            "tools\\BBEnemizerPlanner\\BBEnemizerPlanner.exe",
             "tools\\BBSuppressionWriter.exe",
             "tools\\BBEnemizerWriter.exe",
             "tools\\BBToastWriter.exe",
@@ -252,7 +255,7 @@ class LauncherPackageTests(unittest.TestCase):
         for target in (
             "BloodborneAPLauncher.exe",
             "tools/bb-ap-client.exe",
-            "tools/BBEnemizerPlanner.exe",
+            "tools/BBEnemizerPlanner/BBEnemizerPlanner.exe",
             "tools/BBSuppressionWriter.exe",
             "tools/BBEnemizerWriter.exe",
             "tools/BBToastWriter.exe",

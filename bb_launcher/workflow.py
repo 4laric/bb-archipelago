@@ -389,7 +389,7 @@ class EnemizerToolchain:
 
     @property
     def planner_executable(self) -> Path:
-        return self.app_root / "tools" / "BBEnemizerPlanner.exe"
+        return self.app_root / "tools" / "BBEnemizerPlanner" / "BBEnemizerPlanner.exe"
 
     @property
     def writer_executable(self) -> Path:
