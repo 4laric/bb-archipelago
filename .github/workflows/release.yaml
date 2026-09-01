@@ -81,6 +81,7 @@ jobs:
         shell: pwsh
         env:
           BB_BUILD_SHA: ${{ steps.client-sha.outputs.sha }}
+          BB_RELEASE_VERSION: ${{ env.RELEASE_TAG }}
         run: cargo build --release -p bb-archipelago --manifest-path _client/Cargo.toml
 
       - name: Install the pinned Windows packager
@@ -110,7 +111,15 @@ jobs:
           -SoulsFormatsNextRoot $PWD\_soulsformats
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
           -SuppressionBuild $PWD\work\release-binder
+          -ReleaseVersion $env:RELEASE_TAG
           -NoArchive
+
+      - name: Verify Windows version metadata
+        shell: pwsh
+        run: >-
+          ./packaging/verify_version_metadata.ps1
+          -PackageRoot $PWD\build\BloodborneAPLauncher
+          -ReleaseVersion $env:RELEASE_TAG
 
       - name: Azure login for Artifact Signing
         uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
