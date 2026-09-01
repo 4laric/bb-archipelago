@@ -107,6 +107,12 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertTrue(expected <= set(LOCATION_BINDINGS))
         self.assertTrue(all(LOCATION_BINDINGS[key].event_flag for key in expected))
 
+    def test_eye_gift_checks_event_completion_without_reusing_suppressed_lot_flag(self):
+        binding = LOCATION_BINDINGS["pickup_eye_of_blood_drunk_hunter"]
+        self.assertEqual(12101028, binding.event_flag)
+        self.assertEqual(50000100, binding.item_lot_flag)
+        self.assertEqual(10040, binding.item_lot_id)
+
     def test_slice_contains_rom_route_and_queue_jumped_frontier(self):
         # Slice 5 adds the Woods catalog, both clinic backyard rows and their
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
@@ -284,8 +290,9 @@ class BloodborneModelTests(unittest.TestCase):
         for location, binding in LOCATION_BINDINGS.items():
             if binding.item_lot_id is None:
                 continue
-            self.assertIn(binding.event_flag, lots_by_flag, location)
-            lots = lots_by_flag[binding.event_flag]
+            item_lot_flag = binding.item_lot_flag or binding.event_flag
+            self.assertIn(item_lot_flag, lots_by_flag, location)
+            lots = lots_by_flag[item_lot_flag]
             self.assertIn(str(binding.item_lot_id), lots, location)
             self.assertTrue(
                 all(lot not in placed_lots for lot in lots - {str(binding.item_lot_id)}),
@@ -326,7 +333,8 @@ class BloodborneModelTests(unittest.TestCase):
                 ]
                 self.assertEqual(1, len(candidates), key)
                 row = candidates[0]
-                self.assertIn(str(binding.event_flag), row["acquisition_flags"], key)
+                item_lot_flag = binding.item_lot_flag or binding.event_flag
+                self.assertIn(str(item_lot_flag), row["acquisition_flags"], key)
                 if binding.item_lot_id is not None:
                     self.assertIn(str(binding.item_lot_id), row["item_lot_ids"], key)
                     self.assertIn(binding.source_kind, row["observed_sources"].split(";"), key)

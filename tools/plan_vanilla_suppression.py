@@ -372,6 +372,7 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
         if binding.item_lot_id is None:
             continue
         lot = str(binding.item_lot_id)
+        item_lot_flag = binding.item_lot_flag or binding.event_flag
         if lot in occupied_lots:
             continue
         matching = [row for row in rows if row["item_lot_id"] == lot
@@ -383,9 +384,9 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
             problem = f"expected one matching item row, found {len(matching)}"
         elif fact is None or fact.item_rows != 1:
             problem = f"lot awards {fact.item_rows if fact else 0} item rows"
-        elif fact.acquisition_flags != [str(binding.event_flag)]:
+        elif fact.acquisition_flags != [str(item_lot_flag)]:
             problem = (f"lot flags {fact.acquisition_flags} do not match runtime binding "
-                       f"{binding.event_flag}")
+                       f"item-lot flag {item_lot_flag}")
         if problem:
             plan.refusals.append(Refusal(
                 f"location:{key}", str(binding.item_category), str(binding.item_id),
@@ -394,7 +395,7 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
         plan.edits.append(PlannedEdit(
             f"location:{key}", str(binding.item_category), str(binding.item_id),
             lot, fact.lot_name,
-            str(binding.event_flag), fact.placements,
+            str(item_lot_flag), fact.placements,
             "randomized Archipelago check; replace its vanilla award while preserving its flag"))
         occupied_lots.add(lot)
 
@@ -406,7 +407,7 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
         related = sorted([
             row for row in rows
             if row["item_lot_id"] not in occupied_lots
-            and facts[row["item_lot_id"]].acquisition_flags == [str(binding.event_flag)]
+            and facts[row["item_lot_id"]].acquisition_flags == [str(item_lot_flag)]
         ], key=lambda row: int(row["item_lot_id"]))
         for row in related:
             related_lot = row["item_lot_id"]
@@ -420,7 +421,7 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
             plan.edits.append(PlannedEdit(
                 f"location:{key}:related_lot_{related_lot}", row["item_category"],
                 row["item_id"], related_lot, related_fact.lot_name,
-                str(binding.event_flag), related_fact.placements,
+                str(item_lot_flag), related_fact.placements,
                 "same acquisition-flag award group as the randomized physical check"))
             occupied_lots.add(related_lot)
     return plan

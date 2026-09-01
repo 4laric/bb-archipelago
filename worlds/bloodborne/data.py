@@ -327,7 +327,7 @@ LOCATIONS = (
     Location("pickup_lunarium_key", location_name(53200810), "Byrgenwerth",
              vanilla_award_suppressed=True),
     Location("script_award_orphanage_key", location_name(52420900), "Upper Cathedral Ward"),
-    Location("pickup_eye_of_blood_drunk_hunter", location_name(50000100), "Hunter's Dream",
+    Location("pickup_eye_of_blood_drunk_hunter", location_name(12101028), "Hunter's Dream",
              Rule.all("event_laurences_skull_inspected")),
     Location("pickup_eye_pendant", location_name(9470), "Hunter's Nightmare"),
     Location("boss_ludwig", location_name(13401800), "Hunter's Nightmare",

@@ -96,6 +96,10 @@ class RuntimeLocationBinding:
     source_ref: str
     item_category: int | None
     item_id: int | None
+    # Usually the AP check flag is also the ItemLotParam acquisition flag.
+    # Scripted replacements can differ: the Eye gift check is the completed
+    # EMEVD interaction, while its suppressed lot retains its native flag.
+    item_lot_flag: int | None = None
 
 
 ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
@@ -925,8 +929,11 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
         52420900, "EMEVD award m24_02_00_00:252 + ItemLotParam 2420900 acquisition flag",
         2420900, "script_award", "m24_02_00_00.emevd.dcx.js:252", 4, 4006),
     "pickup_eye_of_blood_drunk_hunter": RuntimeLocationBinding(
-        50000100, "EMEVD award m21_00_00_00:3002 + ItemLotParam 10040 acquisition flag",
-        10040, "script_award", "m21_00_00_00.emevd.dcx.js:3002", 4, 4311),
+        12101028,
+        "EMEVD gift event 12101028 completes after interaction flag 12101029 and award lot "
+        "10040; the lot's separate acquisition flag is 50000100",
+        10040, "script_award", "m21_00_00_00.emevd.dcx.js:2987-3008", 4, 4311,
+        item_lot_flag=50000100),
     "pickup_eye_pendant": RuntimeLocationBinding(
         9470, "EMEVD award m34_00_00_00:1725 + ItemLotParam 3401810 acquisition flag",
         3401810, "script_award", "m34_00_00_00.emevd.dcx.js:1725", 4, 4017),

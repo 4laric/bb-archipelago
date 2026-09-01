@@ -16,7 +16,7 @@ Astral Clocktower Key	4020	boss_reward	Living Failures	3501850	53501850	script_a
 Balcony Key	4019	npc_reward	Adeline	43010;43030	50002250	enemy_drop;script_award		m35_00_00_00	m35_00_00_00.emevd.dcx.js:3373<-init:513	script_source_compatible
 Brain Fluid	4342	enemy_or_npc	Research Hall / Adeline	43040	50002270	enemy_drop		m35_00_00_00		source_type_compatible
 Celestial Dial	4021	boss_reward	Lady Maria	3501800	53501800	script_award			m35_00_00_00.emevd.dcx.js:819	script_source_compatible
-Eye of a Blood-drunk Hunter	4311	treasure	Hunter's Dream	10040	50000100	script_award			m21_00_00_00.emevd.dcx.js:3002	scripted_treasure_compatible
+Eye of a Blood-drunk Hunter	4311	treasure	Hunter's Dream	10040	50000100	script_award			m21_00_00_00.emevd.dcx.js:2987-3008	scripted_treasure_compatible
 Eye Pendant	4017	treasure	Hunter's Nightmare	3401810	9470	script_award			m34_00_00_00.emevd.dcx.js:1725	scripted_treasure_compatible
 Laurence's Skull	4014	treasure	Research Hall	3502000	53502000	script_award			m35_00_00_00.emevd.dcx.js:1832	scripted_treasure_compatible
 Underground Cell Inner Chamber Key	4015	npc_reward	Simon	43221	50002360	treasure	m36_00_00_00			script_or_quest_review
