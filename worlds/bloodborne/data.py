@@ -9,7 +9,7 @@ have been runtime validated.
 """
 
 from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
-from .fixed_locations import FIXED_LOCATIONS
+from .fixed_locations import FIXED_LOCATIONS, VANILLA_ONLY_CARYLL_RUNE_PARAMS
 from .location_names import location_name
 
 P = ItemKind.PROGRESSION
@@ -599,6 +599,9 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
 SLICE_EXCLUDED_FIXED_KEYS = frozenset({
     "fixed_white_messenger_ribbon",
     "fixed_central_yharnam_lot_2410295",
+    *(location.key for location in FIXED_LOCATIONS
+      if location.item_category == 8
+      and location.item_id in VANILLA_ONLY_CARYLL_RUNE_PARAMS),
 })
 SLICE_LOCATION_KEYS = frozenset({
     *SLICE_SCRIPTED_LOCATION_KEYS,

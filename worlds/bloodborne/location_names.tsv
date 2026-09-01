@@ -115,7 +115,7 @@ location_flag	region	name	basis
 52200350	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Vial x2 #2	map m22_00; unestablished
 52200365	Hemwick Charnel Lane	Hemwick Charnel Lane - Kin Coldblood (12)	map m22_00
 52200370	Hemwick Charnel Lane	Hemwick Charnel Lane - Bloodshot Eyeball #2	map m22_00; unestablished
-52200380	Hemwick Charnel Lane	Hemwick Charnel Lane - Blood Gem #3	map m22_00; category-8 blood gem (gem param 101701); specific gem name not in committed data; unestablished
+52200380	Hemwick Charnel Lane	Hemwick Charnel Lane - Lake +3% #3	map m22_00; category-8 Caryll rune; GemGenParam 101701 physical damage cut Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52200385	Hemwick Charnel Lane	Hemwick Charnel Lane - Madman's Knowledge #3	map m22_00; unestablished
 52200390	Hemwick Charnel Lane	Hemwick Charnel Lane - Madman's Knowledge #4	map m22_00; unestablished
 52200400	Hemwick Charnel Lane	Hemwick Charnel Lane - Molotov Cocktail x5	map m22_00
@@ -245,14 +245,14 @@ location_flag	region	name	basis
 52410600	Central Yharnam	Central Yharnam - Coldblood Dew (1) #7 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410600)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
 52410620	Central Yharnam	Central Yharnam - Thick Coldblood (5) (sewer side)	published (fixed_locations.tsv); replaced the "(Lot 2410620)" placeholder under the #75 rename; map m24_01; hint from lot tag 後半 (m24_01_00_00)
 52410630	Central Yharnam	Central Yharnam - Coldblood Dew (1) #8 (sewer side)	published (fixed_locations.tsv); replaced the "(Lot 2410630)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 後半 (m24_01_00_00)
-52410640	Iosefka's Clinic	Iosefka's Clinic - Blood Gem (chest)	published (fixed_locations.tsv); replaced the "(Lot 2410640)" placeholder under the #75 rename; map m24_01; coordinates (-244,-41,190) at the MSB 診療所外 (outside the clinic) warp anchor; category-8 blood gem (gem param 102903); specific gem name not in committed data; hint from MSB in_chest
+52410640	Iosefka's Clinic	Iosefka's Clinic - Communion +3 Blood Vials (chest)	map m24_01; coordinates (-244,-41,190) at the MSB 診療所外 (outside the clinic) warp anchor; category-8 Caryll rune; GemGenParam 102903 blood-vial capacity Lv1; wiki location/effect match; vanilla-only until safe rune delivery; hint from MSB in_chest
 52410645	Iosefka's Clinic	Iosefka's Clinic - Madman's Knowledge (chest)	map m24_01; coordinates (-244,-41,190) at the MSB 診療所外 (outside the clinic) warp anchor; event tag 宝箱
 52410650	Central Yharnam	Central Yharnam - Blood Stone Shard #8 (bridge side)	published (fixed_locations.tsv); replaced the "(Lot 2410650)" placeholder under the #75 rename; map m24_01; unestablished; hint from lot tag 前半 (m24_01_00_00)
 52410800	Central Yharnam	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10 (bridge side)	published (fixed_locations.tsv); hint from lot tag 前半 (m24_01_00_00)
 52410920	Central Yharnam	Central Yharnam - Red Jeweled Brooch	published (fixed_locations.tsv); replaced the "(Lot 2410920)" placeholder under the #75 rename; map m24_01
 52411005	Central Yharnam	Central Yharnam - Kin Coldblood (12) (chest)	map m24_01; hint from MSB in_chest
 52420110	Upper Cathedral Ward	Upper Cathedral Ward - Thick Coldblood (5)	map m24_02
-52420120	Upper Cathedral Ward	Upper Cathedral Ward - Blood Gem	map m24_02; category-8 blood gem (gem param 101802); specific gem name not in committed data
+52420120	Upper Cathedral Ward	Upper Cathedral Ward - Great Lake +4%	map m24_02; category-8 Caryll rune; GemGenParam 101802 all-damage cut Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 52420125	Upper Cathedral Ward	Upper Cathedral Ward - Madman's Knowledge #1	map m24_02; unestablished
 52420130	Upper Cathedral Ward	Upper Cathedral Ward - Frenzied Coldblood (9) #1	map m24_02; unestablished
 52420140	Upper Cathedral Ward	Upper Cathedral Ward - Quicksilver Bullets x3	map m24_02
@@ -275,11 +275,11 @@ location_flag	region	name	basis
 52420610	Cathedral Ward	Cathedral Ward - Antidote	map m24_00
 52420620	Cathedral Ward	Cathedral Ward - Madman's Knowledge #8	map m24_00; unestablished
 52420630	Cathedral Ward	Cathedral Ward - Poison Knife x18	map m24_00
-52420640	Cathedral Ward	Cathedral Ward - Blood Gem #4 (Grand Cathedral approach chest)	map m24_00; category-8 blood gem (gem param 102901); specific gem name not in committed data; unestablished; hint from lot tag 聖C前 (m24_00_00_00); hint from MSB in_chest
+52420640	Cathedral Ward	Cathedral Ward - Communion +1 Blood Vial #4 (Grand Cathedral approach chest)	playtest.32 live award; category-8 Caryll rune; GemGenParam 102901 blood-vial capacity Lv0.3; wiki location/effect match; vanilla-only until safe rune delivery; hint from MSB in_chest
 52420645	Cathedral Ward	Cathedral Ward - Madman's Knowledge #9 (Grand Cathedral approach chest)	map m24_00; unestablished; hint from lot tag 聖C前 (m24_00_00_00); hint from MSB in_chest
 52420650	Cathedral Ward	Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)	map m24_00; category-8 blood gem (gem param 124004); specific gem name not in committed data; unestablished; hint from lot tag 聖C前 (m24_00_00_00); hint from MSB in_chest
 52420660	Cathedral Ward	Cathedral Ward - Madman's Knowledge #10 (Grand Cathedral approach)	map m24_00; unestablished; hint from lot tag 聖C前 (m24_00_00_00)
-52420690	Cathedral Ward	Cathedral Ward - Blood Gem #6 (chest)	map m24_00; category-8 blood gem (gem param 103104); specific gem name not in committed data; unestablished; hint from MSB in_chest
+52420690	Cathedral Ward	Cathedral Ward - Formless Oedon +4 Quicksilver Bullets #6 (chest)	map m24_00; category-8 Caryll rune; GemGenParam 103104 bullet capacity Lv2; wiki location/effect match; vanilla-only until safe rune delivery; hint from MSB in_chest
 52420695	Cathedral Ward	Cathedral Ward - Madman's Knowledge #11 (chest)	map m24_00; unestablished; hint from MSB in_chest
 52420700	Cathedral Ward	Cathedral Ward - Frenzied Coldblood (7)	map m24_00
 52420710	Cathedral Ward	Cathedral Ward - Twin Blood Stone Shards	map m24_00
@@ -325,7 +325,7 @@ location_flag	region	name	basis
 52600270	Nightmare of Mensis	Nightmare of Mensis - Quicksilver Bullets x6 #2	map m26_00; unestablished
 52600280	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #2	map m26_00; unestablished
 52600290	Nightmare of Mensis	Nightmare of Mensis - Frenzied Coldblood (9) #3	map m26_00; unestablished
-52600300	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #4	map m26_00; category-8 blood gem (gem param 100201); specific gem name not in committed data; unestablished
+52600300	Nightmare of Mensis	Nightmare of Mensis - Eye +50 Discovery #4	map m26_00; category-8 Caryll rune; GemGenParam 100201 item-drop rate Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52600305	Nightmare of Mensis	Nightmare of Mensis - Madman's Knowledge #3	map m26_00; unestablished
 52600310	Nightmare of Mensis	Nightmare of Mensis - Blood Stone Chunk #3	map m26_00; unestablished
 52600320	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (10) #1	map m26_00; unestablished
@@ -335,7 +335,7 @@ location_flag	region	name	basis
 52600360	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (10) #2	map m26_00; unestablished
 52600370	Nightmare of Mensis	Nightmare of Mensis - Blood Vial x4	map m26_00
 52600380	Nightmare of Mensis	Nightmare of Mensis - Sedative x3	map m26_00
-52600390	Nightmare of Mensis	Nightmare of Mensis - Blood Gem #5	map m26_00; category-8 blood gem (gem param 100002); specific gem name not in committed data; unestablished
+52600390	Nightmare of Mensis	Nightmare of Mensis - Moon +20% Blood Echoes #5	map m26_00; category-8 Caryll rune; GemGenParam 100002 soul acquisition Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 52600395	Nightmare of Mensis	Nightmare of Mensis - Madman's Knowledge #4	map m26_00; unestablished
 52600400	Nightmare of Mensis	Nightmare of Mensis - Blood Vial x3	map m26_00
 52600410	Nightmare of Mensis	Nightmare of Mensis - Kin Coldblood (10) #3	map m26_00; unestablished
@@ -361,10 +361,10 @@ location_flag	region	name	basis
 52700130	Forbidden Woods	Forbidden Woods - Madman's Knowledge #1	map m27_00; unestablished
 52700140	Forbidden Woods	Forbidden Woods - Molotov Cocktail x11	map m27_00
 52700170	Forbidden Woods	Forbidden Woods - Thick Coldblood (6) #1	map m27_00; unestablished
-52700180	Forbidden Woods	Forbidden Woods - Blood Gem #1	map m27_00; category-8 blood gem (gem param 102001); specific gem name not in committed data; unestablished
+52700180	Forbidden Woods	Forbidden Woods - Clear Deep Sea +100 Slow Poison RES #1	map m27_00; category-8 Caryll rune; GemGenParam 102001 poison resistance Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52700185	Forbidden Woods	Forbidden Woods - Madman's Knowledge #2	map m27_00; unestablished
 52700190	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #1	map m27_00; unestablished
-52700200	Forbidden Woods	Forbidden Woods - Blood Gem #2	map m27_00; category-8 blood gem (gem param 101601); specific gem name not in committed data; unestablished
+52700200	Forbidden Woods	Forbidden Woods - Dissipating Lake +5% Bolt Reduction #2	map m27_00; category-8 Caryll rune; GemGenParam 101601 bolt damage cut Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52700205	Forbidden Woods	Forbidden Woods - Madman's Knowledge #3	map m27_00; unestablished
 52700210	Forbidden Woods	Forbidden Woods - Madman's Knowledge #4	map m27_00; unestablished
 52700220	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #2	map m27_00; unestablished
@@ -382,7 +382,7 @@ location_flag	region	name	basis
 52700350	Forbidden Woods	Forbidden Woods - Antidote x4 #1	map m27_00; unestablished
 52700360	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards x2 #1	map m27_00; unestablished
 52700370	Forbidden Woods	Forbidden Woods - Blood Stone Chunk	map m27_00
-52700380	Forbidden Woods	Forbidden Woods - Blood Gem #4	map m27_00; category-8 blood gem (gem param 100401); specific gem name not in committed data; unestablished
+52700380	Forbidden Woods	Forbidden Woods - Anti-Clockwise Metamorphosis +10% Stamina #4	map m27_00; category-8 Caryll rune; GemGenParam 100401 max stamina Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52700385	Forbidden Woods	Forbidden Woods - Madman's Knowledge #9	map m27_00; unestablished
 52700390	Forbidden Woods	Forbidden Woods - Poison Knife x3	map m27_00
 52700400	Forbidden Woods	Forbidden Woods - Beast Blood Pellet x6	map m27_00
@@ -396,10 +396,10 @@ location_flag	region	name	basis
 52700500	Forbidden Woods	Forbidden Woods - Frenzied Coldblood (7) #2	map m27_00; unestablished
 52700510	Forbidden Woods	Forbidden Woods - Quicksilver Bullets x6	map m27_00
 52700520	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #8	map m27_00; unestablished
-52700540	Forbidden Woods	Forbidden Woods - Blood Gem #5	map m27_00; category-8 blood gem (gem param 102202); specific gem name not in committed data; unestablished
+52700540	Forbidden Woods	Forbidden Woods - Deep Sea +200 Frenzy RES #5	map m27_00; category-8 Caryll rune; GemGenParam 102202 frenzy resistance Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 52700545	Forbidden Woods	Forbidden Woods - Madman's Knowledge #10	map m27_00; unestablished
 52700550	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #9	map m27_00; unestablished
-52700570	Forbidden Woods	Forbidden Woods - Blood Gem #6	map m27_00; category-8 blood gem (gem param 100301); specific gem name not in committed data; unestablished
+52700570	Forbidden Woods	Forbidden Woods - Clockwise Metamorphosis +5% HP #6	map m27_00; category-8 Caryll rune; GemGenParam 100301 max HP Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52700575	Forbidden Woods	Forbidden Woods - Madman's Knowledge #11	map m27_00; unestablished
 52700580	Forbidden Woods	Forbidden Woods - Twin Blood Stone Shards #10	map m27_00; unestablished
 52700590	Forbidden Woods	Forbidden Woods - Beast Blood Pellet x3	map m27_00
@@ -435,7 +435,7 @@ location_flag	region	name	basis
 52800020	Yahar'gul	Yahar'gul - Blood Gem #1	map m28_00; category-8 blood gem (gem param 128000); specific gem name not in committed data; unestablished
 52800030	Yahar'gul	Yahar'gul - Bolt Paper x3	map m28_00
 52800040	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #2	map m28_00; unestablished
-52800050	Yahar'gul	Yahar'gul - Blood Gem #2	map m28_00; category-8 blood gem (gem param 100802); specific gem name not in committed data; unestablished
+52800050	Yahar'gul	Yahar'gul - Heir +40% Visceral Blood Echoes #2	map m28_00; category-8 Caryll rune; GemGenParam 100802 visceral soul acquisition Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 52800055	Yahar'gul	Yahar'gul - Madman's Knowledge #1	map m28_00; unestablished
 52800060	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #3	map m28_00; unestablished
 52800070	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #4	map m28_00; unestablished
@@ -444,7 +444,7 @@ location_flag	region	name	basis
 52800110	Yahar'gul	Yahar'gul - Blood Stone Chunk #2	map m28_00; unestablished
 52800120	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #5	map m28_00; unestablished
 52800130	Yahar'gul	Yahar'gul - Blood Vial x6 #1	map m28_00; unestablished
-52800140	Yahar'gul	Yahar'gul - Blood Gem #3	map m28_00; category-8 blood gem (gem param 101301); specific gem name not in committed data; unestablished
+52800140	Yahar'gul	Yahar'gul - Arcane Lake +5% Arcane Reduction #3	map m28_00; category-8 Caryll rune; GemGenParam 101301 magic damage cut Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52800145	Yahar'gul	Yahar'gul - Madman's Knowledge #2	map m28_00; unestablished
 52800150	Yahar'gul	Yahar'gul - Madman's Knowledge #3	map m28_00; unestablished
 52800160	Yahar'gul	Yahar'gul - Madman's Knowledge #4	map m28_00; unestablished
@@ -454,7 +454,7 @@ location_flag	region	name	basis
 52800300	Yahar'gul	Yahar'gul - Pungent Blood Cocktail	map m28_00
 52800310	Yahar'gul	Yahar'gul - Twin Blood Stone Shards	map m28_00
 52800340	Yahar'gul	Yahar'gul - Bolt Paper x5	map m28_00
-52800350	Yahar'gul	Yahar'gul - Blood Gem #4	map m28_00; category-8 blood gem (gem param 100001); specific gem name not in committed data; unestablished
+52800350	Yahar'gul	Yahar'gul - Moon +10% Blood Echoes #4	map m28_00; category-8 Caryll rune; GemGenParam 100001 soul acquisition Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 52800355	Yahar'gul	Yahar'gul - Madman's Knowledge #5	map m28_00; unestablished
 52800360	Yahar'gul	Yahar'gul - Pungent Blood Cocktail x3	map m28_00
 52800380	Yahar'gul	Yahar'gul - Frenzied Coldblood (8) #6	map m28_00; unestablished
@@ -476,7 +476,7 @@ location_flag	region	name	basis
 52800700	Yahar'gul	Yahar'gul - Madman's Knowledge #8	map m28_00; unestablished
 52800710	Yahar'gul	Yahar'gul - Blood Gem #6	map m28_00; category-8 blood gem (gem param 132000); specific gem name not in committed data; unestablished
 53200000	Lecture Building 1F	Lecture Building 1F - Madman's Knowledge #1	map m32_00; floor from Y coordinate -185.56 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag; unestablished
-53200010	Lecture Building 2F	Lecture Building 2F - Blood Gem (corpse)	map m32_00; floor from Y coordinate -179.19 (tagged 2F rows sit at -176.2..-177.3); no floor in event tag; category-8 blood gem (gem param 101302); specific gem name not in committed data; event tag 宝死体
+53200010	Lecture Building 2F	Lecture Building 2F - Arcane Lake +7% Arcane Reduction (corpse)	map m32_00; floor from Y coordinate -179.19; category-8 Caryll rune; GemGenParam 101302 magic damage cut Lv2; vanilla-only until safe rune delivery; event tag 宝死体
 53200015	Lecture Building 2F	Lecture Building 2F - Madman's Knowledge (corpse)	map m32_00; floor from Y coordinate -179.19 (tagged 2F rows sit at -176.2..-177.3); no floor in event tag; event tag 宝死体
 53200020	Lecture Building 1F	Lecture Building 1F - Madman's Knowledge #2	map m32_00; floor from Y coordinate -186.93 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag; unestablished
 53200030	Lecture Building 1F	Lecture Building 1F - Great One's Wisdom	map m32_00; floor from Y coordinate -186.96 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag
@@ -484,18 +484,18 @@ location_flag	region	name	basis
 53200100	Lecture Building 1F	Lecture Building 1F - Madman's Knowledge #3 (classroom)	map m32_00; event tag names 1F; unestablished; hint from lot tag 教室 (m32_00_00_00)
 53200110	Lecture Building 2F	Lecture Building 2F - Sedative x6 (classroom)	map m32_00; event tag names 2F; hint from lot tag 教室 (m32_00_00_00)
 53200620	Lecture Building 1F	Lecture Building 1F - Red Jelly x2 (classroom chest)	map m32_00; event tag names 1F; hint from lot tag 教室 (m32_00_00_00); hint from MSB in_chest
-53200640	Lecture Building 2F	Lecture Building 2F - Blood Gem (chest)	map m32_00; event tag names 2F; category-8 blood gem (gem param 102902); specific gem name not in committed data; event tag 宝箱
+53200640	Lecture Building 2F	Lecture Building 2F - Communion +2 Blood Vials (chest)	map m32_00; category-8 Caryll rune; GemGenParam 102902 blood-vial capacity Lv0.5; wiki location/effect match; vanilla-only until safe rune delivery; event tag 宝箱
 53200645	Lecture Building 2F	Lecture Building 2F - Madman's Knowledge (chest)	map m32_00; event tag names 2F; event tag 宝箱
 53200700	Lecture Building 1F	Lecture Building 1F - Pearl Slug (chest)	map m32_00; floor from Y coordinate -183.75 (tagged 1F rows sit at -184.9..-187.2); no floor in event tag; hint from MSB in_chest
 53200740	Lecture Building 1F	Lecture Building 1F - Madman's Knowledge #4	map m32_00; event tag names 1F; unestablished
 53200750	Lecture Building 2F	Lecture Building 2F - Blood Stone Chunk	map m32_00; event tag names 2F
 53300100	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #1	map m33_00; unestablished
-53300110	Nightmare Frontier	Nightmare Frontier - Blood Gem #1	map m33_00; category-8 blood gem (gem param 101401); specific gem name not in committed data; unestablished
+53300110	Nightmare Frontier	Nightmare Frontier - Fading Lake +5% Fire Reduction #1	map m33_00; category-8 Caryll rune; GemGenParam 101401 fire damage cut Lv1; wiki location/effect match; vanilla-only until safe rune delivery
 53300115	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #2	map m33_00; unestablished
 53300120	Nightmare Frontier	Nightmare Frontier - Bolt Paper x2	map m33_00
 53300130	Nightmare Frontier	Nightmare Frontier - Lead Elixir x2 #1	map m33_00; unestablished
 53300140	Nightmare Frontier	Nightmare Frontier - Blood Vial x3 #1	map m33_00; unestablished
-53300150	Nightmare Frontier	Nightmare Frontier - Blood Gem #2	map m33_00; category-8 blood gem (gem param 102302); specific gem name not in committed data; unestablished
+53300150	Nightmare Frontier	Nightmare Frontier - Great Deep Sea +100 All RES #2	map m33_00; category-8 Caryll rune; GemGenParam 102302 all resistance Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 53300155	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #3	map m33_00; unestablished
 53300160	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (9) #1	map m33_00; unestablished
 53300170	Nightmare Frontier	Nightmare Frontier - Quicksilver Bullets x5	map m33_00
@@ -513,7 +513,7 @@ location_flag	region	name	basis
 53300290	Nightmare Frontier	Nightmare Frontier - Antidote x2 #2	map m33_00; unestablished
 53300300	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (8) #1	map m33_00; unestablished
 53300310	Nightmare Frontier	Nightmare Frontier - Antidote x4	map m33_00
-53300320	Nightmare Frontier	Nightmare Frontier - Blood Gem #3	map m33_00; category-8 blood gem (gem param 102002); specific gem name not in committed data; unestablished
+53300320	Nightmare Frontier	Nightmare Frontier - Clear Deep Sea +200 Slow Poison RES #3	map m33_00; category-8 Caryll rune; GemGenParam 102002 poison resistance Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 53300325	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #7	map m33_00; unestablished
 53300340	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (8) #2	map m33_00; unestablished
 53300350	Nightmare Frontier	Nightmare Frontier - Lead Elixir x3	map m33_00
@@ -523,14 +523,14 @@ location_flag	region	name	basis
 53300390	Nightmare Frontier	Nightmare Frontier - Frenzied Coldblood (9) #3	map m33_00; unestablished
 53300400	Nightmare Frontier	Nightmare Frontier - Kin Coldblood (10)	map m33_00
 53300410	Nightmare Frontier	Nightmare Frontier - Bold Hunter's Mark x3	map m33_00
-53300420	Nightmare Frontier	Nightmare Frontier - Blood Gem #4	map m33_00; category-8 blood gem (gem param 100302); specific gem name not in committed data; unestablished
+53300420	Nightmare Frontier	Nightmare Frontier - Clockwise Metamorphosis +10% HP #4	map m33_00; category-8 Caryll rune; GemGenParam 100302 max HP Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 53300425	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #10	map m33_00; unestablished
 53300430	Nightmare Frontier	Nightmare Frontier - Coldblood Flowerbud x2	map m33_00
 53300440	Nightmare Frontier	Nightmare Frontier - Lead Elixir x2 #3	map m33_00; unestablished
 53300450	Nightmare Frontier	Nightmare Frontier - Antidote x3	map m33_00
 53300460	Nightmare Frontier	Nightmare Frontier - Coldblood Flowerbud #2	map m33_00; unestablished
 53300470	Nightmare Frontier	Nightmare Frontier - Blood Vial x2 #2	map m33_00; unestablished
-53300480	Nightmare Frontier	Nightmare Frontier - Blood Gem #5	map m33_00; category-8 blood gem (gem param 102102); specific gem name not in committed data; unestablished
+53300480	Nightmare Frontier	Nightmare Frontier - Stunning Deep Sea +200 Rapid Poison RES #5	map m33_00; category-8 Caryll rune; GemGenParam 102102 bleed resistance Lv2; wiki location/effect match; vanilla-only until safe rune delivery
 53300485	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #11	map m33_00; unestablished
 53300490	Nightmare Frontier	Nightmare Frontier - Madman's Knowledge #12	map m33_00; unestablished
 53400000	Hunter's Nightmare	Hunter's Nightmare - Twin Blood Stone Shards #1	map m34_00; unestablished

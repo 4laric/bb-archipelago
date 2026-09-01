@@ -112,23 +112,23 @@ class BloodborneModelTests(unittest.TestCase):
         # scripted Summons check, plus Shadows and Rom. The White Messenger Ribbon (a
         # post-Rom quest reward whose region IS in the slice), and the NG+-only
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
-        self.assertEqual(668, len(NETWORK_LOCATIONS))
+        self.assertEqual(646, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
-            {"Central Yharnam": 47, "Cathedral Ward": 64,
+            {"Central Yharnam": 47, "Cathedral Ward": 62,
              "Old Yharnam": 56, "Grand Cathedral": 2,
-             "Hemwick Charnel Lane": 34, "Castle Cainhurst": 29,
-             "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
+             "Hemwick Charnel Lane": 33, "Castle Cainhurst": 29,
+             "Forbidden Woods": 76, "Iosefka's Clinic": 2, "Byrgenwerth": 1,
              "Moonside Lake": 1,
-            "Yahar'gul": 51, "Lecture Building 1F": 9,
-             "Lecture Building 2F": 8, "Nightmare Frontier": 46,
-             "Nightmare of Mensis": 57, "Hunter's Dream": 3,
+            "Yahar'gul": 48, "Lecture Building 1F": 9,
+             "Lecture Building 2F": 6, "Nightmare Frontier": 41,
+             "Nightmare of Mensis": 55, "Hunter's Dream": 3,
              "Hunter's Nightmare": 68, "Underground Corpse Pile": 1,
              "Research Hall": 37, "Lumenwood Garden": 1,
              "Astral Clocktower": 1, "Fishing Hamlet": 41,
              "Nightmare Grand Cathedral": 1, "Healing Church Workshop": 4,
-             "Upper Cathedral Ward": 21, "Graveyard of the Darkbeast": 1},
+             "Upper Cathedral Ward": 20, "Graveyard of the Darkbeast": 1},
         )
         self.assertEqual(12411700, LOCATION_BINDINGS["boss_cleric_beast"].event_flag)
         self.assertEqual(12411800, LOCATION_BINDINGS["boss_father_gascoigne"].event_flag)
@@ -159,7 +159,9 @@ class BloodborneModelTests(unittest.TestCase):
     def test_slice_excludes_out_of_slice_fixed_rows(self):
         keys = {location.key for location in NETWORK_LOCATIONS}
         self.assertIn("fixed_central_yharnam_lot_2410140", keys)
-        self.assertIn("fixed_central_yharnam_lot_2410640", keys)
+        # Communion (+3) is catalogued, but remains a vanilla-only rune until
+        # category-8 rune delivery is safe (#214).
+        self.assertNotIn("fixed_central_yharnam_lot_2410640", keys)
         self.assertNotIn("fixed_white_messenger_ribbon", keys)
         # The post-Gascoigne strip pickups stay in as Cathedral Ward checks.
         self.assertIn("fixed_blood_gem_workshop_tool", keys)
@@ -208,22 +210,22 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 75)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 50)
-        self.assertEqual(counts["Blood Stone Shards x2"], 38)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 38)
-        self.assertEqual(counts["Blood Stone Chunk"], 25)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 25)
+        self.assertEqual(counts["Blood Vial"], 73)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 49)
+        self.assertEqual(counts["Blood Stone Shards x2"], 37)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 36)
+        self.assertEqual(counts["Blood Stone Chunk"], 24)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 24)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2"):
-            self.assertEqual(counts[name], 25, name)
-        self.assertEqual(counts["Bolt Paper x2"], 25)
-        self.assertEqual(counts["Bone Marrow Ash x3"], 25)
+            self.assertEqual(counts[name], 24, name)
+        self.assertEqual(counts["Bolt Paper x2"], 24)
+        self.assertEqual(counts["Bone Marrow Ash x3"], 24)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2",
                      ):
-            self.assertEqual(counts[name], 13, name)
+            self.assertEqual(counts[name], 12, name)
         for name in ("Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
             self.assertEqual(counts[name], 12, name)
@@ -257,11 +259,11 @@ class BloodborneModelTests(unittest.TestCase):
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 231)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 154)
-        self.assertEqual(counts["Blood Stone Shards x2"], 116)
-        self.assertEqual(counts["Pebbles x3"], 77)
-        self.assertEqual(counts["Molotov Cocktails x2"], 77)
+        self.assertEqual(counts["Blood Vial"], 223)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 149)
+        self.assertEqual(counts["Blood Stone Shards x2"], 112)
+        self.assertEqual(counts["Pebbles x3"], 75)
+        self.assertEqual(counts["Molotov Cocktails x2"], 74)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 18)  # seventeen slice items + Blood Vial
