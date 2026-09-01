@@ -34,7 +34,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52200360	2200360	01	4	goods	4104	Rune Workshop Tool	1	0x40001008	key_or_badge	goods_type_1_requires_logic_review
 52200365	2200365	01	4	goods	1591	Kin Coldblood (12)	1	0x40000637	filler	consumable_or_material
 52200370	2200370	01	4	goods	7150	Bloodshot Eyeball	1	0x40001BEE	filler	consumable_or_material
-52200380	2200380	01	8	gem	101701		1		optional	generated_blood_gem
+52200380	2200380	01	8	caryll_rune	101701	Lake (+3%)	1		optional	fixed_caryll_rune_vanilla_only
 52200385	2200385	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52200390	2200390	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52200400	2200400	01	4	goods	1200	Molotov Cocktail	5	0x400004B0	filler	consumable_or_material
@@ -177,7 +177,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52410610	2410610	01	1	armor	70000	Hunter Hat	1		useful	armor
 52410620	2410620	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
 52410630	2410630	01	4	goods	1510	Coldblood Dew (1)	1	0x400005E6	filler	consumable_or_material
-52410640	2410640	01	8	gem	102903		1		optional	generated_blood_gem
+52410640	2410640	01	8	caryll_rune	102903	Communion (+3 Blood Vials)	1		optional	fixed_caryll_rune_vanilla_only
 52410645	2410645	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52410650	2410650	01	4	goods	3000	Blood Stone Shard	1	0x40000BB8	filler	consumable_or_material
 52410800	2410800	01	4	goods	900	Quicksilver Bullets	10	0x40000384	filler	consumable_or_material
@@ -185,7 +185,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52411000	2411000	01	4	goods	4103	Blood Gem Workshop Tool	1	0x40001007	key_or_badge	goods_type_1_requires_logic_review
 52411005	2411005	01	4	goods	1591	Kin Coldblood (12)	1	0x40000637	filler	consumable_or_material
 52420110	2420110	01	4	goods	1514	Thick Coldblood (5)	1	0x400005EA	filler	consumable_or_material
-52420120	2420120	01	8	gem	101802		1		optional	generated_blood_gem
+52420120	2420120	01	8	caryll_rune	101802	Great Lake (+4%)	1		optional	fixed_caryll_rune_vanilla_only
 52420125	2420125	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52420130	2420130	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
 52420140	2420140	01	4	goods	900	Quicksilver Bullets	3	0x40000384	filler	consumable_or_material
@@ -216,12 +216,12 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52420610	2400610	01	4	goods	1100	Antidote	1	0x4000044C	filler	consumable_or_material
 52420620	2400620	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52420630	2400630	01	4	goods	1210	Poison Knife	18	0x400004BA	filler	consumable_or_material
-52420640	2400640	01	8	gem	102901		1		optional	generated_blood_gem
+52420640	2400640	01	8	caryll_rune	102901	Communion (+1 Blood Vial)	1		optional	fixed_caryll_rune_vanilla_only
 52420645	2400645	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52420650	2400650	01	8	gem	124004		1		optional	generated_blood_gem
 52420660	2400660	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52420670	2400670	01	4	goods	4905	Messenger Top Hat	1	0x40001329	key_or_badge	goods_type_1_requires_logic_review
-52420690	2400690	01	8	gem	103104		1		optional	generated_blood_gem
+52420690	2400690	01	8	caryll_rune	103104	Formless Oedon (+4 Quicksilver Bullets)	1		optional	fixed_caryll_rune_vanilla_only
 52420695	2400695	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52420700	2400700	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
 52420710	2400710	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
@@ -276,7 +276,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52600270	2600270	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
 52600280	2600280	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
 52600290	2600290	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
-52600300	2600300	01	8	gem	100201		1		optional	generated_blood_gem
+52600300	2600300	01	8	caryll_rune	100201	Eye (+50 Discovery)	1		optional	fixed_caryll_rune_vanilla_only
 52600305	2600305	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52600310	2600310	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
 52600320	2600320	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
@@ -286,7 +286,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52600360	2600360	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
 52600370	2600370	01	4	goods	1000	Blood Vial	4	0x400003E8	filler	consumable_or_material
 52600380	2600380	01	4	goods	1101	Sedative	3	0x4000044D	filler	consumable_or_material
-52600390	2600390	01	8	gem	100002		1		optional	generated_blood_gem
+52600390	2600390	01	8	caryll_rune	100002	Moon (+20% Blood Echoes)	1		optional	fixed_caryll_rune_vanilla_only
 52600395	2600395	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52600400	2600400	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
 52600410	2600410	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
@@ -318,10 +318,10 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52700140	2700140	01	4	goods	1200	Molotov Cocktail	11	0x400004B0	filler	consumable_or_material
 52700150	2700150	01	1	armor	290000	White Church Hat	1		useful	armor
 52700170	2700170	01	4	goods	1515	Thick Coldblood (6)	1	0x400005EB	filler	consumable_or_material
-52700180	2700180	01	8	gem	102001		1		optional	generated_blood_gem
+52700180	2700180	01	8	caryll_rune	102001	Clear Deep Sea (+100 Slow Poison RES)	1		optional	fixed_caryll_rune_vanilla_only
 52700185	2700185	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52700190	2700190	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
-52700200	2700200	01	8	gem	101601		1		optional	generated_blood_gem
+52700200	2700200	01	8	caryll_rune	101601	Dissipating Lake (+5% Bolt Reduction)	1		optional	fixed_caryll_rune_vanilla_only
 52700205	2700205	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52700210	2700210	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52700220	2700220	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
@@ -339,7 +339,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52700350	2700350	01	4	goods	1100	Antidote	4	0x4000044C	filler	consumable_or_material
 52700360	2700360	01	4	goods	3010	Twin Blood Stone Shards	2	0x40000BC2	filler	consumable_or_material
 52700370	2700370	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
-52700380	2700380	01	8	gem	100401		1		optional	generated_blood_gem
+52700380	2700380	01	8	caryll_rune	100401	Anti-Clockwise Metamorphosis (+10% Stamina)	1		optional	fixed_caryll_rune_vanilla_only
 52700385	2700385	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52700390	2700390	01	4	goods	1210	Poison Knife	3	0x400004BA	filler	consumable_or_material
 52700400	2700400	01	4	goods	1110	Beast Blood Pellet	6	0x40000456	filler	consumable_or_material
@@ -355,11 +355,11 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52700500	2700500	01	4	goods	1516	Frenzied Coldblood (7)	1	0x400005EC	filler	consumable_or_material
 52700510	2700510	01	4	goods	900	Quicksilver Bullets	6	0x40000384	filler	consumable_or_material
 52700520	2700520	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
-52700540	2700540	01	8	gem	102202		1		optional	generated_blood_gem
+52700540	2700540	01	8	caryll_rune	102202	Deep Sea (+200 Frenzy RES)	1		optional	fixed_caryll_rune_vanilla_only
 52700545	2700545	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52700550	2700550	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
 52700560	2700560	01	1	armor	30000	Graveguard Mask	1		useful	armor
-52700570	2700570	01	8	gem	100301		1		optional	generated_blood_gem
+52700570	2700570	01	8	caryll_rune	100301	Clockwise Metamorphosis (+5% HP)	1		optional	fixed_caryll_rune_vanilla_only
 52700575	2700575	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52700580	2700580	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
 52700590	2700590	01	4	goods	1110	Beast Blood Pellet	3	0x40000456	filler	consumable_or_material
@@ -396,7 +396,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52800020	2800020	01	8	gem	128000		1		optional	generated_blood_gem
 52800030	2800030	01	4	goods	1320	Bolt Paper	3	0x40000528	filler	consumable_or_material
 52800040	2800040	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
-52800050	2800050	01	8	gem	100802		1		optional	generated_blood_gem
+52800050	2800050	01	8	caryll_rune	100802	Heir (+40% Visceral Blood Echoes)	1		optional	fixed_caryll_rune_vanilla_only
 52800055	2800055	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52800060	2800060	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
 52800070	2800070	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
@@ -406,7 +406,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52800110	2800110	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
 52800120	2800120	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
 52800130	2800130	01	4	goods	1000	Blood Vial	6	0x400003E8	filler	consumable_or_material
-52800140	2800140	01	8	gem	101301		1		optional	generated_blood_gem
+52800140	2800140	01	8	caryll_rune	101301	Arcane Lake (+5% Arcane Reduction)	1		optional	fixed_caryll_rune_vanilla_only
 52800145	2800145	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52800150	2800150	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52800160	2800160	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
@@ -419,7 +419,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52800310	2800310	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material
 52800330	2800330	01	0	weapon	13000000	Tonitrus	1		useful	weapon
 52800340	2800340	01	4	goods	1320	Bolt Paper	5	0x40000528	filler	consumable_or_material
-52800350	2800350	01	8	gem	100001		1		optional	generated_blood_gem
+52800350	2800350	01	8	caryll_rune	100001	Moon (+10% Blood Echoes)	1		optional	fixed_caryll_rune_vanilla_only
 52800355	2800355	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52800360	2800360	01	4	goods	1260	Pungent Blood Cocktail	3	0x400004EC	filler	consumable_or_material
 52800380	2800380	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
@@ -446,7 +446,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 52800700	2800700	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 52800710	2800710	01	8	gem	132000		1		optional	generated_blood_gem
 53200000	3200000	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
-53200010	3200010	01	8	gem	101302		1		optional	generated_blood_gem
+53200010	3200010	01	8	caryll_rune	101302	Arcane Lake (+7% Arcane Reduction)	1		optional	fixed_caryll_rune_vanilla_only
 53200015	3200015	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53200020	3200020	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53200030	3200030	01	4	goods	1501	Great One's Wisdom	1	0x400005DD	filler	consumable_or_material
@@ -457,7 +457,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 53200540	3200540	01	1	armor	191000	Student Uniform	1		useful	armor
 53200600	3200600	01	4	goods	2000	Augur of Ebrietas	1	0x400007D0	useful	unique_goods_or_hunter_tool
 53200620	3200620	01	4	goods	7110	Red Jelly	2	0x40001BC6	filler	consumable_or_material
-53200640	3200640	01	8	gem	102902		1		optional	generated_blood_gem
+53200640	3200640	01	8	caryll_rune	102902	Communion (+2 Blood Vials)	1		optional	fixed_caryll_rune_vanilla_only
 53200645	3200645	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53200700	3200700	01	4	goods	7100	Pearl Slug	1	0x40001BBC	filler	consumable_or_material
 53200720	3200720	01	4	goods	4012	Lecture Theatre Key	1	0x40000FAC	key_or_badge	goods_type_1_requires_logic_review
@@ -465,12 +465,12 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 53200740	3200740	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53200750	3200750	01	4	goods	3020	Blood Stone Chunk	1	0x40000BCC	filler	consumable_or_material
 53300100	3300000	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
-53300110	3300010	01	8	gem	101401		1		optional	generated_blood_gem
+53300110	3300010	01	8	caryll_rune	101401	Fading Lake (+5% Fire Reduction)	1		optional	fixed_caryll_rune_vanilla_only
 53300115	3300015	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53300120	3300020	01	4	goods	1320	Bolt Paper	2	0x40000528	filler	consumable_or_material
 53300130	3300030	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
 53300140	3300040	01	4	goods	1000	Blood Vial	3	0x400003E8	filler	consumable_or_material
-53300150	3300050	01	8	gem	102302		1		optional	generated_blood_gem
+53300150	3300050	01	8	caryll_rune	102302	Great Deep Sea (+100 All RES)	1		optional	fixed_caryll_rune_vanilla_only
 53300155	3300055	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53300160	3300060	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
 53300170	3300070	01	4	goods	900	Quicksilver Bullets	5	0x40000384	filler	consumable_or_material
@@ -488,7 +488,7 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 53300290	3300190	01	4	goods	1100	Antidote	2	0x4000044C	filler	consumable_or_material
 53300300	3300200	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
 53300310	3300210	01	4	goods	1100	Antidote	4	0x4000044C	filler	consumable_or_material
-53300320	3300220	01	8	gem	102002		1		optional	generated_blood_gem
+53300320	3300220	01	8	caryll_rune	102002	Clear Deep Sea (+200 Slow Poison RES)	1		optional	fixed_caryll_rune_vanilla_only
 53300325	3300225	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53300330	3300230	01	4	goods	2110	Messenger's Gift	1	0x4000083E	useful	unique_goods_or_hunter_tool
 53300340	3300240	01	4	goods	1517	Frenzied Coldblood (8)	1	0x400005ED	filler	consumable_or_material
@@ -499,14 +499,14 @@ location_flag	item_lot_id	slot	category	category_name	item_param_id	english_name
 53300390	3300290	01	4	goods	1518	Frenzied Coldblood (9)	1	0x400005EE	filler	consumable_or_material
 53300400	3300300	01	4	goods	1519	Kin Coldblood (10)	1	0x400005EF	filler	consumable_or_material
 53300410	3300310	01	4	goods	1400	Bold Hunter's Mark	3	0x40000578	filler	consumable_or_material
-53300420	3300320	01	8	gem	100302		1		optional	generated_blood_gem
+53300420	3300320	01	8	caryll_rune	100302	Clockwise Metamorphosis (+10% HP)	1		optional	fixed_caryll_rune_vanilla_only
 53300425	3300325	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53300430	3300330	01	4	goods	7012	Coldblood Flowerbud	2	0x40001B64	filler	consumable_or_material
 53300440	3300340	01	4	goods	2030	Lead Elixir	2	0x400007EE	filler	consumable_or_material
 53300450	3300350	01	4	goods	1100	Antidote	3	0x4000044C	filler	consumable_or_material
 53300460	3300360	01	4	goods	7012	Coldblood Flowerbud	1	0x40001B64	filler	consumable_or_material
 53300470	3300370	01	4	goods	1000	Blood Vial	2	0x400003E8	filler	consumable_or_material
-53300480	3300380	01	8	gem	102102		1		optional	generated_blood_gem
+53300480	3300380	01	8	caryll_rune	102102	Stunning Deep Sea (+200 Rapid Poison RES)	1		optional	fixed_caryll_rune_vanilla_only
 53300485	3300385	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53300490	3300390	01	4	goods	1500	Madman's Knowledge	1	0x400005DC	filler	consumable_or_material
 53400000	3400000	01	4	goods	3010	Twin Blood Stone Shards	1	0x40000BC2	filler	consumable_or_material

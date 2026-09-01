@@ -58,9 +58,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Cathedral Ward - Blood Gem #1
 - Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)
 - Cathedral Ward - Blood Gem #3 (chest)
-- Cathedral Ward - Blood Gem #4 (Grand Cathedral approach chest)
 - Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)
-- Cathedral Ward - Blood Gem #6 (chest)
 - Cathedral Ward - Blood Gem #7
 - Cathedral Ward - Blood Stone Shard x2
 - Cathedral Ward - Blood Stone Shard x3
@@ -73,7 +71,9 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Cathedral Ward - Bold Hunter's Mark (Grand Cathedral approach chest)
 - Cathedral Ward - Bold Hunter's Mark x3
 - Cathedral Ward - Coldblood Dew (2)
+- Cathedral Ward - Communion +1 Blood Vial #4 (Grand Cathedral approach chest)
 - Cathedral Ward - Eileen's Crow Hunter Badge award
+- Cathedral Ward - Formless Oedon +4 Quicksilver Bullets #6 (chest)
 - Cathedral Ward - Frenzied Coldblood (7)
 - Cathedral Ward - Hunter Chief Emblem (plaza entrance)
 - Cathedral Ward - Madman's Knowledge #1
@@ -218,6 +218,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 
 ## Forbidden Woods
 
+- Forbidden Woods - Anti-Clockwise Metamorphosis +10% Stamina #4
 - Forbidden Woods - Antidote x2
 - Forbidden Woods - Antidote x3
 - Forbidden Woods - Antidote x4 #1
@@ -226,13 +227,8 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Forbidden Woods - Beast Blood Pellet x4
 - Forbidden Woods - Beast Blood Pellet x6
 - Forbidden Woods - Beast Roar
-- Forbidden Woods - Blood Gem #1
 - Forbidden Woods - Blood Gem #10
-- Forbidden Woods - Blood Gem #2
 - Forbidden Woods - Blood Gem #3
-- Forbidden Woods - Blood Gem #4
-- Forbidden Woods - Blood Gem #5
-- Forbidden Woods - Blood Gem #6
 - Forbidden Woods - Blood Gem #7
 - Forbidden Woods - Blood Gem #8
 - Forbidden Woods - Blood Gem #9
@@ -244,6 +240,10 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Forbidden Woods - Blue Elixir x4
 - Forbidden Woods - Burial Blade (chest)
 - Forbidden Woods - Cannon
+- Forbidden Woods - Clear Deep Sea +100 Slow Poison RES #1
+- Forbidden Woods - Clockwise Metamorphosis +5% HP #6
+- Forbidden Woods - Deep Sea +200 Frenzy RES #5
+- Forbidden Woods - Dissipating Lake +5% Bolt Reduction #2
 - Forbidden Woods - Frenzied Coldblood (7) #1
 - Forbidden Woods - Frenzied Coldblood (7) #2
 - Forbidden Woods - Frenzied Coldblood (7) #3
@@ -321,7 +321,6 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 
 - Hemwick Charnel Lane - Blood Gem #1
 - Hemwick Charnel Lane - Blood Gem #2 (chest)
-- Hemwick Charnel Lane - Blood Gem #3
 - Hemwick Charnel Lane - Blood Vial x2 #1
 - Hemwick Charnel Lane - Blood Vial x2 #2
 - Hemwick Charnel Lane - Bloodshot Eyeball #1
@@ -331,6 +330,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Hemwick Charnel Lane - Bone Marrow Ash x9
 - Hemwick Charnel Lane - Coldblood Dew (3)
 - Hemwick Charnel Lane - Kin Coldblood (12)
+- Hemwick Charnel Lane - Lake +3% #3
 - Hemwick Charnel Lane - Madman's Knowledge #1
 - Hemwick Charnel Lane - Madman's Knowledge #2
 - Hemwick Charnel Lane - Madman's Knowledge #3
@@ -435,8 +435,8 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 
 ## Iosefka's Clinic
 
-- Iosefka's Clinic - Blood Gem (chest)
 - Iosefka's Clinic - Cainhurst Summons
+- Iosefka's Clinic - Communion +3 Blood Vials (chest)
 - Iosefka's Clinic - Madman's Knowledge (chest)
 - Iosefka's Clinic - Madman's Knowledge (corpse)
 
@@ -454,9 +454,9 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 
 ## Lecture Building 2F
 
-- Lecture Building 2F - Blood Gem (chest)
-- Lecture Building 2F - Blood Gem (corpse)
+- Lecture Building 2F - Arcane Lake +7% Arcane Reduction (corpse)
 - Lecture Building 2F - Blood Stone Chunk
+- Lecture Building 2F - Communion +2 Blood Vials (chest)
 - Lecture Building 2F - Empty Phantasm Shell (observatory chest)
 - Lecture Building 2F - Lecture Theatre Key
 - Lecture Building 2F - Madman's Knowledge (chest)
@@ -480,26 +480,25 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Nightmare Frontier - Antidote x2 #2
 - Nightmare Frontier - Antidote x3
 - Nightmare Frontier - Antidote x4
-- Nightmare Frontier - Blood Gem #1
-- Nightmare Frontier - Blood Gem #2
-- Nightmare Frontier - Blood Gem #3
-- Nightmare Frontier - Blood Gem #4
-- Nightmare Frontier - Blood Gem #5
 - Nightmare Frontier - Blood Vial x2 #1
 - Nightmare Frontier - Blood Vial x2 #2
 - Nightmare Frontier - Blood Vial x3 #1
 - Nightmare Frontier - Blood Vial x3 #2
 - Nightmare Frontier - Bold Hunter's Mark x3
 - Nightmare Frontier - Bolt Paper x2
+- Nightmare Frontier - Clear Deep Sea +200 Slow Poison RES #3
+- Nightmare Frontier - Clockwise Metamorphosis +10% HP #4
 - Nightmare Frontier - Coldblood Flowerbud #1
 - Nightmare Frontier - Coldblood Flowerbud #2
 - Nightmare Frontier - Coldblood Flowerbud x2
 - Nightmare Frontier - Corpse Pickup
+- Nightmare Frontier - Fading Lake +5% Fire Reduction #1
 - Nightmare Frontier - Frenzied Coldblood (8) #1
 - Nightmare Frontier - Frenzied Coldblood (8) #2
 - Nightmare Frontier - Frenzied Coldblood (9) #1
 - Nightmare Frontier - Frenzied Coldblood (9) #2
 - Nightmare Frontier - Frenzied Coldblood (9) #3
+- Nightmare Frontier - Great Deep Sea +100 All RES #2
 - Nightmare Frontier - Kin Coldblood (10)
 - Nightmare Frontier - Lead Elixir x2 #1
 - Nightmare Frontier - Lead Elixir x2 #2
@@ -519,6 +518,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Nightmare Frontier - Madman's Knowledge #9
 - Nightmare Frontier - Messenger's Gift
 - Nightmare Frontier - Quicksilver Bullets x5
+- Nightmare Frontier - Stunning Deep Sea +200 Rapid Poison RES #5
 - Nightmare Frontier - Thick Coldblood (4) #1
 - Nightmare Frontier - Thick Coldblood (4) #2
 
@@ -533,8 +533,6 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Nightmare of Mensis - Blood Gem #1
 - Nightmare of Mensis - Blood Gem #2
 - Nightmare of Mensis - Blood Gem #3
-- Nightmare of Mensis - Blood Gem #4
-- Nightmare of Mensis - Blood Gem #5
 - Nightmare of Mensis - Blood Gem #6
 - Nightmare of Mensis - Blood Gem #7
 - Nightmare of Mensis - Blood Gem #8
@@ -553,6 +551,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Nightmare of Mensis - Blood Vial x8 #2
 - Nightmare of Mensis - Blue Elixir x2
 - Nightmare of Mensis - Choir Bell (chest)
+- Nightmare of Mensis - Eye +50 Discovery #4
 - Nightmare of Mensis - Frenzied Coldblood (8) #1
 - Nightmare of Mensis - Frenzied Coldblood (8) #2
 - Nightmare of Mensis - Frenzied Coldblood (9) #1
@@ -579,6 +578,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Nightmare of Mensis - Madman's Knowledge #3
 - Nightmare of Mensis - Madman's Knowledge #4
 - Nightmare of Mensis - Madman's Knowledge #5
+- Nightmare of Mensis - Moon +20% Blood Echoes #5
 - Nightmare of Mensis - Quicksilver Bullets x6 #1
 - Nightmare of Mensis - Quicksilver Bullets x6 #2
 - Nightmare of Mensis - Sedative x3
@@ -695,7 +695,6 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Ebrietas, Daughter of the Cosmos
 - Upper Cathedral Ward - A Call Beyond
 - Upper Cathedral Ward - Blindfold Cap
-- Upper Cathedral Ward - Blood Gem
 - Upper Cathedral Ward - Blue Elixir #1
 - Upper Cathedral Ward - Blue Elixir #2
 - Upper Cathedral Ward - Bold Hunter's Mark
@@ -704,6 +703,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Upper Cathedral Ward - Frenzied Coldblood (9) #1
 - Upper Cathedral Ward - Frenzied Coldblood (9) #2
 - Upper Cathedral Ward - Gascoigne's Cap
+- Upper Cathedral Ward - Great Lake +4%
 - Upper Cathedral Ward - Ludwig's Rifle
 - Upper Cathedral Ward - Madman's Knowledge #1
 - Upper Cathedral Ward - Madman's Knowledge #2
@@ -720,11 +720,9 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 ## Yahar'gul
 
 - The One Reborn
+- Yahar'gul - Arcane Lake +5% Arcane Reduction #3
 - Yahar'gul - Black Hooded Iron Helm and Yahar'gul Black Garb (coachman's seat)
 - Yahar'gul - Blood Gem #1
-- Yahar'gul - Blood Gem #2
-- Yahar'gul - Blood Gem #3
-- Yahar'gul - Blood Gem #4
 - Yahar'gul - Blood Gem #5 (chest)
 - Yahar'gul - Blood Gem #6
 - Yahar'gul - Blood Stone Chunk #1
@@ -752,6 +750,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Yahar'gul - Frenzied Coldblood (8) #6
 - Yahar'gul - Frenzied Coldblood (8) #7
 - Yahar'gul - Frenzied Coldblood (9)
+- Yahar'gul - Heir +40% Visceral Blood Echoes #2
 - Yahar'gul - Iron Yahar'gul Helm
 - Yahar'gul - Lead Elixir x3
 - Yahar'gul - Madman's Knowledge #1
@@ -762,6 +761,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Yahar'gul - Madman's Knowledge #6
 - Yahar'gul - Madman's Knowledge #7
 - Yahar'gul - Madman's Knowledge #8
+- Yahar'gul - Moon +10% Blood Echoes #4
 - Yahar'gul - Pungent Blood Cocktail
 - Yahar'gul - Pungent Blood Cocktail x3
 - Yahar'gul - Quicksilver Bullets x10 #1

@@ -325,13 +325,13 @@ class RealCorpusTests(unittest.TestCase):
         # they are not iterated here.
         self.assertEqual(checked, 566)
 
-    def test_category_eight_checks_keep_their_native_generated_gems(self):
+    def test_genuine_category_eight_gem_checks_keep_their_native_awards(self):
         from worlds.bloodborne import NETWORK_LOCATIONS
         from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
 
         gems = [location for location in NETWORK_LOCATIONS
                 if LOCATION_BINDINGS[location.key].item_category == 8]
-        self.assertEqual(len(gems), 58)
+        self.assertEqual(len(gems), 36)
         planned_lots = {edit.item_lot_id for edit in self.plan.edits}
         for location in gems:
             with self.subTest(location=location.key):

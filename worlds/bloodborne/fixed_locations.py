@@ -30,6 +30,17 @@ class FixedLocation:
     vanilla_award_suppressed: bool
 
 
+# Exact GemGenParam ids proven to be fixed Caryll runes by playtest.32 and the
+# committed parameter/location audit.  Their native awards remain enabled,
+# but they are not AP checks until rune delivery is safe (#214).
+VANILLA_ONLY_CARYLL_RUNE_PARAMS = frozenset({
+    100001, 100002, 100201, 100301, 100302, 100401, 100802,
+    101301, 101302, 101401, 101601, 101701, 101802,
+    102001, 102002, 102102, 102202, 102302,
+    102901, 102902, 102903, 103104,
+})
+
+
 def _load() -> tuple[FixedLocation, ...]:
     text = read_resource_text("fixed_locations.tsv")
     handle = io.StringIO(text, newline="")

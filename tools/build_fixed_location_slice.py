@@ -163,6 +163,19 @@ EXCLUDED_FLAGS = {
     ),
 }
 
+# Category 8 is shared by generated blood gems and fixed Caryll runes.  These
+# ids are the 22 fixed rune recipes witnessed by playtest.32 and confirmed by
+# the committed GemGenParam names.  Rune delivery is not safe yet, so their
+# valid native awards remain in place and their flags must not become AP
+# checks.  Keep this an exact allowlist: genuine category-8 gem recipes still
+# belong to the seeded location catalog.
+VANILLA_ONLY_CARYLL_RUNE_PARAMS = frozenset({
+    100001, 100002, 100201, 100301, 100302, 100401, 100802,
+    101301, 101302, 101401, 101601, 101701, 101802,
+    102001, 102002, 102102, 102202, 102302,
+    102901, 102902, 102903, 103104,
+})
+
 # Stable keys for rows the datapackage published before the name table
 # existed. Keys are wire identifiers and never change; names live in the
 # name table.

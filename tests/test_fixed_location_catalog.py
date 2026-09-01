@@ -11,6 +11,7 @@ from worlds.bloodborne import (
     build_runtime_slot_data,
 )
 from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
+from worlds.bloodborne.fixed_locations import VANILLA_ONLY_CARYLL_RUNE_PARAMS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +23,43 @@ def rows(path: Path) -> list[dict[str, str]]:
 
 
 class FixedLocationCatalogTests(unittest.TestCase):
+    def test_fixed_caryll_runes_are_named_but_remain_vanilla_only(self):
+        from tools.build_fixed_location_slice import VANILLA_ONLY_CARYLL_RUNE_PARAMS as BUILDER_RUNES
+        from worlds.bloodborne import NETWORK_LOCATIONS
+
+        self.assertEqual(VANILLA_ONLY_CARYLL_RUNE_PARAMS, BUILDER_RUNES)
+        runes = [
+            row for row in FIXED_LOCATIONS
+            if row.item_category == 8
+            and row.item_id in VANILLA_ONLY_CARYLL_RUNE_PARAMS
+        ]
+        self.assertEqual(22, len(runes))
+        self.assertEqual(
+            VANILLA_ONLY_CARYLL_RUNE_PARAMS,
+            {row.item_id for row in runes},
+        )
+        seeded = {location.key for location in NETWORK_LOCATIONS}
+        for rune in runes:
+            with self.subTest(param=rune.item_id, location=rune.key):
+                self.assertNotIn("Blood Gem", rune.name)
+                self.assertFalse(rune.vanilla_award_suppressed)
+                self.assertNotIn(rune.key, seeded)
+
+    def test_genuine_category_eight_gems_remain_seeded_checks(self):
+        from worlds.bloodborne import NETWORK_LOCATIONS
+
+        genuine_gems = [
+            row for row in FIXED_LOCATIONS
+            if row.item_category == 8
+            and row.item_id not in VANILLA_ONLY_CARYLL_RUNE_PARAMS
+        ]
+        self.assertEqual(36, len(genuine_gems))
+        seeded = {location.key for location in NETWORK_LOCATIONS}
+        for gem in genuine_gems:
+            with self.subTest(param=gem.item_id, location=gem.key):
+                self.assertIn(gem.key, seeded)
+                self.assertFalse(gem.vanilla_award_suppressed)
+
     def test_selected_rows_are_exact_catalog_rows_with_item_evidence(self):
         catalog = {
             int(row["location_flag"]): row
