@@ -44,9 +44,9 @@ def event_body(text: str) -> str:
     return text[start:] if next_event < 0 else text[start:next_event]
 
 
-def patch(source: bytes) -> bytes:
+def patch(source: bytes, *, verify_source: bool = True) -> bytes:
     actual = sha256(source)
-    if actual != SUPPORTED_SOURCE_SHA256:
+    if verify_source and actual != SUPPORTED_SOURCE_SHA256:
         raise ValueError(
             f"unsupported {MAP} source sha256 {actual}; expected {SUPPORTED_SOURCE_SHA256}"
         )
