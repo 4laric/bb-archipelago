@@ -11,6 +11,7 @@ have been runtime validated.
 from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
 from .fixed_locations import FIXED_LOCATIONS, VANILLA_ONLY_CARYLL_RUNE_PARAMS
 from .location_names import location_name
+from .starting_attire import STARTING_ATTIRE_CATALOG
 
 P = ItemKind.PROGRESSION
 U = ItemKind.USEFUL
@@ -168,6 +169,14 @@ ITEMS = (
     Item("uncanny_logarius_wheel", "Logarius' Uncanny Wheel", U),
     Item("uncanny_tonitrus", "Uncanny Tonitrus", U),
     Item("uncanny_threaded_cane", "Uncanny Threaded Cane", U),
+    # Reviewed EquipParamProtector rows. These use the same complete 17-set
+    # corpus as starting-attire randomization, but each piece is an independent
+    # useful AP item. Runtime descriptors remain explicitly corpus-backed until
+    # their first live inserts promote them, just like inferred weapon rows.
+) + tuple(
+    Item(piece.item_key, piece.name, U)
+    for piece in STARTING_ATTIRE_CATALOG
+) + (
     # Locked local events. These are never placed in the random item pool.
     Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
     Item("event_gascoigne_defeated", "Father Gascoigne Defeated", E),
@@ -385,6 +394,8 @@ LOCATIONS = (
 )
 
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
+
+ATTIRE_ITEM_KEYS = frozenset(piece.item_key for piece in STARTING_ATTIRE_CATALOG)
 
 # The generated player exposes one honest, bounded slice. The broader model
 # above remains research scaffolding; none of its later regions enters

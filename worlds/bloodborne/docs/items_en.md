@@ -131,11 +131,34 @@ Dream storage box.
 
 ## Blood gems and armor
 
-Blood gems and armor are not public randomized item classes in the current
-world catalog. Vanilla blood gems remain available, and the starting Blood Gem
-Workshop Tool lets the player equip them. Do not expect armor or individual
-blood gems in an Archipelago hint or item feed until those classes are added to
-the world.
+The 68 reviewed pieces from 17 complete attire sets are useful items in the
+general pool. Each piece is independent: a seed can place a hat, chest piece,
+gloves, or trousers in any world and the receiving client inserts that exact
+EquipParamProtector row.
+
+| Set | Pieces |
+|---|---|
+| Charred Hunter | Charred Hunter Hood; Charred Hunter Garb; Charred Hunter Gloves; Charred Hunter Trousers |
+| Yharnam Hunter | Yharnam Hunter Cap; Yharnam Hunter Garb; Yharnam Hunter Gloves; Yharnam Hunter Trousers |
+| Knight | Knight's Wig; Knight's Garb; Knight's Gloves; Knight's Trousers |
+| Cainhurst | Cainhurst Helmet; Cainhurst Armor; Cainhurst Gauntlets; Cainhurst Leggings |
+| Black Church | Black Church Hat; Black Church Garb; Surgical Long Gloves; Black Church Trousers |
+| Choir | Blindfold Cap; Choir Garb; Choir Gloves; Choir Trousers |
+| Gascoigne | Gascoigne's Cap; Gascoigne's Garb; Gascoigne's Gloves; Gascoigne's Trousers |
+| Tomb Prospector | Tomb Prospector Hood; Tomb Prospector Garb; Tomb Prospector Gloves; Tomb Prospector Trousers |
+| Executioner | Gold Ardeo; Executioner Garb; Executioner Gauntlets; Executioner Trousers |
+| Crowfeather | Beak Mask; Crowfeather Garb; Crowfeather Manchettes; Crowfeather Trousers |
+| Madman | Madman Hood; Madman Garb; Madman Manchettes; Madman Leggings |
+| Doll | Doll Hat; Doll Clothes; Doll Gloves; Doll Skirt |
+| Foreign | Foreign Hood; Foreign Garb; Foreign Manchettes; Foreign Trousers |
+| Old Hunter | Old Hunter Cap; Old Hunter Garb; Old Hunter Gloves; Old Hunter Trousers |
+| Maria Hunter | Maria Hunter Cap; Maria Hunter Garb; Maria Hunter Gloves; Maria Hunter Trousers |
+| Constable | Constable's Helmet; Constable's Garb; Constable's Gloves; Constable's Trousers |
+| Yamamura | Yamamura Hunter Hat; Yamamura Hunter Garb; Yamamura Hunter Gloves; Yamamura Hunter Trousers |
+
+Blood gems are not yet a public randomized item class. Vanilla blood gems
+remain available, and the starting Blood Gem Workshop Tool lets the player
+equip them.
 
 ## Local event items
 
@@ -183,7 +206,9 @@ uncanny_blade_of_mercy uncanny_hunter_axe uncanny_burial_blade
 uncanny_saw_cleaver uncanny_kirkhammer uncanny_ludwigs_holy_blade
 uncanny_beast_claw uncanny_rifle_spear uncanny_reiterpallasch
 uncanny_stake_driver uncanny_logarius_wheel uncanny_tonitrus
-uncanny_threaded_cane event_cleric_beast_defeated event_gascoigne_defeated
+uncanny_threaded_cane
+attire_charred_hunter_head attire_charred_hunter_body attire_charred_hunter_arms attire_charred_hunter_legs attire_yharnam_hunter_head attire_yharnam_hunter_body attire_yharnam_hunter_arms attire_yharnam_hunter_legs attire_knight_head attire_knight_body attire_knight_arms attire_knight_legs attire_cainhurst_head attire_cainhurst_body attire_cainhurst_arms attire_cainhurst_legs attire_black_church_head attire_black_church_body attire_black_church_arms attire_black_church_legs attire_choir_head attire_choir_body attire_choir_arms attire_choir_legs attire_gascoigne_head attire_gascoigne_body attire_gascoigne_arms attire_gascoigne_legs attire_tomb_prospector_head attire_tomb_prospector_body attire_tomb_prospector_arms attire_tomb_prospector_legs attire_executioner_head attire_executioner_body attire_executioner_arms attire_executioner_legs attire_crowfeather_head attire_crowfeather_body attire_crowfeather_arms attire_crowfeather_legs attire_madman_head attire_madman_body attire_madman_arms attire_madman_legs attire_doll_head attire_doll_body attire_doll_arms attire_doll_legs attire_foreign_head attire_foreign_body attire_foreign_arms attire_foreign_legs attire_old_hunter_head attire_old_hunter_body attire_old_hunter_arms attire_old_hunter_legs attire_maria_hunter_head attire_maria_hunter_body attire_maria_hunter_arms attire_maria_hunter_legs attire_constable_head attire_constable_body attire_constable_arms attire_constable_legs attire_yamamura_head attire_yamamura_body attire_yamamura_arms attire_yamamura_legs
+event_cleric_beast_defeated event_gascoigne_defeated
 event_blood_starved_beast_defeated event_darkbeast_paarl_defeated event_amelia_defeated
 event_witch_of_hemwick_defeated event_martyr_logarius_defeated
 event_celestial_emissary_defeated event_ebrietas_defeated

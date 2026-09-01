@@ -21,6 +21,11 @@ class AttirePiece:
     name: str
     grant_descriptor: str
 
+    @property
+    def item_key(self) -> str:
+        """Permanent design key shared by the AP pool and runtime catalog."""
+        return f"attire_{self.set_key}_{self.slot}"
+
 
 def _load_catalog() -> tuple[AttirePiece, ...]:
     resource = files(__package__).joinpath("starting_attire_catalog.tsv")
@@ -68,4 +73,3 @@ def build_starting_attire_choice(seed: str) -> dict[str, object]:
         "pieces": {piece.slot: piece.protector_id for piece in sets[key]},
         "grant_descriptors": [piece.grant_descriptor for piece in sets[key]],
     }
-

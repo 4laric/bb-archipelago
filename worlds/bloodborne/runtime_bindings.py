@@ -9,6 +9,7 @@ accessor has been validated.
 from dataclasses import dataclass
 
 from .fixed_locations import FIXED_LOCATIONS
+from .starting_attire import STARTING_ATTIRE_CATALOG
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,8 @@ class RuntimeEquipmentExclusion:
 LIVE_CATEGORY_0_EVIDENCE = "live_grant_inventory_ui"
 INFERRED_CATEGORY_0_EVIDENCE = "param_id_inferred"
 CATEGORY_0_EVIDENCE = frozenset({LIVE_CATEGORY_0_EVIDENCE, INFERRED_CATEGORY_0_EVIDENCE})
+INFERRED_CATEGORY_1_EVIDENCE = "param_id_inferred"
+CATEGORY_1_EVIDENCE = frozenset({LIVE_CATEGORY_0_EVIDENCE, INFERRED_CATEGORY_1_EVIDENCE})
 
 
 def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantity: int) -> None:
@@ -76,6 +79,22 @@ def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantit
             raise ValueError(f"{key}: category-0 weapon policy is incomplete")
         if binding.feed_effect not in {"right_hand_weapon", "left_hand_weapon"}:
             raise ValueError(f"{key}: category-0 weapon has incompatible feed policy")
+        return
+    if binding.item_category == 1:
+        compatible = (
+            binding.normalized_item_id & 0xF0000000 == 0x10000000
+            and binding.raw_descriptor & 0xF0000000 == 0x90000000
+            and binding.normalized_item_id & 0x0FFFFFFF
+            == binding.raw_descriptor & 0x0FFFFFFF
+        )
+        if not compatible or binding.descriptor_evidence not in CATEGORY_1_EVIDENCE:
+            raise ValueError(f"{key}: category-1 descriptor lacks protector-row evidence")
+        if quantity != 1 or binding.reinforcement_level is not None:
+            raise ValueError(f"{key}: category-1 attire policy is incomplete")
+        if binding.feed_effect not in {
+            "attire_head", "attire_chest", "attire_hands", "attire_legs"
+        }:
+            raise ValueError(f"{key}: category-1 attire has incompatible feed policy")
         return
     if binding.item_category == 255:
         if (binding.normalized_item_id != binding.raw_descriptor
@@ -660,6 +679,24 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "fist_of_gratia": RuntimeItemBinding(0x0206CC80, 0x8206CC80, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
     "loch_shield": RuntimeItemBinding(0x01237160, 0x81237160, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
 }
+
+_ATTIRE_FEED_EFFECT = {
+    "head": "attire_head",
+    "body": "attire_chest",
+    "arms": "attire_hands",
+    "legs": "attire_legs",
+}
+ITEM_BINDINGS.update({
+    piece.item_key: RuntimeItemBinding(
+        0x10000000 | piece.protector_id,
+        0x90000000 | piece.protector_id,
+        "reviewed starting-attire EquipParamProtector row",
+        item_category=1,
+        descriptor_evidence=INFERRED_CATEGORY_1_EVIDENCE,
+        feed_effect=_ATTIRE_FEED_EFFECT[piece.slot],
+    )
+    for piece in STARTING_ATTIRE_CATALOG
+})
 
 # Negative canaries are executable exclusions. Keeping them next to the
 # allowlist makes it impossible for generation code to quietly reintroduce the
