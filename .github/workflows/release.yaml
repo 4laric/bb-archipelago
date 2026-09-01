@@ -178,9 +178,28 @@ jobs:
             --pattern BloodborneAPLauncher-win-x64.zip `
             --pattern bloodborne.apworld
 
+          $archive = Join-Path $PWD "scan\BloodborneAPLauncher-win-x64.zip"
+          $expanded = Join-Path $PWD "scan\expanded"
+          Expand-Archive -LiteralPath $archive -DestinationPath $expanded
+          $scanTargets = @(
+            [pscustomobject]@{ Label = "BloodborneAPLauncher-win-x64.zip"; Path = $archive },
+            [pscustomobject]@{ Label = "bloodborne.apworld"; Path = (Join-Path $PWD "scan\bloodborne.apworld") },
+            [pscustomobject]@{ Label = "BloodborneAPLauncher.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\BloodborneAPLauncher.exe") },
+            [pscustomobject]@{ Label = "tools/bb-ap-client.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\bb-ap-client.exe") },
+            [pscustomobject]@{ Label = "tools/BBSuppressionWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBSuppressionWriter.exe") },
+            [pscustomobject]@{ Label = "tools/BBEnemizerWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEnemizerWriter.exe") },
+            [pscustomobject]@{ Label = "tools/MSBBMiner.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\MSBBMiner.exe") }
+          )
+          foreach ($target in $scanTargets) {
+            if (-not (Test-Path -LiteralPath $target.Path -PathType Leaf)) {
+              throw "VirusTotal scan target is missing: $($target.Label) ($($target.Path))"
+            }
+          }
+
           $headers = @{ "x-apikey" = $env:VIRUSTOTAL_API_KEY }
           $lines = @("", "## VirusTotal")
-          foreach ($path in Get-ChildItem scan -File | Sort-Object Name) {
+          foreach ($target in $scanTargets) {
+            $path = Get-Item -LiteralPath $target.Path
             if ($path.Length -gt 32MB) {
               $uploadUrl = (Invoke-RestMethod `
                 -Uri "https://www.virustotal.com/api/v3/files/upload_url" `
@@ -210,6 +229,9 @@ jobs:
             }
             $analysisId = $upload.data.id
             $analysis = $null
+            # Keep the public API cadence below four requests per minute even
+            # when an analysis completes on the first poll.
+            Start-Sleep -Seconds 16
             for ($attempt = 1; $attempt -le 12; $attempt++) {
               $analysis = Invoke-RestMethod `
                 -Uri "https://www.virustotal.com/api/v3/analyses/$analysisId" `
@@ -231,7 +253,8 @@ jobs:
             } else {
               $summary = "analysis still running at publish time"
             }
-            $lines += "- $($path.Name): $permalink ($summary)"
+            $lines += "- $($target.Label): $permalink ($summary)"
+            Start-Sleep -Seconds 16
           }
 
           $notesPath = Join-Path $PWD "release-notes.md"

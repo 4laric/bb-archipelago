@@ -212,6 +212,18 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn("upload returned no analysis id", scan)
         self.assertIn("$attempt -le 12", scan)
         self.assertIn("Start-Sleep -Seconds 15", scan)
+        self.assertGreaterEqual(scan.count("Start-Sleep -Seconds 16"), 2)
+        self.assertIn("Expand-Archive -LiteralPath $archive", scan)
+        for target in (
+            "BloodborneAPLauncher.exe",
+            "tools/bb-ap-client.exe",
+            "tools/BBSuppressionWriter.exe",
+            "tools/BBEnemizerWriter.exe",
+            "tools/MSBBMiner.exe",
+        ):
+            self.assertIn(f'Label = "{target}"', scan)
+        self.assertIn("VirusTotal scan target is missing", scan)
+        self.assertIn("$target.Label", scan)
         self.assertIn("gh release edit", scan)
         self.assertIn("https://www.virustotal.com/gui/file/$sha256", scan)
 
