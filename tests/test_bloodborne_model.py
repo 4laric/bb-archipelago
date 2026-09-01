@@ -33,6 +33,7 @@ from worlds.bloodborne import (
     SHUFFLABLE_ITEMS,
     build_item_pool_names,
     build_runtime_slot_data,
+    build_shop_gate_permutation,
     build_starting_weapon_choices,
     build_weapon_requirement_families,
 )
@@ -800,6 +801,21 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         option = BloodborneOptions.type_hints["remove_weapon_requirements"]
         self.assertEqual(1, option.default)
         self.assertEqual("Remove Weapon Requirements", option.display_name)
+
+    def test_shop_gate_permutation_is_deterministic_and_bijective(self):
+        first = build_shop_gate_permutation("AP_TEST:1")
+        self.assertEqual(first, build_shop_gate_permutation("AP_TEST:1"))
+        expected = set(range(12101000, 12101010))
+        self.assertEqual({str(value) for value in expected}, set(first))
+        self.assertEqual(expected, set(first.values()))
+
+    def test_shop_randomization_is_explicitly_opt_in(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+        option = BloodborneOptions.type_hints["randomize_shops"]
+        self.assertEqual(0, option.default)
+        self.assertEqual("Randomize Bath Messenger Shops", option.display_name)
 
     def test_death_link_is_explicitly_opt_in_and_receive_only(self):
         if not AP_AVAILABLE:

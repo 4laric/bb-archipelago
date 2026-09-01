@@ -8,6 +8,7 @@ Bloodborne:
   auto_upgrade: false
   randomize_starting_weapons: true
   remove_weapon_requirements: true
+  randomize_shops: false
   goal: moon_presence
   include_dlc: true
   auto_equip: false

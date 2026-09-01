@@ -430,7 +430,7 @@ class EnemizerToolchain:
             "--seed-weapons", str(request_path), str(input_binder), str(paramdef),
             str(output_binder), "--apply",
         ])
-        progress("Writing seed-specific weapon parameters...")
+        progress("Writing seed-specific weapon and shop parameters...")
         self.runner(command, self.repo_root, progress)
         if not output_binder.is_file():
             raise ValidationError("parameter writer produced no starting-weapon binder")
@@ -618,6 +618,19 @@ def _request_identity(
             raise ValidationError("AP request has invalid weapon requirement families")
     elif requirement_families is not None:
         raise ValidationError("AP request keeps weapon requirements but still supplies families")
+    randomize_shops = request.get("randomize_shops", False)
+    shop_gate_permutation = request.get("shop_gate_permutation")
+    if not isinstance(randomize_shops, bool):
+        raise ValidationError("AP request has invalid randomize_shops")
+    expected_shop_gates = {str(value) for value in range(12101000, 12101010)}
+    if randomize_shops:
+        if (not isinstance(shop_gate_permutation, dict)
+                or set(shop_gate_permutation) != expected_shop_gates
+                or any(not isinstance(value, int) for value in shop_gate_permutation.values())
+                or set(shop_gate_permutation.values()) != {int(value) for value in expected_shop_gates}):
+            raise ValidationError("AP request has invalid Bath shop gate permutation")
+    elif shop_gate_permutation is not None:
+        raise ValidationError("AP request disables shop randomization but still supplies a permutation")
     seed_name = request.get("seed_name")
     return {
         "request": request,
@@ -633,6 +646,7 @@ def _request_identity(
         "auto_equip": auto_equip,
         "starting_weapons": starting_weapons if randomize_starting else None,
         "weapon_requirement_families": requirement_families if remove_requirements else None,
+        "shop_gate_permutation": shop_gate_permutation if randomize_shops else None,
     }
 
 
@@ -830,6 +844,7 @@ class LauncherWorkflow:
                 "preserve_locomotion": options.preserve_locomotion,
                 "starting_weapons": request["starting_weapons"],
                 "weapon_requirement_families": request["weapon_requirement_families"],
+                "shop_gate_permutation": request["shop_gate_permutation"],
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -861,11 +876,13 @@ class LauncherWorkflow:
             completed = False
             try:
                 if (options.enabled or request["starting_weapons"] is not None
-                        or request["weapon_requirement_families"] is not None):
+                        or request["weapon_requirement_families"] is not None
+                        or request["shop_gate_permutation"] is not None):
                     settings.cache_root.mkdir(parents=True, exist_ok=True)
                     temporary = Path(tempfile.mkdtemp(prefix=".seed-build-", dir=settings.cache_root))
                 if (request["starting_weapons"] is not None
-                        or request["weapon_requirement_families"] is not None):
+                        or request["weapon_requirement_families"] is not None
+                        or request["shop_gate_permutation"] is not None):
                     assert temporary is not None
                     composed_binder = temporary / "gameparam.parambnd.dcx"
                     paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
@@ -929,7 +946,8 @@ class LauncherWorkflow:
         progress("Writing the native client runtime configuration...")
         client_manifest = settings.suppression_manifest.expanduser().resolve()
         if (request["starting_weapons"] is not None
-                or request["weapon_requirement_families"] is not None):
+                or request["weapon_requirement_families"] is not None
+                or request["shop_gate_permutation"] is not None):
             client_manifest = _write_seed_suppression_manifest(
                 client_manifest,
                 state_root=settings.state_root or default_state_root(),
@@ -938,6 +956,7 @@ class LauncherWorkflow:
                 weapon_edits={
                     "choices": request["starting_weapons"],
                     "requirement_families": request["weapon_requirement_families"],
+                    "shop_gate_permutation": request["shop_gate_permutation"],
                 },
             )
         paths = write_client_runtime_config(

@@ -228,6 +228,30 @@ class RequestIdentityFormatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "requirement families"):
             self._identity_for(payload)
 
+    def test_shop_gate_permutation_joins_seed_identity(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        gates = list(range(12101000, 12101010))
+        payload.update({
+            "randomize_shops": True,
+            "shop_gate_permutation": {
+                str(stock): unlock for stock, unlock in zip(gates, reversed(gates))
+            },
+        })
+        identity = self._identity_for(payload)
+        self.assertEqual(payload["shop_gate_permutation"],
+                         identity["shop_gate_permutation"])
+
+    def test_non_bijective_shop_gate_permutation_is_refused(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload.update({
+            "randomize_shops": True,
+            "shop_gate_permutation": {
+                str(stock): 12101000 for stock in range(12101000, 12101010)
+            },
+        })
+        with self.assertRaisesRegex(ValidationError, "shop gate permutation"):
+            self._identity_for(payload)
+
 
 if __name__ == "__main__":
     unittest.main()

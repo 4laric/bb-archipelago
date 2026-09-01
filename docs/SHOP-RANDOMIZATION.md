@@ -25,7 +25,7 @@ historical `shop_unlock_goods` label is therefore broader than its evidence.
 
 ## Safe implementation contract
 
-The first playable version should:
+The implementation:
 
 1. expose an off-by-default YAML toggle;
 2. derive one deterministic permutation from the AP seed;
@@ -59,11 +59,13 @@ Alfred, and Annalise expose their shared acquisition flags as checks. Every
 reviewed natural badge lot is in the global suppression plan. The pool-safety
 gate is therefore green.
 
-The YAML option remains intentionally absent in this slice. A seed-specific
-permutation must be composed into the launcher's suppression binder, manifest,
-cache identity, and doctor checks as one transaction. Merely emitting a mapping
-in slot data would advertise a feature that the installed binder does not
-apply, violating the refusal-safe contract above.
+Set `randomize_shops: true` in the player YAML to enable it. It defaults off.
+Generation writes a deterministic bijection to the seed request. The launcher
+includes that mapping in the cache identity, then its native parameter writer
+changes all matching ordinary Bath rows in the already-suppressed binder and
+reopens the output to prove that only `qwcId` changed. The seed-specific binder
+hash and mapping are recorded in the launch manifest, so a stale cached overlay
+cannot silently carry another seed's shops.
 
 Run the executable gate before working on the option:
 
@@ -71,10 +73,14 @@ Run the executable gate before working on the option:
 python tools/audit_shop_randomization.py
 ```
 
-It exits non-zero until all ten badges are present, rejects duplicate or missing
+It rejects duplicate or missing
 gate/goods identities, and cross-checks each goods id against the independent
-progression-item mine. `--json --allow-incomplete` produces machine-readable
-diagnostics without treating the known blocker as a command failure.
+progression-item mine. `--json` produces machine-readable diagnostics.
+
+The option shuffles *unlock ownership*, not inventory contents: for example,
+the Saw stock group may require the Cainhurst Badge in one seed. Prices, items,
+quantities, one-time purchase flags, Insight stock, and Chalice stock remain
+vanilla.
 
 ## Inspection
 
