@@ -631,6 +631,32 @@ def _request_identity(
             raise ValidationError("AP request has invalid Bath shop gate permutation")
     elif shop_gate_permutation is not None:
         raise ValidationError("AP request disables shop randomization but still supplies a permutation")
+    randomize_enemy_drops = request.get("randomize_enemy_drops", False)
+    enemy_drop_assignments = request.get("enemy_drop_assignments")
+    if not isinstance(randomize_enemy_drops, bool):
+        raise ValidationError("AP request has invalid randomize_enemy_drops")
+    if randomize_enemy_drops:
+        if not isinstance(enemy_drop_assignments, list) or not enemy_drop_assignments:
+            raise ValidationError("AP request has no enemy drop assignments")
+        seen_drop_fields: set[tuple[int, str]] = set()
+        for assignment in enemy_drop_assignments:
+            if not isinstance(assignment, dict):
+                raise ValidationError("AP request has an invalid enemy drop assignment")
+            npc_id = assignment.get("npc_param_id")
+            field = assignment.get("drop_field")
+            source_lot = assignment.get("source_lot_id")
+            target_lot = assignment.get("target_lot_id")
+            key = (npc_id, field)
+            if (not isinstance(npc_id, int) or npc_id <= 0
+                    or not isinstance(field, str) or field not in {
+                        f"itemLotId_{index}" for index in range(1, 7)}
+                    or not isinstance(source_lot, int) or source_lot <= 0
+                    or not isinstance(target_lot, int) or target_lot <= 0
+                    or source_lot == target_lot or key in seen_drop_fields):
+                raise ValidationError("AP request has an invalid enemy drop assignment")
+            seen_drop_fields.add(key)
+    elif enemy_drop_assignments is not None:
+        raise ValidationError("AP request disables enemy drops but still supplies assignments")
     seed_name = request.get("seed_name")
     return {
         "request": request,
@@ -647,6 +673,8 @@ def _request_identity(
         "starting_weapons": starting_weapons if randomize_starting else None,
         "weapon_requirement_families": requirement_families if remove_requirements else None,
         "shop_gate_permutation": shop_gate_permutation if randomize_shops else None,
+        "enemy_drop_assignments": (
+            enemy_drop_assignments if randomize_enemy_drops else None),
     }
 
 
@@ -845,6 +873,7 @@ class LauncherWorkflow:
                 "starting_weapons": request["starting_weapons"],
                 "weapon_requirement_families": request["weapon_requirement_families"],
                 "shop_gate_permutation": request["shop_gate_permutation"],
+                "enemy_drop_assignments": request["enemy_drop_assignments"],
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -877,12 +906,14 @@ class LauncherWorkflow:
             try:
                 if (options.enabled or request["starting_weapons"] is not None
                         or request["weapon_requirement_families"] is not None
-                        or request["shop_gate_permutation"] is not None):
+                        or request["shop_gate_permutation"] is not None
+                        or request["enemy_drop_assignments"] is not None):
                     settings.cache_root.mkdir(parents=True, exist_ok=True)
                     temporary = Path(tempfile.mkdtemp(prefix=".seed-build-", dir=settings.cache_root))
                 if (request["starting_weapons"] is not None
                         or request["weapon_requirement_families"] is not None
-                        or request["shop_gate_permutation"] is not None):
+                        or request["shop_gate_permutation"] is not None
+                        or request["enemy_drop_assignments"] is not None):
                     assert temporary is not None
                     composed_binder = temporary / "gameparam.parambnd.dcx"
                     paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
@@ -947,7 +978,8 @@ class LauncherWorkflow:
         client_manifest = settings.suppression_manifest.expanduser().resolve()
         if (request["starting_weapons"] is not None
                 or request["weapon_requirement_families"] is not None
-                or request["shop_gate_permutation"] is not None):
+                or request["shop_gate_permutation"] is not None
+                or request["enemy_drop_assignments"] is not None):
             client_manifest = _write_seed_suppression_manifest(
                 client_manifest,
                 state_root=settings.state_root or default_state_root(),
@@ -957,6 +989,7 @@ class LauncherWorkflow:
                     "choices": request["starting_weapons"],
                     "requirement_families": request["weapon_requirement_families"],
                     "shop_gate_permutation": request["shop_gate_permutation"],
+                    "enemy_drop_assignments": request["enemy_drop_assignments"],
                 },
             )
         paths = write_client_runtime_config(

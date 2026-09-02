@@ -252,6 +252,36 @@ class RequestIdentityFormatTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "shop gate permutation"):
             self._identity_for(payload)
 
+    def test_enemy_drop_assignments_join_seed_identity(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload.update({
+            "randomize_enemy_drops": True,
+            "enemy_drop_assignments": [{
+                "npc_param_id": 140000,
+                "drop_field": "itemLotId_1",
+                "source_lot_id": 14003200,
+                "target_lot_id": 14003210,
+            }],
+        })
+        identity = self._identity_for(payload)
+        self.assertEqual(payload["enemy_drop_assignments"],
+                         identity["enemy_drop_assignments"])
+
+    def test_enemy_drop_assignment_cannot_repeat_an_npc_field(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        assignment = {
+            "npc_param_id": 140000,
+            "drop_field": "itemLotId_1",
+            "source_lot_id": 14003200,
+            "target_lot_id": 14003210,
+        }
+        payload.update({
+            "randomize_enemy_drops": True,
+            "enemy_drop_assignments": [assignment, dict(assignment)],
+        })
+        with self.assertRaisesRegex(ValidationError, "enemy drop assignment"):
+            self._identity_for(payload)
+
 
 if __name__ == "__main__":
     unittest.main()

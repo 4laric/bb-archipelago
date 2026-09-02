@@ -1,0 +1,17 @@
+{
+  "randomize_enemy_drops": true,
+  "enemy_drop_assignments": [
+    {
+      "npc_param_id": 140000,
+      "drop_field": "itemLotId_1",
+      "source_lot_id": 14003200,
+      "target_lot_id": 14003210
+    },
+    {
+      "npc_param_id": 140010,
+      "drop_field": "itemLotId_1",
+      "source_lot_id": 14003210,
+      "target_lot_id": 14003200
+    }
+  ]
+}

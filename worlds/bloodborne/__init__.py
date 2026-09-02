@@ -27,6 +27,7 @@ from .model import ItemKind, Rule
 from .resource_data import read_resource_text
 from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime_item_binding
 from .toast_placeholders import ToastPlacement, build_toast_placeholder_plan
+from .enemy_drops import build_enemy_drop_assignments
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
@@ -449,6 +450,16 @@ else:
         display_name = "Randomize Bath Messenger Shops"
         default = 0
 
+    class RandomizeEnemyDrops(Toggle):
+        """Shuffle safe repeatable enemy loot tables between comparable enemies.
+
+        This changes local consumable and material drops only. Enemy kills do
+        not become Archipelago checks, and equipment, runes, blood gems,
+        progression goods, and acquisition-flagged rewards are excluded.
+        """
+        display_name = "Randomize Enemy Consumable Drops"
+        default = 0
+
     class Goal(Choice):
         """Choose which of Bloodborne's three endings completes the seed.
 
@@ -501,6 +512,7 @@ else:
         randomize_starting_weapons: RandomizeStartingWeapons
         remove_weapon_requirements: RemoveWeaponRequirements
         randomize_shops: RandomizeShops
+        randomize_enemy_drops: RandomizeEnemyDrops
         goal: Goal
         include_dlc: IncludeDLC
         alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
@@ -656,6 +668,10 @@ else:
                 build_shop_gate_permutation(seed)
                 if self.options.randomize_shops else None
             )
+            enemy_drop_assignments = (
+                build_enemy_drop_assignments(seed)
+                if bool(getattr(self.options, "randomize_enemy_drops", False)) else None
+            )
             return {
                 "version": 4,
                 "world_version": WORLD_VERSION,
@@ -671,6 +687,9 @@ else:
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
                 "randomize_shops": bool(self.options.randomize_shops),
                 "shop_gate_permutation": shop_gate_permutation,
+                "randomize_enemy_drops": bool(
+                    getattr(self.options, "randomize_enemy_drops", False)),
+                "enemy_drop_assignments": enemy_drop_assignments,
                 "goal": self.options.goal.current_key,
                 "include_dlc": bool(self.options.include_dlc),
                 "alternate_hypogean_gaol_routes": bool(

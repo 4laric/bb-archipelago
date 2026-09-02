@@ -1,0 +1,1299 @@
+{
+  "format": "bb-enemy-drop-catalog-v1",
+  "policy": {
+    "fixed_map_archetypes_only": true,
+    "categories": [
+      4
+    ],
+    "persistent_flags": false,
+    "repeatable_goods_only": true,
+    "group_key": [
+      "drop_field",
+      "lotItem_Rarity",
+      "chance_quantity_luck_cadence"
+    ]
+  },
+  "groups": [
+    {
+      "group": "g001",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 10,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 140000,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 14003200
+        },
+        {
+          "npc_param_id": 140010,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 14003210
+        }
+      ]
+    },
+    {
+      "group": "g004",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 1000,
+          "quantity": 3,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 263280,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202404
+        },
+        {
+          "npc_param_id": 263281,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202404
+        },
+        {
+          "npc_param_id": 263282,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202404
+        },
+        {
+          "npc_param_id": 263433,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202404
+        },
+        {
+          "npc_param_id": 263581,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202424
+        },
+        {
+          "npc_param_id": 263681,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202404
+        },
+        {
+          "npc_param_id": 263720,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202404
+        }
+      ]
+    },
+    {
+      "group": "g005",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 1000,
+          "quantity": 4,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 262000,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26202400
+        },
+        {
+          "npc_param_id": 262030,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26202422
+        },
+        {
+          "npc_param_id": 262121,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26202424
+        },
+        {
+          "npc_param_id": 262310,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26202410
+        },
+        {
+          "npc_param_id": 262410,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26202410
+        }
+      ]
+    },
+    {
+      "group": "g006",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 1000,
+          "quantity": 5,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 404001,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40403605
+        },
+        {
+          "npc_param_id": 409010,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40903400
+        }
+      ]
+    },
+    {
+      "group": "g008",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 105,
+          "quantity": 1,
+          "luck": false
+        },
+        {
+          "points": 50,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 25,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 263800,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202800
+        },
+        {
+          "npc_param_id": 263801,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202800
+        },
+        {
+          "npc_param_id": 263810,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202810
+        }
+      ]
+    },
+    {
+      "group": "g011",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 180,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 20,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 274000,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27403200
+        },
+        {
+          "npc_param_id": 274010,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27403202
+        },
+        {
+          "npc_param_id": 274100,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27403200
+        },
+        {
+          "npc_param_id": 274111,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27403202
+        }
+      ]
+    },
+    {
+      "group": "g016",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 200,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 200,
+          "quantity": 3,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 212610,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 21202602
+        },
+        {
+          "npc_param_id": 212620,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 21202604
+        },
+        {
+          "npc_param_id": 400008,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40003440
+        }
+      ]
+    },
+    {
+      "group": "g017",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 200,
+          "quantity": 4,
+          "luck": false
+        },
+        {
+          "points": 800,
+          "quantity": 2,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 127400,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 12702700
+        },
+        {
+          "npc_param_id": 127500,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 12702410
+        },
+        {
+          "npc_param_id": 127600,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 12702600
+        },
+        {
+          "npc_param_id": 127800,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 12702810
+        }
+      ]
+    },
+    {
+      "group": "g019",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 210,
+          "quantity": 1,
+          "luck": false
+        },
+        {
+          "points": 100,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 50,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 263200,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        },
+        {
+          "npc_param_id": 263202,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        },
+        {
+          "npc_param_id": 263203,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        },
+        {
+          "npc_param_id": 263210,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        },
+        {
+          "npc_param_id": 263400,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        },
+        {
+          "npc_param_id": 263410,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        },
+        {
+          "npc_param_id": 263500,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202420
+        },
+        {
+          "npc_param_id": 263610,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        },
+        {
+          "npc_param_id": 411000,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202400
+        }
+      ]
+    },
+    {
+      "group": "g022",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 210,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 10,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 270100,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002400
+        },
+        {
+          "npc_param_id": 270102,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002400
+        },
+        {
+          "npc_param_id": 270200,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002400
+        },
+        {
+          "npc_param_id": 270350,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27003500
+        }
+      ]
+    },
+    {
+      "group": "g023",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 210,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 210,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 10,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 270120,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002404
+        },
+        {
+          "npc_param_id": 270121,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002404
+        },
+        {
+          "npc_param_id": 270122,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002404
+        },
+        {
+          "npc_param_id": 270142,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002406
+        },
+        {
+          "npc_param_id": 270220,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002404
+        }
+      ]
+    },
+    {
+      "group": "g029",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 25,
+          "quantity": 4,
+          "luck": false
+        },
+        {
+          "points": 175,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 25,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 25,
+          "quantity": 2,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 264800,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302800
+        },
+        {
+          "npc_param_id": 264801,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302800
+        },
+        {
+          "npc_param_id": 264810,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302810
+        },
+        {
+          "npc_param_id": 264811,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302810
+        }
+      ]
+    },
+    {
+      "group": "g032",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 250,
+          "quantity": 4,
+          "luck": false
+        },
+        {
+          "points": 700,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 50,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 106030,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10602410
+        },
+        {
+          "npc_param_id": 106101,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10602400
+        },
+        {
+          "npc_param_id": 106200,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10603200
+        }
+      ]
+    },
+    {
+      "group": "g034",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 280,
+          "quantity": 2,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 404005,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40403610
+        },
+        {
+          "npc_param_id": 404006,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40403610
+        },
+        {
+          "npc_param_id": 404025,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40403660
+        }
+      ]
+    },
+    {
+      "group": "g036",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 300,
+          "quantity": 1,
+          "luck": true
+        },
+        {
+          "points": 650,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 50,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 202000,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 20202810
+        },
+        {
+          "npc_param_id": 202006,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 20202400
+        }
+      ]
+    },
+    {
+      "group": "g041",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 320,
+          "quantity": 2,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 263230,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202402
+        },
+        {
+          "npc_param_id": 263233,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202402
+        },
+        {
+          "npc_param_id": 263430,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202402
+        },
+        {
+          "npc_param_id": 263432,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202402
+        },
+        {
+          "npc_param_id": 263530,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202422
+        },
+        {
+          "npc_param_id": 263630,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202402
+        },
+        {
+          "npc_param_id": 263700,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202402
+        },
+        {
+          "npc_param_id": 404000,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40403600
+        },
+        {
+          "npc_param_id": 404010,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40403620
+        },
+        {
+          "npc_param_id": 404020,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40403640
+        },
+        {
+          "npc_param_id": 411030,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202402
+        }
+      ]
+    },
+    {
+      "group": "g042",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 350,
+          "quantity": 6,
+          "luck": false
+        },
+        {
+          "points": 610,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 40,
+          "quantity": 1,
+          "luck": true
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 210005,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 21002810
+        },
+        {
+          "npc_param_id": 210030,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 21003400
+        }
+      ]
+    },
+    {
+      "group": "g044",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 40,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 263841,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202840
+        },
+        {
+          "npc_param_id": 263850,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202850
+        },
+        {
+          "npc_param_id": 263851,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202850
+        },
+        {
+          "npc_param_id": 263870,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202870
+        },
+        {
+          "npc_param_id": 263895,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202895
+        }
+      ]
+    },
+    {
+      "group": "g051",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 50,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 150,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 110010,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11002410
+        },
+        {
+          "npc_param_id": 110350,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11003500
+        },
+        {
+          "npc_param_id": 110351,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11003500
+        },
+        {
+          "npc_param_id": 110352,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11003500
+        }
+      ]
+    },
+    {
+      "group": "g052",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 50,
+          "quantity": 4,
+          "luck": false
+        },
+        {
+          "points": 850,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 50,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 50,
+          "quantity": 2,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 264100,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302200
+        },
+        {
+          "npc_param_id": 264200,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302400
+        },
+        {
+          "npc_param_id": 264210,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302400
+        },
+        {
+          "npc_param_id": 264400,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302410
+        },
+        {
+          "npc_param_id": 264401,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302410
+        },
+        {
+          "npc_param_id": 264410,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302410
+        },
+        {
+          "npc_param_id": 264601,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302410
+        },
+        {
+          "npc_param_id": 264900,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10302410
+        }
+      ]
+    },
+    {
+      "group": "g053",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 540,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 430,
+          "quantity": 1,
+          "luck": true
+        },
+        {
+          "points": 30,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 273100,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27302400
+        },
+        {
+          "npc_param_id": 273101,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27302400
+        },
+        {
+          "npc_param_id": 273102,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27302400
+        },
+        {
+          "npc_param_id": 273120,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27302410
+        }
+      ]
+    },
+    {
+      "group": "g055",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 60,
+          "quantity": 1,
+          "luck": false
+        },
+        {
+          "points": 30,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 10,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 117000,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11702200
+        },
+        {
+          "npc_param_id": 117300,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11702400
+        },
+        {
+          "npc_param_id": 117301,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11702400
+        },
+        {
+          "npc_param_id": 117350,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11703500
+        },
+        {
+          "npc_param_id": 117400,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11702410
+        },
+        {
+          "npc_param_id": 117450,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11702420
+        },
+        {
+          "npc_param_id": 117460,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11702420
+        },
+        {
+          "npc_param_id": 117600,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11702600
+        },
+        {
+          "npc_param_id": 117900,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 11703400
+        }
+      ]
+    },
+    {
+      "group": "g060",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 790,
+          "quantity": 2,
+          "luck": false
+        },
+        {
+          "points": 160,
+          "quantity": 1,
+          "luck": true
+        },
+        {
+          "points": 50,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 260020,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26002700
+        },
+        {
+          "npc_param_id": 260060,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26002700
+        },
+        {
+          "npc_param_id": 260240,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26002410
+        },
+        {
+          "npc_param_id": 260241,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26002410
+        },
+        {
+          "npc_param_id": 260242,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26002410
+        },
+        {
+          "npc_param_id": 260300,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26002400
+        },
+        {
+          "npc_param_id": 260320,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 26002400
+        }
+      ]
+    },
+    {
+      "group": "g061",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 80,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 263040,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202706
+        },
+        {
+          "npc_param_id": 263050,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202706
+        },
+        {
+          "npc_param_id": 263070,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202706
+        },
+        {
+          "npc_param_id": 263095,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202706
+        },
+        {
+          "npc_param_id": 263130,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202706
+        },
+        {
+          "npc_param_id": 263240,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263250,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263252,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263254,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263270,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263273,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263440,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263450,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263470,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263490,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263540,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202426
+        },
+        {
+          "npc_param_id": 263550,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202426
+        },
+        {
+          "npc_param_id": 263710,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263730,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 263740,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 402020,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402024,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402025,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402026,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402028,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203530
+        },
+        {
+          "npc_param_id": 402040,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402044,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402045,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402046,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402048,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203530
+        },
+        {
+          "npc_param_id": 402050,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 402060,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 40203520
+        },
+        {
+          "npc_param_id": 411041,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        },
+        {
+          "npc_param_id": 411051,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 10202406
+        }
+      ]
+    },
+    {
+      "group": "g063",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 80,
+          "quantity": 3,
+          "luck": true
+        },
+        {
+          "points": 280,
+          "quantity": 1,
+          "luck": false
+        },
+        {
+          "points": 20,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 240010,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 24003300
+        },
+        {
+          "npc_param_id": 240600,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 24002600
+        },
+        {
+          "npc_param_id": 240610,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 24002600
+        }
+      ]
+    },
+    {
+      "group": "g067",
+      "drop_field": "itemLotId_1",
+      "rarity": 1,
+      "cadence": [
+        {
+          "points": 990,
+          "quantity": 3,
+          "luck": false
+        },
+        {
+          "points": 10,
+          "quantity": 1,
+          "luck": false
+        }
+      ],
+      "entries": [
+        {
+          "npc_param_id": 270112,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002402
+        },
+        {
+          "npc_param_id": 270161,
+          "drop_field": "itemLotId_1",
+          "source_lot_id": 27002410
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "referenced_npc_fields": 473,
+    "groups": 26,
+    "assignments": 149,
+    "distinct_lots": 73,
+    "exclusions": {
+      "empty_lot": 65,
+      "missing_lot": 3,
+      "non_goods_or_unknown": 75,
+      "persistent_acquisition_flag": 115
+    }
+  }
+}

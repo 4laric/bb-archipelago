@@ -14,6 +14,9 @@ Bloodborne:
   randomize_starting_weapons: true
   # Remove Strength, Skill, Bloodtinge, and Arcane equip gates; scaling remains.
   remove_weapon_requirements: true
+  # Shuffle repeatable consumable/material drops between comparable enemies.
+  # This is local loot randomization, not additional AP checks.
+  randomize_enemy_drops: false
   # Ending goal: submit_to_gehrman, refuse_gehrman, or moon_presence.
   goal: moon_presence
   # Add The Old Hunters regions, bosses, and checks (off by default).

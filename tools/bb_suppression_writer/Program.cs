@@ -396,7 +396,9 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         && remove.ValueKind == JsonValueKind.True;
     bool randomizeShops = root.TryGetProperty("randomize_shops", out JsonElement randomizeShopElement)
         && randomizeShopElement.ValueKind == JsonValueKind.True;
-    if (!randomizeStarting && !removeRequirements && !randomizeShops)
+    bool randomizeDrops = root.TryGetProperty("randomize_enemy_drops", out JsonElement randomizeDropsElement)
+        && randomizeDropsElement.ValueKind == JsonValueKind.True;
+    if (!randomizeStarting && !removeRequirements && !randomizeShops && !randomizeDrops)
         throw new InvalidDataException("request contains no seed parameter edits");
     int[] right = [];
     int[] left = [];
@@ -434,6 +436,20 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             || !shopPermutation.Values.ToHashSet().SetEquals(shopGates))
             throw new InvalidDataException("shop gate permutation must be a bijection over the ten ordinary Bath gates");
     }
+    List<EnemyDropAssignment> dropAssignments = randomizeDrops
+        ? JsonSerializer.Deserialize<List<EnemyDropAssignment>>(
+            root.GetProperty("enemy_drop_assignments").GetRawText())
+            ?? throw new InvalidDataException("enemy drop assignments are empty")
+        : [];
+    string[] dropFields = Enumerable.Range(1, 6).Select(index => $"itemLotId_{index}").ToArray();
+    if (randomizeDrops && (dropAssignments.Count == 0
+        || dropAssignments.Any(edit => edit.NpcParamId <= 0
+            || !dropFields.Contains(edit.DropField)
+            || edit.SourceLotId <= 0 || edit.TargetLotId <= 0
+            || edit.SourceLotId == edit.TargetLotId)
+        || dropAssignments.Select(edit => (edit.NpcParamId, edit.DropField)).Distinct().Count()
+            != dropAssignments.Count))
+        throw new InvalidDataException("enemy drop assignments contain an invalid or repeated NPC field");
 
     BND4 game = BND4.Read(inputPath);
     BND4 defs = BND4.Read(paramdefPath);
@@ -445,6 +461,12 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     PARAM weapons = PARAM.Read(weaponFile.Bytes);
     PARAMDEF weaponDefinition = ReadMatchingDefinition(defs, weapons);
     weapons.ApplyParamdef(weaponDefinition);
+    BinderFile npcFile = RequireSingleFile(game, "NpcParam.param");
+    PARAM npcs = PARAM.Read(npcFile.Bytes);
+    PARAMDEF npcDefinition = ReadMatchingDefinition(defs, npcs);
+    npcs.ApplyParamdef(npcDefinition);
+    PARAM itemLots = PARAM.Read(RequireSingleFile(game, "ItemLotParam.param").Bytes);
+    var itemLotIds = itemLots.Rows.Select(row => row.ID).ToHashSet();
     var weaponIds = weapons.Rows.Select(row => row.ID).ToHashSet();
     if (right.Concat(left).Any(id => !weaponIds.Contains(id)))
         throw new InvalidDataException("starting weapon choices contain an unknown EquipParamWeapon id");
@@ -452,9 +474,10 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         new FileState(file.ID, file.Name, (byte[])file.Bytes.Clone())).ToList();
     var originalShopRows = shops.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
     var originalWeaponRows = weapons.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
-    var assignments = new[] { 2000, 2001, 2002 }.Zip(right)
+    var originalNpcRows = npcs.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
+    var startingAssignments = new[] { 2000, 2001, 2002 }.Zip(right)
         .Concat(new[] { 2010, 2011 }.Zip(left)).ToList();
-    foreach ((int rowId, int equipId) in assignments)
+    foreach ((int rowId, int equipId) in startingAssignments)
     {
         PARAM.Row row = shops.Rows.Single(candidate => candidate.ID == rowId);
         RequireCell(row, "equipId").Value = equipId;
@@ -489,26 +512,48 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
                 RequireCell(row, field).Value = (byte)0;
         }
     }
+    var dropRows = new Dictionary<int, HashSet<string>>();
+    foreach (EnemyDropAssignment edit in dropAssignments)
+    {
+        List<PARAM.Row> matches = npcs.Rows.Where(row => row.ID == edit.NpcParamId).ToList();
+        if (matches.Count != 1)
+            throw new InvalidDataException(
+                $"enemy drop assignment expected one NpcParam row {edit.NpcParamId}, found {matches.Count}");
+        PARAM.Row row = matches[0];
+        int actual = Convert.ToInt32(RequireCell(row, edit.DropField).Value);
+        if (actual != edit.SourceLotId)
+            throw new InvalidDataException(
+                $"NpcParam {edit.NpcParamId} {edit.DropField} is {actual}, request says {edit.SourceLotId}");
+        if (!itemLotIds.Contains(edit.TargetLotId))
+            throw new InvalidDataException($"enemy drop target lot {edit.TargetLotId} does not exist");
+        if (!dropRows.TryGetValue(row.ID, out HashSet<string>? fields))
+            dropRows[row.ID] = fields = [];
+        fields.Add(edit.DropField);
+        RequireCell(row, edit.DropField).Value = edit.TargetLotId;
+    }
     shopFile.Bytes = shops.Write();
     weaponFile.Bytes = weapons.Write();
+    npcFile.Bytes = npcs.Write();
     Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
     game.Write(outputPath);
 
     BND4 check = BND4.Read(outputPath);
     BinderFile checkedShopFile = RequireSingleFile(check, "ShopLineupParam.param");
     BinderFile checkedWeaponFile = RequireSingleFile(check, "EquipParamWeapon.param");
+    BinderFile checkedNpcFile = RequireSingleFile(check, "NpcParam.param");
     for (int index = 0; index < check.Files.Count; index++)
     {
         BinderFile file = check.Files[index];
         FileState before = originalFiles[index];
         if (file.ID != before.Id || file.Name != before.Name)
             throw new InvalidDataException($"round-trip changed binder identity at index {index}");
-        if (file != checkedShopFile && file != checkedWeaponFile && !file.Bytes.SequenceEqual(before.Bytes))
+        if (file != checkedShopFile && file != checkedWeaponFile && file != checkedNpcFile
+            && !file.Bytes.SequenceEqual(before.Bytes))
             throw new InvalidDataException($"round-trip changed unrelated binder file {file.Name}");
     }
     PARAM checkedShops = PARAM.Read(checkedShopFile.Bytes);
     checkedShops.ApplyParamdef(shopDefinition);
-    var startingRows = assignments.Select(pair => pair.First).ToHashSet();
+    var startingRows = startingAssignments.Select(pair => pair.First).ToHashSet();
     foreach (PARAM.Row row in checkedShops.Rows)
     {
         var allowed = new HashSet<string>();
@@ -520,7 +565,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             RowState.Capture(row), allowed,
             $"ShopLineupParam row {row.ID}");
     }
-    foreach ((int rowId, int equipId) in assignments)
+    foreach ((int rowId, int equipId) in startingAssignments)
     {
         PARAM.Row row = checkedShops.Rows.Single(candidate => candidate.ID == rowId);
         if (Convert.ToInt32(RequireCell(row, "equipId").Value) != equipId)
@@ -548,7 +593,22 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             && requirementFields.Any(field => Convert.ToInt32(RequireCell(row, field).Value) != 0))
             throw new InvalidDataException($"weapon row {row.ID} retained a stat requirement");
     }
-    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} output={outputPath}");
+    PARAM checkedNpcs = PARAM.Read(checkedNpcFile.Bytes);
+    checkedNpcs.ApplyParamdef(npcDefinition);
+    foreach (PARAM.Row row in checkedNpcs.Rows)
+    {
+        HashSet<string> allowed = dropRows.GetValueOrDefault(row.ID) ?? [];
+        originalNpcRows[row.ID].RequireEqualExcept(
+            RowState.Capture(row), allowed, $"NpcParam row {row.ID}");
+    }
+    foreach (EnemyDropAssignment edit in dropAssignments)
+    {
+        PARAM.Row row = checkedNpcs.Rows.Single(candidate => candidate.ID == edit.NpcParamId);
+        if (Convert.ToInt32(RequireCell(row, edit.DropField).Value) != edit.TargetLotId)
+            throw new InvalidDataException(
+                $"NpcParam {edit.NpcParamId} did not retain {edit.DropField}={edit.TargetLotId}");
+    }
+    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count} output={outputPath}");
 }
 
 static BinderFile RequireSingleFile(BND4 binder, string suffix)
@@ -653,6 +713,11 @@ sealed record Edit(
     [property: JsonPropertyName("acquisition_flag")] string AcquisitionFlag);
 sealed record Applied(
     string ItemKey, int LotId, int Slot, int ItemCategory, int GoodsId, int AcquisitionFlag);
+sealed record EnemyDropAssignment(
+    [property: JsonPropertyName("npc_param_id")] int NpcParamId,
+    [property: JsonPropertyName("drop_field")] string DropField,
+    [property: JsonPropertyName("source_lot_id")] int SourceLotId,
+    [property: JsonPropertyName("target_lot_id")] int TargetLotId);
 sealed record FileState(int Id, string Name, byte[] Bytes);
 
 sealed record RowState(int Id, string? Name, Dictionary<string, object> Cells)
