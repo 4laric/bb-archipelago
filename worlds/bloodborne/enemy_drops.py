@@ -15,16 +15,31 @@ def enemy_drop_catalog() -> dict[str, Any]:
     return value
 
 
-def build_enemy_drop_assignments(seed: str) -> list[dict[str, int | str]]:
-    """Permute whole safe loot tables within exact cadence/tier groups."""
+def build_enemy_drop_assignments(
+    seed: str, mode: str = "balanced"
+) -> list[dict[str, int | str]]:
+    """Permute whole safe loot tables, with optional global dropsanity."""
+
+    if mode not in {"balanced", "dropsanity"}:
+        raise ValueError(f"unsupported enemy-drop mode: {mode}")
 
     assignments: list[dict[str, int | str]] = []
-    for group in enemy_drop_catalog()["groups"]:
+    catalog_groups = enemy_drop_catalog()["groups"]
+    groups = (
+        [{
+            "group": "global-dropsanity",
+            "entries": [
+                entry for group in catalog_groups for entry in group["entries"]
+            ],
+        }]
+        if mode == "dropsanity" else catalog_groups
+    )
+    for group in groups:
         entries = sorted(
             group["entries"], key=lambda row: (row["npc_param_id"], row["drop_field"])
         )
         sources = [int(row["source_lot_id"]) for row in entries]
-        random = Random(f"bloodborne-enemy-drops:{seed}:{group['group']}")
+        random = Random(f"bloodborne-enemy-drops:{mode}:{seed}:{group['group']}")
         # Keep the best deterministic permutation from a bounded search. Equal
         # source lots can make a complete derangement impossible, but this
         # minimizes unchanged archetypes without changing the lot multiset.

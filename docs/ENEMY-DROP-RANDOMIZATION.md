@@ -2,7 +2,7 @@
 
 ## Scope
 
-`randomize_enemy_drops` is an opt-in YAML option that shuffles local,
+`randomize_enemy_drops` is an opt-in YAML choice that shuffles local,
 repeatable enemy consumable/material loot. It does **not** add Archipelago
 locations: killing or farming an ordinary enemy never sends a network check.
 The shuffled table follows the `NpcParam` archetype, including when the enemy
@@ -30,8 +30,20 @@ source-data change cannot silently widen the policy.
 
 ## Compatibility groups and determinism
 
+The option has three values:
+
+- `off` leaves enemy drops vanilla;
+- `balanced` permutes lots within the compatibility groups below;
+- `dropsanity` places every eligible field into one global permutation. It
+  intentionally does not preserve rarity, chance, quantity, luck cadence, or
+  which `itemLotId_*` field carried the lot. The fail-closed consumable policy
+  still applies, and the global multiset of safe lots is preserved.
+
+For backward compatibility, YAML `true` selects `balanced` and `false` selects
+`off`.
+
 Whole lot IDs are permuted rather than rewriting their contents. A lot may
-move only within an exact group sharing:
+move only within an exact group in `balanced` mode, sharing:
 
 1. the same `NpcParam` drop field (`itemLotId_1` through `_6`);
 2. the same `ItemLotParam.lotItem_Rarity`;

@@ -16,7 +16,8 @@ Bloodborne:
   remove_weapon_requirements: true
   # Shuffle repeatable consumable/material drops between comparable enemies.
   # This is local loot randomization, not additional AP checks.
-  randomize_enemy_drops: false
+  # off, balanced, or dropsanity (global safe-consumable shuffle)
+  randomize_enemy_drops: off
   # Ending goal: submit_to_gehrman, refuse_gehrman, or moon_presence.
   goal: moon_presence
   # Add The Old Hunters regions, bosses, and checks (off by default).

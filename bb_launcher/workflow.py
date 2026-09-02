@@ -632,10 +632,16 @@ def _request_identity(
     elif shop_gate_permutation is not None:
         raise ValidationError("AP request disables shop randomization but still supplies a permutation")
     randomize_enemy_drops = request.get("randomize_enemy_drops", False)
+    # Requests emitted by the first implementation predate the named mode;
+    # enabled legacy requests mean the original balanced behavior.
+    enemy_drop_mode = request.get(
+        "enemy_drop_mode", "balanced" if randomize_enemy_drops else None)
     enemy_drop_assignments = request.get("enemy_drop_assignments")
     if not isinstance(randomize_enemy_drops, bool):
         raise ValidationError("AP request has invalid randomize_enemy_drops")
     if randomize_enemy_drops:
+        if enemy_drop_mode not in {"balanced", "dropsanity"}:
+            raise ValidationError("AP request has invalid enemy drop mode")
         if not isinstance(enemy_drop_assignments, list) or not enemy_drop_assignments:
             raise ValidationError("AP request has no enemy drop assignments")
         seen_drop_fields: set[tuple[int, str]] = set()
@@ -655,8 +661,8 @@ def _request_identity(
                     or source_lot == target_lot or key in seen_drop_fields):
                 raise ValidationError("AP request has an invalid enemy drop assignment")
             seen_drop_fields.add(key)
-    elif enemy_drop_assignments is not None:
-        raise ValidationError("AP request disables enemy drops but still supplies assignments")
+    elif enemy_drop_assignments is not None or enemy_drop_mode is not None:
+        raise ValidationError("AP request disables enemy drops but still supplies a plan")
     seed_name = request.get("seed_name")
     return {
         "request": request,
@@ -675,6 +681,7 @@ def _request_identity(
         "shop_gate_permutation": shop_gate_permutation if randomize_shops else None,
         "enemy_drop_assignments": (
             enemy_drop_assignments if randomize_enemy_drops else None),
+        "enemy_drop_mode": enemy_drop_mode if randomize_enemy_drops else None,
     }
 
 

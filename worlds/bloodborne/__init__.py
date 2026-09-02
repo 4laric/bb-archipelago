@@ -450,14 +450,19 @@ else:
         display_name = "Randomize Bath Messenger Shops"
         default = 0
 
-    class RandomizeEnemyDrops(Toggle):
-        """Shuffle safe repeatable enemy loot tables between comparable enemies.
+    class RandomizeEnemyDrops(Choice):
+        """Shuffle safe repeatable enemy consumable and material loot tables.
 
         This changes local consumable and material drops only. Enemy kills do
         not become Archipelago checks, and equipment, runes, blood gems,
-        progression goods, and acquisition-flagged rewards are excluded.
+        progression goods, and acquisition-flagged rewards are excluded. The
+        balanced mode preserves loot-table cadence and rarity; dropsanity
+        shuffles every eligible table together without compatibility grouping.
         """
         display_name = "Randomize Enemy Consumable Drops"
+        option_off = 0
+        option_balanced = 1
+        option_dropsanity = 2
         default = 0
 
     class Goal(Choice):
@@ -668,9 +673,14 @@ else:
                 build_shop_gate_permutation(seed)
                 if self.options.randomize_shops else None
             )
+            enemy_drop_option = getattr(self.options, "randomize_enemy_drops", 0)
+            enemy_drop_enabled = bool(enemy_drop_option)
+            enemy_drop_mode = (
+                "dropsanity" if int(enemy_drop_option) == 2 else "balanced"
+            ) if enemy_drop_enabled else None
             enemy_drop_assignments = (
-                build_enemy_drop_assignments(seed)
-                if bool(getattr(self.options, "randomize_enemy_drops", False)) else None
+                build_enemy_drop_assignments(seed, enemy_drop_mode)
+                if enemy_drop_enabled else None
             )
             return {
                 "version": 4,
@@ -687,8 +697,8 @@ else:
                 "remove_weapon_requirements": bool(self.options.remove_weapon_requirements),
                 "randomize_shops": bool(self.options.randomize_shops),
                 "shop_gate_permutation": shop_gate_permutation,
-                "randomize_enemy_drops": bool(
-                    getattr(self.options, "randomize_enemy_drops", False)),
+                "randomize_enemy_drops": enemy_drop_enabled,
+                "enemy_drop_mode": enemy_drop_mode,
                 "enemy_drop_assignments": enemy_drop_assignments,
                 "goal": self.options.goal.current_key,
                 "include_dlc": bool(self.options.include_dlc),

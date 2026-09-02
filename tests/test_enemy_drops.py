@@ -43,6 +43,34 @@ def test_assignments_are_deterministic_unique_and_change_the_lot():
     assert all(row["source_lot_id"] != row["target_lot_id"] for row in first)
 
 
+def test_dropsanity_is_global_deterministic_and_preserves_safe_lot_multiset():
+    catalog = enemy_drop_catalog()
+    entries = [entry for group in catalog["groups"] for entry in group["entries"]]
+    assignments = build_enemy_drop_assignments("AP_TEST:1", "dropsanity")
+    assert assignments == build_enemy_drop_assignments("AP_TEST:1", "dropsanity")
+    assert assignments != build_enemy_drop_assignments("AP_TEST:1", "balanced")
+    by_key = {(row["npc_param_id"], row["drop_field"]): row for row in assignments}
+    assert Counter(int(row["source_lot_id"]) for row in entries) == Counter(
+        int(by_key.get((row["npc_param_id"], row["drop_field"]), row)[
+            "target_lot_id" if (row["npc_param_id"], row["drop_field"]) in by_key
+            else "source_lot_id"
+        ])
+        for row in entries
+    )
+    group_by_key = {
+        (row["npc_param_id"], row["drop_field"]): group["group"]
+        for group in catalog["groups"] for row in group["entries"]
+    }
+    assert any(
+        group_by_key[(row["npc_param_id"], row["drop_field"])]
+        != next(
+            group["group"] for group in catalog["groups"]
+            if any(entry["source_lot_id"] == row["target_lot_id"] for entry in group["entries"])
+        )
+        for row in assignments
+    )
+
+
 def test_each_group_preserves_its_lot_multiset_including_unavoidable_fixed_rows():
     catalog = enemy_drop_catalog()
     assignments = {
@@ -81,6 +109,8 @@ def test_yaml_option_is_opt_in():
     option = BloodborneOptions.type_hints["randomize_enemy_drops"]
     assert option.default == 0
     assert option.display_name == "Randomize Enemy Consumable Drops"
+    assert option.options["balanced"] == 1
+    assert option.options["dropsanity"] == 2
 
 
 def test_native_writer_guards_only_declared_npc_drop_fields():
