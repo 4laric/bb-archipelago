@@ -223,12 +223,17 @@ def _safe_relative_path(raw: str) -> PurePosixPath:
     return path
 
 
-def _tree_files(root: Path, *, ignore: Iterable[str] = ()) -> dict[str, Path]:
+def _tree_files(
+    root: Path,
+    *,
+    ignore: Iterable[str] = (),
+    allow_file_links: bool = False,
+) -> dict[str, Path]:
     ignored = set(ignore)
     found: dict[str, Path] = {}
     for path in root.rglob("*"):
         relative = path.relative_to(root).as_posix()
-        if path.is_symlink():
+        if path.is_symlink() and not (allow_file_links and path.is_file()):
             raise ValidationError(f"symbolic links are not allowed in managed trees: {path}")
         if path.is_file() and relative not in ignored:
             found[relative] = path
@@ -916,7 +921,7 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
     if not root.is_dir() or root.is_symlink():
         raise ConflictError(f"mods path is not a regular directory: {root}")
     owner_path = root / OWNER_NAME
-    if not owner_path.is_file():
+    if not owner_path.is_file() or owner_path.is_symlink():
         raise ConflictError(
             f"{root} already exists without a Bloodborne AP ownership manifest; it was not changed"
         )
@@ -954,7 +959,12 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
     # Recording is canonical now, but manifests written before that are already
     # in the wild, and one of them must still verify against its own disk tree
     # rather than reporting the same file as both missing and unowned.
-    actual = _tree_files(root, ignore=(OWNER_NAME,))
+    # Some shadPS4 game managers deduplicate ordinary files in an activated
+    # mods tree by replacing them with file symlinks.  Reading through such a
+    # link is safe here because the ownership checks below still require its
+    # resolved bytes and size to match the recorded manifest.  Directory,
+    # broken, and user-source links remain forbidden.
+    actual = _tree_files(root, ignore=(OWNER_NAME,), allow_file_links=True)
     actual_by_key: dict[str, str] = {}
     for relative in actual:
         key = relative.casefold()
