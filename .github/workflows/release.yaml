@@ -141,6 +141,20 @@ jobs:
           -ReleaseVersion $env:RELEASE_TAG
           -NoArchive
 
+      - name: Packaging smoke - the frozen launcher loads every apworld table and finds its tools
+        shell: pwsh
+        run: |
+          & "$PWD\build\BloodborneAPLauncher\BloodborneAPLauncher.exe" --self-check "$PWD\work\self-check.json"
+          if ($LASTEXITCODE -ne 0) { Get-Content work\self-check.json; throw "launcher self-check failed" }
+          $report = Get-Content work\self-check.json -Raw | ConvertFrom-Json
+          if (-not $report.ok) { Get-Content work\self-check.json; throw "launcher self-check reported problems" }
+          Get-Content work\self-check.json
+      - name: Packaging smoke - the built client accepts the widest contract this apworld emits
+        shell: pwsh
+        run: |
+          python tools/export_runtime_contract.py --output work\contract.json
+          & "$PWD\build\BloodborneAPLauncher\tools\bb-ap-client.exe" --check-contract "$PWD\work\contract.json"
+          if ($LASTEXITCODE -ne 0) { throw "the built client refuses or would park items from the built apworld's contract" }
       - name: Verify Windows version metadata
         shell: pwsh
         run: >-

@@ -10,6 +10,12 @@
   the packaging smoke runs against first.
 - **The launcher's Troubleshooting tab scrolls** instead of clipping its
   lower rows on a short display.
+- **Packaging smoke checks in CI.** After every release and main-branch
+  package build, the frozen launcher runs `--self-check` (imports every
+  apworld table, builds the widest seed contract, and confirms each native
+  tool is beside it) and the built client runs `--check-contract` against
+  the contract the built apworld emits. Beta 2 shipped with both of those
+  broken; neither can now reach a tag.
 
 - **Fixed: the launcher refused every seed with a missing `attire_additions.tsv`.**
   The packaged launcher bundled a hand-maintained list of apworld tables and
