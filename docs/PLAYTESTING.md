@@ -269,8 +269,8 @@ The full, current list is [KNOWN-LIMITATIONS.md](KNOWN-LIMITATIONS.md). The
 short version for the beta:
 
 - **Never verified live:** the Old Hunters DLC, the three endings' goal
-  detection, the Laurence's Skull check and Forbidden Woods password
-  suppression, and the new rune and gem delivery lane.
+  detection, and the Laurence's Skull check and Forbidden Woods password
+  suppression. No playtest has gone past Rom.
 - Every suppressed pickup also gives one placeholder Blood Vial.
 - A delivered item can land in the storage box; look there first.
 - Enemy randomization is on by default. If you want vanilla enemies for a

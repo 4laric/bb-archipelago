@@ -45,6 +45,9 @@ complete list is in `docs/KNOWN-LIMITATIONS.md`. The three that matter most:
    to you, your seed is still completable and `rescue laurence-skull CONFIRM`
    sends the stranded check.
 
+More broadly: no playtest has gone past Rom yet. Everything up to Rom has
+been played with the client running; everything after it has not.
+
 Also expect: a placeholder Blood Vial on every suppressed pickup, an
 occasional delivery landing in the storage box, and location names that still
 say "Blood Gem #4" instead of where it is.

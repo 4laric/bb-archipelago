@@ -15,6 +15,12 @@ These parts of the randomizer are generated, in logic, and packaged, but no
 one has played through them yet. They may work. They may not. Treat them as
 untested and report what happens either way.
 
+For scale: the furthest a live randomized playtest has reached is Rom, the
+Vacuous Spider. Everything up to and including Rom has been played with the
+client running and checks sending. Everything after Rom (Yahar'gul, the
+Lecture Building, Nightmare of Mensis, Mergo's Wet Nurse, the endings) has
+not.
+
 ### The Old Hunters DLC
 
 `include_dlc: true` adds all seven DLC regions, their bosses, progression
@@ -54,13 +60,6 @@ Check the launcher's install report for the Cathedral event overlay before
 you start. The client refuses to arm if the overlay hash does not match the
 seed, so an unexpected "not armed" at launch is this.
 
-### Caryll runes and blood gems
-
-Runes and gems are delivered through a new event-award lane that ships for the
-first time in this beta. It has had at most one live session. Rune equip,
-gem imprint, and save-reload persistence of delivered runes and gems are on
-the acceptance list, not the verified list.
-
 ## Rough edges you will notice
 
 - **Every suppressed pickup gives one placeholder Blood Vial** on top of the
@@ -84,6 +83,13 @@ the acceptance list, not the verified list.
 - **Chalice Dungeons are out of scope** entirely.
 - **The apworld's Python text client is a manual fallback only.** Automatic
   checks and delivery need the native client the launcher starts.
+
+## Verified in this beta
+
+Worth saying, since the list above is long: Caryll rune and blood gem
+delivery through the new event-award lane was confirmed in a live playtest
+before release. Delivered runes equip and gems imprint. Report anything
+different.
 
 ## If you get stuck: the rescue console
 
