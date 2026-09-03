@@ -11,7 +11,11 @@ the datamined armor item-ID table, and the player-facing armor/storage lists.
 Names that share visible text but use distinct protector rows remain distinct:
 
 - `Hunter Garb (Cape)` (`71000`) and `Hunter Garb` (`281000`);
-- the black and white `Surgical Long Gloves` (`112000`, `292000`);
+- the black and white `Surgical Long Gloves` (`112000`, `292000`). **Correction
+  (2026-09-03):** `292000` has no `EquipParamProtector` row in CUSA03173 01.09;
+  the White Church set wears the black gloves. The row stays in the catalog so
+  network ids do not shift, but it is a phantom: never placed, never delivered
+  (`attire.PHANTOM_PROTECTOR_IDS`);
 - both `Student Uniform` rows (`191000`, `301000`);
 - `Master's Iron Helm` (`260000`) and `One-eyed Iron Helm` (`380000`).
 

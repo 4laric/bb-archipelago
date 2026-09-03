@@ -11,7 +11,7 @@ have been runtime validated.
 from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
 from .fixed_locations import FIXED_LOCATIONS
 from .location_names import location_name
-from .attire import ATTIRE_CATALOG
+from .attire import ATTIRE_CATALOG, PHANTOM_ATTIRE_ITEM_KEYS
 from .category8_awards import CATEGORY8_AWARDS
 
 P = ItemKind.PROGRESSION
@@ -448,9 +448,15 @@ LOCATIONS = (
 
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 
-ATTIRE_ITEM_KEYS = frozenset(piece.item_key for piece in ATTIRE_CATALOG)
+# Placeable attire: the reviewed catalog minus rows the game has no
+# protector for (see attire.PHANTOM_PROTECTOR_IDS).
+ATTIRE_ITEM_KEYS = frozenset(
+    piece.item_key for piece in ATTIRE_CATALOG
+    if piece.item_key not in PHANTOM_ATTIRE_ITEM_KEYS
+)
 DLC_ATTIRE_ITEM_KEYS = frozenset(
-    piece.item_key for piece in ATTIRE_CATALOG if piece.dlc
+    piece.item_key for piece in ATTIRE_CATALOG
+    if piece.dlc and piece.item_key not in PHANTOM_ATTIRE_ITEM_KEYS
 )
 
 # The generated player exposes one honest, bounded slice. The broader model

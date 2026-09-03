@@ -59,3 +59,15 @@ def _load_catalog() -> tuple[AttirePiece, ...]:
 
 
 ATTIRE_CATALOG = _load_catalog()
+
+# Catalog rows with no EquipParamProtector row in CUSA03173 01.09 (checked
+# against the owner's dump, patch and base layers, 2026-09-03). Delivering one
+# would create an invisible inventory record. They keep their catalog row and
+# network id so every other attire id stays stable, but they never enter a
+# pool and the client refuses them by protector id.
+PHANTOM_PROTECTOR_IDS = frozenset({
+    292_000,  # "Surgical Long Gloves (White)": the White Church set uses the black gloves, 112000.
+})
+PHANTOM_ATTIRE_ITEM_KEYS = frozenset(
+    piece.item_key for piece in ATTIRE_CATALOG if piece.protector_id in PHANTOM_PROTECTOR_IDS
+)

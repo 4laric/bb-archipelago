@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Fixed: a phantom attire item.** The expanded catalog listed "Surgical Long
+  Gloves (White)" (protector 292000), which does not exist in the game; the
+  White Church set wears the black gloves. It no longer enters any pool.
+  Its network id is kept so other attire ids stay stable.
+
 - **Packaging smoke checks in CI.** After every release and main-branch
   package build, the frozen launcher runs `--self-check` (imports every
   apworld table, builds the widest seed contract, and confirms each native
