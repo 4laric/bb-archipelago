@@ -25,13 +25,21 @@ def patch(source: bytes) -> bytes:
     text = text.replace(event_zero, f"{event_zero}\n    {MARKER}\n{initializers}", 1)
     body = f'''\n\n{MARKER}\n$Event({EVENT_ID}, Restart, function(itemId, itemLotId, eventFlagId) {{
     SetNetworkSyncState(Disabled);
-    WaitFor(PlayerHasItem(ItemType.Goods, itemId));
+    // The token may have been routed to the storage box (#342), so look
+    // there too; a boxed token must still fire this event.
+    WaitFor(PlayerHasItemIncludingBBox(ItemType.Goods, itemId));
     // Ack flags persist in the save. Clear a previous seed's acknowledgement
     // only after this delivery's token is visible, then publish the new ack
     // after the token has been consumed and the lot awarded.
     SetEventFlag(eventFlagId, OFF);
     WaitFixedTimeSeconds(1);
+L0:
+    // Consume every copy of the token before awarding once: a re-granted
+    // duplicate must not become a duplicate rune. If removal cannot reach
+    // the box this spins without awarding until the player withdraws it.
     RemoveItemFromPlayer(ItemType.Goods, itemId, 1);
+    WaitFixedTimeSeconds(1);
+    GotoIf(L0, PlayerHasItemIncludingBBox(ItemType.Goods, itemId));
     AwardItemLot(itemLotId);
     SetEventFlag(eventFlagId, ON);
     RestartEvent();
