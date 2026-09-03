@@ -30,6 +30,11 @@ grasp in Cathedral Ward) has only been exercised up to the Eye check itself.
 The option defaults off. If you turn it on, you are the first, and your
 client log is the evidence.
 
+Old Hunters equipment is a separate pool concern. `include_dlc_gear` defaults
+on, so DLC weapons—and DLC attire when armor randomization is enabled—may be
+received in a base-game-only route. Set `include_dlc_gear: false` to exclude
+that equipment without changing DLC world access.
+
 ### Endings and goal completion
 
 The three goals are detected from the boss completion flags of Mergo's Wet

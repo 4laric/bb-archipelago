@@ -11,6 +11,7 @@ from worlds.bloodborne.data import (
     DLC_ITEM_KEYS,
     DLC_LOCATION_KEYS,
     DLC_REGIONS,
+    DLC_WEAPON_KEYS,
     GOODS_VARIETY_KEYS,
     SLICE_ITEM_KEYS,
     UNCANNY_ITEM_KEYS,
@@ -767,14 +768,15 @@ class DlcOptionWiringTests(unittest.TestCase):
         uncanny_weapons = 0
         randomize_armor = 0
 
-        def __init__(self, include_dlc):
+        def __init__(self, include_dlc, include_dlc_gear=1):
             self.include_dlc = include_dlc
+            self.include_dlc_gear = include_dlc_gear
 
-    def _world(self, include_dlc):
+    def _world(self, include_dlc, include_dlc_gear=1):
         from worlds.bloodborne import BloodborneWorld
 
         world = BloodborneWorld.__new__(BloodborneWorld)
-        world.options = self._Options(include_dlc)
+        world.options = self._Options(include_dlc, include_dlc_gear)
         return world
 
     def test_the_dlc_option_defaults_off(self):
@@ -784,16 +786,28 @@ class DlcOptionWiringTests(unittest.TestCase):
         self.assertEqual(0, option.default)
         self.assertEqual("Include The Old Hunters DLC", option.display_name)
 
-    def test_disabling_dlc_removes_its_items_and_locations_together(self):
+    def test_disabling_dlc_removes_world_items_and_locations_but_keeps_gear(self):
         off = self._world(0)
         on = self._world(1)
-        active_dlc_items = DLC_ITEM_KEYS & on._pool_item_keys()
+        active_dlc_items = (DLC_ITEM_KEYS - DLC_WEAPON_KEYS) & on._pool_item_keys()
         self.assertEqual(active_dlc_items, on._pool_item_keys() - off._pool_item_keys())
+        self.assertTrue(DLC_WEAPON_KEYS & off._pool_item_keys())
         self.assertEqual(
             DLC_LOCATION_KEYS,
             {location.key for location in on._active_locations()}
             - {location.key for location in off._active_locations()},
         )
+
+    def test_dlc_gear_is_default_on_and_can_be_disabled_independently(self):
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["include_dlc_gear"]
+        self.assertEqual(1, option.default)
+        self.assertEqual("Include The Old Hunters Gear", option.display_name)
+        with_gear = self._world(0, 1)._pool_item_keys()
+        without_gear = self._world(0, 0)._pool_item_keys()
+        self.assertEqual(DLC_WEAPON_KEYS & with_gear, with_gear - without_gear)
+        self.assertTrue(DLC_WEAPON_KEYS.isdisjoint(without_gear))
 
     def test_the_declared_dlc_boundary_is_complete(self):
         from worlds.bloodborne.data import SLICE_ENTRANCES

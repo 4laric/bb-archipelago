@@ -34,5 +34,5 @@ Yharnam Hunter set.
 
 Every admitted row has one literal category-1 descriptor
 `1:<EquipParamProtector ID>:1`, a slot-specific receive effect, and a permanent
-network ID. DLC rows are explicitly tagged so `include_dlc: false` removes all
-32 Old Hunters pieces.
+network ID. DLC rows are explicitly tagged so `include_dlc_gear: false` removes
+all 32 Old Hunters pieces independently of DLC world access.

@@ -503,7 +503,7 @@ def sustain_item_binding() -> dict[str, Any]:
 
 try:
     from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region
-    from Options import Choice, PerGameCommonOptions, Range, Toggle
+    from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
     from worlds.AutoWorld import World
 except ImportError:
     __all__ = ["MODEL"]
@@ -635,6 +635,15 @@ else:
         display_name = "Include The Old Hunters DLC"
         default = 0
 
+    class IncludeDLCGear(DefaultOnToggle):
+        """Allow Old Hunters weapons and attire in the pool.
+
+        This is independent of DLC world access: DLC gear can be received and
+        used in a base-game route. Disable it to restrict equipment to the base
+        game even when The Old Hunters locations are enabled.
+        """
+        display_name = "Include The Old Hunters Gear"
+
     class AlternateHypogeanGaolRoutes(Toggle):
         """Enable Snatcher abduction, Darkbeast Paarl, and the rear Old Yharnam gate.
 
@@ -671,6 +680,7 @@ else:
         randomize_enemy_drops: RandomizeEnemyDrops
         goal: Goal
         include_dlc: IncludeDLC
+        include_dlc_gear: IncludeDLCGear
         alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
         one_time_enemy_checks: OneTimeEnemyChecks
 
@@ -787,10 +797,15 @@ else:
         def _pool_item_keys(self) -> frozenset[str]:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
             if not self.options.include_dlc:
-                base -= DLC_ITEM_KEYS
+                # World access owns DLC progression and DLC-only consumables;
+                # equipment has its own default-on pool policy below.
+                base -= DLC_ITEM_KEYS - DLC_WEAPON_KEYS
+            include_dlc_gear = bool(getattr(self.options, "include_dlc_gear", True))
+            if not include_dlc_gear:
+                base -= DLC_WEAPON_KEYS
             if bool(getattr(self.options, "randomize_armor", False)):
                 armor = ATTIRE_ITEM_KEYS
-                if not self.options.include_dlc:
+                if not include_dlc_gear:
                     armor -= DLC_ATTIRE_ITEM_KEYS
                 base |= armor
             if not self.options.uncanny_weapons:
@@ -860,6 +875,7 @@ else:
                 "enemy_drop_assignments": enemy_drop_assignments,
                 "goal": self.options.goal.current_key,
                 "include_dlc": bool(self.options.include_dlc),
+                "include_dlc_gear": bool(getattr(self.options, "include_dlc_gear", True)),
                 "alternate_hypogean_gaol_routes": bool(
                     self._alternate_gaol_enabled()),
                 "one_time_enemy_checks": self._one_time_enemy_checks_enabled(),
