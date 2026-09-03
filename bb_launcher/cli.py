@@ -127,7 +127,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--ap-request",
         help=(
             "AP seed file to derive the slot and runtime build from: the "
-            "AP_<seed>.zip, or an extracted *.bbseed.json"
+            "a downloaded *.apbb, AP_<seed>.zip, or extracted *.bbseed.json"
         ),
     )
     plan.add_argument("--force", action="store_true", help="overwrite an existing plan")

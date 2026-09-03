@@ -15,6 +15,7 @@ field; filenames are never parsed for it.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import zipfile
 from dataclasses import dataclass
@@ -25,6 +26,7 @@ from .core import ValidationError
 
 
 REQUEST_SUFFIXES = (".bbseed.json", ".bbenemizer.json")
+ARCHIVE_SUFFIXES = (".zip", ".apbb")
 # Where an extracted member lands: launcher-owned, content-keyed, and stable
 # across restarts.  A temp directory would vanish under the seed cache and the
 # Doctor, both of which key off the request file's identity.
@@ -57,7 +59,7 @@ def is_request_name(name: str) -> bool:
 
 
 def looks_like_archive(path: Path | str) -> bool:
-    return Path(path).name.lower().endswith(".zip")
+    return Path(path).name.lower().endswith(ARCHIVE_SUFFIXES)
 
 
 def _request_formats() -> tuple[str, ...]:
@@ -92,11 +94,24 @@ def archive_slots(archive: Path) -> tuple[tuple[str, str], ...]:
         with zipfile.ZipFile(archive) as bundle:
             found: list[tuple[str, str]] = []
             for info in bundle.infolist():
-                if info.is_dir() or not is_request_name(info.filename):
+                if info.is_dir():
                     continue
-                name = _payload_player_name(bundle.read(info))
-                if name is not None:
-                    found.append((info.filename, name))
+                raw = bundle.read(info)
+                if is_request_name(info.filename):
+                    name = _payload_player_name(raw)
+                    if name is not None:
+                        found.append((info.filename, name))
+                elif info.filename.lower().endswith(".apbb"):
+                    try:
+                        with zipfile.ZipFile(io.BytesIO(raw)) as player_file:
+                            for nested in player_file.infolist():
+                                if nested.is_dir() or not is_request_name(nested.filename):
+                                    continue
+                                name = _payload_player_name(player_file.read(nested))
+                                if name is not None:
+                                    found.append((f"{info.filename}!{nested.filename}", name))
+                    except zipfile.BadZipFile:
+                        continue
     except (OSError, zipfile.BadZipFile) as exc:
         raise ValidationError(f"could not read the AP seed zip {archive}: {exc}") from exc
     return tuple(sorted(found))
@@ -139,7 +154,7 @@ def _extraction_target(archive: Path, member: str, state_root: Path) -> Path:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     digest.update(member.encode("utf-8"))
-    return state_root / EXTRACTION_DIRECTORY / digest.hexdigest()[:16] / Path(member).name
+    return state_root / EXTRACTION_DIRECTORY / digest.hexdigest()[:16] / Path(member.rsplit("!", 1)[-1]).name
 
 
 def resolve_request_source(
@@ -172,7 +187,12 @@ def resolve_request_source(
         try:
             target.parent.mkdir(parents=True, exist_ok=True)
             with zipfile.ZipFile(source) as bundle:
-                payload = bundle.read(member)
+                if "!" in member:
+                    outer, inner = member.split("!", 1)
+                    with zipfile.ZipFile(io.BytesIO(bundle.read(outer))) as player_file:
+                        payload = player_file.read(inner)
+                else:
+                    payload = bundle.read(member)
             # Write beside, then replace: a half-written request must never be
             # mistaken for a cached one on the next run.
             staging = target.with_name(target.name + ".partial")

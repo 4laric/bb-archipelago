@@ -54,7 +54,49 @@ def write_seed_zip(path: Path, members: dict[str, object]) -> Path:
     return path
 
 
+def player_container(payload: dict) -> bytes:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as bundle:
+        bundle.writestr("archipelago.json", json.dumps({
+            "compatible_version": 5,
+            "version": 7,
+            "server": "",
+            "player": payload["player"],
+            "player_name": payload["player_name"],
+            "game": "Bloodborne",
+            "patch_file_ending": ".apbb",
+        }))
+        bundle.writestr("seed.bbseed.json", json.dumps(payload))
+    return buffer.getvalue()
+
+
 class SingleSlotZipTests(unittest.TestCase):
+    def test_downloaded_apbb_player_file_resolves(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            payload = request_payload(1, "Tester")
+            archive = root / "P1_Tester.apbb"
+            archive.write_bytes(player_container(payload))
+
+            resolved = resolve_request_source(archive, state_root=root / "state")
+
+            self.assertEqual(resolved.member, "seed.bbseed.json")
+            self.assertEqual(json.loads(resolved.path.read_text())["player_name"], "Tester")
+
+    def test_multiworld_zip_resolves_nested_apbb_player_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            payload = request_payload(1, "Tester")
+            archive = write_seed_zip(
+                root / "AP_1.zip",
+                {"AP_1_P1_Tester.apbb": player_container(payload)},
+            )
+
+            resolved = resolve_request_source(archive, state_root=root / "state")
+
+            self.assertEqual(resolved.member, "AP_1_P1_Tester.apbb!seed.bbseed.json")
+            self.assertEqual(json.loads(resolved.path.read_text())["player_name"], "Tester")
+
     def test_lone_bloodborne_slot_is_chosen_without_a_player_name(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -1,6 +1,7 @@
 """Archipelago adapter for the conservative Bloodborne vertical slice."""
 from __future__ import annotations
 import json
+import zipfile
 from pathlib import Path
 from random import Random
 from typing import Any, Iterable
@@ -506,10 +507,28 @@ try:
     from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region
     from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
     from worlds.AutoWorld import World
+    from worlds.Files import APPlayerContainer
 except ImportError:
     __all__ = ["MODEL"]
 else:
     from dataclasses import dataclass
+
+    class BloodborneSeedContainer(APPlayerContainer):
+        """Downloadable AP player file containing the launcher's seed request."""
+
+        game = GAME
+        patch_file_ending = ".apbb"
+
+        def __init__(self, *args: Any, request: dict[str, Any] | None = None, **kwargs: Any) -> None:
+            self.request = request or {}
+            super().__init__(*args, **kwargs)
+
+        def write_contents(self, opened_zipfile: zipfile.ZipFile) -> None:
+            super().write_contents(opened_zipfile)
+            opened_zipfile.writestr(
+                "seed.bbseed.json",
+                json.dumps(self.request, indent=2) + "\n",
+            )
 
     class AutoUpgrade(Toggle):
         """Raise received weapons to the player's validated reinforcement target."""
@@ -932,8 +951,16 @@ else:
             # to exist.
             request = {"format": "bb-seed-request-v1", **self.fill_slot_data(), "player": self.player,
                        "player_name": self.player_name}
-            path = Path(output_directory) / f"{self.multiworld.get_out_file_name_base(self.player)}.bbseed.json"
-            path.write_text(json.dumps(request, indent=2) + "\n", encoding="utf-8")
+            path = Path(output_directory) / (
+                f"{self.multiworld.get_out_file_name_base(self.player)}"
+                f"{BloodborneSeedContainer.patch_file_ending}"
+            )
+            BloodborneSeedContainer(
+                path=str(path),
+                player=self.player,
+                player_name=self.player_name,
+                request=request,
+            ).write()
 
     __all__ = ["MODEL", "BloodborneWorld"]
 

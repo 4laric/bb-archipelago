@@ -173,7 +173,7 @@ def _check_request(
             FAIL,
             "AP seed file",
             str(exc),
-            "select the AP_<seed>.zip your host sent you, or the "
+            "select the *.apbb or AP_<seed>.zip your host sent you, or the "
             "*.bbseed.json (older seeds: *.bbenemizer.json) the generator "
             "dropped beside it; if the seed predates world-version tagging, "
             "regenerate it",

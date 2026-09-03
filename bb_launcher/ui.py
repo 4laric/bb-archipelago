@@ -52,7 +52,7 @@ GRANT_WATCHDOG_MS = 240_000
 
 
 FIELD_DEFINITIONS = (
-    ("ap_request", "AP seed file (.zip or .bbseed.json)", "file"),
+    ("ap_request", "AP seed file (.apbb, .zip, or .bbseed.json)", "file"),
     ("game_root", "shadPS4 game folder", "directory"),
     ("suppression_binder", "Suppressed gameparam", "file"),
     ("suppression_manifest", "Suppression manifest", "file"),
@@ -182,6 +182,7 @@ def derive_ap_request(roots: Iterable[Path], player_name: str = "") -> Path | No
             if directory.is_dir():
                 candidates.extend(directory.rglob("*.bbseed.json"))
                 candidates.extend(directory.rglob("*.bbenemizer.json"))
+                candidates.extend(directory.rglob("*.apbb"))
                 candidates.extend(directory.rglob("AP_*.zip"))
     wanted = player_name.strip()
     if wanted:
