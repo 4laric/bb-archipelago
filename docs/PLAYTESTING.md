@@ -32,30 +32,15 @@ private vulnerability reporting, see [SECURITY.md](../SECURITY.md).
      shadPS4 that has never had a game directory added in its own UI works
      fine. This field is what decides which install is launched.
 3. **shadPS4 0.18.0** — the emulator the mod runs under.
-4. **DarkScript3 version 3.6.3 exactly** — the launcher compiles two small
-   event-script overlays from your own game files every time it prepares a
-   seed (the Laurence's Skull check and the rune/gem delivery lane depend on
-   them), and it refuses any other DarkScript3 version by hash. Download the
-   3.6.3 release from <https://github.com/AinTunez/DarkScript3/releases>,
-   unzip it anywhere, and point the launcher's **DarkScript3.exe** field at
-   the executable. Without it the seed build stops with a message about
-   Laurence's Skull. It is not bundled with the launcher.
-   DarkScript3 is a .NET application and does not carry its own runtime, so
-   you also need the **.NET 6.0 Desktop Runtime (x64)** from
-   <https://dotnet.microsoft.com/download/dotnet/6.0>. Microsoft marks .NET 6
-   as out of support; install it anyway, this is the version DarkScript3
-   3.6.3 was built for. If DarkScript3.exe opens a dialog about a missing
-   framework, or the seed build fails the moment it tries to compile, this is
-   what is missing.
-5. **Cheat Engine** — *not needed.* Item delivery is native, and the launcher
+4. **Cheat Engine** — *not needed.* Item delivery is native, and the launcher
    no longer opens Cheat Engine at all. It is only used if your host
    explicitly tells you to restart the client with `--delivery=ce-bridge`, and
    in that case your host walks you through opening it and the grant table by
    hand. Otherwise do not install it, and do not go looking for a `.CT` file.
-6. **The launcher package** — `BloodborneAPLauncher-win-x64.zip`, from the
+5. **The launcher package** — `BloodborneAPLauncher-win-x64.zip`, from the
    release page, a `Bloodborne-playtest-<commit>` Actions artifact, or sent to
    you directly. Unzip it anywhere.
-7. **Two things from your session host** (the person running the seed):
+6. **Two things from your session host** (the person running the seed):
    - the **AP seed file**. The whole `AP_<seed>.zip` Archipelago generated is
      fine — the launcher finds your Bloodborne slot inside it. An already
      extracted `....bbseed.json` (older seeds: `....bbenemizer.json`) works
@@ -68,7 +53,6 @@ private vulnerability reporting, see [SECURITY.md](../SECURITY.md).
 2. Fill in the fields the launcher cannot guess:
    - **shadPS4.exe** — pick the emulator executable. The game folder fills in
      automatically if your game is installed in the usual place.
-   - **DarkScript3.exe** — the 3.6.3 executable from step 4 above. Required.
    - **AP seed file (.zip or .bbseed.json)** — what your host sent you: the
      `AP_<seed>.zip`, or a `.bbseed.json` extracted from it. Given the zip, the
      launcher picks the Bloodborne slot inside; if there is exactly one it also

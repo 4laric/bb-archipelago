@@ -293,8 +293,6 @@ class ClientConfigTests(unittest.TestCase):
         )
         client_exe = self.root / "bb-ap-client.exe"
         client_exe.write_bytes(b"client")
-        darkscript = self.root / "DarkScript3.exe"
-        darkscript.write_bytes(b"compiler")
         plan_file = self.root / "process-plan.json"
         plan_file.write_text(
             json.dumps(
@@ -328,7 +326,6 @@ class ClientConfigTests(unittest.TestCase):
             process_plan=plan_file,
             state_root=self.root / "state",
             shad_log=self.root / "shad_log.txt",
-            darkscript=darkscript,
         )
         launched: list[tuple] = []
 
@@ -337,13 +334,15 @@ class ClientConfigTests(unittest.TestCase):
             return [types.SimpleNamespace(pid=4321) for _ in specs]
 
         workflow = LauncherWorkflow(self.root, process_launcher=fake_launcher)
-        def fake_event_build(_compiler, _source, output, manifest):
-            output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_bytes(b"verified-event-overlay")
-            manifest.write_text("{}", encoding="utf-8")
+        def fake_event_build(**values):
+            values["output"].parent.mkdir(parents=True, exist_ok=True)
+            values["output"].write_bytes(b"verified-event-overlay")
+            values["manifest"].write_text("{}", encoding="utf-8")
 
-        with (patch("tools.build_cathedral_emevd.build", side_effect=fake_event_build),
-              patch("tools.build_common_emevd.build", side_effect=fake_event_build)):
+        with (patch("bb_launcher.workflow.EnemizerToolchain.write_cathedral_event",
+                    side_effect=fake_event_build),
+              patch("bb_launcher.workflow.EnemizerToolchain.write_common_event",
+                    side_effect=fake_event_build)):
             result = workflow.randomize_and_launch(
                 settings,
                 EnemizerOptions(enabled=False),

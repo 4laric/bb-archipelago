@@ -141,6 +141,7 @@ jobs:
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEnemizerWriter.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBSuppressionWriter.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBToastWriter.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEventWriter.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\MSBBMiner.exe
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
@@ -167,6 +168,7 @@ jobs:
             "tools\BBEnemizerWriter.exe",
             "tools\BBSuppressionWriter.exe",
             "tools\BBToastWriter.exe",
+            "tools\BBEventWriter.exe",
             "tools\MSBBMiner.exe"
           )
           $expected = $env:EXPECTED_SIGNER_SUBJECT
@@ -297,6 +299,7 @@ jobs:
             [pscustomobject]@{ Label = "tools/BBSuppressionWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBSuppressionWriter.exe") },
             [pscustomobject]@{ Label = "tools/BBEnemizerWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEnemizerWriter.exe") },
             [pscustomobject]@{ Label = "tools/BBToastWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBToastWriter.exe") },
+            [pscustomobject]@{ Label = "tools/BBEventWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEventWriter.exe") },
             [pscustomobject]@{ Label = "tools/MSBBMiner.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\MSBBMiner.exe") }
           )
           foreach ($target in $scanTargets) {

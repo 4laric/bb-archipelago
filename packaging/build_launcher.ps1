@@ -113,6 +113,7 @@ $projects = @(
     @{ Project = "tools\bb_enemizer_writer\BBEnemizerWriter.csproj"; Name = "BBEnemizerWriter.exe"; Description = "Bloodborne Enemy Map Writer" },
     @{ Project = "tools\bb_suppression_writer\BBSuppressionWriter.csproj"; Name = "BBSuppressionWriter.exe"; Description = "Bloodborne Vanilla Award Suppression Writer" },
     @{ Project = "tools\bb_toast_writer\BBToastWriter.csproj"; Name = "BBToastWriter.exe"; Description = "Bloodborne Pickup Toast Writer" },
+    @{ Project = "tools\bb_event_writer\BBEventWriter.csproj"; Name = "BBEventWriter.exe"; Description = "Bloodborne Event Overlay Writer" },
     @{ Project = "tools\msbb_miner\MSBBMiner.csproj"; Name = "MSBBMiner.exe"; Description = "Bloodborne Map Inventory Miner" }
 )
 foreach ($item in $projects) {

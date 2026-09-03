@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **DarkScript3 is no longer required.** The launcher now writes the two
+  event overlays (the Laurence's Skull / Hunter Chief Emblem edits in
+  `m24_00_00_00.emevd.dcx` and the rune and gem award bridge in
+  `common.emevd.dcx`) with a bundled native tool, `BBEventWriter`, that edits
+  the licensed files instruction by instruction. Players no longer download a
+  compiler or the .NET 6 runtime. Every untouched event is now byte-identical
+  to the player's original file; the compiler path re-encoded dozens of
+  unrelated vanilla events on every build. The DarkScript3 field is gone from
+  the launcher and the `darkscript` setting is ignored.
+
 - **Named rescue recipes in the client console.** `rescue` lists them;
   `rescue laurence-skull CONFIRM` sends a stranded Grand Cathedral altar
   check, `rescue forbidden-woods-password CONFIRM` rewrites the shuffled
@@ -13,9 +23,7 @@
 - **A player-facing known-limitations page**, `docs/KNOWN-LIMITATIONS.md`,
   states plainly what has never been verified live: the Old Hunters DLC, all
   three endings' goal detection, and the Laurence's Skull check and password
-  suppression. It also records the playtest frontier (Mergo's Wet Nurse) and
-  that DarkScript3 3.6.3, and therefore the .NET 6.0 Desktop Runtime, is now
-  a player-side requirement for every seed.
+  suppression. It also records the playtest frontier (Mergo's Wet Nurse).
 
 - Seed generation now emits an inert, collision-checked plan for truthful
   in-game names on useful and progression pickups. A packaged build tool can
