@@ -24,7 +24,8 @@ class FullAttireCatalogTests(unittest.TestCase):
         # used by the Decorative Old Hunter ensemble.
         self.assertNotIn(192000, ids)
         self.assertNotIn(362000, ids)
-        self.assertTrue(all(value < 480000 for value in ids))
+        out_of_range = sorted(value for value in ids if value >= 480000)
+        self.assertFalse(out_of_range, f"non-player attire rows admitted: {out_of_range}")
 
     def test_dlc_boundary_covers_every_old_hunters_piece(self):
         dlc = {piece.protector_id for piece in ATTIRE_CATALOG if piece.dlc}
