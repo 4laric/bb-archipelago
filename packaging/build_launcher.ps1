@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SoulsFormatsNextRoot,
     [string]$ClientPath,
+    [string]$ClientRef,
     [string]$OutputRoot,
     [string]$SuppressionBuild,
     [string]$ReleaseVersion,
@@ -159,6 +160,9 @@ if (-not $SkipClient) {
     $clientRecord = [ordered]@{
         path = "tools/bb-ap-client.exe"
         sha256 = (Get-FileHash -LiteralPath $clientDestination -Algorithm SHA256).Hash.ToLowerInvariant()
+        # The from-software-archipelago-clients commit the executable was
+        # built from, when the caller knows it (CI always does).
+        ref = if ($ClientRef) { $ClientRef } else { $null }
     }
 }
 

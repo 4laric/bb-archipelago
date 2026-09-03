@@ -350,7 +350,9 @@ CE table and documentation, writes a SHA-256 `package-manifest.json`, and emits
 files. `-SkipClient` exists for CI artifacts and is deliberately explicit.
 
 The manifest records the client explicitly: a `client` object naming
-`tools/bb-ap-client.exe` and its SHA-256 (`null` under `-SkipClient`), so a
+`tools/bb-ap-client.exe`, its SHA-256, and the client commit it was built
+from as `ref` (`null` under `-SkipClient`; `ref` is `null` when the caller
+did not pass `-ClientRef`), so a
 player or a support script can verify the exact client the package shipped
 without scanning the per-file list.
 

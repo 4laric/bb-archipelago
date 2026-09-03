@@ -967,10 +967,27 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             },
             texts_by_parent[enemy_tab],
         )
+        # The Troubleshooting tab hosts a scrolling canvas; its controls sit on
+        # the body frame inside it, so gather texts from the tab's descendants.
+        def descendants(frame: str) -> set[str]:
+            found = {frame}
+            grew = True
+            while grew:
+                grew = False
+                for child, parent in parent_of.items():
+                    if parent in found and child not in found:
+                        found.add(child)
+                        grew = True
+            return found
+
+        troubleshooting_texts: set[str] = set()
+        for frame in descendants(troubleshooting_tab):
+            troubleshooting_texts |= texts_by_parent.get(frame, set())
+        self.assertEqual(parent_of[troubleshooting_tab], "notebook")
         # The operator override is available without cluttering normal setup.
         self.assertIn(
             "Allow suppression binder mismatch (operators only, not saved)",
-            texts_by_parent[troubleshooting_tab],
+            troubleshooting_texts,
         )
         self.assertNotIn(
             "Allow suppression binder mismatch (operators only, not saved)",
