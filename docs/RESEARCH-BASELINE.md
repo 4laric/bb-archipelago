@@ -364,6 +364,28 @@ records that distinction directly: Saw Spear is an explicit category-0 row,
 while Torch is an executable exclusion and cannot be regenerated from its
 ItemLot weapon ID.
 
+### Full equipment descriptor census
+
+On 2026-09-03, issue #330's equipment census ran against fresh AP seed
+`55912587072695770571`, slot `Playtest35`, and throwaway character
+`shad-save-slot:0003` on CUSA03173 01.09 (eboot base `0x05570000`). The Saw
+Spear positive control appeared in the equipment menu and completed through
+the diagnostic's `instance insert verified at slot` branch. A durable serial
+runner then submitted every known category-0 and category-1 binding in the
+active seed contract through the same operator-grant lane.
+
+All 111 bindings completed through `verified_slot`: 43 weapons and 68 attire
+pieces, with zero `execution_evidence_only` completions, terminal failures, or
+stalls. After save, return to title, and reload, the operator confirmed the
+former suspects Burial Blade, Ludwig's Holy Blade, Rifle Spear, and Chikage
+were still present. Burial Blade had also been explicitly observed in the UI
+during the run. The complete per-row verdict is posted on #330; the runner is
+from-software-archipelago-clients#606. This validates native-lane insertion
+and persistence for the contracted equipment set. It does not claim a
+separate UI inspection of every attire row, and it does not rehabilitate the
+disproved ItemLot-id-as-runtime-descriptor formula above: the census used the
+catalogued runtime bindings.
+
 An existing-stack Blood Vial command then sampled three, wrote four, reread
 four, persisted `completed`, and removed its command. The player confirmed four
 in the inventory UI. A completed Vial state with expected counts four and five
