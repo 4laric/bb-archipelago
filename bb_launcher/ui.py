@@ -1327,7 +1327,15 @@ class LauncherApp:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--settings", type=Path, default=default_settings_path())
+    parser.add_argument(
+        "--self-check", type=Path, default=None, metavar="REPORT",
+        help="write a packaging self-check report (JSON) and exit without opening a window",
+    )
     args = parser.parse_args(argv)
+    if args.self_check is not None:
+        from .self_check import run_self_check
+
+        return run_self_check(args.self_check)
     try:
         import tkinter as tk
     except ImportError as exc:

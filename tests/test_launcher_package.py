@@ -155,6 +155,38 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn('".tsv", ".json"', script)
         self.assertIn("@worldData", script)
 
+    def test_self_check_passes_on_a_checkout_and_reports_the_world(self):
+        from bb_launcher.self_check import run_self_check
+        report = self.root / "self-check.json"
+        # A checkout has no bundled tools beside it; only the frozen package must.
+        self.assertEqual(0, run_self_check(report, require_bundled_tools=False))
+        data = json.loads(report.read_text(encoding="utf-8"))
+        self.assertTrue(data["ok"], data["problems"])
+        self.assertGreater(data["world"]["attire_catalog"], 68)
+        self.assertGreater(data["world"]["runtime_items"], 200)
+        self.assertEqual(58, data["world"]["category8_awards"])
+        self.assertIn("BBEventWriter.exe", data["tools"])
+
+    def test_self_check_fails_when_a_bundled_tool_is_required_and_missing(self):
+        from bb_launcher.self_check import run_self_check
+        self.assertEqual(1, run_self_check(self.root / "r.json", require_bundled_tools=True))
+        data = json.loads((self.root / "r.json").read_text(encoding="utf-8"))
+        self.assertTrue(any("bundled tool missing" in problem for problem in data["problems"]))
+
+    def test_release_and_bundle_jobs_run_the_packaging_smoke(self):
+        for name in ("release.yaml", "tests.yaml"):
+            workflow = (self.repo / ".github" / "workflows" / name).read_text(encoding="utf-8")
+            self.assertIn("BloodborneAPLauncher.exe\" --self-check", workflow, name)
+            self.assertIn("bb-ap-client.exe\" --check-contract", workflow, name)
+            self.assertIn("tools/export_runtime_contract.py", workflow, name)
+
+    def test_exported_contract_is_the_widest_pool(self):
+        from tools.export_runtime_contract import widest_slot_data
+        slot_data = widest_slot_data()
+        from worlds.bloodborne import ITEM_NAME_TO_ID
+        self.assertEqual(set(slot_data["runtime_items"]), {str(value) for value in ITEM_NAME_TO_ID.values()})
+        self.assertIn("sustain_item", slot_data)
+
     def test_partial_package_does_not_claim_to_be_bundled(self):
         (self.app / "tools" / "MSBBMiner.exe").unlink()
         toolchain = EnemizerToolchain(self.repo, app_root=self.app)
