@@ -12,8 +12,8 @@ This is the first beta of Bloodborne support for Archipelago: a full-base-game
 apworld, a Windows launcher, and a native client that reads checks out of the
 running game and delivers items into it, under shadPS4. It needs your own dump
 of `CUSA03173` (Game of the Year edition) at update 01.09, plus DarkScript3
-version 3.6.3, which the launcher uses to build two event-script overlays
-from your own files. No Cheat Engine, no manual item entry.
+version 3.6.3 and the .NET 6.0 Desktop Runtime it runs on; the launcher uses
+DarkScript3 to build two event-script overlays from your own files. No Cheat Engine, no manual item entry.
 
 **What it does**
 

@@ -14,7 +14,8 @@
   states plainly what has never been verified live: the Old Hunters DLC, all
   three endings' goal detection, and the Laurence's Skull check and password
   suppression. It also records the playtest frontier (Mergo's Wet Nurse) and
-  that DarkScript3 3.6.3 is now a player-side requirement for every seed.
+  that DarkScript3 3.6.3, and therefore the .NET 6.0 Desktop Runtime, is now
+  a player-side requirement for every seed.
 
 - Seed generation now emits an inert, collision-checked plan for truthful
   in-game names on useful and progression pickups. A packaged build tool can
