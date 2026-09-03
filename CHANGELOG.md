@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Fixed: one rune or gem delivery handed out several.** The AP award lots
+  were numbered consecutively, and Bloodborne awards consecutive lot ids as
+  one group (the way a vanilla armour set drops from one corpse), so a
+  single delivery could give five runes and gems. Award lots now step by
+  ten like every vanilla lot. Seeds generated before this carry the old
+  numbering and need regenerating.
+
 - **Fixed: the launcher refused every seed with a missing `attire_additions.tsv`.**
   The packaged launcher bundled a hand-maintained list of apworld tables and
   the newest one was not on it. The build now bundles every table in the

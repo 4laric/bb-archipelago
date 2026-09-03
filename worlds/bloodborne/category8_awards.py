@@ -18,6 +18,14 @@ class Category8Award:
     source_lot_id: int
 
 
+# ItemLotParam ids are read as consecutive groups: awarding lot N also
+# awards N+1, N+2, ... while those rows exist (the Hunter Set is the vanilla
+# example, 2410610..2410613 from one pickup), which is why every vanilla lot
+# sits on a multiple of ten. AP award lots must keep the same stride or one
+# rune delivery hands out a run of unrelated rows (playtest, 2026-09-03:
+# five gems and runes from a single check).
+LOT_STRIDE = 10
+
 # Keep the two live-proven pilot identities stable, then admit every other
 # category-8 row in the reviewed fixed-location catalog.  A fixed-location key
 # is used for generated identities because GemGenParam ids are recipes, not
@@ -29,7 +37,7 @@ _PILOTS = (
     ),
     Category8Award(
         "blood_gem_old_yharnam_123000", "Old Yharnam Blood Gem (123000)",
-        9_801, 98_000_001, 123_000, 12_400_991, 2_300_040,
+        9_801, 98_000_010, 123_000, 12_400_991, 2_300_040,
     ),
 )
 
@@ -44,7 +52,7 @@ CATEGORY8_AWARDS = _PILOTS + tuple(
         f"category8_{row.key.removeprefix('fixed_')}",
         row.name,
         9_800 + index,
-        98_000_000 + index,
+        98_000_000 + LOT_STRIDE * index,
         row.item_id,
         12_400_900 + index - len(_PILOTS),
         row.item_lot_id,

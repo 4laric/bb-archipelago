@@ -111,6 +111,28 @@ class BloodborneModelTests(unittest.TestCase):
             {row.source_lot_id: row.gemgen_id for row in CATEGORY8_AWARDS},
         )
 
+    def test_category8_award_lots_are_spaced_like_vanilla_lots(self):
+        """Consecutive ItemLotParam ids award together; a stride of one hands
+        out a run of unrelated gems and runes from a single delivery."""
+        import csv
+        from worlds.bloodborne.category8_awards import LOT_STRIDE
+        self.assertEqual(10, LOT_STRIDE)
+        lots = sorted(row.item_lot_id for row in CATEGORY8_AWARDS)
+        for lot in lots:
+            self.assertEqual(0, lot % LOT_STRIDE, lot)
+        for earlier, later in zip(lots, lots[1:]):
+            self.assertGreaterEqual(later - earlier, LOT_STRIDE, (earlier, later))
+        self.assertEqual(98_000_000, lots[0])
+        with (Path(__file__).resolve().parents[1] / "research" / "joined" / "lot_items.tsv").open(
+            encoding="utf-8", newline=""
+        ) as handle:
+            vanilla = {int(row["item_lot_id"]) for row in csv.DictReader(handle, delimiter="\t")
+                       if row["item_lot_id"].isdigit()}
+        self.assertGreater(len(vanilla), 1000)  # witness: the corpus is real
+        # Nothing vanilla sits inside or right after the AP block, so no AP
+        # lot can pick up a vanilla continuation row either.
+        self.assertEqual([], [lot for lot in vanilla if lots[0] <= lot <= lots[-1] + LOT_STRIDE])
+
     def test_category8_runtime_ids_and_ack_flags_are_unique(self):
         self.assertEqual(58, len(CATEGORY8_AWARDS))
         for field in ("item_key", "display_name", "token_goods_id",
