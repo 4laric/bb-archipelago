@@ -11,8 +11,9 @@ source so later betas edit one place.
 This is the first beta of Bloodborne support for Archipelago: a full-base-game
 apworld, a Windows launcher, and a native client that reads checks out of the
 running game and delivers items into it, under shadPS4. It needs your own dump
-of `CUSA03173` (Game of the Year edition) at update 01.09, and nothing else.
-No Cheat Engine, no manual item entry.
+of `CUSA03173` (Game of the Year edition) at update 01.09, plus DarkScript3
+version 3.6.3, which the launcher uses to build two event-script overlays
+from your own files. No Cheat Engine, no manual item entry.
 
 **What it does**
 
@@ -45,8 +46,9 @@ complete list is in `docs/KNOWN-LIMITATIONS.md`. The three that matter most:
    to you, your seed is still completable and `rescue laurence-skull CONFIRM`
    sends the stranded check.
 
-More broadly: no playtest has gone past Rom yet. Everything up to Rom has
-been played with the client running; everything after it has not.
+More broadly: the furthest live playtest so far is defeating Mergo's Wet
+Nurse. Everything up to there has been played with the client running;
+Gehrman, the Moon Presence, and the DLC have not.
 
 Also expect: a placeholder Blood Vial on every suppressed pickup, an
 occasional delivery landing in the storage box, and location names that still

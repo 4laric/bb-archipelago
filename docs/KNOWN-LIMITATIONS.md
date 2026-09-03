@@ -9,17 +9,21 @@ send back so the next release can fix the cause.
 Supported target: `CUSA03173` at update `01.09` under shadPS4 0.18.0. Nothing
 else is, and the launcher refuses other builds.
 
+You also need **DarkScript3 version 3.6.3**, downloaded separately. The
+launcher compiles two event-script overlays from your own game files when it
+prepares a seed and checks the compiler by hash. See
+[PLAYTESTING.md](PLAYTESTING.md) for where to get it.
+
 ## Never verified in a live game
 
 These parts of the randomizer are generated, in logic, and packaged, but no
 one has played through them yet. They may work. They may not. Treat them as
 untested and report what happens either way.
 
-For scale: the furthest a live randomized playtest has reached is Rom, the
-Vacuous Spider. Everything up to and including Rom has been played with the
-client running and checks sending. Everything after Rom (Yahar'gul, the
-Lecture Building, Nightmare of Mensis, Mergo's Wet Nurse, the endings) has
-not.
+For scale: the furthest a live randomized playtest has reached is defeating
+Mergo's Wet Nurse, with the client running and checks sending the whole way.
+What lies beyond that (Gehrman, the Moon Presence, and the DLC) has not been
+played.
 
 ### The Old Hunters DLC
 
@@ -34,11 +38,11 @@ client log is the evidence.
 ### Endings and goal completion
 
 The three goals are detected from the boss completion flags of Mergo's Wet
-Nurse, Gehrman, and the Moon Presence. **None of the three has been observed
-firing live.** In particular, no playtest has reached the Refuse Gehrman
-ending or the Moon Presence ending with the client running, so goal reporting
-for `refuse_gehrman` and `moon_presence` is inferred from the game's scripts
-and nothing more. The `goal` rescue recipe exists for exactly this case.
+Nurse, Gehrman, and the Moon Presence. Mergo's Wet Nurse has been defeated in
+a live playtest, so that flag is observed. **Gehrman and the Moon Presence
+have not been reached with the client running**, so goal reporting for
+`refuse_gehrman` and `moon_presence` is inferred from the game's scripts and
+nothing more. The `goal` rescue recipe exists for exactly this case.
 
 ### Laurence's Skull and the Forbidden Woods password
 
