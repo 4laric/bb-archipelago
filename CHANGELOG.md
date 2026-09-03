@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **The per-check bonus item is now seed-owned.** Slot data publishes
+  `sustain_item` (Quicksilver Bullets, goods 900) from the apworld's runtime
+  bindings, so the client no longer hardcodes it. The beta 1 client hardcoded
+  goods 1100, the Antidote, which is why players received an Antidote after
+  every check; the client fix is in the client repository.
+
 - **DarkScript3 is no longer required.** The launcher now writes the two
   event overlays (the Laurence's Skull / Hunter Chief Emblem edits in
   `m24_00_00_00.emevd.dcx` and the rune and gem award bridge in

@@ -594,3 +594,20 @@ class RuntimeItemContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SustainItemTests(unittest.TestCase):
+    def test_slot_data_publishes_the_quicksilver_sustain_descriptor(self):
+        from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS
+
+        sustain = build_runtime_slot_data()["sustain_item"]
+        binding = ITEM_BINDINGS["quicksilver_bullets"]
+        # Goods row 900 is Quicksilver Bullets; 1100 (the Antidote) is what the
+        # client hardcoded before the seed published this.
+        self.assertEqual(sustain["normalized_item_id"], 0x40000384)
+        self.assertEqual(sustain["raw_descriptor"], 0xB0000384)
+        self.assertEqual(sustain["item_category"], 4)
+        self.assertEqual(sustain["quantity"], 1)
+        self.assertEqual(sustain["descriptor_evidence"], binding.descriptor_evidence)
+        self.assertEqual(sustain["normalized_item_id"], binding.normalized_item_id)
+        self.assertEqual(sustain["raw_descriptor"], binding.raw_descriptor)
