@@ -253,17 +253,17 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 63)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 42)
-        self.assertEqual(counts["Blood Stone Shards x2"], 32)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 32)
-        self.assertEqual(counts["Blood Stone Chunk"], 21)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 21)
+        self.assertEqual(counts["Blood Vial"], 67)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 45)
+        self.assertEqual(counts["Blood Stone Shards x2"], 33)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 33)
+        self.assertEqual(counts["Blood Stone Chunk"], 22)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 22)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2"):
-            self.assertEqual(counts[name], 21, name)
-        self.assertEqual(counts["Bolt Paper x2"], 21)
-        self.assertEqual(counts["Bone Marrow Ash x3"], 21)
+            self.assertEqual(counts[name], 22, name)
+        self.assertEqual(counts["Bolt Paper x2"], 22)
+        self.assertEqual(counts["Bone Marrow Ash x3"], 22)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2",
@@ -272,11 +272,11 @@ class BloodborneModelTests(unittest.TestCase):
         for name in ("Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
             self.assertEqual(counts[name], 11, name)
-        self.assertEqual(counts["Great One's Wisdom"], 10)
-        self.assertEqual(counts["Coldblood Dew (3)"], 10)
-        self.assertEqual(counts["Thick Coldblood (6)"], 10)
-        self.assertEqual(counts["Frenzied Coldblood (8)"], 10)
-        self.assertEqual(counts["Kin Coldblood (11)"], 10)
+        self.assertEqual(counts["Great One's Wisdom"], 11)
+        self.assertEqual(counts["Coldblood Dew (3)"], 11)
+        self.assertEqual(counts["Thick Coldblood (6)"], 11)
+        self.assertEqual(counts["Frenzied Coldblood (8)"], 11)
+        self.assertEqual(counts["Kin Coldblood (11)"], 11)
         self.assertEqual(counts["Blood Rock"], 1)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
