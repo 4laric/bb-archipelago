@@ -131,7 +131,8 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertGreater(len(vanilla), 1000)  # witness: the corpus is real
         # Nothing vanilla sits inside or right after the AP block, so no AP
         # lot can pick up a vanilla continuation row either.
-        self.assertEqual([], [lot for lot in vanilla if lots[0] <= lot <= lots[-1] + LOT_STRIDE])
+        intruders = sorted(lot for lot in vanilla if lots[0] <= lot <= lots[-1] + LOT_STRIDE)
+        self.assertEqual(0, len(intruders), intruders)
 
     def test_category8_runtime_ids_and_ack_flags_are_unique(self):
         self.assertEqual(58, len(CATEGORY8_AWARDS))
