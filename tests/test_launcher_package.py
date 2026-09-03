@@ -174,12 +174,14 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertTrue(any("bundled tool missing" in problem for problem in data["problems"]))
 
     def test_release_and_bundle_jobs_run_the_packaging_smoke(self):
-        workflows = self.repo / ".github" / "workflows"
-        if not (workflows / "release.yaml").is_file():
-            # The Archipelago-tier job runs this suite from inside the
-            # Archipelago checkout, which has its own .github/workflows but
-            # not this repository's release configuration.
-            self.skipTest("this repository's CI configuration is not beside this checkout")
+        # The Archipelago-tier job copies tests/ into the Archipelago checkout
+        # (_ap/, which has its own .github) inside this repository's
+        # workspace, so the release configuration is found by walking up.
+        workflows = next(
+            candidate / ".github" / "workflows"
+            for candidate in (self.repo, *self.repo.parents)
+            if (candidate / ".github" / "workflows" / "release.yaml").is_file()
+        )
         for name in ("release.yaml", "tests.yaml"):
             workflow = (workflows / name).read_text(encoding="utf-8")
             self.assertIn("BloodborneAPLauncher.exe\" --self-check", workflow, name)
