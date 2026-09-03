@@ -12,6 +12,7 @@ from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
 from .fixed_locations import FIXED_LOCATIONS, VANILLA_ONLY_CARYLL_RUNE_PARAMS
 from .location_names import location_name
 from .starting_attire import STARTING_ATTIRE_CATALOG
+from .category8_awards import CATEGORY8_AWARDS
 
 P = ItemKind.PROGRESSION
 U = ItemKind.USEFUL
@@ -201,7 +202,7 @@ ITEMS = (
     Item("event_lady_maria_defeated", "Lady Maria Defeated", E),
     Item("event_orphan_of_kos_defeated", "Orphan of Kos Defeated", E),
     Item("event_laurence_defeated", "Laurence Defeated", E),
-)
+) + tuple(Item(row.item_key, row.display_name, U) for row in CATEGORY8_AWARDS)
 
 REGIONS = (
     "Menu", "Hunter's Dream", "Central Yharnam", "Cathedral Ward", "Old Yharnam",
@@ -308,6 +309,11 @@ LOCATIONS = (
              locked_item="event_laurences_skull_inspected"),
     Location("boss_shadows_of_yharnam", location_name(12701800), "Forbidden Woods", locked_item="event_shadows_defeated"),
     Location("boss_rom", location_name(13201800), "Moonside Lake", locked_item="event_rom_defeated"),
+    # Yurie is a hostile, non-respawning Choir hunter. Her dedicated EMEVD
+    # slot 13200500 becomes a durable event flag after CharacterDead(3200110),
+    # independently of her item lot. This is deliberately option-gated; see
+    # docs/ONE-TIME-ENEMY-CHECKS.md for the conservative candidate census.
+    Location("hunter_yurie", location_name(13200500), "Byrgenwerth"),
     Location("boss_amygdala", location_name(13301800), "Nightmare Frontier",
              locked_item="event_amygdala_defeated"),
     Location("boss_the_one_reborn", location_name(12801800), "Yahar'gul", locked_item="event_one_reborn_defeated"),
@@ -562,6 +568,7 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_ebrietas",
     "boss_shadows_of_yharnam",
     "boss_rom",
+    "hunter_yurie",
     "pickup_lunarium_key",
     "boss_the_one_reborn",
     "boss_micolash",
@@ -625,6 +632,11 @@ SLICE_LOCATION_KEYS = frozenset({
       if location.region in SLICE_REGIONS
       and location.key not in SLICE_EXCLUDED_FIXED_KEYS),
 })
+
+# One-time enemy checks are opt-in because they add combat locations beyond
+# the vanilla treasure/boss manifest. Each row must have a unique, durable
+# witness; do not add acquisition flags or inferred entity-death state here.
+ONE_TIME_ENEMY_LOCATION_KEYS = frozenset({"hunter_yurie"})
 
 # The Old Hunters is one optional branch of the seeded graph. These explicit
 # sets let generation remove the complete branch without changing permanent

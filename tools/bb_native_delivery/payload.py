@@ -36,6 +36,7 @@ ITEM_GRANT_RVA = 0x14DA0A0
 ALLOCATE_EQUIPMENT_INSTANCE_RVA = 0x1A87260
 ALLOCATE_ARMOR_INSTANCE_RVA = 0x1A87390
 RESOLVE_DESCRIPTOR_RVA = 0x1A89070
+CATEGORY8_GENERATOR_RVA = 0x1A87590
 LOOKUP_WEAPON_PARAM_RVA = 0x1F29AA0
 # Pointer to the category-instance registry used by the resolver at
 # +0x1A89070. This is an eboot data RVA, not a launch-time absolute.
@@ -173,11 +174,11 @@ def _program_consume() -> list[tuple[str | None, _Insn | None]]:
         (None, _rip_form(b"\x83\x3d", "request", b"\x00")),
         # je bbAutoConsumeOriginal
         (None, _rel32_jump(b"\x0f\x84", "consume_original")),
-        # request 3 is a read-only diagnostic: resolve a naturally-created
-        # category instance and publish its backing-object pointer.  It never
-        # calls ItemGrant and never writes through the returned pointer.
+        # request 3 is the gated category-8 construction experiment. Rust
+        # supplies cave-owned scratch in item_quantity_pointer and a witnessed
+        # generator context in descriptor+8. No inventory insertion happens.
         (None, _rip_form(b"\x83\x3d", "request", b"\x03")),
-        (None, _rel32_jump(b"\x0f\x84", "resolve_probe")),
+        (None, _rel32_jump(b"\x0f\x84", "gem_generate")),
         # cmp dword ptr [bbAutoRequest],2
         (None, _rip_form(b"\x83\x3d", "request", b"\x02")),
         # je bbAutoExisting
@@ -259,17 +260,16 @@ def _program_consume() -> list[tuple[str | None, _Insn | None]]:
         (None, _fixed(CALL_RAX)),
         # jmp bbAutoFinish
         (None, _rel32_jump(b"\xe9", "finish")),
-        ("resolve_probe", None),
+        ("gem_generate", None),
         (None, _rip_form(b"\xc7\x05", "request", _imm32(0))),
-        (None, _rip_form(b"\x48\x8d\x3d", "descriptor")),
-        (None, _mov_rax_imm64(RESOLVE_DESCRIPTOR_RVA)),
+        (None, _rip_form(b"\x48\x8b\x3d", "item_quantity_pointer")),
+        (None, _rip_form(b"\x48\x8b\x35", "descriptor_pointer")),
+        (None, _rip_form(b"\x8b\x15", "quantity")),
+        (None, _fixed(b"\xb9" + _imm32(0xFFFFFFFF))),
+        (None, _mov_rax_imm64(CATEGORY8_GENERATOR_RVA)),
         (None, _fixed(CALL_RAX)),
-        # Reuse the pointer cell only while no delivery request is active.
-        (None, _rip_form(b"\x48\x89\x05", "item_quantity_pointer")),
-        # Preserve a compact success witness in the ordinary result cell.
-        (None, _fixed(b"\x85\xc0")),
-        (None, _rel32_jump(b"\x0f\x84", "finish")),
-        (None, _fixed(b"\xb8" + _imm32(0))),
+        # Preserve the full return value; finish also publishes eax/result.
+        (None, _rip_form(b"\x48\x89\x05", "descriptor")),
         (None, _rel32_jump(b"\xe9", "finish")),
         ("existing", None),
         # mov dword ptr [bbAutoRequest],0

@@ -149,10 +149,10 @@ class LauncherPackageTests(unittest.TestCase):
 
     def test_release_tag_maps_to_display_and_numeric_windows_versions(self):
         module = load_version_metadata_module()
-        version = module.parse_release_version("v0.1.0-playtest.35")
-        self.assertEqual(version.product_version, "0.1.0-playtest.35")
-        self.assertEqual(version.file_version, "0.1.0.35")
-        self.assertEqual(version.file_version_tuple, (0, 1, 0, 35))
+        version = module.parse_release_version("v0.1.0-beta.1")
+        self.assertEqual(version.product_version, "0.1.0-beta.1")
+        self.assertEqual(version.file_version, "0.1.0.1")
+        self.assertEqual(version.file_version_tuple, (0, 1, 0, 1))
         self.assertTrue(version.prerelease)
 
     def test_signing_canary_and_stable_tags_are_versioned_deterministically(self):
@@ -166,7 +166,7 @@ class LauncherPackageTests(unittest.TestCase):
 
     def test_invalid_or_unrepresentable_release_versions_are_rejected(self):
         module = load_version_metadata_module()
-        for value in ("playtest.35", "v0.1", "v0.1.0-playtest", "v65536.0.0"):
+        for value in ("beta.1", "v0.1", "v0.1.0-beta", "v65536.0.0"):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 module.parse_release_version(value)
 

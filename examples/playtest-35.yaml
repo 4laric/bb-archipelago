@@ -1,0 +1,37 @@
+description: Bloodborne Playtest 35 - full-world high-coverage solo seed
+name: Playtest35
+game: Bloodborne
+
+Bloodborne:
+  progression_balancing: 50
+  accessibility: items
+
+  # Exercise the complete validated pool and optional delivery categories.
+  full_item_pool: true
+  uncanny_weapons: true
+  randomize_armor: true
+
+  # #214 event-award acceptance: exercise both pilot category-8 rows as soon
+  # as the client connects, without depending on their randomized locations.
+  start_inventory:
+    Communion (+1 Blood Vial): 1
+    Old Yharnam Blood Gem (123000): 1
+
+  # Keep the opening varied and exercise the seed-owned Bath permutation.
+  randomize_starting_weapons: true
+  randomize_shops: true
+  remove_weapon_requirements: true
+
+  # Upgrade incoming weapons without changing the player's equipped gear.
+  auto_upgrade: true
+  auto_equip: false
+
+  # Long-form completion coverage, including the Old Hunters content.
+  goal: moon_presence
+  include_dlc: true
+
+  # Keep this a clean solo progression test. DeathLink is receive-only today,
+  # and alternate Gaol routes intentionally permit nonstandard progression.
+  death_link: false
+  death_link_amnesty: 0
+  alternate_hypogean_gaol_routes: false

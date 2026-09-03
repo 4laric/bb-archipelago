@@ -675,6 +675,7 @@ location_flag	region	name	basis
 12601850	Nightmare of Mensis	Micolash, Host of the Nightmare	published (data.py boss_micolash); boss-defeat event flag committed in runtime_bindings.py
 12601800	Nightmare of Mensis	Mergo's Wet Nurse	published (data.py boss_mergos_wet_nurse); boss-defeat event flag committed in runtime_bindings.py
 13301800	Nightmare Frontier	Amygdala	published (data.py boss_amygdala); boss-defeat event flag committed in runtime_bindings.py
+13200500	Byrgenwerth	Byrgenwerth - Yurie, the Last Scholar	one-time enemy check; EMEVD event 13200500 waits CharacterDead(3200110); MSB/NpcParam 6450 identifies a non-respawning Choir hunter
 13401800	Hunter's Nightmare	Ludwig, the Holy Blade	published (data.py boss_ludwig); boss-defeat event flag committed in runtime_bindings.py
 13501850	Lumenwood Garden	Living Failures	published (data.py boss_living_failures); boss-defeat event flag committed in runtime_bindings.py
 13501800	Astral Clocktower	Lady Maria of the Astral Clocktower	published (data.py boss_lady_maria); boss-defeat event flag committed in runtime_bindings.py

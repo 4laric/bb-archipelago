@@ -5,9 +5,12 @@ import json
 import os
 import tempfile
 import unittest
+from dataclasses import replace
+from unittest.mock import patch
 from pathlib import Path
 
 from bb_launcher.core import (
+    CATHEDRAL_EVENT_PATH,
     OWNER_NAME,
     SUPPRESSION_CHECK_PLAN,
     SUPPRESSION_CHECK_SOURCE,
@@ -82,6 +85,21 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         vanilla = self.install.patch.joinpath(*SUPPRESSION_PATH.split("/"))
         vanilla.parent.mkdir(parents=True)
         vanilla.write_bytes(b"vanilla-gameparam")
+        cathedral = self.install.patch.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
+        cathedral.parent.mkdir(parents=True)
+        cathedral.write_bytes(b"licensed-cathedral-event")
+        self.darkscript = self.root / "DarkScript3.exe"
+        self.darkscript.write_bytes(b"pinned-darkscript")
+        self.cathedral_builder = patch("tools.build_cathedral_emevd.build")
+        build = self.cathedral_builder.start()
+
+        def fake_cathedral(_compiler, source, output, manifest):
+            self.assertEqual(cathedral, source)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(b"verified-cathedral-overlay")
+            manifest.write_text("{}", encoding="utf-8")
+
+        build.side_effect = fake_cathedral
         paramdef = self.install.patch / "dvdroot_ps4" / "paramdef" / "paramdef.paramdefbnd.dcx"
         paramdef.parent.mkdir(parents=True)
         paramdef.write_bytes(b"paramdef")
@@ -155,6 +173,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
 
     def tearDown(self):
+        self.cathedral_builder.stop()
         self.temporary.cleanup()
 
     def settings(self, *, enemy_inputs: bool = True) -> LauncherSettings:
@@ -170,6 +189,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             soulsformats_next=self.souls if enemy_inputs else None,
             state_root=self.root / "state",
             shad_log=self.root / "shad_log.txt",
+            darkscript=self.darkscript,
         )
 
     def test_process_plan_resolves_paths_and_pins_component_hashes(self):
@@ -287,6 +307,44 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
         self.assertTrue(owner["enemizer"]["enabled"])
         self.assertIn("Planning deterministic enemy swaps", "\n".join(progress))
+        active_event = self.install.mods.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
+        self.assertEqual(b"verified-cathedral-overlay", active_event.read_bytes())
+        owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
+        self.assertEqual(12401898, owner["cathedral_event"]["laurence_witness_flag"])
+
+    def test_laurence_seed_without_darkscript_fails_before_touching_overlay(self):
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=FakeToolchain(),
+            process_launcher=lambda _processes: [Process(10), Process(11)],
+        )
+        settings = self.settings(enemy_inputs=False)
+        workflow.randomize_and_launch(
+            settings, EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        owner_before = (self.install.mods / OWNER_NAME).read_bytes()
+        with self.assertRaisesRegex(ValidationError, "select DarkScript3.exe"):
+            workflow.randomize_and_launch(
+                replace(settings, darkscript=None), EnemizerOptions(enabled=False),
+                process_is_running=lambda: False,
+            )
+        self.assertEqual(owner_before, (self.install.mods / OWNER_NAME).read_bytes())
+
+    def test_cathedral_build_failure_preserves_diagnostics_and_does_not_activate(self):
+        from tools import build_cathedral_emevd
+
+        build_cathedral_emevd.build.side_effect = RuntimeError("compiler rejected source")
+        progress: list[str] = []
+        with self.assertRaisesRegex(RuntimeError, "compiler rejected source"):
+            LauncherWorkflow(
+                self.repo, toolchain=FakeToolchain(),
+                process_launcher=lambda _processes: [],
+            ).randomize_and_launch(
+                self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),
+                progress=progress.append, process_is_running=lambda: False,
+            )
+        self.assertFalse(self.install.mods.exists())
+        self.assertIn("Preserved failed enemizer build diagnostics", "\n".join(progress))
 
     def _skew_the_installed_gameparam(self) -> None:
         self.install.patch.joinpath(*SUPPRESSION_PATH.split("/")).write_bytes(

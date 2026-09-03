@@ -16,6 +16,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 ## Byrgenwerth
 
 - Byrgenwerth - Lunarium Key (Headmaster's Room attic desk)
+- Byrgenwerth - Yurie, the Last Scholar
 
 ## Castle Cainhurst
 

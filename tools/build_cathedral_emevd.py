@@ -20,6 +20,10 @@ EVENT_FILE = "m24_00_00_00.emevd.dcx"
 OUTPUT_RELATIVE_PATH = f"dvdroot_ps4/event/{EVENT_FILE}"
 DARKSCRIPT_VERSION = "3.6.3"
 DARKSCRIPT_SHA256 = "c86fd23ee28f7d39032a5bc792f9510bbd171ca72de1c547d956fe5e161d54de"
+# DarkScript 3.6.3 output for the supported CUSA03173 01.09 map event when
+# its required common link is supplied. This differs from the historical
+# standalone research dump, which was produced without resolving links.
+LINKED_SOURCE_SHA256 = "1191bb2d5a67825dfc86a3d76782e1e02aa05e5a4c2dd2d8ffd1b0dfca527c57"
 
 
 def sha256(path: Path) -> str:
@@ -71,15 +75,36 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
 
     with tempfile.TemporaryDirectory(prefix="bb-cathedral-emevd-") as raw:
         root = Path(raw)
-        original_dir, source_dir, compiled_dir, verify_dir = (
-            root / "original", root / "source", root / "compiled", root / "verify"
+        original_dir, source_dir, baseline_dir, baseline_verify_dir, compiled_dir, verify_dir = (
+            root / "original", root / "source", root / "baseline",
+            root / "baseline-verify", root / "compiled", root / "verify"
         )
         original_dir.mkdir()
         shutil.copyfile(source_binary, original_dir / EVENT_FILE)
+        # Bloodborne map events link `common`; DarkScript resolves linked
+        # binaries from the same input directory while decompiling. Supplying
+        # only the target file makes 3.6.3 terminate with an unhandled
+        # "Missing linked file common" exception before any patching occurs.
+        linked_common = source_binary.parent / "common.emevd.dcx"
+        if not linked_common.is_file():
+            raise FileNotFoundError(f"required linked common event is absent: {linked_common}")
+        shutil.copyfile(linked_common, original_dir / linked_common.name)
         run_compiler(executable, "decompile", original_dir, source_dir)
         source_path = source_dir / f"{EVENT_FILE}.js"
         original_source = source_path.read_bytes()
-        patched = patch_laurence(patch_emblem(original_source), verify_source=False)
+        if hashlib.sha256(original_source).hexdigest() != LINKED_SOURCE_SHA256:
+            raise ValueError("unsupported linked Cathedral event source")
+        # DarkScript normalizes two unrelated events during an ordinary
+        # compile/decompile cycle. Establish that tool-owned baseline first;
+        # the patched round trip must match it everywhere except our events.
+        run_compiler(executable, "compile", source_dir, baseline_dir)
+        run_compiler(executable, "decompile", baseline_dir, baseline_verify_dir)
+        baseline_text = (baseline_verify_dir / f"{EVENT_FILE}.js").read_text(
+            encoding="utf-8-sig"
+        )
+        patched = patch_laurence(
+            patch_emblem(original_source, verify_source=False), verify_source=False
+        )
         source_path.write_bytes(patched)
         run_compiler(executable, "compile", source_dir, compiled_dir)
         compiled = compiled_dir / EVENT_FILE
@@ -90,8 +115,14 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
         expected_text = patched.decode("utf-8-sig")
         if event(verified_text, "12401803") != event(expected_text, "12401803"):
             raise ValueError("compiled Laurence event did not round-trip")
-        if unrelated_events(verified_text) != unrelated_events(expected_text):
-            raise ValueError("compile changed an unrelated event")
+        verified_unrelated = unrelated_events(verified_text)
+        expected_unrelated = unrelated_events(baseline_text)
+        if verified_unrelated != expected_unrelated:
+            changed = sorted(
+                key for key in verified_unrelated.keys() | expected_unrelated.keys()
+                if verified_unrelated.get(key) != expected_unrelated.get(key)
+            )
+            raise ValueError(f"compile changed unrelated events: {changed}")
         if event(verified_text, "12400760") != event(expected_text, "12400760"):
             raise ValueError("compiled Emblem event did not round-trip")
 

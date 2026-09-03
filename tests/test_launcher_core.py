@@ -12,6 +12,7 @@ from pathlib import Path
 from bb_launcher import core
 from bb_launcher.core import (
     APP_VERSION,
+    CATHEDRAL_EVENT_PATH,
     SESSION_HEADER_PREFIX,
     EXCLUDED_AP_OWNED,
     EXCLUDED_DEAD_PATH,
@@ -311,6 +312,77 @@ class LauncherCoreTests(unittest.TestCase):
             SeedCache(self.root / "cache").build(
                 identity("seed", enemizer_seed="12345"), binder, maps
             )
+
+    def test_cache_carries_verified_cathedral_event_into_activation(self):
+        binder = self.root / "binder.dcx"
+        binder.write_bytes(b"suppressed")
+        cathedral = self.root / "m24_00_00_00.emevd.dcx"
+        cathedral.write_bytes(b"compiled owned events 12400760 and 12401803")
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(identity("seed", b"suppressed"), binder,
+                            cathedral_event=cathedral)
+        witness = build.manifest["cathedral_event"]
+        self.assertEqual(CATHEDRAL_EVENT_PATH, witness["path"])
+        self.assertEqual(hashlib.sha256(cathedral.read_bytes()).hexdigest(),
+                         witness["sha256"])
+        install = make_install(self.root / "game")
+        owner = activate_build(install, build.path, process_is_running=lambda: False)
+        self.assertEqual(12401898,
+                         owner["cathedral_event"]["laurence_witness_flag"])
+        self.assertEqual(12401803,
+                         owner["cathedral_event"]["suppressed_password_flag"])
+        active = install.mods.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
+        self.assertEqual(cathedral.read_bytes(), active.read_bytes())
+
+    def test_cache_refuses_forged_cathedral_witness_contract(self):
+        binder = self.root / "binder.dcx"
+        binder.write_bytes(b"suppressed")
+        cathedral = self.root / "m24_00_00_00.emevd.dcx"
+        cathedral.write_bytes(b"compiled")
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(identity("seed", b"suppressed"), binder,
+                            cathedral_event=cathedral)
+        manifest_path = build.path / core.SEED_MANIFEST_NAME
+        original = json.loads(manifest_path.read_text(encoding="utf-8"))
+        mutations = (
+            ("both be present", lambda value: value.__setitem__("cathedral_event", None)),
+            ("wrong component", lambda value: next(
+                record for record in value["files"]
+                if record["path"] == CATHEDRAL_EVENT_PATH
+            ).__setitem__("component", "enemizer")),
+            ("unexpected owned events", lambda value: value["cathedral_event"].__setitem__(
+                "events", [12401803])),
+            ("wrong Laurence flag", lambda value: value["cathedral_event"].__setitem__(
+                "laurence_witness_flag", 12401897)),
+            ("wrong password flag", lambda value: value["cathedral_event"].__setitem__(
+                "suppressed_password_flag", 12401804)),
+        )
+        for message, mutate in mutations:
+            with self.subTest(message=message):
+                forged = json.loads(json.dumps(original))
+                mutate(forged)
+                manifest_path.write_text(json.dumps(forged), encoding="utf-8")
+                with self.assertRaisesRegex(ValidationError, message):
+                    cache.verify(build.path)
+        manifest_path.write_text(json.dumps(original), encoding="utf-8")
+
+    def test_cache_refuses_cathedral_witness_without_event_file_record(self):
+        binder = self.root / "binder.dcx"
+        binder.write_bytes(b"suppressed")
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(identity("seed", b"suppressed"), binder)
+        manifest_path = build.path / core.SEED_MANIFEST_NAME
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["cathedral_event"] = {
+            "path": CATHEDRAL_EVENT_PATH,
+            "sha256": "0" * 64,
+            "events": [12400760, 12401803],
+            "laurence_witness_flag": 12401898,
+            "suppressed_password_flag": 12401803,
+        }
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "both be present"):
+            cache.verify(build.path)
 
     def test_activation_refuses_preexisting_unowned_mods_without_moving_it(self):
         install = make_install(self.root / "game")
