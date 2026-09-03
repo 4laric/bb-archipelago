@@ -175,10 +175,11 @@ class LauncherPackageTests(unittest.TestCase):
 
     def test_release_and_bundle_jobs_run_the_packaging_smoke(self):
         workflows = self.repo / ".github" / "workflows"
-        if not workflows.is_dir():
-            # The Archipelago-tier job runs this suite from a world copy
-            # without the repository's CI configuration.
-            self.skipTest("no .github/workflows beside this checkout")
+        if not (workflows / "release.yaml").is_file():
+            # The Archipelago-tier job runs this suite from inside the
+            # Archipelago checkout, which has its own .github/workflows but
+            # not this repository's release configuration.
+            self.skipTest("this repository's CI configuration is not beside this checkout")
         for name in ("release.yaml", "tests.yaml"):
             workflow = (workflows / name).read_text(encoding="utf-8")
             self.assertIn("BloodborneAPLauncher.exe\" --self-check", workflow, name)
