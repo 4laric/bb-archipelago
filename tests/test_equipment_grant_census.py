@@ -32,7 +32,7 @@ class EquipmentGrantCensusTests(unittest.TestCase):
         commands = [line for line in out.getvalue().splitlines() if line.startswith("give ")]
         self.assertEqual(len(census_rows()), len(commands))
         for line in commands:
-            self.assertTrue(line.split("	")[0].endswith(" CONFIRM"), line)
+            self.assertTrue(line.split("\t")[0].endswith(" CONFIRM"), line)
 
     def test_classify_separates_verified_from_execution_evidence(self):
         self.assertEqual("verified_slot", classify({
