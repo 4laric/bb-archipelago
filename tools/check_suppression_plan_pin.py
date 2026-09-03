@@ -53,7 +53,9 @@ EXPECTED_SOURCE_SHA256 = "581e28302a231a10ad333806dfc90f41425db4f9f146799dca625f
 # the writer's byte-faithful round-trip verification guards content, and the
 # client checks a binder against its OWN manifest, so this value is playable
 # by construction. Owed: one live session on a CI-built binder (#200).
-EXPECTED_OUTPUT_SHA256 = "a8592cad6ccfa707f8591fb35cd74eb3a002aa20a07ed4bea787c59d2df47829"
+# Rebuilt 2026-09-03 from the pinned source and SFN 7cef52a7 when the 58
+# category-8 rune and gem lots joined the plan (#214 live-confirmed).
+EXPECTED_OUTPUT_SHA256 = "78e6415c0e7ae3118d1bb8ceb65e5908a8e0d151b408588c8f532e490c91cacb"
 
 
 def read_bundle_source_sha(bundle: Path) -> str:

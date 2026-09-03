@@ -45,7 +45,7 @@ fixed_central_yharnam_lot_2410600	Central Yharnam - Coldblood Dew (1) #7 (bridge
 fixed_central_yharnam_lot_2410610	Central Yharnam - Hunter Set (Aqueduct drop near Large Huntsman)	Central Yharnam	52410610	2410610	1	70000	useful	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410620	Central Yharnam - Thick Coldblood (5) (sewer side)	Central Yharnam	52410620	2410620	4	1514	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410630	Central Yharnam - Coldblood Dew (1) #8 (sewer side)	Central Yharnam	52410630	2410630	4	1510	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
-fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Communion +3 Blood Vials (chest)	Iosefka's Clinic	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	False
+fixed_central_yharnam_lot_2410640	Iosefka's Clinic - Communion +3 Blood Vials (chest)	Iosefka's Clinic	52410640	2410640	8	102903	optional	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410650	Central Yharnam - Blood Stone Shard #8 (bridge side)	Central Yharnam	52410650	2410650	4	3000	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_iosefka_courtyard_bullets	Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10 (bridge side)	Central Yharnam	52410800	2410800	4	900	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
 fixed_central_yharnam_lot_2410920	Central Yharnam - Red Jeweled Brooch	Cathedral Ward	52410920	2410920	4	4306	filler	treasure	m24_01_00_00;m24_01_00_01;m24_01_00_11	True
@@ -69,7 +69,7 @@ fixed_cathedral_ward_lot_2400260	Cathedral Ward - Blood Vial x2	Cathedral Ward	5
 fixed_cathedral_ward_lot_2400270	Cathedral Ward - Black Messenger Hat (second rooftop past Oedon Chapel Gate)	Cathedral Ward	52400270	2400270	4	4906	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400280	Cathedral Ward - Numbing Mist x6 (ladder above Oedon Chapel Gate)	Cathedral Ward	52400280	2400280	4	1270	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400290	Cathedral Ward - Black Church Hat (Foggy Alley alcove)	Cathedral Ward	52400290	2400290	1	110000	useful	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400300	Cathedral Ward - Blood Gem #1	Cathedral Ward	52400300	2400300	8	124002	optional	treasure	m24_00_00_00;m24_00_00_01	False
+fixed_cathedral_ward_lot_2400300	Cathedral Ward - Blood Gem #1	Cathedral Ward	52400300	2400300	8	124002	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400310	Cathedral Ward - Shining Coins x12	Cathedral Ward	52400310	2400310	4	1410	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400320	Cathedral Ward - Blood Vial x6 #2	Cathedral Ward	52400320	2400320	4	1000	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400330	Cathedral Ward - Blood Stone Shard x3	Cathedral Ward	52400330	2400330	4	3000	filler	treasure	m24_00_00_00;m24_00_00_01	True
@@ -82,12 +82,12 @@ fixed_cathedral_ward_lot_2400390	Cathedral Ward - Molotov Cocktail x4	Cathedral 
 fixed_cathedral_ward_lot_2400400	Cathedral Ward - Coldblood Dew (2)	Cathedral Ward	52400400	2400400	4	1511	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400410	Cathedral Ward - Madman's Knowledge #6 (Grand Cathedral approach)	Cathedral Ward	52400410	2400410	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400420	Cathedral Ward - Thick Coldblood (6) #2 (Grand Cathedral approach)	Cathedral Ward	52400420	2400420	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400430	Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)	Cathedral Ward	52400430	2400430	8	124003	optional	treasure	m24_00_00_00;m24_00_00_01	False
+fixed_cathedral_ward_lot_2400430	Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)	Cathedral Ward	52400430	2400430	8	124003	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400440	Cathedral Ward - Thick Coldblood (6) #3 (Grand Cathedral approach)	Cathedral Ward	52400440	2400440	4	1515	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400450	Cathedral Ward - Hunter Chief Emblem (plaza entrance)	Cathedral Ward	52400450	2400450	4	4011	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400460	Cathedral Ward - Thick Coldblood (5) #2	Cathedral Ward	52400460	2400460	4	1514	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400470	Cathedral Ward - Thick Coldblood (4) #2	Cathedral Ward	52400470	2400470	4	1513	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400760	Cathedral Ward - Blood Gem #3 (chest)	Cathedral Ward	52410580	2400760	8	124001	optional	treasure	m24_00_00_00;m24_00_00_01	False
+fixed_cathedral_ward_lot_2400760	Cathedral Ward - Blood Gem #3 (chest)	Cathedral Ward	52410580	2400760	8	124001	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2420320	Upper Cathedral Ward - A Call Beyond	Upper Cathedral Ward	52420320	2420320	4	2010	useful	treasure	m24_00_00_00;m24_00_00_01;m24_02_00_00;m24_02_00_01	True
 fixed_cathedral_ward_lot_2400540	Cathedral Ward - Rumpled Yharnam Hat (workshop-tower back alley)	Cathedral Ward	52420540	2400540	1	320000	useful	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400550	Cathedral Ward - Wooden Shield (base of Oedon Chapel Gate)	Cathedral Ward	52420550	2400550	0	19000000	useful	treasure	m24_00_00_00;m24_00_00_01	True
@@ -99,22 +99,22 @@ fixed_cathedral_ward_lot_2400600	Cathedral Ward - Twin Blood Stone Shards x2	Cat
 fixed_cathedral_ward_lot_2400610	Cathedral Ward - Antidote	Cathedral Ward	52420610	2400610	4	1100	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400620	Cathedral Ward - Madman's Knowledge #8	Cathedral Ward	52420620	2400620	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400630	Cathedral Ward - Poison Knife x18	Cathedral Ward	52420630	2400630	4	1210	filler	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400640	Cathedral Ward - Communion +1 Blood Vial #4 (Grand Cathedral approach chest)	Cathedral Ward	52420640	2400640	8	102901	optional	treasure	m24_00_00_00;m24_00_00_01	False
-fixed_cathedral_ward_lot_2400650	Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)	Cathedral Ward	52420650	2400650	8	124004	optional	treasure	m24_00_00_00;m24_00_00_01	False
+fixed_cathedral_ward_lot_2400640	Cathedral Ward - Communion +1 Blood Vial #4 (Grand Cathedral approach chest)	Cathedral Ward	52420640	2400640	8	102901	optional	treasure	m24_00_00_00;m24_00_00_01	True
+fixed_cathedral_ward_lot_2400650	Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)	Cathedral Ward	52420650	2400650	8	124004	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400660	Cathedral Ward - Madman's Knowledge #10 (Grand Cathedral approach)	Cathedral Ward	52420660	2400660	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400670	Cathedral Ward - Messenger Top Hat (Grand Cathedral approach)	Cathedral Ward	52420670	2400670	4	4905	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400690	Cathedral Ward - Formless Oedon +4 Quicksilver Bullets #6 (chest)	Cathedral Ward	52420690	2400690	8	103104	optional	treasure	m24_00_00_00;m24_00_00_01	False
+fixed_cathedral_ward_lot_2400690	Cathedral Ward - Formless Oedon +4 Quicksilver Bullets #6 (chest)	Cathedral Ward	52420690	2400690	8	103104	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400700	Cathedral Ward - Frenzied Coldblood (7)	Cathedral Ward	52420700	2400700	4	1516	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400710	Cathedral Ward - Twin Blood Stone Shards	Cathedral Ward	52420710	2400710	4	3010	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400720	Cathedral Ward - Madman's Knowledge #12	Cathedral Ward	52420720	2400720	4	1500	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400730	Cathedral Ward - Messenger Urn Festival	Cathedral Ward	52420730	2400730	4	4908	key_or_badge	treasure	m24_00_00_00;m24_00_00_01	True
-fixed_cathedral_ward_lot_2400740	Cathedral Ward - Blood Gem #7	Cathedral Ward	52420740	2400740	8	124000	optional	treasure	m24_00_00_00;m24_00_00_01	False
+fixed_cathedral_ward_lot_2400740	Cathedral Ward - Blood Gem #7	Cathedral Ward	52420740	2400740	8	124000	optional	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_cathedral_ward_lot_2400750	Cathedral Ward - Bold Hunter's Mark x3	Cathedral Ward	52420750	2400750	4	1400	filler	treasure	m24_00_00_00;m24_00_00_01	True
 fixed_old_yharnam_lot_2300000	Old Yharnam - Antidote #1	Old Yharnam	52300000	2300000	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300010	Old Yharnam - Blood Stone Shard x2 #1	Old Yharnam	52300010	2300010	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300020	Old Yharnam - Blood Stone Shard #1	Old Yharnam	52300020	2300020	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300030	Old Yharnam - Fire Paper x2 #1	Old Yharnam	52300030	2300030	4	1300	filler	treasure	m23_00_00_00;m23_00_00_01	True
-fixed_old_yharnam_lot_2300040	Old Yharnam - Blood Gem (corpse)	Old Yharnam	52300040	2300040	8	123000	optional	treasure	m23_00_00_00;m23_00_00_01	False
+fixed_old_yharnam_lot_2300040	Old Yharnam - Blood Gem (corpse)	Old Yharnam	52300040	2300040	8	123000	optional	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300050	Old Yharnam - Coldblood Dew (3) #1	Old Yharnam	52300050	2300050	4	1512	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300060	Old Yharnam - Blood Stone Shard x2 #2	Old Yharnam	52300060	2300060	4	3000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300070	Old Yharnam - Bloody Messenger Head Bandage	Old Yharnam	52300070	2300070	4	4907	key_or_badge	treasure	m23_00_00_00;m23_00_00_01	True
@@ -140,7 +140,7 @@ fixed_old_yharnam_lot_2300260	Old Yharnam - Molotov Cocktail x3	Old Yharnam	5230
 fixed_old_yharnam_lot_2300270	Old Yharnam - Corpse Pickup	Old Yharnam	52300270	2300270	4	6000	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300280	Old Yharnam - Antidote x4	Old Yharnam	52300280	2300280	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300290	Old Yharnam - Coldblood Dew (2) #2	Old Yharnam	52300290	2300290	4	1511	filler	treasure	m23_00_00_00;m23_00_00_01	True
-fixed_old_yharnam_lot_2300300	Old Yharnam - Blood Gem (chest)	Old Yharnam	52300300	2300300	8	123001	optional	treasure	m23_00_00_00;m23_00_00_01	False
+fixed_old_yharnam_lot_2300300	Old Yharnam - Blood Gem (chest)	Old Yharnam	52300300	2300300	8	123001	optional	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300310	Old Yharnam - Antidote x3 #1	Old Yharnam	52300310	2300310	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300320	Old Yharnam - Antidote x3 #2	Old Yharnam	52300320	2300320	4	1100	filler	treasure	m23_00_00_00;m23_00_00_01	True
 fixed_old_yharnam_lot_2300330	Old Yharnam - Quicksilver Bullets x10	Old Yharnam	52300330	2300330	4	900	filler	treasure	m23_00_00_00;m23_00_00_01	True
@@ -173,7 +173,7 @@ fixed_hemwick_lot_2200150	Hemwick Charnel Lane - Blood Vial x2 #1	Hemwick Charne
 fixed_hemwick_lot_2200160	Hemwick Charnel Lane - Bone Marrow Ash x8 #1	Hemwick Charnel Lane	52200160	2200160	4	1330	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200170	Hemwick Charnel Lane - Bone Marrow Ash x8 #2	Hemwick Charnel Lane	52200170	2200170	4	1330	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200180	Hemwick Charnel Lane - Bloodshot Eyeball #1	Hemwick Charnel Lane	52200180	2200180	4	7150	filler	treasure	m22_00_00_00	True
-fixed_hemwick_lot_2200190	Hemwick Charnel Lane - Blood Gem #1	Hemwick Charnel Lane	52200190	2200190	8	122000	optional	treasure	m22_00_00_00	False
+fixed_hemwick_lot_2200190	Hemwick Charnel Lane - Blood Gem #1	Hemwick Charnel Lane	52200190	2200190	8	122000	optional	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200200	Hemwick Charnel Lane - Madman's Knowledge #1	Hemwick Charnel Lane	52200200	2200200	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200210	Hemwick Charnel Lane - Coldblood Dew (3)	Hemwick Charnel Lane	52200210	2200210	4	1512	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200220	Hemwick Charnel Lane - Twin Blood Stone Shards x2 #3	Hemwick Charnel Lane	52200220	2200220	4	3010	filler	treasure	m22_00_00_00	True
@@ -182,7 +182,7 @@ fixed_hemwick_lot_2200240	Hemwick Charnel Lane - Thick Coldblood (4) #2	Hemwick 
 fixed_hemwick_lot_2200250	Hemwick Charnel Lane - Quicksilver Bullets x4 #2	Hemwick Charnel Lane	52200250	2200250	4	900	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200260	Hemwick Charnel Lane - Throwing Knife x3	Hemwick Charnel Lane	52200260	2200260	4	1240	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200270	Hemwick Charnel Lane - Thick Coldblood (4) #3	Hemwick Charnel Lane	52200270	2200270	4	1513	filler	treasure	m22_00_00_00	True
-fixed_hemwick_lot_2200280	Hemwick Charnel Lane - Blood Gem #2 (chest)	Hemwick Charnel Lane	52200280	2200280	8	122001	optional	treasure	m22_00_00_00	False
+fixed_hemwick_lot_2200280	Hemwick Charnel Lane - Blood Gem #2 (chest)	Hemwick Charnel Lane	52200280	2200280	8	122001	optional	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200290	Hemwick Charnel Lane - Madman's Knowledge #2	Hemwick Charnel Lane	52200290	2200290	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200300	Hemwick Charnel Lane - Pebble x4 #2	Hemwick Charnel Lane	52200300	2200300	4	1230	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200310	Hemwick Charnel Lane - Quicksilver Bullets x4 #3	Hemwick Charnel Lane	52200310	2200310	4	900	filler	treasure	m22_00_00_00	True
@@ -192,7 +192,7 @@ fixed_hemwick_lot_2200340	Hemwick Charnel Lane - Thick Coldblood (4) #5	Hemwick 
 fixed_hemwick_lot_2200350	Hemwick Charnel Lane - Blood Vial x2 #2	Hemwick Charnel Lane	52200350	2200350	4	1000	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200365	Hemwick Charnel Lane - Kin Coldblood (12)	Hemwick Charnel Lane	52200365	2200365	4	1591	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200370	Hemwick Charnel Lane - Bloodshot Eyeball #2	Hemwick Charnel Lane	52200370	2200370	4	7150	filler	treasure	m22_00_00_00	True
-fixed_hemwick_lot_2200380	Hemwick Charnel Lane - Lake +3% #3	Hemwick Charnel Lane	52200380	2200380	8	101701	optional	treasure	m22_00_00_00	False
+fixed_hemwick_lot_2200380	Hemwick Charnel Lane - Lake +3% #3	Hemwick Charnel Lane	52200380	2200380	8	101701	optional	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200385	Hemwick Charnel Lane - Madman's Knowledge #3	Hemwick Charnel Lane	52200385	2200385	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200390	Hemwick Charnel Lane - Madman's Knowledge #4	Hemwick Charnel Lane	52200390	2200390	4	1500	filler	treasure	m22_00_00_00	True
 fixed_hemwick_lot_2200400	Hemwick Charnel Lane - Molotov Cocktail x5	Hemwick Charnel Lane	52200400	2200400	4	1200	filler	treasure	m22_00_00_00	True
@@ -217,9 +217,9 @@ fixed_cainhurst_lot_2501000	Castle Cainhurst - Reiterpallasch (chest)	Castle Cai
 fixed_cainhurst_lot_2501010	Castle Cainhurst - Blood Stone Chunk #2	Castle Cainhurst	52501010	2501010	4	3020	filler	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501020	Castle Cainhurst - Executioner Garb	Castle Cainhurst	52501020	2501020	1	151000	useful	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501030	Castle Cainhurst - Blood Stone Chunk #3	Castle Cainhurst	52501030	2501030	4	3020	filler	treasure	m25_00_00_00	True
-fixed_cainhurst_lot_2501040	Castle Cainhurst - Blood Gem #1 (chest)	Castle Cainhurst	52501040	2501040	8	125000	optional	treasure	m25_00_00_00	False
+fixed_cainhurst_lot_2501040	Castle Cainhurst - Blood Gem #1 (chest)	Castle Cainhurst	52501040	2501040	8	125000	optional	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501050	Castle Cainhurst - Knight's Wig	Castle Cainhurst	52501050	2501050	1	80000	useful	treasure	m25_00_00_00	True
-fixed_cainhurst_lot_2501060	Castle Cainhurst - Blood Gem #2	Castle Cainhurst	52501060	2501060	8	125001	optional	treasure	m25_00_00_00	False
+fixed_cainhurst_lot_2501060	Castle Cainhurst - Blood Gem #2	Castle Cainhurst	52501060	2501060	8	125001	optional	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501070	Castle Cainhurst - Knight's Garb (chest)	Castle Cainhurst	52501070	2501070	1	81000	useful	treasure	m25_00_00_00	True
 fixed_cainhurst_lot_2501080	Castle Cainhurst - Evelyn (chest)	Castle Cainhurst	52501080	2501080	0	14100000	useful	treasure	m25_00_00_00	True
 fixed_forbidden_woods_lot_2700100	Forbidden Woods - Twin Blood Stone Shards x3	Forbidden Woods	52700100	2700100	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -229,10 +229,10 @@ fixed_forbidden_woods_lot_2700130	Forbidden Woods - Madman's Knowledge #1	Forbid
 fixed_forbidden_woods_lot_2700140	Forbidden Woods - Molotov Cocktail x11	Forbidden Woods	52700140	2700140	4	1200	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700150	Forbidden Woods - White Church Hat	Forbidden Woods	52700150	2700150	1	290000	useful	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700170	Forbidden Woods - Thick Coldblood (6) #1	Forbidden Woods	52700170	2700170	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700180	Forbidden Woods - Clear Deep Sea +100 Slow Poison RES #1	Forbidden Woods	52700180	2700180	8	102001	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700180	Forbidden Woods - Clear Deep Sea +100 Slow Poison RES #1	Forbidden Woods	52700180	2700180	8	102001	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700185	Forbidden Woods - Madman's Knowledge #2	Forbidden Woods	52700185	2700185	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700190	Forbidden Woods - Twin Blood Stone Shards #1	Forbidden Woods	52700190	2700190	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700200	Forbidden Woods - Dissipating Lake +5% Bolt Reduction #2	Forbidden Woods	52700200	2700200	8	101601	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700200	Forbidden Woods - Dissipating Lake +5% Bolt Reduction #2	Forbidden Woods	52700200	2700200	8	101601	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700205	Forbidden Woods - Madman's Knowledge #3	Forbidden Woods	52700205	2700205	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700210	Forbidden Woods - Madman's Knowledge #4	Forbidden Woods	52700210	2700210	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700220	Forbidden Woods - Twin Blood Stone Shards #2	Forbidden Woods	52700220	2700220	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -242,7 +242,7 @@ fixed_forbidden_woods_lot_2700250	Forbidden Woods - Madman's Knowledge #5	Forbid
 fixed_forbidden_woods_lot_2700260	Forbidden Woods - Madman's Knowledge #6	Forbidden Woods	52700260	2700260	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700270	Forbidden Woods - Madman's Knowledge #7	Forbidden Woods	52700270	2700270	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700290	Forbidden Woods - Madman's Knowledge #8	Forbidden Woods	52700290	2700290	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700300	Forbidden Woods - Blood Gem #3	Forbidden Woods	52700300	2700300	8	127001	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700300	Forbidden Woods - Blood Gem #3	Forbidden Woods	52700300	2700300	8	127001	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700310	Forbidden Woods - Frenzied Coldblood (7) #1	Forbidden Woods	52700310	2700310	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700320	Forbidden Woods - Blood Vial x6 #1	Forbidden Woods	52700320	2700320	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700330	Forbidden Woods - Twin Blood Stone Shards #4	Forbidden Woods	52700330	2700330	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -250,7 +250,7 @@ fixed_forbidden_woods_lot_2700340	Forbidden Woods - Antidote x3	Forbidden Woods	
 fixed_forbidden_woods_lot_2700350	Forbidden Woods - Antidote x4 #1	Forbidden Woods	52700350	2700350	4	1100	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700360	Forbidden Woods - Twin Blood Stone Shards x2 #1	Forbidden Woods	52700360	2700360	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700370	Forbidden Woods - Blood Stone Chunk	Forbidden Woods	52700370	2700370	4	3020	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700380	Forbidden Woods - Anti-Clockwise Metamorphosis +10% Stamina #4	Forbidden Woods	52700380	2700380	8	100401	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700380	Forbidden Woods - Anti-Clockwise Metamorphosis +10% Stamina #4	Forbidden Woods	52700380	2700380	8	100401	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700385	Forbidden Woods - Madman's Knowledge #9	Forbidden Woods	52700385	2700385	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700390	Forbidden Woods - Poison Knife x3	Forbidden Woods	52700390	2700390	4	1210	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700400	Forbidden Woods - Beast Blood Pellet x6	Forbidden Woods	52700400	2700400	4	1110	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -266,22 +266,22 @@ fixed_forbidden_woods_lot_2700490	Forbidden Woods - Twin Blood Stone Shards x2 #
 fixed_forbidden_woods_lot_2700500	Forbidden Woods - Frenzied Coldblood (7) #2	Forbidden Woods	52700500	2700500	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700510	Forbidden Woods - Quicksilver Bullets x6	Forbidden Woods	52700510	2700510	4	900	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700520	Forbidden Woods - Twin Blood Stone Shards #8	Forbidden Woods	52700520	2700520	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700540	Forbidden Woods - Deep Sea +200 Frenzy RES #5	Forbidden Woods	52700540	2700540	8	102202	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700540	Forbidden Woods - Deep Sea +200 Frenzy RES #5	Forbidden Woods	52700540	2700540	8	102202	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700545	Forbidden Woods - Madman's Knowledge #10	Forbidden Woods	52700545	2700545	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700550	Forbidden Woods - Twin Blood Stone Shards #9	Forbidden Woods	52700550	2700550	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700560	Forbidden Woods - Graveguard Mask	Forbidden Woods	52700560	2700560	1	30000	useful	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700570	Forbidden Woods - Clockwise Metamorphosis +5% HP #6	Forbidden Woods	52700570	2700570	8	100301	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700570	Forbidden Woods - Clockwise Metamorphosis +5% HP #6	Forbidden Woods	52700570	2700570	8	100301	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700575	Forbidden Woods - Madman's Knowledge #11	Forbidden Woods	52700575	2700575	4	1500	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700580	Forbidden Woods - Twin Blood Stone Shards #10	Forbidden Woods	52700580	2700580	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700590	Forbidden Woods - Beast Blood Pellet x3	Forbidden Woods	52700590	2700590	4	1110	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700600	Forbidden Woods - Thick Coldblood (6) #2	Forbidden Woods	52700600	2700600	4	1515	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700610	Forbidden Woods - Blood Vial x2	Forbidden Woods	52700610	2700610	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700640	Forbidden Woods - Blood Vial x6 #2	Forbidden Woods	52700640	2700640	4	1000	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700650	Forbidden Woods - Blood Gem #7	Forbidden Woods	52700650	2700650	8	127003	optional	treasure	m27_00_00_00;m27_00_00_01	False
-fixed_forbidden_woods_lot_2700660	Forbidden Woods - Blood Gem #8	Forbidden Woods	52700660	2700660	8	127004	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700650	Forbidden Woods - Blood Gem #7	Forbidden Woods	52700650	2700650	8	127003	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700660	Forbidden Woods - Blood Gem #8	Forbidden Woods	52700660	2700660	8	127004	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700670	Forbidden Woods - Frenzied Coldblood (7) #3	Forbidden Woods	52700670	2700670	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
-fixed_forbidden_woods_lot_2700690	Forbidden Woods - Blood Gem #9	Forbidden Woods	52700690	2700690	8	127002	optional	treasure	m27_00_00_00;m27_00_00_01	False
-fixed_forbidden_woods_lot_2700700	Forbidden Woods - Blood Gem #10	Forbidden Woods	52700700	2700700	8	127000	optional	treasure	m27_00_00_00;m27_00_00_01	False
+fixed_forbidden_woods_lot_2700690	Forbidden Woods - Blood Gem #9	Forbidden Woods	52700690	2700690	8	127002	optional	treasure	m27_00_00_00;m27_00_00_01	True
+fixed_forbidden_woods_lot_2700700	Forbidden Woods - Blood Gem #10	Forbidden Woods	52700700	2700700	8	127000	optional	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700720	Forbidden Woods - Twin Blood Stone Shards #11	Forbidden Woods	52700720	2700720	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700740	Forbidden Woods - Frenzied Coldblood (7) #4	Forbidden Woods	52700740	2700740	4	1516	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_forbidden_woods_lot_2700750	Forbidden Woods - Shining Coins x6	Forbidden Woods	52700750	2700750	4	1410	filler	treasure	m27_00_00_00;m27_00_00_01	True
@@ -304,10 +304,10 @@ fixed_forbidden_woods_lot_2700950	Forbidden Woods - Antidote x2	Forbidden Woods	
 fixed_forbidden_woods_lot_2700960	Forbidden Woods - Twin Blood Stone Shards x2 #5	Forbidden Woods	52700960	2700960	4	3010	filler	treasure	m27_00_00_00;m27_00_00_01	True
 fixed_yahargul_lot_2800000	Yahar'gul - Frenzied Coldblood (8) #1	Yahar'gul	52800000	2800000	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800010	Yahar'gul - Blood Stone Chunk #1	Yahar'gul	52800010	2800010	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
-fixed_yahargul_lot_2800020	Yahar'gul - Blood Gem #1	Yahar'gul	52800020	2800020	8	128000	optional	treasure	m28_00_00_00;m28_00_00_01	False
+fixed_yahargul_lot_2800020	Yahar'gul - Blood Gem #1	Yahar'gul	52800020	2800020	8	128000	optional	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800030	Yahar'gul - Bolt Paper x3	Yahar'gul	52800030	2800030	4	1320	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800040	Yahar'gul - Frenzied Coldblood (8) #2	Yahar'gul	52800040	2800040	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
-fixed_yahargul_lot_2800050	Yahar'gul - Heir +40% Visceral Blood Echoes #2	Yahar'gul	52800050	2800050	8	100802	optional	treasure	m28_00_00_00;m28_00_00_01	False
+fixed_yahargul_lot_2800050	Yahar'gul - Heir +40% Visceral Blood Echoes #2	Yahar'gul	52800050	2800050	8	100802	optional	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800055	Yahar'gul - Madman's Knowledge #1	Yahar'gul	52800055	2800055	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800060	Yahar'gul - Frenzied Coldblood (8) #3	Yahar'gul	52800060	2800060	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800070	Yahar'gul - Frenzied Coldblood (8) #4	Yahar'gul	52800070	2800070	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
@@ -317,7 +317,7 @@ fixed_yahargul_lot_2800100	Yahar'gul - Iron Yahar'gul Helm	Yahar'gul	52800100	28
 fixed_yahargul_lot_2800110	Yahar'gul - Blood Stone Chunk #2	Yahar'gul	52800110	2800110	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800120	Yahar'gul - Frenzied Coldblood (8) #5	Yahar'gul	52800120	2800120	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800130	Yahar'gul - Blood Vial x6 #1	Yahar'gul	52800130	2800130	4	1000	filler	treasure	m28_00_00_00;m28_00_00_01	True
-fixed_yahargul_lot_2800140	Yahar'gul - Arcane Lake +5% Arcane Reduction #3	Yahar'gul	52800140	2800140	8	101301	optional	treasure	m28_00_00_00;m28_00_00_01	False
+fixed_yahargul_lot_2800140	Yahar'gul - Arcane Lake +5% Arcane Reduction #3	Yahar'gul	52800140	2800140	8	101301	optional	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800145	Yahar'gul - Madman's Knowledge #2	Yahar'gul	52800145	2800145	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800150	Yahar'gul - Madman's Knowledge #3	Yahar'gul	52800150	2800150	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800160	Yahar'gul - Madman's Knowledge #4	Yahar'gul	52800160	2800160	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
@@ -327,7 +327,7 @@ fixed_yahargul_lot_2800300	Yahar'gul - Pungent Blood Cocktail	Yahar'gul	52800300
 fixed_yahargul_lot_2800310	Yahar'gul - Twin Blood Stone Shards	Yahar'gul	52800310	2800310	4	3010	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800330	Yahar'gul - Tonitrus (main street dead end)	Yahar'gul	52800330	2800330	0	13000000	useful	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800340	Yahar'gul - Bolt Paper x5	Yahar'gul	52800340	2800340	4	1320	filler	treasure	m28_00_00_00;m28_00_00_01	True
-fixed_yahargul_lot_2800350	Yahar'gul - Moon +10% Blood Echoes #4	Yahar'gul	52800350	2800350	8	100001	optional	treasure	m28_00_00_00;m28_00_00_01	False
+fixed_yahargul_lot_2800350	Yahar'gul - Moon +10% Blood Echoes #4	Yahar'gul	52800350	2800350	8	100001	optional	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800355	Yahar'gul - Madman's Knowledge #5	Yahar'gul	52800355	2800355	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800360	Yahar'gul - Pungent Blood Cocktail x3	Yahar'gul	52800360	2800360	4	1260	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800380	Yahar'gul - Frenzied Coldblood (8) #6	Yahar'gul	52800380	2800380	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
@@ -340,7 +340,7 @@ fixed_yahargul_lot_2800450	Yahar'gul - Blood Stone Chunk x2 #4	Yahar'gul	5280045
 fixed_yahargul_lot_2800500	Yahar'gul - Tiny Tonitrus (chest)	Yahar'gul	52800500	2800500	4	2070	useful	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800510	Yahar'gul - Choir Bell (chest)	Yahar'gul	52800510	2800510	4	2050	useful	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800520	Yahar'gul - Bone Ash Mask (chest)	Yahar'gul	52800520	2800520	1	40000	useful	treasure	m28_00_00_00;m28_00_00_01	True
-fixed_yahargul_lot_2800530	Yahar'gul - Blood Gem #5 (chest)	Yahar'gul	52800530	2800530	8	228001	optional	treasure	m28_00_00_00;m28_00_00_01	False
+fixed_yahargul_lot_2800530	Yahar'gul - Blood Gem #5 (chest)	Yahar'gul	52800530	2800530	8	228001	optional	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800620	Yahar'gul - Madman's Knowledge #6	Yahar'gul	52800620	2800620	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800630	Yahar'gul - Frenzied Coldblood (7) #3	Yahar'gul	52800630	2800630	4	1516	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800640	Yahar'gul - Thick Coldblood (6)	Yahar'gul	52800640	2800640	4	1515	filler	treasure	m28_00_00_00;m28_00_00_01	True
@@ -350,9 +350,9 @@ fixed_yahargul_lot_2800670	Yahar'gul - Lead Elixir x3	Yahar'gul	52800670	2800670
 fixed_yahargul_lot_2800680	Yahar'gul - Frenzied Coldblood (8) #7	Yahar'gul	52800680	2800680	4	1517	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800690	Yahar'gul - Madman's Knowledge #7	Yahar'gul	52800690	2800690	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800700	Yahar'gul - Madman's Knowledge #8	Yahar'gul	52800700	2800700	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
-fixed_yahargul_lot_2800710	Yahar'gul - Blood Gem #6	Yahar'gul	52800710	2800710	8	132000	optional	treasure	m28_00_00_00;m28_00_00_01	False
+fixed_yahargul_lot_2800710	Yahar'gul - Blood Gem #6	Yahar'gul	52800710	2800710	8	132000	optional	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_lecture_building_lot_3200000	Lecture Building 1F - Madman's Knowledge #1	Lecture Building 1F	53200000	3200000	4	1500	filler	treasure	m32_00_00_00;m32_00_00_01	True
-fixed_lecture_building_lot_3200010	Lecture Building 2F - Arcane Lake +7% Arcane Reduction (corpse)	Lecture Building 2F	53200010	3200010	8	101302	optional	treasure	m32_00_00_00;m32_00_00_01	False
+fixed_lecture_building_lot_3200010	Lecture Building 2F - Arcane Lake +7% Arcane Reduction (corpse)	Lecture Building 2F	53200010	3200010	8	101302	optional	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200020	Lecture Building 1F - Madman's Knowledge #2	Lecture Building 1F	53200020	3200020	4	1500	filler	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200030	Lecture Building 1F - Great One's Wisdom	Lecture Building 1F	53200030	3200030	4	1501	filler	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200040	Lecture Building 1F - Sedative x5	Lecture Building 1F	53200040	3200040	4	1101	filler	treasure	m32_00_00_00;m32_00_00_01	True
@@ -361,7 +361,7 @@ fixed_lecture_building_lot_3200110	Lecture Building 2F - Sedative x6 (classroom)
 fixed_lecture_building_lot_3200500	Lecture Building 2F - Empty Phantasm Shell (observatory chest)	Lecture Building 2F	53200500	3200500	4	1310	useful	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200540	Lecture Building 2F - Student Uniform (Headmaster's Room chest)	Lecture Building 2F	53200540	3200540	1	191000	useful	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200620	Lecture Building 1F - Red Jelly x2 (classroom chest)	Lecture Building 1F	53200620	3200620	4	7110	filler	treasure	m32_00_00_00;m32_00_00_01	True
-fixed_lecture_building_lot_3200640	Lecture Building 2F - Communion +2 Blood Vials (chest)	Lecture Building 2F	53200640	3200640	8	102902	optional	treasure	m32_00_00_00;m32_00_00_01	False
+fixed_lecture_building_lot_3200640	Lecture Building 2F - Communion +2 Blood Vials (chest)	Lecture Building 2F	53200640	3200640	8	102902	optional	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200700	Lecture Building 1F - Pearl Slug (chest)	Lecture Building 1F	53200700	3200700	4	7100	filler	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200730	Lecture Building 2F - Student Uniform #2	Lecture Building 2F	53200730	3200730	1	301000	useful	treasure	m32_00_00_00;m32_00_00_01	True
 fixed_lecture_building_lot_3200740	Lecture Building 1F - Madman's Knowledge #4	Lecture Building 1F	53200740	3200740	4	1500	filler	treasure	m32_00_00_00;m32_00_00_01	True
@@ -371,14 +371,14 @@ fixed_nightmare_mensis_lot_2600110	Nightmare of Mensis - Madman's Knowledge #1	N
 fixed_nightmare_mensis_lot_2600120	Nightmare of Mensis - Great One's Wisdom #1	Nightmare of Mensis	52600120	2600120	4	1501	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600130	Nightmare of Mensis - Great One's Wisdom #2	Nightmare of Mensis	52600130	2600130	4	1501	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600140	Nightmare of Mensis - Great One's Wisdom #3	Nightmare of Mensis	52600140	2600140	4	1501	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600150	Nightmare of Mensis - Blood Gem #1	Nightmare of Mensis	52600150	2600150	8	126002	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600150	Nightmare of Mensis - Blood Gem #1	Nightmare of Mensis	52600150	2600150	8	126002	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600160	Nightmare of Mensis - Great One's Wisdom #4	Nightmare of Mensis	52600160	2600160	4	1501	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600170	Nightmare of Mensis - Frenzied Coldblood (9) #1	Nightmare of Mensis	52600170	2600170	4	1518	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600180	Nightmare of Mensis - Frenzied Coldblood (9) #2	Nightmare of Mensis	52600180	2600180	4	1518	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600190	Nightmare of Mensis - Blood Vial x8 #1	Nightmare of Mensis	52600190	2600190	4	1000	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600200	Nightmare of Mensis - Blood Gem #2	Nightmare of Mensis	52600200	2600200	8	126003	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600200	Nightmare of Mensis - Blood Gem #2	Nightmare of Mensis	52600200	2600200	8	126003	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600210	Nightmare of Mensis - Blood Stone Chunk #1	Nightmare of Mensis	52600210	2600210	4	3020	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600220	Nightmare of Mensis - Blood Gem #3	Nightmare of Mensis	52600220	2600220	8	126000	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600220	Nightmare of Mensis - Blood Gem #3	Nightmare of Mensis	52600220	2600220	8	126000	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600230	Nightmare of Mensis - Quicksilver Bullets x6 #1	Nightmare of Mensis	52600230	2600230	4	900	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600240	Nightmare of Mensis - Madman's Knowledge #2	Nightmare of Mensis	52600240	2600240	4	1500	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600250	Nightmare of Mensis - Lead Elixir x2	Nightmare of Mensis	52600250	2600250	4	2030	filler	treasure	m26_00_00_00	True
@@ -386,7 +386,7 @@ fixed_nightmare_mensis_lot_2600260	Nightmare of Mensis - Frenzied Coldblood (8) 
 fixed_nightmare_mensis_lot_2600270	Nightmare of Mensis - Quicksilver Bullets x6 #2	Nightmare of Mensis	52600270	2600270	4	900	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600280	Nightmare of Mensis - Blood Stone Chunk #2	Nightmare of Mensis	52600280	2600280	4	3020	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600290	Nightmare of Mensis - Frenzied Coldblood (9) #3	Nightmare of Mensis	52600290	2600290	4	1518	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600300	Nightmare of Mensis - Eye +50 Discovery #4	Nightmare of Mensis	52600300	2600300	8	100201	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600300	Nightmare of Mensis - Eye +50 Discovery #4	Nightmare of Mensis	52600300	2600300	8	100201	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600305	Nightmare of Mensis - Madman's Knowledge #3	Nightmare of Mensis	52600305	2600305	4	1500	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600310	Nightmare of Mensis - Blood Stone Chunk #3	Nightmare of Mensis	52600310	2600310	4	3020	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600320	Nightmare of Mensis - Kin Coldblood (10) #1	Nightmare of Mensis	52600320	2600320	4	1519	filler	treasure	m26_00_00_00	True
@@ -396,7 +396,7 @@ fixed_nightmare_mensis_lot_2600350	Nightmare of Mensis - Twin Blood Stone Shards
 fixed_nightmare_mensis_lot_2600360	Nightmare of Mensis - Kin Coldblood (10) #2	Nightmare of Mensis	52600360	2600360	4	1519	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600370	Nightmare of Mensis - Blood Vial x4	Nightmare of Mensis	52600370	2600370	4	1000	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600380	Nightmare of Mensis - Sedative x3	Nightmare of Mensis	52600380	2600380	4	1101	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600390	Nightmare of Mensis - Moon +20% Blood Echoes #5	Nightmare of Mensis	52600390	2600390	8	100002	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600390	Nightmare of Mensis - Moon +20% Blood Echoes #5	Nightmare of Mensis	52600390	2600390	8	100002	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600395	Nightmare of Mensis - Madman's Knowledge #4	Nightmare of Mensis	52600395	2600395	4	1500	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600400	Nightmare of Mensis - Blood Vial x3	Nightmare of Mensis	52600400	2600400	4	1000	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600410	Nightmare of Mensis - Kin Coldblood (10) #3	Nightmare of Mensis	52600410	2600410	4	1519	filler	treasure	m26_00_00_00	True
@@ -406,12 +406,12 @@ fixed_nightmare_mensis_lot_2600440	Nightmare of Mensis - Madman's Knowledge #5	N
 fixed_nightmare_mensis_lot_2600450	Nightmare of Mensis - Blood Stone Chunk x2 #2	Nightmare of Mensis	52600450	2600450	4	3020	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600460	Nightmare of Mensis - Kin Coldblood (11) #1	Nightmare of Mensis	52600460	2600460	4	1590	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600470	Nightmare of Mensis - Kin Coldblood (11) #2	Nightmare of Mensis	52600470	2600470	4	1590	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600480	Nightmare of Mensis - Blood Gem #6	Nightmare of Mensis	52600480	2600480	8	126004	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600480	Nightmare of Mensis - Blood Gem #6	Nightmare of Mensis	52600480	2600480	8	126004	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600490	Nightmare of Mensis - Blood Stone Chunk x2 #3	Nightmare of Mensis	52600490	2600490	4	3020	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600500	Nightmare of Mensis - Kin Coldblood (11) #3	Nightmare of Mensis	52600500	2600500	4	1590	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600510	Nightmare of Mensis - Blood Gem #7	Nightmare of Mensis	52600510	2600510	8	126001	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600510	Nightmare of Mensis - Blood Gem #7	Nightmare of Mensis	52600510	2600510	8	126001	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600520	Nightmare of Mensis - Blood Stone Chunk x2 #4	Nightmare of Mensis	52600520	2600520	4	3020	filler	treasure	m26_00_00_00	True
-fixed_nightmare_mensis_lot_2600530	Nightmare of Mensis - Blood Gem #8	Nightmare of Mensis	52600530	2600530	8	126000	optional	treasure	m26_00_00_00	False
+fixed_nightmare_mensis_lot_2600530	Nightmare of Mensis - Blood Gem #8	Nightmare of Mensis	52600530	2600530	8	126000	optional	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600540	Nightmare of Mensis - Blood Rock	Nightmare of Mensis	52600540	2600540	4	3030	filler	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600550	Nightmare of Mensis - Iron Door Key (Nightmare Host corpse)	Nightmare of Mensis	52600550	2600550	4	4009	key_or_badge	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2600560	Nightmare of Mensis - Blood Stone Chunk #4	Nightmare of Mensis	52600560	2600560	4	3020	filler	treasure	m26_00_00_00	True
@@ -422,12 +422,12 @@ fixed_nightmare_mensis_lot_2600610	Nightmare of Mensis - Iron Door Key #2	Nightm
 fixed_nightmare_mensis_lot_2601000	Nightmare of Mensis - Iosefka's Blood Vial (Micolash arena chest)	Nightmare of Mensis	52601000	2601000	4	703	useful	treasure	m26_00_00_00	True
 fixed_nightmare_mensis_lot_2601010	Nightmare of Mensis - Yellow Backbone x2 (chest)	Nightmare of Mensis	52601010	2601010	4	7131	filler	treasure	m26_00_00_00	True
 fixed_nightmare_frontier_lot_3300000	Nightmare Frontier - Madman's Knowledge #1	Nightmare Frontier	53300100	3300000	4	1500	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300010	Nightmare Frontier - Fading Lake +5% Fire Reduction #1	Nightmare Frontier	53300110	3300010	8	101401	optional	treasure	m33_00_00_00	False
+fixed_nightmare_frontier_lot_3300010	Nightmare Frontier - Fading Lake +5% Fire Reduction #1	Nightmare Frontier	53300110	3300010	8	101401	optional	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300015	Nightmare Frontier - Madman's Knowledge #2	Nightmare Frontier	53300115	3300015	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300020	Nightmare Frontier - Bolt Paper x2	Nightmare Frontier	53300120	3300020	4	1320	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300030	Nightmare Frontier - Lead Elixir x2 #1	Nightmare Frontier	53300130	3300030	4	2030	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300040	Nightmare Frontier - Blood Vial x3 #1	Nightmare Frontier	53300140	3300040	4	1000	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300050	Nightmare Frontier - Great Deep Sea +100 All RES #2	Nightmare Frontier	53300150	3300050	8	102302	optional	treasure	m33_00_00_00	False
+fixed_nightmare_frontier_lot_3300050	Nightmare Frontier - Great Deep Sea +100 All RES #2	Nightmare Frontier	53300150	3300050	8	102302	optional	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300055	Nightmare Frontier - Madman's Knowledge #3	Nightmare Frontier	53300155	3300055	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300060	Nightmare Frontier - Frenzied Coldblood (9) #1	Nightmare Frontier	53300160	3300060	4	1518	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300070	Nightmare Frontier - Quicksilver Bullets x5	Nightmare Frontier	53300170	3300070	4	900	filler	treasure	m33_00_00_00	True
@@ -445,7 +445,7 @@ fixed_nightmare_frontier_lot_3300180	Nightmare Frontier - Coldblood Flowerbud #1
 fixed_nightmare_frontier_lot_3300190	Nightmare Frontier - Antidote x2 #2	Nightmare Frontier	53300290	3300190	4	1100	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300200	Nightmare Frontier - Frenzied Coldblood (8) #1	Nightmare Frontier	53300300	3300200	4	1517	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300210	Nightmare Frontier - Antidote x4	Nightmare Frontier	53300310	3300210	4	1100	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300220	Nightmare Frontier - Clear Deep Sea +200 Slow Poison RES #3	Nightmare Frontier	53300320	3300220	8	102002	optional	treasure	m33_00_00_00	False
+fixed_nightmare_frontier_lot_3300220	Nightmare Frontier - Clear Deep Sea +200 Slow Poison RES #3	Nightmare Frontier	53300320	3300220	8	102002	optional	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300225	Nightmare Frontier - Madman's Knowledge #7	Nightmare Frontier	53300325	3300225	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300240	Nightmare Frontier - Frenzied Coldblood (8) #2	Nightmare Frontier	53300340	3300240	4	1517	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300250	Nightmare Frontier - Lead Elixir x3	Nightmare Frontier	53300350	3300250	4	2030	filler	treasure	m33_00_00_00	True
@@ -455,18 +455,18 @@ fixed_nightmare_frontier_lot_3300280	Nightmare Frontier - Madman's Knowledge #9	
 fixed_nightmare_frontier_lot_3300290	Nightmare Frontier - Frenzied Coldblood (9) #3	Nightmare Frontier	53300390	3300290	4	1518	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300300	Nightmare Frontier - Kin Coldblood (10)	Nightmare Frontier	53300400	3300300	4	1519	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300310	Nightmare Frontier - Bold Hunter's Mark x3	Nightmare Frontier	53300410	3300310	4	1400	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300320	Nightmare Frontier - Clockwise Metamorphosis +10% HP #4	Nightmare Frontier	53300420	3300320	8	100302	optional	treasure	m33_00_00_00	False
+fixed_nightmare_frontier_lot_3300320	Nightmare Frontier - Clockwise Metamorphosis +10% HP #4	Nightmare Frontier	53300420	3300320	8	100302	optional	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300325	Nightmare Frontier - Madman's Knowledge #10	Nightmare Frontier	53300425	3300325	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300330	Nightmare Frontier - Coldblood Flowerbud x2	Nightmare Frontier	53300430	3300330	4	7012	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300340	Nightmare Frontier - Lead Elixir x2 #3	Nightmare Frontier	53300440	3300340	4	2030	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300350	Nightmare Frontier - Antidote x3	Nightmare Frontier	53300450	3300350	4	1100	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300360	Nightmare Frontier - Coldblood Flowerbud #2	Nightmare Frontier	53300460	3300360	4	7012	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300370	Nightmare Frontier - Blood Vial x2 #2	Nightmare Frontier	53300470	3300370	4	1000	filler	treasure	m33_00_00_00	True
-fixed_nightmare_frontier_lot_3300380	Nightmare Frontier - Stunning Deep Sea +200 Rapid Poison RES #5	Nightmare Frontier	53300480	3300380	8	102102	optional	treasure	m33_00_00_00	False
+fixed_nightmare_frontier_lot_3300380	Nightmare Frontier - Stunning Deep Sea +200 Rapid Poison RES #5	Nightmare Frontier	53300480	3300380	8	102102	optional	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300385	Nightmare Frontier - Madman's Knowledge #11	Nightmare Frontier	53300485	3300385	4	1500	filler	treasure	m33_00_00_00	True
 fixed_nightmare_frontier_lot_3300390	Nightmare Frontier - Madman's Knowledge #12	Nightmare Frontier	53300490	3300390	4	1500	filler	treasure	m33_00_00_00	True
 fixed_upper_cathedral_lot_2420110	Upper Cathedral Ward - Thick Coldblood (5)	Upper Cathedral Ward	52420110	2420110	4	1514	filler	treasure	m24_02_00_00;m24_02_00_01	True
-fixed_upper_cathedral_lot_2420120	Upper Cathedral Ward - Great Lake +4%	Upper Cathedral Ward	52420120	2420120	8	101802	optional	treasure	m24_02_00_00;m24_02_00_01	False
+fixed_upper_cathedral_lot_2420120	Upper Cathedral Ward - Great Lake +4%	Upper Cathedral Ward	52420120	2420120	8	101802	optional	treasure	m24_02_00_00;m24_02_00_01	True
 fixed_upper_cathedral_lot_2420130	Upper Cathedral Ward - Frenzied Coldblood (9) #1	Upper Cathedral Ward	52420130	2420130	4	1518	filler	treasure	m24_02_00_00;m24_02_00_01	True
 fixed_upper_cathedral_lot_2420140	Upper Cathedral Ward - Quicksilver Bullets x3	Upper Cathedral Ward	52420140	2420140	4	900	filler	treasure	m24_02_00_00;m24_02_00_01	True
 fixed_upper_cathedral_lot_2420150	Upper Cathedral Ward - Choir Garb	Upper Cathedral Ward	52420150	2420150	1	121000	useful	treasure	m24_02_00_00;m24_02_00_01	True
@@ -555,9 +555,9 @@ fixed_research_hall_lot_3500120	Research Hall - Blue Elixir x2 (tower)	Research 
 fixed_research_hall_lot_3500130	Research Hall - Frenzied Coldblood (9) #1 (underground cell)	Research Hall	53500130	3500130	4	1518	filler	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500140	Research Hall - Blood Stone Chunk #1 (tower)	Research Hall	53500140	3500140	4	3020	filler	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500150	Research Hall - Blue Elixir #1 (tower)	Research Hall	53500150	3500150	4	1120	filler	treasure	m35_00_00_00	True
-fixed_research_hall_lot_3500160	Research Hall - Blood Gem #1 (tower)	Research Hall	53500160	3500160	8	135000	optional	treasure	m35_00_00_00	False
+fixed_research_hall_lot_3500160	Research Hall - Blood Gem #1 (tower)	Research Hall	53500160	3500160	8	135000	optional	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500180	Research Hall - Blue Elixir #2 (tower)	Research Hall	53500180	3500180	4	1120	filler	treasure	m35_00_00_00	True
-fixed_research_hall_lot_3500190	Research Hall - Blood Gem #2 (tower)	Research Hall	53500190	3500190	8	135004	optional	treasure	m35_00_00_00	False
+fixed_research_hall_lot_3500190	Research Hall - Blood Gem #2 (tower)	Research Hall	53500190	3500190	8	135004	optional	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500200	Research Hall - Kin Coldblood (10) #2 (tower)	Research Hall	53500200	3500200	4	1519	filler	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500210	Research Hall - Frenzied Coldblood (9) #2 (tower 2F)	Research Hall	53500210	3500210	4	1518	filler	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500220	Research Hall - Sedative x3 (tower 2F)	Research Hall	53500220	3500220	4	1101	filler	treasure	m35_00_00_00	True
@@ -582,17 +582,17 @@ fixed_research_hall_lot_3500840	Research Hall - Great One's Wisdom #2 (chapel)	R
 fixed_research_hall_lot_3500850	Research Hall - Church Cannon (lower sanctum chest)	Research Hall	53500850	3500850	0	35000000	useful	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500860	Research Hall - Loch Shield (tower)	Research Hall	53500860	3500860	0	19100000	useful	treasure	m35_00_00_00	True
 fixed_research_hall_lot_3500870	Research Hall - Decorative Old Hunter Garb	Research Hall	53500870	3500870	1	361000	useful	treasure	m35_00_00_00	True
-fixed_research_hall_lot_3501100	Research Hall - Blood Gem #3 (tower 6.5F chest)	Research Hall	53501100	3501100	8	134000	optional	treasure	m35_00_00_00	False
-fixed_research_hall_lot_3501500	Research Hall - Blood Gem #4 (chapel chest)	Research Hall	53501500	3501500	8	135005	optional	treasure	m35_00_00_00	False
+fixed_research_hall_lot_3501100	Research Hall - Blood Gem #3 (tower 6.5F chest)	Research Hall	53501100	3501100	8	134000	optional	treasure	m35_00_00_00	True
+fixed_research_hall_lot_3501500	Research Hall - Blood Gem #4 (chapel chest)	Research Hall	53501500	3501500	8	135005	optional	treasure	m35_00_00_00	True
 fixed_fishing_hamlet_lot_3600000	Fishing Hamlet - Lead Elixir #1 (shoreline)	Fishing Hamlet	53600000	3600000	4	2030	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600010	Fishing Hamlet - Madman's Knowledge #1 (shoreline)	Fishing Hamlet	53600010	3600010	4	1500	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600100	Fishing Hamlet - Blood Vial x3 #1 (upper hamlet)	Fishing Hamlet	53600100	3600100	4	1000	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600110	Fishing Hamlet - Lead Elixir x2 #1 (upper hamlet)	Fishing Hamlet	53600110	3600110	4	2030	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600120	Fishing Hamlet - Kin Coldblood (10) #1 (upper hamlet)	Fishing Hamlet	53600120	3600120	4	1519	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600130	Fishing Hamlet - Oil Urn x4 #1 (upper hamlet)	Fishing Hamlet	53600130	3600130	4	1220	filler	treasure	m36_00_00_00	True
-fixed_fishing_hamlet_lot_3600140	Fishing Hamlet - Blood Gem #1 (upper hamlet)	Fishing Hamlet	53600140	3600140	8	134001	optional	treasure	m36_00_00_00	False
+fixed_fishing_hamlet_lot_3600140	Fishing Hamlet - Blood Gem #1 (upper hamlet)	Fishing Hamlet	53600140	3600140	8	134001	optional	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600150	Fishing Hamlet - Great One's Wisdom #1 (upper hamlet)	Fishing Hamlet	53600150	3600150	4	1501	filler	treasure	m36_00_00_00	True
-fixed_fishing_hamlet_lot_3600160	Fishing Hamlet - Blood Gem #2 (upper hamlet)	Fishing Hamlet	53600160	3600160	8	136002	optional	treasure	m36_00_00_00	False
+fixed_fishing_hamlet_lot_3600160	Fishing Hamlet - Blood Gem #2 (upper hamlet)	Fishing Hamlet	53600160	3600160	8	136002	optional	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600170	Fishing Hamlet - Blood Stone Chunk #1 (upper hamlet)	Fishing Hamlet	53600170	3600170	4	3020	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600200	Fishing Hamlet - Blood Stone Chunk #2 (mountain path)	Fishing Hamlet	53600200	3600200	4	3020	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600210	Fishing Hamlet - Great One's Wisdom #2 (mountain path)	Fishing Hamlet	53600210	3600210	4	1501	filler	treasure	m36_00_00_00	True
@@ -602,13 +602,13 @@ fixed_fishing_hamlet_lot_3600300	Fishing Hamlet - Blood Stone Chunk x2 (lower ha
 fixed_fishing_hamlet_lot_3600310	Fishing Hamlet - Blood Vial x3 #2 (lower hamlet)	Fishing Hamlet	53600310	3600310	4	1000	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600320	Fishing Hamlet - Blood Stone Chunk #3 (lower hamlet)	Fishing Hamlet	53600320	3600320	4	3020	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600330	Fishing Hamlet - Blood Stone Chunk #4 (lower hamlet)	Fishing Hamlet	53600330	3600330	4	3020	filler	treasure	m36_00_00_00	True
-fixed_fishing_hamlet_lot_3600340	Fishing Hamlet - Blood Gem #3 (lower hamlet)	Fishing Hamlet	53600340	3600340	8	136001	optional	treasure	m36_00_00_00	False
+fixed_fishing_hamlet_lot_3600340	Fishing Hamlet - Blood Gem #3 (lower hamlet)	Fishing Hamlet	53600340	3600340	8	136001	optional	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600350	Fishing Hamlet - Kin Coldblood (10) #4 (lower hamlet)	Fishing Hamlet	53600350	3600350	4	1519	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600360	Fishing Hamlet - Kin Coldblood (10) #5 (lower hamlet)	Fishing Hamlet	53600360	3600360	4	1519	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600400	Fishing Hamlet - Oil Urn x4 #2 (fish tank upper)	Fishing Hamlet	53600400	3600400	4	1220	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600410	Fishing Hamlet - Blood Vial x6 (fish tank upper)	Fishing Hamlet	53600410	3600410	4	1000	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600420	Fishing Hamlet - Madman's Knowledge #2 (fish tank upper)	Fishing Hamlet	53600420	3600420	4	1500	filler	treasure	m36_00_00_00	True
-fixed_fishing_hamlet_lot_3600430	Fishing Hamlet - Blood Gem #4 (fish tank middle)	Fishing Hamlet	53600430	3600430	8	136004	optional	treasure	m36_00_00_00	False
+fixed_fishing_hamlet_lot_3600430	Fishing Hamlet - Blood Gem #4 (fish tank middle)	Fishing Hamlet	53600430	3600430	8	136004	optional	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600440	Fishing Hamlet - Twin Blood Stone Shards x3 (fish tank middle)	Fishing Hamlet	53600440	3600440	4	3010	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600450	Fishing Hamlet - Blood Stone Chunk #5 (fish tank middle)	Fishing Hamlet	53600450	3600450	4	3020	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600460	Fishing Hamlet - Blood Stone Chunk #6 (fish tank middle)	Fishing Hamlet	53600460	3600460	4	3020	filler	treasure	m36_00_00_00	True
@@ -619,8 +619,8 @@ fixed_fishing_hamlet_lot_3600520	Fishing Hamlet - Madman's Knowledge #3 (culvert
 fixed_fishing_hamlet_lot_3600530	Fishing Hamlet - Great One's Wisdom #3 (culvert lower)	Fishing Hamlet	53600530	3600530	4	1501	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600540	Fishing Hamlet - Lead Elixir x2 #2 (culvert lower)	Fishing Hamlet	53600540	3600540	4	2030	filler	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600550	Fishing Hamlet - Kin Coldblood (11) #2 (culvert lower)	Fishing Hamlet	53600550	3600550	4	1590	filler	treasure	m36_00_00_00	True
-fixed_fishing_hamlet_lot_3600560	Fishing Hamlet - Blood Gem #5 (culvert lower)	Fishing Hamlet	53600560	3600560	8	136003	optional	treasure	m36_00_00_00	False
-fixed_fishing_hamlet_lot_3600570	Fishing Hamlet - Blood Gem #6 (culvert lower)	Fishing Hamlet	53600570	3600570	8	136006	optional	treasure	m36_00_00_00	False
+fixed_fishing_hamlet_lot_3600560	Fishing Hamlet - Blood Gem #5 (culvert lower)	Fishing Hamlet	53600560	3600560	8	136003	optional	treasure	m36_00_00_00	True
+fixed_fishing_hamlet_lot_3600570	Fishing Hamlet - Blood Gem #6 (culvert lower)	Fishing Hamlet	53600570	3600570	8	136006	optional	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600600	Fishing Hamlet - Blood Rock (fish tank lower)	Fishing Hamlet	53600600	3600600	4	3030	filler	treasure	m36_00_00_00	True
-fixed_fishing_hamlet_lot_3600610	Fishing Hamlet - Blood Gem #7 (fish tank lower)	Fishing Hamlet	53600610	3600610	8	136005	optional	treasure	m36_00_00_00	False
+fixed_fishing_hamlet_lot_3600610	Fishing Hamlet - Blood Gem #7 (fish tank lower)	Fishing Hamlet	53600610	3600610	8	136005	optional	treasure	m36_00_00_00	True
 fixed_fishing_hamlet_lot_3600700	Fishing Hamlet - Harrowed Hood	Fishing Hamlet	53600700	3600700	1	340000	useful	treasure	m36_00_00_00	True

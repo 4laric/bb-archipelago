@@ -31,8 +31,9 @@ class FixedLocation:
 
 
 # Exact GemGenParam ids proven to be fixed Caryll runes by playtest.32 and the
-# committed parameter/location audit.  Their native awards remain enabled,
-# but they are not AP checks until rune delivery is safe (#214).
+# committed parameter/location audit. Since rune delivery through the
+# event-award lane was confirmed live (2026-09-03) these are ordinary seeded
+# checks; the set remains the reviewed rune/gem classification.
 VANILLA_ONLY_CARYLL_RUNE_PARAMS = frozenset({
     100001, 100002, 100201, 100301, 100302, 100401, 100802,
     101301, 101302, 101401, 101601, 101701, 101802,
@@ -57,13 +58,7 @@ def _load() -> tuple[FixedLocation, ...]:
             classification=row["classification"],
             source_kind=row["source_kind"],
             source_ref=row["source_ref"],
-            # Category 8 rows are generated blood-gem recipes, not stable item
-            # identities. They remain AP checks but keep their native award so
-            # the player receives a valid game-constructed gem.
-            vanilla_award_suppressed=(
-                row["vanilla_award_suppressed"] == "True"
-                and int(row["item_category"]) != 8
-            ),
+            vanilla_award_suppressed=row["vanilla_award_suppressed"] == "True",
         )
         for row in rows
     )

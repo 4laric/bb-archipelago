@@ -23,7 +23,7 @@ def rows(path: Path) -> list[dict[str, str]]:
 
 
 class FixedLocationCatalogTests(unittest.TestCase):
-    def test_fixed_caryll_runes_are_named_but_remain_vanilla_only(self):
+    def test_fixed_caryll_runes_are_named_seeded_and_suppressed(self):
         from tools.build_fixed_location_slice import VANILLA_ONLY_CARYLL_RUNE_PARAMS as BUILDER_RUNES
         from worlds.bloodborne import NETWORK_LOCATIONS
 
@@ -42,8 +42,8 @@ class FixedLocationCatalogTests(unittest.TestCase):
         for rune in runes:
             with self.subTest(param=rune.item_id, location=rune.key):
                 self.assertNotIn("Blood Gem", rune.name)
-                self.assertFalse(rune.vanilla_award_suppressed)
-                self.assertNotIn(rune.key, seeded)
+                self.assertTrue(rune.vanilla_award_suppressed)
+                self.assertIn(rune.key, seeded)
 
     def test_genuine_category_eight_gems_remain_seeded_checks(self):
         from worlds.bloodborne import NETWORK_LOCATIONS
@@ -58,7 +58,7 @@ class FixedLocationCatalogTests(unittest.TestCase):
         for gem in genuine_gems:
             with self.subTest(param=gem.item_id, location=gem.key):
                 self.assertIn(gem.key, seeded)
-                self.assertFalse(gem.vanilla_award_suppressed)
+                self.assertTrue(gem.vanilla_award_suppressed)
 
     def test_selected_rows_are_exact_catalog_rows_with_item_evidence(self):
         catalog = {
