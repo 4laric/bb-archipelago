@@ -22,22 +22,30 @@ from .data import (
     UNCANNY_ITEM_KEYS,
     UNCANNY_WEAPONS,
     MODEL,
+    ONE_TIME_ENEMY_LOCATION_KEYS,
 )
 from .model import ItemKind, Rule
 from .resource_data import read_resource_text
 from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime_item_binding
 from .toast_placeholders import ToastPlacement, build_toast_placeholder_plan
 from .enemy_drops import build_enemy_drop_assignments
+from .category8_awards import CATEGORY8_AWARDS
 
 GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
-RUNTIME_BUILD = "bb-0.1.0-r9"
+RUNTIME_BUILD = "bb-0.1.0-r10"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
 SUPPRESSION_PLAN_SHA256 = "f35dec2ce4eaa97174ede1c8eaefff8dc77d90250e099d143027b59358f74485"
 ID_BASE = 0xBB0000
-NETWORK_LOCATIONS = tuple(
+ALL_NETWORK_LOCATIONS = tuple(
     location for location in MODEL.locations
     if location.key in SLICE_LOCATION_KEYS
+)
+# Historical/default manifest. Opt-in combat checks are published in the
+# datapackage but excluded from the seed unless their option is enabled.
+NETWORK_LOCATIONS = tuple(
+    location for location in ALL_NETWORK_LOCATIONS
+    if location.key not in ONE_TIME_ENEMY_LOCATION_KEYS
 )
 # Everything that can enter the pool: every non-event item has a permanent
 # network id and a validated runtime binding. The Yharnam slice option below
@@ -214,6 +222,9 @@ def build_item_pool_names(
     useful = [item.name for item in selected
               if item.kind is ItemKind.USEFUL and item.key not in UNCANNY_ITEM_KEYS]
     uncanny = [item.name for item in selected if item.key in UNCANNY_ITEM_KEYS]
+    # Option-off parity: opt-in combat checks must not silently grow callers
+    # that use the historical default capacity rather than a world's active
+    # location list. BloodborneWorld passes the active count explicitly.
     capacity = len(NETWORK_LOCATIONS) if capacity is None else capacity
     if len(progression) > capacity:
         raise ValueError(
@@ -282,7 +293,9 @@ ITEM_NAME_TO_ID[FILLER_ITEM_NAME] = _assigned("item", "blood_vial")
 # append-only), including rows the bounded slice does not seed. Only slice
 # locations enter the datapackage's name->id map.
 LOCATION_ID_BY_KEY = {loc.key: _assigned("location", loc.key) for loc in MODEL.locations}
-LOCATION_NAME_TO_ID = {loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in NETWORK_LOCATIONS}
+LOCATION_NAME_TO_ID = {
+    loc.name: LOCATION_ID_BY_KEY[loc.key] for loc in ALL_NETWORK_LOCATIONS
+}
 
 
 def build_runtime_slot_data(
@@ -306,7 +319,7 @@ def build_runtime_slot_data(
         if location_keys is None else frozenset(location_keys)
     )
     locations_by_key = {
-        location.key: location for location in NETWORK_LOCATIONS
+        location.key: location for location in ALL_NETWORK_LOCATIONS
         if location.key in active_location_keys
     }
     items_by_key = {item.key: item for item in SHUFFLABLE_ITEMS if item.key in active_keys}
@@ -334,6 +347,9 @@ def build_runtime_slot_data(
             "quantity": items_by_key[key].quantity,
             "reinforcement_level": binding.reinforcement_level,
             "feed_effect": binding.feed_effect,
+            "award_lot_id": binding.award_lot_id,
+            "gemgen_id": binding.gemgen_id,
+            "award_ack_flag": binding.award_ack_flag,
         }
         for key, binding in active_item_bindings.items()
     }
@@ -505,6 +521,16 @@ else:
         display_name = "Alternate Hypogean Gaol Routes"
         default = 0
 
+    class OneTimeEnemyChecks(Toggle):
+        """Add checks for reviewed non-respawning hunters and unique enemies.
+
+        Only encounters with a unique, durable, save-backed completion witness
+        are eligible. Quest NPCs and composite fights remain excluded until
+        their alternate outcomes can be represented safely.
+        """
+        display_name = "One-Time Hunter and Unique-Enemy Checks"
+        default = 0
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
@@ -521,6 +547,7 @@ else:
         goal: Goal
         include_dlc: IncludeDLC
         alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
+        one_time_enemy_checks: OneTimeEnemyChecks
 
     class BloodborneItem(APItem):
         game = GAME
@@ -615,16 +642,22 @@ else:
 
         def _active_locations(self):
             return tuple(
-                location for location in NETWORK_LOCATIONS
+                location for location in ALL_NETWORK_LOCATIONS
                 if self.options.include_dlc or location.key not in DLC_LOCATION_KEYS
                 if (self._alternate_gaol_enabled()
                     or location.key not in ALTERNATE_GAOL_LOCATION_KEYS)
+                if (self._one_time_enemy_checks_enabled()
+                    or location.key not in ONE_TIME_ENEMY_LOCATION_KEYS)
             )
 
         def _alternate_gaol_enabled(self) -> bool:
             # getattr keeps small unit-test world doubles and old generated
             # option objects fail-closed during the transition to this option.
             return bool(getattr(self.options, "alternate_hypogean_gaol_routes", False))
+
+        def _one_time_enemy_checks_enabled(self) -> bool:
+            # Fail closed for old generated option objects and small test doubles.
+            return bool(getattr(self.options, "one_time_enemy_checks", False))
 
         def _pool_item_keys(self) -> frozenset[str]:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
@@ -651,7 +684,7 @@ else:
             # Cathedral Ward, and therefore Old Yharnam, is behind the shuffled
             # Oedon Tomb Key. Leaving this unconditional would let fill bury the
             # key behind itself in a multiworld and call the seed complete.
-            goal_name = next(location.name for location in NETWORK_LOCATIONS
+            goal_name = next(location.name for location in ALL_NETWORK_LOCATIONS
                              if location.key == self._goal_location_key())
             self.multiworld.completion_condition[self.player] = (
                 lambda state: state.can_reach_location(goal_name, self.player))
@@ -704,9 +737,22 @@ else:
                 "include_dlc": bool(self.options.include_dlc),
                 "alternate_hypogean_gaol_routes": bool(
                     self._alternate_gaol_enabled()),
+                "one_time_enemy_checks": self._one_time_enemy_checks_enabled(),
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
                 "toast_placeholders": self._toast_placeholder_plan(),
+                "category8_awards": {
+                    str(ITEM_ID_BY_KEY[row.item_key]): {
+                        "item_key": row.item_key,
+                        "token_goods_id": row.token_goods_id,
+                        "item_lot_id": row.item_lot_id,
+                        "gemgen_id": row.gemgen_id,
+                        "ack_flag": row.ack_flag,
+                        "source_lot_id": row.source_lot_id,
+                    }
+                    for row in CATEGORY8_AWARDS
+                    if row.item_key in self._pool_item_keys()
+                },
                 **build_runtime_slot_data(
                     self._pool_item_keys() | STARTING_TOOL_KEYS,
                     self._goal_location_key(),

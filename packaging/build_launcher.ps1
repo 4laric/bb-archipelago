@@ -92,6 +92,12 @@ $pyinstaller = @(
     --version-file (Join-Path $versionRoot "launcher-version.txt") `
     --add-data "$(Join-Path $repo 'research\enemizer\enemy_tags.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\slot_policy.json');research\enemizer" `
+    --add-data "$(Join-Path $repo 'worlds\bloodborne\archipelago.json');worlds\bloodborne" `
+    --add-data "$(Join-Path $repo 'worlds\bloodborne\ids.tsv');worlds\bloodborne" `
+    --add-data "$(Join-Path $repo 'worlds\bloodborne\fixed_locations.tsv');worlds\bloodborne" `
+    --add-data "$(Join-Path $repo 'worlds\bloodborne\location_names.tsv');worlds\bloodborne" `
+    --add-data "$(Join-Path $repo 'worlds\bloodborne\enemy_drop_catalog.json');worlds\bloodborne" `
+    --add-data "$(Join-Path $repo 'worlds\bloodborne\starting_attire_catalog.tsv');worlds\bloodborne" `
     (Join-Path $repo "packaging\launcher_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }
 

@@ -16,6 +16,7 @@ import unittest
 from pathlib import Path
 
 from worlds.bloodborne import (
+    ALL_NETWORK_LOCATIONS,
     ITEM_ID_BY_KEY,
     ITEM_NAME_TO_ID,
     LOCATION_ID_BY_KEY,
@@ -29,6 +30,7 @@ from worlds.bloodborne import (
     _load_id_registry,
     build_runtime_slot_data,
 )
+from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
 from worlds.bloodborne.data import MODEL
 from worlds.bloodborne.model import ItemKind
 
@@ -212,6 +214,9 @@ GOLDEN_ITEMS = {
     "attire_yamamura_body": 0xBB0184,
     "attire_yamamura_arms": 0xBB0185,
     "attire_yamamura_legs": 0xBB0186,
+    # bb-archipelago#214 category-8 AwardItemLot bridge pilot.
+    "caryll_rune_communion_1": 0xBB0187,
+    "blood_gem_old_yharnam_123000": 0xBB0188,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -220,6 +225,10 @@ GOLDEN_ITEMS = {
     "augur_of_ebrietas": 0xBB0105,
     "oedon_tomb_key": 0xBB0106,
 }
+GOLDEN_ITEMS.update({
+    row.item_key: 0xBB0187 + index
+    for index, row in enumerate(CATEGORY8_AWARDS)
+})
 GOLDEN_LOCATIONS = {
     "boss_gehrman": 0xBB11F5,
     "boss_moon_presence": 0xBB11F6,
@@ -357,7 +366,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB12A1)
+        self.assertEqual(max(ids), 0xBB12A2)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""
@@ -408,7 +417,7 @@ class RegistryCoverageTests(unittest.TestCase):
     def test_display_names_are_unique(self):
         """Two items sharing a name would silently collapse in item_name_to_id."""
         self.assertEqual(len(ITEM_NAME_TO_ID), len(set(ITEM_NAME_TO_ID)))
-        self.assertEqual(len(LOCATION_NAME_TO_ID), len(NETWORK_LOCATIONS))
+        self.assertEqual(len(LOCATION_NAME_TO_ID), len(ALL_NETWORK_LOCATIONS))
 
 
 class RegistryFailureTests(unittest.TestCase):
@@ -473,7 +482,7 @@ class RuntimeItemContractTests(unittest.TestCase):
                 "live_grant_inventory_ui",
                 "param_id_inferred",
             },
-            "bb-0.1.0-r9": {
+            "bb-0.1.0-r10": {
                 "goods_formula_observed",
                 "live_grant_inventory_ui",
                 "param_id_inferred",

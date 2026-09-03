@@ -31,7 +31,7 @@ def parse_release_version(raw: str) -> ReleaseVersion:
     match = _VERSION.fullmatch(value)
     if match is None:
         raise ValueError(
-            "release version must look like v0.1.0, v0.1.0-playtest.35, "
+            "release version must look like v0.1.0, v0.1.0-beta.1, "
             "or v0.1.0-signing-canary.2"
         )
     parts = tuple(int(match.group(name)) for name in ("major", "minor", "patch"))

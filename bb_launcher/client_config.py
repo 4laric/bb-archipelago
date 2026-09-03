@@ -170,6 +170,7 @@ def write_client_runtime_config(
         "shad_log": log_path,
         "locations": [],
         "items": {},
+        "category8_awards": {},
         "auto_upgrade": bool(auto_upgrade),
         "auto_equip": bool(auto_equip),
         "pickup_notification_probe": bool(research_captures),

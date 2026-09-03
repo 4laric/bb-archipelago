@@ -25,7 +25,7 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 686  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 687  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
 SHIPPED_NAMED_ROWS = 625
 
@@ -51,6 +51,7 @@ SCRIPTED_CHECK_FLAGS = {
     "12101800",   # boss_gehrman
     "12101850",   # boss_moon_presence
     "13301800",   # boss_amygdala
+    "13200500",   # hunter_yurie
     "13401800",   # boss_ludwig
     "13501850",   # boss_living_failures
     "13501800",   # boss_lady_maria
@@ -86,6 +87,7 @@ DATA_PY_TABLED_CHECKS = {
     "boss_ebrietas": 12421800,
     "boss_shadows_of_yharnam": 12701800,
     "boss_rom": 13201800,
+    "hunter_yurie": 13200500,
     "boss_the_one_reborn": 12801800,
     "boss_micolash": 12601850,
     "boss_mergos_wet_nurse": 12601800,
@@ -145,7 +147,7 @@ LANDMARK_UNRESOLVED = ROOT / "docs" / "location_landmark_unresolved.tsv"
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
 HINTED_ROWS = 188
-BARE_ROWS = 498
+BARE_ROWS = 499
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an

@@ -56,6 +56,7 @@ FIELD_DEFINITIONS = (
     ("game_root", "shadPS4 game folder", "directory"),
     ("suppression_binder", "Suppressed gameparam", "file"),
     ("suppression_manifest", "Suppression manifest", "file"),
+    ("darkscript", "DarkScript3.exe (Cathedral checks)", "file"),
     ("map_studio_source", "Source MapStudio", "directory"),
     ("enemy_inventory", "Enemy inventory", "file"),
     ("soulsformats_next", "SoulsFormatsNEXT", "directory"),

@@ -79,6 +79,11 @@ alternate progression graph. It defaults off because the late Blood Moon path
 can bypass the expected Blood-starved Beast route into Old Yharnam. Early
 abduction still requires Blood-starved Beast, and enemy randomization preserves
 an authored Cathedral Ward Snatcher so access never depends on a lucky roll.
+Set `one_time_enemy_checks: true` to add the reviewed non-respawning hunter and
+unique-enemy checks. It defaults off; the initial conservative tranche contains
+Yurie at Byrgenwerth, whose dedicated persistent death-event flag is independent
+of her drop. The evidence census and explicit exclusions are in
+`docs/ONE-TIME-ENEMY-CHECKS.md`.
 Set `randomize_shops: true` to shuffle which of the ten hunter badges unlocks
 each ordinary Blood Echo Bath Messenger stock group. It defaults off and does
 not alter prices, stock contents, Insight shops, or Chalice shops.

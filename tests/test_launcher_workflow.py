@@ -241,6 +241,33 @@ class RequestIdentityFormatTests(unittest.TestCase):
         self.assertEqual(payload["shop_gate_permutation"],
                          identity["shop_gate_permutation"])
 
+    def test_category8_ack_flags_stay_in_the_owned_124009xx_window(self):
+        row = {
+            "item_key": "category8_test",
+            "token_goods_id": 9800,
+            "item_lot_id": 98000000,
+            "gemgen_id": 102901,
+            "ack_flag": 12400900,
+            "source_lot_id": 2400640,
+        }
+        for flag in (12400900, 12400999):
+            with self.subTest(flag=flag):
+                payload = _request_payload(REQUEST_FORMAT)
+                payload["category8_awards"] = {
+                    "12255623": dict(row, ack_flag=flag),
+                }
+                self.assertEqual(
+                    flag,
+                    self._identity_for(payload)["category8_awards"][0]["ack_flag"],
+                )
+        # 12401000 is referenced by vanilla events 12405263 and 13401000.
+        payload = _request_payload(REQUEST_FORMAT)
+        payload["category8_awards"] = {
+            "12255623": dict(row, ack_flag=12401000),
+        }
+        with self.assertRaisesRegex(ValidationError, "12400900..12400999"):
+            self._identity_for(payload)
+
     def test_non_bijective_shop_gate_permutation_is_refused(self):
         payload = _request_payload(REQUEST_FORMAT)
         payload.update({

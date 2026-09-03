@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from .fixed_locations import FIXED_LOCATIONS
 from .starting_attire import STARTING_ATTIRE_CATALOG
+from .category8_awards import CATEGORY8_AWARDS
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,9 @@ class RuntimeItemBinding:
     # fields rather than asking the client to infer semantics from an ID.
     feed_effect: str = "not_equippable"
     reinforcement_level: int | None = None
+    award_lot_id: int | None = None
+    gemgen_id: int | None = None
+    award_ack_flag: int | None = None
 
 
 @dataclass(frozen=True)
@@ -680,6 +684,18 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "loch_shield": RuntimeItemBinding(0x01237160, 0x81237160, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
 }
 
+ITEM_BINDINGS.update({
+    row.item_key: RuntimeItemBinding(
+        0x40000000 | row.token_goods_id,
+        0xB0000000 | row.token_goods_id,
+        "category-8 event token; category-4 formula observed; AwardItemLot bridge #214",
+        award_lot_id=row.item_lot_id,
+        gemgen_id=row.gemgen_id,
+        award_ack_flag=row.ack_flag,
+    )
+    for row in CATEGORY8_AWARDS
+})
+
 _ATTIRE_FEED_EFFECT = {
     "head": "attire_head",
     "body": "attire_chest",
@@ -1025,6 +1041,17 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "treasure_messengers_gift": RuntimeLocationBinding(
         53300330, "MSB treasure m33_00_00_00 + ItemLotParam 3300230 acquisition flag",
         3300230, "treasure", "m33_00_00_00", 4, 2110),
+    "hunter_yurie": RuntimeLocationBinding(
+        13200500,
+        "dedicated EMEVD event slot 13200500 waits for CharacterDead(3200110); "
+        "MSB m32_00_00_00 places c0000_0002 as entity 3200110 with NpcParam 6450 "
+        "(university Choir NPC), whose disableRespawn field is 1",
+        None,
+        "one_time_enemy",
+        "m32_00_00_00.emevd.dcx.js:122,645-655; msb_enemies.tsv; NpcParam 6450",
+        None,
+        None,
+    ),
     "treasure_underground_jail_chunk": RuntimeLocationBinding(
         53500630, "MSB treasure m35_00_00_00 + ItemLotParam 3500630 acquisition flag",
         3500630, "treasure", "m35_00_00_00", 4, 3020),

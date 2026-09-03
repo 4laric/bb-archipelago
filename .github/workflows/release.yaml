@@ -1,6 +1,6 @@
 name: release
 
-# Tag-triggered player prerelease: pushing v* (e.g. v0.1.0-playtest.1) builds
+# Tag-triggered player prerelease: pushing v* (e.g. v0.1.0-beta.1) builds
 # the full Windows launcher package -- launcher, native tools, CE table, and
 # the bb-ap-client built from the client repo's main -- and attaches the zip
 # plus bloodborne.apworld to a GitHub prerelease, so a playtester needs no
@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to create (e.g. v0.1.0-playtest.1)"
+        description: "Release tag to create (e.g. v0.1.0-beta.1)"
         required: true
       client_ref:
         description: "from-software-archipelago-clients ref to build"

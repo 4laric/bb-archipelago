@@ -398,7 +398,22 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         && randomizeShopElement.ValueKind == JsonValueKind.True;
     bool randomizeDrops = root.TryGetProperty("randomize_enemy_drops", out JsonElement randomizeDropsElement)
         && randomizeDropsElement.ValueKind == JsonValueKind.True;
-    if (!randomizeStarting && !removeRequirements && !randomizeShops && !randomizeDrops)
+    List<Category8Award> category8Awards = [];
+    if (root.TryGetProperty("category8_awards", out JsonElement awardsElement))
+    {
+        IEnumerable<JsonElement> rows = awardsElement.ValueKind switch
+        {
+            JsonValueKind.Array => awardsElement.EnumerateArray(),
+            JsonValueKind.Object => awardsElement.EnumerateObject().Select(property => property.Value),
+            _ => throw new InvalidDataException("category8_awards must be an object or array"),
+        };
+        category8Awards = rows.Select(row =>
+            JsonSerializer.Deserialize<Category8Award>(row.GetRawText())
+            ?? throw new InvalidDataException("category8_awards contains an empty row")
+        ).ToList();
+    }
+    if (!randomizeStarting && !removeRequirements && !randomizeShops && !randomizeDrops
+        && category8Awards.Count == 0)
         throw new InvalidDataException("request contains no seed parameter edits");
     int[] right = [];
     int[] left = [];
@@ -465,7 +480,14 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     PARAM npcs = PARAM.Read(npcFile.Bytes);
     PARAMDEF npcDefinition = ReadMatchingDefinition(defs, npcs);
     npcs.ApplyParamdef(npcDefinition);
-    PARAM itemLots = PARAM.Read(RequireSingleFile(game, "ItemLotParam.param").Bytes);
+    BinderFile itemLotFile = RequireSingleFile(game, "ItemLotParam.param");
+    PARAM itemLots = PARAM.Read(itemLotFile.Bytes);
+    PARAMDEF itemLotDefinition = ReadMatchingDefinition(defs, itemLots);
+    itemLots.ApplyParamdef(itemLotDefinition);
+    BinderFile goodsFile = RequireSingleFile(game, "EquipParamGoods.param");
+    PARAM goods = PARAM.Read(goodsFile.Bytes);
+    PARAMDEF goodsDefinition = ReadMatchingDefinition(defs, goods);
+    goods.ApplyParamdef(goodsDefinition);
     var itemLotIds = itemLots.Rows.Select(row => row.ID).ToHashSet();
     var weaponIds = weapons.Rows.Select(row => row.ID).ToHashSet();
     if (right.Concat(left).Any(id => !weaponIds.Contains(id)))
@@ -531,9 +553,61 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         fields.Add(edit.DropField);
         RequireCell(row, edit.DropField).Value = edit.TargetLotId;
     }
+    if (category8Awards.Any(row => row.TokenGoodsId <= 0 || row.ItemLotId <= 0
+        || row.GemgenId <= 0 || row.AckFlag <= 0 || row.SourceLotId <= 0)
+        || category8Awards.Select(row => row.TokenGoodsId).Distinct().Count() != category8Awards.Count
+        || category8Awards.Select(row => row.ItemLotId).Distinct().Count() != category8Awards.Count
+        || category8Awards.Select(row => row.AckFlag).Distinct().Count() != category8Awards.Count)
+        throw new InvalidDataException("category-8 award table contains invalid or repeated ids");
+    foreach (Category8Award award in category8Awards)
+    {
+        if (goods.Rows.Any(row => row.ID == award.TokenGoodsId)
+            || itemLots.Rows.Any(row => row.ID == award.ItemLotId))
+            throw new InvalidDataException($"category-8 award ids collide for {award.ItemKey}");
+        PARAM.Row sourceLot = itemLots.Rows.Single(row => row.ID == award.SourceLotId);
+        if (Convert.ToInt32(RequireCell(sourceLot, "lotItemCategory01").Value) != 8
+            || Convert.ToInt32(RequireCell(sourceLot, "lotItemId01").Value) != award.GemgenId)
+            throw new InvalidDataException($"{award.ItemKey}: source lot does not witness GemGenParam {award.GemgenId}");
+        var lot = new PARAM.Row(sourceLot) { ID = award.ItemLotId, Name = $"AP {award.ItemKey}" };
+        RequireCell(lot, "getItemFlagId").Value = -1;
+        RequireCell(lot, "lotItemCategory01").Value = (byte)8;
+        RequireCell(lot, "lotItemId01").Value = award.GemgenId;
+        RequireCell(lot, "lotItemNum01").Value = (byte)1;
+        RequireCell(lot, "lotItemBasePoint01").Value = (short)100;
+        RequireCell(lot, "cumulateNumFlagId").Value = -1;
+        RequireCell(lot, "cumulateNumMax").Value = (byte)0;
+        RequireCell(lot, "lotItem_Rarity").Value = (byte)0;
+        // A source lot is only a schema/default witness. Some category-8
+        // vanilla lots contain additional rewards; carrying those slots into
+        // the AP row duplicates unrelated gems/runes (live acceptance caught
+        // Communion's source also awarding GemGenParam 123000).
+        for (int slot = 1; slot <= 8; slot++)
+        {
+            RequireCell(lot, $"cumulateLotPoint{slot:00}").Value = (short)0;
+            RequireCell(lot, $"getItemFlagId{slot:00}").Value = 0;
+            RequireCell(lot, $"enableLuck{slot:00}").Value = (byte)0;
+            RequireCell(lot, $"cumulateReset{slot:00}").Value = (byte)0;
+            if (slot > 1)
+            {
+                RequireCell(lot, $"lotItemCategory{slot:00}").Value = (byte)0;
+                RequireCell(lot, $"lotItemId{slot:00}").Value = 0;
+                RequireCell(lot, $"lotItemNum{slot:00}").Value = (byte)0;
+                RequireCell(lot, $"lotItemBasePoint{slot:00}").Value = (short)0;
+            }
+        }
+        itemLots.Rows.Add(lot);
+        PARAM.Row pebble = goods.Rows.Single(row => row.ID == 1120);
+        var token = new PARAM.Row(pebble) { ID = award.TokenGoodsId, Name = $"AP incoming {award.ItemKey}" };
+        RequireCell(token, "maxNum").Value = (byte)99;
+        RequireCell(token, "maxRepositoryNum").Value = (short)0;
+        RequireCell(token, "isDeposit").Value = (byte)0;
+        goods.Rows.Add(token);
+    }
     shopFile.Bytes = shops.Write();
     weaponFile.Bytes = weapons.Write();
     npcFile.Bytes = npcs.Write();
+    itemLotFile.Bytes = itemLots.Write();
+    goodsFile.Bytes = goods.Write();
     Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
     game.Write(outputPath);
 
@@ -541,6 +615,8 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     BinderFile checkedShopFile = RequireSingleFile(check, "ShopLineupParam.param");
     BinderFile checkedWeaponFile = RequireSingleFile(check, "EquipParamWeapon.param");
     BinderFile checkedNpcFile = RequireSingleFile(check, "NpcParam.param");
+    BinderFile checkedItemLotFile = RequireSingleFile(check, "ItemLotParam.param");
+    BinderFile checkedGoodsFile = RequireSingleFile(check, "EquipParamGoods.param");
     for (int index = 0; index < check.Files.Count; index++)
     {
         BinderFile file = check.Files[index];
@@ -548,6 +624,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         if (file.ID != before.Id || file.Name != before.Name)
             throw new InvalidDataException($"round-trip changed binder identity at index {index}");
         if (file != checkedShopFile && file != checkedWeaponFile && file != checkedNpcFile
+            && file != checkedItemLotFile && file != checkedGoodsFile
             && !file.Bytes.SequenceEqual(before.Bytes))
             throw new InvalidDataException($"round-trip changed unrelated binder file {file.Name}");
     }
@@ -607,6 +684,36 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         if (Convert.ToInt32(RequireCell(row, edit.DropField).Value) != edit.TargetLotId)
             throw new InvalidDataException(
                 $"NpcParam {edit.NpcParamId} did not retain {edit.DropField}={edit.TargetLotId}");
+    }
+    PARAM checkedLots = PARAM.Read(checkedItemLotFile.Bytes);
+    checkedLots.ApplyParamdef(itemLotDefinition);
+    PARAM checkedGoods = PARAM.Read(checkedGoodsFile.Bytes);
+    checkedGoods.ApplyParamdef(goodsDefinition);
+    foreach (Category8Award award in category8Awards)
+    {
+        PARAM.Row lot = checkedLots.Rows.Single(row => row.ID == award.ItemLotId);
+        if (Convert.ToInt32(RequireCell(lot, "lotItemCategory01").Value) != 8
+            || Convert.ToInt32(RequireCell(lot, "lotItemId01").Value) != award.GemgenId
+            || Convert.ToInt32(RequireCell(lot, "lotItemNum01").Value) != 1
+            || Convert.ToInt32(RequireCell(lot, "lotItemBasePoint01").Value) != 100
+            || Enumerable.Range(2, 7).Any(slot =>
+                Convert.ToInt32(RequireCell(lot, $"lotItemCategory{slot:00}").Value) != 0
+                || Convert.ToInt32(RequireCell(lot, $"lotItemId{slot:00}").Value) != 0
+                || Convert.ToInt32(RequireCell(lot, $"lotItemNum{slot:00}").Value) != 0
+                || Convert.ToInt32(RequireCell(lot, $"lotItemBasePoint{slot:00}").Value) != 0)
+            || Enumerable.Range(1, 8).Any(slot =>
+                Convert.ToInt32(RequireCell(lot, $"cumulateLotPoint{slot:00}").Value) != 0
+                || Convert.ToInt32(RequireCell(lot, $"getItemFlagId{slot:00}").Value) != 0
+                || Convert.ToInt32(RequireCell(lot, $"enableLuck{slot:00}").Value) != 0
+                || Convert.ToInt32(RequireCell(lot, $"cumulateReset{slot:00}").Value) != 0)
+            || Convert.ToInt32(RequireCell(lot, "getItemFlagId").Value) != -1
+            || Convert.ToInt32(RequireCell(lot, "cumulateNumFlagId").Value) != -1
+            || Convert.ToInt32(RequireCell(lot, "cumulateNumMax").Value) != 0
+            || Convert.ToInt32(RequireCell(lot, "lotItem_Rarity").Value) != 0)
+            throw new InvalidDataException($"{award.ItemKey}: category-8 lot failed round-trip verification");
+        PARAM.Row token = checkedGoods.Rows.Single(row => row.ID == award.TokenGoodsId);
+        if (Convert.ToInt32(RequireCell(token, "isDeposit").Value) != 0)
+            throw new InvalidDataException($"{award.ItemKey}: token remained depositable");
     }
     Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count} output={outputPath}");
 }
@@ -718,6 +825,13 @@ sealed record EnemyDropAssignment(
     [property: JsonPropertyName("drop_field")] string DropField,
     [property: JsonPropertyName("source_lot_id")] int SourceLotId,
     [property: JsonPropertyName("target_lot_id")] int TargetLotId);
+sealed record Category8Award(
+    [property: JsonPropertyName("item_key")] string ItemKey,
+    [property: JsonPropertyName("token_goods_id")] int TokenGoodsId,
+    [property: JsonPropertyName("item_lot_id")] int ItemLotId,
+    [property: JsonPropertyName("gemgen_id")] int GemgenId,
+    [property: JsonPropertyName("ack_flag")] int AckFlag,
+    [property: JsonPropertyName("source_lot_id")] int SourceLotId);
 sealed record FileState(int Id, string Name, byte[] Bytes);
 
 sealed record RowState(int Id, string? Name, Dictionary<string, object> Cells)
@@ -738,7 +852,10 @@ sealed record RowState(int Id, string? Name, Dictionary<string, object> Cells)
     {
         if (Id != after.Id)
             throw new InvalidDataException($"{context}: row id changed {Id} -> {after.Id}");
-        if (Name != after.Name)
+        // PARAM round-tripping normalizes an absent row name to the empty
+        // string. Treat those two representations as the same identity while
+        // still rejecting every substantive rename.
+        if (!string.Equals(Name ?? "", after.Name ?? "", StringComparison.Ordinal))
             throw new InvalidDataException(
                 $"{context}: row name changed '{Name ?? "<null>"}' -> '{after.Name ?? "<null>"}'");
         if (!Cells.Keys.ToHashSet().SetEquals(after.Cells.Keys))

@@ -43,6 +43,8 @@ TRANSACTION_NAME = ".bb-ap-launcher-transaction.json"
 TRANSACTION_FORMAT = "bb-launcher-activation-transaction-v1"
 DVDROOT_PREFIX = "dvdroot_ps4/"
 SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
+CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
+COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
 MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
 # The one operator escape hatch over suppression-binder hash skew
@@ -189,9 +191,10 @@ def _safe_overlay_path(raw: str) -> str:
         and "/" not in normalized[len(MAP_PREFIX):]
         and normalized.lower().endswith(".msb.dcx")
     )
-    if not is_suppression and not is_map:
+    is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, COMMON_EVENT_PATH}
+    if not is_suppression and not is_map and not is_owned_event:
         raise ValidationError(
-            f"overlay path is outside the param/map contract: {normalized}"
+            f"overlay path is outside the param/map/event contract: {normalized}"
         )
     return normalized
 
@@ -210,6 +213,10 @@ def canonical_overlay_case(value: str) -> str:
     normalized = value.replace("\\", "/")
     if normalized.casefold() == SUPPRESSION_PATH.casefold():
         return SUPPRESSION_PATH
+    if normalized.casefold() == CATHEDRAL_EVENT_PATH.casefold():
+        return CATHEDRAL_EVENT_PATH
+    if normalized.casefold() == COMMON_EVENT_PATH.casefold():
+        return COMMON_EVENT_PATH
     if normalized.casefold().startswith(MAP_PREFIX.casefold()):
         return MAP_PREFIX + normalized[len(MAP_PREFIX) :]
     return normalized
@@ -473,6 +480,8 @@ class SeedCache:
         identity: SeedIdentity,
         suppression_binder: Path | str,
         map_studio: Path | str | None = None,
+        cathedral_event: Path | str | None = None,
+        common_event: Path | str | None = None,
     ) -> BuildResult:
         key = identity.cache_key
         destination = self.path_for(key)
@@ -518,6 +527,16 @@ class SeedCache:
         stage.mkdir()
         try:
             inputs = [(SUPPRESSION_PATH, binder, "suppression")]
+            if cathedral_event is not None:
+                event = Path(cathedral_event).expanduser().resolve()
+                if not event.is_file() or event.is_symlink():
+                    raise ValidationError(f"Cathedral event is not a regular file: {event}")
+                inputs.append((CATHEDRAL_EVENT_PATH, event, "cathedral-event"))
+            if common_event is not None:
+                event = Path(common_event).expanduser().resolve()
+                if not event.is_file() or event.is_symlink():
+                    raise ValidationError(f"Common event is not a regular file: {event}")
+                inputs.append((COMMON_EVENT_PATH, event, "common-event"))
             inputs.extend(
                 (f"{MAP_PREFIX}{path.name}", path, "enemizer") for path in maps
             )
@@ -552,6 +571,26 @@ class SeedCache:
                     ),
                     "plan_sha256": identity.suppression_plan_sha256,
                 },
+                "cathedral_event": (
+                    None if cathedral_event is None else {
+                        "path": CATHEDRAL_EVENT_PATH,
+                        "sha256": next(
+                            record["sha256"] for record in records
+                            if record["path"] == CATHEDRAL_EVENT_PATH
+                        ),
+                        "events": [12400760, 12401803],
+                        "laurence_witness_flag": 12401898,
+                        "suppressed_password_flag": 12401803,
+                    }
+                ),
+                "common_event": (
+                    None if common_event is None else {
+                        "path": COMMON_EVENT_PATH,
+                        "sha256": next(record["sha256"] for record in records
+                                       if record["path"] == COMMON_EVENT_PATH),
+                        "event": 98000000,
+                    }
+                ),
                 "enemizer": {
                     "enabled": bool(maps),
                     "seed": identity.enemizer_seed,
@@ -625,6 +664,40 @@ class SeedCache:
             raise ValidationError("suppression witness points outside the overlay binder")
         if suppression.get("sha256") != expected[SUPPRESSION_PATH].get("sha256"):
             raise ValidationError("suppression witness hash does not match the binder record")
+        cathedral = manifest.get("cathedral_event")
+        cathedral_record = expected.get(CATHEDRAL_EVENT_PATH)
+        if (cathedral is None) != (cathedral_record is None):
+            raise ValidationError(
+                "Cathedral event file and witness metadata must either both be present or both be absent"
+            )
+        if cathedral is not None:
+            if not isinstance(cathedral, dict):
+                raise ValidationError("Cathedral event witness is not an object")
+            if cathedral.get("path") != CATHEDRAL_EVENT_PATH:
+                raise ValidationError("Cathedral event witness points outside the managed event")
+            assert cathedral_record is not None
+            if cathedral_record.get("component") != "cathedral-event":
+                raise ValidationError("Cathedral event output has the wrong component")
+            if cathedral.get("sha256") != cathedral_record.get("sha256"):
+                raise ValidationError("Cathedral event witness hash does not match its record")
+            if cathedral.get("events") != [12400760, 12401803]:
+                raise ValidationError("Cathedral event witness has unexpected owned events")
+            if cathedral.get("laurence_witness_flag") != 12401898:
+                raise ValidationError("Cathedral event witness has the wrong Laurence flag")
+            if cathedral.get("suppressed_password_flag") != 12401803:
+                raise ValidationError("Cathedral event witness has the wrong password flag")
+        common = manifest.get("common_event")
+        common_record = expected.get(COMMON_EVENT_PATH)
+        if (common is None) != (common_record is None):
+            raise ValidationError("Common event file and witness must both be present or absent")
+        if common is not None:
+            if not isinstance(common, dict) or common.get("path") != COMMON_EVENT_PATH:
+                raise ValidationError("Common event witness points outside the managed event")
+            assert common_record is not None
+            if (common_record.get("component") != "common-event"
+                    or common.get("sha256") != common_record.get("sha256")
+                    or common.get("event") != 98000000):
+                raise ValidationError("Common category-8 event witness is invalid")
         return BuildResult(root, manifest, False)
 
 
@@ -1239,6 +1312,8 @@ def _stage_overlay(
         "build_manifest_sha256": sha256_file(build.path / SEED_MANIFEST_NAME),
         "files": build.manifest["files"],
         "suppression": build.manifest["suppression"],
+        "common_event": build.manifest.get("common_event"),
+        "cathedral_event": build.manifest.get("cathedral_event"),
         "enemizer": build.manifest["enemizer"],
         "user_merge": {
             "format": USER_MERGE_FORMAT,

@@ -19,7 +19,10 @@ from worlds.bloodborne.data import (
 )
 from worlds.bloodborne.model import ItemKind, Rule
 from worlds.bloodborne.runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS
+from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
+from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
 from worlds.bloodborne import (
+    ALL_NETWORK_LOCATIONS,
     FILLER_ITEM_NAME,
     FILLER_WEIGHTS,
     FULL_POOL_ITEM_KEYS,
@@ -89,6 +92,35 @@ def slice_reachable(held: set[str], *, locations=None) -> set[str]:
 
 
 class BloodborneModelTests(unittest.TestCase):
+    def test_category8_awards_cover_the_reviewed_fixed_catalog(self):
+        reviewed = {
+            row.item_lot_id: row.item_id
+            for row in FIXED_LOCATIONS if row.item_category == 8
+        }
+        self.assertEqual(58, len(reviewed))
+        self.assertEqual(
+            reviewed,
+            {row.source_lot_id: row.gemgen_id for row in CATEGORY8_AWARDS},
+        )
+
+    def test_category8_runtime_ids_and_ack_flags_are_unique(self):
+        self.assertEqual(58, len(CATEGORY8_AWARDS))
+        for field in ("item_key", "display_name", "token_goods_id",
+                      "item_lot_id", "ack_flag", "source_lot_id"):
+            values = [getattr(row, field) for row in CATEGORY8_AWARDS]
+            self.assertEqual(len(values), len(set(values)), field)
+        # 12401000 is vanilla-owned (event_flag_references.tsv); the AP bridge
+        # deliberately stays in the audited-empty 12400900..12400999 window.
+        self.assertTrue(all(12_400_900 <= row.ack_flag <= 12_400_999
+                            for row in CATEGORY8_AWARDS))
+        self.assertNotIn(12_401_000, {row.ack_flag for row in CATEGORY8_AWARDS})
+
+    def test_category8_duplicate_recipes_remain_distinct_items(self):
+        duplicate = [row for row in CATEGORY8_AWARDS if row.gemgen_id == 126_000]
+        self.assertEqual(2, len(duplicate))
+        self.assertEqual(2, len({row.item_key for row in duplicate}))
+        self.assertEqual(2, len({row.source_lot_id for row in duplicate}))
+
     def test_model_references_are_valid(self):
         errors = MODEL.validate()
         self.assertFalse(errors, "invalid model references: " + "; ".join(errors))
@@ -217,30 +249,30 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 73)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 49)
-        self.assertEqual(counts["Blood Stone Shards x2"], 37)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 36)
-        self.assertEqual(counts["Blood Stone Chunk"], 24)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 24)
+        self.assertEqual(counts["Blood Vial"], 65)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 43)
+        self.assertEqual(counts["Blood Stone Shards x2"], 32)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 32)
+        self.assertEqual(counts["Blood Stone Chunk"], 22)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 21)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2"):
-            self.assertEqual(counts[name], 24, name)
-        self.assertEqual(counts["Bolt Paper x2"], 24)
-        self.assertEqual(counts["Bone Marrow Ash x3"], 24)
+            self.assertEqual(counts[name], 22, name)
+        self.assertEqual(counts["Bolt Paper x2"], 21)
+        self.assertEqual(counts["Bone Marrow Ash x3"], 21)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2",
                      ):
-            self.assertEqual(counts[name], 12, name)
+            self.assertEqual(counts[name], 11, name)
         for name in ("Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
-            self.assertEqual(counts[name], 12, name)
-        self.assertEqual(counts["Great One's Wisdom"], 12)
-        self.assertEqual(counts["Coldblood Dew (3)"], 12)
-        self.assertEqual(counts["Thick Coldblood (6)"], 12)
-        self.assertEqual(counts["Frenzied Coldblood (8)"], 12)
-        self.assertEqual(counts["Kin Coldblood (11)"], 12)
+            self.assertEqual(counts[name], 11, name)
+        self.assertEqual(counts["Great One's Wisdom"], 11)
+        self.assertEqual(counts["Coldblood Dew (3)"], 11)
+        self.assertEqual(counts["Thick Coldblood (6)"], 11)
+        self.assertEqual(counts["Frenzied Coldblood (8)"], 11)
+        self.assertEqual(counts["Kin Coldblood (11)"], 11)
         self.assertEqual(counts["Blood Rock"], 1)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
@@ -320,7 +352,7 @@ class BloodborneModelTests(unittest.TestCase):
                                  for row in csv.DictReader(handle, delimiter="\t")}
 
         for key, binding in LOCATION_BINDINGS.items():
-            if binding.source_kind in ("boss_defeat", "interaction"):
+            if binding.source_kind in ("boss_defeat", "interaction", "one_time_enemy"):
                 # Flag-only checks: no item lot to trace; the evidence string
                 # must carry the flag itself.
                 self.assertIsNone(binding.item_lot_id)
@@ -379,7 +411,10 @@ class BloodborneModelTests(unittest.TestCase):
         # Every model location has a permanent id (ids.tsv is append-only);
         # the datapackage map is restricted to what the slice seeds.
         self.assertTrue({location.key for location in NETWORK_LOCATIONS} <= set(LOCATION_ID_BY_KEY))
-        self.assertEqual({location.name for location in NETWORK_LOCATIONS}, set(LOCATION_NAME_TO_ID))
+        self.assertEqual(
+            {location.name for location in ALL_NETWORK_LOCATIONS},
+            set(LOCATION_NAME_TO_ID),
+        )
         self.assertEqual(len(ITEM_NAME_TO_ID), len(shufflable) + 1)  # Blood Vial filler
         self.assertFalse(set(ITEM_NAME_TO_ID.values()) & set(LOCATION_ID_BY_KEY.values()))
 

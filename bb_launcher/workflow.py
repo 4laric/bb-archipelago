@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
+    CATHEDRAL_EVENT_PATH,
+    COMMON_EVENT_PATH,
     STALE_BARE_SERIAL_REMEDY,
     SUPPRESSION_CHECK_PLAN,
     SUPPRESSION_CHECK_SOURCE,
@@ -89,6 +91,7 @@ class LauncherSettings:
     soulsformats_next: Path | None = None
     state_root: Path | None = None
     shad_log: Path | None = None
+    darkscript: Path | None = None
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any], *, relative_to: Path | None = None) -> "LauncherSettings":
@@ -124,6 +127,7 @@ class LauncherSettings:
             soulsformats_next=optional("soulsformats_next"),
             state_root=optional("state_root"),
             shad_log=optional("shad_log"),
+            darkscript=optional("darkscript"),
         )
 
     def as_dict(self) -> dict[str, Any]:
@@ -140,6 +144,7 @@ class LauncherSettings:
             "soulsformats_next": None if self.soulsformats_next is None else str(self.soulsformats_next),
             "state_root": None if self.state_root is None else str(self.state_root),
             "shad_log": None if self.shad_log is None else str(self.shad_log),
+            "darkscript": None if self.darkscript is None else str(self.darkscript),
         }
 
 
@@ -663,6 +668,32 @@ def _request_identity(
             seen_drop_fields.add(key)
     elif enemy_drop_assignments is not None or enemy_drop_mode is not None:
         raise ValidationError("AP request disables enemy drops but still supplies a plan")
+    raw_category8_awards = request.get("category8_awards", {})
+    if (not isinstance(raw_category8_awards, dict)
+            or any(not isinstance(key, str) or not key.isdecimal()
+                   or not isinstance(row, dict)
+                   for key, row in raw_category8_awards.items())):
+        raise ValidationError("AP request has an invalid category-8 award table")
+    category8_awards = list(raw_category8_awards.values())
+    required_award_fields = {
+        "item_key", "token_goods_id", "item_lot_id", "gemgen_id", "ack_flag",
+        "source_lot_id",
+    }
+    for row in category8_awards:
+        if (set(row) != required_award_fields
+                or not isinstance(row["item_key"], str)
+                or any(not isinstance(row[field], int) or row[field] <= 0
+                       for field in required_award_fields - {"item_key"})):
+            raise ValidationError("AP request has an invalid category-8 award row")
+    for field in ("token_goods_id", "item_lot_id", "ack_flag"):
+        values = [row[field] for row in category8_awards]
+        if len(values) != len(set(values)):
+            raise ValidationError(f"category-8 award table repeats {field}")
+    if any(not 12_400_900 <= row["ack_flag"] <= 12_400_999
+           for row in category8_awards):
+        raise ValidationError(
+            "category-8 award acknowledgement flag is outside 12400900..12400999"
+        )
     seed_name = request.get("seed_name")
     return {
         "request": request,
@@ -682,6 +713,7 @@ def _request_identity(
         "enemy_drop_assignments": (
             enemy_drop_assignments if randomize_enemy_drops else None),
         "enemy_drop_mode": enemy_drop_mode if randomize_enemy_drops else None,
+        "category8_awards": category8_awards,
     }
 
 
@@ -768,8 +800,15 @@ def _write_seed_suppression_manifest(
     return output
 
 
-def _source_hashes(install: GameInstall, map_root: Path | None) -> dict[str, str]:
-    hashes = install.source_hashes((SUPPRESSION_PATH,))
+def _source_hashes(
+    install: GameInstall, map_root: Path | None, *, cathedral: bool = False
+) -> dict[str, str]:
+    paths = (
+        (SUPPRESSION_PATH, CATHEDRAL_EVENT_PATH, COMMON_EVENT_PATH)
+        if cathedral
+        else (SUPPRESSION_PATH,)
+    )
+    hashes = install.source_hashes(paths)
     if map_root is None:
         return hashes
     if not map_root.is_dir():
@@ -781,7 +820,7 @@ def _source_hashes(install: GameInstall, map_root: Path | None) -> dict[str, str
         if not path.name.lower().endswith((".msb.dcx", ".msb")):
             continue
         hashes[f"dvdroot_ps4/map/MapStudio/{path.name}"] = sha256_file(path)
-    if len(hashes) == 1:
+    if len(hashes) == len(paths):
         raise ValidationError("source MapStudio directory contains no .msb/.msb.dcx files")
     return hashes
 
@@ -865,7 +904,12 @@ class LauncherWorkflow:
                     )
 
                 map_root = max(candidates, key=map_count)
-        sources = _source_hashes(install, map_root)
+        if settings.darkscript is None:
+            raise ValidationError(
+                "this seed includes Laurence's Skull; select DarkScript3.exe version 3.6.3 "
+                "so its required Cathedral event overlay can be built"
+            )
+        sources = _source_hashes(install, map_root, cathedral=True)
         identity = SeedIdentity(
             seed=request["seed"],
             slot=request["slot"],
@@ -881,6 +925,7 @@ class LauncherWorkflow:
                 "weapon_requirement_families": request["weapon_requirement_families"],
                 "shop_gate_permutation": request["shop_gate_permutation"],
                 "enemy_drop_assignments": request["enemy_drop_assignments"],
+                "category8_awards": request["category8_awards"],
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -909,6 +954,8 @@ class LauncherWorkflow:
         else:
             map_output = None
             composed_binder = binder
+            cathedral_output = None
+            common_output = None
             completed = False
             try:
                 if (options.enabled or request["starting_weapons"] is not None
@@ -917,10 +964,34 @@ class LauncherWorkflow:
                         or request["enemy_drop_assignments"] is not None):
                     settings.cache_root.mkdir(parents=True, exist_ok=True)
                     temporary = Path(tempfile.mkdtemp(prefix=".seed-build-", dir=settings.cache_root))
+                if temporary is None:
+                    settings.cache_root.mkdir(parents=True, exist_ok=True)
+                    temporary = Path(tempfile.mkdtemp(prefix=".seed-build-", dir=settings.cache_root))
+                from tools.build_cathedral_emevd import build as build_cathedral_emevd
+                cathedral_output = temporary / CATHEDRAL_EVENT_PATH
+                cathedral_manifest = temporary / "cathedral-event-manifest.json"
+                source_event = install.resolve_file(
+                    CATHEDRAL_EVENT_PATH, include_mods=False
+                )[1]
+                progress("Building and verifying the Cathedral event overlay...")
+                build_cathedral_emevd(
+                    settings.darkscript.expanduser().resolve(), source_event,
+                    cathedral_output, cathedral_manifest,
+                )
+                from tools.build_common_emevd import build as build_common_emevd
+                common_output = temporary / COMMON_EVENT_PATH
+                common_manifest = temporary / "common-event-manifest.json"
+                source_common = install.resolve_file(COMMON_EVENT_PATH, include_mods=False)[1]
+                progress("Building and verifying the category-8 common event overlay...")
+                build_common_emevd(
+                    settings.darkscript.expanduser().resolve(), source_common,
+                    common_output, common_manifest,
+                )
                 if (request["starting_weapons"] is not None
                         or request["weapon_requirement_families"] is not None
                         or request["shop_gate_permutation"] is not None
-                        or request["enemy_drop_assignments"] is not None):
+                        or request["enemy_drop_assignments"] is not None
+                        or request["category8_awards"]):
                     assert temporary is not None
                     composed_binder = temporary / "gameparam.parambnd.dcx"
                     paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
@@ -955,7 +1026,8 @@ class LauncherWorkflow:
                     )
                     map_output = enemizer.map_studio
                 progress("Composing and verifying the seed cache...")
-                result = cache.build(identity, composed_binder, map_output)
+                result = cache.build(
+                    identity, composed_binder, map_output, cathedral_output, common_output)
                 build = result
                 reused = result.reused
                 completed = True
@@ -979,6 +1051,14 @@ class LauncherWorkflow:
         )
         if owner["suppression"]["sha256"] != build.manifest["suppression"]["sha256"]:
             raise ValidationError("activated suppression witness does not match the seed build")
+        cathedral = build.manifest.get("cathedral_event")
+        if not isinstance(cathedral, dict) or cathedral.get("path") != CATHEDRAL_EVENT_PATH:
+            raise ValidationError(
+                "activated seed is missing the required Cathedral event overlay"
+            )
+        common = build.manifest.get("common_event")
+        if not isinstance(common, dict) or common.get("path") != COMMON_EVENT_PATH:
+            raise ValidationError("activated seed is missing the category-8 common event overlay")
         for line in dead_path_warnings(owner):
             progress(line)
         progress("Writing the native client runtime configuration...")
