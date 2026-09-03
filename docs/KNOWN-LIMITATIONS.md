@@ -59,6 +59,23 @@ Check the launcher's install report for the Cathedral event overlay before
 you start. The client refuses to arm if the overlay hash does not match the
 seed, so an unexpected "not armed" at launch is this.
 
+## Runes and gems: three things to know
+
+- **Rune and gem chests give you both.** All 58 Caryll rune and blood gem
+  locations send their check and still hand out their vanilla item. That is
+  deliberate for this beta: the vanilla award stays until the new delivery
+  lane has been proven at every one of them.
+- **A `?GoodsName?` item in your storage box is an undelivered rune or gem.**
+  Runes and gems arrive through a small token item the game consumes. If the
+  game routes that token to the Hunter's Dream storage box instead of your
+  inventory, delivery stalls: the client shows `1 queued` and nothing after it
+  arrives. Withdraw the `?GoodsName?` item from the box and the rune or gem
+  appears within a second. Withdraw **one at a time**; if several are in the
+  box, take one, wait for the award, then the next.
+- **An item on the ground saying "exceeds maximum capacity" is a duplicate
+  rune** the game refuses to hold twice. It cannot be picked up and vanishes on
+  reload. You already have that rune; nothing else is lost.
+
 ## Rough edges you will notice
 
 - **Every suppressed pickup gives one placeholder Blood Vial** on top of the
