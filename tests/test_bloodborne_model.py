@@ -95,6 +95,11 @@ def slice_reachable(held: set[str], *, locations=None) -> set[str]:
 
 
 class BloodborneModelTests(unittest.TestCase):
+    def test_dlc_weapon_boundary_is_imported_by_the_world_module(self):
+        import worlds.bloodborne as world
+
+        self.assertIs(world.DLC_WEAPON_KEYS, DLC_WEAPON_KEYS)
+
     def test_category8_awards_cover_the_reviewed_fixed_catalog(self):
         reviewed = {
             row.item_lot_id: row.item_id
