@@ -70,6 +70,15 @@ See `docs/INPUTS-BUNDLE.md` before expanding or rebuilding the bundle. Rebuildin
 it requires the owner's dump and should happen only when a committed tool needs a
 new input.
 
+## Live probes and playtest requests
+
+Anything that asks an operator to run the game, including capture hooks,
+runtime probes, and direct native calls, follows
+[docs/CONTRIBUTING-LIVE-PROBES.md](docs/CONTRIBUTING-LIVE-PROBES.md). The short
+version: a probe must have captured a known, planted event before it is pointed
+at an unknown one, every session is pre-registered with a prediction, and
+"nothing was captured" is a diagnostic miss unless the bundle proves otherwise.
+
 ## Checks
 
 Run the repository gate before opening a pull request:
