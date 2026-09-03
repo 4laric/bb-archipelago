@@ -265,19 +265,36 @@ tell your host what you're running when you report back.
 
 ## Known limits of this build
 
-- Checks and deliveries require the three rules above; real save-file
-  identification is still being built.
-- Three pickups are **inert** in this slice: two in the Iosefka's Clinic
-  back yard (Madman's Knowledge, Blood Gem) and the White Messenger Ribbon
-  (a quest that can only finish after Rom's blood moon). Reaching them needs
-  progress far past the goal, so they are not AP checks yet and their
-  vanilla items stay suppressed. They become real checks when the world
-  grows. Everything else you can reach through Gascoigne is a live check,
-  including the Red Jeweled Brooch and the Blood Gem Workshop Tool.
+The full, current list is [KNOWN-LIMITATIONS.md](KNOWN-LIMITATIONS.md). The
+short version for the beta:
+
+- **Never verified live:** the Old Hunters DLC, the three endings' goal
+  detection, the Laurence's Skull check and Forbidden Woods password
+  suppression, and the new rune and gem delivery lane.
+- Every suppressed pickup also gives one placeholder Blood Vial.
+- A delivered item can land in the storage box; look there first.
 - Enemy randomization is on by default. If you want vanilla enemies for a
   cleaner comparison run, untick **Randomize Enemies** before launching.
-- Deaths, chat, and multiworld sync of anything beyond items are not in this
-  build.
+- DeathLink is receive-only; chat and other multiworld sync beyond items are
+  not in this build.
+
+### If you get stuck: the rescue console
+
+The client window accepts commands. Type `help`. Anything that changes the
+save needs the word `CONFIRM`, is limited to your seed's own flags and items,
+and is written to the audit log. `rescue` on its own lists the named repairs
+for the failures this beta expects:
+
+```
+rescue laurence-skull CONFIRM
+rescue forbidden-woods-password CONFIRM
+rescue goal CONFIRM
+```
+
+Run one only when its listed symptom matches, with the game in gameplay (not
+a menu or loading screen), and paste the `AUDIT` lines it prints into your
+report. `rescue goal` sends goal completion to the server, so use it only
+after the ending has actually played.
 
 ## For the host: cutting a release
 

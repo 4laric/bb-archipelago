@@ -459,9 +459,11 @@ fixed-chalice `AwardItemLot` rows found above (80000200 in m33, 80000300 in
 m24_02) should be left unsuppressed: suppressing a chalice award in a build with
 no chalice content buys nothing and perturbs the ritual economy for free.
 
-**The Old Hunters.** Out. Its maps (`m34`-`m36`, 144 net rows) are fully bundled
-and its regions fully modelled, so the DLC is a *deliberate* deferral rather
-than a blocked one. Note the pool boundary already recorded in `data.py`:
+**The Old Hunters.** Since superseded: the DLC now generates behind the
+`include_dlc` option (see README). At the time of this roadmap it was out. Its
+maps (`m34`-`m36`, 144 net rows) were fully bundled and its regions fully
+modelled, so the DLC was a *deliberate* deferral rather than a blocked one. It
+has still never been played live. Note the pool boundary already recorded in `data.py`:
 `EquipParamWeapon` ids ≥ 23000000 are the DLC block and are deliberately absent
 from the wave-1 weapon pool.
 
