@@ -374,6 +374,24 @@ def build_runtime_slot_data(
             "plan_sha256": SUPPRESSION_PLAN_SHA256,
         },
         "goal_location": LOCATION_ID_BY_KEY[goal_location_key],
+        "sustain_item": sustain_item_binding(),
+    }
+
+
+def sustain_item_binding() -> dict[str, Any]:
+    """The single good the client grants after every location check.
+
+    The client used to hardcode this descriptor and shipped the wrong goods
+    id (1100, the Antidote) for a day; publishing it here makes
+    `runtime_bindings.py` the only source. Quantity is fixed at one.
+    """
+    binding = ITEM_BINDINGS["quicksilver_bullets"]
+    return {
+        "normalized_item_id": binding.normalized_item_id,
+        "raw_descriptor": binding.raw_descriptor,
+        "item_category": binding.item_category,
+        "descriptor_evidence": binding.descriptor_evidence,
+        "quantity": 1,
     }
 
 try:
