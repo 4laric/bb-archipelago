@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Randomized starting gifts are always visibly randomized.** A seed could
+  draw exactly the vanilla Hunter Pistol and Blunderbuss (one seed did), which
+  looked like the option had turned itself off. A hand now never reproduces
+  its vanilla set, and the Dream's firearm rows draw only from firearms, not
+  the torch or the shields the expanded pool added.
+
 - **Fixed: the launcher refused every seed with a missing `attire_additions.tsv`.**
   The packaged launcher bundled a hand-maintained list of apworld tables and
   the newest one was not on it. The build now bundles every table in the
