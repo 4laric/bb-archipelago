@@ -61,10 +61,8 @@ seed, so an unexpected "not armed" at launch is this.
 
 ## Runes and gems: three things to know
 
-- **Rune and gem chests give you both.** All 58 Caryll rune and blood gem
-  locations send their check and still hand out their vanilla item. That is
-  deliberate for this beta: the vanilla award stays until the new delivery
-  lane has been proven at every one of them.
+- **Rune and gem chests give a placeholder Blood Vial**, like every other
+  suppressed pickup. Their vanilla rune or gem arrives from AP.
 - **A `?GoodsName?` item in your storage box is an undelivered rune or gem.**
   Runes and gems arrive through a small token item the game consumes. If the
   game routes that token to the Hunter's Dream storage box instead of your
