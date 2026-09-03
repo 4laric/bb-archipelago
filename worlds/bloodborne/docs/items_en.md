@@ -131,11 +131,21 @@ Dream storage box.
 | Use | Items |
 |---|---|
 | Healing and ammunition | Blood Vial; Quicksilver Bullets x3 |
-| Thrown attacks and lures | Pebbles x3; Molotov Cocktails x2; Poison Knife x3; Throwing Knife x4; Oil Urn x2; Pungent Blood Cocktail x2; Numbing Mist x2; Shaman Bone Blade |
+| Thrown attacks and lures | Pebbles x3; Molotov Cocktails x2; Delayed Molotov Cocktails x2 (DLC); Rope Molotov Cocktails x2; Delayed Rope Molotov Cocktails x2 (DLC); Poison Knife x3; Throwing Knife x4; Oil Urn x2; Pungent Blood Cocktail x2; Numbing Mist x2; Shaman Bone Blade |
 | Weapon buffs | Fire Paper x2; Bolt Paper x2; Bone Marrow Ash x3 |
 | Status and temporary effects | Antidote x2; Sedatives x2; Beast Blood Pellet; Blue Elixir; Lead Elixir |
-| Return and insight | Bold Hunter's Mark x2; Madman's Knowledge; Great One's Wisdom |
-| Blood Echoes | Coldblood Dew (3); Thick Coldblood (6); Frenzied Coldblood (8); Kin Coldblood (11) |
+| Return, markers, and insight | Hunter's Mark; Bold Hunter's Mark x2; Shining Coins x5; Madman's Knowledge; Great One's Wisdom |
+| Special blood vials | Blood of Arianna; Blood of Adella; Iosefka's Blood Vial; Blood of Adeline (DLC) |
+| Blood Echoes | Coldblood Dew (1); Coldblood Dew (2); Coldblood Dew (3); Thick Coldblood (4); Thick Coldblood (5); Thick Coldblood (6); Frenzied Coldblood (7); Frenzied Coldblood (8); Frenzied Coldblood (9); Kin Coldblood (10); Kin Coldblood (11); Kin Coldblood (12); Great One Coldblood; Old Great One Coldblood |
+
+The catalog deliberately excludes progression keys, badges, reusable Hunter
+Tools, weapon-upgrade materials, blood gems and runes (all modeled in their own
+sections), chalices and ritual materials, gestures and messenger cosmetics,
+online bells and ranking goods, covenant offerings/currencies (Blood Dregs and
+Vermin), and quest-conversion goods such as the Red Jeweled Brooch and Tear
+Stone. Debug/test rows, Queen's Blood (goods 705), and the unobtainable Revered Great One Coldblood are
+also excluded. This boundary is the complete obtainable ordinary-consumable
+catalog, not every row whose internal parameter type happens to be Goods.
 
 ## Blood gems, Caryll runes, and armor
 
@@ -324,6 +334,10 @@ attire_harrowed_head attire_harrowed_body attire_harrowed_arms attire_harrowed_l
 attire_decorative_old_hunter_head attire_decorative_old_hunter_body attire_decorative_old_hunter_legs
 attire_brador_head attire_brador_body attire_brador_arms attire_brador_legs
 attire_enlarged_head_head attire_masters_iron_helm_head
+hunters_mark delayed_molotov_cocktails rope_molotov_cocktails delayed_rope_molotov_cocktails shining_coins
+coldblood_dew_1 coldblood_dew_2 thick_coldblood_4 thick_coldblood_5 frenzied_coldblood_7
+frenzied_coldblood_9 kin_coldblood_10 kin_coldblood_12 great_one_coldblood old_great_one_coldblood
+blood_of_arianna blood_of_adella iosefkas_blood_vial blood_of_adeline
 event_cleric_beast_defeated event_gascoigne_defeated
 event_blood_starved_beast_defeated event_darkbeast_paarl_defeated event_amelia_defeated
 event_witch_of_hemwick_defeated event_martyr_logarius_defeated

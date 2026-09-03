@@ -24,6 +24,7 @@ from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
 from worlds.bloodborne import (
     ALL_NETWORK_LOCATIONS,
     FILLER_ITEM_NAME,
+    FILLER_SHED_TIER,
     FILLER_WEIGHTS,
     FULL_POOL_ITEM_KEYS,
     GOAL_LOCATION_KEY,
@@ -39,6 +40,7 @@ from worlds.bloodborne import (
     build_shop_gate_permutation,
     build_starting_weapon_choices,
     build_weapon_requirement_families,
+    _weighted_filler,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -253,17 +255,17 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 67)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 45)
-        self.assertEqual(counts["Blood Stone Shards x2"], 33)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 33)
-        self.assertEqual(counts["Blood Stone Chunk"], 22)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 22)
+        self.assertEqual(counts["Blood Vial"], 24)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 6)
+        self.assertEqual(counts["Blood Stone Shards x2"], 32)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 32)
+        self.assertEqual(counts["Blood Stone Chunk"], 21)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 21)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2"):
-            self.assertEqual(counts[name], 22, name)
-        self.assertEqual(counts["Bolt Paper x2"], 22)
-        self.assertEqual(counts["Bone Marrow Ash x3"], 22)
+            self.assertEqual(counts[name], 21, name)
+        self.assertEqual(counts["Bolt Paper x2"], 21)
+        self.assertEqual(counts["Bone Marrow Ash x3"], 21)
         for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
                      "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
                      "Oil Urn x2", "Numbing Mist x2",
@@ -273,10 +275,14 @@ class BloodborneModelTests(unittest.TestCase):
                      "Madman's Knowledge"):
             self.assertEqual(counts[name], 11, name)
         self.assertEqual(counts["Great One's Wisdom"], 11)
-        self.assertEqual(counts["Coldblood Dew (3)"], 11)
+        self.assertEqual(counts["Coldblood Dew (1)"], 0)
+        self.assertEqual(counts["Coldblood Dew (2)"], 0)
+        self.assertEqual(counts["Coldblood Dew (3)"], 0)
+        self.assertEqual(counts["Thick Coldblood (4)"], 0)
+        self.assertEqual(counts["Thick Coldblood (5)"], 0)
         self.assertEqual(counts["Thick Coldblood (6)"], 11)
-        self.assertEqual(counts["Frenzied Coldblood (8)"], 11)
-        self.assertEqual(counts["Kin Coldblood (11)"], 11)
+        self.assertEqual(counts["Frenzied Coldblood (8)"], 10)
+        self.assertEqual(counts["Kin Coldblood (11)"], 10)
         self.assertEqual(counts["Blood Rock"], 1)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
@@ -302,11 +308,11 @@ class BloodborneModelTests(unittest.TestCase):
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 231)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 154)
+        self.assertEqual(counts["Blood Vial"], 233)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 150)
         self.assertEqual(counts["Blood Stone Shards x2"], 116)
-        self.assertEqual(counts["Pebbles x3"], 77)
-        self.assertEqual(counts["Molotov Cocktails x2"], 77)
+        self.assertEqual(counts["Pebbles x3"], 78)
+        self.assertEqual(counts["Molotov Cocktails x2"], 78)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 18)  # seventeen slice items + Blood Vial
@@ -1129,15 +1135,56 @@ class WeightedFillerTests(unittest.TestCase):
                 pool = build_item_pool_names(keys, seed)
                 self.assertEqual(len(pool), len(NETWORK_LOCATIONS), (len(keys), seed))
 
+    def test_marginal_unique_items_shed_filler_in_explicit_tier_order(self):
+        candidates = [
+            ("coldblood_dew", "echo"),
+            ("blood_vial", "vial"),
+            ("quicksilver_bullets", "bullets"),
+            ("pebbles", "pebbles"),
+            ("thick_coldblood", "higher echo"),
+            ("molotov_cocktails", "molotov"),
+            ("blood_stone_shards", "shards"),
+        ]
+        envelope = 140
+        previous = Counter(_weighted_filler(
+            candidates, envelope, "shed-order", envelope=envelope))
+        removed_tiers = []
+        # Below the sum of the configured floors scarcity necessarily starts
+        # consuming guarantees; the ordinary marginal-addition range ends
+        # before that emergency regime.
+        for count in range(envelope - 1, 30, -1):
+            current = Counter(_weighted_filler(
+                candidates, count, "shed-order", envelope=envelope))
+            removed = list((previous - current).elements())
+            self.assertEqual(len(removed), 1)
+            key_by_name = {name: key for key, name in candidates}
+            removed_tiers.append(FILLER_SHED_TIER.get(key_by_name[removed[0]], 4))
+            previous = current
+        self.assertEqual(removed_tiers, sorted(removed_tiers))
+
+    def test_reinforcement_and_combat_floors_outlive_disposable_filler(self):
+        candidates = [
+            ("coldblood_dew", "echo"),
+            ("blood_vial", "vial"),
+            ("pebbles", "pebbles"),
+            ("molotov_cocktails", "molotov"),
+            ("blood_stone_shards", "shards"),
+        ]
+        names = _weighted_filler(candidates, 12, "floors", envelope=100)
+        self.assertNotIn("echo", names)
+        self.assertNotIn("pebbles", names)
+        self.assertIn("vial", names)
+        self.assertIn("molotov", names)
+        self.assertIn("shards", names)
+
     def test_blood_vial_stays_in_the_mix_and_stays_the_filler_contract(self):
         pool = build_item_pool_names(FULL_POOL_ITEM_KEYS, "seed-a")
         self.assertIn(FILLER_ITEM_NAME, pool)
         self.assertIn(FILLER_ITEM_NAME, ITEM_NAME_TO_ID)
-        # It is the heaviest share, so the mix is variety, not a shuffle that
-        # buries the item a run actually burns.
+        # Vials retain a useful floor even though surplus low-quantity vial
+        # bundles are intentionally shed before combat and upgrade supplies.
         counts = Counter(pool)
-        heaviest = max(counts, key=lambda name: (counts[name], name))
-        self.assertEqual(heaviest, FILLER_ITEM_NAME)
+        self.assertGreaterEqual(counts[FILLER_ITEM_NAME], 8)
         self.assertEqual(FILLER_WEIGHTS["blood_vial"], max(FILLER_WEIGHTS.values()))
 
     def test_every_filler_item_carries_a_weight(self):

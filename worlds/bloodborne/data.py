@@ -132,6 +132,30 @@ ITEMS = (
     Item("thick_coldblood", "Thick Coldblood (6)", F, 1),
     Item("frenzied_coldblood", "Frenzied Coldblood (8)", F, 1),
     Item("kin_coldblood", "Kin Coldblood (11)", F, 1),
+    # Complete obtainable, ordinary-use goods catalog.  Keep distinct echo
+    # denominations distinct: their names and goods rows communicate the
+    # actual payout, even though each AP item delivers one inventory object.
+    # These six rows are unique (`isOnlyOne=1`) and therefore one-each useful
+    # items, never weighted filler that could try to award duplicate copies.
+    Item("hunters_mark", "Hunter's Mark", U, 1),
+    Item("delayed_molotov_cocktails", "Delayed Molotov Cocktails x2", F, 2),
+    Item("rope_molotov_cocktails", "Rope Molotov Cocktails x2", F, 2),
+    Item("delayed_rope_molotov_cocktails", "Delayed Rope Molotov Cocktails x2", F, 2),
+    Item("shining_coins", "Shining Coins x5", F, 5),
+    Item("coldblood_dew_1", "Coldblood Dew (1)", F, 1),
+    Item("coldblood_dew_2", "Coldblood Dew (2)", F, 1),
+    Item("thick_coldblood_4", "Thick Coldblood (4)", F, 1),
+    Item("thick_coldblood_5", "Thick Coldblood (5)", F, 1),
+    Item("frenzied_coldblood_7", "Frenzied Coldblood (7)", F, 1),
+    Item("frenzied_coldblood_9", "Frenzied Coldblood (9)", F, 1),
+    Item("kin_coldblood_10", "Kin Coldblood (10)", F, 1),
+    Item("kin_coldblood_12", "Kin Coldblood (12)", F, 1),
+    Item("great_one_coldblood", "Great One Coldblood", F, 1),
+    Item("old_great_one_coldblood", "Old Great One Coldblood", F, 1),
+    Item("blood_of_arianna", "Blood of Arianna", U, 1),
+    Item("blood_of_adella", "Blood of Adella", U, 1),
+    Item("iosefkas_blood_vial", "Iosefka's Blood Vial", U, 1),
+    Item("blood_of_adeline", "Blood of Adeline", U, 1),
     # Remaining mapped hunter tools. These are category-4 inventory goods and
     # use the same live-validated delivery formula as Augur of Ebrietas.
     Item("beast_roar", "Beast Roar", U),
@@ -692,7 +716,10 @@ DLC_ENTRANCE_NAMES = frozenset({
 })
 DLC_ITEM_KEYS = frozenset({
     "eye_of_blood_drunk_hunter", "eye_pendant", "astral_clocktower_key",
-    "celestial_dial", "laurences_skull", "blacksky_eye", *DLC_WEAPON_KEYS,
+    "celestial_dial", "laurences_skull", "blacksky_eye",
+    "delayed_molotov_cocktails", "delayed_rope_molotov_cocktails",
+    "blood_of_adeline",
+    *DLC_WEAPON_KEYS,
 })
 DLC_LOCATION_KEYS = frozenset(
     location.key for location in LOCATIONS

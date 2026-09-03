@@ -161,11 +161,85 @@ FILLER_WEIGHTS: dict[str, int] = {
     "thick_coldblood": 1,
     "frenzied_coldblood": 1,
     "kin_coldblood": 1,
+    "hunters_mark": 1,
+    "delayed_molotov_cocktails": 1,
+    "rope_molotov_cocktails": 1,
+    "delayed_rope_molotov_cocktails": 1,
+    "shining_coins": 1,
+    "coldblood_dew_1": 1,
+    "coldblood_dew_2": 1,
+    "thick_coldblood_4": 1,
+    "thick_coldblood_5": 1,
+    "frenzied_coldblood_7": 1,
+    "frenzied_coldblood_9": 1,
+    "kin_coldblood_10": 1,
+    "kin_coldblood_12": 1,
+    "great_one_coldblood": 1,
+    "old_great_one_coldblood": 1,
+    "blood_of_arianna": 1,
+    "blood_of_adella": 1,
+    "iosefkas_blood_vial": 1,
+    "blood_of_adeline": 1,
 }
 FILLER_WEIGHT_DEFAULT = 1
 
+# Filler is shed from the lowest numbered tier first.  The ordering is about
+# replacement value, not rarity: a single low-value echo packet is the first
+# thing a new unique item should replace, while reinforcement materials are the
+# last.  Unlisted combat/utility consumables deliberately land in tier 4.
+FILLER_SHED_TIER: dict[str, int] = {
+    "coldblood_dew": 0,
+    "coldblood_dew_1": 0,
+    "coldblood_dew_2": 0,
+    "thick_coldblood_4": 0,
+    "thick_coldblood_5": 0,
+    "blood_vial": 1,
+    "quicksilver_bullets": 1,
+    "pebbles": 2,
+    "throwing_knife": 2,
+    "poison_knife": 2,
+    "oil_urn": 2,
+    "pungent_blood_cocktail": 2,
+    "hunters_mark": 2,
+    "shining_coins": 2,
+    "thick_coldblood": 3,
+    "frenzied_coldblood": 3,
+    "kin_coldblood": 3,
+    "frenzied_coldblood_7": 3,
+    "frenzied_coldblood_9": 3,
+    "kin_coldblood_10": 3,
+    "kin_coldblood_12": 3,
+    "great_one_coldblood": 3,
+    "old_great_one_coldblood": 3,
+    "madmans_knowledge": 3,
+    "great_ones_wisdom": 3,
+    "blood_stone_shards": 5,
+    "twin_blood_stone_shards": 5,
+    "blood_stone_chunks": 5,
+}
 
-def _weighted_filler(candidates: list[tuple[str, str]], count: int, seed: str) -> list[str]:
+# These are modest seed-wide floors, not guarantees when the whole filler
+# budget is smaller than their sum.  In that case higher shed tiers win, so a
+# tiny pool still favors upgrades and useful combat supplies.
+FILLER_MINIMUMS: dict[str, int] = {
+    "blood_vial": 8,
+    "quicksilver_bullets": 6,
+    "blood_stone_shards": 4,
+    "twin_blood_stone_shards": 4,
+    "blood_stone_chunks": 2,
+    "molotov_cocktails": 2,
+    "bone_marrow_ash": 2,
+    "fire_paper": 2,
+    "bolt_paper": 2,
+    "antidote": 1,
+    "sedatives": 1,
+}
+
+
+def _weighted_filler(
+    candidates: list[tuple[str, str]], count: int, seed: str,
+    *, envelope: int | None = None,
+) -> list[str]:
     """Allocate `count` filler slots across `candidates` by weight, then order them.
 
     `candidates` is (key, name) in a fixed order, so the allocation is
@@ -176,19 +250,47 @@ def _weighted_filler(candidates: list[tuple[str, str]], count: int, seed: str) -
     """
     if count <= 0 or not candidates:
         return []
+    # Allocate the largest possible filler envelope, then shed its disposable
+    # tail.  This is what makes adding one unique item remove exactly one item
+    # from the earliest non-exhausted shed tier instead of proportionally
+    # nibbling every useful supply category.
+    envelope = count if envelope is None else max(count, envelope)
     weights = [FILLER_WEIGHTS.get(key, FILLER_WEIGHT_DEFAULT) for key, _ in candidates]
     total = sum(weights)
-    quotas = [count * weight / total for weight in weights]
+    quotas = [envelope * weight / total for weight in weights]
     allocation = [int(quota) for quota in quotas]
-    remainder = count - sum(allocation)
+    remainder = envelope - sum(allocation)
     # Largest fractional part wins the leftover slots; ties break on candidate
     # order, so this is a pure function of (candidates, count).
     ranked = sorted(range(len(candidates)),
                     key=lambda index: (-(quotas[index] - allocation[index]), index))
     for index in ranked[:remainder]:
         allocation[index] += 1
-    names = [name for (_, name), share in zip(candidates, allocation)
-             for _ in range(share)]
+    # Raise useful categories to their floors by transferring slots from the
+    # most disposable categories.  Total size remains exactly the envelope.
+    by_disposability = sorted(
+        range(len(candidates)),
+        key=lambda index: (FILLER_SHED_TIER.get(candidates[index][0], 4), index),
+    )
+    for index in reversed(by_disposability):
+        wanted = min(FILLER_MINIMUMS.get(candidates[index][0], 0), envelope)
+        while allocation[index] < wanted:
+            donor = next((other for other in by_disposability
+                          if other != index and allocation[other] > 0), None)
+            if donor is None:
+                break
+            allocation[donor] -= 1
+            allocation[index] += 1
+    entries: list[tuple[int, int, str]] = []
+    for index, ((key, name), share) in enumerate(zip(candidates, allocation)):
+        floor = min(share, FILLER_MINIMUMS.get(key, 0))
+        tier = FILLER_SHED_TIER.get(key, 4)
+        entries.extend((100 + tier, index, name) for _ in range(floor))
+        entries.extend((tier, index, name) for _ in range(share - floor))
+    # Floors are a protected prefix; beyond them, higher tiers still outlive
+    # lower ones. Candidate order is the stable tie-break within a tier.
+    entries.sort(key=lambda entry: (-entry[0], entry[1]))
+    names = [name for _, _, name in entries[:count]]
     Random(f"bloodborne-filler:{seed}").shuffle(names)
     return names
 
@@ -236,7 +338,12 @@ def build_item_pool_names(
     filler_candidates = [("blood_vial", FILLER_ITEM_NAME)]
     filler_candidates.extend(
         (item.key, item.name) for item in selected if item.kind is ItemKind.FILLER)
-    names.extend(_weighted_filler(filler_candidates, capacity - len(names), seed))
+    filler_count = capacity - len(names)
+    # Progression defines the maximum possible filler envelope. Useful and
+    # optional unique items consume its disposable end in explicit tier order.
+    filler_envelope = capacity - len(progression)
+    names.extend(_weighted_filler(
+        filler_candidates, filler_count, seed, envelope=filler_envelope))
     return names
 
 
