@@ -49,6 +49,9 @@ jobs:
   # a binder CI cannot reproduce byte-for-byte is a binder nobody can check.
   suppression-binder:
     name: suppression binder from the inputs bundle
+    # Slow and never waited on for review: run for main and manual/dispatch
+    # runs only, so a pull request gets its verdict from the fast tier.
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -129,6 +132,9 @@ jobs:
   launcher-package:
     name: commit playtest bundle
     needs: suppression-binder
+    # Slow and never waited on for review: run for main and manual/dispatch
+    # runs only, so a pull request gets its verdict from the fast tier.
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
