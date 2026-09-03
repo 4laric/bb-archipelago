@@ -87,17 +87,22 @@ $pyinstaller = @(
     "--workpath", (Join-Path $work "pyi-work"),
     "--specpath", (Join-Path $work "spec")
 )
+# Every data file the apworld loads through importlib.resources ships with
+# the launcher. Enumerating the directory instead of naming files means a new
+# table cannot be forgotten (beta 1 shipped without attire_additions.tsv and
+# every seed build failed at launch).
+$worldData = @(
+    Get-ChildItem -LiteralPath (Join-Path $repo "worlds\bloodborne") -File |
+        Where-Object { $_.Extension -in ".tsv", ".json" } |
+        ForEach-Object { "--add-data"; "$($_.FullName);worlds\bloodborne" }
+)
+if ($worldData.Count -lt 2) { throw "No apworld data files found to bundle." }
 & python @pyinstaller --windowed --onedir --name BloodborneAPLauncher `
     --distpath (Join-Path $work "launcher-dist") `
     --version-file (Join-Path $versionRoot "launcher-version.txt") `
     --add-data "$(Join-Path $repo 'research\enemizer\enemy_tags.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\slot_policy.json');research\enemizer" `
-    --add-data "$(Join-Path $repo 'worlds\bloodborne\archipelago.json');worlds\bloodborne" `
-    --add-data "$(Join-Path $repo 'worlds\bloodborne\ids.tsv');worlds\bloodborne" `
-    --add-data "$(Join-Path $repo 'worlds\bloodborne\fixed_locations.tsv');worlds\bloodborne" `
-    --add-data "$(Join-Path $repo 'worlds\bloodborne\location_names.tsv');worlds\bloodborne" `
-    --add-data "$(Join-Path $repo 'worlds\bloodborne\enemy_drop_catalog.json');worlds\bloodborne" `
-    --add-data "$(Join-Path $repo 'worlds\bloodborne\starting_attire_catalog.tsv');worlds\bloodborne" `
+    @worldData `
     (Join-Path $repo "packaging\launcher_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }
 

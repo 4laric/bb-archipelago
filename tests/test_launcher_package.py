@@ -135,6 +135,26 @@ class LauncherPackageTests(unittest.TestCase):
                 soulsformats_next=None, progress=lambda _message: None,
             )
 
+    def test_every_world_resource_file_is_bundled_by_the_launcher_build(self):
+        """The apworld opens its tables through importlib.resources; each one
+        must exist and the build must bundle the directory, not a hand list."""
+        import re
+        package = self.repo / "worlds" / "bloodborne"
+        referenced = set()
+        for source in package.glob("*.py"):
+            referenced.update(re.findall(
+                r'(?:read_resource_text|joinpath)\("([A-Za-z0-9_]+\.(?:tsv|json))"\)',
+                source.read_text(encoding="utf-8"),
+            ))
+        self.assertIn("attire_additions.tsv", referenced)
+        self.assertIn("ids.tsv", referenced)
+        for name in sorted(referenced):
+            self.assertTrue((package / name).is_file(), name)
+        script = (self.repo / "packaging" / "build_launcher.ps1").read_text(encoding="utf-8")
+        self.assertIn('Get-ChildItem -LiteralPath (Join-Path $repo "worlds\\bloodborne") -File', script)
+        self.assertIn('".tsv", ".json"', script)
+        self.assertIn("@worldData", script)
+
     def test_partial_package_does_not_claim_to_be_bundled(self):
         (self.app / "tools" / "MSBBMiner.exe").unlink()
         toolchain = EnemizerToolchain(self.repo, app_root=self.app)
