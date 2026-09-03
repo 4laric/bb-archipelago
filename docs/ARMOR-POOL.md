@@ -34,11 +34,11 @@ once as a useful item and replaces ordinary filler; it does not add locations.
 Turning it off must preserve the pre-armor item pool byte-for-byte for the same
 seed and options.
 
-The catalog currently contains four Old Hunters sets (`old_hunter`,
-`maria_hunter`, `constable`, and `yamamura`). Those pieces must also require
-`include_dlc`; the armor option alone must never introduce DLC equipment into a
-base-game seed. All other catalog sets are eligible independently of the DLC
-option.
+Old Hunters attire follows the independent, default-on `include_dlc_gear`
+option. DLC world access is not required to receive or equip it. Setting
+`include_dlc_gear: false` restricts randomized armor to base-game pieces even
+when `include_dlc: true`; `randomize_armor` must still be enabled for any attire
+to enter the pool.
 
 Because the armor catalog is larger than the old useful-item tier, capacity
 shedding must remain deterministic. Progression items are never shed. If a

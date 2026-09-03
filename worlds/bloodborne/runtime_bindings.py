@@ -9,7 +9,7 @@ accessor has been validated.
 from dataclasses import dataclass
 
 from .fixed_locations import FIXED_LOCATIONS
-from .starting_attire import STARTING_ATTIRE_CATALOG
+from .attire import ATTIRE_CATALOG
 from .category8_awards import CATEGORY8_AWARDS
 
 
@@ -665,6 +665,25 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "thick_coldblood": RuntimeItemBinding(0x400005EB, 0xB00005EB, "catalog id + validated category-4 goods formula"),
     "frenzied_coldblood": RuntimeItemBinding(0x400005ED, 0xB00005ED, "catalog id + validated category-4 goods formula"),
     "kin_coldblood": RuntimeItemBinding(0x40000636, 0xB0000636, "catalog id + validated category-4 goods formula"),
+    "hunters_mark": RuntimeItemBinding(0x40000064, 0xB0000064, "bundled EquipParamGoods row 100 + validated category-4 goods formula"),
+    "delayed_molotov_cocktails": RuntimeItemBinding(0x400004B1, 0xB00004B1, "bundled EquipParamGoods row 1201 + validated category-4 goods formula"),
+    "rope_molotov_cocktails": RuntimeItemBinding(0x400004E2, 0xB00004E2, "bundled EquipParamGoods row 1250 + validated category-4 goods formula"),
+    "delayed_rope_molotov_cocktails": RuntimeItemBinding(0x400004E3, 0xB00004E3, "bundled EquipParamGoods row 1251 + validated category-4 goods formula"),
+    "shining_coins": RuntimeItemBinding(0x40000582, 0xB0000582, "bundled EquipParamGoods row 1410 + validated category-4 goods formula"),
+    "coldblood_dew_1": RuntimeItemBinding(0x400005E6, 0xB00005E6, "bundled EquipParamGoods row 1510 + validated category-4 goods formula"),
+    "coldblood_dew_2": RuntimeItemBinding(0x400005E7, 0xB00005E7, "bundled EquipParamGoods row 1511 + validated category-4 goods formula"),
+    "thick_coldblood_4": RuntimeItemBinding(0x400005E9, 0xB00005E9, "bundled EquipParamGoods row 1513 + validated category-4 goods formula"),
+    "thick_coldblood_5": RuntimeItemBinding(0x400005EA, 0xB00005EA, "bundled EquipParamGoods row 1514 + validated category-4 goods formula"),
+    "frenzied_coldblood_7": RuntimeItemBinding(0x400005EC, 0xB00005EC, "bundled EquipParamGoods row 1516 + validated category-4 goods formula"),
+    "frenzied_coldblood_9": RuntimeItemBinding(0x400005EE, 0xB00005EE, "bundled EquipParamGoods row 1518 + validated category-4 goods formula"),
+    "kin_coldblood_10": RuntimeItemBinding(0x400005EF, 0xB00005EF, "bundled EquipParamGoods row 1519 + validated category-4 goods formula"),
+    "kin_coldblood_12": RuntimeItemBinding(0x40000637, 0xB0000637, "bundled EquipParamGoods row 1591 + validated category-4 goods formula"),
+    "great_one_coldblood": RuntimeItemBinding(0x40000638, 0xB0000638, "bundled EquipParamGoods row 1592 + validated category-4 goods formula"),
+    "old_great_one_coldblood": RuntimeItemBinding(0x40000639, 0xB0000639, "bundled EquipParamGoods row 1593 + validated category-4 goods formula"),
+    "blood_of_arianna": RuntimeItemBinding(0x400002BD, 0xB00002BD, "bundled EquipParamGoods row 701 + validated category-4 goods formula"),
+    "blood_of_adella": RuntimeItemBinding(0x400002BE, 0xB00002BE, "bundled EquipParamGoods row 702 + validated category-4 goods formula"),
+    "iosefkas_blood_vial": RuntimeItemBinding(0x400002BF, 0xB00002BF, "bundled EquipParamGoods row 703 + validated category-4 goods formula"),
+    "blood_of_adeline": RuntimeItemBinding(0x400002C2, 0xB00002C2, "bundled EquipParamGoods row 706 + validated category-4 goods formula"),
     "beast_roar": RuntimeItemBinding(0x400007E4, 0xB00007E4, "catalog id + validated category-4 goods formula"),
     "empty_phantasm_shell": RuntimeItemBinding(0x4000051E, 0xB000051E, "catalog id + validated category-4 goods formula"),
     "old_hunter_bone": RuntimeItemBinding(0x4000080C, 0xB000080C, "catalog id + validated category-4 goods formula"),
@@ -682,6 +701,30 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "church_cannon": RuntimeItemBinding(0x02160EC0, 0x82160EC0, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
     "fist_of_gratia": RuntimeItemBinding(0x0206CC80, 0x8206CC80, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
     "loch_shield": RuntimeItemBinding(0x01237160, 0x81237160, "bundled catalog EquipParamWeapon row", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "evelyn": RuntimeItemBinding(0x00D72620, 0x80D72620, "reviewed EquipParamWeapon row 14100000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "rosmarinus": RuntimeItemBinding(0x0112A880, 0x8112A880, "reviewed EquipParamWeapon row 18000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "flamesprayer": RuntimeItemBinding(0x01142F20, 0x81142F20, "reviewed EquipParamWeapon row 18100000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "wooden_shield": RuntimeItemBinding(0x0121EAC0, 0x8121EAC0, "reviewed EquipParamWeapon row 19000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "hunters_torch": RuntimeItemBinding(0x01312D00, 0x81312D00, "reviewed EquipParamWeapon row 20000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "holy_moonlight_sword": RuntimeItemBinding(0x018CBA80, 0x818CBA80, "reviewed EquipParamWeapon row 26000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "rakuyo": RuntimeItemBinding(0x019BFCC0, 0x819BFCC0, "reviewed EquipParamWeapon row 27000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "bloodletter": RuntimeItemBinding(0x01BA8140, 0x81BA8140, "reviewed EquipParamWeapon row 29000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "church_pick": RuntimeItemBinding(0x01C9C380, 0x81C9C380, "reviewed EquipParamWeapon row 30000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "simons_bowblade": RuntimeItemBinding(0x01E84800, 0x81E84800, "reviewed EquipParamWeapon row 32000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "gatling_gun": RuntimeItemBinding(0x01F78A40, 0x81F78A40, "reviewed EquipParamWeapon row 33000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "piercing_rifle": RuntimeItemBinding(0x02255100, 0x82255100, "reviewed EquipParamWeapon row 36000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="left_hand_weapon", reinforcement_level=0),
+    "kos_parasite": RuntimeItemBinding(0x0243D580, 0x8243D580, "reviewed EquipParamWeapon row 38000000", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_beasthunter_saif": RuntimeItemBinding(0x015F1AD0, 0x815F1AD0, "EquipParamWeapon 23010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_beast_cutter": RuntimeItemBinding(0x016E5D10, 0x816E5D10, "EquipParamWeapon 24010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_amygdalan_arm": RuntimeItemBinding(0x017D9F50, 0x817D9F50, "EquipParamWeapon 25010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_boom_hammer": RuntimeItemBinding(0x01AB6610, 0x81AB6610, "EquipParamWeapon 28010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_whirligig_saw": RuntimeItemBinding(0x01D92CD0, 0x81D92CD0, "EquipParamWeapon 31010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_holy_moonlight_sword": RuntimeItemBinding(0x018CE190, 0x818CE190, "EquipParamWeapon 26010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_rakuyo": RuntimeItemBinding(0x019C23D0, 0x819C23D0, "EquipParamWeapon 27010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_bloodletter": RuntimeItemBinding(0x01BAA850, 0x81BAA850, "EquipParamWeapon 29010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_church_pick": RuntimeItemBinding(0x01C9EA90, 0x81C9EA90, "EquipParamWeapon 30010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_simons_bowblade": RuntimeItemBinding(0x01E86F10, 0x81E86F10, "EquipParamWeapon 32010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
+    "uncanny_kos_parasite": RuntimeItemBinding(0x0243FC90, 0x8243FC90, "EquipParamWeapon 38010000 = base + Uncanny offset", item_category=0, descriptor_evidence=INFERRED_CATEGORY_0_EVIDENCE, feed_effect="right_hand_weapon", reinforcement_level=0),
 }
 
 ITEM_BINDINGS.update({
@@ -706,12 +749,12 @@ ITEM_BINDINGS.update({
     piece.item_key: RuntimeItemBinding(
         0x10000000 | piece.protector_id,
         0x90000000 | piece.protector_id,
-        "reviewed starting-attire EquipParamProtector row",
+        "reviewed player-obtainable EquipParamProtector row",
         item_category=1,
         descriptor_evidence=INFERRED_CATEGORY_1_EVIDENCE,
         feed_effect=_ATTIRE_FEED_EFFECT[piece.slot],
     )
-    for piece in STARTING_ATTIRE_CATALOG
+    for piece in ATTIRE_CATALOG
 })
 
 # Negative canaries are executable exclusions. Keeping them next to the

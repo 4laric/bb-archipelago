@@ -32,8 +32,11 @@ class StartingAttireCatalogTests(unittest.TestCase):
         choice = build_starting_attire_choice("AP_TEST:1")
         self.assertEqual(set(SLOTS), set(choice["pieces"]))
         self.assertEqual(4, len(choice["grant_descriptors"]))
-        self.assertTrue(all(value.startswith("1:") and value.endswith(":1")
-                            for value in choice["grant_descriptors"]))
+        malformed = [
+            value for value in choice["grant_descriptors"]
+            if not (value.startswith("1:") and value.endswith(":1"))
+        ]
+        self.assertFalse(malformed, f"malformed starting-attire descriptors: {malformed}")
 
     def test_world_does_not_publish_or_activate_starting_attire_yet(self):
         world_source = (Path(__file__).parents[1] / "worlds" / "bloodborne" / "__init__.py").read_text(
@@ -42,7 +45,10 @@ class StartingAttireCatalogTests(unittest.TestCase):
 
     def test_every_reviewed_piece_is_a_distinct_general_pool_item(self):
         expected = {piece.item_key for piece in STARTING_ATTIRE_CATALOG}
-        self.assertEqual(expected, ATTIRE_ITEM_KEYS)
+        self.assertGreater(
+            len(ATTIRE_ITEM_KEYS - expected), 0,
+            "full attire pool must strictly extend the starting-safe catalog",
+        )
         modeled = {item.key: item for item in MODEL.items}
         self.assertEqual(expected, expected & modeled.keys())
         self.assertEqual(len(expected), len(STARTING_ATTIRE_CATALOG))

@@ -73,7 +73,11 @@ Beast Cutter; Amygdalan Arm; Boom Hammer; and Whirligig Saw.
 ### Left-hand weapons
 
 Hunter Blunderbuss; Ludwig's Rifle; Hunter Pistol; Repeating Pistol; Cannon;
-Church Cannon; Fist of Gratia; and Loch Shield.
+Evelyn; Rosmarinus; Flamesprayer; Wooden Shield; Hunter's Torch; Church Cannon;
+Gatling Gun; Piercing Rifle; Fist of Gratia; and Loch Shield.
+
+The remaining right-hand DLC weapons are Holy Moonlight Sword; Rakuyo;
+Bloodletter; Church Pick; Simon's Bowblade; and Kos Parasite.
 
 ### Uncanny weapon variants
 
@@ -86,7 +90,11 @@ Uncanny Saw Spear; Uncanny Chikage; Uncanny Blade of Mercy; Uncanny Hunter Axe;
 Uncanny Burial Blade; Uncanny Saw Cleaver; Uncanny Kirkhammer;
 Ludwig's Uncanny Holy Blade; Uncanny Beast Claw; Uncanny Rifle Spear; Uncanny Reiterpallasch;
 Uncanny Stake Driver; Logarius' Uncanny Wheel; Uncanny Tonitrus; and
-Uncanny Threaded Cane.
+Uncanny Threaded Cane. The DLC set also includes Uncanny Beasthunter Saif;
+Uncanny Beast Cutter; Uncanny Amygdalan Arm; Uncanny Boom Hammer;
+Uncanny Whirligig Saw; Uncanny Holy Moonlight Sword; Uncanny Rakuyo;
+Uncanny Bloodletter; Uncanny Church Pick; Uncanny Simon's Bowblade; and
+Uncanny Kos Parasite.
 
 The **Randomize Starting Weapons** option, enabled by default, independently
 changes the three right-hand and two left-hand weapon choices offered by the
@@ -123,11 +131,21 @@ Dream storage box.
 | Use | Items |
 |---|---|
 | Healing and ammunition | Blood Vial; Quicksilver Bullets x3 |
-| Thrown attacks and lures | Pebbles x3; Molotov Cocktails x2; Poison Knife x3; Throwing Knife x4; Oil Urn x2; Pungent Blood Cocktail x2; Numbing Mist x2; Shaman Bone Blade |
+| Thrown attacks and lures | Pebbles x3; Molotov Cocktails x2; Delayed Molotov Cocktails x2 (DLC); Rope Molotov Cocktails x2; Delayed Rope Molotov Cocktails x2 (DLC); Poison Knife x3; Throwing Knife x4; Oil Urn x2; Pungent Blood Cocktail x2; Numbing Mist x2; Shaman Bone Blade |
 | Weapon buffs | Fire Paper x2; Bolt Paper x2; Bone Marrow Ash x3 |
 | Status and temporary effects | Antidote x2; Sedatives x2; Beast Blood Pellet; Blue Elixir; Lead Elixir |
-| Return and insight | Bold Hunter's Mark x2; Madman's Knowledge; Great One's Wisdom |
-| Blood Echoes | Coldblood Dew (3); Thick Coldblood (6); Frenzied Coldblood (8); Kin Coldblood (11) |
+| Return, markers, and insight | Hunter's Mark; Bold Hunter's Mark x2; Shining Coins x5; Madman's Knowledge; Great One's Wisdom |
+| Special blood vials | Blood of Arianna; Blood of Adella; Iosefka's Blood Vial; Blood of Adeline (DLC) |
+| Blood Echoes | Coldblood Dew (1); Coldblood Dew (2); Coldblood Dew (3); Thick Coldblood (4); Thick Coldblood (5); Thick Coldblood (6); Frenzied Coldblood (7); Frenzied Coldblood (8); Frenzied Coldblood (9); Kin Coldblood (10); Kin Coldblood (11); Kin Coldblood (12); Great One Coldblood; Old Great One Coldblood |
+
+The catalog deliberately excludes progression keys, badges, reusable Hunter
+Tools, weapon-upgrade materials, blood gems and runes (all modeled in their own
+sections), chalices and ritual materials, gestures and messenger cosmetics,
+online bells and ranking goods, covenant offerings/currencies (Blood Dregs and
+Vermin), and quest-conversion goods such as the Red Jeweled Brooch and Tear
+Stone. Debug/test rows, Queen's Blood (goods 705), and the unobtainable Revered Great One Coldblood are
+also excluded. This boundary is the complete obtainable ordinary-consumable
+catalog, not every row whose internal parameter type happens to be Goods.
 
 ## Blood gems, Caryll runes, and armor
 
@@ -169,10 +187,32 @@ Fishing Hamlet - Blood Gem #3 (lower hamlet); Fishing Hamlet - Blood Gem #4 (fis
 Fishing Hamlet - Blood Gem #5 (culvert lower); Fishing Hamlet - Blood Gem #6 (culvert lower); and
 Fishing Hamlet - Blood Gem #7 (fish tank lower).
 
-The 68 reviewed pieces from 17 complete attire sets are useful items in the
-general pool. Each piece is independent: a seed can place a hat, chest piece,
-gloves, or trousers in any world and the receiving client inserts that exact
-EquipParamProtector row.
+All 127 obtainable attire pieces are useful items in the general pool. Each
+piece is independent: a seed can place a hat, chest piece, gloves, or trousers
+in any world and the receiving client inserts that exact EquipParamProtector
+row. The expanded catalog also includes Black Hooded Iron Helm; Yahar'gul Black
+Garb; Yahar'gul Black Gloves; Yahar'gul Black Trousers; Graveguard Mask;
+Graveguard Robe; Graveguard Manchettes; Graveguard Kilt; Bone Ash Mask; Bone Ash
+Armor; Bone Ash Gauntlets; Bone Ash Leggings; Henryk's Hunter Cap; Henryk's
+Hunter Garb; Henryk's Hunter Gloves; Henryk's Hunter Trousers; Mensis Cage;
+Student Uniform; Student Trousers; Gehrman's Hunter Cap; Gehrman's Hunter Garb;
+Gehrman's Hunter Trousers; Ashen Hunter Garb; Ashen Hunter Gloves; Ashen Hunter
+Trousers; Crown of Illusions; Iron Yahar'gul Helm; Top Hat; Hunter Garb; White
+Church Hat; White Church Garb; Surgical Long Gloves (White); White Church
+Trousers; Student Uniform (Cape); Noble Dress; Arianna's Shoes; Rumpled Yharnam
+Hat; Sweaty Clothes; Butcher Mask; Butcher Garb; Butcher Gloves; Butcher
+Trousers; Harrowed Hood; Harrowed Garb; Harrowed Gloves; Harrowed Trousers; Old
+Hunter Top Hat; Decorative Old Hunter Garb; Decorative Old Hunter Trousers;
+Brador's Testimony; Beast Hide Garb; Bloodied Arm Bands; Bloodied Trousers;
+Enlarged Head; and Master's Iron Helm.
+
+Canonical display names that distinguish variant rows include Grey Wolf Cap;
+Hunter Garb (Cape); Sullied Bandage; One-eyed Iron Helm; Khaki Haori; Old Hunter
+Arm Bands; Wine Hakama; Yahar'gul Black Garb; Bone Ash Armor; Henryk's Hunter
+Garb; Ashen Hunter Trousers; White Church Hat; White Church Trousers; Rumpled
+Yharnam Hat; Butcher Trousers; and Old Hunter Top Hat.
+
+Exact wrapped-name aliases: Old Hunter Arm Bands; Henryk's Hunter Garb; Rumpled Yharnam Hat.
 
 | Set | Pieces |
 |---|---|
@@ -241,6 +281,12 @@ uncanny_saw_cleaver uncanny_kirkhammer uncanny_ludwigs_holy_blade
 uncanny_beast_claw uncanny_rifle_spear uncanny_reiterpallasch
 uncanny_stake_driver uncanny_logarius_wheel uncanny_tonitrus
 uncanny_threaded_cane
+evelyn rosmarinus flamesprayer wooden_shield hunters_torch
+holy_moonlight_sword rakuyo bloodletter church_pick simons_bowblade kos_parasite
+gatling_gun piercing_rifle uncanny_beasthunter_saif uncanny_beast_cutter
+uncanny_amygdalan_arm uncanny_boom_hammer uncanny_whirligig_saw
+uncanny_holy_moonlight_sword uncanny_rakuyo uncanny_bloodletter
+uncanny_church_pick uncanny_simons_bowblade uncanny_kos_parasite
 caryll_rune_communion_1 blood_gem_old_yharnam_123000
 category8_central_yharnam_lot_2410640 category8_cathedral_ward_lot_2400300
 category8_cathedral_ward_lot_2400430 category8_cathedral_ward_lot_2400760
@@ -271,6 +317,27 @@ category8_fishing_hamlet_lot_3600340 category8_fishing_hamlet_lot_3600430
 category8_fishing_hamlet_lot_3600560 category8_fishing_hamlet_lot_3600570
 category8_fishing_hamlet_lot_3600610
 attire_charred_hunter_head attire_charred_hunter_body attire_charred_hunter_arms attire_charred_hunter_legs attire_yharnam_hunter_head attire_yharnam_hunter_body attire_yharnam_hunter_arms attire_yharnam_hunter_legs attire_knight_head attire_knight_body attire_knight_arms attire_knight_legs attire_cainhurst_head attire_cainhurst_body attire_cainhurst_arms attire_cainhurst_legs attire_black_church_head attire_black_church_body attire_black_church_arms attire_black_church_legs attire_choir_head attire_choir_body attire_choir_arms attire_choir_legs attire_gascoigne_head attire_gascoigne_body attire_gascoigne_arms attire_gascoigne_legs attire_tomb_prospector_head attire_tomb_prospector_body attire_tomb_prospector_arms attire_tomb_prospector_legs attire_executioner_head attire_executioner_body attire_executioner_arms attire_executioner_legs attire_crowfeather_head attire_crowfeather_body attire_crowfeather_arms attire_crowfeather_legs attire_madman_head attire_madman_body attire_madman_arms attire_madman_legs attire_doll_head attire_doll_body attire_doll_arms attire_doll_legs attire_foreign_head attire_foreign_body attire_foreign_arms attire_foreign_legs attire_old_hunter_head attire_old_hunter_body attire_old_hunter_arms attire_old_hunter_legs attire_maria_hunter_head attire_maria_hunter_body attire_maria_hunter_arms attire_maria_hunter_legs attire_constable_head attire_constable_body attire_constable_arms attire_constable_legs attire_yamamura_head attire_yamamura_body attire_yamamura_arms attire_yamamura_legs
+attire_yahargul_black_head attire_yahargul_black_body attire_yahargul_black_arms attire_yahargul_black_legs
+attire_graveguard_head attire_graveguard_body attire_graveguard_arms attire_graveguard_legs
+attire_bone_ash_head attire_bone_ash_body attire_bone_ash_arms attire_bone_ash_legs
+attire_henryk_hunter_head attire_henryk_hunter_body attire_henryk_hunter_arms attire_henryk_hunter_legs
+attire_yharnam_hunter_variant_head attire_yharnam_hunter_variant_body attire_yharnam_hunter_variant_arms attire_yharnam_hunter_variant_legs
+attire_mensis_student_head attire_mensis_student_body attire_mensis_student_legs
+attire_gehrman_hunter_head attire_gehrman_hunter_body attire_gehrman_hunter_legs
+attire_ashen_hunter_body attire_ashen_hunter_arms attire_ashen_hunter_legs
+attire_crown_of_illusions_head attire_iron_yahargul_head attire_top_hat_hunter_head attire_top_hat_hunter_body
+attire_white_church_head attire_white_church_body attire_white_church_arms attire_white_church_legs
+attire_student_cape_body attire_noble_dress_body attire_arianna_legs
+attire_common_yharnam_head attire_common_yharnam_body
+attire_butcher_head attire_butcher_body attire_butcher_arms attire_butcher_legs
+attire_harrowed_head attire_harrowed_body attire_harrowed_arms attire_harrowed_legs
+attire_decorative_old_hunter_head attire_decorative_old_hunter_body attire_decorative_old_hunter_legs
+attire_brador_head attire_brador_body attire_brador_arms attire_brador_legs
+attire_enlarged_head_head attire_masters_iron_helm_head
+hunters_mark delayed_molotov_cocktails rope_molotov_cocktails delayed_rope_molotov_cocktails shining_coins
+coldblood_dew_1 coldblood_dew_2 thick_coldblood_4 thick_coldblood_5 frenzied_coldblood_7
+frenzied_coldblood_9 kin_coldblood_10 kin_coldblood_12 great_one_coldblood old_great_one_coldblood
+blood_of_arianna blood_of_adella iosefkas_blood_vial blood_of_adeline
 event_cleric_beast_defeated event_gascoigne_defeated
 event_blood_starved_beast_defeated event_darkbeast_paarl_defeated event_amelia_defeated
 event_witch_of_hemwick_defeated event_martyr_logarius_defeated

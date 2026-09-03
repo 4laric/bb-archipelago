@@ -11,6 +11,7 @@ from worlds.bloodborne.data import (
     DLC_ITEM_KEYS,
     DLC_LOCATION_KEYS,
     DLC_REGIONS,
+    DLC_WEAPON_KEYS,
     GOODS_VARIETY_KEYS,
     SLICE_ITEM_KEYS,
     UNCANNY_ITEM_KEYS,
@@ -24,6 +25,7 @@ from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
 from worlds.bloodborne import (
     ALL_NETWORK_LOCATIONS,
     FILLER_ITEM_NAME,
+    FILLER_SHED_TIER,
     FILLER_WEIGHTS,
     FULL_POOL_ITEM_KEYS,
     GOAL_LOCATION_KEY,
@@ -39,6 +41,7 @@ from worlds.bloodborne import (
     build_shop_gate_permutation,
     build_starting_weapon_choices,
     build_weapon_requirement_families,
+    _weighted_filler,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,6 +95,11 @@ def slice_reachable(held: set[str], *, locations=None) -> set[str]:
 
 
 class BloodborneModelTests(unittest.TestCase):
+    def test_dlc_weapon_boundary_is_imported_by_the_world_module(self):
+        import worlds.bloodborne as world
+
+        self.assertIs(world.DLC_WEAPON_KEYS, DLC_WEAPON_KEYS)
+
     def test_category8_awards_cover_the_reviewed_fixed_catalog(self):
         reviewed = {
             row.item_lot_id: row.item_id
@@ -247,36 +255,40 @@ class BloodborneModelTests(unittest.TestCase):
             "Blade of Mercy", "Burial Blade", "Chikage", "Reiterpallasch",
             "Tonitrus", "Logarius' Wheel",
             "Hunter Pistol", "Hunter Blunderbuss", "Repeating Pistol",
-            "Ludwig's Rifle", "Cannon",
+            "Ludwig's Rifle", "Cannon", "Evelyn", "Rosmarinus", "Flamesprayer",
+            "Wooden Shield", "Hunter's Torch",
         ):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 68)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 45)
-        self.assertEqual(counts["Blood Stone Shards x2"], 34)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 34)
-        self.assertEqual(counts["Blood Stone Chunk"], 23)
-        self.assertEqual(counts["Bold Hunter's Mark x2"], 23)
+        self.assertEqual(counts["Blood Vial"], 24)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 6)
+        self.assertEqual(counts["Blood Stone Shards x2"], 32)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 32)
+        self.assertEqual(counts["Blood Stone Chunk"], 21)
+        self.assertEqual(counts["Bold Hunter's Mark x2"], 21)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
                      "Fire Paper x2"):
-            self.assertEqual(counts[name], 23, name)
-        self.assertEqual(counts["Bolt Paper x2"], 23)
-        self.assertEqual(counts["Bone Marrow Ash x3"], 23)
-        for name in ("Antidote x2", "Sedatives x2"):
-            self.assertEqual(counts[name], 12, name)
-        for name in ("Poison Knife x3", "Blue Elixir", "Beast Blood Pellet",
-                     "Lead Elixir", "Oil Urn x2", "Numbing Mist x2",
+            self.assertEqual(counts[name], 21, name)
+        self.assertEqual(counts["Bolt Paper x2"], 21)
+        self.assertEqual(counts["Bone Marrow Ash x3"], 21)
+        for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
+                     "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
+                     "Oil Urn x2", "Numbing Mist x2",
                      ):
             self.assertEqual(counts[name], 11, name)
         for name in ("Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
             self.assertEqual(counts[name], 11, name)
         self.assertEqual(counts["Great One's Wisdom"], 11)
-        self.assertEqual(counts["Coldblood Dew (3)"], 11)
+        self.assertEqual(counts["Coldblood Dew (1)"], 0)
+        self.assertEqual(counts["Coldblood Dew (2)"], 0)
+        self.assertEqual(counts["Coldblood Dew (3)"], 0)
+        self.assertEqual(counts["Thick Coldblood (4)"], 0)
+        self.assertEqual(counts["Thick Coldblood (5)"], 0)
         self.assertEqual(counts["Thick Coldblood (6)"], 11)
-        self.assertEqual(counts["Frenzied Coldblood (8)"], 11)
-        self.assertEqual(counts["Kin Coldblood (11)"], 11)
+        self.assertEqual(counts["Frenzied Coldblood (8)"], 10)
+        self.assertEqual(counts["Kin Coldblood (11)"], 10)
         self.assertEqual(counts["Blood Rock"], 1)
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
 
@@ -302,11 +314,11 @@ class BloodborneModelTests(unittest.TestCase):
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 231)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 154)
+        self.assertEqual(counts["Blood Vial"], 233)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 150)
         self.assertEqual(counts["Blood Stone Shards x2"], 116)
-        self.assertEqual(counts["Pebbles x3"], 77)
-        self.assertEqual(counts["Molotov Cocktails x2"], 77)
+        self.assertEqual(counts["Pebbles x3"], 78)
+        self.assertEqual(counts["Molotov Cocktails x2"], 78)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         self.assertEqual(len(slot_data["runtime_items"]), 18)  # seventeen slice items + Blood Vial
@@ -761,14 +773,15 @@ class DlcOptionWiringTests(unittest.TestCase):
         uncanny_weapons = 0
         randomize_armor = 0
 
-        def __init__(self, include_dlc):
+        def __init__(self, include_dlc, include_dlc_gear=1):
             self.include_dlc = include_dlc
+            self.include_dlc_gear = include_dlc_gear
 
-    def _world(self, include_dlc):
+    def _world(self, include_dlc, include_dlc_gear=1):
         from worlds.bloodborne import BloodborneWorld
 
         world = BloodborneWorld.__new__(BloodborneWorld)
-        world.options = self._Options(include_dlc)
+        world.options = self._Options(include_dlc, include_dlc_gear)
         return world
 
     def test_the_dlc_option_defaults_off(self):
@@ -778,15 +791,28 @@ class DlcOptionWiringTests(unittest.TestCase):
         self.assertEqual(0, option.default)
         self.assertEqual("Include The Old Hunters DLC", option.display_name)
 
-    def test_disabling_dlc_removes_its_items_and_locations_together(self):
+    def test_disabling_dlc_removes_world_items_and_locations_but_keeps_gear(self):
         off = self._world(0)
         on = self._world(1)
-        self.assertEqual(DLC_ITEM_KEYS, on._pool_item_keys() - off._pool_item_keys())
+        active_dlc_items = (DLC_ITEM_KEYS - DLC_WEAPON_KEYS) & on._pool_item_keys()
+        self.assertEqual(active_dlc_items, on._pool_item_keys() - off._pool_item_keys())
+        self.assertTrue(DLC_WEAPON_KEYS & off._pool_item_keys())
         self.assertEqual(
             DLC_LOCATION_KEYS,
             {location.key for location in on._active_locations()}
             - {location.key for location in off._active_locations()},
         )
+
+    def test_dlc_gear_is_default_on_and_can_be_disabled_independently(self):
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["include_dlc_gear"]
+        self.assertEqual(1, option.default)
+        self.assertEqual("Include The Old Hunters Gear", option.display_name)
+        with_gear = self._world(0, 1)._pool_item_keys()
+        without_gear = self._world(0, 0)._pool_item_keys()
+        self.assertEqual(DLC_WEAPON_KEYS & with_gear, with_gear - without_gear)
+        self.assertTrue(DLC_WEAPON_KEYS.isdisjoint(without_gear))
 
     def test_the_declared_dlc_boundary_is_complete(self):
         from worlds.bloodborne.data import SLICE_ENTRANCES
@@ -939,21 +965,30 @@ class Wave1WeaponPoolTests(unittest.TestCase):
         "hunter_pistol": (14000000, "Hunter Pistol"),
         "repeating_pistol": (14200000, "Repeating Pistol"),
         "cannon": (15000000, "Cannon"),
+        "evelyn": (14100000, "Evelyn"),
+        "rosmarinus": (18000000, "Rosmarinus"),
+        "flamesprayer": (18100000, "Flamesprayer"),
+    }
+    LEFT_HAND_TOOLS = {
+        "wooden_shield": (19000000, "Wooden Shield"),
+        "hunters_torch": (20000000, "Hunter's Torch"),
     }
 
     def test_every_base_game_weapon_is_in_the_default_pool_as_useful(self):
         by_key = {item.key: item for item in MODEL.items}
-        expected = set(self.TRICK_WEAPONS) | set(self.FIREARMS)
+        expected = set(self.TRICK_WEAPONS) | set(self.FIREARMS) | set(self.LEFT_HAND_TOOLS)
         self.assertEqual(BASE_GAME_WEAPON_KEYS, frozenset(expected))
         pool = set(build_item_pool_names(FULL_POOL_ITEM_KEYS))
-        for key, (_, name) in {**self.TRICK_WEAPONS, **self.FIREARMS}.items():
+        for key, (_, name) in {**self.TRICK_WEAPONS, **self.FIREARMS,
+                               **self.LEFT_HAND_TOOLS}.items():
             self.assertIn(key, FULL_POOL_ITEM_KEYS, key)
             self.assertEqual(by_key[key].name, name, key)
             self.assertEqual(by_key[key].kind, ItemKind.USEFUL, key)
             self.assertIn(name, pool, name)
 
     def test_each_weapon_descriptor_is_its_param_row_under_the_category_0_formula(self):
-        for key, (param_id, _) in {**self.TRICK_WEAPONS, **self.FIREARMS}.items():
+        for key, (param_id, _) in {**self.TRICK_WEAPONS, **self.FIREARMS,
+                                   **self.LEFT_HAND_TOOLS}.items():
             binding = ITEM_BINDINGS[key]
             self.assertEqual(binding.normalized_item_id, param_id, key)
             self.assertEqual(binding.raw_descriptor, param_id | 0x80000000, key)
@@ -961,7 +996,7 @@ class Wave1WeaponPoolTests(unittest.TestCase):
             self.assertEqual(binding.reinforcement_level, 0, key)
         for key in self.TRICK_WEAPONS:
             self.assertEqual(ITEM_BINDINGS[key].feed_effect, "right_hand_weapon", key)
-        for key in self.FIREARMS:
+        for key in set(self.FIREARMS) | set(self.LEFT_HAND_TOOLS):
             self.assertEqual(ITEM_BINDINGS[key].feed_effect, "left_hand_weapon", key)
 
     def test_firearms_have_no_uncanny_variant(self):
@@ -979,17 +1014,17 @@ class Wave1WeaponPoolTests(unittest.TestCase):
         """
         for key in self.FIREARMS:
             self.assertNotIn(key, UNCANNY_WEAPONS, key)
-        self.assertEqual(set(UNCANNY_WEAPONS), set(self.TRICK_WEAPONS))
+        self.assertTrue(set(self.TRICK_WEAPONS) < set(UNCANNY_WEAPONS))
 
     def test_one_uncanny_row_per_trick_weapon_at_the_uncanny_offset(self):
-        self.assertEqual(len(UNCANNY_ITEM_KEYS), len(self.TRICK_WEAPONS))
+        self.assertEqual(len(UNCANNY_ITEM_KEYS), 26)
         for key, (param_id, _) in self.TRICK_WEAPONS.items():
             variant = ITEM_BINDINGS[UNCANNY_WEAPONS[key]]
             self.assertEqual(variant.normalized_item_id, param_id + 10000, key)
             self.assertEqual(variant.descriptor_evidence, "param_id_inferred", key)
 
-    def test_unmapped_dlc_weapons_and_the_torch_stay_excluded(self):
-        """Mapped DLC pickups enter; the remaining rows and torches do not.
+    def test_complete_dlc_weapon_catalog_and_failed_torch_stay_separate(self):
+        """All obtainable DLC equipment enters; the failed Torch stays out.
 
         EquipParamWeapon ids from 23000000 up are The Old Hunters block
         (Beasthunter Saif 23000000, Beast Cutter 24000000, Amygdalan Arm
@@ -999,19 +1034,50 @@ class Wave1WeaponPoolTests(unittest.TestCase):
         is base game but is a standing negative canary, not an omission.
         """
         names = {item.name for item in MODEL.items}
-        for name in ("Holy Moonlight Sword", "Rakuyo",
-                     "Bloodletter", "Church Pick",
-                     "Simon's Bowblade", "Kos Parasite",
-                     "Torch", "Hunter's Torch", "Evelyn"):
-            self.assertNotIn(name, names, name)
+        for name in ("Holy Moonlight Sword", "Rakuyo", "Bloodletter", "Church Pick",
+                     "Simon's Bowblade", "Kos Parasite", "Gatling Gun", "Piercing Rifle"):
+            self.assertIn(name, names, name)
+        self.assertNotIn("Torch", names)
         from worlds.bloodborne.data import DLC_WEAPON_KEYS
         for key in DLC_WEAPON_KEYS:
             self.assertEqual(ITEM_BINDINGS[key].item_category, 0, key)
         self.assertEqual(
             {key for key, binding in ITEM_BINDINGS.items()
              if binding.item_category == 0 and binding.normalized_item_id >= 23000000},
-            set(DLC_WEAPON_KEYS) - {"loch_shield"},
+            {key for key in DLC_WEAPON_KEYS if key != "loch_shield"},
         )
+
+
+class CompleteObtainableWeaponCatalogTests(unittest.TestCase):
+    DLC_TRICK_WEAPONS = {
+        "beasthunter_saif": 23000000, "beast_cutter": 24000000,
+        "amygdalan_arm": 25000000, "holy_moonlight_sword": 26000000,
+        "rakuyo": 27000000, "boom_hammer": 28000000, "bloodletter": 29000000,
+        "church_pick": 30000000, "whirligig_saw": 31000000,
+        "simons_bowblade": 32000000, "kos_parasite": 38000000,
+    }
+    DLC_LEFT_HAND = {
+        "church_cannon": 35000000, "gatling_gun": 33000000,
+        "piercing_rifle": 36000000, "fist_of_gratia": 34000000,
+        "loch_shield": 19100000,
+    }
+
+    def test_all_obtainable_dlc_rows_have_exact_descriptors(self):
+        for key, param_id in {**self.DLC_TRICK_WEAPONS, **self.DLC_LEFT_HAND}.items():
+            binding = ITEM_BINDINGS[key]
+            self.assertEqual(binding.normalized_item_id, param_id, key)
+            self.assertEqual(binding.raw_descriptor, param_id | 0x80000000, key)
+            self.assertEqual(binding.item_category, 0, key)
+            self.assertEqual(binding.reinforcement_level, 0, key)
+
+    def test_every_obtainable_dlc_trick_weapon_has_uncanny_variant(self):
+        for key, param_id in self.DLC_TRICK_WEAPONS.items():
+            uncanny = UNCANNY_WEAPONS[key]
+            self.assertEqual(ITEM_BINDINGS[uncanny].normalized_item_id, param_id + 10000, key)
+
+    def test_lost_variants_are_deliberately_not_ap_items(self):
+        names = {item.name for item in MODEL.items}
+        self.assertFalse(any(name.startswith("Lost ") for name in names))
 
 
 class Wave1GoodsVarietyTests(unittest.TestCase):
@@ -1089,15 +1155,56 @@ class WeightedFillerTests(unittest.TestCase):
                 pool = build_item_pool_names(keys, seed)
                 self.assertEqual(len(pool), len(NETWORK_LOCATIONS), (len(keys), seed))
 
+    def test_marginal_unique_items_shed_filler_in_explicit_tier_order(self):
+        candidates = [
+            ("coldblood_dew", "echo"),
+            ("blood_vial", "vial"),
+            ("quicksilver_bullets", "bullets"),
+            ("pebbles", "pebbles"),
+            ("thick_coldblood", "higher echo"),
+            ("molotov_cocktails", "molotov"),
+            ("blood_stone_shards", "shards"),
+        ]
+        envelope = 140
+        previous = Counter(_weighted_filler(
+            candidates, envelope, "shed-order", envelope=envelope))
+        removed_tiers = []
+        # Below the sum of the configured floors scarcity necessarily starts
+        # consuming guarantees; the ordinary marginal-addition range ends
+        # before that emergency regime.
+        for count in range(envelope - 1, 30, -1):
+            current = Counter(_weighted_filler(
+                candidates, count, "shed-order", envelope=envelope))
+            removed = list((previous - current).elements())
+            self.assertEqual(len(removed), 1)
+            key_by_name = {name: key for key, name in candidates}
+            removed_tiers.append(FILLER_SHED_TIER.get(key_by_name[removed[0]], 4))
+            previous = current
+        self.assertEqual(removed_tiers, sorted(removed_tiers))
+
+    def test_reinforcement_and_combat_floors_outlive_disposable_filler(self):
+        candidates = [
+            ("coldblood_dew", "echo"),
+            ("blood_vial", "vial"),
+            ("pebbles", "pebbles"),
+            ("molotov_cocktails", "molotov"),
+            ("blood_stone_shards", "shards"),
+        ]
+        names = _weighted_filler(candidates, 12, "floors", envelope=100)
+        self.assertNotIn("echo", names)
+        self.assertNotIn("pebbles", names)
+        self.assertIn("vial", names)
+        self.assertIn("molotov", names)
+        self.assertIn("shards", names)
+
     def test_blood_vial_stays_in_the_mix_and_stays_the_filler_contract(self):
         pool = build_item_pool_names(FULL_POOL_ITEM_KEYS, "seed-a")
         self.assertIn(FILLER_ITEM_NAME, pool)
         self.assertIn(FILLER_ITEM_NAME, ITEM_NAME_TO_ID)
-        # It is the heaviest share, so the mix is variety, not a shuffle that
-        # buries the item a run actually burns.
+        # Vials retain a useful floor even though surplus low-quantity vial
+        # bundles are intentionally shed before combat and upgrade supplies.
         counts = Counter(pool)
-        heaviest = max(counts, key=lambda name: (counts[name], name))
-        self.assertEqual(heaviest, FILLER_ITEM_NAME)
+        self.assertGreaterEqual(counts[FILLER_ITEM_NAME], 8)
         self.assertEqual(FILLER_WEIGHTS["blood_vial"], max(FILLER_WEIGHTS.values()))
 
     def test_every_filler_item_carries_a_weight(self):

@@ -11,7 +11,7 @@ have been runtime validated.
 from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
 from .fixed_locations import FIXED_LOCATIONS
 from .location_names import location_name
-from .starting_attire import STARTING_ATTIRE_CATALOG
+from .attire import ATTIRE_CATALOG
 from .category8_awards import CATEGORY8_AWARDS
 
 P = ItemKind.PROGRESSION
@@ -91,6 +91,11 @@ ITEMS = (
     Item("hunter_pistol", "Hunter Pistol", U),
     Item("repeating_pistol", "Repeating Pistol", U),
     Item("cannon", "Cannon", U),
+    Item("evelyn", "Evelyn", U),
+    Item("rosmarinus", "Rosmarinus", U),
+    Item("flamesprayer", "Flamesprayer", U),
+    Item("wooden_shield", "Wooden Shield", U),
+    Item("hunters_torch", "Hunter's Torch", U),
     # Live category-4 grant canaries promoted into the vertical-slice pool.
     # Quantities are part of the AP item contract and are granted atomically.
     Item("augur_of_ebrietas", "Augur of Ebrietas", U),
@@ -127,6 +132,30 @@ ITEMS = (
     Item("thick_coldblood", "Thick Coldblood (6)", F, 1),
     Item("frenzied_coldblood", "Frenzied Coldblood (8)", F, 1),
     Item("kin_coldblood", "Kin Coldblood (11)", F, 1),
+    # Complete obtainable, ordinary-use goods catalog.  Keep distinct echo
+    # denominations distinct: their names and goods rows communicate the
+    # actual payout, even though each AP item delivers one inventory object.
+    # These six rows are unique (`isOnlyOne=1`) and therefore one-each useful
+    # items, never weighted filler that could try to award duplicate copies.
+    Item("hunters_mark", "Hunter's Mark", U, 1),
+    Item("delayed_molotov_cocktails", "Delayed Molotov Cocktails x2", F, 2),
+    Item("rope_molotov_cocktails", "Rope Molotov Cocktails x2", F, 2),
+    Item("delayed_rope_molotov_cocktails", "Delayed Rope Molotov Cocktails x2", F, 2),
+    Item("shining_coins", "Shining Coins x5", F, 5),
+    Item("coldblood_dew_1", "Coldblood Dew (1)", F, 1),
+    Item("coldblood_dew_2", "Coldblood Dew (2)", F, 1),
+    Item("thick_coldblood_4", "Thick Coldblood (4)", F, 1),
+    Item("thick_coldblood_5", "Thick Coldblood (5)", F, 1),
+    Item("frenzied_coldblood_7", "Frenzied Coldblood (7)", F, 1),
+    Item("frenzied_coldblood_9", "Frenzied Coldblood (9)", F, 1),
+    Item("kin_coldblood_10", "Kin Coldblood (10)", F, 1),
+    Item("kin_coldblood_12", "Kin Coldblood (12)", F, 1),
+    Item("great_one_coldblood", "Great One Coldblood", F, 1),
+    Item("old_great_one_coldblood", "Old Great One Coldblood", F, 1),
+    Item("blood_of_arianna", "Blood of Arianna", U, 1),
+    Item("blood_of_adella", "Blood of Adella", U, 1),
+    Item("iosefkas_blood_vial", "Iosefka's Blood Vial", U, 1),
+    Item("blood_of_adeline", "Blood of Adeline", U, 1),
     # Remaining mapped hunter tools. These are category-4 inventory goods and
     # use the same live-validated delivery formula as Augur of Ebrietas.
     Item("beast_roar", "Beast Roar", U),
@@ -146,7 +175,15 @@ ITEMS = (
     Item("amygdalan_arm", "Amygdalan Arm", U),
     Item("boom_hammer", "Boom Hammer", U),
     Item("whirligig_saw", "Whirligig Saw", U),
+    Item("holy_moonlight_sword", "Holy Moonlight Sword", U),
+    Item("rakuyo", "Rakuyo", U),
+    Item("bloodletter", "Bloodletter", U),
+    Item("church_pick", "Church Pick", U),
+    Item("simons_bowblade", "Simon's Bowblade", U),
+    Item("kos_parasite", "Kos Parasite", U),
     Item("church_cannon", "Church Cannon", U),
+    Item("gatling_gun", "Gatling Gun", U),
+    Item("piercing_rifle", "Piercing Rifle", U),
     Item("fist_of_gratia", "Fist of Gratia", U),
     Item("loch_shield", "Loch Shield", U),
     # Uncanny variants of pooled weapons (bb-archipelago#205). Each is its own
@@ -170,13 +207,23 @@ ITEMS = (
     Item("uncanny_logarius_wheel", "Logarius' Uncanny Wheel", U),
     Item("uncanny_tonitrus", "Uncanny Tonitrus", U),
     Item("uncanny_threaded_cane", "Uncanny Threaded Cane", U),
-    # Reviewed EquipParamProtector rows. These use the same complete 17-set
-    # corpus as starting-attire randomization, but each piece is an independent
-    # useful AP item. Runtime descriptors remain explicitly corpus-backed until
-    # their first live inserts promote them, just like inferred weapon rows.
+    Item("uncanny_beasthunter_saif", "Uncanny Beasthunter Saif", U),
+    Item("uncanny_beast_cutter", "Uncanny Beast Cutter", U),
+    Item("uncanny_amygdalan_arm", "Uncanny Amygdalan Arm", U),
+    Item("uncanny_boom_hammer", "Uncanny Boom Hammer", U),
+    Item("uncanny_whirligig_saw", "Uncanny Whirligig Saw", U),
+    Item("uncanny_holy_moonlight_sword", "Uncanny Holy Moonlight Sword", U),
+    Item("uncanny_rakuyo", "Uncanny Rakuyo", U),
+    Item("uncanny_bloodletter", "Uncanny Bloodletter", U),
+    Item("uncanny_church_pick", "Uncanny Church Pick", U),
+    Item("uncanny_simons_bowblade", "Uncanny Simon's Bowblade", U),
+    Item("uncanny_kos_parasite", "Uncanny Kos Parasite", U),
+    # Reviewed player-obtainable EquipParamProtector rows. Each piece is an
+    # independent useful AP item. Runtime descriptors remain explicitly
+    # corpus-backed until their first live inserts promote them.
 ) + tuple(
     Item(piece.item_key, piece.name, U)
-    for piece in STARTING_ATTIRE_CATALOG
+    for piece in ATTIRE_CATALOG
 ) + (
     # Locked local events. These are never placed in the random item pool.
     Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
@@ -401,11 +448,9 @@ LOCATIONS = (
 
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 
-ATTIRE_ITEM_KEYS = frozenset(piece.item_key for piece in STARTING_ATTIRE_CATALOG)
-DLC_ATTIRE_SET_KEYS = frozenset({"old_hunter", "maria_hunter", "constable", "yamamura"})
+ATTIRE_ITEM_KEYS = frozenset(piece.item_key for piece in ATTIRE_CATALOG)
 DLC_ATTIRE_ITEM_KEYS = frozenset(
-    piece.item_key for piece in STARTING_ATTIRE_CATALOG
-    if piece.set_key in DLC_ATTIRE_SET_KEYS
+    piece.item_key for piece in ATTIRE_CATALOG if piece.dlc
 )
 
 # The generated player exposes one honest, bounded slice. The broader model
@@ -529,6 +574,17 @@ UNCANNY_WEAPONS = {
     "logarius_wheel": "uncanny_logarius_wheel",
     "tonitrus": "uncanny_tonitrus",
     "threaded_cane": "uncanny_threaded_cane",
+    "beasthunter_saif": "uncanny_beasthunter_saif",
+    "beast_cutter": "uncanny_beast_cutter",
+    "amygdalan_arm": "uncanny_amygdalan_arm",
+    "boom_hammer": "uncanny_boom_hammer",
+    "whirligig_saw": "uncanny_whirligig_saw",
+    "holy_moonlight_sword": "uncanny_holy_moonlight_sword",
+    "rakuyo": "uncanny_rakuyo",
+    "bloodletter": "uncanny_bloodletter",
+    "church_pick": "uncanny_church_pick",
+    "simons_bowblade": "uncanny_simons_bowblade",
+    "kos_parasite": "uncanny_kos_parasite",
 }
 UNCANNY_ITEM_KEYS = frozenset(UNCANNY_WEAPONS.values())
 
@@ -538,13 +594,23 @@ UNCANNY_ITEM_KEYS = frozenset(UNCANNY_WEAPONS.values())
 # there is no option for either, by design (#207: "goods variety should
 # probably just be default pool improvement").
 BASE_GAME_WEAPON_KEYS = frozenset({
-    *UNCANNY_WEAPONS,
+    "chikage", "blade_of_mercy", "hunter_axe", "burial_blade", "saw_cleaver",
+    "saw_spear", "kirkhammer", "ludwigs_holy_blade", "beast_claw",
+    "rifle_spear", "reiterpallasch", "stake_driver", "logarius_wheel",
+    "tonitrus", "threaded_cane",
     "hunter_blunderbuss", "ludwigs_rifle", "hunter_pistol",
-    "repeating_pistol", "cannon",
+    "repeating_pistol", "cannon", "evelyn", "rosmarinus", "flamesprayer",
+    "wooden_shield", "hunters_torch",
 })
 DLC_WEAPON_KEYS = frozenset({
     "beasthunter_saif", "beast_cutter", "amygdalan_arm", "boom_hammer",
-    "whirligig_saw", "church_cannon", "fist_of_gratia", "loch_shield",
+    "whirligig_saw", "holy_moonlight_sword", "rakuyo", "bloodletter",
+    "church_pick", "simons_bowblade", "kos_parasite", "church_cannon",
+    "gatling_gun", "piercing_rifle", "fist_of_gratia", "loch_shield",
+    "uncanny_beasthunter_saif", "uncanny_beast_cutter",
+    "uncanny_amygdalan_arm", "uncanny_boom_hammer", "uncanny_whirligig_saw",
+    "uncanny_holy_moonlight_sword", "uncanny_rakuyo", "uncanny_bloodletter",
+    "uncanny_church_pick", "uncanny_simons_bowblade", "uncanny_kos_parasite",
 })
 GOODS_VARIETY_KEYS = frozenset({
     "antidote", "sedatives", "beast_blood_pellet", "blue_elixir",
@@ -650,7 +716,10 @@ DLC_ENTRANCE_NAMES = frozenset({
 })
 DLC_ITEM_KEYS = frozenset({
     "eye_of_blood_drunk_hunter", "eye_pendant", "astral_clocktower_key",
-    "celestial_dial", "laurences_skull", "blacksky_eye", *DLC_WEAPON_KEYS,
+    "celestial_dial", "laurences_skull", "blacksky_eye",
+    "delayed_molotov_cocktails", "delayed_rope_molotov_cocktails",
+    "blood_of_adeline",
+    *DLC_WEAPON_KEYS,
 })
 DLC_LOCATION_KEYS = frozenset(
     location.key for location in LOCATIONS

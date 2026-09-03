@@ -1,12 +1,12 @@
 set_key	protector_id	slot	name	grant_descriptor
-charred_hunter	10000	head	Charred Hunter Hood	1:10000:1
+charred_hunter	10000	head	Grey Wolf Cap	1:10000:1
 charred_hunter	11000	body	Charred Hunter Garb	1:11000:1
 charred_hunter	12000	arms	Charred Hunter Gloves	1:12000:1
 charred_hunter	13000	legs	Charred Hunter Trousers	1:13000:1
-yharnam_hunter	70000	head	Yharnam Hunter Cap	1:70000:1
-yharnam_hunter	71000	body	Yharnam Hunter Garb	1:71000:1
-yharnam_hunter	72000	arms	Yharnam Hunter Gloves	1:72000:1
-yharnam_hunter	73000	legs	Yharnam Hunter Trousers	1:73000:1
+yharnam_hunter	70000	head	Hunter Hat	1:70000:1
+yharnam_hunter	71000	body	Hunter Garb (Cape)	1:71000:1
+yharnam_hunter	72000	arms	Hunter Gloves	1:72000:1
+yharnam_hunter	73000	legs	Hunter Trousers	1:73000:1
 knight	80000	head	Knight's Wig	1:80000:1
 knight	81000	body	Knight's Garb	1:81000:1
 knight	82000	arms	Knight's Gloves	1:82000:1
@@ -47,9 +47,9 @@ doll	220000	head	Doll Hat	1:220000:1
 doll	221000	body	Doll Clothes	1:221000:1
 doll	222000	arms	Doll Gloves	1:222000:1
 doll	223000	legs	Doll Skirt	1:223000:1
-foreign	230000	head	Foreign Hood	1:230000:1
+foreign	230000	head	Black Hood	1:230000:1
 foreign	231000	body	Foreign Garb	1:231000:1
-foreign	232000	arms	Foreign Manchettes	1:232000:1
+foreign	232000	arms	Sullied Bandage	1:232000:1
 foreign	233000	legs	Foreign Trousers	1:233000:1
 old_hunter	350000	head	Old Hunter Cap	1:350000:1
 old_hunter	351000	body	Old Hunter Garb	1:351000:1
@@ -59,11 +59,11 @@ maria_hunter	370000	head	Maria Hunter Cap	1:370000:1
 maria_hunter	371000	body	Maria Hunter Garb	1:371000:1
 maria_hunter	372000	arms	Maria Hunter Gloves	1:372000:1
 maria_hunter	373000	legs	Maria Hunter Trousers	1:373000:1
-constable	380000	head	Constable's Helmet	1:380000:1
+constable	380000	head	One-eyed Iron Helm	1:380000:1
 constable	381000	body	Constable's Garb	1:381000:1
 constable	382000	arms	Constable's Gloves	1:382000:1
 constable	383000	legs	Constable's Trousers	1:383000:1
 yamamura	400000	head	Yamamura Hunter Hat	1:400000:1
-yamamura	401000	body	Yamamura Hunter Garb	1:401000:1
-yamamura	402000	arms	Yamamura Hunter Gloves	1:402000:1
-yamamura	403000	legs	Yamamura Hunter Trousers	1:403000:1
+yamamura	401000	body	Khaki Haori	1:401000:1
+yamamura	402000	arms	Old Hunter Arm Bands	1:402000:1
+yamamura	403000	legs	Wine Hakama	1:403000:1

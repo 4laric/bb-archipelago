@@ -16,7 +16,7 @@ from worlds.bloodborne.runtime_bindings import (
     RuntimeItemBinding,
     validate_runtime_item_binding,
 )
-from worlds.bloodborne.starting_attire import STARTING_ATTIRE_CATALOG
+from worlds.bloodborne.attire import ATTIRE_CATALOG
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,10 +31,10 @@ class ArmorPoolSafetyTests(unittest.TestCase):
             "legs": "attire_legs",
         }
         self.assertEqual(
-            {piece.item_key for piece in STARTING_ATTIRE_CATALOG},
+            {piece.item_key for piece in ATTIRE_CATALOG},
             ATTIRE_ITEM_KEYS,
         )
-        for piece in STARTING_ATTIRE_CATALOG:
+        for piece in ATTIRE_CATALOG:
             with self.subTest(piece=piece.item_key):
                 binding = ITEM_BINDINGS[piece.item_key]
                 self.assertEqual(1, binding.item_category)
@@ -78,10 +78,11 @@ class ArmorPoolSafetyTests(unittest.TestCase):
         self.assertTrue(ATTIRE_ITEM_KEYS.isdisjoint(SLICE_POOL_SUPPRESSION_KEYS))
 
     def test_dlc_set_boundary_is_explicit_in_the_reviewed_contract(self):
-        catalog_sets = {piece.set_key for piece in STARTING_ATTIRE_CATALOG}
-        dlc_sets = {"old_hunter", "maria_hunter", "constable", "yamamura"}
-        self.assertTrue(dlc_sets <= catalog_sets)
-        self.assertEqual(4, len(dlc_sets))
+        self.assertEqual(
+            {piece.item_key for piece in ATTIRE_CATALOG if piece.dlc},
+            DLC_ATTIRE_ITEM_KEYS,
+        )
+        self.assertEqual(127, len(ATTIRE_CATALOG))
 
     @unittest.skipUnless(hasattr(__import__("worlds.bloodborne", fromlist=["BloodborneOptions"]),
                                  "BloodborneOptions"),
@@ -97,24 +98,26 @@ class ArmorPoolSafetyTests(unittest.TestCase):
             full_item_pool = 1
             uncanny_weapons = 0
 
-            def __init__(self, armor: int, dlc: int):
+            def __init__(self, armor: int, dlc: int, dlc_gear: int = 1):
                 self.randomize_armor = armor
                 self.include_dlc = dlc
+                self.include_dlc_gear = dlc_gear
 
-        def keys(armor: int, dlc: int):
+        def keys(armor: int, dlc: int, dlc_gear: int = 1):
             world = BloodborneWorld.__new__(BloodborneWorld)
-            world.options = Options(armor, dlc)
+            world.options = Options(armor, dlc, dlc_gear)
             return world._pool_item_keys()
 
         self.assertEqual(FULL_POOL_ITEM_KEYS, keys(0, 1))
         self.assertEqual(ATTIRE_ITEM_KEYS, keys(1, 1) - keys(0, 1))
+        self.assertEqual(ATTIRE_ITEM_KEYS, keys(1, 0) - keys(0, 0))
         self.assertEqual(ATTIRE_ITEM_KEYS - DLC_ATTIRE_ITEM_KEYS,
-                         keys(1, 0) - keys(0, 0))
-        self.assertTrue(DLC_ATTIRE_ITEM_KEYS.isdisjoint(keys(1, 0)))
+                         keys(1, 0, 0) - keys(0, 0, 0))
+        self.assertTrue(DLC_ATTIRE_ITEM_KEYS.isdisjoint(keys(1, 0, 0)))
 
     def test_armor_pool_design_contract_is_documented(self):
         text = (ROOT / "docs" / "ARMOR-POOL.md").read_text(encoding="utf-8")
-        self.assertIn("must also require\n`include_dlc`", text)
+        self.assertIn("`include_dlc_gear: false` restricts", text)
         self.assertIn("Do not add every armor key to `POOL_SUPPRESSION_ITEM_KEYS`", text)
         self.assertIn("save, reload", text)
 
