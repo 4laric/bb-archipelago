@@ -253,9 +253,10 @@ class RealCorpusTests(unittest.TestCase):
         location_edits = [edit for edit in self.plan.edits if edit.item_key.startswith("location:")]
         # The combined base-game, Frontier, and DLC manifest and separately-published
         # treasures, minus Saw Spear's lot, plus continuation rows in shared
-        # acquisition-flag award groups, minus the
-        # category-8 generation recipes whose native gem awards stay intact.
-        self.assertEqual(len(location_edits), 624)
+        # acquisition-flag award groups. The 58 category-8 rune and gem lots
+        # are planned like every other pickup since their AP copies arrive
+        # through the event-award lane (#214).
+        self.assertEqual(len(location_edits), 683)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -266,9 +267,9 @@ class RealCorpusTests(unittest.TestCase):
                 # Top Hat and Black Church sets (Cathedral Ward)
                 "2400121", "2400122", "2400123",
                 "2400291", "2400292", "2400293",
-                # Rumpled Yharnam set. Lot 2410580 shares a flag with a
-                # category-8 gem recipe and therefore stays native too.
-                "2400541",
+                # Rumpled Yharnam set, and lot 2410580, which shares its
+                # flag with a category-8 gem recipe that is now planned too.
+                "2400541", "2410580",
                 # Charred Hunter Garb (Old Yharnam)
                 "2300401", "2300402",
                 # Executioner and Knight sets (Castle Cainhurst)
@@ -319,24 +320,24 @@ class RealCorpusTests(unittest.TestCase):
             self.assertEqual(int(by_lot[str(binding.item_lot_id)]), item_lot_flag,
                              f"{location.key}: planner and runtime_bindings disagree")
         # The base-game and DLC fixed pickups plus published treasures carry
-        # lots; bosses and the skull interaction do not, and the
-        # four unseeded-but-suppressed rows (clinic pair, post-Rom ribbon, and
-        # the NG+-only lot 2410295 from #220) are not network locations, so
-        # they are not iterated here.
-        self.assertEqual(checked, 566)
+        # lots, now including the 58 category-8 rune and gem rows; bosses and
+        # the skull interaction do not, and the unseeded-but-suppressed rows
+        # (clinic pair, post-Rom ribbon, and the NG+-only lot 2410295 from
+        # #220) are not network locations, so they are not iterated here.
+        self.assertEqual(checked, 624)
 
-    def test_genuine_category_eight_gem_checks_keep_their_native_awards(self):
+    def test_every_category_eight_check_is_suppressed_and_planned(self):
         from worlds.bloodborne import NETWORK_LOCATIONS
         from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
 
-        gems = [location for location in NETWORK_LOCATIONS
+        rows = [location for location in NETWORK_LOCATIONS
                 if LOCATION_BINDINGS[location.key].item_category == 8]
-        self.assertEqual(len(gems), 36)
+        self.assertEqual(len(rows), 58)
         planned_lots = {edit.item_lot_id for edit in self.plan.edits}
-        for location in gems:
+        for location in rows:
             with self.subTest(location=location.key):
-                self.assertFalse(location.vanilla_award_suppressed)
-                self.assertNotIn(
+                self.assertTrue(location.vanilla_award_suppressed)
+                self.assertIn(
                     str(LOCATION_BINDINGS[location.key].item_lot_id), planned_lots
                 )
 

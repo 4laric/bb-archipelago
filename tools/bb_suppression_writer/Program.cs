@@ -565,8 +565,16 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             || itemLots.Rows.Any(row => row.ID == award.ItemLotId))
             throw new InvalidDataException($"category-8 award ids collide for {award.ItemKey}");
         PARAM.Row sourceLot = itemLots.Rows.Single(row => row.ID == award.SourceLotId);
-        if (Convert.ToInt32(RequireCell(sourceLot, "lotItemCategory01").Value) != 8
-            || Convert.ToInt32(RequireCell(sourceLot, "lotItemId01").Value) != award.GemgenId)
+        // The input binder is the suppressed one, so the source lot's first
+        // slot is either the vanilla category-8 recipe (unsuppressed build)
+        // or the category-4 placeholder the suppression plan wrote over it.
+        // The world's catalog test ties source_lot_id to gemgen_id; the
+        // writer only refuses a lot that is neither shape.
+        int sourceCategory = Convert.ToInt32(RequireCell(sourceLot, "lotItemCategory01").Value);
+        int sourceItem = Convert.ToInt32(RequireCell(sourceLot, "lotItemId01").Value);
+        bool vanillaRecipe = sourceCategory == 8 && sourceItem == award.GemgenId;
+        bool suppressedRecipe = sourceCategory == 4;
+        if (!vanillaRecipe && !suppressedRecipe)
             throw new InvalidDataException($"{award.ItemKey}: source lot does not witness GemGenParam {award.GemgenId}");
         var lot = new PARAM.Row(sourceLot) { ID = award.ItemLotId, Name = $"AP {award.ItemKey}" };
         RequireCell(lot, "getItemFlagId").Value = -1;

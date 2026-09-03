@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Caryll rune and blood gem chests no longer hand out their vanilla item.**
+  With rune and gem delivery through the event-award lane confirmed live, all
+  58 category-8 pickups are suppressed like every other check, and the 22
+  fixed Caryll rune locations join the seeded pool. Base-game seeds grow from
+  495 to 517 locations, full seeds from 646 to 668. The suppression plan and
+  the CI-reproduced binder hash move with it; players get the rebuilt binder
+  from the launcher package as usual.
+
 - **The per-check bonus item is now seed-owned.** Slot data publishes
   `sustain_item` (Quicksilver Bullets, goods 900) from the apworld's runtime
   bindings, so the client no longer hardcodes it. The beta 1 client hardcoded
