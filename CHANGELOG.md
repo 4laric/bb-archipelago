@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Rune and gem deliveries no longer stall when their token lands in the
+  storage box.** The bridge event now waits for the token including the box,
+  consumes every copy of it before awarding once, and only then raises its
+  acknowledgement. A duplicate token can no longer become a duplicate rune,
+  and a boxed token is consumed without the player withdrawing it, provided
+  the game's removal reaches the box; if it does not, the event waits for the
+  withdrawal instead of awarding twice (#342).
+
 - **Caryll rune and blood gem chests no longer hand out their vanilla item.**
   With rune and gem delivery through the event-award lane confirmed live, all
   58 category-8 pickups are suppressed like every other check, and the 22
