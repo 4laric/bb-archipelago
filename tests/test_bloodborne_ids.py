@@ -219,6 +219,30 @@ GOLDEN_ITEMS = {
     # bb-archipelago#214 category-8 AwardItemLot bridge pilot.
     "caryll_rune_communion_1": 0xBB0187,
     "blood_gem_old_yharnam_123000": 0xBB0188,
+    "evelyn": 0xBB01C1,
+    "rosmarinus": 0xBB01C2,
+    "flamesprayer": 0xBB01C3,
+    "holy_moonlight_sword": 0xBB01C4,
+    "rakuyo": 0xBB01C5,
+    "bloodletter": 0xBB01C6,
+    "church_pick": 0xBB01C7,
+    "simons_bowblade": 0xBB01C8,
+    "gatling_gun": 0xBB01C9,
+    "piercing_rifle": 0xBB01CA,
+    "kos_parasite": 0xBB01CB,
+    "uncanny_beasthunter_saif": 0xBB01CC,
+    "uncanny_beast_cutter": 0xBB01CD,
+    "uncanny_amygdalan_arm": 0xBB01CE,
+    "uncanny_boom_hammer": 0xBB01CF,
+    "uncanny_whirligig_saw": 0xBB01D0,
+    "uncanny_holy_moonlight_sword": 0xBB01D1,
+    "uncanny_rakuyo": 0xBB01D2,
+    "uncanny_bloodletter": 0xBB01D3,
+    "uncanny_church_pick": 0xBB01D4,
+    "uncanny_simons_bowblade": 0xBB01D5,
+    "uncanny_kos_parasite": 0xBB01D6,
+    "wooden_shield": 0xBB01D7,
+    "hunters_torch": 0xBB01D8,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -552,11 +576,16 @@ class RuntimeItemContractTests(unittest.TestCase):
         # bb-archipelago#207 wave 1: the allowlist is now the base-game weapon
         # catalog, not one canary. The invariant is unchanged -- nothing enters
         # category 0 that is not a declared, bound weapon key.
-        from worlds.bloodborne.data import BASE_GAME_WEAPON_KEYS, DLC_WEAPON_KEYS
+        from worlds.bloodborne.data import (
+            BASE_GAME_WEAPON_KEYS, DLC_WEAPON_KEYS, UNCANNY_ITEM_KEYS,
+        )
 
         saw_spear = equipment[str(ITEM_ID_BY_KEY["saw_spear"])]
-        self.assertEqual(set(equipment),
-                         {str(ITEM_ID_BY_KEY[key]) for key in BASE_GAME_WEAPON_KEYS | DLC_WEAPON_KEYS})
+        self.assertEqual(
+            set(equipment),
+            {str(ITEM_ID_BY_KEY[key])
+             for key in (BASE_GAME_WEAPON_KEYS | DLC_WEAPON_KEYS) - UNCANNY_ITEM_KEYS},
+        )
         self.assertEqual(saw_spear["raw_descriptor"], 0x806C5660)
         self.assertEqual(saw_spear["normalized_item_id"], 0x006C5660)
         self.assertEqual(saw_spear["feed_effect"], "right_hand_weapon")

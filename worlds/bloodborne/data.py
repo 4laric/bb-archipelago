@@ -91,6 +91,11 @@ ITEMS = (
     Item("hunter_pistol", "Hunter Pistol", U),
     Item("repeating_pistol", "Repeating Pistol", U),
     Item("cannon", "Cannon", U),
+    Item("evelyn", "Evelyn", U),
+    Item("rosmarinus", "Rosmarinus", U),
+    Item("flamesprayer", "Flamesprayer", U),
+    Item("wooden_shield", "Wooden Shield", U),
+    Item("hunters_torch", "Hunter's Torch", U),
     # Live category-4 grant canaries promoted into the vertical-slice pool.
     # Quantities are part of the AP item contract and are granted atomically.
     Item("augur_of_ebrietas", "Augur of Ebrietas", U),
@@ -146,7 +151,15 @@ ITEMS = (
     Item("amygdalan_arm", "Amygdalan Arm", U),
     Item("boom_hammer", "Boom Hammer", U),
     Item("whirligig_saw", "Whirligig Saw", U),
+    Item("holy_moonlight_sword", "Holy Moonlight Sword", U),
+    Item("rakuyo", "Rakuyo", U),
+    Item("bloodletter", "Bloodletter", U),
+    Item("church_pick", "Church Pick", U),
+    Item("simons_bowblade", "Simon's Bowblade", U),
+    Item("kos_parasite", "Kos Parasite", U),
     Item("church_cannon", "Church Cannon", U),
+    Item("gatling_gun", "Gatling Gun", U),
+    Item("piercing_rifle", "Piercing Rifle", U),
     Item("fist_of_gratia", "Fist of Gratia", U),
     Item("loch_shield", "Loch Shield", U),
     # Uncanny variants of pooled weapons (bb-archipelago#205). Each is its own
@@ -170,6 +183,17 @@ ITEMS = (
     Item("uncanny_logarius_wheel", "Logarius' Uncanny Wheel", U),
     Item("uncanny_tonitrus", "Uncanny Tonitrus", U),
     Item("uncanny_threaded_cane", "Uncanny Threaded Cane", U),
+    Item("uncanny_beasthunter_saif", "Uncanny Beasthunter Saif", U),
+    Item("uncanny_beast_cutter", "Uncanny Beast Cutter", U),
+    Item("uncanny_amygdalan_arm", "Uncanny Amygdalan Arm", U),
+    Item("uncanny_boom_hammer", "Uncanny Boom Hammer", U),
+    Item("uncanny_whirligig_saw", "Uncanny Whirligig Saw", U),
+    Item("uncanny_holy_moonlight_sword", "Uncanny Holy Moonlight Sword", U),
+    Item("uncanny_rakuyo", "Uncanny Rakuyo", U),
+    Item("uncanny_bloodletter", "Uncanny Bloodletter", U),
+    Item("uncanny_church_pick", "Uncanny Church Pick", U),
+    Item("uncanny_simons_bowblade", "Uncanny Simon's Bowblade", U),
+    Item("uncanny_kos_parasite", "Uncanny Kos Parasite", U),
     # Reviewed player-obtainable EquipParamProtector rows. Each piece is an
     # independent useful AP item. Runtime descriptors remain explicitly
     # corpus-backed until their first live inserts promote them.
@@ -526,6 +550,17 @@ UNCANNY_WEAPONS = {
     "logarius_wheel": "uncanny_logarius_wheel",
     "tonitrus": "uncanny_tonitrus",
     "threaded_cane": "uncanny_threaded_cane",
+    "beasthunter_saif": "uncanny_beasthunter_saif",
+    "beast_cutter": "uncanny_beast_cutter",
+    "amygdalan_arm": "uncanny_amygdalan_arm",
+    "boom_hammer": "uncanny_boom_hammer",
+    "whirligig_saw": "uncanny_whirligig_saw",
+    "holy_moonlight_sword": "uncanny_holy_moonlight_sword",
+    "rakuyo": "uncanny_rakuyo",
+    "bloodletter": "uncanny_bloodletter",
+    "church_pick": "uncanny_church_pick",
+    "simons_bowblade": "uncanny_simons_bowblade",
+    "kos_parasite": "uncanny_kos_parasite",
 }
 UNCANNY_ITEM_KEYS = frozenset(UNCANNY_WEAPONS.values())
 
@@ -535,13 +570,23 @@ UNCANNY_ITEM_KEYS = frozenset(UNCANNY_WEAPONS.values())
 # there is no option for either, by design (#207: "goods variety should
 # probably just be default pool improvement").
 BASE_GAME_WEAPON_KEYS = frozenset({
-    *UNCANNY_WEAPONS,
+    "chikage", "blade_of_mercy", "hunter_axe", "burial_blade", "saw_cleaver",
+    "saw_spear", "kirkhammer", "ludwigs_holy_blade", "beast_claw",
+    "rifle_spear", "reiterpallasch", "stake_driver", "logarius_wheel",
+    "tonitrus", "threaded_cane",
     "hunter_blunderbuss", "ludwigs_rifle", "hunter_pistol",
-    "repeating_pistol", "cannon",
+    "repeating_pistol", "cannon", "evelyn", "rosmarinus", "flamesprayer",
+    "wooden_shield", "hunters_torch",
 })
 DLC_WEAPON_KEYS = frozenset({
     "beasthunter_saif", "beast_cutter", "amygdalan_arm", "boom_hammer",
-    "whirligig_saw", "church_cannon", "fist_of_gratia", "loch_shield",
+    "whirligig_saw", "holy_moonlight_sword", "rakuyo", "bloodletter",
+    "church_pick", "simons_bowblade", "kos_parasite", "church_cannon",
+    "gatling_gun", "piercing_rifle", "fist_of_gratia", "loch_shield",
+    "uncanny_beasthunter_saif", "uncanny_beast_cutter",
+    "uncanny_amygdalan_arm", "uncanny_boom_hammer", "uncanny_whirligig_saw",
+    "uncanny_holy_moonlight_sword", "uncanny_rakuyo", "uncanny_bloodletter",
+    "uncanny_church_pick", "uncanny_simons_bowblade", "uncanny_kos_parasite",
 })
 GOODS_VARIETY_KEYS = frozenset({
     "antidote", "sedatives", "beast_blood_pellet", "blue_elixir",

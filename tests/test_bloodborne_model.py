@@ -247,7 +247,8 @@ class BloodborneModelTests(unittest.TestCase):
             "Blade of Mercy", "Burial Blade", "Chikage", "Reiterpallasch",
             "Tonitrus", "Logarius' Wheel",
             "Hunter Pistol", "Hunter Blunderbuss", "Repeating Pistol",
-            "Ludwig's Rifle", "Cannon",
+            "Ludwig's Rifle", "Cannon", "Evelyn", "Rosmarinus", "Flamesprayer",
+            "Wooden Shield", "Hunter's Torch",
         ):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
@@ -939,21 +940,30 @@ class Wave1WeaponPoolTests(unittest.TestCase):
         "hunter_pistol": (14000000, "Hunter Pistol"),
         "repeating_pistol": (14200000, "Repeating Pistol"),
         "cannon": (15000000, "Cannon"),
+        "evelyn": (14100000, "Evelyn"),
+        "rosmarinus": (18000000, "Rosmarinus"),
+        "flamesprayer": (18100000, "Flamesprayer"),
+    }
+    LEFT_HAND_TOOLS = {
+        "wooden_shield": (19000000, "Wooden Shield"),
+        "hunters_torch": (20000000, "Hunter's Torch"),
     }
 
     def test_every_base_game_weapon_is_in_the_default_pool_as_useful(self):
         by_key = {item.key: item for item in MODEL.items}
-        expected = set(self.TRICK_WEAPONS) | set(self.FIREARMS)
+        expected = set(self.TRICK_WEAPONS) | set(self.FIREARMS) | set(self.LEFT_HAND_TOOLS)
         self.assertEqual(BASE_GAME_WEAPON_KEYS, frozenset(expected))
         pool = set(build_item_pool_names(FULL_POOL_ITEM_KEYS))
-        for key, (_, name) in {**self.TRICK_WEAPONS, **self.FIREARMS}.items():
+        for key, (_, name) in {**self.TRICK_WEAPONS, **self.FIREARMS,
+                               **self.LEFT_HAND_TOOLS}.items():
             self.assertIn(key, FULL_POOL_ITEM_KEYS, key)
             self.assertEqual(by_key[key].name, name, key)
             self.assertEqual(by_key[key].kind, ItemKind.USEFUL, key)
             self.assertIn(name, pool, name)
 
     def test_each_weapon_descriptor_is_its_param_row_under_the_category_0_formula(self):
-        for key, (param_id, _) in {**self.TRICK_WEAPONS, **self.FIREARMS}.items():
+        for key, (param_id, _) in {**self.TRICK_WEAPONS, **self.FIREARMS,
+                                   **self.LEFT_HAND_TOOLS}.items():
             binding = ITEM_BINDINGS[key]
             self.assertEqual(binding.normalized_item_id, param_id, key)
             self.assertEqual(binding.raw_descriptor, param_id | 0x80000000, key)
@@ -961,7 +971,7 @@ class Wave1WeaponPoolTests(unittest.TestCase):
             self.assertEqual(binding.reinforcement_level, 0, key)
         for key in self.TRICK_WEAPONS:
             self.assertEqual(ITEM_BINDINGS[key].feed_effect, "right_hand_weapon", key)
-        for key in self.FIREARMS:
+        for key in set(self.FIREARMS) | set(self.LEFT_HAND_TOOLS):
             self.assertEqual(ITEM_BINDINGS[key].feed_effect, "left_hand_weapon", key)
 
     def test_firearms_have_no_uncanny_variant(self):
@@ -979,17 +989,17 @@ class Wave1WeaponPoolTests(unittest.TestCase):
         """
         for key in self.FIREARMS:
             self.assertNotIn(key, UNCANNY_WEAPONS, key)
-        self.assertEqual(set(UNCANNY_WEAPONS), set(self.TRICK_WEAPONS))
+        self.assertTrue(set(self.TRICK_WEAPONS) < set(UNCANNY_WEAPONS))
 
     def test_one_uncanny_row_per_trick_weapon_at_the_uncanny_offset(self):
-        self.assertEqual(len(UNCANNY_ITEM_KEYS), len(self.TRICK_WEAPONS))
+        self.assertEqual(len(UNCANNY_ITEM_KEYS), 26)
         for key, (param_id, _) in self.TRICK_WEAPONS.items():
             variant = ITEM_BINDINGS[UNCANNY_WEAPONS[key]]
             self.assertEqual(variant.normalized_item_id, param_id + 10000, key)
             self.assertEqual(variant.descriptor_evidence, "param_id_inferred", key)
 
-    def test_unmapped_dlc_weapons_and_the_torch_stay_excluded(self):
-        """Mapped DLC pickups enter; the remaining rows and torches do not.
+    def test_complete_dlc_weapon_catalog_and_failed_torch_stay_separate(self):
+        """All obtainable DLC equipment enters; the failed Torch stays out.
 
         EquipParamWeapon ids from 23000000 up are The Old Hunters block
         (Beasthunter Saif 23000000, Beast Cutter 24000000, Amygdalan Arm
@@ -999,19 +1009,50 @@ class Wave1WeaponPoolTests(unittest.TestCase):
         is base game but is a standing negative canary, not an omission.
         """
         names = {item.name for item in MODEL.items}
-        for name in ("Holy Moonlight Sword", "Rakuyo",
-                     "Bloodletter", "Church Pick",
-                     "Simon's Bowblade", "Kos Parasite",
-                     "Torch", "Hunter's Torch", "Evelyn"):
-            self.assertNotIn(name, names, name)
+        for name in ("Holy Moonlight Sword", "Rakuyo", "Bloodletter", "Church Pick",
+                     "Simon's Bowblade", "Kos Parasite", "Gatling Gun", "Piercing Rifle"):
+            self.assertIn(name, names, name)
+        self.assertNotIn("Torch", names)
         from worlds.bloodborne.data import DLC_WEAPON_KEYS
         for key in DLC_WEAPON_KEYS:
             self.assertEqual(ITEM_BINDINGS[key].item_category, 0, key)
         self.assertEqual(
             {key for key, binding in ITEM_BINDINGS.items()
              if binding.item_category == 0 and binding.normalized_item_id >= 23000000},
-            set(DLC_WEAPON_KEYS) - {"loch_shield"},
+            {key for key in DLC_WEAPON_KEYS if key != "loch_shield"},
         )
+
+
+class CompleteObtainableWeaponCatalogTests(unittest.TestCase):
+    DLC_TRICK_WEAPONS = {
+        "beasthunter_saif": 23000000, "beast_cutter": 24000000,
+        "amygdalan_arm": 25000000, "holy_moonlight_sword": 26000000,
+        "rakuyo": 27000000, "boom_hammer": 28000000, "bloodletter": 29000000,
+        "church_pick": 30000000, "whirligig_saw": 31000000,
+        "simons_bowblade": 32000000, "kos_parasite": 38000000,
+    }
+    DLC_LEFT_HAND = {
+        "church_cannon": 35000000, "gatling_gun": 33000000,
+        "piercing_rifle": 36000000, "fist_of_gratia": 34000000,
+        "loch_shield": 19100000,
+    }
+
+    def test_all_obtainable_dlc_rows_have_exact_descriptors(self):
+        for key, param_id in {**self.DLC_TRICK_WEAPONS, **self.DLC_LEFT_HAND}.items():
+            binding = ITEM_BINDINGS[key]
+            self.assertEqual(binding.normalized_item_id, param_id, key)
+            self.assertEqual(binding.raw_descriptor, param_id | 0x80000000, key)
+            self.assertEqual(binding.item_category, 0, key)
+            self.assertEqual(binding.reinforcement_level, 0, key)
+
+    def test_every_obtainable_dlc_trick_weapon_has_uncanny_variant(self):
+        for key, param_id in self.DLC_TRICK_WEAPONS.items():
+            uncanny = UNCANNY_WEAPONS[key]
+            self.assertEqual(ITEM_BINDINGS[uncanny].normalized_item_id, param_id + 10000, key)
+
+    def test_lost_variants_are_deliberately_not_ap_items(self):
+        names = {item.name for item in MODEL.items}
+        self.assertFalse(any(name.startswith("Lost ") for name in names))
 
 
 class Wave1GoodsVarietyTests(unittest.TestCase):
