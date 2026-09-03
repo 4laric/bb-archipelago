@@ -21,8 +21,8 @@ on:
         description: "Release tag to create (e.g. v0.1.0-beta.1)"
         required: true
       client_ref:
-        description: "from-software-archipelago-clients ref to build"
-        default: "main"
+        description: "from-software-archipelago-clients ref to build (blank: the pin in packaging/client-ref.txt)"
+        default: ""
       scan_only:
         description: "Rescan an existing release without rebuilding it"
         type: boolean
@@ -63,11 +63,26 @@ jobs:
           git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
           git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
 
+      # The client commit a release ships is chosen in this repository, in a
+      # reviewed commit: packaging/client-ref.txt. A manual dispatch may
+      # override it for an experiment; the package manifest records whichever
+      # was used.
+      - name: Resolve the pinned AP client ref
+        id: client-pin
+        shell: pwsh
+        run: |
+          $pin = (Get-Content -LiteralPath packaging/client-ref.txt -Raw).Trim()
+          if ($pin -notmatch '^[0-9a-f]{40}$') { throw "packaging/client-ref.txt must hold one full commit SHA, found '$pin'" }
+          $override = "${{ github.event.inputs.client_ref }}"
+          $ref = if ($override) { $override } else { $pin }
+          "pin=$pin" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "ref=$ref" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Check out the AP client
         uses: actions/checkout@v4
         with:
           repository: 4laric/from-software-archipelago-clients
-          ref: ${{ github.event.inputs.client_ref || 'main' }}
+          ref: ${{ steps.client-pin.outputs.ref }}
           path: _client
 
       - name: Resolve the AP client build stamp
@@ -76,6 +91,9 @@ jobs:
         run: |
           $sha = git -C _client rev-parse HEAD
           "sha=$sha" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          if (-not "${{ github.event.inputs.client_ref }}" -and $sha -ne "${{ steps.client-pin.outputs.pin }}") {
+            throw "checked-out client $sha is not the pinned ${{ steps.client-pin.outputs.pin }}"
+          }
 
       - name: Build the AP client (cargo release)
         shell: pwsh
@@ -83,6 +101,14 @@ jobs:
           BB_BUILD_SHA: ${{ steps.client-sha.outputs.sha }}
           BB_RELEASE_VERSION: ${{ env.RELEASE_TAG }}
         run: cargo build --release -p bb-archipelago --manifest-path _client/Cargo.toml
+
+      - name: The built client carries the commit it was built from
+        shell: pwsh
+        run: |
+          $version = & _client\target\release\bb-ap-client.exe --version
+          $stamp = "${{ steps.client-sha.outputs.sha }}".Substring(0, 12)
+          if ($version -notmatch [regex]::Escape($stamp)) { throw "client --version '$version' does not carry build stamp $stamp" }
+          Write-Host "client $version"
 
       - name: Install the pinned Windows packager
         run: python -m pip install --disable-pip-version-check -r packaging/requirements-build.txt
@@ -110,6 +136,7 @@ jobs:
           ./packaging/build_launcher.ps1
           -SoulsFormatsNextRoot $PWD\_soulsformats
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
+          -ClientRef ${{ steps.client-sha.outputs.sha }}
           -SuppressionBuild $PWD\work\release-binder
           -ReleaseVersion $env:RELEASE_TAG
           -NoArchive

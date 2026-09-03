@@ -149,13 +149,23 @@ jobs:
         run: |
           git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
           git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+      # The bundle pairs the world with the client commit pinned in
+      # packaging/client-ref.txt. A client-commit dispatch or a manual ref
+      # builds against that ref instead, which is how a pin bump is proven
+      # before it is committed.
+      - name: Resolve the pinned AP client ref
+        id: client-pin
+        shell: bash
+        run: |
+          pin=$(tr -d '[:space:]' < packaging/client-ref.txt)
+          [[ "$pin" =~ ^[0-9a-f]{40}$ ]] || { echo "packaging/client-ref.txt must hold one full commit SHA"; exit 1; }
+          override="${{ github.event.client_payload.ref || inputs.client_ref }}"
+          echo "ref=${override:-$pin}" >> "$GITHUB_OUTPUT"
       - name: Check out the AP client
         uses: actions/checkout@v4
         with:
           repository: 4laric/from-software-archipelago-clients
-          # Category-8 research bundle: this stacked branch deliberately pairs
-          # with the passive natural-award capture client until that PR lands.
-          ref: ${{ github.event.client_payload.ref || inputs.client_ref || 'codex/blood-gem-capture' }}
+          ref: ${{ steps.client-pin.outputs.ref }}
           path: _client
       - name: Build the AP client
         shell: pwsh
@@ -173,13 +183,14 @@ jobs:
           ./packaging/build_launcher.ps1
           -SoulsFormatsNextRoot $PWD\_soulsformats
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
+          -ClientRef $(git -C _client rev-parse HEAD)
           -SuppressionBuild $PWD\work\commit-binder
       - name: Package the apworld
         shell: pwsh
         run: ./build.ps1 -Apworld
       - uses: actions/upload-artifact@v4
         with:
-          name: Bloodborne-gem-diagnostic-${{ github.sha }}
+          name: Bloodborne-playtest-${{ github.sha }}
           path: |
             build/BloodborneAPLauncher-win-x64.zip
             build/bloodborne.apworld

@@ -456,9 +456,51 @@ class LauncherApp:
         options.columnconfigure(1, weight=1)
         notebook.add(options, text="Enemy randomization")
 
-        troubleshooting = ttk.Frame(notebook, padding=10)
+        # Troubleshooting carries every operator path plus the recovery
+        # actions, which is taller than the notebook on a short display, so
+        # its body lives on a canvas that scrolls instead of being clipped.
+        troubleshooting_host = ttk.Frame(notebook)
+        troubleshooting_host.columnconfigure(0, weight=1)
+        troubleshooting_host.rowconfigure(0, weight=1)
+        notebook.add(troubleshooting_host, text="Troubleshooting")
+        troubleshooting_canvas = tk.Canvas(
+            troubleshooting_host, highlightthickness=0, borderwidth=0,
+            background=THEME_BACKGROUND,
+        )
+        troubleshooting_canvas.grid(row=0, column=0, sticky="nsew")
+        troubleshooting_scroll = ttk.Scrollbar(
+            troubleshooting_host, orient="vertical", command=troubleshooting_canvas.yview
+        )
+        troubleshooting_scroll.grid(row=0, column=1, sticky="ns")
+        troubleshooting_canvas.configure(yscrollcommand=troubleshooting_scroll.set)
+        troubleshooting = ttk.Frame(troubleshooting_canvas, padding=10)
         troubleshooting.columnconfigure(1, weight=1)
-        notebook.add(troubleshooting, text="Troubleshooting")
+        troubleshooting_window = troubleshooting_canvas.create_window(
+            (0, 0), window=troubleshooting, anchor="nw"
+        )
+        troubleshooting.bind(
+            "<Configure>",
+            lambda _event: troubleshooting_canvas.configure(
+                scrollregion=troubleshooting_canvas.bbox("all")
+            ),
+        )
+        troubleshooting_canvas.bind(
+            "<Configure>",
+            lambda event: troubleshooting_canvas.itemconfigure(
+                troubleshooting_window, width=event.width
+            ),
+        )
+
+        def _troubleshooting_wheel(event, canvas=troubleshooting_canvas):
+            canvas.yview_scroll(-int(event.delta / 120), "units")
+
+        troubleshooting_canvas.bind(
+            "<Enter>",
+            lambda _event: troubleshooting_canvas.bind_all("<MouseWheel>", _troubleshooting_wheel),
+        )
+        troubleshooting_canvas.bind(
+            "<Leave>", lambda _event: troubleshooting_canvas.unbind_all("<MouseWheel>")
+        )
 
         # Player choices stay on Setup, enemizer inputs live with their toggle,
         # and launcher-owned/operator paths remain available under

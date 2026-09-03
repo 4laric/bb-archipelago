@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **The client is pinned by commit.** `packaging/client-ref.txt` names the
+  `from-software-archipelago-clients` commit every release and playtest
+  bundle builds, the built client's version stamp is checked against it, and
+  the package manifest records it. Beta 2 shipped an apworld and a client
+  that had never been built together; a pin bump is now a reviewed change
+  the packaging smoke runs against first.
+- **The launcher's Troubleshooting tab scrolls** instead of clipping its
+  lower rows on a short display.
+
 - **Fixed: the launcher refused every seed with a missing `attire_additions.tsv`.**
   The packaged launcher bundled a hand-maintained list of apworld tables and
   the newest one was not on it. The build now bundles every table in the

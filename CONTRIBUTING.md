@@ -79,6 +79,18 @@ version: a probe must have captured a known, planted event before it is pointed
 at an unknown one, every session is pre-registered with a prediction, and
 "nothing was captured" is a diagnostic miss unless the bundle proves otherwise.
 
+## The client pin
+
+`packaging/client-ref.txt` holds the full commit SHA of
+`from-software-archipelago-clients` that releases and the main-branch
+playtest bundle build. It is the one place the world/client pair is chosen.
+To bump it: put the new SHA in the file in its own pull request, and let the
+packaging smoke (the frozen launcher's `--self-check` and the built client's
+`--check-contract` against this apworld's widest contract) prove the pair
+before it merges. A client-commit dispatch or a manual `client_ref` builds
+against another ref without changing what a release ships. Never point the
+file at a branch name.
+
 ## Checks
 
 Run the repository gate before opening a pull request:
