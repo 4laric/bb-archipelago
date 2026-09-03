@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Fixed: the launcher refused every seed with a missing `attire_additions.tsv`.**
+  The packaged launcher bundled a hand-maintained list of apworld tables and
+  the newest one was not on it. The build now bundles every table in the
+  apworld directory, and a test checks that each file the apworld opens
+  exists.
+
 - **Rune and gem deliveries no longer stall when their token lands in the
   storage box.** The bridge event now waits for the token including the box,
   consumes every copy of it before awarding once, and only then raises its
