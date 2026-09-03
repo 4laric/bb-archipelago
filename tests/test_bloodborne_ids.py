@@ -563,10 +563,18 @@ class RuntimeItemContractTests(unittest.TestCase):
         from worlds.bloodborne.data import ATTIRE_ITEM_KEYS, UNCANNY_ITEM_KEYS
         from worlds.bloodborne import FULL_POOL_ITEM_KEYS, STARTING_TOOL_KEYS
 
+        from worlds.bloodborne import ITEM_ID_BY_KEY
+        from worlds.bloodborne.attire import PHANTOM_ATTIRE_ITEM_KEYS
+
         runtime_items = build_runtime_slot_data(
             FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS | ATTIRE_ITEM_KEYS
             | STARTING_TOOL_KEYS)["runtime_items"]
-        self.assertEqual(set(runtime_items), {str(value) for value in ITEM_NAME_TO_ID.values()})
+        # Phantom attire keeps its datapackage id but is never placeable.
+        phantom_ids = {str(ITEM_ID_BY_KEY[key]) for key in PHANTOM_ATTIRE_ITEM_KEYS}
+        self.assertEqual(
+            set(runtime_items),
+            {str(value) for value in ITEM_NAME_TO_ID.values()} - phantom_ids,
+        )
         for binding in runtime_items.values():
             self.assertIn("raw_descriptor", binding)
             self.assertIn("item_category", binding)
