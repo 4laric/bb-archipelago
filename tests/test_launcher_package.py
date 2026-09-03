@@ -195,6 +195,28 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertEqual(set(slot_data["runtime_items"]), {str(value) for value in ITEM_NAME_TO_ID.values()})
         self.assertIn("sustain_item", slot_data)
 
+    def test_the_client_is_pinned_by_commit_and_both_workflows_build_the_pin(self):
+        import re
+        pin = (self.repo / "packaging" / "client-ref.txt").read_text(encoding="utf-8").strip()
+        self.assertRegex(pin, r"^[0-9a-f]{40}$")
+        workflows = next(
+            candidate / ".github" / "workflows"
+            for candidate in (self.repo, *self.repo.parents)
+            if (candidate / ".github" / "workflows" / "release.yaml").is_file()
+        )
+        for name in ("release.yaml", "tests.yaml"):
+            workflow = (workflows / name).read_text(encoding="utf-8")
+            self.assertIn("packaging/client-ref.txt", workflow, name)
+            self.assertIn("steps.client-pin.outputs.ref", workflow, name)
+            self.assertIn("-ClientRef", workflow, name)
+            # No workflow may quietly default the client to a moving branch.
+            self.assertNotRegex(workflow, r"client_ref \|\| '(main|codex/[^']+)'", name)
+        release = (workflows / "release.yaml").read_text(encoding="utf-8")
+        self.assertIn("bb-ap-client.exe --version", release)
+        script = (self.repo / "packaging" / "build_launcher.ps1").read_text(encoding="utf-8")
+        self.assertIn("[string]$ClientRef", script)
+        self.assertIn("ref = if ($ClientRef)", script)
+
     def test_partial_package_does_not_claim_to_be_bundled(self):
         (self.app / "tools" / "MSBBMiner.exe").unlink()
         toolchain = EnemizerToolchain(self.repo, app_root=self.app)
