@@ -7,6 +7,7 @@ import tempfile
 import types
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from bb_launcher.client_config import (
     session_key,
@@ -16,6 +17,8 @@ from bb_launcher.client_config import (
 )
 from bb_launcher.core import (
     APP_VERSION,
+    CATHEDRAL_EVENT_PATH,
+    COMMON_EVENT_PATH,
     SUPPRESSION_PATH,
     GameInstall,
     ProcessSpec,
@@ -252,6 +255,10 @@ class ClientConfigTests(unittest.TestCase):
         source = install.patch.joinpath(*SUPPRESSION_PATH.split("/"))
         source.parent.mkdir(parents=True, exist_ok=True)
         source.write_bytes(b"vanilla-param")
+        for event_path in (CATHEDRAL_EVENT_PATH, COMMON_EVENT_PATH):
+            event = install.patch.joinpath(*event_path.split("/"))
+            event.parent.mkdir(parents=True, exist_ok=True)
+            event.write_bytes(b"licensed-event")
         binder = self.root / "binder.parambnd.dcx"
         binder.write_bytes(b"suppressed-param")
         plan_hash = hashlib.sha256(b"plan").hexdigest()
@@ -286,6 +293,8 @@ class ClientConfigTests(unittest.TestCase):
         )
         client_exe = self.root / "bb-ap-client.exe"
         client_exe.write_bytes(b"client")
+        darkscript = self.root / "DarkScript3.exe"
+        darkscript.write_bytes(b"compiler")
         plan_file = self.root / "process-plan.json"
         plan_file.write_text(
             json.dumps(
@@ -319,6 +328,7 @@ class ClientConfigTests(unittest.TestCase):
             process_plan=plan_file,
             state_root=self.root / "state",
             shad_log=self.root / "shad_log.txt",
+            darkscript=darkscript,
         )
         launched: list[tuple] = []
 
@@ -327,11 +337,18 @@ class ClientConfigTests(unittest.TestCase):
             return [types.SimpleNamespace(pid=4321) for _ in specs]
 
         workflow = LauncherWorkflow(self.root, process_launcher=fake_launcher)
-        result = workflow.randomize_and_launch(
-            settings,
-            EnemizerOptions(enabled=False),
-            process_is_running=lambda: False,
-        )
+        def fake_event_build(_compiler, _source, output, manifest):
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(b"verified-event-overlay")
+            manifest.write_text("{}", encoding="utf-8")
+
+        with (patch("tools.build_cathedral_emevd.build", side_effect=fake_event_build),
+              patch("tools.build_common_emevd.build", side_effect=fake_event_build)):
+            result = workflow.randomize_and_launch(
+                settings,
+                EnemizerOptions(enabled=False),
+                process_is_running=lambda: False,
+            )
         config = json.loads(result.client_config.read_text(encoding="utf-8"))
         installed = install.mods.joinpath(*SUPPRESSION_PATH.split("/"))
         self.assertEqual(config["installed_gameparam"], str(installed))
