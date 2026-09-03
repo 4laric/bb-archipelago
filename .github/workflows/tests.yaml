@@ -368,11 +368,11 @@ jobs:
                   # pair: NoEnemizer has uncanny_weapons on, Tester has it off,
                   # so the option's effect on the emitted pool is visible here
                   # rather than only in unit tests. The default pool has the
-                  # 20 base-game weapons plus 8 mapped Old Hunters pickups;
-                  # the option adds one Uncanny variant per base trick weapon.
+                  # 25 base-game weapons plus 16 mapped Old Hunters pickups;
+                  # the option adds one Uncanny variant per compatible trick weapon.
                   weapons = [row for row in payload["runtime_items"].values()
                              if row["item_category"] == 0]
-                  expected_weapons = 43 if payload["player_name"] == "NoEnemizer" else 28
+                  expected_weapons = 67 if payload["player_name"] == "NoEnemizer" else 41
                   assert len(weapons) == expected_weapons, (
                       name, payload["player_name"], len(weapons))
                   # Upgrade materials, hunter tools, the two guaranteed
@@ -380,7 +380,7 @@ jobs:
                   # placed Umbilical Cord
                   # items, and the expanded filler mix are all explicit
                   # category-4 delivery contracts. Category-8 awards use one
-                  # synthetic category-4 token each, so keep the original 68
+                  # synthetic category-4 token each, so keep the 87 ordinary
                   # contracts and the 58 award bridges independently visible.
                   goods = [row for row in payload["runtime_items"].values()
                            if row["item_category"] == 4]
@@ -389,7 +389,7 @@ jobs:
                   awards = payload["category8_awards"]
                   assert len(awards) == 58, (
                       name, payload["player_name"], len(awards))
-                  assert len(goods) == 68 + len(awards), (
+                  assert len(goods) == 87 + len(awards), (
                       name, payload["player_name"], len(goods))
                   for item_id in (0xBB0130, 0xBB0131):
                       assert str(item_id) in payload["runtime_items"], (

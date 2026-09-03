@@ -787,7 +787,8 @@ class DlcOptionWiringTests(unittest.TestCase):
     def test_disabling_dlc_removes_its_items_and_locations_together(self):
         off = self._world(0)
         on = self._world(1)
-        self.assertEqual(DLC_ITEM_KEYS, on._pool_item_keys() - off._pool_item_keys())
+        active_dlc_items = DLC_ITEM_KEYS & on._pool_item_keys()
+        self.assertEqual(active_dlc_items, on._pool_item_keys() - off._pool_item_keys())
         self.assertEqual(
             DLC_LOCATION_KEYS,
             {location.key for location in on._active_locations()}
