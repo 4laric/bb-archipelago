@@ -174,8 +174,13 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertTrue(any("bundled tool missing" in problem for problem in data["problems"]))
 
     def test_release_and_bundle_jobs_run_the_packaging_smoke(self):
+        workflows = self.repo / ".github" / "workflows"
+        if not workflows.is_dir():
+            # The Archipelago-tier job runs this suite from a world copy
+            # without the repository's CI configuration.
+            self.skipTest("no .github/workflows beside this checkout")
         for name in ("release.yaml", "tests.yaml"):
-            workflow = (self.repo / ".github" / "workflows" / name).read_text(encoding="utf-8")
+            workflow = (workflows / name).read_text(encoding="utf-8")
             self.assertIn("BloodborneAPLauncher.exe\" --self-check", workflow, name)
             self.assertIn("bb-ap-client.exe\" --check-contract", workflow, name)
             self.assertIn("tools/export_runtime_contract.py", workflow, name)
