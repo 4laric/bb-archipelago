@@ -12,8 +12,8 @@
 
 - **A player-facing known-limitations page**, `docs/KNOWN-LIMITATIONS.md`,
   states plainly what has never been verified live: the Old Hunters DLC, all
-  three endings' goal detection, the Laurence's Skull check and password
-  suppression, and the new rune and gem lane.
+  three endings' goal detection, and the Laurence's Skull check and password
+  suppression. It also records that no playtest has gone past Rom.
 
 - Seed generation now emits an inert, collision-checked plan for truthful
   in-game names on useful and progression pickups. A packaged build tool can
