@@ -53,7 +53,7 @@ def census_rows() -> list[dict[str, object]]:
         })
     # Weapons first, then attire; stable by key inside each group so two
     # operators produce the same order.
-    rows.sort(key=lambda row: (row["category"], row["key"]))
+    rows.sort(key=lambda row: (row["category"] != "weapon", row["key"]))
     return rows
 
 
