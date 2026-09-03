@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- **Named rescue recipes in the client console.** `rescue` lists them;
+  `rescue laurence-skull CONFIRM` sends a stranded Grand Cathedral altar
+  check, `rescue forbidden-woods-password CONFIRM` rewrites the shuffled
+  password flag, and `rescue goal CONFIRM` sends goal completion after an
+  ending the client did not detect. Each reuses the existing audited
+  `setflag` and `give` primitives, validates every step against the seed
+  contract before writing anything, and never moves the AP receive cursor.
+
+- **A player-facing known-limitations page**, `docs/KNOWN-LIMITATIONS.md`,
+  states plainly what has never been verified live: the Old Hunters DLC, all
+  three endings' goal detection, the Laurence's Skull check and password
+  suppression, and the new rune and gem lane.
+
 - Seed generation now emits an inert, collision-checked plan for truthful
   in-game names on useful and progression pickups. A packaged build tool can
   clone the non-modal Blood Vial goods shape, repoint the corresponding lots,

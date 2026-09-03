@@ -58,8 +58,9 @@ reward. The full post-Gascoigne model remains research scaffolding only.
    The first slice has one explicit goal: Father Gascoigne's defeat flag.
 6. How should missable NPC quest rewards be handled so multiworld generation never
    requires an irreversibly failed check?
-7. Chalice Dungeons and DLC are outside this initial slice and need separate option
-   and logic designs.
+7. Chalice Dungeons are outside this slice and need separate option and logic
+   designs. The Old Hunters is modelled behind `include_dlc` but has never been
+   played live; see `docs/KNOWN-LIMITATIONS.md`.
 
 Run `python -m unittest discover -s tests` to validate schema references and the
 hard boundary between design and runtime mappings.
