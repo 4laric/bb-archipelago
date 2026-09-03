@@ -9,7 +9,7 @@ accessor has been validated.
 from dataclasses import dataclass
 
 from .fixed_locations import FIXED_LOCATIONS
-from .starting_attire import STARTING_ATTIRE_CATALOG
+from .attire import ATTIRE_CATALOG
 from .category8_awards import CATEGORY8_AWARDS
 
 
@@ -706,12 +706,12 @@ ITEM_BINDINGS.update({
     piece.item_key: RuntimeItemBinding(
         0x10000000 | piece.protector_id,
         0x90000000 | piece.protector_id,
-        "reviewed starting-attire EquipParamProtector row",
+        "reviewed player-obtainable EquipParamProtector row",
         item_category=1,
         descriptor_evidence=INFERRED_CATEGORY_1_EVIDENCE,
         feed_effect=_ATTIRE_FEED_EFFECT[piece.slot],
     )
-    for piece in STARTING_ATTIRE_CATALOG
+    for piece in ATTIRE_CATALOG
 })
 
 # Negative canaries are executable exclusions. Keeping them next to the

@@ -42,7 +42,7 @@ class StartingAttireCatalogTests(unittest.TestCase):
 
     def test_every_reviewed_piece_is_a_distinct_general_pool_item(self):
         expected = {piece.item_key for piece in STARTING_ATTIRE_CATALOG}
-        self.assertEqual(expected, ATTIRE_ITEM_KEYS)
+        self.assertTrue(expected < ATTIRE_ITEM_KEYS)
         modeled = {item.key: item for item in MODEL.items}
         self.assertEqual(expected, expected & modeled.keys())
         self.assertEqual(len(expected), len(STARTING_ATTIRE_CATALOG))

@@ -1,0 +1,60 @@
+set_key	protector_id	slot	name	grant_descriptor	dlc
+yahargul_black	20000	head	Black Hooded Iron Helm	1:20000:1	0
+yahargul_black	21000	body	Yahar'gul Black Garb	1:21000:1	0
+yahargul_black	22000	arms	Yahar'gul Black Gloves	1:22000:1	0
+yahargul_black	23000	legs	Yahar'gul Black Trousers	1:23000:1	0
+graveguard	30000	head	Graveguard Mask	1:30000:1	0
+graveguard	31000	body	Graveguard Robe	1:31000:1	0
+graveguard	32000	arms	Graveguard Manchettes	1:32000:1	0
+graveguard	33000	legs	Graveguard Kilt	1:33000:1	0
+bone_ash	40000	head	Bone Ash Mask	1:40000:1	0
+bone_ash	41000	body	Bone Ash Armor	1:41000:1	0
+bone_ash	42000	arms	Bone Ash Gauntlets	1:42000:1	0
+bone_ash	43000	legs	Bone Ash Leggings	1:43000:1	0
+henryk_hunter	50000	head	Henryk's Hunter Cap	1:50000:1	0
+henryk_hunter	51000	body	Henryk's Hunter Garb	1:51000:1	0
+henryk_hunter	52000	arms	Henryk's Hunter Gloves	1:52000:1	0
+henryk_hunter	53000	legs	Henryk's Hunter Trousers	1:53000:1	0
+yharnam_hunter_variant	60000	head	Yharnam Hunter Cap	1:60000:1	0
+yharnam_hunter_variant	61000	body	Yharnam Hunter Garb	1:61000:1	0
+yharnam_hunter_variant	62000	arms	Yharnam Hunter Gloves	1:62000:1	0
+yharnam_hunter_variant	63000	legs	Yharnam Hunter Trousers	1:63000:1	0
+mensis_student	190000	head	Mensis Cage	1:190000:1	0
+mensis_student	191000	body	Student Uniform	1:191000:1	0
+mensis_student	193000	legs	Student Trousers	1:193000:1	0
+gehrman_hunter	200000	head	Gehrman's Hunter Cap	1:200000:1	0
+gehrman_hunter	201000	body	Gehrman's Hunter Garb	1:201000:1	0
+gehrman_hunter	203000	legs	Gehrman's Hunter Trousers	1:203000:1	0
+ashen_hunter	241000	body	Ashen Hunter Garb	1:241000:1	0
+ashen_hunter	242000	arms	Ashen Hunter Gloves	1:242000:1	0
+ashen_hunter	243000	legs	Ashen Hunter Trousers	1:243000:1	0
+crown_of_illusions	250000	head	Crown of Illusions	1:250000:1	0
+iron_yahargul	270000	head	Iron Yahar'gul Helm	1:270000:1	0
+top_hat_hunter	280000	head	Top Hat	1:280000:1	0
+top_hat_hunter	281000	body	Hunter Garb	1:281000:1	0
+white_church	290000	head	White Church Hat	1:290000:1	0
+white_church	291000	body	White Church Garb	1:291000:1	0
+white_church	292000	arms	Surgical Long Gloves (White)	1:292000:1	0
+white_church	293000	legs	White Church Trousers	1:293000:1	0
+student_cape	301000	body	Student Uniform (Cape)	1:301000:1	0
+noble_dress	311000	body	Noble Dress	1:311000:1	0
+arianna	313000	legs	Arianna's Shoes	1:313000:1	0
+common_yharnam	320000	head	Rumpled Yharnam Hat	1:320000:1	0
+common_yharnam	321000	body	Sweaty Clothes	1:321000:1	0
+butcher	330000	head	Butcher Mask	1:330000:1	1
+butcher	331000	body	Butcher Garb	1:331000:1	1
+butcher	332000	arms	Butcher Gloves	1:332000:1	1
+butcher	333000	legs	Butcher Trousers	1:333000:1	1
+harrowed	340000	head	Harrowed Hood	1:340000:1	1
+harrowed	341000	body	Harrowed Garb	1:341000:1	1
+harrowed	342000	arms	Harrowed Gloves	1:342000:1	1
+harrowed	343000	legs	Harrowed Trousers	1:343000:1	1
+decorative_old_hunter	360000	head	Old Hunter Top Hat	1:360000:1	1
+decorative_old_hunter	361000	body	Decorative Old Hunter Garb	1:361000:1	1
+decorative_old_hunter	363000	legs	Decorative Old Hunter Trousers	1:363000:1	1
+brador	390000	head	Brador's Testimony	1:390000:1	1
+brador	391000	body	Beast Hide Garb	1:391000:1	1
+brador	392000	arms	Bloodied Arm Bands	1:392000:1	1
+brador	393000	legs	Bloodied Trousers	1:393000:1	1
+enlarged_head	430000	head	Enlarged Head	1:430000:1	1
+masters_iron_helm	260000	head	Master's Iron Helm	1:260000:1	0

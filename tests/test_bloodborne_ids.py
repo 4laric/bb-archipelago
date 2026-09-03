@@ -31,6 +31,8 @@ from worlds.bloodborne import (
     build_runtime_slot_data,
 )
 from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
+from worlds.bloodborne.attire import ATTIRE_CATALOG
+from worlds.bloodborne.starting_attire import STARTING_ATTIRE_CATALOG
 from worlds.bloodborne.data import MODEL
 from worlds.bloodborne.model import ItemKind
 
@@ -228,6 +230,10 @@ GOLDEN_ITEMS = {
 GOLDEN_ITEMS.update({
     row.item_key: 0xBB0187 + index
     for index, row in enumerate(CATEGORY8_AWARDS)
+})
+GOLDEN_ITEMS.update({
+    row.item_key: 0xBB01D9 + index
+    for index, row in enumerate(ATTIRE_CATALOG[len(STARTING_ATTIRE_CATALOG):])
 })
 GOLDEN_LOCATIONS = {
     "boss_gehrman": 0xBB11F5,

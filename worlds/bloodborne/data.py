@@ -11,7 +11,7 @@ have been runtime validated.
 from .model import Entrance, Item, ItemKind, Location, Rule, WorldModel
 from .fixed_locations import FIXED_LOCATIONS
 from .location_names import location_name
-from .starting_attire import STARTING_ATTIRE_CATALOG
+from .attire import ATTIRE_CATALOG
 from .category8_awards import CATEGORY8_AWARDS
 
 P = ItemKind.PROGRESSION
@@ -170,13 +170,12 @@ ITEMS = (
     Item("uncanny_logarius_wheel", "Logarius' Uncanny Wheel", U),
     Item("uncanny_tonitrus", "Uncanny Tonitrus", U),
     Item("uncanny_threaded_cane", "Uncanny Threaded Cane", U),
-    # Reviewed EquipParamProtector rows. These use the same complete 17-set
-    # corpus as starting-attire randomization, but each piece is an independent
-    # useful AP item. Runtime descriptors remain explicitly corpus-backed until
-    # their first live inserts promote them, just like inferred weapon rows.
+    # Reviewed player-obtainable EquipParamProtector rows. Each piece is an
+    # independent useful AP item. Runtime descriptors remain explicitly
+    # corpus-backed until their first live inserts promote them.
 ) + tuple(
     Item(piece.item_key, piece.name, U)
-    for piece in STARTING_ATTIRE_CATALOG
+    for piece in ATTIRE_CATALOG
 ) + (
     # Locked local events. These are never placed in the random item pool.
     Item("event_cleric_beast_defeated", "Cleric Beast Defeated", E),
@@ -401,11 +400,9 @@ LOCATIONS = (
 
 MODEL = WorldModel(ITEMS, REGIONS, ENTRANCES, LOCATIONS)
 
-ATTIRE_ITEM_KEYS = frozenset(piece.item_key for piece in STARTING_ATTIRE_CATALOG)
-DLC_ATTIRE_SET_KEYS = frozenset({"old_hunter", "maria_hunter", "constable", "yamamura"})
+ATTIRE_ITEM_KEYS = frozenset(piece.item_key for piece in ATTIRE_CATALOG)
 DLC_ATTIRE_ITEM_KEYS = frozenset(
-    piece.item_key for piece in STARTING_ATTIRE_CATALOG
-    if piece.set_key in DLC_ATTIRE_SET_KEYS
+    piece.item_key for piece in ATTIRE_CATALOG if piece.dlc
 )
 
 # The generated player exposes one honest, bounded slice. The broader model

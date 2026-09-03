@@ -16,7 +16,7 @@ from worlds.bloodborne.runtime_bindings import (
     RuntimeItemBinding,
     validate_runtime_item_binding,
 )
-from worlds.bloodborne.starting_attire import STARTING_ATTIRE_CATALOG
+from worlds.bloodborne.attire import ATTIRE_CATALOG
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,10 +31,10 @@ class ArmorPoolSafetyTests(unittest.TestCase):
             "legs": "attire_legs",
         }
         self.assertEqual(
-            {piece.item_key for piece in STARTING_ATTIRE_CATALOG},
+            {piece.item_key for piece in ATTIRE_CATALOG},
             ATTIRE_ITEM_KEYS,
         )
-        for piece in STARTING_ATTIRE_CATALOG:
+        for piece in ATTIRE_CATALOG:
             with self.subTest(piece=piece.item_key):
                 binding = ITEM_BINDINGS[piece.item_key]
                 self.assertEqual(1, binding.item_category)
@@ -78,10 +78,11 @@ class ArmorPoolSafetyTests(unittest.TestCase):
         self.assertTrue(ATTIRE_ITEM_KEYS.isdisjoint(SLICE_POOL_SUPPRESSION_KEYS))
 
     def test_dlc_set_boundary_is_explicit_in_the_reviewed_contract(self):
-        catalog_sets = {piece.set_key for piece in STARTING_ATTIRE_CATALOG}
-        dlc_sets = {"old_hunter", "maria_hunter", "constable", "yamamura"}
-        self.assertTrue(dlc_sets <= catalog_sets)
-        self.assertEqual(4, len(dlc_sets))
+        self.assertEqual(
+            {piece.item_key for piece in ATTIRE_CATALOG if piece.dlc},
+            DLC_ATTIRE_ITEM_KEYS,
+        )
+        self.assertEqual(127, len(ATTIRE_CATALOG))
 
     @unittest.skipUnless(hasattr(__import__("worlds.bloodborne", fromlist=["BloodborneOptions"]),
                                  "BloodborneOptions"),
