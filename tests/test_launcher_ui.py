@@ -11,6 +11,7 @@ from pathlib import Path
 
 from bb_launcher.core import (
     CATHEDRAL_EVENT_PATH,
+    COMMON_EVENT_PATH,
     OWNER_NAME,
     SUPPRESSION_CHECK_PLAN,
     SUPPRESSION_CHECK_SOURCE,
@@ -88,6 +89,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         cathedral = self.install.patch.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
         cathedral.parent.mkdir(parents=True)
         cathedral.write_bytes(b"licensed-cathedral-event")
+        common = self.install.patch.joinpath(*COMMON_EVENT_PATH.split("/"))
+        common.parent.mkdir(parents=True, exist_ok=True)
+        common.write_bytes(b"licensed-common-event")
         self.darkscript = self.root / "DarkScript3.exe"
         self.darkscript.write_bytes(b"pinned-darkscript")
         self.cathedral_builder = patch("tools.build_cathedral_emevd.build")
@@ -100,6 +104,16 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             manifest.write_text("{}", encoding="utf-8")
 
         build.side_effect = fake_cathedral
+        self.common_builder = patch("tools.build_common_emevd.build")
+        build_common = self.common_builder.start()
+
+        def fake_common(_compiler, source, output, manifest):
+            self.assertEqual(common, source)
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(b"verified-common-overlay")
+            manifest.write_text("{}", encoding="utf-8")
+
+        build_common.side_effect = fake_common
         paramdef = self.install.patch / "dvdroot_ps4" / "paramdef" / "paramdef.paramdefbnd.dcx"
         paramdef.parent.mkdir(parents=True)
         paramdef.write_bytes(b"paramdef")
@@ -173,6 +187,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
 
     def tearDown(self):
+        self.common_builder.stop()
         self.cathedral_builder.stop()
         self.temporary.cleanup()
 

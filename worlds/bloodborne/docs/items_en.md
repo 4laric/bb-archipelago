@@ -129,7 +129,45 @@ Dream storage box.
 | Return and insight | Bold Hunter's Mark x2; Madman's Knowledge; Great One's Wisdom |
 | Blood Echoes | Coldblood Dew (3); Thick Coldblood (6); Frenzied Coldblood (8); Kin Coldblood (11) |
 
-## Blood gems and armor
+## Blood gems, Caryll runes, and armor
+
+The reviewed fixed-pickup blood gems and Caryll runes are distinct useful
+items in the general pool. Their source area and pickup number are retained in
+the item name so that two pickups using the same underlying gem recipe remain
+distinct Archipelago items.
+
+Communion (+1 Blood Vial); Old Yharnam Blood Gem (123000);
+Iosefka's Clinic - Communion +3 Blood Vials (chest);
+Cathedral Ward - Blood Gem #1; Cathedral Ward - Blood Gem #2 (Grand Cathedral approach);
+Cathedral Ward - Blood Gem #3 (chest); Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest);
+Cathedral Ward - Formless Oedon +4 Quicksilver Bullets #6 (chest); Cathedral Ward - Blood Gem #7;
+Old Yharnam - Blood Gem (chest); Hemwick Charnel Lane - Blood Gem #1;
+Hemwick Charnel Lane - Blood Gem #2 (chest); Hemwick Charnel Lane - Lake +3% #3;
+Castle Cainhurst - Blood Gem #1 (chest); Castle Cainhurst - Blood Gem #2;
+Forbidden Woods - Clear Deep Sea +100 Slow Poison RES #1;
+Forbidden Woods - Dissipating Lake +5% Bolt Reduction #2; Forbidden Woods - Blood Gem #3;
+Forbidden Woods - Anti-Clockwise Metamorphosis +10% Stamina #4;
+Forbidden Woods - Deep Sea +200 Frenzy RES #5; Forbidden Woods - Clockwise Metamorphosis +5% HP #6;
+Forbidden Woods - Blood Gem #7; Forbidden Woods - Blood Gem #8; Forbidden Woods - Blood Gem #9;
+Forbidden Woods - Blood Gem #10; Yahar'gul - Blood Gem #1;
+Yahar'gul - Heir +40% Visceral Blood Echoes #2; Yahar'gul - Arcane Lake +5% Arcane Reduction #3;
+Yahar'gul - Moon +10% Blood Echoes #4; Yahar'gul - Blood Gem #5 (chest); Yahar'gul - Blood Gem #6;
+Lecture Building 2F - Arcane Lake +7% Arcane Reduction (corpse);
+Lecture Building 2F - Communion +2 Blood Vials (chest); Nightmare of Mensis - Blood Gem #1;
+Nightmare of Mensis - Blood Gem #2; Nightmare of Mensis - Blood Gem #3;
+Nightmare of Mensis - Eye +50 Discovery #4; Nightmare of Mensis - Moon +20% Blood Echoes #5;
+Nightmare of Mensis - Blood Gem #6; Nightmare of Mensis - Blood Gem #7;
+Nightmare of Mensis - Blood Gem #8; Nightmare Frontier - Fading Lake +5% Fire Reduction #1;
+Nightmare Frontier - Great Deep Sea +100 All RES #2;
+Nightmare Frontier - Clear Deep Sea +200 Slow Poison RES #3;
+Nightmare Frontier - Clockwise Metamorphosis +10% HP #4;
+Nightmare Frontier - Stunning Deep Sea +200 Rapid Poison RES #5; Upper Cathedral Ward - Great Lake +4%;
+Research Hall - Blood Gem #1 (tower); Research Hall - Blood Gem #2 (tower);
+Research Hall - Blood Gem #3 (tower 6.5F chest); Research Hall - Blood Gem #4 (chapel chest);
+Fishing Hamlet - Blood Gem #1 (upper hamlet); Fishing Hamlet - Blood Gem #2 (upper hamlet);
+Fishing Hamlet - Blood Gem #3 (lower hamlet); Fishing Hamlet - Blood Gem #4 (fish tank middle);
+Fishing Hamlet - Blood Gem #5 (culvert lower); Fishing Hamlet - Blood Gem #6 (culvert lower); and
+Fishing Hamlet - Blood Gem #7 (fish tank lower).
 
 The 68 reviewed pieces from 17 complete attire sets are useful items in the
 general pool. Each piece is independent: a seed can place a hat, chest piece,
@@ -155,10 +193,6 @@ EquipParamProtector row.
 | Maria Hunter | Maria Hunter Cap; Maria Hunter Garb; Maria Hunter Gloves; Maria Hunter Trousers |
 | Constable | Constable's Helmet; Constable's Garb; Constable's Gloves; Constable's Trousers |
 | Yamamura | Yamamura Hunter Hat; Yamamura Hunter Garb; Yamamura Hunter Gloves; Yamamura Hunter Trousers |
-
-Blood gems are not yet a public randomized item class. Vanilla blood gems
-remain available, and the starting Blood Gem Workshop Tool lets the player
-equip them.
 
 ## Local event items
 
@@ -207,6 +241,35 @@ uncanny_saw_cleaver uncanny_kirkhammer uncanny_ludwigs_holy_blade
 uncanny_beast_claw uncanny_rifle_spear uncanny_reiterpallasch
 uncanny_stake_driver uncanny_logarius_wheel uncanny_tonitrus
 uncanny_threaded_cane
+caryll_rune_communion_1 blood_gem_old_yharnam_123000
+category8_central_yharnam_lot_2410640 category8_cathedral_ward_lot_2400300
+category8_cathedral_ward_lot_2400430 category8_cathedral_ward_lot_2400760
+category8_cathedral_ward_lot_2400650 category8_cathedral_ward_lot_2400690
+category8_cathedral_ward_lot_2400740 category8_old_yharnam_lot_2300300
+category8_hemwick_lot_2200190 category8_hemwick_lot_2200280 category8_hemwick_lot_2200380
+category8_cainhurst_lot_2501040 category8_cainhurst_lot_2501060
+category8_forbidden_woods_lot_2700180 category8_forbidden_woods_lot_2700200
+category8_forbidden_woods_lot_2700300 category8_forbidden_woods_lot_2700380
+category8_forbidden_woods_lot_2700540 category8_forbidden_woods_lot_2700570
+category8_forbidden_woods_lot_2700650 category8_forbidden_woods_lot_2700660
+category8_forbidden_woods_lot_2700690 category8_forbidden_woods_lot_2700700
+category8_yahargul_lot_2800020 category8_yahargul_lot_2800050
+category8_yahargul_lot_2800140 category8_yahargul_lot_2800350
+category8_yahargul_lot_2800530 category8_yahargul_lot_2800710
+category8_lecture_building_lot_3200010 category8_lecture_building_lot_3200640
+category8_nightmare_mensis_lot_2600150 category8_nightmare_mensis_lot_2600200
+category8_nightmare_mensis_lot_2600220 category8_nightmare_mensis_lot_2600300
+category8_nightmare_mensis_lot_2600390 category8_nightmare_mensis_lot_2600480
+category8_nightmare_mensis_lot_2600510 category8_nightmare_mensis_lot_2600530
+category8_nightmare_frontier_lot_3300010 category8_nightmare_frontier_lot_3300050
+category8_nightmare_frontier_lot_3300220 category8_nightmare_frontier_lot_3300320
+category8_nightmare_frontier_lot_3300380 category8_upper_cathedral_lot_2420120
+category8_research_hall_lot_3500160 category8_research_hall_lot_3500190
+category8_research_hall_lot_3501100 category8_research_hall_lot_3501500
+category8_fishing_hamlet_lot_3600140 category8_fishing_hamlet_lot_3600160
+category8_fishing_hamlet_lot_3600340 category8_fishing_hamlet_lot_3600430
+category8_fishing_hamlet_lot_3600560 category8_fishing_hamlet_lot_3600570
+category8_fishing_hamlet_lot_3600610
 attire_charred_hunter_head attire_charred_hunter_body attire_charred_hunter_arms attire_charred_hunter_legs attire_yharnam_hunter_head attire_yharnam_hunter_body attire_yharnam_hunter_arms attire_yharnam_hunter_legs attire_knight_head attire_knight_body attire_knight_arms attire_knight_legs attire_cainhurst_head attire_cainhurst_body attire_cainhurst_arms attire_cainhurst_legs attire_black_church_head attire_black_church_body attire_black_church_arms attire_black_church_legs attire_choir_head attire_choir_body attire_choir_arms attire_choir_legs attire_gascoigne_head attire_gascoigne_body attire_gascoigne_arms attire_gascoigne_legs attire_tomb_prospector_head attire_tomb_prospector_body attire_tomb_prospector_arms attire_tomb_prospector_legs attire_executioner_head attire_executioner_body attire_executioner_arms attire_executioner_legs attire_crowfeather_head attire_crowfeather_body attire_crowfeather_arms attire_crowfeather_legs attire_madman_head attire_madman_body attire_madman_arms attire_madman_legs attire_doll_head attire_doll_body attire_doll_arms attire_doll_legs attire_foreign_head attire_foreign_body attire_foreign_arms attire_foreign_legs attire_old_hunter_head attire_old_hunter_body attire_old_hunter_arms attire_old_hunter_legs attire_maria_hunter_head attire_maria_hunter_body attire_maria_hunter_arms attire_maria_hunter_legs attire_constable_head attire_constable_body attire_constable_arms attire_constable_legs attire_yamamura_head attire_yamamura_body attire_yamamura_arms attire_yamamura_legs
 event_cleric_beast_defeated event_gascoigne_defeated
 event_blood_starved_beast_defeated event_darkbeast_paarl_defeated event_amelia_defeated

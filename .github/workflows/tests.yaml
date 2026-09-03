@@ -372,12 +372,18 @@ jobs:
                   # workshop tools, shuffled Lunarium Key, four independently
                   # placed Umbilical Cord
                   # items, and the expanded filler mix are all explicit
-                  # category-4 delivery contracts.
+                  # category-4 delivery contracts. Category-8 awards use one
+                  # synthetic category-4 token each, so keep the original 68
+                  # contracts and the 58 award bridges independently visible.
                   goods = [row for row in payload["runtime_items"].values()
                            if row["item_category"] == 4]
                   # The three boss trophies and all ten ordinary Bath badges
                   # are randomized category-4 goods.
-                  assert len(goods) == 68, (name, payload["player_name"], len(goods))
+                  awards = payload["category8_awards"]
+                  assert len(awards) == 58, (
+                      name, payload["player_name"], len(awards))
+                  assert len(goods) == 68 + len(awards), (
+                      name, payload["player_name"], len(goods))
                   for item_id in (0xBB0130, 0xBB0131):
                       assert str(item_id) in payload["runtime_items"], (
                           name, payload["player_name"], hex(item_id))

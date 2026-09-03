@@ -111,9 +111,10 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(len(values), len(set(values)), field)
         # 12401000 is vanilla-owned (event_flag_references.tsv); the AP bridge
         # deliberately stays in the audited-empty 12400900..12400999 window.
-        self.assertTrue(all(12_400_900 <= row.ack_flag <= 12_400_999
-                            for row in CATEGORY8_AWARDS))
-        self.assertNotIn(12_401_000, {row.ack_flag for row in CATEGORY8_AWARDS})
+        ack_flags = {row.ack_flag for row in CATEGORY8_AWARDS}
+        self.assertGreaterEqual(min(ack_flags), 12_400_900)
+        self.assertLessEqual(max(ack_flags), 12_400_999)
+        self.assertNotIn(12_401_000, ack_flags)
 
     def test_category8_duplicate_recipes_remain_distinct_items(self):
         duplicate = [row for row in CATEGORY8_AWARDS if row.gemgen_id == 126_000]
