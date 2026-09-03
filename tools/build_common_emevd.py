@@ -21,6 +21,22 @@ EVENT_FILE = "common.emevd.dcx"
 OUTPUT_RELATIVE_PATH = f"dvdroot_ps4/event/{EVENT_FILE}"
 
 
+def instructions(event_source: str) -> str:
+    """Reduce an event body to what the compiler preserves.
+
+    DarkScript3 discards ``//`` comments and trailing whitespace when it
+    decompiles, so a round-trip comparison must do the same or a commented
+    source event can never match its own compiled form.
+    """
+    kept = []
+    for line in event_source.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("//"):
+            continue
+        kept.append(line.rstrip())
+    return "\n".join(kept)
+
+
 def build(executable: Path, source_binary: Path, output_binary: Path, manifest: Path) -> None:
     if sha256(executable) != DARKSCRIPT_SHA256:
         raise ValueError(f"unsupported DarkScript3 executable; require {DARKSCRIPT_VERSION}")
@@ -46,7 +62,7 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
         expected_text = expected.decode("utf-8-sig")
         actual_event = event(verified, str(EVENT_ID))
         expected_event = event(expected_text, str(EVENT_ID))
-        if actual_event.rstrip() != expected_event.rstrip():
+        if instructions(actual_event) != instructions(expected_event):
             raise ValueError(
                 "compiled category-8 event did not round-trip\nEXPECTED:\n"
                 + expected_event + "\nACTUAL:\n" + actual_event
