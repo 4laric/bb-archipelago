@@ -40,6 +40,13 @@ private vulnerability reporting, see [SECURITY.md](../SECURITY.md).
    unzip it anywhere, and point the launcher's **DarkScript3.exe** field at
    the executable. Without it the seed build stops with a message about
    Laurence's Skull. It is not bundled with the launcher.
+   DarkScript3 is a .NET application and does not carry its own runtime, so
+   you also need the **.NET 6.0 Desktop Runtime (x64)** from
+   <https://dotnet.microsoft.com/download/dotnet/6.0>. Microsoft marks .NET 6
+   as out of support; install it anyway, this is the version DarkScript3
+   3.6.3 was built for. If DarkScript3.exe opens a dialog about a missing
+   framework, or the seed build fails the moment it tries to compile, this is
+   what is missing.
 5. **Cheat Engine** — *not needed.* Item delivery is native, and the launcher
    no longer opens Cheat Engine at all. It is only used if your host
    explicitly tells you to restart the client with `--delivery=ce-bridge`, and
