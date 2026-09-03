@@ -96,6 +96,45 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertNotIn("dotnet", " ".join(" ".join(command) for command in commands).lower())
         self.assertNotIn("tools.bb_enemizer.cli", " ".join(" ".join(command) for command in commands))
 
+    def test_bundled_event_writer_writes_both_overlays_without_dotnet(self):
+        commands: list[list[str]] = []
+
+        def runner(command, _cwd, _progress):
+            command = [str(item) for item in command]
+            commands.append(command)
+            Path(command[command.index("--output") + 1]).write_bytes(b"overlay")
+            Path(command[command.index("--manifest") + 1]).write_text("{}", encoding="utf-8")
+
+        (self.app / "tools" / "BBEventWriter.exe").write_bytes(b"fake executable")
+        toolchain = EnemizerToolchain(self.repo, app_root=self.app, runner=runner)
+        source = self.root / "m24_00_00_00.emevd.dcx"
+        source.write_bytes(b"licensed")
+        rows = self.root / "rows.json"
+        rows.write_text("{}", encoding="utf-8")
+        toolchain.write_cathedral_event(
+            source=source, output=self.root / "m24.out", manifest=self.root / "m24.json",
+            soulsformats_next=None, progress=lambda _message: None,
+        )
+        toolchain.write_common_event(
+            request_path=rows, source=source, output=self.root / "common.out",
+            manifest=self.root / "common.json", soulsformats_next=None,
+            progress=lambda _message: None,
+        )
+        self.assertEqual(
+            [(Path(command[0]).name, command[1]) for command in commands],
+            [("BBEventWriter.exe", "cathedral"), ("BBEventWriter.exe", "common")],
+        )
+        self.assertIn("--request", commands[1])
+        self.assertNotIn("dotnet", " ".join(" ".join(command) for command in commands).lower())
+
+    def test_unbundled_event_writer_needs_soulsformats(self):
+        toolchain = EnemizerToolchain(self.repo, app_root=self.app)
+        with self.assertRaisesRegex(ValidationError, "SoulsFormatsNEXT is required"):
+            toolchain.write_cathedral_event(
+                source=self.root / "m24.dcx", output=self.root / "out", manifest=self.root / "m.json",
+                soulsformats_next=None, progress=lambda _message: None,
+            )
+
     def test_partial_package_does_not_claim_to_be_bundled(self):
         (self.app / "tools" / "MSBBMiner.exe").unlink()
         toolchain = EnemizerToolchain(self.repo, app_root=self.app)
@@ -197,6 +236,7 @@ class LauncherPackageTests(unittest.TestCase):
             "tools\\BBEnemizerWriter.exe",
             "tools\\BBSuppressionWriter.exe",
             "tools\\BBToastWriter.exe",
+            "tools\\BBEventWriter.exe",
             "tools\\MSBBMiner.exe",
         ):
             self.assertIn(target, verifier)
@@ -290,6 +330,7 @@ class LauncherPackageTests(unittest.TestCase):
             "tools\\BBSuppressionWriter.exe",
             "tools\\BBEnemizerWriter.exe",
             "tools\\BBToastWriter.exe",
+            "tools\\BBEventWriter.exe",
             "tools\\MSBBMiner.exe",
         ):
             self.assertIn(target, workflow)
@@ -336,6 +377,7 @@ class LauncherPackageTests(unittest.TestCase):
             "tools/BBSuppressionWriter.exe",
             "tools/BBEnemizerWriter.exe",
             "tools/BBToastWriter.exe",
+            "tools/BBEventWriter.exe",
             "tools/MSBBMiner.exe",
         ):
             self.assertIn(f'Label = "{target}"', scan)

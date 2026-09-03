@@ -40,6 +40,7 @@ jobs:
         run: |
           dotnet build tools/bb_suppression_writer/BBSuppressionWriter.csproj -p:SoulsFormatsNextRoot=$PWD\_soulsformats -v:minimal
           dotnet build tools/bb_toast_writer/BBToastWriter.csproj -p:SoulsFormatsNextRoot=$PWD\_soulsformats -v:minimal
+          dotnet build tools/bb_event_writer/BBEventWriter.csproj -p:SoulsFormatsNextRoot=$PWD\_soulsformats -v:minimal
 
   # The binder the launcher validates, rebuilt from the repo alone (#138). The
   # world pins SUPPRESSION_PLAN_SHA256 into every seed and the launcher refuses
@@ -426,7 +427,8 @@ jobs:
             tools/msbb_miner/MSBBMiner.csproj \
             tools/bb_enemizer_writer/BBEnemizerWriter.csproj \
             tools/bb_suppression_writer/BBSuppressionWriter.csproj \
-            tools/bb_toast_writer/BBToastWriter.csproj; do
+            tools/bb_toast_writer/BBToastWriter.csproj \
+            tools/bb_event_writer/BBEventWriter.csproj; do
             dotnet build "$project" -c Release \
               -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -v:minimal
           done

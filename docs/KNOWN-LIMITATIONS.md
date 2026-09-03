@@ -9,12 +9,6 @@ send back so the next release can fix the cause.
 Supported target: `CUSA03173` at update `01.09` under shadPS4 0.18.0. Nothing
 else is, and the launcher refuses other builds.
 
-You also need **DarkScript3 version 3.6.3** and the **.NET 6.0 Desktop
-Runtime (x64)** it runs on, both downloaded separately. The launcher compiles
-two event-script overlays from your own game files when it prepares a seed
-and checks the compiler by hash. See [PLAYTESTING.md](PLAYTESTING.md) for
-where to get both.
-
 ## Never verified in a live game
 
 These parts of the randomizer are generated, in logic, and packaged, but no

@@ -91,6 +91,9 @@ class LauncherSettings:
     soulsformats_next: Path | None = None
     state_root: Path | None = None
     shad_log: Path | None = None
+    # Retained so settings files written by earlier builds still load. The
+    # event overlays are written by the bundled BBEventWriter; no compiler is
+    # consulted.
     darkscript: Path | None = None
 
     @classmethod
@@ -405,6 +408,10 @@ class EnemizerToolchain:
         return self.app_root / "tools" / "BBSuppressionWriter.exe"
 
     @property
+    def event_writer_executable(self) -> Path:
+        return self.app_root / "tools" / "BBEventWriter.exe"
+
+    @property
     def miner_executable(self) -> Path:
         return self.app_root / "tools" / "MSBBMiner.exe"
 
@@ -439,6 +446,54 @@ class EnemizerToolchain:
         self.runner(command, self.repo_root, progress)
         if not output_binder.is_file():
             raise ValidationError("parameter writer produced no starting-weapon binder")
+
+    def _event_writer_command(self, soulsformats_next: Path | None) -> list[str]:
+        if self.event_writer_executable.is_file():
+            return [str(self.event_writer_executable)]
+        if soulsformats_next is None or not soulsformats_next.is_dir():
+            raise ValidationError(
+                "SoulsFormatsNEXT is required when the packaged event writer is unavailable"
+            )
+        return [
+            self.dotnet, "run", "--project",
+            str(self.repo_root / "tools" / "bb_event_writer" / "BBEventWriter.csproj"),
+            "-c", "Release", f"-p:SoulsFormatsNextRoot={soulsformats_next}", "--",
+        ]
+
+    def write_cathedral_event(
+        self, *, source: Path, output: Path, manifest: Path,
+        soulsformats_next: Path | None, progress: Progress,
+    ) -> None:
+        """Write the Laurence's Skull / Hunter Chief Emblem overlay for m24_00_00_00.
+
+        The writer edits the licensed event file in place with SoulsFormats and
+        refuses the result unless every unrelated event is byte-identical to
+        the source; see docs/EVENT-WRITER.md.
+        """
+        command = self._event_writer_command(soulsformats_next)
+        command.extend([
+            "cathedral", "--source", str(source), "--output", str(output),
+            "--manifest", str(manifest),
+        ])
+        progress("Writing and verifying the Cathedral event overlay...")
+        self.runner(command, self.repo_root, progress)
+        if not output.is_file() or not manifest.is_file():
+            raise ValidationError("event writer produced no Cathedral event overlay")
+
+    def write_common_event(
+        self, *, request_path: Path, source: Path, output: Path, manifest: Path,
+        soulsformats_next: Path | None, progress: Progress,
+    ) -> None:
+        """Write the category-8 award bridge (event 98000000) into common.emevd."""
+        command = self._event_writer_command(soulsformats_next)
+        command.extend([
+            "common", "--source", str(source), "--request", str(request_path),
+            "--output", str(output), "--manifest", str(manifest),
+        ])
+        progress("Writing and verifying the category-8 common event overlay...")
+        self.runner(command, self.repo_root, progress)
+        if not output.is_file() or not manifest.is_file():
+            raise ValidationError("event writer produced no common event overlay")
 
     def build(
         self,
@@ -904,11 +959,6 @@ class LauncherWorkflow:
                     )
 
                 map_root = max(candidates, key=map_count)
-        if settings.darkscript is None:
-            raise ValidationError(
-                "this seed includes Laurence's Skull; select DarkScript3.exe version 3.6.3 "
-                "so its required Cathedral event overlay can be built"
-            )
         sources = _source_hashes(install, map_root, cathedral=True)
         identity = SeedIdentity(
             seed=request["seed"],
@@ -967,25 +1017,32 @@ class LauncherWorkflow:
                 if temporary is None:
                     settings.cache_root.mkdir(parents=True, exist_ok=True)
                     temporary = Path(tempfile.mkdtemp(prefix=".seed-build-", dir=settings.cache_root))
-                from tools.build_cathedral_emevd import build as build_cathedral_emevd
                 cathedral_output = temporary / CATHEDRAL_EVENT_PATH
                 cathedral_manifest = temporary / "cathedral-event-manifest.json"
                 source_event = install.resolve_file(
                     CATHEDRAL_EVENT_PATH, include_mods=False
                 )[1]
-                progress("Building and verifying the Cathedral event overlay...")
-                build_cathedral_emevd(
-                    settings.darkscript.expanduser().resolve(), source_event,
-                    cathedral_output, cathedral_manifest,
+                self.toolchain.write_cathedral_event(
+                    source=source_event, output=cathedral_output,
+                    manifest=cathedral_manifest,
+                    soulsformats_next=settings.soulsformats_next, progress=progress,
                 )
-                from tools.build_common_emevd import build as build_common_emevd
+                # The bridge carries the complete reviewed category-8 table, not
+                # only this seed's rows, exactly as the compiled overlay did:
+                # an initializer for an unshuffled row is inert because its
+                # token is never granted.
+                from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
                 common_output = temporary / COMMON_EVENT_PATH
                 common_manifest = temporary / "common-event-manifest.json"
+                common_rows = temporary / "category8-award-rows.json"
+                common_rows.write_text(json.dumps({
+                    "category8_awards": [row.__dict__ for row in CATEGORY8_AWARDS],
+                }, indent=2) + "\n", encoding="utf-8")
                 source_common = install.resolve_file(COMMON_EVENT_PATH, include_mods=False)[1]
-                progress("Building and verifying the category-8 common event overlay...")
-                build_common_emevd(
-                    settings.darkscript.expanduser().resolve(), source_common,
-                    common_output, common_manifest,
+                self.toolchain.write_common_event(
+                    request_path=common_rows, source=source_common,
+                    output=common_output, manifest=common_manifest,
+                    soulsformats_next=settings.soulsformats_next, progress=progress,
                 )
                 if (request["starting_weapons"] is not None
                         or request["weapon_requirement_families"] is not None

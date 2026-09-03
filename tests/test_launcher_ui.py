@@ -58,6 +58,7 @@ class FakeToolchain:
     def __init__(self):
         self.calls: list[dict] = []
         self.starting_calls: list[dict] = []
+        self.event_calls: list[tuple[str, dict]] = []
 
     def build(self, **values):
         self.calls.append(values)
@@ -76,6 +77,26 @@ class FakeToolchain:
         self.starting_calls.append(values)
         values["output_binder"].write_bytes(values["input_binder"].read_bytes() + b"-starting")
 
+    event_failure: Exception | None = None
+
+    def write_cathedral_event(self, **values):
+        self.event_calls.append(("cathedral", dict(values)))
+        if self.event_failure is not None:
+            raise self.event_failure
+        values["output"].parent.mkdir(parents=True, exist_ok=True)
+        values["output"].write_bytes(b"verified-cathedral-overlay")
+        values["manifest"].write_text("{}", encoding="utf-8")
+
+    def write_common_event(self, **values):
+        record = dict(values)
+        record["rows"] = json.loads(values["request_path"].read_text(encoding="utf-8"))
+        self.event_calls.append(("common", record))
+        if self.event_failure is not None:
+            raise self.event_failure
+        values["output"].parent.mkdir(parents=True, exist_ok=True)
+        values["output"].write_bytes(b"verified-common-overlay")
+        values["manifest"].write_text("{}", encoding="utf-8")
+
 
 class LauncherUiWorkflowTests(unittest.TestCase):
     def setUp(self):
@@ -92,28 +113,6 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         common = self.install.patch.joinpath(*COMMON_EVENT_PATH.split("/"))
         common.parent.mkdir(parents=True, exist_ok=True)
         common.write_bytes(b"licensed-common-event")
-        self.darkscript = self.root / "DarkScript3.exe"
-        self.darkscript.write_bytes(b"pinned-darkscript")
-        self.cathedral_builder = patch("tools.build_cathedral_emevd.build")
-        build = self.cathedral_builder.start()
-
-        def fake_cathedral(_compiler, source, output, manifest):
-            self.assertEqual(cathedral, source)
-            output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_bytes(b"verified-cathedral-overlay")
-            manifest.write_text("{}", encoding="utf-8")
-
-        build.side_effect = fake_cathedral
-        self.common_builder = patch("tools.build_common_emevd.build")
-        build_common = self.common_builder.start()
-
-        def fake_common(_compiler, source, output, manifest):
-            self.assertEqual(common, source)
-            output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_bytes(b"verified-common-overlay")
-            manifest.write_text("{}", encoding="utf-8")
-
-        build_common.side_effect = fake_common
         paramdef = self.install.patch / "dvdroot_ps4" / "paramdef" / "paramdef.paramdefbnd.dcx"
         paramdef.parent.mkdir(parents=True)
         paramdef.write_bytes(b"paramdef")
@@ -187,8 +186,6 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
 
     def tearDown(self):
-        self.common_builder.stop()
-        self.cathedral_builder.stop()
         self.temporary.cleanup()
 
     def settings(self, *, enemy_inputs: bool = True) -> LauncherSettings:
@@ -204,7 +201,6 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             soulsformats_next=self.souls if enemy_inputs else None,
             state_root=self.root / "state",
             shad_log=self.root / "shad_log.txt",
-            darkscript=self.darkscript,
         )
 
     def test_process_plan_resolves_paths_and_pins_component_hashes(self):
@@ -327,32 +323,41 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
         self.assertEqual(12401898, owner["cathedral_event"]["laurence_witness_flag"])
 
-    def test_laurence_seed_without_darkscript_fails_before_touching_overlay(self):
+    def test_event_overlays_are_written_from_the_licensed_sources_without_a_compiler(self):
+        toolchain = FakeToolchain()
         workflow = LauncherWorkflow(
-            self.repo, toolchain=FakeToolchain(),
+            self.repo, toolchain=toolchain,
             process_launcher=lambda _processes: [Process(10), Process(11)],
         )
-        settings = self.settings(enemy_inputs=False)
         workflow.randomize_and_launch(
-            settings, EnemizerOptions(enabled=False),
-            process_is_running=lambda: False,
+            replace(self.settings(enemy_inputs=False), darkscript=None),
+            EnemizerOptions(enabled=False), process_is_running=lambda: False,
         )
-        owner_before = (self.install.mods / OWNER_NAME).read_bytes()
-        with self.assertRaisesRegex(ValidationError, "select DarkScript3.exe"):
-            workflow.randomize_and_launch(
-                replace(settings, darkscript=None), EnemizerOptions(enabled=False),
-                process_is_running=lambda: False,
-            )
-        self.assertEqual(owner_before, (self.install.mods / OWNER_NAME).read_bytes())
+        self.assertEqual(["cathedral", "common"], [kind for kind, _ in toolchain.event_calls])
+        cathedral = toolchain.event_calls[0][1]
+        self.assertEqual(
+            self.install.patch.joinpath(*CATHEDRAL_EVENT_PATH.split("/")), cathedral["source"]
+        )
+        common = toolchain.event_calls[1][1]
+        self.assertEqual(
+            self.install.patch.joinpath(*COMMON_EVENT_PATH.split("/")), common["source"]
+        )
+        rows = common["rows"]["category8_awards"]
+        from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
+        self.assertEqual(len(CATEGORY8_AWARDS), len(rows))
+        self.assertEqual(
+            [row.token_goods_id for row in CATEGORY8_AWARDS],
+            [row["token_goods_id"] for row in rows],
+        )
+        self.assertLessEqual({"token_goods_id", "item_lot_id", "ack_flag"}, set(rows[0]))
 
     def test_cathedral_build_failure_preserves_diagnostics_and_does_not_activate(self):
-        from tools import build_cathedral_emevd
-
-        build_cathedral_emevd.build.side_effect = RuntimeError("compiler rejected source")
+        toolchain = FakeToolchain()
+        toolchain.event_failure = RuntimeError("writer rejected source")
         progress: list[str] = []
-        with self.assertRaisesRegex(RuntimeError, "compiler rejected source"):
+        with self.assertRaisesRegex(RuntimeError, "writer rejected source"):
             LauncherWorkflow(
-                self.repo, toolchain=FakeToolchain(),
+                self.repo, toolchain=toolchain,
                 process_launcher=lambda _processes: [],
             ).randomize_and_launch(
                 self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),

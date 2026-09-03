@@ -36,6 +36,7 @@ $catalog = @(
     @{ Path = "tools\BBEnemizerWriter.exe"; Description = "Bloodborne Enemy Map Writer"; Original = "BBEnemizerWriter.dll" },
     @{ Path = "tools\BBSuppressionWriter.exe"; Description = "Bloodborne Vanilla Award Suppression Writer"; Original = "BBSuppressionWriter.dll" },
     @{ Path = "tools\BBToastWriter.exe"; Description = "Bloodborne Pickup Toast Writer"; Original = "BBToastWriter.dll" },
+    @{ Path = "tools\BBEventWriter.exe"; Description = "Bloodborne Event Overlay Writer"; Original = "BBEventWriter.dll" },
     @{ Path = "tools\MSBBMiner.exe"; Description = "Bloodborne Map Inventory Miner"; Original = "MSBBMiner.dll" }
 )
 if (-not $SkipClient) {
