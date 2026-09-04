@@ -13,6 +13,18 @@
   of a single compatibility rule so playtests can falsify it directly.
   Ordinary seeds are unchanged.
 
+- **Fixed: DLC blood gems in a non-DLC seed.** Eleven Research Hall and
+  Fishing Hamlet category-8 blood gems escaped the DLC gate, so a seed
+  generated with `include_dlc: false` still placed them on base-game checks
+  and still built their Old Hunters award lots. A category-8 item's DLC
+  membership is now derived from the region of the fixed location it was
+  generated from, so future generated rows are gated automatically.
+  (review W13)
+- **Fixed: DLC weapons in a base-game-only starting gift.** The randomized
+  Hunter's Dream gift lineup sampled every weapon and never read Include The
+  Old Hunters Gear, so a run that had disabled DLC equipment could still
+  start with the Boom Hammer or the Piercing Rifle. The gift now honours the
+  same rule the item pool applies to weapons. (review W11)
 - **Fixed: a phantom attire item.** The expanded catalog listed "Surgical Long
   Gloves (White)" (protector 292000), which does not exist in the game; the
   White Church set wears the black gloves. It no longer enters any pool.

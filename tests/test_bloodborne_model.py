@@ -837,6 +837,34 @@ class DlcOptionWiringTests(unittest.TestCase):
         self.assertEqual(DLC_WEAPON_KEYS & with_gear, with_gear - without_gear)
         self.assertTrue(DLC_WEAPON_KEYS.isdisjoint(without_gear))
 
+    def test_category_8_awards_from_dlc_regions_leave_the_pool_and_the_award_table(self):
+        """Review W13: eleven Research Hall and Fishing Hamlet blood gems used to
+        survive the DLC subtraction, so `include_dlc: false` seeds placed them on
+        base-game checks and still built their DLC GemGenParam award lots."""
+        from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
+        from worlds.bloodborne.data import DLC_CATEGORY8_ITEM_KEYS
+        from worlds.bloodborne.fixed_locations import FIXED_LOCATIONS
+
+        region_by_lot = {row.item_lot_id: row.region for row in FIXED_LOCATIONS}
+        dlc_awards = [
+            row for row in CATEGORY8_AWARDS
+            if region_by_lot.get(row.source_lot_id) in DLC_REGIONS
+        ]
+        self.assertEqual(11, len(dlc_awards))
+
+        without_dlc = self._world(0)._pool_item_keys()
+        with_dlc = self._world(1)._pool_item_keys()
+        # The same expression fill_slot_data uses to build "category8_awards".
+        table_without_dlc = {
+            row.item_key for row in CATEGORY8_AWARDS if row.item_key in without_dlc
+        }
+        for row in dlc_awards:
+            witness = (row.item_key, row.display_name, region_by_lot[row.source_lot_id])
+            self.assertIn(row.item_key, DLC_CATEGORY8_ITEM_KEYS, witness)
+            self.assertNotIn(row.item_key, without_dlc, witness)
+            self.assertNotIn(row.item_key, table_without_dlc, witness)
+            self.assertIn(row.item_key, with_dlc, witness)
+
     def test_the_declared_dlc_boundary_is_complete(self):
         from worlds.bloodborne.data import SLICE_ENTRANCES
 
@@ -882,6 +910,36 @@ class StartingWeaponChoiceTests(unittest.TestCase):
             choices = build_starting_weapon_choices(f"AP_TEST:{seed}")
             for hand, vanilla in VANILLA_STARTING_WEAPONS.items():
                 self.assertNotEqual(set(choices[hand]), vanilla, (seed, hand))
+
+    def test_the_dream_gift_offers_no_dlc_weapon_when_dlc_gear_is_disabled(self):
+        """Review W11: the gift lineup used to sample every weapon binding, so
+        185 of 200 sampled seeds handed a base-game-only run an Old Hunters
+        weapon (Boom Hammer, Piercing Rifle, ...) at character creation."""
+        from worlds.bloodborne import starting_weapon_candidates
+        from worlds.bloodborne.data import DLC_WEAPON_KEYS
+
+        dlc_ids = {
+            ITEM_BINDINGS[key].normalized_item_id for key in DLC_WEAPON_KEYS
+            if key in ITEM_BINDINGS
+            and ITEM_BINDINGS[key].normalized_item_id is not None
+        }
+        self.assertTrue(dlc_ids)
+        # The exclusion has to be doing real work: DLC weapons are drawable
+        # in both hands when the option is on.
+        with_gear = starting_weapon_candidates(True)
+        for hand in ("right_hand", "left_hand"):
+            self.assertTrue(dlc_ids & set(with_gear[hand]), hand)
+            self.assertTrue(dlc_ids.isdisjoint(starting_weapon_candidates(False)[hand]), hand)
+
+        seen_with_gear = set()
+        for seed in range(200):
+            without = build_starting_weapon_choices(f"AP_TEST:{seed}", False)
+            for hand, drawn in without.items():
+                for item_id in drawn:
+                    self.assertNotIn(item_id, dlc_ids, (seed, hand, item_id))
+            for drawn in build_starting_weapon_choices(f"AP_TEST:{seed}", True).values():
+                seen_with_gear |= dlc_ids & set(drawn)
+        self.assertTrue(seen_with_gear)
 
     def test_option_defaults_on(self):
         if not AP_AVAILABLE:
