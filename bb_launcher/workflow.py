@@ -41,6 +41,7 @@ from .core import (
 )
 from .client_config import (
     CLIENT_LOG_FLAG,
+    CLIENT_PLACEHOLDERS,
     ClientRuntimePaths,
     default_shad_log,
     default_state_root,
@@ -294,6 +295,28 @@ def refuse_stale_plan(plan: ProcessPlan) -> None:
             f"{stale.name} still launches the game by bare game ID; "
             + STALE_BARE_SERIAL_REMEDY
         )
+
+
+def _without_client_processes(plan: ProcessPlan) -> ProcessPlan:
+    """Drop every entry that only a randomized session can satisfy.
+
+    An entry naming any client placeholder consumes files the client runtime
+    configuration writer produces, so it has nothing to run against on a
+    vanilla launch (bb-archipelago review W3).
+    """
+
+    kept = tuple(
+        spec
+        for spec in plan.processes
+        if not any(
+            "{" + name + "}" in argument
+            for argument in spec.arguments
+            for name in CLIENT_PLACEHOLDERS
+        )
+    )
+    return ProcessPlan(
+        shad_build=plan.shad_build, runtime_build=plan.runtime_build, processes=kept
+    )
 
 
 def resolve_process_plan(
@@ -845,6 +868,28 @@ def _validate_suppression(
     return SuppressionValidation(manifest, tuple(bypassed))
 
 
+def _composes_seed_binder(request: Mapping[str, Any]) -> bool:
+    """Does this seed get a freshly composed gameparam binder?
+
+    One predicate, two call sites, because they must never disagree
+    (bb-archipelago review W2). The category-8 award table is a param edit like
+    any other -- the C# writer adds an ItemLot row and a Goods row per award --
+    so a seed whose *only* edit is that table still composes a binder. When the
+    recomposition condition counted it and the manifest condition did not, such
+    a seed shipped a composed binder to the overlay while the client was handed
+    the bundled build-manifest.json naming the un-composed one: the client's
+    hash check failed and nothing was ever delivered, behind a success dialog.
+    """
+
+    return (
+        request["starting_weapons"] is not None
+        or request["weapon_requirement_families"] is not None
+        or request["shop_gate_permutation"] is not None
+        or request["enemy_drop_assignments"] is not None
+        or bool(request["category8_awards"])
+    )
+
+
 def _write_seed_suppression_manifest(
     source_manifest: Path, *, state_root: Path, cache_key: str, output_hash: str,
     weapon_edits: Mapping[str, Any],
@@ -1049,11 +1094,7 @@ class LauncherWorkflow:
                     output=common_output, manifest=common_manifest,
                     soulsformats_next=settings.soulsformats_next, progress=progress,
                 )
-                if (request["starting_weapons"] is not None
-                        or request["weapon_requirement_families"] is not None
-                        or request["shop_gate_permutation"] is not None
-                        or request["enemy_drop_assignments"] is not None
-                        or request["category8_awards"]):
+                if _composes_seed_binder(request):
                     assert temporary is not None
                     composed_binder = temporary / "gameparam.parambnd.dcx"
                     paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
@@ -1131,10 +1172,9 @@ class LauncherWorkflow:
             progress(line)
         progress("Writing the native client runtime configuration...")
         client_manifest = settings.suppression_manifest.expanduser().resolve()
-        if (request["starting_weapons"] is not None
-                or request["weapon_requirement_families"] is not None
-                or request["shop_gate_permutation"] is not None
-                or request["enemy_drop_assignments"] is not None):
+        # Same predicate as the recomposition above: whatever composed the
+        # binder must also re-publish the witness the client hashes it against.
+        if _composes_seed_binder(request):
             client_manifest = _write_seed_suppression_manifest(
                 client_manifest,
                 state_root=settings.state_root or default_state_root(),
@@ -1204,18 +1244,35 @@ class LauncherWorkflow:
         """Bypass the overlay and launch the plan without any AP component.
 
         Deactivates only a verified launcher-owned overlay (cached builds stay
-        available) and launches the process plan under the vanilla rule: any
-        client placeholder in the plan fails closed, because a vanilla launch
-        has no client runtime configuration to substitute.
+        available) and launches the plan with every AP component dropped: an
+        entry whose arguments name a client placeholder is a component of the
+        randomized session, and a vanilla launch has no client runtime
+        configuration to give it.
+
+        Dropping rather than refusing (bb-archipelago review W3): every plan a
+        packaged player has is a generated one, and `generate_process_plan`
+        always pins the AP client with `{runtime_config}`, `{ledger}` and
+        `{client_log}`, so failing closed on those placeholders made the
+        button refuse on every healthy setup, leaving the overlay active and
+        the game unlaunched.
         """
 
         progress("Validating CUSA03173 01.09 and launch components...")
         install = GameInstall.from_root(settings.game_root)
         plan = load_process_plan(settings.process_plan)
         validate_processes(plan.processes)
-        # Resolve before any mutation: a plan that still carries client
-        # placeholders must fail closed with the overlay untouched.
-        resolved = resolve_process_plan(plan, None, game_path=install.base)
+        vanilla = _without_client_processes(plan)
+        if not vanilla.processes:
+            raise ValidationError(
+                "this launch plan has no non-Archipelago process to launch vanilla; "
+                "regenerate it (Generate Launch Plan) so it pins shadPS4"
+            )
+        for spec in plan.processes:
+            if spec not in vanilla.processes:
+                progress(f"Vanilla launch: leaving out the Archipelago component {spec.name}")
+        # Resolve before any mutation: a plan that still fails to resolve must
+        # do so with the overlay untouched.
+        resolved = resolve_process_plan(vanilla, None, game_path=install.base)
         require_no_stray_cheat_engine(resolved.processes, self.process_running)
         progress("Moving the launcher-owned overlay out of the search path...")
         disabled = deactivate_overlay(install, process_is_running=process_is_running)
