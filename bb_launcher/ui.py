@@ -283,6 +283,11 @@ class LauncherApp:
         # _save_settings and _load_settings_if_present: it is per-session by
         # construction, so it can never be left on and forgotten.
         self.allow_suppression_mismatch = tk.BooleanVar(value=False)
+        # Same per-session-only contract as allow_suppression_mismatch, for
+        # the AP seed/slot identity check (bb-archipelago#347): a stale
+        # saved server address must require a deliberate, un-persisted
+        # override every time, never a setting left on and forgotten.
+        self.allow_seed_mismatch = tk.BooleanVar(value=False)
         # Diagnostic probes are an explicit, per-session playtest aid.
         self.research_captures = tk.BooleanVar(value=False)
         self.show_session_details = tk.BooleanVar(value=False)
@@ -576,6 +581,17 @@ class LauncherApp:
             troubleshooting,
             text="Enable research captures (playtest diagnostics, not saved)",
             variable=self.research_captures,
+        ).grid(
+            row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
+        )
+        troubleshooting_row += 1
+        ttk.Checkbutton(
+            troubleshooting,
+            text=(
+                "Allow AP seed/slot mismatch (operators only, not saved -- see "
+                "the warning naming expected vs connected identity)"
+            ),
+            variable=self.allow_seed_mismatch,
         ).grid(
             row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
         )
@@ -1072,6 +1088,7 @@ class LauncherApp:
                 preserve_locomotion=self.preserve_locomotion.get(),
             )
             override = self.allow_suppression_mismatch.get()
+            seed_mismatch_override = self.allow_seed_mismatch.get()
             research_captures = self.research_captures.get()
             self._save_settings()
         except LauncherError as exc:
@@ -1083,7 +1100,7 @@ class LauncherApp:
         self._append_log("Starting Randomize & Launch...")
         threading.Thread(
             target=self._run,
-            args=(settings, options, override, research_captures),
+            args=(settings, options, override, research_captures, seed_mismatch_override),
             daemon=True,
             name="bloodborne-randomize-launch",
         ).start()
@@ -1278,6 +1295,7 @@ class LauncherApp:
                 self.ap_server.get().strip() or None,
                 self.player_name.get().strip() or None,
                 self.allow_suppression_mismatch.get(),
+                self.allow_seed_mismatch.get(),
             ),
             daemon=True,
             name="bloodborne-doctor",
@@ -1290,6 +1308,7 @@ class LauncherApp:
         server: str | None,
         player_name: str | None = None,
         allow_suppression_mismatch: bool = False,
+        allow_seed_mismatch: bool = False,
     ) -> None:
         try:
             report = run_doctor(
@@ -1298,6 +1317,7 @@ class LauncherApp:
                 server=server,
                 player_name=player_name,
                 allow_suppression_mismatch=allow_suppression_mismatch,
+                allow_seed_mismatch=allow_seed_mismatch,
             )
             text = format_report(report)
         except Exception as exc:
@@ -1376,6 +1396,7 @@ class LauncherApp:
                 preserve_locomotion=self.preserve_locomotion.get(),
             )
             override = self.allow_suppression_mismatch.get()
+            seed_mismatch_override = self.allow_seed_mismatch.get()
             research_captures = self.research_captures.get()
             self._save_settings()
         except LauncherError as exc:
@@ -1385,7 +1406,7 @@ class LauncherApp:
         self._append_log("Starting Rebuild...")
         threading.Thread(
             target=self._run_rebuild,
-            args=(settings, options, override, research_captures),
+            args=(settings, options, override, research_captures, seed_mismatch_override),
             daemon=True,
             name="bloodborne-rebuild-seed",
         ).start()
@@ -1396,6 +1417,7 @@ class LauncherApp:
         options: EnemizerOptions,
         allow_suppression_mismatch: bool = False,
         research_captures: bool = False,
+        allow_seed_mismatch: bool = False,
     ) -> None:
         try:
             result = self.workflow.randomize_and_launch(
@@ -1403,6 +1425,7 @@ class LauncherApp:
                 options,
                 force_rebuild=True,
                 allow_suppression_mismatch=allow_suppression_mismatch,
+                allow_seed_mismatch=allow_seed_mismatch,
                 research_captures=research_captures,
                 player_name=self.player_name.get().strip(),
                 progress=self._progress_message,
@@ -1432,12 +1455,14 @@ class LauncherApp:
         options: EnemizerOptions,
         allow_suppression_mismatch: bool = False,
         research_captures: bool = False,
+        allow_seed_mismatch: bool = False,
     ) -> None:
         try:
             result = self.workflow.randomize_and_launch(
                 settings,
                 options,
                 allow_suppression_mismatch=allow_suppression_mismatch,
+                allow_seed_mismatch=allow_seed_mismatch,
                 research_captures=research_captures,
                 player_name=self.player_name.get().strip(),
                 progress=self._progress_message,

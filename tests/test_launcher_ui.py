@@ -1525,6 +1525,166 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(len(launched), 2)
         self.assertTrue(self.install.mods.is_dir())
 
+    def _write_plan_with_server(self, server: str) -> None:
+        """A process plan whose AP client is pinned at ``server``.
+
+        The fixture's default plan leaves the AP client's arguments empty,
+        which makes the seed/slot identity check a no-op (there is no server
+        address to compare against). These tests need a real address so the
+        check has something to remember and compare.
+        """
+        value = json.loads(self.process_plan.read_text(encoding="utf-8"))
+        for spec in value["processes"]:
+            if spec["name"] == "AP client":
+                spec["arguments"] = [server]
+        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
+
+    def test_reconnect_with_stale_saved_server_credentials_is_refused_until_overridden(self):
+        """bb-archipelago#347 acceptance test 6.
+
+        A player launches seed A against a server, quits, then relaunches
+        (or reconnects) with a *different* seed package selected but the
+        same saved AP server address -- exactly what a stale
+        ``ap_server``/settings round-trip produces. The stale connection
+        must be refused and delivery must stay disarmed until the player
+        explicitly overrides it; a bare retry must keep refusing.
+        """
+        self._write_plan_with_server("localhost:38281")
+        launched: list[tuple[str, ...]] = []
+
+        def launch(processes):
+            launched.extend(tuple(spec.arguments) for spec in processes)
+            return [Process(10), Process(11)]
+
+        workflow = LauncherWorkflow(self.repo, toolchain=FakeToolchain(), process_launcher=launch)
+
+        # First connect: seed A, slot Hunter. Nothing recorded yet, so this
+        # succeeds and locks the server to seed A/Hunter.
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(len(launched), 2)
+
+        # Reconnect/relaunch: a different seed package is now selected (the
+        # request's seed_name changed) but the saved server is untouched --
+        # the stale-credentials scenario from the issue.
+        request = json.loads(self.request.read_text(encoding="utf-8"))
+        request["enemizer_seed"] = "seed-name:2"
+        self.request.write_text(json.dumps(request), encoding="utf-8")
+
+        with self.assertRaises(WorkflowError) as raised:
+            workflow.randomize_and_launch(
+                self.settings(enemy_inputs=False),
+                EnemizerOptions(enabled=False),
+                process_is_running=lambda: False,
+            )
+        message = str(raised.exception)
+        # The warning must name both identities so the player knows which
+        # launcher input to fix.
+        self.assertIn("seed-name:1", message)
+        self.assertIn("seed-name:2", message)
+        self.assertIn("localhost:38281", message)
+        # Delivery stayed disarmed: no second launch was spawned.
+        self.assertEqual(len(launched), 2)
+
+        # A bare retry (no override) keeps refusing -- it is not a one-shot
+        # warning that clears itself.
+        with self.assertRaises(WorkflowError):
+            workflow.randomize_and_launch(
+                self.settings(enemy_inputs=False),
+                EnemizerOptions(enabled=False),
+                process_is_running=lambda: False,
+            )
+        self.assertEqual(len(launched), 2)
+
+        # The explicit override proceeds and re-locks the server to the new
+        # seed package.
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            allow_seed_mismatch=True,
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(len(launched), 4)
+
+        # Once re-locked, relaunching the same (now current) seed package
+        # against the same server needs no override.
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(len(launched), 6)
+
+    def test_seed_slot_mismatch_with_same_slot_name_is_refused(self):
+        """Acceptance test 2: a different AP seed with the same slot name."""
+        self._write_plan_with_server("localhost:38281")
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=FakeToolchain(),
+            process_launcher=lambda _processes: [Process(10)],
+        )
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        request = json.loads(self.request.read_text(encoding="utf-8"))
+        request["enemizer_seed"] = "a-different-seed"
+        self.request.write_text(json.dumps(request), encoding="utf-8")
+        with self.assertRaises(WorkflowError):
+            workflow.randomize_and_launch(
+                self.settings(enemy_inputs=False),
+                EnemizerOptions(enabled=False),
+                process_is_running=lambda: False,
+            )
+
+    def test_seed_slot_mismatch_with_same_seed_different_slot_is_refused(self):
+        """Acceptance test 3: the same AP seed with a different slot name."""
+        self._write_plan_with_server("localhost:38281")
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=FakeToolchain(),
+            process_launcher=lambda _processes: [Process(10)],
+        )
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        request = json.loads(self.request.read_text(encoding="utf-8"))
+        request["player_name"] = "SomeoneElse"
+        self.request.write_text(json.dumps(request), encoding="utf-8")
+        with self.assertRaises(WorkflowError):
+            workflow.randomize_and_launch(
+                self.settings(enemy_inputs=False),
+                EnemizerOptions(enabled=False),
+                player_name="SomeoneElse",
+                process_is_running=lambda: False,
+            )
+
+    def test_matching_seed_package_and_server_launches_normally(self):
+        """Acceptance test 1: matching seed package + AP room + slot."""
+        self._write_plan_with_server("localhost:38281")
+        launched: list[tuple[str, ...]] = []
+
+        def launch(processes):
+            launched.extend(tuple(spec.arguments) for spec in processes)
+            return [Process(10), Process(11)]
+
+        workflow = LauncherWorkflow(self.repo, toolchain=FakeToolchain(), process_launcher=launch)
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        workflow.randomize_and_launch(
+            self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(len(launched), 4)
+
     def test_restore_previous_reactivates_the_prior_seed(self):
         toolchain = FakeToolchain()
         workflow = LauncherWorkflow(
