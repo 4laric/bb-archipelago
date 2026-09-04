@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- **A native goods grant left undetermined by a prior attempt is never
+  re-armed silently.** `bb_native_delivery`'s reused-tag guard used to let
+  `--expected-before` bypass its check entirely, so a tag left at `armed` or
+  `interrupted` -- meaning the prior attempt's outcome was never confirmed --
+  could be re-issued as long as a baseline was supplied, even though that
+  baseline is sampled from the same undetermined state. This is the same
+  failure shape reported in #342 for category-8 delivery tokens: "not
+  currently where a fresh read expects it" is not evidence a grant failed,
+  it may just be routed somewhere the read did not check (the Hunter's Dream
+  storage box). The guard now refuses those tags outright regardless of
+  `--expected-before`; only `--force` or a fresh `--tag` gets past it. A
+  timed-out grant also now prints a hint pointing at the storage box, since a
+  `?GoodsName?` item there is the most likely explanation for a category-8
+  token stuck pending. The bridge event itself (`common.emevd`) already
+  waits on the storage box and drains duplicate copies of a token before
+  awarding, landed in #344.
+
 - **Report a Bad Enemy.** The launcher keeps the exact enemy plan each seed
   was built from, and a new recovery action (or `python -m bb_launcher
   enemy-report`) turns it into a paste-ready report: seed, slot, cache key,

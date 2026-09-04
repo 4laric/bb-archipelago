@@ -231,20 +231,56 @@ def _gate_descriptor(args: argparse.Namespace) -> int:
     return 0
 
 
+#: Journal statuses that mean "the last attempt's outcome is not known" --
+#: either it never reached a terminal transition (``armed``, recorded before
+#: the poll loop even starts) or it left the poll loop by an exception
+#: (``interrupted``) or fell through to the fallback (``unknown``). None of
+#: these is evidence the grant failed, only that nothing confirmed it either
+#: way -- the same shape as a category-8 token whose ack is still pending
+#: (issue #342): "not currently where we expect it" is not evidence of
+#: non-delivery. A caller-supplied ``--expected-before`` cannot rule this out
+#: either, because it is sampled from the same inconclusive state.
+INCONCLUSIVE_STATUSES = frozenset({"armed", "interrupted", "unknown"})
+
+
 def _gate_reused_tag(args: argparse.Namespace, journal: Path) -> int:
-    """Warn on a baseline-free grant; refuse a reused tag without one.
+    """Refuse a reused tag whose last outcome is undetermined; warn otherwise.
 
     Issue #146 item 4: an interrupted grant landed, and rerunning the same tag
     without ``--expected-before`` granted it a second time -- the CLI samples a
     live baseline when none is given, so a partial prior delivery is invisible
     to it. A fresh tag stays frictionless; a tag this journal has already armed
     is the case that cannot be ruled out.
+
+    Issue #342 generalised the failure mode: a token grant whose ack is still
+    pending must never be re-issued just because a fresh read no longer finds
+    it where the caller expected. So a journal entry left in an
+    :data:`INCONCLUSIVE_STATUSES` state is refused unconditionally --
+    ``--expected-before`` no longer buys a bypass, because a baseline sampled
+    from an undetermined state proves nothing. Only ``--force`` (an explicit
+    assertion that the operator has independently ruled the prior attempt out)
+    or a fresh ``--tag`` gets past it.
     """
+    entry = _read_journal(journal).get(args.tag)
+    if entry and entry.get("status") in INCONCLUSIVE_STATUSES:
+        if args.force:
+            print(f"--force: arming tag {args.tag!r} again anyway despite an undetermined "
+                  f"prior outcome (journal says status={entry.get('status')!r}).")
+            return 0
+        print(f"\nREFUSING TO GRANT: tag {args.tag!r} was last left in status="
+              f"{entry.get('status')!r} (journal {journal}), which means its outcome is "
+              "undetermined -- it never reached a terminal transition. Per issue #342, a "
+              "grant whose outcome is still undetermined must never be re-issued just because "
+              "it is not where a fresh read expects it; the token may simply have been routed "
+              "somewhere the read did not check. --expected-before cannot rule this out, "
+              "because any baseline sampled now is sampled from the same undetermined state. "
+              "Confirm in game whether the item already arrived, then re-run with a fresh "
+              "--tag, or --force if you have independently ruled the prior attempt out.")
+        return 1
     if args.expected_before is not None:
         return 0
     print("warning: no --expected-before. The baseline is sampled live, so a prior "
           "partial delivery of this tag cannot be detected from the numbers alone.")
-    entry = _read_journal(journal).get(args.tag)
     if not entry:
         return 0
     if args.force:
@@ -258,6 +294,20 @@ def _gate_reused_tag(args: argparse.Namespace, journal: Path) -> int:
           "with --expected-before <count read from the inventory UI>, or a fresh "
           "--tag, or --force if you have already ruled a prior delivery out.")
     return 1
+
+
+#: Issue #342's suggested player-facing wording: a category-8 delivery token
+#: that never satisfies the bridge event's held-inventory wait is most often
+#: sitting in the Hunter's Dream storage box, not lost. Surfaced here because
+#: this is where a delivery budget expiring without a terminal status becomes
+#: visible -- the same "pending longer than the delivery budget" shape the
+#: issue describes for the (not yet shipped) client's ack wait.
+STORAGE_BOX_HINT = (
+    "hint: if this grant is a category-8 delivery token (a rune or blood gem) and it "
+    "has been pending longer than expected, check the Hunter's Dream storage box -- a "
+    "'?GoodsName?' item there is an undelivered rune or gem; withdraw it and the "
+    "delivery will complete."
+)
 
 
 def _poll_to_completion(session, timeout: float, sleep=time.sleep) -> int:
@@ -280,6 +330,7 @@ def _poll_to_completion(session, timeout: float, sleep=time.sleep) -> int:
         print("\ninterrupted: disarmed the native request cell before exiting.")
         raise
     print("timed out")
+    print(STORAGE_BOX_HINT)
     return 1
 
 

@@ -1216,11 +1216,37 @@ class ReusedTagAndPollLoopTests(unittest.TestCase):
             cli._record_tag(journal, "pebble-1", "armed")
             self.assertEqual(1, cli._gate_reused_tag(self._args(), journal))
 
-    def test_a_reused_tag_passes_with_a_baseline_or_with_force(self):
+    def test_a_reused_tag_with_a_resolved_outcome_passes_with_a_baseline_or_with_force(self):
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Path(directory) / "journal.json"
+            # "failed" is a terminal status (delivery.TERMINAL): the prior
+            # attempt's outcome is fully decided, so a fresh baseline or
+            # --force is enough to try again.
+            cli._record_tag(journal, "pebble-1", "failed")
+            self.assertEqual(0, cli._gate_reused_tag(self._args(expected_before=3), journal))
+            self.assertEqual(0, cli._gate_reused_tag(self._args(force=True), journal))
+
+    def test_an_interrupted_tag_is_refused_even_with_a_baseline(self):
+        # Issue #342: "not currently where a fresh read expects it" is not
+        # evidence a grant failed -- the same shape as a category-8 token
+        # routed to storage instead of held inventory. An "interrupted" entry
+        # never reached a terminal transition, so --expected-before must not
+        # buy a bypass; only --force (or a fresh tag) does.
         with tempfile.TemporaryDirectory() as directory:
             journal = Path(directory) / "journal.json"
             cli._record_tag(journal, "pebble-1", "interrupted")
-            self.assertEqual(0, cli._gate_reused_tag(self._args(expected_before=3), journal))
+            self.assertEqual(1, cli._gate_reused_tag(self._args(expected_before=3), journal))
+            self.assertEqual(1, cli._gate_reused_tag(self._args(), journal))
+            self.assertEqual(0, cli._gate_reused_tag(self._args(force=True), journal))
+
+    def test_an_armed_tag_with_no_recorded_outcome_is_refused_even_with_a_baseline(self):
+        # A tag left at "armed" is what a hard kill mid-grant leaves behind
+        # (_record_tag's terminal update never ran): the outcome is exactly
+        # as undetermined as "interrupted".
+        with tempfile.TemporaryDirectory() as directory:
+            journal = Path(directory) / "journal.json"
+            cli._record_tag(journal, "pebble-1", "armed")
+            self.assertEqual(1, cli._gate_reused_tag(self._args(expected_before=3), journal))
             self.assertEqual(0, cli._gate_reused_tag(self._args(force=True), journal))
 
     def test_an_interrupt_in_the_sleep_between_polls_still_disarms(self):
@@ -1245,6 +1271,20 @@ class ReusedTagAndPollLoopTests(unittest.TestCase):
         session.submit(_command(expected_before=3))
         self.assertEqual(0, cli._poll_to_completion(session, timeout=60.0, sleep=lambda _s: None))
         self.assertEqual("recovered_complete", session.state.status)
+
+    def test_a_timed_out_grant_prints_the_storage_box_hint(self):
+        # Issue #342: the suggested player-facing hint for a grant that has
+        # been pending longer than the delivery budget, surfaced where a
+        # never-terminal poll loop becomes visible: it never satisfies the
+        # bridge event's held-inventory wait because it never left the box.
+        runtime = FakeRuntime(ready=False)
+        session = GrantSession(runtime=runtime)
+        session.submit(_command(expected_before=0))
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = cli._poll_to_completion(session, timeout=0.0, sleep=lambda _s: None)
+        self.assertEqual(1, code)
+        self.assertIn(cli.STORAGE_BOX_HINT, buffer.getvalue())
 
 
 class Issue146AcceptanceTests(unittest.TestCase):
