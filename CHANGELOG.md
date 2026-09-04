@@ -30,6 +30,37 @@
   sixteen are no longer checks; every corpse keeps the check it always had.
   (review finding W5)
 
+- **Fixed: a rune-and-gem-only seed delivered nothing.** A seed whose only
+  param edit was the category-8 award table got a freshly composed binder but
+  was handed the bundled build manifest, which names the un-composed one. The
+  client's hash check failed and nothing was ever delivered, behind a
+  successful launch dialog. Both the binder and its witness now follow one
+  predicate. (review W2)
+
+- **Fixed: Launch Vanilla always refused.** Every generated plan pins the AP
+  client with the client runtime placeholders, and a vanilla launch has none
+  of those files, so the button refused on every packaged setup and left the
+  overlay active. A vanilla launch now drops the Archipelago components and
+  starts the game. (review W3)
+
+- **Fixed: Check Setup warned that item delivery was impossible.** Generated
+  plans never carry a Cheat Engine bridge by design, so "no Cheat Engine
+  bridge in the launch plan" fired on every healthy setup with a remedy that
+  could not change it. Check Setup now reports the native lane: it passes when
+  the plan pins the AP client. (review W8)
+
+- **Fixed: DLC blood gems in a non-DLC seed.** Eleven Research Hall and
+  Fishing Hamlet category-8 blood gems escaped the DLC gate, so a seed
+  generated with `include_dlc: false` still placed them on base-game checks
+  and still built their Old Hunters award lots. A category-8 item's DLC
+  membership is now derived from the region of the fixed location it was
+  generated from, so future generated rows are gated automatically.
+  (review W13)
+- **Fixed: DLC weapons in a base-game-only starting gift.** The randomized
+  Hunter's Dream gift lineup sampled every weapon and never read Include The
+  Old Hunters Gear, so a run that had disabled DLC equipment could still
+  start with the Boom Hammer or the Piercing Rifle. The gift now honours the
+  same rule the item pool applies to weapons. (review W11)
 - **Fixed: a phantom attire item.** The expanded catalog listed "Surgical Long
   Gloves (White)" (protector 292000), which does not exist in the game; the
   White Church set wears the black gloves. It no longer enters any pool.

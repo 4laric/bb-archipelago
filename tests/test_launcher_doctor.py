@@ -413,10 +413,29 @@ class DoctorTests(unittest.TestCase):
             )
         self.assertEqual(finding(report, "elevation").status, PASS)
 
-    def test_item_grants_warn_without_the_ce_bridge(self):
+    def test_item_grants_pass_on_a_generated_plan_with_no_cheat_engine_bridge(self):
+        """Review W8: the packaged plan never pins a bridge and must still pass.
+
+        `generate_process_plan` emits shadPS4 and the AP client only
+        (bb-archipelago#153), so a missing CE bridge described every healthy
+        setup and the WARN told those players items could not be delivered.
+        """
+
         report = run(self.fixture)
         result = finding(report, "item grants")
-        self.assertEqual(result.status, WARN)
+        self.assertEqual(result.status, PASS, result.detail)
+        self.assertIn("bb-ap-client.exe", result.detail)
+        self.assertNotIn("Cheat Engine", result.detail)
+
+    def test_item_grants_warn_when_the_plan_pins_no_delivery_component(self):
+        plan = json.loads(self.fixture.plan_path.read_text(encoding="utf-8"))
+        plan["processes"] = [
+            spec for spec in plan["processes"] if spec["name"] != "AP client"
+        ]
+        self.fixture.plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        report = run(self.fixture)
+        result = finding(report, "item grants")
+        self.assertEqual(result.status, WARN, result.detail)
         self.assertIn("Generate Launch Plan", result.remedy)
 
     def test_item_grants_pass_with_the_ce_bridge(self):

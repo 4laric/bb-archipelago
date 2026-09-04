@@ -21,7 +21,7 @@ from bb_launcher.core import (
     ValidationError,
 )
 from bb_launcher.core import EarlyExit
-from bb_launcher.plan import DEFAULT_SERVER
+from bb_launcher.plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from bb_launcher.ui import (
     ENEMY_FIELDS,
     FIELD_DEFINITIONS,
@@ -285,6 +285,50 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )["suppression_manifest"]).read_text(encoding="utf-8"))
         self.assertEqual(payload["shop_gate_permutation"],
                          manifest["seed_weapon_edits"]["shop_gate_permutation"])
+
+    def test_category8_only_seed_republishes_the_manifest_for_its_binder(self):
+        """Review W2: an award-table-only seed still composes a binder.
+
+        The award rows are param edits (one ItemLot row and one Goods row
+        each), so the binder is recomposed. When only the recomposition
+        condition counted them, the client kept the bundled build manifest
+        naming the un-composed binder, failed its hash check and delivered
+        nothing behind a success dialog.
+        """
+
+        payload = json.loads(self.request.read_text(encoding="utf-8"))
+        payload["category8_awards"] = {
+            "12255623": {
+                "item_key": "category8_test",
+                "token_goods_id": 9800,
+                "item_lot_id": 98000000,
+                "gemgen_id": 102901,
+                "ack_flag": 12400900,
+                "source_lot_id": 2400640,
+            },
+        }
+        self.request.write_text(json.dumps(payload), encoding="utf-8")
+        toolchain = FakeToolchain()
+        result = LauncherWorkflow(
+            self.repo, toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(10), Process(11)],
+        ).randomize_and_launch(
+            self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        self.assertEqual(1, len(toolchain.starting_calls))
+        active = self.install.mods.joinpath(*SUPPRESSION_PATH.split("/"))
+        config = json.loads(result.client_config.read_text(encoding="utf-8"))
+        manifest_path = Path(config["suppression_manifest"])
+        self.assertNotEqual(
+            manifest_path, self.suppression_manifest.resolve(),
+            "a composed binder must not be witnessed by the bundled manifest",
+        )
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            digest(active.read_bytes()), manifest["output_gameparam_sha256"],
+            "the client hashes the activated binder against this witness",
+        )
 
     def test_randomize_enemies_runs_toolchain_caches_maps_activates_and_launches(self):
         toolchain = FakeToolchain()
@@ -1380,17 +1424,6 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
         self.assertTrue(self.install.mods.is_dir())
 
-        # A plan still carrying a client placeholder refuses BEFORE the active
-        # overlay is touched.
-        value = json.loads(self.process_plan.read_text(encoding="utf-8"))
-        value["processes"][1]["arguments"] = ["{runtime_config}", "{ledger}"]
-        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
-        with self.assertRaisesRegex(ValidationError, "vanilla launch"):
-            workflow.launch_vanilla(self.settings(), process_is_running=lambda: False)
-        self.assertTrue(self.install.mods.is_dir())
-
-        value["processes"][1]["arguments"] = []
-        self.process_plan.write_text(json.dumps(value), encoding="utf-8")
         pids = workflow.launch_vanilla(self.settings(), process_is_running=lambda: False)
         self.assertEqual(pids, (10, 11))
         self.assertFalse(self.install.mods.exists())
@@ -1404,6 +1437,52 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             path for path in self.root.glob("game/.*") if "bb-ap-disabled" in path.name
         ]
         self.assertEqual(len(preserved), 1)
+
+    def test_launch_vanilla_drops_the_ap_client_from_a_generated_plan(self):
+        """Review W3: the only plan a packaged player has must launch vanilla.
+
+        `generate_process_plan` always pins the AP client with
+        {runtime_config}, {ledger} and --log-file {client_log}, and a vanilla
+        launch has no client runtime configuration for them. Refusing on those
+        placeholders made the button fail on every healthy setup, leaving the
+        overlay active and the game unlaunched; the AP client is dropped
+        instead.
+        """
+
+        write_process_plan(
+            self.process_plan,
+            generate_process_plan(
+                shad_executable=self.shad,
+                runtime_build="bb-runtime-r1",
+                slot="Hunter",
+                client_executable=self.client,
+            ),
+            force=True,
+        )
+        launched: list[tuple[str, tuple[str, ...]]] = []
+
+        def launch(processes):
+            launched.extend((spec.name, tuple(spec.arguments)) for spec in processes)
+            return [Process(10)]
+
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=FakeToolchain(), process_launcher=launch
+        )
+        messages: list[str] = []
+        pids = workflow.launch_vanilla(
+            self.settings(), progress=messages.append, process_is_running=lambda: False
+        )
+        self.assertEqual(pids, (10,))
+        self.assertEqual(
+            [name for name, _arguments in launched],
+            ["shadPS4"],
+            "the AP client must not be launched without a runtime configuration",
+        )
+        self.assertEqual(launched[0][1], (str(self.install.base),))
+        self.assertTrue(
+            any("AP client" in message for message in messages),
+            f"the dropped component must be named in the progress log: {messages}",
+        )
 
     def test_a_stale_bare_id_plan_refuses_before_the_overlay_is_touched(self):
         # bb-archipelago#177: every playtester has a pre-#177 plan on disk, and

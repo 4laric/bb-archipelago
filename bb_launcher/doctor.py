@@ -50,6 +50,7 @@ from .core import (
 from .client_config import default_state_root
 from .readiness import gather_readiness
 from .workflow import (
+    CLIENT_PROCESS_NAME,
     SHAD_PROCESS_NAME,
     LauncherSettings,
     ProcessPlan,
@@ -745,7 +746,23 @@ def _bridge_reported(settings: LauncherSettings, chain: _Chain) -> bool | None:
 def _check_item_grants(
     settings: LauncherSettings, chain: _Chain, process_running: Callable[[str], bool]
 ) -> DoctorFinding:
-    names = {spec.name for spec in chain.processes or ()}
+    """Report whether this plan can deliver items, on whichever lane it pins.
+
+    The native lane is the packaged shape: `plan.generate_process_plan` emits
+    exactly shadPS4 and the AP client and never a Cheat Engine bridge
+    (bb-archipelago#153), and the client's own native path does the granting.
+    The CE branch below survives only for a host-directed fallback plan that
+    actually pins the bridge. Treating a missing bridge as a warning told every
+    healthy packaged player that no items could be delivered, with a remedy
+    (Generate Launch Plan) that could not change the outcome and a follow-up
+    (install Cheat Engine) that `_check_processes` would then flag as a stray
+    instance -- bb-archipelago review W8.
+    """
+
+    if chain.processes is None:
+        return DoctorFinding(SKIP, "item grants", "upstream check failed")
+    specs = list(chain.processes)
+    names = {spec.name for spec in specs}
     if CE_BRIDGE_PROCESS_NAME in names:
         stray = stray_cheat_engine_names(process_running)
         if stray:
@@ -771,13 +788,31 @@ def _check_item_grants(
                 "session; the launcher warns if it never does)"
             )
         return DoctorFinding(PASS, "item grants", detail)
+    client = next((spec for spec in specs if spec.name == CLIENT_PROCESS_NAME), None)
+    if client is None:
+        return DoctorFinding(
+            WARN,
+            "item grants",
+            "the launch plan pins no delivery component: no AP client and no "
+            "Cheat Engine bridge",
+            "regenerate the launch plan (Generate Launch Plan): without the AP "
+            "client your checks still reach the server, but no items can be "
+            "delivered into your game",
+        )
+    executable = Path(client.executable).expanduser()
+    if not executable.is_file():
+        return DoctorFinding(
+            FAIL,
+            "item grants",
+            f"the pinned AP client executable does not exist: {executable}",
+            "regenerate the launch plan (Generate Launch Plan) so it pins the "
+            "AP client shipped with this package",
+        )
     return DoctorFinding(
-        WARN,
+        PASS,
         "item grants",
-        "no Cheat Engine bridge in the launch plan",
-        "regenerate the launch plan with Cheat Engine and the grant table "
-        "(Generate Launch Plan): without it your checks still reach the "
-        "server, but no items can be delivered into your game",
+        f"AP client {executable.name} pinned: items are delivered on the "
+        "client's native path",
     )
 
 

@@ -104,9 +104,20 @@ NON_FIREARM_LEFT_HAND_KEYS = frozenset({"wooden_shield", "loch_shield", "hunters
 SHOP_GATE_IDS = tuple(range(12101000, 12101010))
 
 
-def starting_weapon_candidates() -> dict[str, list[int]]:
+def starting_weapon_candidates(include_dlc_gear: bool = True) -> dict[str, list[int]]:
     """The ids each Dream gift hand may draw from: non-Uncanny weapons of
-    that hand, and for the left hand only firearms."""
+    that hand, and for the left hand only firearms.
+
+    review W11: the Dream gift is native parameter data, not an AP placement,
+    so it used to draw from every weapon binding and ignore the DLC gear
+    option entirely -- 185 of 200 sampled seeds handed a base-game-only run at
+    least one Old Hunters weapon (Boom Hammer, Piercing Rifle, ...) at
+    character creation, contradicting IncludeDLCGear's own promise. The gift
+    now honours the same rule the pool applies to weapons in
+    `_pool_item_keys`: DLC_WEAPON_KEYS is governed by `include_dlc_gear`
+    alone, because DLC equipment is deliberately allowed in a base-game route
+    when that option is on.
+    """
     return {
         hand: sorted(
             binding.normalized_item_id
@@ -114,19 +125,23 @@ def starting_weapon_candidates() -> dict[str, list[int]]:
             if key not in UNCANNY_ITEM_KEYS and binding.feed_effect == f"{hand}_weapon"
             and binding.normalized_item_id is not None
             and (hand != "left_hand" or key not in NON_FIREARM_LEFT_HAND_KEYS)
+            and (include_dlc_gear or key not in DLC_WEAPON_KEYS)
         )
         for hand in STARTING_WEAPON_ROWS
     }
 
 
-def build_starting_weapon_choices(seed: str) -> dict[str, list[int]]:
+def build_starting_weapon_choices(
+    seed: str, include_dlc_gear: bool = True,
+) -> dict[str, list[int]]:
     """Choose the native Dream gift lineup independently of the AP item pool.
 
     Deterministic per seed. A hand never reproduces its vanilla set: the draw
     is repeated from the same stream until it differs, so the randomized
-    lineup is always visibly randomized.
+    lineup is always visibly randomized. With `include_dlc_gear` off, no Old
+    Hunters weapon can be offered (review W11).
     """
-    candidates = starting_weapon_candidates()
+    candidates = starting_weapon_candidates(include_dlc_gear)
     random = Random(f"bloodborne-starting-weapons:{seed}")
     choices: dict[str, list[int]] = {}
     for hand, rows in STARTING_WEAPON_ROWS.items():
@@ -871,7 +886,8 @@ else:
         def fill_slot_data(self) -> dict[str, Any]:
             seed = f"{self.multiworld.seed_name}:{self.player}"
             starting_weapons = (
-                build_starting_weapon_choices(seed)
+                build_starting_weapon_choices(
+                    seed, bool(getattr(self.options, "include_dlc_gear", True)))
                 if self.options.randomize_starting_weapons else None
             )
             requirement_families = (
