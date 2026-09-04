@@ -13,6 +13,25 @@
   of a single compatibility rule so playtests can falsify it directly.
   Ordinary seeds are unchanged.
 
+- **Fixed: a rune-and-gem-only seed delivered nothing.** A seed whose only
+  param edit was the category-8 award table got a freshly composed binder but
+  was handed the bundled build manifest, which names the un-composed one. The
+  client's hash check failed and nothing was ever delivered, behind a
+  successful launch dialog. Both the binder and its witness now follow one
+  predicate. (review W2)
+
+- **Fixed: Launch Vanilla always refused.** Every generated plan pins the AP
+  client with the client runtime placeholders, and a vanilla launch has none
+  of those files, so the button refused on every packaged setup and left the
+  overlay active. A vanilla launch now drops the Archipelago components and
+  starts the game. (review W3)
+
+- **Fixed: Check Setup warned that item delivery was impossible.** Generated
+  plans never carry a Cheat Engine bridge by design, so "no Cheat Engine
+  bridge in the launch plan" fired on every healthy setup with a remedy that
+  could not change it. Check Setup now reports the native lane: it passes when
+  the plan pins the AP client. (review W8)
+
 - **Fixed: a phantom attire item.** The expanded catalog listed "Surgical Long
   Gloves (White)" (protector 292000), which does not exist in the game; the
   White Church set wears the black gloves. It no longer enters any pool.
