@@ -843,6 +843,23 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         for hand, values in first.items():
             self.assertLessEqual(set(values), expected[hand])
 
+    def test_gift_lineup_is_never_vanilla_and_firearm_rows_offer_only_firearms(self):
+        from worlds.bloodborne import (
+            NON_FIREARM_LEFT_HAND_KEYS, VANILLA_STARTING_WEAPONS, starting_weapon_candidates,
+        )
+        candidates = starting_weapon_candidates()
+        non_firearms = {ITEM_BINDINGS[key].normalized_item_id for key in NON_FIREARM_LEFT_HAND_KEYS}
+        self.assertTrue(non_firearms)
+        self.assertTrue(non_firearms.isdisjoint(candidates["left_hand"]))
+        self.assertGreaterEqual(len(candidates["left_hand"]), 8)
+        # The vanilla sets are drawable, so the exclusion is doing real work.
+        for hand, vanilla in VANILLA_STARTING_WEAPONS.items():
+            self.assertLessEqual(vanilla, set(candidates[hand]), hand)
+        for seed in range(400):
+            choices = build_starting_weapon_choices(f"AP_TEST:{seed}")
+            for hand, vanilla in VANILLA_STARTING_WEAPONS.items():
+                self.assertNotEqual(set(choices[hand]), vanilla, (seed, hand))
+
     def test_option_defaults_on(self):
         if not AP_AVAILABLE:
             self.skipTest("requires Archipelago options")
