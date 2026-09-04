@@ -69,7 +69,7 @@ Central Yharnam, Cathedral Ward, Old Yharnam, Hemwick, Cainhurst, Forbidden
 Woods, Iosefka's Clinic, Byrgenwerth, Yahar'gul, both Lecture Building floors,
 Nightmare of Mensis, and Nightmare Frontier. Set `include_dlc: true` in the
 player YAML to add all seven DLC regions, their progression items, bosses, and
-checks; it defaults off. There are 517 base-game locations and 668 with DLC enabled.
+checks; it defaults off. There are 501 base-game locations and 652 with DLC enabled.
 The `goal` YAML option follows Bloodborne's three
 endings: `submit_to_gehrman` completes after Mergo's Wet Nurse,
 `refuse_gehrman` requires Gehrman, and the default `moon_presence` requires

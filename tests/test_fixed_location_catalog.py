@@ -22,6 +22,27 @@ def rows(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle, delimiter="\t"))
 
 
+# Hunter's Nightmare pairs a numbered retail corpse with a "TGS" corpse at the
+# same MSB coordinates in nine places. They are not the NG-cycle replacement
+# class that review finding W5 removed -- their event names carry no
+# replacement suffix and their awards differ -- so removing them would be a
+# guess, not a fix. They are listed here so the collision test stays a real
+# guard: a new pair has to be added deliberately, with a reason, rather than
+# slipping in silently. Whether the TGS lots ever fire in a retail first cycle
+# is an open research question; see review finding W5.
+KNOWN_SHARED_CORPSES = frozenset({
+    frozenset({"fixed_hunters_nightmare_lot_3400420", "fixed_hunters_nightmare_lot_3401130"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400430", "fixed_hunters_nightmare_lot_3401010"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400440", "fixed_hunters_nightmare_lot_3401020"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400450", "fixed_hunters_nightmare_lot_3401080"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400460", "fixed_hunters_nightmare_lot_3401100"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400470", "fixed_hunters_nightmare_lot_3401110"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400480", "fixed_hunters_nightmare_lot_3401060"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400490", "fixed_hunters_nightmare_lot_3401070"}),
+    frozenset({"fixed_hunters_nightmare_lot_3400500", "fixed_hunters_nightmare_lot_3401050"}),
+})
+
+
 class FixedLocationCatalogTests(unittest.TestCase):
     def test_fixed_caryll_runes_are_named_seeded_and_suppressed(self):
         from tools.build_fixed_location_slice import VANILLA_ONLY_CARYLL_RUNE_PARAMS as BUILDER_RUNES
@@ -171,6 +192,65 @@ class FixedLocationCatalogTests(unittest.TestCase):
     def test_selected_location_names_and_flags_are_unique(self):
         self.assertEqual(len(FIXED_LOCATIONS), len({row.name for row in FIXED_LOCATIONS}))
         self.assertEqual(len(FIXED_LOCATIONS), len({row.event_flag for row in FIXED_LOCATIONS}))
+
+    def test_no_two_seeded_fixed_locations_share_one_corpse(self):
+        """Review finding W5: 16 NG+ replacement lots were seeded checks.
+
+        Each of them sat at the exact MSB coordinates of a first-cycle row that
+        the slice also seeds. In a first playthrough the corpse fires the
+        first-cycle lot, so the replacement flag never sets and its check can
+        never be sent -- and Archipelago is free to put another player's
+        progression item there, because the row carries no access rule. A
+        seeded corpse must therefore back exactly one seeded check.
+        """
+        from worlds.bloodborne.data import SLICE_LOCATION_KEYS
+
+        catalog = rows(ROOT / "research" / "catalog" / "fixed_location_catalog.tsv")
+        place_by_flag = {
+            int(row["location_flag"]): (row["canonical_map"], row["coordinates"])
+            for row in catalog
+        }
+        seeded_by_place: dict[tuple[str, str], list[str]] = {}
+        for location in FIXED_LOCATIONS:
+            if location.key not in SLICE_LOCATION_KEYS:
+                continue
+            place = place_by_flag.get(location.event_flag)
+            if place is None or not place[1]:
+                continue
+            seeded_by_place.setdefault(place, []).append(location.key)
+        self.assertGreater(len(seeded_by_place), 400)
+        for place, keys in sorted(seeded_by_place.items()):
+            if frozenset(keys) in KNOWN_SHARED_CORPSES:
+                continue
+            self.assertEqual(
+                1, len(keys),
+                f"{place[0]} {place[1]} backs more than one seeded check: {sorted(keys)}")
+
+    def test_every_catalog_replacement_lot_is_kept_out_of_the_seeded_manifest(self):
+        """Review finding W5: the collapse rule must cover all 26 replacement rows.
+
+        The catalog marks an NG-cycle replacement lot by suffixing its event
+        name with the Japanese for "for replacement". The builder's
+        REPLACEMENT_FLAGS table listed 9 of the 26; the rest are excluded by
+        data.SLICE_EXCLUDED_FIXED_KEYS. Either route is fine, but no such row
+        may end up as a seeded check.
+        """
+        from worlds.bloodborne.data import SLICE_LOCATION_KEYS
+
+        catalog = rows(ROOT / "research" / "catalog" / "fixed_location_catalog.tsv")
+        replacements = [
+            int(row["location_flag"]) for row in catalog
+            if "差し替え" in (row["event_names"] or "")
+        ]
+        self.assertEqual(26, len(replacements))
+        seeded_flags = {
+            location.event_flag for location in FIXED_LOCATIONS
+            if location.key in SLICE_LOCATION_KEYS
+        }
+        for flag in sorted(replacements):
+            self.assertNotIn(
+                flag, seeded_flags,
+                f"replacement lot {flag} is seeded as an ordinary check")
 
     def test_suppression_claim_has_a_seed_owned_install_witness_contract(self):
         slot_data = build_runtime_slot_data()

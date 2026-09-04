@@ -542,6 +542,27 @@ SLICE_ITEM_KEYS = frozenset({
     "sword_hunter_badge",
     "old_hunter_badge",
     "gold_pendant",
+    # Review finding W4: the slice pool used to stop here, but _active_locations()
+    # seeds the whole slice manifest whatever full_item_pool says, and
+    # _SLICE_ENTRANCE_NAMES still seeds the entrances these eight items gate
+    # (Amygdala's grasp, Upper Cathedral door, Cainhurst carriage, Amygdala's
+    # DLC grasp, Surgery altar, Astral Clocktower door, Astral clock, and
+    # boss_laurence's own rule). Without them a `full_item_pool: false` seed
+    # left Castle Cainhurst, Lecture Building 1F, Nightmare Frontier and Upper
+    # Cathedral Ward permanently sealed: 105 of 516 checks unreachable, which
+    # Archipelago's default `accessibility: full` turns into a FillError and
+    # `accessibility: minimal` turns into 105 checks nobody can ever send.
+    # The four DLC-side keys are members of DLC_ITEM_KEYS, so _pool_item_keys
+    # strips them again for an `include_dlc: false` seed, which is also the
+    # seed that drops the regions they gate.
+    "tonsil_stone",
+    "upper_cathedral_key",
+    "cainhurst_summons",
+    "eye_of_blood_drunk_hunter",
+    "eye_pendant",
+    "astral_clocktower_key",
+    "celestial_dial",
+    "laurences_skull",
 })
 # Pool membership and global vanilla-item suppression are different contracts.
 # Repeatable consumables may remain elsewhere in the game; the Saw Spear's
@@ -691,9 +712,40 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
 # the same MSB coordinates, and it never spawns in a first playthrough, so a
 # check on flag 52410295 is unobtainable filler in every NG(1) seed. The row
 # stays in the TSV so its vanilla award remains suppressed for NG+ players.
+# Review finding W5: 2410295 was not the only row of its NG+ class. The
+# catalog marks 26 rows with the event-name suffix (差し替え用) -- "for
+# replacement" -- and every one of them sits at the exact MSB coordinates of a
+# first-cycle row whose event name is the same string without that suffix.
+# tools/build_fixed_location_slice.py drops 9 of them through REPLACEMENT_FLAGS
+# and 2410295 is excluded above, which left 16 replacement lots shipping as
+# ordinary seeded checks on a corpse that already carries a seeded first-cycle
+# check. In a first playthrough the corpse fires the first-cycle lot, so the
+# replacement flag never sets: fill could put another player's progression item
+# on fixed_forbidden_woods_lot_2700185 and nobody could ever send it. As with
+# 2410295, the rows stay in fixed_locations.tsv so their vanilla awards remain
+# suppressed for NG+ players; they are only excluded from the seeded manifest.
+_SLICE_EXCLUDED_NG_REPLACEMENT_KEYS = frozenset({
+    "fixed_central_yharnam_lot_2410295",
+    "fixed_hemwick_lot_2200385",
+    "fixed_nightmare_mensis_lot_2600305",
+    "fixed_nightmare_mensis_lot_2600395",
+    "fixed_forbidden_woods_lot_2700185",
+    "fixed_forbidden_woods_lot_2700205",
+    "fixed_forbidden_woods_lot_2700385",
+    "fixed_forbidden_woods_lot_2700545",
+    "fixed_forbidden_woods_lot_2700575",
+    "fixed_yahargul_lot_2800055",
+    "fixed_yahargul_lot_2800145",
+    "fixed_yahargul_lot_2800355",
+    "fixed_nightmare_frontier_lot_3300015",
+    "fixed_nightmare_frontier_lot_3300055",
+    "fixed_nightmare_frontier_lot_3300225",
+    "fixed_nightmare_frontier_lot_3300325",
+    "fixed_nightmare_frontier_lot_3300385",
+})
 SLICE_EXCLUDED_FIXED_KEYS = frozenset({
     "fixed_white_messenger_ribbon",
-    "fixed_central_yharnam_lot_2410295",
+    *_SLICE_EXCLUDED_NG_REPLACEMENT_KEYS,
 })
 SLICE_LOCATION_KEYS = frozenset({
     *SLICE_SCRIPTED_LOCATION_KEYS,
