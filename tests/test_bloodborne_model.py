@@ -13,7 +13,10 @@ from worlds.bloodborne.data import (
     DLC_REGIONS,
     DLC_WEAPON_KEYS,
     GOODS_VARIETY_KEYS,
+    ONE_TIME_ENEMY_LOCATION_KEYS,
+    SLICE_ENTRANCES,
     SLICE_ITEM_KEYS,
+    SLICE_REGIONS,
     UNCANNY_ITEM_KEYS,
     UNCANNY_WEAPONS,
     MODEL,
@@ -185,18 +188,21 @@ class BloodborneModelTests(unittest.TestCase):
         # Bold Hunter's Mark corpse, lot 2410295 (#220).
         # 2026-09-03: the 22 fixed Caryll rune rows joined the seeded pool
         # once rune delivery was confirmed live (#214).
-        self.assertEqual(668, len(NETWORK_LOCATIONS))
+        # Review finding W5: 16 NG+ "replacement" lots left the seeded manifest
+        # (668 -> 652). Each shared a corpse with a first-cycle row that is
+        # still seeded, so no corpse lost its check.
+        self.assertEqual(652, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
             {"Central Yharnam": 47, "Cathedral Ward": 64,
              "Old Yharnam": 56, "Grand Cathedral": 2,
-             "Hemwick Charnel Lane": 34, "Castle Cainhurst": 29,
-             "Forbidden Woods": 81, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
+             "Hemwick Charnel Lane": 33, "Castle Cainhurst": 29,
+             "Forbidden Woods": 76, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
              "Moonside Lake": 1,
-            "Yahar'gul": 51, "Lecture Building 1F": 9,
-             "Lecture Building 2F": 8, "Nightmare Frontier": 46,
-             "Nightmare of Mensis": 57, "Hunter's Dream": 3,
+            "Yahar'gul": 48, "Lecture Building 1F": 9,
+             "Lecture Building 2F": 8, "Nightmare Frontier": 41,
+             "Nightmare of Mensis": 55, "Hunter's Dream": 3,
              "Hunter's Nightmare": 68, "Underground Corpse Pile": 1,
              "Research Hall": 37, "Lumenwood Garden": 1,
              "Astral Clocktower": 1, "Fishing Hamlet": 41,
@@ -284,10 +290,10 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 24)
+        self.assertEqual(counts["Blood Vial"], 21)
         self.assertEqual(counts["Quicksilver Bullets x3"], 6)
-        self.assertEqual(counts["Blood Stone Shards x2"], 32)
-        self.assertEqual(counts["Twin Blood Stone Shards x2"], 32)
+        self.assertEqual(counts["Blood Stone Shards x2"], 31)
+        self.assertEqual(counts["Twin Blood Stone Shards x2"], 31)
         self.assertEqual(counts["Blood Stone Chunk"], 21)
         self.assertEqual(counts["Bold Hunter's Mark x2"], 21)
         for name in ("Pebbles x3", "Molotov Cocktails x2", "Throwing Knife x4",
@@ -295,21 +301,23 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 21, name)
         self.assertEqual(counts["Bolt Paper x2"], 21)
         self.assertEqual(counts["Bone Marrow Ash x3"], 21)
-        for name in ("Poison Knife x3", "Antidote x2", "Sedatives x2",
-                     "Blue Elixir", "Beast Blood Pellet", "Lead Elixir",
-                     "Oil Urn x2", "Numbing Mist x2",
-                     ):
+        # Review finding W5 removed 16 seeded locations, so the weighted
+        # remainder now falls to a different set of these names. The split is
+        # restated per name rather than as one shared number.
+        for name in ("Antidote x2", "Sedatives x2"):
             self.assertEqual(counts[name], 11, name)
-        for name in ("Pungent Blood Cocktail x2", "Shaman Bone Blade",
+        for name in ("Poison Knife x3", "Blue Elixir", "Beast Blood Pellet",
+                     "Lead Elixir", "Oil Urn x2", "Numbing Mist x2",
+                     "Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
-            self.assertEqual(counts[name], 11, name)
-        self.assertEqual(counts["Great One's Wisdom"], 11)
+            self.assertEqual(counts[name], 10, name)
+        self.assertEqual(counts["Great One's Wisdom"], 10)
         self.assertEqual(counts["Coldblood Dew (1)"], 0)
         self.assertEqual(counts["Coldblood Dew (2)"], 0)
         self.assertEqual(counts["Coldblood Dew (3)"], 0)
         self.assertEqual(counts["Thick Coldblood (4)"], 0)
         self.assertEqual(counts["Thick Coldblood (5)"], 0)
-        self.assertEqual(counts["Thick Coldblood (6)"], 11)
+        self.assertEqual(counts["Thick Coldblood (6)"], 10)
         self.assertEqual(counts["Frenzied Coldblood (8)"], 10)
         self.assertEqual(counts["Kin Coldblood (11)"], 10)
         self.assertEqual(counts["Blood Rock"], 1)
@@ -321,8 +329,11 @@ class BloodborneModelTests(unittest.TestCase):
         Slice 3 added the Hunter Chief Emblem to this pool because the plaza
         gate is emblem-only, and the Oedon Tomb Key joins it for the same
         reason: with the key shuffled, a pool without it cannot leave Central
-        Yharnam. 364 - 4 one-off items = 360 filler slots over the slice's own
-        five filler names.
+        Yharnam. Review finding W4 added the eight region gates (tonsil stone,
+        Upper Cathedral key, Cainhurst summons, the four DLC keys and
+        Laurence's skull) so that turning the option off no longer seals the
+        regions the manifest still seeds. 652 - 21 one-off items = 631 filler
+        slots over the slice's own five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
         self.assertEqual(sum(counts.values()), len(NETWORK_LOCATIONS))
@@ -336,15 +347,17 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
-        # play experience. 484 - 4 one-each = 480 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 233)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 150)
-        self.assertEqual(counts["Blood Stone Shards x2"], 116)
-        self.assertEqual(counts["Pebbles x3"], 78)
-        self.assertEqual(counts["Molotov Cocktails x2"], 78)
+        # play experience. 652 - 21 one-each = 631 slots over five weighted names.
+        self.assertEqual(counts["Blood Vial"], 224)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 145)
+        self.assertEqual(counts["Blood Stone Shards x2"], 112)
+        self.assertEqual(counts["Pebbles x3"], 75)
+        self.assertEqual(counts["Molotov Cocktails x2"], 75)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
-        self.assertEqual(len(slot_data["runtime_items"]), 18)  # seventeen slice items + Blood Vial
+        # Seventeen original slice items, the eight region gates added by review
+        # finding W4, and Blood Vial.
+        self.assertEqual(len(slot_data["runtime_items"]), 26)
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
@@ -1351,6 +1364,89 @@ class WeightedFillerTests(unittest.TestCase):
                 self.assertIn(item.name, smaller, item.name)
         finally:
             world.NETWORK_LOCATIONS = original
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class SlicePoolReachabilityTests(unittest.TestCase):
+    """Review finding W4: the reduced pool must still open every seeded region.
+
+    `_pool_item_keys` narrows the pool to SLICE_ITEM_KEYS when `full_item_pool`
+    is off, but `_active_locations()` seeds the whole slice manifest either
+    way, and `SLICE_ENTRANCES` still seeds the entrances the missing keys gate.
+    Before the fix a `full_item_pool: false` seed left Castle Cainhurst,
+    Lecture Building 1F, Nightmare Frontier and Upper Cathedral Ward sealed:
+    105 of 516 checks unreachable. Archipelago's default `accessibility: full`
+    turns that into a FillError, and `accessibility: minimal` turns it into a
+    seed whose 105 checks nobody can ever send.
+    """
+
+    @staticmethod
+    def _sweep(pool: frozenset[str], include_dlc: bool):
+        """Fixpoint over seeded entrances and event-bearing seeded locations."""
+        locations = [
+            location for location in ALL_NETWORK_LOCATIONS
+            if include_dlc or location.key not in DLC_LOCATION_KEYS
+            if location.key not in ALTERNATE_GAOL_LOCATION_KEYS
+            if location.key not in ONE_TIME_ENEMY_LOCATION_KEYS
+        ]
+        entrances = [
+            entrance for entrance in SLICE_ENTRANCES
+            if include_dlc or entrance.name not in DLC_ENTRANCE_NAMES
+        ]
+        inventory = set(pool)
+        reached = {SLICE_REGIONS[0]}
+        growing = True
+        while growing:
+            growing = False
+            for entrance in entrances:
+                if (entrance.source in reached and entrance.target not in reached
+                        and entrance.rule.allows(inventory)):
+                    reached.add(entrance.target)
+                    growing = True
+            for location in locations:
+                if (location.locked_item and location.locked_item not in inventory
+                        and location.region in reached
+                        and location.rule.allows(inventory)):
+                    inventory.add(location.locked_item)
+                    growing = True
+        return locations, reached, inventory
+
+    def _assert_every_seeded_location_is_reachable(self, include_dlc: bool):
+        pool = SLICE_ITEM_KEYS if include_dlc else SLICE_ITEM_KEYS - DLC_ITEM_KEYS
+        locations, reached, inventory = self._sweep(pool, include_dlc)
+        self.assertGreater(len(locations), 400)
+        for location in locations:
+            with self.subTest(location=location.key, include_dlc=include_dlc):
+                self.assertIn(
+                    location.region, reached,
+                    f"{location.key}: region {location.region!r} is sealed with the "
+                    f"slice pool, so this check can never be sent")
+                self.assertTrue(
+                    location.rule.allows(inventory),
+                    f"{location.key}: its own rule {location.rule.any_of} is never "
+                    f"satisfiable with the slice pool")
+
+    def test_the_slice_pool_reaches_every_seeded_location_without_the_dlc(self):
+        self._assert_every_seeded_location_is_reachable(include_dlc=False)
+
+    def test_the_slice_pool_reaches_every_seeded_location_with_the_dlc(self):
+        self._assert_every_seeded_location_is_reachable(include_dlc=True)
+
+    def test_the_slice_pool_carries_every_gate_the_seeded_entrances_name(self):
+        # The structural half: a new gated entrance whose key the slice pool
+        # does not carry is a diff here rather than a silent FillError.
+        event_keys = {item.key for item in MODEL.items if item.kind is ItemKind.EVENT}
+        for entrance in SLICE_ENTRANCES:
+            for clause in entrance.rule.any_of:
+                for key in sorted(clause - event_keys):
+                    with self.subTest(entrance=entrance.name, item=key):
+                        self.assertIn(
+                            key, SLICE_ITEM_KEYS,
+                            f"entrance {entrance.name!r} needs {key!r}, which the "
+                            f"slice pool does not place")
 
 
 if __name__ == "__main__":

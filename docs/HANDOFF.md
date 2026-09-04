@@ -87,10 +87,12 @@ Cathedral Key, Orphanage Key, Eye of a Blood-drunk Hunter, Eye Pendant,
 Astral Clocktower Key, Celestial Dial, Laurence's Skull) — then cycles filler
 over the remaining 41 of the 53 locations. The playable area is unchanged;
 the progression keys are forward unlocks whose vanilla homes are outside the
-slice. With the option off, the pool is the original slice composition: Saw
-Spear and Augur once each, eleven Vials, and ten each of Quicksilver
-Bullets x3, Pebbles x3, Molotov Cocktails x2, and Blood Stone Shards x2. The
-checked-in tests pin both compositions.
+slice. With the option off, the pool is the original slice composition plus
+every key that gates a seeded region: Saw Spear and Augur once each, the ten
+progression keys, then filler over the rest. The keys are not optional in
+either mode -- without them the seeded regions behind them are sealed and
+generation fails the accessibility check (review finding W4). The checked-in
+tests pin both compositions.
 
 **Uncanny Weapon Variants** (`uncanny_weapons`, off by default) is orthogonal to
 both: with it on, each weapon the pool places is joined by its Uncanny variant,

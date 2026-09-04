@@ -592,10 +592,12 @@ else:
         default = 0
 
     class FullItemPool(Toggle):
-        """Place every validated item in the Yharnam slice, not only the six slice items.
+        """Place every validated item in the Yharnam slice, not only the slice items.
 
-        The playable area is unchanged; progression keys whose vanilla homes
-        are outside the slice become forward unlocks found in Yharnam."""
+        The playable area is unchanged either way: the reduced pool still
+        carries every key that gates a seeded region, so every seeded check
+        stays reachable. Turning this off only shrinks the variety of what
+        you find, not where you can go."""
         display_name = "Full Item Pool"
         default = 1
 

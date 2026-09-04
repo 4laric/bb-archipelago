@@ -322,9 +322,10 @@ class RealCorpusTests(unittest.TestCase):
         # The base-game and DLC fixed pickups plus published treasures carry
         # lots, now including the 58 category-8 rune and gem rows; bosses and
         # the skull interaction do not, and the unseeded-but-suppressed rows
-        # (clinic pair, post-Rom ribbon, and the NG+-only lot 2410295 from
-        # #220) are not network locations, so they are not iterated here.
-        self.assertEqual(checked, 624)
+        # (clinic pair, post-Rom ribbon, and the 17 NG+-only replacement lots
+        # -- 2410295 from #220 plus the 16 from review finding W5) are not
+        # network locations, so they are not iterated here.
+        self.assertEqual(checked, 608)
 
     def test_every_category_eight_check_is_suppressed_and_planned(self):
         from worlds.bloodborne import NETWORK_LOCATIONS

@@ -99,6 +99,12 @@ NAMES = REPO / "worlds" / "bloodborne" / "location_names.tsv"
 # at and are selected only when the unique first-cycle reward was already
 # owned. The catalog's event name says so: each carries the same chest ordinal
 # plus 差し替え ("replacement") or the replaced chest's number.
+# This table is deliberately not the whole replacement set. Review finding W5:
+# the catalog carries 26 rows with the (差し替え用) suffix, and the other 17 are
+# handled by data.SLICE_EXCLUDED_FIXED_KEYS instead, which keeps their rows in
+# fixed_locations.tsv so their vanilla awards stay suppressed for NG+ players
+# while removing them from the seeded manifest. Do not move rows here to fix a
+# phantom check; add them to that set.
 REPLACEMENT_FLAGS = {
     52410645: 52410640,   # Item 宝箱05（差し替え用）
     52411005: 52411000,   # Item 宝箱02（差し替え用）

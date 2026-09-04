@@ -13,6 +13,23 @@
   of a single compatibility rule so playtests can falsify it directly.
   Ordinary seeds are unchanged.
 
+- **Fixed: Full Item Pool off could not generate.** With the option turned off
+  the reduced pool left out the keys that gate Castle Cainhurst, Lecture
+  Building 1F, Nightmare Frontier and Upper Cathedral Ward, while the seed
+  still placed the 105 checks behind them. Generation aborted with a FillError
+  at the default accessibility, and on `accessibility: minimal` it produced a
+  seed with 105 checks nobody could ever send. The reduced pool now carries
+  every gate the seeded regions need. (review finding W4)
+
+- **Fixed: sixteen checks that could never be sent.** Sixteen New Game Plus
+  "replacement" item lots shipped as ordinary checks sitting on a corpse that
+  already had a check on it, in Hemwick, the Forbidden Woods, Yahar'gul,
+  Nightmare of Mensis and the Nightmare Frontier. On a first playthrough the
+  corpse gives the other item, so the check never fired, and in a multiworld
+  another player's progression item could land there and be lost. Those
+  sixteen are no longer checks; every corpse keeps the check it always had.
+  (review finding W5)
+
 - **Fixed: a rune-and-gem-only seed delivered nothing.** A seed whose only
   param edit was the category-8 award table got a freshly composed binder but
   was handed the bundled build manifest, which names the un-composed one. The
