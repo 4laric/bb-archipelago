@@ -172,6 +172,9 @@ class EnemizerBuild:
     map_studio: Path
     manifest: Mapping[str, Any]
     manifest_sha256: str
+    # The plan file the writer consumed; retained in the seed cache so a bad
+    # swap can be named from a player's report (bb-archipelago#321).
+    plan_path: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -546,6 +549,8 @@ class EnemizerToolchain:
             str(self.repo_root / "research" / "enemizer" / "enemy_tags.json"),
             "--slot-policy",
             str(self.repo_root / "research" / "enemizer" / "slot_policy.json"),
+            "--facts",
+            str(self.repo_root / "research" / "enemizer" / "archetype_facts.json"),
             "--output",
             str(plan_path),
         ]
@@ -604,7 +609,7 @@ class EnemizerToolchain:
         if other:
             raise ValidationError("enemizer writer produced unexpected files: " + ", ".join(other))
         progress(f"Verified {len(outputs)} randomized map file(s).")
-        return EnemizerBuild(map_output, plan, sha256_file(plan_path))
+        return EnemizerBuild(map_output, plan, sha256_file(plan_path), plan_path)
 
 
 def _request_identity(
@@ -1084,7 +1089,13 @@ class LauncherWorkflow:
                     map_output = enemizer.map_studio
                 progress("Composing and verifying the seed cache...")
                 result = cache.build(
-                    identity, composed_binder, map_output, cathedral_output, common_output)
+                    identity, composed_binder, map_output, cathedral_output, common_output,
+                    enemizer_plan=None if enemizer is None else enemizer.plan_path,
+                    enemizer_options=None if enemizer is None else {
+                        "allow_tier_mixing": options.allow_tier_mixing,
+                        "preserve_locomotion": options.preserve_locomotion,
+                    },
+                )
                 build = result
                 reused = result.reused
                 completed = True

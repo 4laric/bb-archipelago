@@ -114,14 +114,53 @@ def make_build(
     binder.write_bytes(content)
     maps = None
     seed = None
+    plan = None
     if with_maps:
         maps = inputs / f"{name}-maps"
         maps.mkdir()
         (maps / "m24_01_00_00.msb.dcx").write_bytes(b"map-" + content)
         seed = f"{name}:enemizer"
+        plan = inputs / f"{name}-plan.json"
+        plan.write_text(json.dumps(sample_plan(seed)), encoding="utf-8")
     cache = SeedCache(root / "cache")
-    result = cache.build(identity(name, content, enemizer_seed=seed), binder, maps)
+    result = cache.build(
+        identity(name, content, enemizer_seed=seed), binder, maps, enemizer_plan=plan
+    )
     return cache, result.path
+
+
+def sample_plan(seed: str) -> dict:
+    """A minimal bb-enemizer-plan-v2 with one enriched swap (bb-archipelago#321)."""
+    return {
+        "format": "bb-enemizer-plan-v2",
+        "seed": seed,
+        "dry_run": True,
+        "options": {"allow_tier_mixing": False, "preserve_locomotion": False},
+        "stress": None,
+        "swaps": [
+            {
+                "logical_key": "m24_01_00_00:c1000_0000",
+                "destination_keys": ["m24_01_00_00:c1000_0000"],
+                "destinations": {
+                    "m24_01_00_00:c1000_0000": {
+                        "map_name": "m24_01_00_00", "entity_id": 2410100,
+                        "x": 1.0, "y": 2.0, "z": 3.0,
+                    }
+                },
+                "source": {"model_name": "c1000", "npc_param_id": 100000,
+                           "think_param_id": 100000, "chara_init_id": 0},
+                "target": {"model_name": "c4060", "npc_param_id": 406000,
+                           "think_param_id": 406000, "chara_init_id": 0},
+                "source_tag": {"size_class": "M", "tier": "common",
+                               "locomotion": "move_type_3", "scaling_hp": 1.0},
+                "target_tag": {"size_class": "XL", "tier": "elite",
+                               "locomotion": "move_type_3", "scaling_hp": 1.0},
+                "source_facts": {"name": "huntsman", "echoes": 120, "hp": 100},
+                "target_facts": {"name": "fishman large", "echoes": 4514, "hp": 400},
+                "warnings": ["size-up at limit: +1"],
+            }
+        ],
+    }
 
 
 def snapshot_tree(root: Path) -> dict[str, str]:
@@ -1199,3 +1238,60 @@ class OverlayOwnershipCaseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EnemizerPlanRetentionTests(unittest.TestCase):
+    """bb-archipelago#321: the seed cache keeps the plan that built its maps."""
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def test_plan_is_retained_recorded_and_kept_out_of_the_overlay_file_set(self):
+        cache, build_path = make_build(self.root, "seed", b"content", with_maps=True)
+        result = cache.verify(build_path)
+        record = result.manifest["enemizer"]["plan"]
+        retained = build_path / core.ENEMIZER_PLAN_NAME
+        self.assertTrue(retained.is_file())
+        self.assertEqual(record["sha256"], sha256_file(retained))
+        self.assertEqual(record["swap_count"], 1)
+        self.assertEqual(record["options"], {"allow_tier_mixing": False, "preserve_locomotion": False})
+        self.assertNotIn(core.ENEMIZER_PLAN_NAME, {r["path"] for r in result.manifest["files"]})
+
+    def test_tampered_or_unrecorded_plan_refuses_verification(self):
+        cache, build_path = make_build(self.root, "seed", b"content", with_maps=True)
+        retained = build_path / core.ENEMIZER_PLAN_NAME
+        retained.write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "plan hash changed"):
+            cache.verify(build_path)
+        retained.unlink()
+        with self.assertRaisesRegex(ValidationError, "missing its retained enemizer plan"):
+            cache.verify(build_path)
+        # A build made before retention (no record, no file) still verifies.
+        manifest_path = build_path / core.SEED_MANIFEST_NAME
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["enemizer"]["plan"] = None
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertIsNone(cache.verify(build_path).manifest["enemizer"]["plan"])
+        retained.write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "manifest does not record"):
+            cache.verify(build_path)
+
+    def test_maps_without_their_plan_are_refused(self):
+        inputs = self.root / "inputs"
+        inputs.mkdir()
+        binder = inputs / "binder.dcx"
+        binder.write_bytes(b"binder")
+        maps = inputs / "maps"
+        maps.mkdir()
+        (maps / "m24_01_00_00.msb.dcx").write_bytes(b"map")
+        cache = SeedCache(self.root / "cache")
+        with self.assertRaisesRegex(ValidationError, "require the enemizer plan"):
+            cache.build(identity("seed", b"binder", enemizer_seed="x"), binder, maps)
+        plan = inputs / "plan.json"
+        plan.write_text(json.dumps(sample_plan("x")), encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "without MapStudio outputs"):
+            cache.build(identity("seed", b"binder"), binder, enemizer_plan=plan)

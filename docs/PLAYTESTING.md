@@ -277,6 +277,15 @@ short version for the beta:
 - A delivered item can land in the storage box; look there first.
 - Enemy randomization is on by default. If you want vanilla enemies for a
   cleaner comparison run, untick **Randomize Enemies** before launching.
+- **If an enemy is stuck, invisible, keeps dying off-screen, or crashes a
+  map load**, press **Report a Bad Enemy** in the launcher (Recovery
+  actions), pick the area, type the echo figure if you saw one, and paste
+  the file it opens into a GitHub issue. It names the exact swap for us.
+- **Want to break the enemizer on purpose?** Open Advanced enemy options and
+  set the Enemy seed to a stress profile such as `stress:size-up:m24_01`,
+  `stress:echoes:m24_01`, or `stress:family=c4060:m24_01`. Central Yharnam
+  then gets the harshest allowed swap in every slot and every other area
+  stays vanilla. Report what breaks the same way.
 - DeathLink is receive-only; chat and other multiworld sync beyond items are
   not in this build.
 

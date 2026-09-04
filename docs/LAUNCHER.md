@@ -187,6 +187,13 @@ slot across three gameplay-ready polls, and durably binds that character to
 the AP seed and slot before checks or delivery can arm. An existing plan is
 never overwritten without `--force`.
 
+The same report is available without the desktop UI:
+
+```powershell
+python -m bb_launcher enemy-report --settings launcher-settings.json `
+  --area m24_01 --echoes 4700 --note "kept dying off-screen"
+```
+
 ## Desktop Randomize & Launch
 
 Open the player-facing surface from a checkout with:
@@ -324,6 +331,12 @@ core operations as the CLI:
   again; without it, a matching cache is reused.
 - **Open Logs & Diagnostics** opens the launcher state root (client configs,
   per-session ledgers, bridge directory).
+- **Report a Bad Enemy** asks where you were, what echo reward you saw (if
+  any), and what happened, then writes a paste-ready Markdown report from the
+  active seed's retained enemy plan under `enemy-reports/` in the state root,
+  copies it to the clipboard, and opens it (bb-archipelago#321; details in
+  `docs/ENEMIZER.md`). Builds made before the plan was retained say so and
+  ask for one **Rebuild**.
 
 Every launch, Doctor run, rebuild, and vanilla launch writes a fresh
 hash-pinned process plan automatically. It reads the slot and runtime build

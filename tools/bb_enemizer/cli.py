@@ -8,11 +8,12 @@ from .inventory import (
     apply_archetype_tag,
     classify_slot,
     inventory_summary,
+    load_facts,
     load_slot_overrides,
     load_slots,
     load_tags,
 )
-from .planner import EnemizerConfig, plan_swaps
+from .planner import EnemizerConfig, StressProfile, plan_swaps
 from .scaling import load_params, plan_scaling
 
 
@@ -29,6 +30,9 @@ def parser() -> argparse.ArgumentParser:
                         help="archetype-tag JSON (default: generated research catalog)")
     result.add_argument("--slot-policy", default="research/enemizer/slot_policy.json",
                         help="per-slot policy JSON (default: generated research catalog)")
+    result.add_argument("--facts", default="research/enemizer/archetype_facts.json",
+                        help="per-NpcParam name/echo/HP facts stamped into every swap "
+                             "for the player-facing enemy report (default: generated table)")
     result.add_argument("--output", required=True, help="manifest JSON path")
     result.add_argument("--allow-tier-mixing", action="store_true")
     result.add_argument("--preserve-locomotion", action="store_true")
@@ -38,6 +42,22 @@ def parser() -> argparse.ArgumentParser:
     )
     result.add_argument("--bundle", default="research/bb_inputs.db")
     return result
+
+
+def _stress_matched(stress: StressProfile, swap) -> bool:
+    if stress.kind == "family":
+        return swap.target.model_name == stress.argument
+    if stress.kind == "locomotion":
+        return swap.source_tag.get("locomotion") != swap.target_tag.get("locomotion")
+    if stress.kind == "size-up":
+        return any(note.startswith("size-up") for note in swap.warnings)
+    if stress.kind == "size-down":
+        return swap.source_tag.get("size_class") != swap.target_tag.get("size_class")
+    if stress.kind == "tier-up":
+        return swap.source_tag.get("tier") != swap.target_tag.get("tier")
+    if stress.kind == "echoes":
+        return swap.target_facts.get("echoes", 0) > swap.source_facts.get("echoes", 0)
+    return False
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -51,7 +71,12 @@ def main(argv: list[str] | None = None) -> int:
         # authorize it. Legacy requests still carry an `enemizer` flag; it is
         # deliberately ignored.
         args.seed = str(request["enemizer_seed"])
+    try:
+        stress = StressProfile.parse(args.seed)
+    except ValueError as exc:
+        raise SystemExit(str(exc))
     slots = load_slots(args.inventory)
+    facts = load_facts(args.facts if Path(args.facts).is_file() else None)
     tags_path = args.tags if Path(args.tags).is_file() else None
     policy_path = args.slot_policy if Path(args.slot_policy).is_file() else None
     tags = load_tags(tags_path)
@@ -67,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
         preserve_tier=not args.allow_tier_mixing,
         preserve_locomotion=args.preserve_locomotion,
     )
-    swaps, rejections = plan_swaps(slots, policies, tags, config)
+    swaps, rejections = plan_swaps(slots, policies, tags, config, facts)
     scaling, scaling_skips = [], []
     if args.normalize_scaling:
         npcs, effects = load_params(Path(args.bundle))
@@ -77,6 +102,16 @@ def main(argv: list[str] | None = None) -> int:
         "seed": args.seed,
         "dry_run": True,
         "inventory": inventory_summary(slots, policies),
+        "options": {
+            "allow_tier_mixing": bool(args.allow_tier_mixing),
+            "preserve_locomotion": bool(args.preserve_locomotion),
+        },
+        "stress": None if stress is None else {
+            **stress.json(),
+            # How many swaps actually embody the profile, so a tester can see
+            # at a glance that e.g. a family was never compatible in the focus.
+            "matched": sum(1 for swap in swaps if _stress_matched(stress, swap)),
+        },
         "swap_count": len(swaps),
         "rejection_count": len(rejections),
         "swaps": [swap.json() for swap in swaps],

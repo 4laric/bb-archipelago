@@ -84,6 +84,26 @@ class SlotPolicy:
     bans: tuple[str, ...] = ()
 
 
+def slot_placement(slot: Slot) -> dict[str, Any]:
+    """Where a physical copy stands, for the player-facing enemy report."""
+    return {
+        "map_name": slot.map_name,
+        "entity_id": slot.entity_id,
+        "x": slot.x,
+        "y": slot.y,
+        "z": slot.z,
+    }
+
+
+def tag_summary(tag: EnemyTag) -> dict[str, Any]:
+    return {
+        "size_class": tag.size_class,
+        "tier": tag.tier,
+        "locomotion": tag.locomotion,
+        "scaling_hp": tag.scaling_hp,
+    }
+
+
 @dataclass
 class Swap:
     logical_key: str
@@ -92,6 +112,13 @@ class Swap:
     source: Archetype
     target: Archetype
     warnings: list[str] = field(default_factory=list)
+    # Diagnostic context stamped at plan time so a retained plan can name a
+    # swap after the fact without the game dump (bb-archipelago#321).
+    destinations: dict[str, dict[str, Any]] = field(default_factory=dict)
+    source_tag: dict[str, Any] = field(default_factory=dict)
+    target_tag: dict[str, Any] = field(default_factory=dict)
+    source_facts: dict[str, Any] = field(default_factory=dict)
+    target_facts: dict[str, Any] = field(default_factory=dict)
 
     def json(self) -> dict[str, Any]:
         return {
@@ -100,7 +127,12 @@ class Swap:
             "destination_sources": {
                 key: asdict(value) for key, value in sorted(self.destination_sources.items())
             },
+            "destinations": {key: dict(value) for key, value in sorted(self.destinations.items())},
             "source": asdict(self.source),
             "target": asdict(self.target),
+            "source_tag": dict(self.source_tag),
+            "target_tag": dict(self.target_tag),
+            "source_facts": dict(self.source_facts),
+            "target_facts": dict(self.target_facts),
             "warnings": self.warnings,
         }

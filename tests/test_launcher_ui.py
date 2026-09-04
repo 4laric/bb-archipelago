@@ -71,7 +71,9 @@ class FakeToolchain:
             "dry_run": True,
             "swaps": [{"logical_key": "one"}, {"logical_key": "two"}],
         }
-        return EnemizerBuild(output, plan, digest(json.dumps(plan).encode()))
+        plan_path = values["output_root"] / "bb-enemizer-plan.json"
+        plan_path.write_text(json.dumps(plan), encoding="utf-8")
+        return EnemizerBuild(output, plan, digest(json.dumps(plan).encode()), plan_path)
 
     def write_seed_weapons(self, **values):
         self.starting_calls.append(values)
@@ -318,6 +320,18 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
         self.assertTrue(owner["enemizer"]["enabled"])
         self.assertIn("Planning deterministic enemy swaps", "\n".join(progress))
+        # bb-archipelago#321: the plan the writer consumed survives the build,
+        # outside the overlay, with its options and hash on the record.
+        retained = result.build_path / "bb-enemizer-plan.json"
+        self.assertTrue(retained.is_file())
+        self.assertEqual(json.loads(retained.read_text(encoding="utf-8"))["seed"], "custom-enemy-seed")
+        self.assertEqual(owner["enemizer"]["plan"]["swap_count"], 2)
+        self.assertEqual(owner["enemizer"]["plan"]["sha256"], digest(retained.read_bytes()))
+        self.assertEqual(
+            owner["enemizer"]["plan"]["options"],
+            {"allow_tier_mixing": True, "preserve_locomotion": True},
+        )
+        self.assertFalse((self.install.mods / "bb-enemizer-plan.json").exists())
         active_event = self.install.mods.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
         self.assertEqual(b"verified-cathedral-overlay", active_event.read_bytes())
         owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
@@ -1155,10 +1169,14 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         for label in (
             "Launch Vanilla", "Undo Last Build", "Rebuild", "Open Logs & Diagnostics",
-            "Check Setup",
+            "Check Setup", "Report a Bad Enemy",
         ):
             self.assertIn(f'text="{label}"', source)
         for method in ("launch_vanilla", "restore_previous", "force_rebuild"):
+            self.assertIn(method, source)
+        # bb-archipelago#321: the report runs off the UI thread, writes under
+        # the state root, and never touches the game.
+        for method in ("_start_enemy_report", "_run_enemy_report", "write_report", "load_context"):
             self.assertIn(method, source)
 
     def test_ui_contract_can_generate_the_launch_plan(self):

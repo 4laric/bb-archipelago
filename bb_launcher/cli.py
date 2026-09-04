@@ -150,6 +150,19 @@ def build_parser() -> argparse.ArgumentParser:
         "named WARN instead of a FAIL (bb-archipelago#183)",
     )
 
+    report = commands.add_parser(
+        "enemy-report",
+        help="write a paste-ready report of the active seed's enemy swaps (bb-archipelago#321)",
+    )
+    report.add_argument("--settings", required=True, help="launcher settings JSON (the UI saves one)")
+    report.add_argument("--area", help="only this map prefix, e.g. m24_01 for Central Yharnam")
+    report.add_argument(
+        "--echoes", type=int, help="Blood Echoes you saw awarded; ranks the closest enemies first"
+    )
+    report.add_argument("--note", default="", help="what you saw, in your own words")
+    report.add_argument("--player-name", help="override the AP player name the seed is resolved for")
+    report.add_argument("--output", help="write here instead of the launcher state root")
+
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
 
@@ -387,6 +400,28 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(format_report(report))
             return 0 if report.ok else 1
+        elif args.command == "enemy-report":
+            from .enemy_report import format_report as format_enemy_report
+            from .enemy_report import load_context, write_report
+
+            settings_path = Path(args.settings).expanduser().resolve()
+            raw = _json_file(settings_path, "launcher settings")
+            settings = LauncherSettings.from_dict(raw, relative_to=settings_path.parent)
+            player_name = args.player_name
+            if player_name is None and isinstance(raw.get("player_name"), str):
+                player_name = raw["player_name"].strip()
+            context = load_context(settings, player_name=player_name or "")
+            text = format_enemy_report(
+                context, area=args.area, echoes=args.echoes, note=args.note
+            )
+            if args.output:
+                destination = Path(args.output).expanduser().resolve()
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_text(text, encoding="utf-8", newline="\n")
+            else:
+                destination = write_report(settings.state_root or default_state_root(), text)
+            print(text)
+            print(f"Saved to {destination}", file=sys.stderr)
         elif args.command == "ui":
             from .ui import main as ui_main
 

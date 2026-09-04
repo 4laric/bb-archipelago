@@ -118,3 +118,70 @@ class BloodborneEnemizerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EnemizerStressProfileTests(unittest.TestCase):
+    """Pregenerated worst-case seeds that limit-test the compatibility rules."""
+
+    def make_world(self):
+        from tools.bb_enemizer.model import EnemyTag
+        slots = [
+            slot("m24_01_00_00", "c1000_0000", 1000),
+            slot("m24_01_00_00", "c1000_0001", 1000),
+            slot("m22_00_00_00", "c2000_0000", 2000, "c2000"),
+            slot("m23_00_00_00", "c3000_0000", 3000, "c3000"),
+            slot("m23_00_00_00", "c4000_0000", 4000, "c4000"),
+        ]
+        tags = {
+            "c1000:1000:1000:0": EnemyTag(size_class="M", locomotion="move_type_3"),
+            "c2000:2000:2000:0": EnemyTag(size_class="M", locomotion="move_type_3"),
+            "c3000:3000:3000:0": EnemyTag(size_class="L", locomotion="move_type_4"),
+            "c4000:4000:4000:0": EnemyTag(size_class="S", locomotion="move_type_3"),
+        }
+        policies = {
+            s.key: apply_archetype_tag(SlotPolicy(True, "test"), tags[s.archetype.key])
+            for s in slots
+        }
+        facts = {1000: {"echoes": 10}, 2000: {"echoes": 50}, 3000: {"echoes": 900}, 4000: {"echoes": 5}}
+        return slots, policies, tags, facts
+
+    def test_parse_accepts_the_documented_grammar_and_nothing_else(self):
+        from tools.bb_enemizer.planner import StressProfile
+        self.assertIsNone(StressProfile.parse("ordinary-seed"))
+        profile = StressProfile.parse("stress:family=c4060:m24_01")
+        self.assertEqual(("family", "c4060", "m24_01"), (profile.kind, profile.argument, profile.focus))
+        self.assertEqual("", StressProfile.parse("stress:echoes").focus)
+        for bad in ("stress:", "stress:bogus", "stress:size-up=3", "stress:family", "stress:echoes:yharnam",
+                    "stress:echoes:m24_01:extra"):
+            with self.assertRaises(ValueError, msg=bad):
+                StressProfile.parse(bad)
+
+    def test_focus_keeps_every_other_map_vanilla(self):
+        slots, policies, tags, facts = self.make_world()
+        swaps, rejected = plan_swaps(slots, policies, tags, EnemizerConfig("stress:size-up:m24_01"), facts)
+        self.assertEqual({"m24_01_00_00:c1000_0000", "m24_01_00_00:c1000_0001"}, {s.logical_key for s in swaps})
+        self.assertIn("outside stress focus m24_01", {r["reason"] for r in rejected})
+
+    def test_profiles_pick_the_harshest_compatible_family(self):
+        slots, policies, tags, facts = self.make_world()
+        by_kind = {}
+        for kind in ("size-up", "size-down", "locomotion", "echoes", "family=c2000"):
+            swaps, _ = plan_swaps(slots, policies, tags, EnemizerConfig(f"stress:{kind}:m24_01"), facts)
+            by_kind[kind] = {s.target.model_name for s in swaps}
+        self.assertEqual({"c3000"}, by_kind["size-up"])       # M -> L is the only +1
+        self.assertEqual({"c4000"}, by_kind["size-down"])     # M -> S
+        self.assertEqual({"c3000"}, by_kind["locomotion"])    # only move_type_4 differs
+        self.assertEqual({"c3000"}, by_kind["echoes"])        # 900 echoes
+        self.assertEqual({"c2000"}, by_kind["family=c2000"])
+
+    def test_ordinary_seeds_are_untouched_and_carry_diagnostics(self):
+        slots, policies, tags, facts = self.make_world()
+        plain, _ = plan_swaps(slots, policies, tags, EnemizerConfig("12345"), facts)
+        again, _ = plan_swaps(list(reversed(slots)), policies, tags, EnemizerConfig("12345"), facts)
+        self.assertEqual([s.json() for s in plain], [s.json() for s in again])
+        record = plain[0].json()
+        key = record["destination_keys"][0]
+        self.assertEqual(key.split(":")[0], record["destinations"][key]["map_name"])
+        self.assertIn("x", record["destinations"][key])
+        self.assertEqual("M", record["source_tag"]["size_class"])
+        self.assertIn("echoes", record["target_facts"])

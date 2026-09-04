@@ -53,6 +53,16 @@ def load_tags(path: str | Path | None) -> dict[str, EnemyTag]:
     return {key: EnemyTag.from_json(value) for key, value in raw.items()}
 
 
+def load_facts(path: str | Path | None) -> dict[int, dict]:
+    """NpcParam id -> designer name / echoes / HP (tools/build_enemizer_facts.py)."""
+    if path is None:
+        return {}
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(raw, dict):
+        raise ValueError("archetype facts file must be a JSON object")
+    return {int(key): dict(value) for key, value in raw.items()}
+
+
 def load_slot_overrides(path: str | Path | None) -> dict[str, dict]:
     if path is None:
         return {}
