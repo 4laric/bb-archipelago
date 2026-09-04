@@ -16,6 +16,22 @@ class FullAttireCatalogTests(unittest.TestCase):
             < {piece.protector_id for piece in ATTIRE_CATALOG}
         )
 
+    def test_phantom_rows_keep_their_id_but_never_enter_a_pool(self):
+        from worlds.bloodborne import FULL_POOL_ITEM_KEYS, ITEM_ID_BY_KEY
+        from worlds.bloodborne.attire import PHANTOM_ATTIRE_ITEM_KEYS, PHANTOM_PROTECTOR_IDS
+        from worlds.bloodborne.data import ATTIRE_ITEM_KEYS, DLC_ATTIRE_ITEM_KEYS
+
+        # 292000 has no EquipParamProtector row in CUSA03173 01.09; the White
+        # Church set wears the black Surgical Long Gloves (112000).
+        self.assertEqual({292000}, PHANTOM_PROTECTOR_IDS)
+        self.assertEqual({"attire_white_church_arms"}, PHANTOM_ATTIRE_ITEM_KEYS)
+        for key in PHANTOM_ATTIRE_ITEM_KEYS:
+            self.assertIn(key, ITEM_ID_BY_KEY)  # the network id stays assigned and stable
+            self.assertNotIn(key, ATTIRE_ITEM_KEYS)
+            self.assertNotIn(key, DLC_ATTIRE_ITEM_KEYS)
+            self.assertNotIn(key, FULL_POOL_ITEM_KEYS)
+        self.assertEqual(126, len(ATTIRE_ITEM_KEYS))
+
     def test_known_non_equipment_and_cut_rows_are_excluded(self):
         ids = {piece.protector_id for piece in ATTIRE_CATALOG}
         # 192000 is Micolash's hidden arms row; 330000 was a cut wolf head in

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Fixed: a phantom attire item.** The expanded catalog listed "Surgical Long
+  Gloves (White)" (protector 292000), which does not exist in the game; the
+  White Church set wears the black gloves. It no longer enters any pool.
+  Its network id is kept so other attire ids stay stable.
+
 - **Fixed: one rune or gem delivery handed out several.** The AP award lots
   were numbered consecutively, and Bloodborne awards consecutive lot ids as
   one group (the way a vanilla armour set drops from one corpse), so a

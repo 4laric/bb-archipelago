@@ -191,8 +191,13 @@ class LauncherPackageTests(unittest.TestCase):
     def test_exported_contract_is_the_widest_pool(self):
         from tools.export_runtime_contract import widest_slot_data
         slot_data = widest_slot_data()
-        from worlds.bloodborne import ITEM_NAME_TO_ID
-        self.assertEqual(set(slot_data["runtime_items"]), {str(value) for value in ITEM_NAME_TO_ID.values()})
+        from worlds.bloodborne import ITEM_ID_BY_KEY, ITEM_NAME_TO_ID
+        from worlds.bloodborne.attire import PHANTOM_ATTIRE_ITEM_KEYS
+        phantom_ids = {str(ITEM_ID_BY_KEY[key]) for key in PHANTOM_ATTIRE_ITEM_KEYS}
+        self.assertEqual(
+            set(slot_data["runtime_items"]),
+            {str(value) for value in ITEM_NAME_TO_ID.values()} - phantom_ids,
+        )
         self.assertIn("sustain_item", slot_data)
 
     def test_the_client_is_pinned_by_commit_and_both_workflows_build_the_pin(self):

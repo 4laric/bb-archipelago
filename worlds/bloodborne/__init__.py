@@ -10,6 +10,7 @@ from .data import (
     ALTERNATE_GAOL_REGIONS,
     ATTIRE_ITEM_KEYS,
     DLC_ATTIRE_ITEM_KEYS,
+    PHANTOM_ATTIRE_ITEM_KEYS,
     DLC_ENTRANCE_NAMES,
     DLC_ITEM_KEYS,
     DLC_LOCATION_KEYS,
@@ -64,6 +65,7 @@ FULL_POOL_ITEM_KEYS = frozenset(
     if item.key not in UNCANNY_ITEM_KEYS
     and item.key not in STARTING_TOOL_KEYS
     and item.key not in ATTIRE_ITEM_KEYS
+    and item.key not in PHANTOM_ATTIRE_ITEM_KEYS
 )
 POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)

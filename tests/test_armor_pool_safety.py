@@ -30,8 +30,9 @@ class ArmorPoolSafetyTests(unittest.TestCase):
             "arms": "attire_hands",
             "legs": "attire_legs",
         }
+        from worlds.bloodborne.attire import PHANTOM_ATTIRE_ITEM_KEYS
         self.assertEqual(
-            {piece.item_key for piece in ATTIRE_CATALOG},
+            {piece.item_key for piece in ATTIRE_CATALOG} - PHANTOM_ATTIRE_ITEM_KEYS,
             ATTIRE_ITEM_KEYS,
         )
         for piece in ATTIRE_CATALOG:
