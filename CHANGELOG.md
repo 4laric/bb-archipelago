@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Fixed: one rune or gem delivery handed out several.** The AP award lots
+  were numbered consecutively, and Bloodborne awards consecutive lot ids as
+  one group (the way a vanilla armour set drops from one corpse), so a
+  single delivery could give five runes and gems. Award lots now step by
+  ten like every vanilla lot. Seeds generated before this carry the old
+  numbering and need regenerating.
 - **Randomized starting gifts are always visibly randomized.** A seed could
   draw exactly the vanilla Hunter Pistol and Blunderbuss (one seed did), which
   looked like the option had turned itself off. A hand now never reproduces
