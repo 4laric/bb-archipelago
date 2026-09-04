@@ -720,12 +720,27 @@ DLC_ENTRANCE_NAMES = frozenset({
     "Research Hall summit", "Astral Clocktower door", "Astral clock",
     "Nightmare Grand Cathedral",
 })
+# review W13: the hand-maintained literal below was never extended when the
+# category-8 award items were generated from FIXED_LOCATIONS
+# (category8_awards.py), so eleven Research Hall and Fishing Hamlet blood gems
+# survived `base -= DLC_ITEM_KEYS - DLC_WEAPON_KEYS` and shipped in
+# `include_dlc: false` seeds -- placed on base-game checks and emitted in the
+# `category8_awards` slot-data table, building DLC GemGenParam award lots for a
+# seed that asked to exclude the DLC. Derive their DLC membership from the
+# region of the fixed location each award row was generated from, so any future
+# generated row is gated automatically.
+_FIXED_REGION_BY_LOT = {row.item_lot_id: row.region for row in FIXED_LOCATIONS}
+DLC_CATEGORY8_ITEM_KEYS = frozenset(
+    row.item_key for row in CATEGORY8_AWARDS
+    if _FIXED_REGION_BY_LOT.get(row.source_lot_id) in DLC_REGIONS
+)
 DLC_ITEM_KEYS = frozenset({
     "eye_of_blood_drunk_hunter", "eye_pendant", "astral_clocktower_key",
     "celestial_dial", "laurences_skull", "blacksky_eye",
     "delayed_molotov_cocktails", "delayed_rope_molotov_cocktails",
     "blood_of_adeline",
     *DLC_WEAPON_KEYS,
+    *DLC_CATEGORY8_ITEM_KEYS,
 })
 DLC_LOCATION_KEYS = frozenset(
     location.key for location in LOCATIONS
