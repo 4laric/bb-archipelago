@@ -8,6 +8,11 @@
   single delivery could give five runes and gems. Award lots now step by
   ten like every vanilla lot. Seeds generated before this carry the old
   numbering and need regenerating.
+- **Randomized starting gifts are always visibly randomized.** A seed could
+  draw exactly the vanilla Hunter Pistol and Blunderbuss (one seed did), which
+  looked like the option had turned itself off. A hand now never reproduces
+  its vanilla set, and the Dream's firearm rows draw only from firearms, not
+  the torch or the shields the expanded pool added.
 - **The client is pinned by commit.** `packaging/client-ref.txt` names the
   `from-software-archipelago-clients` commit every release and playtest
   bundle builds, the built client's version stamp is checked against it, and
