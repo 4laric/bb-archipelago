@@ -683,12 +683,24 @@ class LauncherApp:
             actions, text="Show Details", command=self._toggle_session_details
         )
         self.details_button.grid(row=0, column=5, padx=(8, 0))
+        self.report_button = ttk.Button(
+            actions, text="Report a Bad Enemy", command=self._start_enemy_report
+        )
+        self.report_button.grid(row=1, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        ttk.Label(
+            actions,
+            text="Met a stuck, invisible, or endlessly dying enemy? This writes a report "
+                 "naming every swap in that area and copies it for you to paste.",
+            style="Muted.TLabel",
+            wraplength=520,
+        ).grid(row=1, column=2, columnspan=4, sticky="w", pady=(8, 0))
         self._action_buttons = (
             self.vanilla_button,
             self.restore_button,
             self.rebuild_button,
             self.diagnostics_button,
             self.doctor_button,
+            self.report_button,
         )
         live = ttk.Frame(outer)
         live.grid(row=6, column=0, sticky="ew", pady=(8, 0))
@@ -1126,6 +1138,124 @@ class LauncherApp:
         detail = "" if outcome is None else f": {outcome}"
         self._append_log(f"{label} complete{detail}")
         self._refresh_status()
+
+    def _start_enemy_report(self) -> None:
+        """Write a paste-ready bad-enemy report from the retained plan (bb-archipelago#321)."""
+        if self._busy:
+            return
+        try:
+            settings = self._settings()
+        except LauncherError as exc:
+            self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
+            return
+        choice = self._ask_enemy_report_details()
+        if choice is None:
+            return
+        area, echoes, note = choice
+        self._set_busy(True)
+        self._append_log("Writing the enemy report from the active seed's plan...")
+        threading.Thread(
+            target=self._run_enemy_report,
+            args=(settings, area, echoes, note, self.player_name.get().strip()),
+            daemon=True,
+            name="bloodborne-enemy-report",
+        ).start()
+
+    def _ask_enemy_report_details(self) -> tuple[str | None, int | None, str] | None:
+        """A small modal: which area, the echoes seen (optional), and a note."""
+        from tkinter import ttk
+
+        from .enemy_report import MAP_AREAS
+
+        tk = self.tk
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Report a Bad Enemy")
+        dialog.transient(self.root)
+        dialog.resizable(False, False)
+        frame = ttk.Frame(dialog, padding=12)
+        frame.grid(row=0, column=0, sticky="nsew")
+        frame.columnconfigure(1, weight=1)
+        ttk.Label(frame, text="Where were you?").grid(row=0, column=0, sticky="w", pady=4)
+        labels = ["All areas"] + [f"{name} ({key})" for key, name in MAP_AREAS.items()]
+        area_var = tk.StringVar(value=labels[0])
+        ttk.Combobox(
+            frame, textvariable=area_var, values=labels, state="readonly", width=38
+        ).grid(row=0, column=1, sticky="ew", pady=4)
+        ttk.Label(frame, text="Echoes awarded (if any)").grid(row=1, column=0, sticky="w", pady=4)
+        echoes_var = tk.StringVar()
+        ttk.Entry(frame, textvariable=echoes_var, width=12).grid(row=1, column=1, sticky="w", pady=4)
+        ttk.Label(frame, text="What did you see?").grid(row=2, column=0, sticky="nw", pady=4)
+        note = tk.Text(frame, height=4, width=44, wrap="word")
+        note.grid(row=2, column=1, sticky="ew", pady=4)
+        result: dict[str, Any] = {}
+
+        def accept() -> None:
+            raw = echoes_var.get().strip().replace(",", "")
+            echoes = None
+            if raw:
+                if not raw.isdigit():
+                    self.messagebox.showerror(
+                        "Report a Bad Enemy", "Echoes must be a whole number.", parent=dialog
+                    )
+                    return
+                echoes = int(raw)
+            chosen = area_var.get()
+            area = None
+            if chosen != labels[0]:
+                area = chosen.rsplit("(", 1)[1].rstrip(")")
+            result["value"] = (area, echoes, note.get("1.0", "end").strip())
+            dialog.destroy()
+
+        buttons = ttk.Frame(frame)
+        buttons.grid(row=3, column=0, columnspan=2, sticky="e", pady=(8, 0))
+        ttk.Button(buttons, text="Cancel", command=dialog.destroy).grid(row=0, column=0, padx=(0, 8))
+        ttk.Button(buttons, text="Write Report", command=accept, style="Accent.TButton").grid(
+            row=0, column=1
+        )
+        dialog.grab_set()
+        self.root.wait_window(dialog)
+        return result.get("value")
+
+    def _run_enemy_report(
+        self,
+        settings: LauncherSettings,
+        area: str | None,
+        echoes: int | None,
+        note: str,
+        player_name: str,
+    ) -> None:
+        from .enemy_report import format_report, load_context, write_report
+
+        try:
+            context = load_context(settings, player_name=player_name)
+            text = format_report(context, area=area, echoes=echoes, note=note)
+            path = write_report(settings.state_root or default_state_root(), text)
+        except Exception as exc:
+            self.root.after(0, self._action_failed, "Report a Bad Enemy", exc)
+        else:
+            self.root.after(0, self._enemy_report_finished, path, text)
+
+    def _enemy_report_finished(self, path: Path, text: str) -> None:
+        self._set_busy(False)
+        self._append_log(f"Enemy report written: {path}")
+        try:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(text)
+            copied = " It is on your clipboard too."
+        except Exception:  # noqa: BLE001 - clipboard is a convenience, never a failure
+            copied = ""
+        startfile = getattr(os, "startfile", None)
+        if startfile is not None:
+            try:
+                startfile(path)
+            except OSError:
+                pass
+        self.messagebox.showinfo(
+            "Report a Bad Enemy",
+            f"Report saved to {path}.{copied}\n\nPaste it into a new GitHub issue or the "
+            "playtest channel and add anything else you noticed.",
+            parent=self.root,
+        )
 
     def _start_doctor(self) -> None:
         """Preflight the whole chain (bb-archipelago#103) without launching."""

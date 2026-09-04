@@ -46,6 +46,9 @@ SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
 CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
 MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
+# The enemizer plan is retained beside the seed manifest, outside the overlay
+# file set, so a bad swap can be named after the fact (bb-archipelago#321).
+ENEMIZER_PLAN_NAME = "bb-enemizer-plan.json"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
 # The one operator escape hatch over suppression-binder hash skew
 # (bb-archipelago#183).  Modeled on the delivery tool's
@@ -482,6 +485,8 @@ class SeedCache:
         map_studio: Path | str | None = None,
         cathedral_event: Path | str | None = None,
         common_event: Path | str | None = None,
+        enemizer_plan: Path | str | None = None,
+        enemizer_options: Mapping[str, Any] | None = None,
     ) -> BuildResult:
         key = identity.cache_key
         destination = self.path_for(key)
@@ -521,6 +526,19 @@ class SeedCache:
             raise ValidationError("enemizer_seed is set but no MapStudio outputs were supplied")
         if maps and identity.enemizer_seed is None:
             raise ValidationError("MapStudio outputs require an enemizer_seed in the cache identity")
+        plan_source: Path | None = None
+        plan_document: dict[str, Any] | None = None
+        if enemizer_plan is not None:
+            if not maps:
+                raise ValidationError("an enemizer plan was supplied without MapStudio outputs")
+            plan_source = Path(enemizer_plan).expanduser().resolve()
+            if not plan_source.is_file() or plan_source.is_symlink():
+                raise ValidationError(f"enemizer plan is not a regular file: {plan_source}")
+            plan_document = _read_json(plan_source, "enemizer plan")
+            if not isinstance(plan_document.get("swaps"), list):
+                raise ValidationError("enemizer plan carries no swap list")
+        elif maps:
+            raise ValidationError("MapStudio outputs require the enemizer plan that produced them")
 
         self.root.mkdir(parents=True, exist_ok=True)
         stage = self.root / f".{key}.staging-{uuid.uuid4().hex}"
@@ -559,6 +577,21 @@ class SeedCache:
                     }
                 )
             records.sort(key=lambda record: record["path"])
+            plan_record: dict[str, Any] | None = None
+            if plan_source is not None and plan_document is not None:
+                retained = stage / ENEMIZER_PLAN_NAME
+                shutil.copyfile(plan_source, retained)
+                plan_hash = sha256_file(retained)
+                if plan_hash != sha256_file(plan_source):
+                    raise ValidationError("copy verification failed for the enemizer plan")
+                plan_record = {
+                    "name": ENEMIZER_PLAN_NAME,
+                    "sha256": plan_hash,
+                    "size": retained.stat().st_size,
+                    "swap_count": len(plan_document["swaps"]),
+                    "stress": plan_document.get("stress"),
+                    "options": dict(enemizer_options or plan_document.get("options") or {}),
+                }
             manifest = {
                 "format": SEED_MANIFEST_FORMAT,
                 "cache_key": key,
@@ -595,6 +628,7 @@ class SeedCache:
                     "enabled": bool(maps),
                     "seed": identity.enemizer_seed,
                     "file_count": len(maps),
+                    "plan": plan_record,
                 },
             }
             _write_json_atomic(stage / SEED_MANIFEST_NAME, manifest)
@@ -643,7 +677,7 @@ class SeedCache:
             expected[relative] = record
         if SUPPRESSION_PATH not in expected:
             raise ValidationError("seed build is missing the suppression binder")
-        actual = _tree_files(root, ignore=(SEED_MANIFEST_NAME,))
+        actual = _tree_files(root, ignore=(SEED_MANIFEST_NAME, ENEMIZER_PLAN_NAME))
         if set(actual) != set(expected):
             raise ValidationError(
                 "seed build file set drift: "
@@ -657,6 +691,19 @@ class SeedCache:
                 raise ValidationError(f"seed output size changed: {relative}")
             if sha256_file(path_value) != digest:
                 raise ValidationError(f"seed output hash changed: {relative}")
+        enemizer = manifest.get("enemizer")
+        plan_record = enemizer.get("plan") if isinstance(enemizer, dict) else None
+        retained_plan = root / ENEMIZER_PLAN_NAME
+        if plan_record is not None:
+            if not isinstance(plan_record, dict) or plan_record.get("name") != ENEMIZER_PLAN_NAME:
+                raise ValidationError("seed manifest enemizer plan record is malformed")
+            if not retained_plan.is_file() or retained_plan.is_symlink():
+                raise ValidationError("seed build is missing its retained enemizer plan")
+            plan_hash = _require_sha256(str(plan_record.get("sha256", "")), "enemizer plan")
+            if sha256_file(retained_plan) != plan_hash:
+                raise ValidationError("retained enemizer plan hash changed")
+        elif retained_plan.exists():
+            raise ValidationError("seed build carries an enemizer plan its manifest does not record")
         suppression = manifest.get("suppression")
         if not isinstance(suppression, dict):
             raise ValidationError("seed manifest is missing its suppression witness")

@@ -103,6 +103,7 @@ if ($worldData.Count -lt 2) { throw "No apworld data files found to bundle." }
     --version-file (Join-Path $versionRoot "launcher-version.txt") `
     --add-data "$(Join-Path $repo 'research\enemizer\enemy_tags.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\slot_policy.json');research\enemizer" `
+    --add-data "$(Join-Path $repo 'research\enemizer\archetype_facts.json');research\enemizer" `
     @worldData `
     (Join-Path $repo "packaging\launcher_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }

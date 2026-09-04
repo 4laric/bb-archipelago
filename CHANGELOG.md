@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Report a Bad Enemy.** The launcher keeps the exact enemy plan each seed
+  was built from, and a new recovery action (or `python -m bb_launcher
+  enemy-report`) turns it into a paste-ready report: seed, slot, cache key,
+  every swap in the area you name, and, if you saw an echo reward, the
+  enemies whose reward is nearest first. Builds from before this need one
+  Rebuild. (bb-archipelago#321)
+- **Stress-test enemy seeds.** An enemy seed such as `stress:size-up:m24_01`
+  or `stress:family=c4060:m24_01` pushes every swap in one area to the limit
+  of a single compatibility rule so playtests can falsify it directly.
+  Ordinary seeds are unchanged.
+
 - **Fixed: a phantom attire item.** The expanded catalog listed "Surgical Long
   Gloves (White)" (protector 292000), which does not exist in the game; the
   White Church set wears the black gloves. It no longer enters any pool.
