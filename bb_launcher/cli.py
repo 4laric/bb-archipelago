@@ -149,6 +149,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="OPERATORS ONLY: report suppression binder/seed/install hash skew as a "
         "named WARN instead of a FAIL (bb-archipelago#183)",
     )
+    doctor.add_argument(
+        "--allow-seed-mismatch",
+        action="store_true",
+        help="OPERATORS ONLY: report an AP server address last connected to a "
+        "different seed/slot as a named WARN instead of a FAIL, and re-lock it "
+        "to the current seed package (bb-archipelago#347)",
+    )
 
     report = commands.add_parser(
         "enemy-report",
@@ -397,6 +404,7 @@ def main(argv: list[str] | None = None) -> int:
                 server=server,
                 player_name=player_name,
                 allow_suppression_mismatch=args.allow_suppression_mismatch,
+                allow_seed_mismatch=args.allow_seed_mismatch,
             )
             print(format_report(report))
             return 0 if report.ok else 1

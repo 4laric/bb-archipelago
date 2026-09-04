@@ -57,6 +57,7 @@ from .workflow import (
     _read_object,
     _request_identity,
     load_process_plan,
+    read_ap_identity_lock,
 )
 
 PASS = "pass"
@@ -722,6 +723,77 @@ def _check_server(
     return DoctorFinding(PASS, "AP server", f"{address} accepted a connection")
 
 
+def _resolved_server_address(chain: _Chain, server: str | None) -> str | None:
+    address = server
+    if not address and chain.processes:
+        for spec in chain.processes:
+            if spec.name == CLIENT_PROCESS_NAME and spec.arguments:
+                address = spec.arguments[0]
+                break
+    return address
+
+
+def _check_seed_slot_identity(
+    chain: _Chain,
+    server: str | None,
+    state_root: Path,
+    allow_seed_mismatch: bool,
+) -> DoctorFinding:
+    """Refuse a launch plan whose AP server was last connected to a different
+    seed or slot than the one the player just selected (bb-archipelago#347).
+
+    Read-only: this only consults the durable record written by a prior
+    successful (or explicitly overridden) launch; it never writes one, so
+    running Doctor repeatedly cannot itself clear a real mismatch.
+    """
+    if chain.request is None:
+        return DoctorFinding(SKIP, "AP seed/slot identity", "upstream check failed")
+    address = _resolved_server_address(chain, server)
+    if not address:
+        return DoctorFinding(
+            SKIP, "AP seed/slot identity", "no server address in the launch plan and none supplied"
+        )
+    seed = chain.request["seed"]
+    slot = chain.request["slot"]
+    recorded = read_ap_identity_lock(state_root, address)
+    if recorded is None:
+        return DoctorFinding(
+            PASS,
+            "AP seed/slot identity",
+            f"no prior connection recorded for {address}; nothing to conflict with "
+            f"seed {seed!r} slot {slot!r}",
+        )
+    if recorded["seed"] == seed and recorded["slot"] == slot:
+        return DoctorFinding(
+            PASS,
+            "AP seed/slot identity",
+            f"{address} was last connected as seed {seed!r} slot {slot!r}, matching this seed package",
+        )
+    detail = (
+        f"selected seed package expects seed {seed!r} slot {slot!r}, but "
+        f"{address} was last connected as seed {recorded['seed']!r} "
+        f"slot {recorded['slot']!r}"
+    )
+    if allow_seed_mismatch:
+        return DoctorFinding(
+            WARN,
+            "AP seed/slot identity",
+            detail + " (override enabled: launch will proceed and re-lock this server to the new identity)",
+            "this is expected only when you deliberately intend to reuse this "
+            "server address for a different seed; otherwise fix the AP server "
+            "field to point at the room for this seed package",
+        )
+    return DoctorFinding(
+        FAIL,
+        "AP seed/slot identity",
+        detail,
+        "fix the AP server field to the room for this seed package (or select "
+        "the seed package for that room) -- a different Bloodborne save slot "
+        "does not resolve this; enable the seed/slot mismatch override only if "
+        "you deliberately intend to reuse this server for a different seed",
+    )
+
+
 def _bridge_reported(settings: LauncherSettings, chain: _Chain) -> bool | None:
     """Has the grant harness ever written bridge state for this session?
 
@@ -903,6 +975,7 @@ def run_doctor(
     server: str | None = None,
     player_name: str | None = None,
     allow_suppression_mismatch: bool = False,
+    allow_seed_mismatch: bool = False,
     process_running: Callable[[str], bool] | None = None,
     probe: Callable[[str, int], None] | None = None,
     read_shad_version: Callable[[Path], str | None] | None = None,
@@ -936,6 +1009,14 @@ def run_doctor(
         _safely(lambda: _check_map_studio(settings, chain, randomize_enemies=randomize_enemies)),
         _safely(lambda: _check_user_mods(chain, randomize_enemies=randomize_enemies)),
         _safely(lambda: _check_server(chain, server, probe)),
+        _safely(
+            lambda: _check_seed_slot_identity(
+                chain,
+                server,
+                settings.state_root or default_state_root(),
+                allow_seed_mismatch,
+            )
+        ),
         _safely(lambda: _check_elevation(chain, process_running)),
     ]
     try:

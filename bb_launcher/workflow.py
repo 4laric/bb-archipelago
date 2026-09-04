@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -38,6 +39,7 @@ from .core import (
     suppression_override_line,
     validate_processes,
     wait_for_early_exit,
+    _write_json_atomic,
 )
 from .client_config import (
     CLIENT_LOG_FLAG,
@@ -62,6 +64,11 @@ REQUEST_FORMAT = "bb-seed-request-v1"
 # carry the old format name; the payload is compatible.
 LEGACY_REQUEST_FORMAT = "bb-enemizer-request-v1"
 REQUEST_FORMATS = (REQUEST_FORMAT, LEGACY_REQUEST_FORMAT)
+# Records which AP seed/slot a server address was last used to connect
+# delivery for, so a stale saved address cannot silently replay another
+# room's receive history onto a freshly selected seed package
+# (bb-archipelago#347).
+AP_IDENTITY_LOCK_FORMAT = "bb-ap-identity-lock-v1"
 PLAN_FORMAT = "bb-enemizer-plan-v2"
 PARAMDEF_PATH = "dvdroot_ps4/paramdef/paramdef.paramdefbnd.dcx"
 Progress = Callable[[str], None]
@@ -800,6 +807,87 @@ def _request_identity(
     }
 
 
+def _ap_identity_lock_path(state_root: Path | str, server: str) -> Path:
+    root = Path(state_root).expanduser().resolve()
+    key = hashlib.sha256(server.strip().encode("utf-8")).hexdigest()
+    return root / "ap-identity" / f"{key}.json"
+
+
+def read_ap_identity_lock(state_root: Path | str, server: str) -> dict[str, str] | None:
+    """The seed/slot last connected through ``server``, or None if unknown.
+
+    Read-only and tolerant of a missing or corrupt lock file: an unknown
+    prior identity is not a mismatch, only an absence of evidence.
+    """
+    path = _ap_identity_lock_path(state_root, server)
+    if not path.is_file():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(value, dict) or value.get("format") != AP_IDENTITY_LOCK_FORMAT:
+        return None
+    seed = value.get("seed")
+    slot = value.get("slot")
+    if not isinstance(seed, str) or not isinstance(slot, str) or not seed or not slot:
+        return None
+    return {"seed": seed, "slot": slot}
+
+
+def _write_ap_identity_lock(state_root: Path | str, server: str, *, seed: str, slot: str) -> None:
+    path = _ap_identity_lock_path(state_root, server)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _write_json_atomic(
+        path,
+        {"format": AP_IDENTITY_LOCK_FORMAT, "server": server.strip(), "seed": seed, "slot": slot},
+    )
+
+
+def check_seed_slot_identity(
+    state_root: Path | str,
+    *,
+    server: str | None,
+    seed: str,
+    slot: str,
+    allow_mismatch: bool = False,
+) -> None:
+    """Refuse an AP connection that would replay another room's history.
+
+    bb-archipelago#347: the AP server address is player-editable and easily
+    left pointed at a previous room. If ``server`` was last used to connect
+    delivery for a different seed or slot than the one the player just
+    selected, that is exactly the setup that silently inherits the old
+    room's receive ledger onto a fresh seed package -- so this refuses
+    before delivery arms unless the player explicitly overrides it. A fresh
+    Bloodborne save/character slot is not part of this comparison at all,
+    so switching save slots alone can never resolve a real mismatch.
+    """
+    if server is None or not server.strip():
+        return
+    recorded = read_ap_identity_lock(state_root, server)
+    if recorded is not None and (recorded["seed"] != seed or recorded["slot"] != slot):
+        if not allow_mismatch:
+            raise WorkflowError(
+                "AP server/slot does not match the selected seed package -- delivery "
+                "stays disarmed. Selected seed package expects "
+                f"seed {seed!r} slot {slot!r}; server {server!r} was last connected "
+                f"as seed {recorded['seed']!r} slot {recorded['slot']!r}. Fix the AP "
+                "server field to the room for this seed package (or select the seed "
+                "package for that room) -- a different Bloodborne save slot does not "
+                "resolve this. If you intend to reuse this server for a different "
+                "seed on purpose, enable the explicit seed/slot mismatch override."
+            )
+    _write_ap_identity_lock(state_root, server, seed=seed, slot=slot)
+
+
+def _ap_client_server(plan: ProcessPlan) -> str | None:
+    for spec in plan.processes:
+        if spec.name == CLIENT_PROCESS_NAME and spec.arguments:
+            return spec.arguments[0]
+    return None
+
+
 def _validate_suppression(
     install: GameInstall,
     binder: Path,
@@ -955,6 +1043,7 @@ class LauncherWorkflow:
         *,
         force_rebuild: bool = False,
         allow_suppression_mismatch: bool = False,
+        allow_seed_mismatch: bool = False,
         research_captures: bool = False,
         player_name: str = "",
         progress: Progress = lambda _message: None,
@@ -979,6 +1068,16 @@ class LauncherWorkflow:
             raise ValidationError(
                 f"AP seed requires runtime {request['runtime_build']}, process plan supplies {plan.runtime_build}"
             )
+        # Before the overlay is touched and no later than AP connection: a
+        # stale saved server address must not silently inherit another
+        # room's receive history onto this seed package (bb-archipelago#347).
+        check_seed_slot_identity(
+            settings.state_root or default_state_root(),
+            server=_ap_client_server(plan),
+            seed=request["seed"],
+            slot=request["slot"],
+            allow_mismatch=allow_seed_mismatch,
+        )
         binder = settings.suppression_binder.expanduser().resolve()
         # Operator override (bb-archipelago#183): off by default, and when on
         # it emits one loud line per bypassed check through this same progress

@@ -528,6 +528,66 @@ class DoctorTests(unittest.TestCase):
         report = run(self.fixture, server="not-a-host-port")
         self.assertEqual(finding(report, "AP server").status, FAIL)
 
+    def test_seed_slot_identity_passes_with_no_prior_connection(self):
+        # bb-archipelago#347: nothing recorded yet for this server, so there
+        # is nothing to conflict with the currently selected seed package.
+        report = run(self.fixture)
+        result = finding(report, "AP seed/slot identity")
+        self.assertEqual(result.status, PASS)
+        self.assertIn("no prior connection recorded", result.detail)
+
+    def test_seed_slot_identity_fails_when_the_saved_server_points_elsewhere(self):
+        # bb-archipelago#347 acceptance tests 2-4: the server named in the
+        # plan was last connected under a different seed/slot identity than
+        # the one this seed package now names.
+        from bb_launcher.workflow import _write_ap_identity_lock
+
+        _write_ap_identity_lock(
+            self.fixture.root / "state",
+            "localhost:38281",
+            seed="AP_a-stale-room",
+            slot="Hunter",
+        )
+        report = run(self.fixture)
+        result = finding(report, "AP seed/slot identity")
+        self.assertEqual(result.status, FAIL)
+        # Both identities, named, so the player knows which input to fix.
+        self.assertIn("AP_test", result.detail)
+        self.assertIn("AP_a-stale-room", result.detail)
+        self.assertIn("Hunter", result.detail)
+        self.assertIsNotNone(result.remedy)
+        self.assertIn("seed/slot mismatch override", result.remedy)
+        self.assertFalse(report.ok)
+
+    def test_seed_slot_identity_warns_under_the_override(self):
+        from bb_launcher.workflow import _write_ap_identity_lock
+
+        _write_ap_identity_lock(
+            self.fixture.root / "state",
+            "localhost:38281",
+            seed="AP_a-stale-room",
+            slot="Hunter",
+        )
+        report = run(self.fixture, allow_seed_mismatch=True)
+        result = finding(report, "AP seed/slot identity")
+        self.assertEqual(result.status, WARN)
+        self.assertIn("override enabled", result.detail)
+        # Doctor never writes: the FAIL persists on a second run without the
+        # override even after a WARN run.
+        report = run(self.fixture)
+        self.assertEqual(finding(report, "AP seed/slot identity").status, FAIL)
+
+    def test_seed_slot_identity_passes_when_the_saved_server_agrees(self):
+        from bb_launcher.workflow import _write_ap_identity_lock
+
+        _write_ap_identity_lock(
+            self.fixture.root / "state", "localhost:38281", seed="AP_test", slot="Hunter",
+        )
+        report = run(self.fixture)
+        result = finding(report, "AP seed/slot identity")
+        self.assertEqual(result.status, PASS)
+        self.assertTrue(report.ok)
+
     def test_running_shad_blocks_and_ce_warns(self):
         report = run(
             self.fixture,
