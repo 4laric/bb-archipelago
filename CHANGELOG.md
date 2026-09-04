@@ -7,6 +7,25 @@
   White Church set wears the black gloves. It no longer enters any pool.
   Its network id is kept so other attire ids stay stable.
 
+- **Fixed: one rune or gem delivery handed out several.** The AP award lots
+  were numbered consecutively, and Bloodborne awards consecutive lot ids as
+  one group (the way a vanilla armour set drops from one corpse), so a
+  single delivery could give five runes and gems. Award lots now step by
+  ten like every vanilla lot. Seeds generated before this carry the old
+  numbering and need regenerating.
+- **Randomized starting gifts are always visibly randomized.** A seed could
+  draw exactly the vanilla Hunter Pistol and Blunderbuss (one seed did), which
+  looked like the option had turned itself off. A hand now never reproduces
+  its vanilla set, and the Dream's firearm rows draw only from firearms, not
+  the torch or the shields the expanded pool added.
+- **The client is pinned by commit.** `packaging/client-ref.txt` names the
+  `from-software-archipelago-clients` commit every release and playtest
+  bundle builds, the built client's version stamp is checked against it, and
+  the package manifest records it. Beta 2 shipped an apworld and a client
+  that had never been built together; a pin bump is now a reviewed change
+  the packaging smoke runs against first.
+- **The launcher's Troubleshooting tab scrolls** instead of clipping its
+  lower rows on a short display.
 - **Packaging smoke checks in CI.** After every release and main-branch
   package build, the frozen launcher runs `--self-check` (imports every
   apworld table, builds the widest seed contract, and confirms each native

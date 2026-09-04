@@ -86,25 +86,56 @@ STARTING_WEAPON_ROWS = {
     "left_hand": (2010, 2011),
 }
 
+# What the vanilla Dream gift rows offer (ShopLineupParam 2000-2002 and
+# 2010-2011 in CUSA03173 01.09): Saw Cleaver, Hunter Axe, Threaded Cane;
+# Hunter Pistol, Hunter Blunderbuss. A randomized lineup that reproduces a
+# hand's vanilla set is indistinguishable from the option being off, so the
+# chooser draws again (playtest, 2026-09-03: a seed drew exactly the vanilla
+# pistol and blunderbuss).
+VANILLA_STARTING_WEAPONS = {
+    "right_hand": frozenset({7_000_000, 5_000_000, 22_000_000}),
+    "left_hand": frozenset({14_000_000, 6_000_000}),
+}
+
+# Left-hand bindings that are not firearms. They are real pool items, but the
+# Dream's firearm gift rows should offer guns, not a torch or a shield.
+NON_FIREARM_LEFT_HAND_KEYS = frozenset({"wooden_shield", "loch_shield", "hunters_torch"})
+
 SHOP_GATE_IDS = tuple(range(12101000, 12101010))
 
 
-def build_starting_weapon_choices(seed: str) -> dict[str, list[int]]:
-    """Choose the native Dream gift lineup independently of the AP item pool."""
-    candidates = {
+def starting_weapon_candidates() -> dict[str, list[int]]:
+    """The ids each Dream gift hand may draw from: non-Uncanny weapons of
+    that hand, and for the left hand only firearms."""
+    return {
         hand: sorted(
             binding.normalized_item_id
             for key, binding in ITEM_BINDINGS.items()
             if key not in UNCANNY_ITEM_KEYS and binding.feed_effect == f"{hand}_weapon"
             and binding.normalized_item_id is not None
+            and (hand != "left_hand" or key not in NON_FIREARM_LEFT_HAND_KEYS)
         )
         for hand in STARTING_WEAPON_ROWS
     }
+
+
+def build_starting_weapon_choices(seed: str) -> dict[str, list[int]]:
+    """Choose the native Dream gift lineup independently of the AP item pool.
+
+    Deterministic per seed. A hand never reproduces its vanilla set: the draw
+    is repeated from the same stream until it differs, so the randomized
+    lineup is always visibly randomized.
+    """
+    candidates = starting_weapon_candidates()
     random = Random(f"bloodborne-starting-weapons:{seed}")
-    return {
-        hand: random.sample(candidates[hand], len(rows))
-        for hand, rows in STARTING_WEAPON_ROWS.items()
-    }
+    choices: dict[str, list[int]] = {}
+    for hand, rows in STARTING_WEAPON_ROWS.items():
+        while True:
+            drawn = random.sample(candidates[hand], len(rows))
+            if set(drawn) != VANILLA_STARTING_WEAPONS[hand]:
+                break
+        choices[hand] = drawn
+    return choices
 
 
 def build_weapon_requirement_families(include_uncanny: bool) -> list[int]:

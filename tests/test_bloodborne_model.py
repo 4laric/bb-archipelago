@@ -111,6 +111,29 @@ class BloodborneModelTests(unittest.TestCase):
             {row.source_lot_id: row.gemgen_id for row in CATEGORY8_AWARDS},
         )
 
+    def test_category8_award_lots_are_spaced_like_vanilla_lots(self):
+        """Consecutive ItemLotParam ids award together; a stride of one hands
+        out a run of unrelated gems and runes from a single delivery."""
+        import csv
+        from worlds.bloodborne.category8_awards import LOT_STRIDE
+        self.assertEqual(10, LOT_STRIDE)
+        lots = sorted(row.item_lot_id for row in CATEGORY8_AWARDS)
+        for lot in lots:
+            self.assertEqual(0, lot % LOT_STRIDE, lot)
+        for earlier, later in zip(lots, lots[1:]):
+            self.assertGreaterEqual(later - earlier, LOT_STRIDE, (earlier, later))
+        self.assertEqual(98_000_000, lots[0])
+        with (Path(__file__).resolve().parents[1] / "research" / "joined" / "lot_items.tsv").open(
+            encoding="utf-8", newline=""
+        ) as handle:
+            vanilla = {int(row["item_lot_id"]) for row in csv.DictReader(handle, delimiter="\t")
+                       if row["item_lot_id"].isdigit()}
+        self.assertGreater(len(vanilla), 1000)  # witness: the corpus is real
+        # Nothing vanilla sits inside or right after the AP block, so no AP
+        # lot can pick up a vanilla continuation row either.
+        intruders = sorted(lot for lot in vanilla if lots[0] <= lot <= lots[-1] + LOT_STRIDE)
+        self.assertEqual(0, len(intruders), intruders)
+
     def test_category8_runtime_ids_and_ack_flags_are_unique(self):
         self.assertEqual(58, len(CATEGORY8_AWARDS))
         for field in ("item_key", "display_name", "token_goods_id",
@@ -842,6 +865,23 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         }
         for hand, values in first.items():
             self.assertLessEqual(set(values), expected[hand])
+
+    def test_gift_lineup_is_never_vanilla_and_firearm_rows_offer_only_firearms(self):
+        from worlds.bloodborne import (
+            NON_FIREARM_LEFT_HAND_KEYS, VANILLA_STARTING_WEAPONS, starting_weapon_candidates,
+        )
+        candidates = starting_weapon_candidates()
+        non_firearms = {ITEM_BINDINGS[key].normalized_item_id for key in NON_FIREARM_LEFT_HAND_KEYS}
+        self.assertTrue(non_firearms)
+        self.assertTrue(non_firearms.isdisjoint(candidates["left_hand"]))
+        self.assertGreaterEqual(len(candidates["left_hand"]), 8)
+        # The vanilla sets are drawable, so the exclusion is doing real work.
+        for hand, vanilla in VANILLA_STARTING_WEAPONS.items():
+            self.assertLessEqual(vanilla, set(candidates[hand]), hand)
+        for seed in range(400):
+            choices = build_starting_weapon_choices(f"AP_TEST:{seed}")
+            for hand, vanilla in VANILLA_STARTING_WEAPONS.items():
+                self.assertNotEqual(set(choices[hand]), vanilla, (seed, hand))
 
     def test_option_defaults_on(self):
         if not AP_AVAILABLE:
