@@ -185,6 +185,7 @@ def build_contract() -> dict:
             "provenance": "validated",
         },
         "inventory_geometry": {
+            "storage_mode": payload.INVENTORY_STORAGE_MODE_OFFSET,
             "split": 0x24, "last": 0x88, "primary_array": 0x58, "secondary_array": 0x48,
             "record_stride": 0x10, "record_id": 0x04, "record_quantity": 0x08,
             "provenance": "observed",

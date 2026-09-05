@@ -545,6 +545,31 @@ jobs:
           work/integration/fixtures/param/gameparam.parambnd.dcx
           work/integration/fixtures/paramdef/paramdef.paramdefbnd.dcx
           work/integration/gameparam.suppressed.parambnd.dcx --apply
+      - name: Execute the emitted category-8 protocol in a bounded model
+        run: |
+          python - <<'PY'
+          import json
+          from dataclasses import asdict
+          from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
+          assert len(CATEGORY8_AWARDS) > 15
+          with open("work/integration/category8-rows.json", "w") as out:
+              json.dump({"category8_awards": [asdict(row) for row in CATEGORY8_AWARDS]}, out)
+          PY
+          dotnet run --project tools/bb_event_writer -c Release --no-build \
+            -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- common \
+            --source work/integration/fixtures/event/common.emevd.dcx \
+            --request work/integration/category8-rows.json \
+            --output work/integration/common.emevd.dcx \
+            --manifest work/integration/common-manifest.json
+          dotnet run --project tools/bb_event_writer -c Release --no-build \
+            -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- dump \
+            work/integration/common.emevd.dcx > work/integration/common-dump.txt
+          python tools/check_category8_event_runtime.py \
+            work/integration/common-dump.txt work/integration/category8-rows.json --mutation-controls
+      - name: Execute native inventory guards in an x86-64 CPU emulator
+        run: |
+          python -m pip install unicorn==2.1.4
+          python -m tools.check_inventory_hook_cpu
       - name: Build and apply a guarded toast plan to both forged archives
         run: |
           python - <<'PY'

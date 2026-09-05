@@ -1018,6 +1018,42 @@ def _source_hashes(
     return hashes
 
 
+def _validate_category8_bridge_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Validate stable identities, migrating only the known legacy internal lot IDs.
+
+    Token, ack, recipe and AP identity stay unchanged. Only the launcher's private
+    lot address changes, in both the parameter writer and common event catalog.
+    """
+    from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
+
+    catalog = {row.item_key: row for row in CATEGORY8_AWARDS}
+    legacy_lots = {row.item_key: 98_000_000 + index
+                   for index, row in enumerate(CATEGORY8_AWARDS)}
+    effective = []
+    fields = ('token_goods_id', 'item_lot_id', 'gemgen_id', 'ack_flag', 'source_lot_id')
+    for row in rows:
+        canonical = catalog.get(row['item_key'])
+        if canonical is None:
+            raise ValidationError(
+                f"category-8 seed row {row['item_key']} is not in this launcher's bridge catalog; "
+                "use a matching world/launcher version before launching"
+            )
+        for name in fields:
+            expected = getattr(canonical, name)
+            if row[name] != expected:
+                if name == 'item_lot_id' and row[name] == legacy_lots[row['item_key']]:
+                    continue
+                raise ValidationError(
+                    f"category-8 seed/bridge mismatch for {row['item_key']}: "
+                    f"seed {name}={row[name]}, bundled bridge expects {expected}. "
+                    "This seed needs a compatible migration or a new seed generated with "
+                    "the matching world. Do not repair an existing save by reissuing "
+                    "the held token or editing the ledger."
+                )
+        effective.append({**row, 'item_lot_id': canonical.item_lot_id})
+    return effective
+
+
 class LauncherWorkflow:
     def __init__(
         self,
@@ -1056,6 +1092,11 @@ class LauncherWorkflow:
             player_name=player_name,
             state_root=settings.state_root,
         )
+        effective_awards = _validate_category8_bridge_rows(request['category8_awards'])
+        migrated_awards = effective_awards != request['category8_awards']
+        request['category8_awards'] = effective_awards
+        if migrated_awards:
+            progress("Migrating legacy category-8 reward lots; token and acknowledgement identities are preserved.")
         plan = load_process_plan(settings.process_plan)
         validate_processes(plan.processes)
         # Before the overlay is touched: a stale bare-game-ID plan (#177) would
@@ -1197,8 +1238,14 @@ class LauncherWorkflow:
                     assert temporary is not None
                     composed_binder = temporary / "gameparam.parambnd.dcx"
                     paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
+                    parameter_request = request['path']
+                    if migrated_awards:
+                        parameter_request = temporary / 'compatible-seed-params.json'
+                        parameter_request.write_text(json.dumps({
+                            **request['request'], 'category8_awards': effective_awards,
+                        }, indent=2) + '\n', encoding='utf-8')
                     self.toolchain.write_seed_weapons(
-                        request_path=request["path"], input_binder=binder, paramdef=paramdef,
+                        request_path=parameter_request, input_binder=binder, paramdef=paramdef,
                         output_binder=composed_binder,
                         soulsformats_next=settings.soulsformats_next, progress=progress,
                     )

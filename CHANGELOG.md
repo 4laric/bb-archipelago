@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Native delivery now rejects storage inventory in both hooks and host reads,
+  preventing a repository quantity change from redirecting a pending grant.
+  The launcher migrates known legacy category-8 lot IDs to the bundled event
+  bridge's stride and rejects other contract mismatches (#362).
+
 - **A native goods grant left undetermined by a prior attempt is never
   re-armed silently.** `bb_native_delivery`'s reused-tag guard used to let
   `--expected-before` bypass its check entirely, so a tag left at `armed` or

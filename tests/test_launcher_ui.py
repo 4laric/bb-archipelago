@@ -76,6 +76,7 @@ class FakeToolchain:
         return EnemizerBuild(output, plan, digest(json.dumps(plan).encode()), plan_path)
 
     def write_seed_weapons(self, **values):
+        values['request_snapshot'] = json.loads(values['request_path'].read_text(encoding='utf-8'))
         self.starting_calls.append(values)
         values["output_binder"].write_bytes(values["input_binder"].read_bytes() + b"-starting")
 
@@ -299,11 +300,11 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         payload = json.loads(self.request.read_text(encoding="utf-8"))
         payload["category8_awards"] = {
             "12255623": {
-                "item_key": "category8_test",
+                "item_key": "caryll_rune_communion_1",
                 "token_goods_id": 9800,
                 "item_lot_id": 98000000,
                 "gemgen_id": 102901,
-                "ack_flag": 12400900,
+                "ack_flag": 12400990,
                 "source_lot_id": 2400640,
             },
         }
@@ -329,6 +330,33 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             digest(active.read_bytes()), manifest["output_gameparam_sha256"],
             "the client hashes the activated binder against this witness",
         )
+
+    def test_legacy_lot_migration_reaches_both_writers_without_editing_seed(self):
+        from dataclasses import asdict
+        from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
+        row = asdict(CATEGORY8_AWARDS[15])
+        row.pop('display_name')
+        row['item_lot_id'] = 98000015
+        seed = json.loads(self.request.read_text(encoding='utf-8'))
+        seed['category8_awards'] = {'12255638': row}
+        original = json.dumps(seed)
+        self.request.write_text(original, encoding='utf-8')
+        toolchain = FakeToolchain()
+        LauncherWorkflow(
+            self.repo, toolchain=toolchain,
+            process_launcher=lambda _: [Process(10), Process(11)],
+        ).randomize_and_launch(
+            self.settings(enemy_inputs=False), EnemizerOptions(enabled=False),
+            process_is_running=lambda: False,
+        )
+        migrated = toolchain.starting_calls[0]['request_snapshot']
+        self.assertEqual(migrated['category8_awards'], [{**row, 'item_lot_id': 98000150}])
+        self.assertEqual({k: v for k, v in migrated.items() if k != 'category8_awards'},
+                         {k: v for k, v in seed.items() if k != 'category8_awards'})
+        common = next(v for name, v in toolchain.event_calls if name == 'common')
+        event_row = common['rows']['category8_awards'][15]
+        self.assertEqual({k: event_row[k] for k in row}, migrated['category8_awards'][0])
+        self.assertEqual(self.request.read_text(encoding='utf-8'), original)
 
     def test_randomize_enemies_runs_toolchain_caches_maps_activates_and_launches(self):
         toolchain = FakeToolchain()

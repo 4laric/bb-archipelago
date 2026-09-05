@@ -60,17 +60,11 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
         run_compiler(executable, "decompile", compiled, verify)
         verified = (verify / f"{EVENT_FILE}.js").read_text(encoding="utf-8-sig")
         expected_text = expected.decode("utf-8-sig")
-        actual_event = event(verified, str(EVENT_ID))
-        expected_event = event(expected_text, str(EVENT_ID))
-        if instructions(actual_event) != instructions(expected_event):
-            raise ValueError(
-                "compiled category-8 event did not round-trip\nEXPECTED:\n"
-                + expected_event + "\nACTUAL:\n" + actual_event
-            )
+        verify_owned_events(expected_text, verified)
         constructor = event(verified, "0")
         for index, row in enumerate(CATEGORY8_AWARDS):
             initializer = (
-                f"$InitializeEvent({index}, {EVENT_ID}, {row.token_goods_id}, "
+                f"$InitializeEvent(0, {EVENT_ID + index}, {row.token_goods_id}, "
                 f"{row.item_lot_id}, {row.ack_flag});"
             )
             if constructor.count(initializer) != 1:
@@ -89,3 +83,11 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
             "event": EVENT_ID,
             "rows": [row.__dict__ for row in CATEGORY8_AWARDS],
         }, indent=2) + "\n", encoding="utf-8")
+
+
+def verify_owned_events(expected: str, actual: str) -> None:
+    """Check every isolated row, including non-pilot rows such as #362's row 15."""
+    for index, _ in enumerate(CATEGORY8_AWARDS):
+        event_id = str(EVENT_ID + index)
+        if instructions(event(actual, event_id)) != instructions(event(expected, event_id)):
+            raise ValueError(f"compiled category-8 event {event_id} did not round-trip")
