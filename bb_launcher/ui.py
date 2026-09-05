@@ -468,7 +468,7 @@ class LauncherApp:
         troubleshooting_host.columnconfigure(0, weight=1)
         troubleshooting_host.rowconfigure(0, weight=1)
         notebook.add(troubleshooting_host, text="Troubleshooting")
-        troubleshooting_canvas = tk.Canvas(
+        troubleshooting_canvas = self.tk.Canvas(
             troubleshooting_host, highlightthickness=0, borderwidth=0,
             background=THEME_BACKGROUND,
         )
