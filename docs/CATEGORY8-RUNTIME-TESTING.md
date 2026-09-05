@@ -164,5 +164,7 @@ Subsequent received items resumed through the normal queue.
 - The client passes all 306 library tests with one test thread. A parallel run
   exposed an unrelated shared-console logging race (304/305 passed before the
   new Windows test); the serialized run is not evidence that race is fixed.
-- No hosted CI run has been performed. Live capture, recovery and clean
-  save/reload acceptance passed as described above.
+- Hosted CI results must be reviewed separately from these local results. Live
+  capture, recovery and clean save/reload acceptance passed as described above.
+  The default cross-repository drift check compares against client main and
+  remains red until the paired client contract lands.
