@@ -10,6 +10,9 @@ the real tools against:
 - `param/gameparam.parambnd.dcx` + `paramdef/paramdef.paramdefbnd.dcx` — a
   synthetic one-param binder whose `ItemLotParam` rows are rebuilt from a real
   `plan_vanilla_suppression.py` plan, written by `bb_suppression_writer`.
+- `event/m24_00_00_00.emevd.dcx` — synthetic Cathedral events with the reviewed
+  vanilla instruction shapes used by `bb_event_writer` for its Laurence's Skull
+  and Hunter Chief Emblem transforms.
 
 Nothing emitted is derived from game files: every id, name, and row is
 invented, so the fixtures can be produced fresh in CI without licensed content.

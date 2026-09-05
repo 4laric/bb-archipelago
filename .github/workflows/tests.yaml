@@ -566,6 +566,19 @@ jobs:
             work/integration/common.emevd.dcx > work/integration/common-dump.txt
           python tools/check_category8_event_runtime.py \
             work/integration/common-dump.txt work/integration/category8-rows.json --mutation-controls
+      - name: Verify the Cathedral writer matches the reviewed event compile
+        run: |
+          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- cathedral --source work/integration/fixtures/event/m24_00_00_00.emevd.dcx --output work/integration/m24_00_00_00.emevd.dcx --manifest work/integration/cathedral-manifest.json
+          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- dump work/integration/m24_00_00_00.emevd.dcx 12401803 > work/integration/laurence-dump.txt
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          expected = Path("tests/fixtures/laurence_emitted_dump.txt").read_text()
+          actual = Path("work/integration/laurence-dump.txt").read_text()
+          instructions = lambda text: re.findall(r"^  \[\d+\].*$", text, re.M)
+          assert instructions(actual) == instructions(expected), (actual, expected)
+          PY
+          python -m unittest tests.test_laurence_skull_event_runtime
       - name: Execute native inventory guards in an x86-64 CPU emulator
         run: |
           python -m pip install unicorn==2.1.4

@@ -250,6 +250,17 @@ internal static class Program
         // inverse condition keeps a guest from completing event 12401803.
         Expect(e.Instructions[6], 1003, 6, "00010000", "Laurence client guard");
         e.Instructions[6] = Clone(emevd, 3, 6, Args((byte)1, (byte)1, (byte)0, (byte)0));
+        // DarkScript compiles WaitFor(condition) as a condition definition
+        // followed by an explicit MAIN wait for that condition group.  The
+        // definition alone would fall through and would also collide with the
+        // action-button condition's vanilla group 1.
+        Expect(e.Instructions[7], 4, 3, "010000001027000000000000", "Laurence character condition");
+        Expect(e.Instructions[8], 3, 24, "010000000a9f240009a62400", "Laurence action condition");
+        Expect(e.Instructions[9], 0, 0, "00010100", "Laurence action wait");
+        e.Instructions[7] = Clone(emevd, 4, 3, Args((byte)2, (byte)0, (byte)0, (byte)0, 10000, 0));
+        e.Instructions[8] = Clone(emevd, 3, 24, Args((byte)2, (byte)0, (byte)0, (byte)0, 2400010, 2401801));
+        e.Instructions[9] = Clone(emevd, 0, 0, Args((byte)0, (byte)1, (byte)2, (byte)0));
+        e.Instructions.Insert(7, Clone(emevd, 0, 0, Args((byte)0, (byte)0, (byte)1, (byte)0)));
         var setWitness = Clone(emevd, 2003, 2, Args(WitnessFlag, (byte)1));
         var restart = Clone(emevd, 1000, 4, Args((byte)1));
         e.Instructions.Add(setWitness);
