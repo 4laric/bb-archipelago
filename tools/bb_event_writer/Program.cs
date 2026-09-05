@@ -320,43 +320,46 @@ internal static class Program
             throw new InvalidDataException("category-8 rows must have distinct tokens, lots, and ack flags");
 
         var emevd = Load(o["source"]);
-        if (emevd.Events.Any(e => e.ID == BridgeEvent))
+        var bridgeEventIds = rows.Select((_, index) => BridgeEvent + index).ToHashSet();
+        if (emevd.Events.Any(e => bridgeEventIds.Contains(e.ID)))
             throw new InvalidDataException("category-8 award bridge is already present");
         var constructor = EventById(emevd, 0);
         var untouched = emevd.Events.Where(e => e.ID != 0).Select(e => (e.ID, Fingerprint(e))).ToList();
         var constructorBefore = constructor.Instructions.ToList();
 
-        // $InitializeEvent(slot, 98000000, token, lot, ackFlag), inserted at the
-        // top of the constructor in row order, exactly as the source transform does.
+        // Give every row an isolated event ID. The two-row pilot happened to work
+        // with shared event slots, but expanded tables can leave later instances
+        // inert even though their arguments decompile correctly.
         Template(emevd, 2000, 0, 12); // the game exercises InitializeEvent
         var initializers = rows.Select((row, index) =>
-            new EMEVD.Instruction(2000, 0, Args(index, (int)BridgeEvent, row.token_goods_id, row.item_lot_id, row.ack_flag))).ToList();
+            new EMEVD.Instruction(2000, 0, Args(0, (int)(BridgeEvent + index), row.token_goods_id, row.item_lot_id, row.ack_flag))).ToList();
         constructor.Instructions.InsertRange(0, initializers);
 
-        // $Event(98000000, Restart, function(itemId, itemLotId, eventFlagId) { ... })
-        var bridge = new EMEVD.Event(BridgeEvent, EMEVD.Event.RestBehaviorType.Restart);
-        // Instruction encodings and parameter order are those DarkScript3 3.6.3
-        // emits for tools/patch_category8_awards.py (see docs/EVENT-WRITER.md).
-        bridge.Instructions.Add(Clone(emevd, 2000, 2, Args((byte)0)));                                    // SetNetworkSyncState(Disabled)
-        bridge.Instructions.Add(Clone(emevd, 3, 16, Args((byte)0, (byte)3, (byte)0, (byte)0, 0, (byte)1))); // WaitFor(PlayerHasItemIncludingBBox(Goods, itemId))
-        bridge.Instructions.Add(Clone(emevd, 2003, 2, Args(0, (byte)0)));                                  // SetEventFlag(eventFlagId, OFF)
-        bridge.Instructions.Add(Clone(emevd, 1001, 0, Args(1.0f)));                                        // WaitFixedTimeSeconds(1)
-        bridge.Instructions.Add(Clone(emevd, 1014, 0, Array.Empty<byte>()));                               // L0:
-        bridge.Instructions.Add(Clone(emevd, 2003, 24, Args(3, 0, 1)));                                    // RemoveItemFromPlayer(Goods, itemId, 1)
-        bridge.Instructions.Add(Clone(emevd, 1001, 0, Args(1.0f)));                                        // WaitFixedTimeSeconds(1)
-        bridge.Instructions.Add(Clone(emevd, 3, 16, Args((byte)1, (byte)3, (byte)0, (byte)0, 0, (byte)1))); // IfPlayerHasItemIncludingBBox(OR_01, Goods, itemId)
-        bridge.Instructions.Add(Clone(emevd, 1000, 101, Args((byte)0, (byte)1, (byte)1, (byte)0)));         // GotoIf(L0, OR_01)
-        bridge.Instructions.Add(Clone(emevd, 2003, 4, Args(0)));                                           // AwardItemLot(itemLotId)
-        bridge.Instructions.Add(Clone(emevd, 2003, 2, Args(0, (byte)1)));                                  // SetEventFlag(eventFlagId, ON)
-        bridge.Instructions.Add(Clone(emevd, 1000, 4, Args((byte)1)));                                     // RestartEvent()
-        // Parameter records in the compiler's order: by source offset, then instruction.
-        bridge.Parameters.Add(new EMEVD.Parameter(1, 4, 0, 4));  // itemId -> WaitFor(HasIncludingBBox)
-        bridge.Parameters.Add(new EMEVD.Parameter(5, 4, 0, 4));  // itemId -> RemoveItemFromPlayer
-        bridge.Parameters.Add(new EMEVD.Parameter(7, 4, 0, 4));  // itemId -> loop HasIncludingBBox
-        bridge.Parameters.Add(new EMEVD.Parameter(9, 0, 4, 4));  // itemLotId -> AwardItemLot
-        bridge.Parameters.Add(new EMEVD.Parameter(2, 0, 8, 4));  // eventFlagId -> SetEventFlag OFF
-        bridge.Parameters.Add(new EMEVD.Parameter(10, 0, 8, 4)); // eventFlagId -> SetEventFlag ON
-        emevd.Events.Add(bridge);
+        foreach (var (row, index) in rows.Select((row, index) => (row, index)))
+        {
+            var bridge = new EMEVD.Event(BridgeEvent + index, EMEVD.Event.RestBehaviorType.Restart);
+            // Instruction encodings and parameter order are those DarkScript3 3.6.3
+            // emits for tools/patch_category8_awards.py (see docs/EVENT-WRITER.md).
+            bridge.Instructions.Add(Clone(emevd, 2000, 2, Args((byte)0)));
+            bridge.Instructions.Add(Clone(emevd, 3, 16, Args((byte)0, (byte)3, (byte)0, (byte)0, 0, (byte)1)));
+            bridge.Instructions.Add(Clone(emevd, 2003, 2, Args(0, (byte)0)));
+            bridge.Instructions.Add(Clone(emevd, 1001, 0, Args(1.0f)));
+            bridge.Instructions.Add(Clone(emevd, 1014, 0, Array.Empty<byte>()));
+            bridge.Instructions.Add(Clone(emevd, 2003, 24, Args(3, 0, 1)));
+            bridge.Instructions.Add(Clone(emevd, 1001, 0, Args(1.0f)));
+            bridge.Instructions.Add(Clone(emevd, 3, 16, Args((byte)1, (byte)3, (byte)0, (byte)0, 0, (byte)1)));
+            bridge.Instructions.Add(Clone(emevd, 1000, 101, Args((byte)0, (byte)1, (byte)1, (byte)0)));
+            bridge.Instructions.Add(Clone(emevd, 2003, 4, Args(0)));
+            bridge.Instructions.Add(Clone(emevd, 2003, 2, Args(0, (byte)1)));
+            bridge.Instructions.Add(Clone(emevd, 1000, 4, Args((byte)1)));
+            bridge.Parameters.Add(new EMEVD.Parameter(1, 4, 0, 4));
+            bridge.Parameters.Add(new EMEVD.Parameter(5, 4, 0, 4));
+            bridge.Parameters.Add(new EMEVD.Parameter(7, 4, 0, 4));
+            bridge.Parameters.Add(new EMEVD.Parameter(9, 0, 4, 4));
+            bridge.Parameters.Add(new EMEVD.Parameter(2, 0, 8, 4));
+            bridge.Parameters.Add(new EMEVD.Parameter(10, 0, 8, 4));
+            emevd.Events.Add(bridge);
+        }
 
         // Verification: nothing else moved.
         foreach (var (id, fingerprint) in untouched)
@@ -375,6 +378,7 @@ internal static class Program
             output_sha256 = Sha256(o["output"]),
             output_relative_path = "dvdroot_ps4/event/common.emevd.dcx",
             @event = BridgeEvent,
+            events = bridgeEventIds.Order().ToList(),
             rows,
         });
         return 0;

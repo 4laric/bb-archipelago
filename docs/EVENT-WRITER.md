@@ -11,7 +11,7 @@ runtime it needed.
 | overlay | file | edits |
 | --- | --- | --- |
 | Cathedral | `dvdroot_ps4/event/m24_00_00_00.emevd.dcx` | event `12401803`: guard `EndIf(ThisEvent())` becomes `EndIf(EventFlag(12401898))`; tail gains `SetEventFlag(12401898, ON); RestartEvent();`. Event `12400760`: the `ObjActEventFlag(12400170)` disjunct and its OR-group compile are removed. |
-| Common | `dvdroot_ps4/event/common.emevd.dcx` | event `0` gains one `InitializeEvent(slot, 98000000, token, lot, ackFlag)` per reviewed category-8 row at the top of the constructor; event `98000000` (Restart) is appended: wait for the token including the storage box, clear the ack, consume every copy of the token in a labelled loop, `AwardItemLot` once, raise the ack, restart. Twelve instructions and six parameter records. |
+| Common | `dvdroot_ps4/event/common.emevd.dcx` | event `0` gains one `InitializeEvent(0, 98000000 + rowIndex, token, lot, ackFlag)` per reviewed category-8 row at the top of the constructor. One isolated Restart event per row is appended: wait for the token including the storage box, clear the ack, consume every copy of the token in a labelled loop, `AwardItemLot` once, raise the ack, restart. Each event has twelve instructions and six parameter records. |
 
 The reviewed specifications remain the source transforms in
 `tools/patch_laurence_skull.py`, `tools/patch_emblem_chokepoint.py`, and
