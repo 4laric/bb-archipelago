@@ -144,8 +144,14 @@ jobs:
       - name: Packaging smoke - the frozen launcher loads every apworld table and finds its tools
         shell: pwsh
         run: |
-          & "$PWD\build\BloodborneAPLauncher\BloodborneAPLauncher.exe" --self-check "$PWD\work\self-check.json"
-          if ($LASTEXITCODE -ne 0) { Get-Content work\self-check.json; throw "launcher self-check failed" }
+          $process = Start-Process `
+            -FilePath "$PWD\build\BloodborneAPLauncher\BloodborneAPLauncher.exe" `
+            -ArgumentList @("--self-check", "$PWD\work\self-check.json") `
+            -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            if (Test-Path work\self-check.json) { Get-Content work\self-check.json }
+            throw "launcher self-check failed with exit code $($process.ExitCode)"
+          }
           $report = Get-Content work\self-check.json -Raw | ConvertFrom-Json
           if (-not $report.ok) { Get-Content work\self-check.json; throw "launcher self-check reported problems" }
           Get-Content work\self-check.json

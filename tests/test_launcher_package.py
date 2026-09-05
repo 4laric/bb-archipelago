@@ -184,7 +184,9 @@ class LauncherPackageTests(unittest.TestCase):
         )
         for name in ("release.yaml", "tests.yaml"):
             workflow = (workflows / name).read_text(encoding="utf-8")
-            self.assertIn("BloodborneAPLauncher.exe\" --self-check", workflow, name)
+            self.assertIn("Start-Process", workflow, name)
+            self.assertIn('"--self-check"', workflow, name)
+            self.assertIn("-Wait -PassThru", workflow, name)
             self.assertIn("bb-ap-client.exe\" --check-contract", workflow, name)
             self.assertIn("tools/export_runtime_contract.py", workflow, name)
 
