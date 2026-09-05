@@ -112,6 +112,8 @@ class GuestRuntime(Runtime):
         inventory = self.memory.read_u64(self.inventory_pointer)
         if not inventory:
             return None
+        if self.memory.read(inventory + payload.INVENTORY_STORAGE_MODE_OFFSET, 1) != b"\x00":
+            return None
         split = self.memory.read_u32(inventory + SPLIT_OFFSET)
         last = self.memory.read_u32(inventory + LAST_OFFSET)
         primary = self.memory.read_u64(inventory + PRIMARY_ARRAY_OFFSET)
@@ -122,7 +124,7 @@ class GuestRuntime(Runtime):
 
     def inventory_ready(self) -> bool:
         return self._bounded(
-            lambda: self.memory.read_u64(self.inventory_pointer) != 0, False
+            lambda: self._inventory() is not None, False
         )
 
     def find_stack(self, normalized_id: int) -> StackView | None:

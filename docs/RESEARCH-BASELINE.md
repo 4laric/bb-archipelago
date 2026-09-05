@@ -1,5 +1,13 @@
 # Bloodborne shadPS4 Runtime Research Baseline
 
+2026-09-05 addendum: [Category-8 inventory selection and CI boundary](CATEGORY8-RUNTIME-TESTING.md)
+records a read-only CUSA03173 01.09 session where the generic quantity-delta
+hook cached the repository-capacity inventory. The client treated that cache
+as held inventory. It also records an independent old-seed/new-event lot-ID
+mismatch. The linked record now includes a guarded live Vial control, native
+chest withdrawal, one Clear Deep Sea award after lot migration/restart, and
+a clean save/reload without a duplicate. Pre-restart event state is unresolved.
+
 Status: initial evidence record  
 Target: `CUSA00900`, AppVer `01.09`  
 Recorded: 2026-08-16

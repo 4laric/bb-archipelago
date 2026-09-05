@@ -183,6 +183,24 @@ if (!paramCheck.ApplyParamdefCarefully(defCheck))
 if (paramCheck.Rows.Count != plan.Edits.Count)
     throw new InvalidDataException("forged param lost rows on round-trip");
 
+// Synthetic opcode shapes for exercising the real event writer in CI.
+// Zero arguments witness byte lengths only, not game semantics or licensed data.
+var common = new EMEVD(EMEVD.Game.Bloodborne);
+common.Events.Add(new EMEVD.Event(0));
+var shapes = new EMEVD.Event(1);
+foreach (var (bank, id, length) in new[] {
+    (2000, 0, 12), (2000, 2, 4), (3, 16, 12), (2003, 2, 8),
+    (1001, 0, 4), (1014, 0, 0), (2003, 24, 12), (1000, 101, 4),
+    (2003, 4, 4), (1000, 4, 4),
+})
+    shapes.Instructions.Add(new EMEVD.Instruction(bank, id, new byte[length]));
+common.Events.Add(shapes);
+Directory.CreateDirectory(Path.Combine(outputRoot, "event"));
+string commonPath = Path.Combine(outputRoot, "event", "common.emevd.dcx");
+common.Write(commonPath);
+if (EMEVD.Read(commonPath).Events.Count != 2)
+    throw new InvalidDataException("synthetic event fixture did not round-trip");
+
 Console.WriteLine(
     $"forge maps=2 placements_per_map={placements.Length} enemies_total={forgedEnemies} "
     + $"suppression_rows={paramCheck.Rows.Count} output={outputRoot}");

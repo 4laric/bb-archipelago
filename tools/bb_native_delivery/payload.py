@@ -10,6 +10,10 @@ read back from a live armed process and matched these blobs (owner checklist
 item 1), and on the same day an armed install of these bytes ran the guest
 through native grants without Cheat Engine loaded at all (items 5 through 9).
 
+The 2026-09-05 storage guards extend those historical bytes. Instruction
+emulation passes, and a live Vial control captured held inventory; restart and
+full delivery validation of this revision remain pending.
+
 Every operand in the template is a constant or a label, so the blob is static.
 Assembling at ``base = 0`` makes it fully position-independent apart from three
 ``mov rax, imm64`` operands, because every other absolute in the template is
@@ -43,6 +47,7 @@ LOOKUP_WEAPON_PARAM_RVA = 0x1F29AA0
 EQUIPMENT_INSTANCE_REGISTRY_RVA = 0x553E990
 QUANTITY_DELTA_RVA = 0x14D94A0
 FIND_SLOT_RVA = 0x14DA2C0
+INVENTORY_STORAGE_MODE_OFFSET = 0x8C
 
 CONSUME_CAVE_RVA = 0x50DBA00
 HEARTBEAT_CAVE_RVA = 0x50DBC00
@@ -168,6 +173,10 @@ CALL_RAX = b"\xff\xd0"
 def _program_consume() -> list[tuple[str | None, _Insn | None]]:
     """The consume-return detour cave (CE label block ``8050DBA00``)."""
     return [
+        # #362: this generic quantity-delta routine also runs on storage.
+        # Never cache that object or execute an AP request on its return.
+        (None, _fixed(b"\x41\x80\xbd" + _imm32(INVENTORY_STORAGE_MODE_OFFSET) + b"\x00")),
+        (None, _rel32_jump(b"\x0f\x85", "consume_original")),
         # mov [bbAutoInventory],r13
         (None, _rip_form(b"\x4c\x89\x2d", "inventory")),
         # cmp dword ptr [bbAutoRequest],0
@@ -317,6 +326,9 @@ def _program_heartbeat() -> list[tuple[str | None, _Insn | None]]:
         (None, _rel32_jump(b"\x0f\x84", "heartbeat_original")),
         # mov rdi,[bbAutoInventory]
         (None, _rip_form(b"\x48\x8b\x3d", "inventory")),
+        # Refuse a repository pointer retained from an old installation.
+        (None, _fixed(b"\x80\xbf" + _imm32(INVENTORY_STORAGE_MODE_OFFSET) + b"\x00")),
+        (None, _rel32_jump(b"\x0f\x85", "heartbeat_original")),
         # lea rsi,[heartbeat descriptor]
         (None, _rip_form(b"\x48\x8d\x35", "heartbeat_descriptor")),
         # mov rax,find-slot / call rax

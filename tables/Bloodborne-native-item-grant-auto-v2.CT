@@ -256,6 +256,8 @@ label(bbAutoItemQuantityPointer)
 label(bbAutoManualTrigger)
 
 8050DBA00:
+  cmp byte ptr [r13+8C],0
+  jne bbAutoConsumeOriginal
   mov [bbAutoInventory],r13
   cmp dword ptr [bbAutoRequest],0
   je bbAutoConsumeOriginal
@@ -381,6 +383,8 @@ bbAutoDescriptor:
   cmp qword ptr [bbAutoInventory],0
   je bbAutoHeartbeatOriginal
   mov rdi,[bbAutoInventory]
+  cmp byte ptr [rdi+8C],0
+  jne bbAutoHeartbeatOriginal
   lea rsi,[8050DBE40]
   mov rax,8014DA2C0
   call rax
