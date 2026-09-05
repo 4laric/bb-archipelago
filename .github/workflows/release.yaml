@@ -287,16 +287,26 @@ jobs:
           }
           Add-Content packaging\PACKAGE-README.txt ($lines -join "`n")
 
-      - name: Create the prerelease with the package zip
+      - name: Publish the prerelease with the package zip
         shell: pwsh
-        run: >-
-          gh release create "$env:RELEASE_TAG"
-          --repo ${{ github.repository }}
-          --title "Bloodborne Archipelago $env:RELEASE_TAG"
-          --notes-file packaging\PACKAGE-README.txt
-          --prerelease
-          build\BloodborneAPLauncher-win-x64.zip
-          build\bloodborne.apworld
+        run: |
+          # A moved prerelease tag rebuilds the same release. Keep its existing
+          # downloads until signing, smoke checks, attestation and hashing pass.
+          gh release view "$env:RELEASE_TAG" --repo ${{ github.repository }} *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+              build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld --clobber
+            if ($LASTEXITCODE -ne 0) { throw "Replacing prerelease artifacts failed" }
+            gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+              --notes-file packaging/PACKAGE-README.txt
+            if ($LASTEXITCODE -ne 0) { throw "Updating prerelease hashes failed" }
+          } else {
+            gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+              --title "Bloodborne Archipelago $env:RELEASE_TAG" `
+              --notes-file packaging/PACKAGE-README.txt --prerelease `
+              build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+            if ($LASTEXITCODE -ne 0) { throw "Creating prerelease failed" }
+          }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
