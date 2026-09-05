@@ -21,7 +21,9 @@ WITNESS_FLAG = 12401898
 PASSWORD_FLAG = 12401803
 SUPPORTED_SOURCE_SHA256 = "092fc23411eebb286df20401346b715d8110acbf3b7ca5b79ad494da65144d5c"
 OLD_GUARD = "    EndIf(ThisEvent());"
-NEW_GUARD = f"    EndIf(EventFlag({WITNESS_FLAG}));"
+NEW_GUARD = f"    WaitFor(!EventFlag({WITNESS_FLAG}));"
+OLD_CLIENT_GUARD = "    EndIf(HasMultiplayerState(MultiplayerState.Client));"
+NEW_CLIENT_GUARD = "    WaitFor(!HasMultiplayerState(MultiplayerState.Client));"
 OLD_TAIL = "    SetEventFlag(9180, OFF);\n});"
 NEW_TAIL = (
     "    SetEventFlag(9180, OFF);\n"
@@ -52,16 +54,19 @@ def patch(source: bytes, *, verify_source: bool = True) -> bytes:
         )
     text = source.decode("utf-8-sig").replace("\r\n", "\n")
     body = event_body(text)
-    if body.count(OLD_GUARD) != 1 or body.count(OLD_TAIL) != 1:
+    if (body.count(OLD_GUARD) != 1 or body.count(OLD_CLIENT_GUARD) != 1
+            or body.count(OLD_TAIL) != 1):
         raise ValueError(f"event {EVENT} does not have the supported interaction shape")
 
-    patched_body = body.replace(OLD_GUARD, NEW_GUARD, 1).replace(OLD_TAIL, NEW_TAIL, 1)
+    patched_body = (body.replace(OLD_GUARD, NEW_GUARD, 1)
+                    .replace(OLD_CLIENT_GUARD, NEW_CLIENT_GUARD, 1)
+                    .replace(OLD_TAIL, NEW_TAIL, 1))
     if f"SetEventFlag({PASSWORD_FLAG}, ON)" in patched_body:
         raise ValueError("altar patch must not write the shuffled password flag")
     if patched_body.count(f"SetEventFlag({WITNESS_FLAG}, ON)") != 1:
         raise ValueError("altar patch must write exactly one synthetic witness")
     if patched_body.count("RestartEvent();") != body.count("RestartEvent();") + 1:
-        raise ValueError("altar patch must restart instead of completing its own event flag")
+        raise ValueError("altar patch must restart after recording the witness")
 
     start = text.index(f"$Event({EVENT},")
     return (text[:start] + patched_body + text[start + len(body) :]).encode("utf-8")

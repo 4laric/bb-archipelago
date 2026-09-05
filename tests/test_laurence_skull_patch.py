@@ -9,8 +9,10 @@ from pathlib import Path
 from tools.patch_laurence_skull import (
     EVENT,
     NEW_GUARD,
+    NEW_CLIENT_GUARD,
     NEW_TAIL,
     OLD_GUARD,
+    OLD_CLIENT_GUARD,
     OLD_TAIL,
     SUPPORTED_SOURCE_SHA256,
     event_body,
@@ -41,9 +43,9 @@ class LaurenceSkullPatchTests(unittest.TestCase):
         before = source.decode("utf-8-sig").replace("\r\n", "\n")
         after = patch(source).decode("utf-8")
         old_body = event_body(before)
-        new_body = old_body.replace(OLD_GUARD, NEW_GUARD, 1).replace(
-            OLD_TAIL, NEW_TAIL, 1
-        )
+        new_body = (old_body.replace(OLD_GUARD, NEW_GUARD, 1)
+                    .replace(OLD_CLIENT_GUARD, NEW_CLIENT_GUARD, 1)
+                    .replace(OLD_TAIL, NEW_TAIL, 1))
         start = before.index(f"$Event({EVENT},")
         expected = before[:start] + new_body + before[start + len(old_body) :]
         self.assertEqual(expected, after)
@@ -56,8 +58,23 @@ class LaurenceSkullPatchTests(unittest.TestCase):
     def test_interaction_event_no_longer_completes_its_password_flag(self):
         body = event_body(patch(bundled_source()).decode("utf-8"))
         self.assertNotIn("EndIf(ThisEvent());", body)
-        self.assertIn("EndIf(EventFlag(12401898));", body)
+        self.assertIn("WaitFor(!EventFlag(12401898));", body)
+        self.assertIn("WaitFor(!HasMultiplayerState(MultiplayerState.Client));", body)
+        self.assertNotIn("EndIf(HasMultiplayerState(MultiplayerState.Client));", body)
         self.assertEqual(EVENT, "12401803")
+
+    def test_witnessed_restart_and_reload_cannot_complete_password_event(self):
+        body = event_body(patch(bundled_source()).decode("utf-8"))
+        prefix, tail = body.split("SetEventFlag(12401898, ON);", 1)
+        self.assertIn("WaitFor(!EventFlag(12401898));", prefix)
+        self.assertIn("RestartEvent();", tail)
+        self.assertNotIn("EndIf(", body)
+        self.assertNotIn("SetEventFlag(12401803, ON);", body)
+
+    def test_patch_never_removes_legitimate_ap_password_state(self):
+        body = event_body(patch(bundled_source()).decode("utf-8"))
+        self.assertNotIn("SetEventFlag(12401803, OFF);", body)
+        self.assertNotIn("SetEventFlag(12401803, ON);", body)
 
     def test_identity_mismatch_fails_closed(self):
         with self.assertRaisesRegex(ValueError, "unsupported"):

@@ -8,10 +8,16 @@ serve as the altar location witness.
 `tools/patch_laurence_skull.py` pins the supported `m24_00_00_00` DarkScript
 source and makes two narrow changes inside event `12401803`:
 
-- completion is guarded by AP-only witness flag `12401898`, rather than
-  `ThisEvent()` / password flag `12401803`;
+- completion is replaced with a wait on the AP-only witness flag
+  `12401898` being off, rather than an ending `ThisEvent()` guard tied to
+  password flag `12401803`;
+- the multiplayer-client branch also waits for the inverse condition instead
+  of ending the event, so a guest cannot implicitly complete the password
+  event;
 - after the interaction and cutscene, it sets `12401898` and restarts the event
-  so the vanilla event-completion flag is never awarded.
+  so the vanilla event-completion flag is never awarded. A witnessed restart or
+  reload therefore remains blocked without touching a legitimate AP password
+  flag.
 
 The transform fails closed on a source hash or event-shape mismatch.
 
