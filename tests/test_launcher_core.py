@@ -20,6 +20,7 @@ from bb_launcher.core import (
     MAP_PREFIX,
     MODS_DIR_NAME,
     OWNER_NAME,
+    SEED_MANIFEST_FORMAT,
     SERIAL,
     SUPPRESSION_PATH,
     USER_MODS_DIR_NAME,
@@ -313,6 +314,10 @@ class LauncherCoreTests(unittest.TestCase):
         self.assertEqual(first.cache_key, other_seed.cache_key)
         self.assertEqual(first.cache_key, other_slot.cache_key)
         self.assertNotEqual(first.cache_key, changed_binder.cache_key)
+
+    def test_cache_identity_tracks_overlay_build_format(self):
+        material = identity("seed").cache_material()
+        self.assertEqual(material["overlay_build_format"], SEED_MANIFEST_FORMAT)
 
     def test_cache_composes_only_suppression_and_optional_map_outputs(self):
         cache, build_path = make_build(self.root, "seed", b"suppressed", with_maps=True)
