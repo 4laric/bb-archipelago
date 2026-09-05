@@ -4,7 +4,7 @@ import unittest
 
 from tools.build_cathedral_emevd import event
 from tools.build_common_emevd import instructions
-from tools.patch_category8_awards import EVENT_ID, patch
+from tools.patch_category8_awards import CATEGORY8_AWARDS, EVENT_ID, patch
 
 
 VANILLA = "$Event(0, Default, function() {\n    $InitializeEvent(0, 1, 2);\n});\n"
@@ -27,6 +27,17 @@ class CommonEmevdRoundTripTest(unittest.TestCase):
         expected = event(patched, str(EVENT_ID))
         mutated = expected.replace("AwardItemLot(itemLotId);", "AwardItemLot(0);")
         self.assertNotEqual(instructions(expected), instructions(mutated))
+
+    def test_each_award_uses_an_isolated_event(self):
+        patched = patch(VANILLA.encode("utf-8-sig")).decode("utf-8-sig")
+        self.assertEqual(patched.count("$Event("), len(CATEGORY8_AWARDS) + 1)
+        for index, row in enumerate(CATEGORY8_AWARDS):
+            initializer = (
+                f"$InitializeEvent(0, {EVENT_ID + index}, {row.token_goods_id}, "
+                f"{row.item_lot_id}, {row.ack_flag});"
+            )
+            self.assertIn(initializer, patched)
+            self.assertIn(f"$Event({EVENT_ID + index}, Restart", patched)
 
 
 if __name__ == "__main__":

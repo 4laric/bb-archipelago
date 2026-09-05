@@ -18,12 +18,14 @@ def patch(source: bytes) -> bytes:
     if text.count(event_zero) != 1:
         raise ValueError("common constructor is absent or ambiguous")
     initializers = "\n".join(
-        f"    $InitializeEvent({index}, {EVENT_ID}, {row.token_goods_id}, "
+        f"    $InitializeEvent(0, {EVENT_ID + index}, {row.token_goods_id}, "
         f"{row.item_lot_id}, {row.ack_flag});"
         for index, row in enumerate(CATEGORY8_AWARDS)
     )
     text = text.replace(event_zero, f"{event_zero}\n    {MARKER}\n{initializers}", 1)
-    body = f'''\n\n{MARKER}\n$Event({EVENT_ID}, Restart, function(itemId, itemLotId, eventFlagId) {{
+    bodies = []
+    for index, _row in enumerate(CATEGORY8_AWARDS):
+        bodies.append(f'''$Event({EVENT_ID + index}, Restart, function(itemId, itemLotId, eventFlagId) {{
     SetNetworkSyncState(Disabled);
     // The token may have been routed to the storage box (#342), so look
     // there too; a boxed token must still fire this event.
@@ -43,6 +45,5 @@ L0:
     AwardItemLot(itemLotId);
     SetEventFlag(eventFlagId, ON);
     RestartEvent();
-}});
-'''
-    return (text.rstrip() + body).encode("utf-8-sig")
+}});''')
+    return (text.rstrip() + f"\n\n{MARKER}\n" + "\n\n".join(bodies) + "\n").encode("utf-8-sig")
