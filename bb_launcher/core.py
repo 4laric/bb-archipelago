@@ -36,7 +36,12 @@ PATCH_DIR_NAMES = (f"{SERIAL}-patch", f"{SERIAL}-UPDATE")
 MODS_DIR_NAME = f"{SERIAL}-mods"
 USER_MODS_DIR_NAME = f"{SERIAL}-mods-user"
 SEED_MANIFEST_NAME = "seed-manifest.json"
-SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v1"
+# This format is also part of ``SeedIdentity.cache_material``.  Bump it for
+# any launcher-side generator change that can alter overlay bytes, even when
+# the AP world/runtime build strings in an existing seed request are unchanged.
+# v2 invalidates overlays made by the shared category-8 award event; those
+# overlays can strand a completed delivery token after the client is upgraded.
+SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v2"
 OWNER_NAME = ".bb-ap-owner.json"
 OWNER_FORMAT = "bb-launcher-overlay-owner-v1"
 TRANSACTION_NAME = ".bb-ap-launcher-transaction.json"
@@ -419,6 +424,7 @@ class SeedIdentity:
         value = self.as_dict()
         value.pop("seed")
         value.pop("slot")
+        value["overlay_build_format"] = SEED_MANIFEST_FORMAT
         return value
 
     @classmethod
