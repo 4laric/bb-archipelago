@@ -235,9 +235,25 @@ emblem.Instructions[14] = new EMEVD.Instruction(0, 0, Convert.FromHexString("ff0
 emblem.Instructions[15] = new EMEVD.Instruction(0, 0, Convert.FromHexString("0001ff00"));
 cathedral.Events.Add(emblem);
 
+var workshopDoor = new EMEVD.Event(12405710, EMEVD.Event.RestBehaviorType.Restart);
+foreach (var (bank, id, hex) in new[] {
+    (1003, 101, "00000000ed240000"),
+    (2005, 7, "b2a3240001000000"),
+    (2010, 5, "b2a3240003000000"),
+    (1000, 4, "00000000"),
+    (1014, 0, ""),
+    (2000, 2, "00000000"),
+    (3, 24, "00000000581b0000b2a32400"),
+    (2007, 1, "3bbe980001000100b2a324000000a040"),
+    (1000, 4, "01000000"),
+})
+    workshopDoor.Instructions.Add(new EMEVD.Instruction(bank, id, Convert.FromHexString(hex)));
+cathedral.Events.Add(workshopDoor);
+
 var cathedralShapes = new EMEVD.Event(2);
 foreach (var (bank, id, length) in new[] {
-    (3, 0, 8), (3, 6, 4), (0, 0, 4), (2003, 2, 8), (1000, 4, 4),
+    (3, 0, 8), (3, 4, 12), (3, 6, 4), (0, 0, 4), (2003, 2, 8), (1000, 4, 4),
+    (1000, 101, 4),
 })
     cathedralShapes.Instructions.Add(new EMEVD.Instruction(bank, id, new byte[length]));
 cathedral.Events.Add(cathedralShapes);

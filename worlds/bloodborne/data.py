@@ -38,7 +38,7 @@ ITEMS = (
     # Boss trophies are ordinary category-4 goods once received. Their vanilla
     # award lots are suppressed so the shop unlocks and Pendant conversion
     # follow the AP item instead of the boss kill.
-    Item("sword_hunter_badge", "Sword Hunter Badge", U),
+    Item("sword_hunter_badge", "Sword Hunter Badge", P),
     Item("old_hunter_badge", "Old Hunter Badge", U),
     Item("saw_hunter_badge", "Saw Hunter Badge", U),
     Item("crow_hunter_badge", "Crow Hunter Badge", U),
@@ -289,11 +289,11 @@ ENTRANCES = (
     Entrance("Paarl's rear gate", "Graveyard of the Darkbeast", "Old Yharnam",
              Rule.all("event_darkbeast_paarl_defeated")),
     Entrance("Healing Church Workshop door", "Cathedral Ward", "Healing Church Workshop",
-             Rule.all("event_blood_starved_beast_defeated")),
+             Rule.all("sword_hunter_badge")),
     # The audited edge is "Hunter Chief Emblem OR the Healing Church Workshop
     # route". Collapsing that into one two-clause rule on a single entrance is
     # what made the emblem vacuous: the workshop route's own prerequisite
-    # (Blood-starved Beast) is free from Cathedral Ward, so the emblem clause
+    # (Sword Hunter Badge) is separately represented, so the emblem clause
     # could never be the required one. The route is two hops in the game and is
     # now two hops here — the emblem opens the gate directly, the workshop
     # reaches the same plaza the long way round.
@@ -471,7 +471,7 @@ DLC_ATTIRE_ITEM_KEYS = frozenset(
 #    sphere 0 rather than a corridor the seed starts on the far side of;
 #  - Old Yharnam, reached freely from the Cathedral Ward lamp, ending at the
 #    Blood-starved Beast;
-#  - the Healing Church Workshop transit route, opened by defeating the Beast;
+#  - the Healing Church Workshop transit route, opened by Sword Hunter Badge;
 #  - the Grand Cathedral, reached either through that route or directly with
 #    the Hunter Chief Emblem, ending at Vicar Amelia.
 SLICE_REGIONS = (

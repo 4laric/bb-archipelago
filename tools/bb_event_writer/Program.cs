@@ -188,6 +188,9 @@ internal static class Program
 
     private const long LaurenceEvent = 12401803;
     private const long EmblemEvent = 12400760;
+    private const long WorkshopDoorEvent = 12405710;
+    private const int WorkshopDoorObject = 2401202;
+    private const int SwordHunterBadgeGoods = 4114;
     private const int WitnessFlag = 12401898;
     private const int PasswordFlag = 12401803;
     private const int FarSideFlag = 12400170;
@@ -199,12 +202,14 @@ internal static class Program
         if (!Path.GetFileName(o["source"]).Equals("m24_00_00_00.emevd.dcx", StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("source must be named m24_00_00_00.emevd.dcx");
         var emevd = Load(o["source"]);
-        var untouched = emevd.Events.Where(e => e.ID != LaurenceEvent && e.ID != EmblemEvent)
+        var untouched = emevd.Events.Where(e => e.ID != LaurenceEvent && e.ID != EmblemEvent
+                                                && e.ID != WorkshopDoorEvent)
             .Select(e => (e.ID, Fingerprint(e))).ToList();
         var eventCount = emevd.Events.Count;
 
         PatchLaurence(emevd);
         PatchEmblem(emevd);
+        PatchWorkshopDoor(emevd);
 
         if (emevd.Events.Count != eventCount)
             throw new InvalidDataException("Cathedral transform must not add or remove events");
@@ -221,7 +226,9 @@ internal static class Program
             source_sha256 = Sha256(o["source"]),
             output_sha256 = Sha256(o["output"]),
             output_relative_path = "dvdroot_ps4/event/m24_00_00_00.emevd.dcx",
-            owned_events = new[] { EmblemEvent, LaurenceEvent },
+            owned_events = new[] { EmblemEvent, LaurenceEvent, WorkshopDoorEvent },
+            workshop_door_object = WorkshopDoorObject,
+            workshop_badge_goods = SwordHunterBadgeGoods,
             laurence_witness_flag = WitnessFlag,
             suppressed_password_flag = PasswordFlag,
         });
@@ -295,6 +302,36 @@ internal static class Program
         foreach (var ins in e.Instructions)
             if (ins.Bank == 5 && ins.ID == 2 && Hex(ins.ArgData).EndsWith(farSide, StringComparison.Ordinal))
                 throw new InvalidDataException("gate patch left a far-side success path");
+    }
+
+    /// <summary>
+    /// tools/patch_sword_badge_workshop.py in instructions: the Workshop door
+    /// opens when the player owns the Sword Hunter Badge instead of when the
+    /// Blood-starved Beast mirror flag is set. Door animation, collision,
+    /// persistence and the locked interaction remain vanilla-owned.
+    /// </summary>
+    private static void PatchWorkshopDoor(EMEVD emevd)
+    {
+        var e = EventById(emevd, WorkshopDoorEvent);
+        if (e.Instructions.Count != 9 || e.Parameters.Count != 0)
+            throw new InvalidDataException(
+                $"event {WorkshopDoorEvent} does not have the supported Workshop-door shape");
+        // Vanilla begins with GotoIfEventFlag(L0, OFF, EventFlag, 9453).
+        Expect(e.Instructions[0], 1003, 101, "00000000ed240000", "Workshop door BSB guard");
+        // DarkScript 3.6.3 compiles
+        // `if (PlayerHasItem(ItemType.Goods, 4114))` into this condition and
+        // branch pair. The remaining nine instructions are byte-identical.
+        e.Instructions[0] = Clone(
+            emevd, 3, 4, Args((byte)1, (byte)3, (byte)0, (byte)0,
+                              SwordHunterBadgeGoods, (byte)0));
+        e.Instructions.Insert(1, Clone(
+            emevd, 1000, 101, Args((byte)0, (byte)1, (byte)1, (byte)0)));
+
+        if (e.Instructions.Count != 10)
+            throw new InvalidDataException("Workshop-door transform emitted the wrong instruction count");
+        Expect(e.Instructions[2], 2005, 7, "b2a3240001000000", "Workshop door animation");
+        Expect(e.Instructions[8], 2007, 1,
+               "3bbe980001000100b2a324000000a040", "Workshop door locked dialog");
     }
 
     // --------------------------------------------------------------- common

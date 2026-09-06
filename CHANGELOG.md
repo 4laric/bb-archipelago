@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The Healing Church Workshop door now opens when the player receives the
+  shuffled Sword Hunter Badge instead of when Blood-starved Beast dies. The
+  larger Amelia-route policy is still awaiting a decision in draft form (#376).
+
 - The Windows launcher no longer fails with a `NoneType.casefold` error when
   localized `tasklist` output cannot be decoded. Process checks now preserve
   raw output and refuse overlay changes when Windows does not return a complete

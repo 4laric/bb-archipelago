@@ -28,7 +28,7 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     # and the door is physically behind Gascoigne's arena. Vanilla awarded the
     # key on his death, which hid the second requirement inside the first.
     "Tomb of Oedon gate": {frozenset({"oedon_tomb_key", "event_gascoigne_defeated"})},
-    "Healing Church Workshop door": {frozenset({"event_blood_starved_beast_defeated"})},
+    "Healing Church Workshop door": {frozenset({"sword_hunter_badge"})},
     "Snatcher abduction": {frozenset({"event_blood_starved_beast_defeated"})},
     "Paarl's rear gate": {frozenset({"event_darkbeast_paarl_defeated"})},
     # The emblem opens the gate itself. The game's other way in is the Healing
@@ -66,7 +66,7 @@ DOCUMENTED_FREE = {
     "Blood Moon path to Hypogean Gaol",
     "Descent to Paarl",
     "Forbidden Woods clinic passage",
-    # The workshop's own door already costs Blood-starved Beast; the walk from
+    # The workshop's own door already costs Sword Hunter Badge; the walk from
     # it to the plaza costs nothing more.
     "Healing Church Workshop plaza route",
     # The road starts left of the Grand Cathedral entrance, so it is behind the
@@ -172,7 +172,7 @@ class CathedralPlazaRouteTests(unittest.TestCase):
     is free from Cathedral Ward and the Blood-starved Beast is free inside it,
     so the second clause is always satisfiable and the emblem never decides
     anything. The Amelia slice keeps the two routes as two edges: the emblem
-    is the direct shortcut, while defeating BSB opens the Workshop route.
+    is the direct shortcut, while Sword Hunter Badge opens the Workshop route.
     """
 
     def test_the_plaza_gate_is_emblem_only(self):

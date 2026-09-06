@@ -290,7 +290,7 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 21)
+        self.assertEqual(counts["Blood Vial"], 22)
         self.assertEqual(counts["Quicksilver Bullets x3"], 6)
         self.assertEqual(counts["Blood Stone Shards x2"], 31)
         self.assertEqual(counts["Twin Blood Stone Shards x2"], 31)
@@ -304,8 +304,8 @@ class BloodborneModelTests(unittest.TestCase):
         # Review finding W5 removed 16 seeded locations, so the weighted
         # remainder now falls to a different set of these names. The split is
         # restated per name rather than as one shared number.
-        for name in ("Antidote x2", "Sedatives x2"):
-            self.assertEqual(counts[name], 11, name)
+        self.assertEqual(counts["Antidote x2"], 11)
+        self.assertEqual(counts["Sedatives x2"], 10)
         for name in ("Poison Knife x3", "Blue Elixir", "Beast Blood Pellet",
                      "Lead Elixir", "Oil Urn x2", "Numbing Mist x2",
                      "Pungent Blood Cocktail x2", "Shaman Bone Blade",
@@ -494,8 +494,8 @@ class BloodborneModelTests(unittest.TestCase):
         """Reachability, without needing an Archipelago checkout.
 
         Every seeded location must be reachable with the seeded pool. The
-        emblem is a shortcut, not a Go-mode requirement: after Blood-starved
-        Beast, the Workshop route reaches the same plaza.
+        emblem is a shortcut, not a Go-mode requirement: after receiving Sword
+        Hunter Badge, the Workshop route reaches the same plaza.
         """
         from worlds.bloodborne.data import SLICE_ITEM_KEYS, SLICE_REGIONS
 
@@ -512,7 +512,7 @@ class BloodborneModelTests(unittest.TestCase):
             (set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)) - {"hunter_chief_emblem"})
         self.assertEqual(with_everything, without_emblem)
 
-    def test_abandoned_workshop_checks_open_after_blood_starved_beast(self):
+    def test_abandoned_workshop_checks_open_with_sword_hunter_badge(self):
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
 
         workshop_keys = {
@@ -531,14 +531,10 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertFalse(locked_workshop, locked_workshop)
 
         inventory = set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)
-        without_beast = slice_reachable(
-            inventory - {"event_blood_starved_beast_defeated"},
-            locations=[location for location in locations.values()
-                       if location.key != "boss_blood_starved_beast"],
-        )
-        self.assertTrue(workshop_keys.isdisjoint(without_beast), sorted(without_beast))
-        with_beast = slice_reachable(inventory)
-        self.assertTrue(workshop_keys <= with_beast, sorted(with_beast))
+        without_badge = slice_reachable(inventory - {"sword_hunter_badge"})
+        self.assertTrue(workshop_keys.isdisjoint(without_badge), sorted(without_badge))
+        with_badge = slice_reachable(inventory)
+        self.assertTrue(workshop_keys <= with_badge, sorted(with_badge))
 
     def test_withholding_the_oedon_tomb_key_strands_the_seed_in_central_yharnam(self):
         """The point of shuffling the key: sphere 0 is a place, not the world.
@@ -625,7 +621,7 @@ class BloodborneModelTests(unittest.TestCase):
                          LOCATION_ID_BY_KEY["fixed_central_yharnam_lot_2410295"])
 
     def test_the_goal_requires_the_oedon_and_lunarium_keys_but_not_the_emblem(self):
-        """BSB opens the Workshop route, making the emblem an optional shortcut."""
+        """Sword Hunter Badge opens the Workshop route, keeping Emblem optional."""
         from worlds.bloodborne import GOAL_LOCATION_KEY
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
 
@@ -652,6 +648,8 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn("Lunarium Key", build_item_pool_names(keys))
             self.assertIn("forbidden_woods_password", keys)
             self.assertIn('"Fear the Old Blood"', build_item_pool_names(keys))
+            self.assertIn("sword_hunter_badge", keys)
+            self.assertIn("Sword Hunter Badge", build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}

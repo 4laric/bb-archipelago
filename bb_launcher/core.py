@@ -43,7 +43,7 @@ SEED_MANIFEST_NAME = "seed-manifest.json"
 # overlays could strand a completed delivery token after the client upgraded.
 # v3 invalidates Cathedral overlays whose Laurence event could implicitly set
 # the shuffled Forbidden Woods password flag after the altar interaction.
-SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v3"
+SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v4"
 OWNER_NAME = ".bb-ap-owner.json"
 OWNER_FORMAT = "bb-launcher-overlay-owner-v1"
 TRANSACTION_NAME = ".bb-ap-launcher-transaction.json"
@@ -619,7 +619,9 @@ class SeedCache:
                             record["sha256"] for record in records
                             if record["path"] == CATHEDRAL_EVENT_PATH
                         ),
-                        "events": [12400760, 12401803],
+                        "events": [12400760, 12401803, 12405710],
+                        "workshop_door_object": 2401202,
+                        "workshop_badge_goods": 4114,
                         "laurence_witness_flag": 12401898,
                         "suppressed_password_flag": 12401803,
                     }
@@ -735,8 +737,12 @@ class SeedCache:
                 raise ValidationError("Cathedral event output has the wrong component")
             if cathedral.get("sha256") != cathedral_record.get("sha256"):
                 raise ValidationError("Cathedral event witness hash does not match its record")
-            if cathedral.get("events") != [12400760, 12401803]:
+            if cathedral.get("events") != [12400760, 12401803, 12405710]:
                 raise ValidationError("Cathedral event witness has unexpected owned events")
+            if cathedral.get("workshop_door_object") != 2401202:
+                raise ValidationError("Cathedral event witness has the wrong Workshop door")
+            if cathedral.get("workshop_badge_goods") != 4114:
+                raise ValidationError("Cathedral event witness has the wrong Workshop badge")
             if cathedral.get("laurence_witness_flag") != 12401898:
                 raise ValidationError("Cathedral event witness has the wrong Laurence flag")
             if cathedral.get("suppressed_password_flag") != 12401803:

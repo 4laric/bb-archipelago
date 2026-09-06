@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile the two owned Cathedral Ward EMEVD edits from a user-owned binary."""
+"""Compile the owned Cathedral Ward EMEVD edits from a user-owned binary."""
 
 from __future__ import annotations
 
@@ -13,9 +13,10 @@ from pathlib import Path
 
 from tools.patch_emblem_chokepoint import patch as patch_emblem
 from tools.patch_laurence_skull import patch as patch_laurence
+from tools.patch_sword_badge_workshop import patch as patch_workshop
 
 
-FORMAT = "bb-cathedral-emevd-build-v1"
+FORMAT = "bb-cathedral-emevd-build-v2"
 EVENT_FILE = "m24_00_00_00.emevd.dcx"
 OUTPUT_RELATIVE_PATH = f"dvdroot_ps4/event/{EVENT_FILE}"
 DARKSCRIPT_VERSION = "3.6.3"
@@ -48,7 +49,7 @@ def unrelated_events(source: str) -> dict[str, str]:
         if not body.startswith("$Event("):
             continue
         event_id = body[7:].split(",", 1)[0]
-        if event_id not in {"12400760", "12401803"}:
+        if event_id not in {"12400760", "12401803", "12405710"}:
             result[event_id] = body
     return result
 
@@ -102,8 +103,11 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
         baseline_text = (baseline_verify_dir / f"{EVENT_FILE}.js").read_text(
             encoding="utf-8-sig"
         )
-        patched = patch_laurence(
-            patch_emblem(original_source, verify_source=False), verify_source=False
+        patched = patch_workshop(
+            patch_laurence(
+                patch_emblem(original_source, verify_source=False), verify_source=False
+            ),
+            verify_source=False,
         )
         source_path.write_bytes(patched)
         run_compiler(executable, "compile", source_dir, compiled_dir)
@@ -125,6 +129,8 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
             raise ValueError(f"compile changed unrelated events: {changed}")
         if event(verified_text, "12400760") != event(expected_text, "12400760"):
             raise ValueError("compiled Emblem event did not round-trip")
+        if event(verified_text, "12405710") != event(expected_text, "12405710"):
+            raise ValueError("compiled Workshop-door event did not round-trip")
 
         output_binary.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(compiled, output_binary)
@@ -136,7 +142,9 @@ def build(executable: Path, source_binary: Path, output_binary: Path, manifest: 
             "source_sha256": sha256(source_binary),
             "output_sha256": sha256(output_binary),
             "output_relative_path": OUTPUT_RELATIVE_PATH,
-            "events": [12400760, 12401803],
+            "events": [12400760, 12401803, 12405710],
+            "workshop_door_object": 2401202,
+            "workshop_badge_goods": 4114,
             "laurence_witness_flag": 12401898,
             "suppressed_password_flag": 12401803,
         }, indent=2) + "\n", encoding="utf-8")
