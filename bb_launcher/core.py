@@ -39,9 +39,11 @@ SEED_MANIFEST_NAME = "seed-manifest.json"
 # This format is also part of ``SeedIdentity.cache_material``.  Bump it for
 # any launcher-side generator change that can alter overlay bytes, even when
 # the AP world/runtime build strings in an existing seed request are unchanged.
-# v2 invalidates overlays made by the shared category-8 award event; those
-# overlays can strand a completed delivery token after the client is upgraded.
-SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v2"
+# v2 invalidated overlays made by the shared category-8 award event; those
+# overlays could strand a completed delivery token after the client upgraded.
+# v3 invalidates Cathedral overlays whose Laurence event could implicitly set
+# the shuffled Forbidden Woods password flag after the altar interaction.
+SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v3"
 OWNER_NAME = ".bb-ap-owner.json"
 OWNER_FORMAT = "bb-launcher-overlay-owner-v1"
 TRANSACTION_NAME = ".bb-ap-launcher-transaction.json"

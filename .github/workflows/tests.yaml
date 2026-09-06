@@ -575,7 +575,9 @@ jobs:
           import re
           expected = Path("tests/fixtures/laurence_emitted_dump.txt").read_text()
           actual = Path("work/integration/laurence-dump.txt").read_text()
-          instructions = lambda text: re.findall(r"^  \[\d+\].*$", text, re.M)
+          instructions = lambda text: [
+              line.rstrip() for line in re.findall(r"^  \[\d+\].*$", text, re.M)
+          ]
           assert instructions(actual) == instructions(expected), (actual, expected)
           PY
           python -m unittest tests.test_laurence_skull_event_runtime
