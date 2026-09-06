@@ -758,6 +758,14 @@ def _request_identity(
             seen_drop_fields.add(key)
     elif enemy_drop_assignments is not None or enemy_drop_mode is not None:
         raise ValidationError("AP request disables enemy drops but still supplies a plan")
+    from worlds.bloodborne.insight_armor import build_insight_armor_suppression
+    from worlds.bloodborne.attire import ATTIRE_CATALOG
+    insight_rows = request.get("insight_armor_suppression", [])
+    allowed_insight = build_insight_armor_suppression({p.item_key for p in ATTIRE_CATALOG})
+    if (not isinstance(insight_rows, list)
+            or any(row not in allowed_insight for row in insight_rows)
+            or len({row["row_id"] for row in insight_rows}) != len(insight_rows)):
+        raise ValidationError("AP request has an invalid Insight armor suppression plan")
     raw_category8_awards = request.get("category8_awards", {})
     if (not isinstance(raw_category8_awards, dict)
             or any(not isinstance(key, str) or not key.isdecimal()
@@ -804,6 +812,7 @@ def _request_identity(
             enemy_drop_assignments if randomize_enemy_drops else None),
         "enemy_drop_mode": enemy_drop_mode if randomize_enemy_drops else None,
         "category8_awards": category8_awards,
+        "insight_armor_suppression": insight_rows,
     }
 
 
@@ -975,6 +984,7 @@ def _composes_seed_binder(request: Mapping[str, Any]) -> bool:
         or request["shop_gate_permutation"] is not None
         or request["enemy_drop_assignments"] is not None
         or bool(request["category8_awards"])
+        or bool(request.get("insight_armor_suppression"))
     )
 
 
@@ -1166,6 +1176,7 @@ class LauncherWorkflow:
                 "shop_gate_permutation": request["shop_gate_permutation"],
                 "enemy_drop_assignments": request["enemy_drop_assignments"],
                 "category8_awards": request["category8_awards"],
+                "insight_armor_suppression": request.get("insight_armor_suppression", []),
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -1331,6 +1342,7 @@ class LauncherWorkflow:
                     "requirement_families": request["weapon_requirement_families"],
                     "shop_gate_permutation": request["shop_gate_permutation"],
                     "enemy_drop_assignments": request["enemy_drop_assignments"],
+                    "insight_armor_suppression": request.get("insight_armor_suppression", []),
                 },
             )
         paths = write_client_runtime_config(

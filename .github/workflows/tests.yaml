@@ -653,3 +653,22 @@ jobs:
             echo "or the bundle is stale. Both are real; neither is cosmetic."
             exit 1
           fi
+
+  insight-armor-writer:
+    name: Insight armor production writer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: |
+          git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
+          git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+          dotnet build tools/bb_suppression_writer -c Release -p:SoulsFormatsNextRoot="$PWD/_soulsformats"
+      - run: python -m unittest tests.test_insight_armor tests.integration_insight_writer
+        env:
+          BB_INSIGHT_WRITER: tools/bb_suppression_writer/bin/Release/net9.0/BBSuppressionWriter.dll
