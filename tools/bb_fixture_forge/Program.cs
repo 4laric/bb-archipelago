@@ -201,6 +201,51 @@ common.Write(commonPath);
 if (EMEVD.Read(commonPath).Events.Count != 2)
     throw new InvalidDataException("synthetic event fixture did not round-trip");
 
+// A synthetic Cathedral source exercises both owned transforms. Its Laurence
+// event has the reviewed vanilla instruction shape, while the separate shape
+// event supplies the opcodes cloned by the writer. No game bytes are included.
+var cathedral = new EMEVD(EMEVD.Game.Bloodborne);
+var laurence = new EMEVD.Event(12401803);
+foreach (var (bank, id, hex) in new[] {
+    (2006, 1, "55ac240000000000"),
+    (1003, 2, "0001010000000000"),
+    (1003, 101, "00010000883cbd00"),
+    (3, 0, "00010000883cbd00"),
+    (1014, 0, ""),
+    (2006, 2, "55ac2400"),
+    (1003, 6, "00010000"),
+    (4, 3, "010000001027000000000000"),
+    (3, 24, "010000000a9f240009a62400"),
+    (0, 0, "00010100"),
+    (2003, 2, "dc23000001000000"),
+    (1001, 1, "01000000"),
+    (2006, 1, "55ac240001000000"),
+    (2002, 6, "1e366e0100000000ffffffff180000001027000002000000"),
+    (1001, 1, "01000000"),
+    (2003, 2, "dc23000000000000"),
+})
+    laurence.Instructions.Add(new EMEVD.Instruction(bank, id, Convert.FromHexString(hex)));
+cathedral.Events.Add(laurence);
+
+var emblem = new EMEVD.Event(12400760);
+for (int i = 0; i < 58; i++)
+    emblem.Instructions.Add(new EMEVD.Instruction(1014, 0, Array.Empty<byte>()));
+emblem.Instructions[11] = new EMEVD.Instruction(5, 2, Convert.FromHexString("030000002a36bd00"));
+emblem.Instructions[14] = new EMEVD.Instruction(0, 0, Convert.FromHexString("ff010300"));
+emblem.Instructions[15] = new EMEVD.Instruction(0, 0, Convert.FromHexString("0001ff00"));
+cathedral.Events.Add(emblem);
+
+var cathedralShapes = new EMEVD.Event(2);
+foreach (var (bank, id, length) in new[] {
+    (3, 0, 8), (3, 6, 4), (0, 0, 4), (2003, 2, 8), (1000, 4, 4),
+})
+    cathedralShapes.Instructions.Add(new EMEVD.Instruction(bank, id, new byte[length]));
+cathedral.Events.Add(cathedralShapes);
+string cathedralPath = Path.Combine(outputRoot, "event", "m24_00_00_00.emevd.dcx");
+cathedral.Write(cathedralPath);
+if (EMEVD.Read(cathedralPath).Events.Single(e => e.ID == 12401803).Instructions.Count != 16)
+    throw new InvalidDataException("synthetic Cathedral event fixture did not round-trip");
+
 Console.WriteLine(
     $"forge maps=2 placements_per_map={placements.Length} enemies_total={forgedEnemies} "
     + $"suppression_rows={paramCheck.Rows.Count} output={outputRoot}");

@@ -230,9 +230,10 @@ internal static class Program
 
     /// <summary>
     /// tools/patch_laurence_skull.py in instructions: the guard
-    /// <c>EndIf(ThisEvent())</c> becomes <c>EndIf(EventFlag(12401898))</c>,
+    /// <c>EndIf(ThisEvent())</c> becomes <c>WaitFor(!EventFlag(12401898))</c>,
     /// and the tail gains <c>SetEventFlag(12401898, ON); RestartEvent();</c>
-    /// so the event never completes and never awards password flag 12401803.
+    /// so a witnessed event remains alive across restart/reload and never awards
+    /// password flag 12401803 through implicit event completion.
     /// </summary>
     private static void PatchLaurence(EMEVD emevd)
     {
@@ -241,7 +242,25 @@ internal static class Program
             throw new InvalidDataException($"event {LaurenceEvent} does not have the supported interaction shape");
         // 1003[2] EndIfEventFlag(endType=End, state=ON, flagType=ThisEvent, flag=0)
         Expect(e.Instructions[1], 1003, 2, "0001010000000000", "Laurence guard");
-        e.Instructions[1] = Clone(emevd, 1003, 2, Args((byte)0, (byte)1, (byte)0, (byte)0, WitnessFlag));
+        // 3[0] WaitFor(EventFlag(state=OFF)); the negated witness condition
+        // blocks forever after the altar interaction instead of ending the
+        // event and implicitly setting its ID as a vanilla completion flag.
+        e.Instructions[1] = Clone(emevd, 3, 0, Args((byte)0, (byte)0, (byte)0, (byte)0, WitnessFlag));
+        // 1003[6] is the vanilla EndIf(client) path.  Waiting for the
+        // inverse condition keeps a guest from completing event 12401803.
+        Expect(e.Instructions[6], 1003, 6, "00010000", "Laurence client guard");
+        e.Instructions[6] = Clone(emevd, 3, 6, Args((byte)1, (byte)1, (byte)0, (byte)0));
+        // DarkScript compiles WaitFor(condition) as a condition definition
+        // followed by an explicit MAIN wait for that condition group.  The
+        // definition alone would fall through and would also collide with the
+        // action-button condition's vanilla group 1.
+        Expect(e.Instructions[7], 4, 3, "010000001027000000000000", "Laurence character condition");
+        Expect(e.Instructions[8], 3, 24, "010000000a9f240009a62400", "Laurence action condition");
+        Expect(e.Instructions[9], 0, 0, "00010100", "Laurence action wait");
+        e.Instructions[7] = Clone(emevd, 4, 3, Args((byte)2, (byte)0, (byte)0, (byte)0, 10000, 0));
+        e.Instructions[8] = Clone(emevd, 3, 24, Args((byte)2, (byte)0, (byte)0, (byte)0, 2400010, 2401801));
+        e.Instructions[9] = Clone(emevd, 0, 0, Args((byte)0, (byte)1, (byte)2, (byte)0));
+        e.Instructions.Insert(7, Clone(emevd, 0, 0, Args((byte)0, (byte)0, (byte)1, (byte)0)));
         var setWitness = Clone(emevd, 2003, 2, Args(WitnessFlag, (byte)1));
         var restart = Clone(emevd, 1000, 4, Args((byte)1));
         e.Instructions.Add(setWitness);

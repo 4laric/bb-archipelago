@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Laurence's Skull no longer completes the vanilla event that owns the
+  Forbidden Woods password flag. Its AP witness and multiplayer guards now
+  wait without ending the event, preventing premature password dialogue after
+  restart or reload (#373).
+
 - Native delivery now rejects storage inventory in both hooks and host reads,
   preventing a repository quantity change from redirecting a pending grant.
   The launcher migrates known legacy category-8 lot IDs to the bundled event

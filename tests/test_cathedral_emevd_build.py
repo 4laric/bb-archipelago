@@ -23,6 +23,8 @@ class CathedralEmevdBuildTests(unittest.TestCase):
         skull = event(text, "12401803")
         self.assertIn("SetEventFlag(12401898, ON);", skull)
         self.assertNotIn("EndIf(ThisEvent());", skull)
+        self.assertIn("WaitFor(!EventFlag(12401898));", skull)
+        self.assertIn("WaitFor(!HasMultiplayerState(MultiplayerState.Client));", skull)
         self.assertEqual(
             unrelated_events(source.decode("utf-8-sig")), unrelated_events(text)
         )

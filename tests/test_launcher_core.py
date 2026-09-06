@@ -318,6 +318,10 @@ class LauncherCoreTests(unittest.TestCase):
     def test_cache_identity_tracks_overlay_build_format(self):
         material = identity("seed").cache_material()
         self.assertEqual(material["overlay_build_format"], SEED_MANIFEST_FORMAT)
+        self.assertEqual(SEED_MANIFEST_FORMAT, "bb-launcher-seed-build-v3")
+        old_material = {**material, "overlay_build_format": "bb-launcher-seed-build-v2"}
+        old_key = hashlib.sha256(core.canonical_json(old_material)).hexdigest()
+        self.assertNotEqual(identity("seed").cache_key, old_key)
 
     def test_cache_composes_only_suppression_and_optional_map_outputs(self):
         cache, build_path = make_build(self.root, "seed", b"suppressed", with_maps=True)
