@@ -398,6 +398,29 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         && randomizeShopElement.ValueKind == JsonValueKind.True;
     bool randomizeDrops = root.TryGetProperty("randomize_enemy_drops", out JsonElement randomizeDropsElement)
         && randomizeDropsElement.ValueKind == JsonValueKind.True;
+    var insightRows = new Dictionary<int, (int Equip, int Gate)>();
+    if (root.TryGetProperty("insight_armor_suppression", out JsonElement insight))
+    {
+        if (insight.ValueKind != JsonValueKind.Array)
+            throw new InvalidDataException("Insight suppression must be an array");
+        foreach (var row in insight.EnumerateArray())
+        {
+            int id = row.GetProperty("row_id").GetInt32();
+            int equip = row.GetProperty("equip_id").GetInt32();
+            int gate = row.GetProperty("qwc_id").GetInt32();
+            int family = id / 10000 * 10000, suffix = id % 10000;
+            var expected = suffix switch {
+                >= 40 and <= 43 => (130000 + (suffix - 40) * 1000, 5910),
+                >= 60 and <= 63 => (40000 + (suffix - 60) * 1000, 5090),
+                >= 64 and <= 67 => (210000 + (suffix - 64) * 1000, 5091),
+                >= 90 and <= 93 => (370000 + (suffix - 90) * 1000, 6675),
+                _ => (-1, -1),
+            };
+            if (family < 200000 || family > 240000 || expected != (equip, gate)
+                || !insightRows.TryAdd(id, (equip, gate)))
+                throw new InvalidDataException($"unreviewed Insight armor row {id}");
+        }
+    }
     List<Category8Award> category8Awards = [];
     if (root.TryGetProperty("category8_awards", out JsonElement awardsElement))
     {
@@ -413,7 +436,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         ).ToList();
     }
     if (!randomizeStarting && !removeRequirements && !randomizeShops && !randomizeDrops
-        && category8Awards.Count == 0)
+        && category8Awards.Count == 0 && insightRows.Count == 0)
         throw new InvalidDataException("request contains no seed parameter edits");
     int[] right = [];
     int[] left = [];
@@ -495,6 +518,18 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     var originalFiles = game.Files.Select(file =>
         new FileState(file.ID, file.Name, (byte[])file.Bytes.Clone())).ToList();
     var originalShopRows = shops.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
+    // Remove only reviewed shop rows; preserve unlock and purchase flags globally.
+    foreach (var (id, expected) in insightRows)
+    {
+        var row = shops.Rows.SingleOrDefault(row => row.ID == id)
+            ?? throw new InvalidDataException($"missing Insight armor row {id}");
+        if (Convert.ToInt32(RequireCell(row, "equipId").Value) != expected.Equip
+            || Convert.ToInt32(RequireCell(row, "qwcId").Value) != expected.Gate
+            || Convert.ToInt32(RequireCell(row, "shopType").Value) != 5
+            || Convert.ToInt32(RequireCell(row, "equipType").Value) != 1)
+            throw new InvalidDataException($"Insight armor source drift at {id}");
+    }
+    shops.Rows.RemoveAll(row => insightRows.ContainsKey(row.ID));
     var originalWeaponRows = weapons.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
     var originalNpcRows = npcs.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
     var startingAssignments = new[] { 2000, 2001, 2002 }.Zip(right)
@@ -638,6 +673,9 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     }
     PARAM checkedShops = PARAM.Read(checkedShopFile.Bytes);
     checkedShops.ApplyParamdef(shopDefinition);
+    if (!checkedShops.Rows.Select(row => row.ID).ToHashSet().SetEquals(
+            originalShopRows.Keys.Where(id => !insightRows.ContainsKey(id))))
+        throw new InvalidDataException("Insight suppression changed unexpected shop row IDs");
     var startingRows = startingAssignments.Select(pair => pair.First).ToHashSet();
     foreach (PARAM.Row row in checkedShops.Rows)
     {
@@ -723,7 +761,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         if (Convert.ToInt32(RequireCell(token, "isDeposit").Value) != 0)
             throw new InvalidDataException($"{award.ItemKey}: token remained depositable");
     }
-    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count} output={outputPath}");
+    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} insight_armor_rows_removed={insightRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count} output={outputPath}");
 }
 
 static BinderFile RequireSingleFile(BND4 binder, string suffix)

@@ -77,3 +77,24 @@ for every distinct protector row:
 The already observed Charred Hunter Garb is the category-1 allocator canary,
 not evidence for every protector row. Until the remaining rows are witnessed,
 the diagnostic build must label their descriptor provenance as inferred.
+
+
+### Boss Insight stock (#377)
+
+New seed requests carry `insight_armor_suppression`, an audited list of shop rows
+for armor actually included in the AP pool. The list is empty when armor is not
+in the pool; Maria rows remain available when her DLC gear is excluded.
+Gascoigne, Bone Ash, Madman and Maria have 80 rows across five families. Henryk,
+Djura, consumables and materials remain unchanged.
+
+The seed parameter writer removes those exact rows after verifying protector,
+shop type and unlock gate, then reopens the binder and checks all retained rows
+and unrelated files. It does not clear boss or purchase flags. This is a narrow
+exception to global armor-source suppression, not permission to chase other lots.
+The plan participates in cache identity and the seed suppression manifest.
+Older contracts omit the list and retain existing behavior.
+
+Validation: production-writer tests use the committed binder and compare the
+entire retained ShopLineupParam listing. In-game menu behavior after row removal,
+Chalice unlock provenance and repeated/NG shop contexts still require live
+acceptance; no live game files have been changed for this implementation.

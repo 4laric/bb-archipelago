@@ -102,6 +102,10 @@ seed, so an unexpected "not armed" at launch is this.
 - **Chalice Dungeons are out of scope** entirely.
 - **The apworld's Python text client is a manual fallback only.** Automatic
   checks and delivery need the native client the launcher starts.
+- **Received items show no in-game popup yet.** Delivery lands and the client
+  window toast shows the truthful name, but Bloodborne's own lower-corner
+  pickup popup has not been confirmed on any lane. See
+  docs/NATIVE-ITEM-POPUPS.md for the plan and the guided probe.
 
 ## Verified in this beta
 

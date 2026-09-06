@@ -1,10 +1,16 @@
 # Changelog
 
+
 ## Unreleased
 
 - The Healing Church Workshop door now opens when the player receives the
   shuffled Sword Hunter Badge instead of when Blood-starved Beast dies. The
   larger Amelia-route policy is still awaiting a decision in draft form (#376).
+- Suppress boss Insight armor shop rows only for attire included in the AP pool; preserve NPC armor and other stock (#377).
+- Added a guided operator probe (`probe-popup`) and a client `/mark` console
+  command for issue #330: whether a received AP item can produce Bloodborne's
+  own non-blocking pickup popup by going through the event-award lane. See
+  docs/NATIVE-ITEM-POPUPS.md. No delivery behavior changed.
 
 - The Windows launcher no longer fails with a `NoneType.casefold` error when
   localized `tasklist` output cannot be decoded. Process checks now preserve
