@@ -435,6 +435,206 @@ def _probe_deliver(args, memory, base, step, expected_before: int):
     )
 
 
+DEFAULT_POPUP_REPORT = "bb-popup-probe.jsonl"
+
+
+def _popup_report_path(args: argparse.Namespace) -> Path:
+    """The operator's working directory, same rationale as _probe_report_path."""
+    return Path(args.report) if args.report else Path.cwd() / DEFAULT_POPUP_REPORT
+
+
+def _popup_deliver(args, memory, base, step):
+    """Deliver one popup-probe grant through the ordinary machinery.
+
+    Reuses :func:`_probe_deliver` for the shape of the call (same
+    GrantSession, same journal tag, same poll loop) -- a ``PopupStep``
+    exposes ``descriptor``, ``quantity`` and ``tag`` exactly like a
+    storage-probe ``ProbeStep``, so nothing here re-implements it.
+    """
+    from . import popup_probe
+
+    result = _probe_deliver(args, memory, base, step, expected_before=None)
+    return popup_probe.DeliveryResult(
+        status=result.status, detail=result.detail, native_result=result.native_result,
+    )
+
+
+def _load_console_marks(args: argparse.Namespace) -> list[dict]:
+    """Marks the client's ``/mark`` command wrote (worlds/bloodborne/probe_marks.py).
+
+    Best effort: this CLI runs from the repo, the marks file is written by the
+    client process from wherever it runs, and the two are not guaranteed to
+    share a working directory. ``--marks`` (or ``BB_PROBE_MARKS``, the same
+    env var the client honours) points this reader at the right file; a
+    missing file just means no marks to merge, not an error.
+    """
+    import os
+
+    from worlds.bloodborne.probe_marks import DEFAULT_MARKS_FILENAME, read_marks
+
+    path = Path(args.marks) if getattr(args, "marks", None) else (
+        Path(os.environ["BB_PROBE_MARKS"]) if os.environ.get("BB_PROBE_MARKS")
+        else Path.cwd() / DEFAULT_MARKS_FILENAME
+    )
+    return read_marks(path)
+
+
+def _cmd_probe_popup(args: argparse.Namespace) -> int:
+    from . import popup_probe
+
+    popup_probe.validate_steps()
+    report = _popup_report_path(args)
+
+    if args.runbook:
+        print(popup_probe.runbook())
+        return 0
+    if args.summary:
+        records = popup_probe.read_records(report)
+        marks = _load_console_marks(args)
+        if not records:
+            print(f"no probe records in {report}. Nothing to summarise.")
+            return 1
+        save_ids = tuple(sorted({record.get("save_id", "?") for record in records}))
+        print(popup_probe.render_summary(records, save_ids=save_ids, marks=marks))
+        print(f"\n(read {len(records)} record(s) from {report})")
+        print("Paste the block above into issue #330.")
+        return 0
+
+    if not args.save_id:
+        print("REFUSING: --save-id names the throwaway save this session runs on. It "
+              "keys the journal, so resuming into a DIFFERENT save would silently skip "
+              "steps that save never ran.")
+        return 1
+
+    steps = popup_probe.steps_for(args.only)
+    if args.only:
+        unknown = set(args.only) - {step.step_id for step in popup_probe.POPUP_STEPS}
+        if unknown:
+            print(f"REFUSING: unknown step id(s): {', '.join(sorted(unknown))}")
+            return 1
+    if args.skip:
+        steps = tuple(step for step in steps if step.step_id not in set(args.skip))
+    if not steps:
+        print("no steps selected")
+        return 1
+
+    journal_path = _journal_path(args)
+    todo, done = popup_probe.pending_steps(steps, _read_journal(journal_path), args.save_id)
+    for step in done:
+        print(f"[{step.step_id}] already recorded for save {args.save_id!r}; skipping. "
+              f"(Re-run it with --redo {step.step_id}.)")
+    if args.redo:
+        redo = set(args.redo)
+        todo = [step for step in steps if step.step_id in redo] + [
+            step for step in todo if step.step_id not in redo
+        ]
+    if not todo:
+        print(f"every selected step is already recorded for save {args.save_id!r}. "
+              "Run with --summary to render the report.")
+        return 0
+
+    if not args.arm:
+        print(popup_probe.runbook(tuple(todo)))
+        print("\nDry run: nothing was queued and no guest memory was touched. "
+              "Re-run with --arm --yes-throwaway-save to deliver.")
+        return 0
+    if not args.yes_throwaway_save:
+        print("REFUSING: --yes-throwaway-save is required. Communion is a unique "
+              "insert once-per-save and is not removable afterwards. Use a save you "
+              "are willing to delete.")
+        return 1
+
+    from .process import StaleRequest
+
+    memory, base = _attach(args, writable=True)
+    with memory:
+        try:
+            _gate_request_cell(memory, base, args.clear_stale_request)
+        except StaleRequest as exc:
+            print(f"\nREFUSING TO PROBE: {exc}")
+            return 1
+        return _run_popup_steps(args, memory, base, todo, report, journal_path)
+
+
+def _run_popup_steps(args, memory, base, todo, report, journal_path) -> int:
+    from . import popup_probe
+
+    recorded = 0
+    for step in todo:
+        tag = step.tag(args.save_id)
+        print("\n" + "=" * 72)
+        print(f"[{step.step_id}]  {step.hypothesis}  {step.lane} lane")
+        print(f"WHY:   {step.rationale}")
+        print(f"DO THIS IN GAME FIRST (and `mark {step.step_id}` in the CLIENT console):"
+              f"\n  {step.setup}")
+        answer = input("ready? (y = deliver / s = skip this step / q = stop here): ").strip().lower()
+        if answer.startswith("q"):
+            print("stopping. Re-run the same command to resume where you left off.")
+            break
+        if answer.startswith("s"):
+            _record_tag(journal_path, tag, "skipped", probe_status="skipped")
+            print(f"[{step.step_id}] skipped and journalled; it will not be offered again "
+                  f"for save {args.save_id!r} unless you pass --redo {step.step_id}.")
+            continue
+
+        result = None
+        if step.quantity > 0:
+            raw, normalized = step.descriptor
+            # --token-descriptor is a sanity check, not an override: the
+            # Communion token descriptor is derivable statically
+            # (popup_probe.COMMUNION_RAW/_NORMALIZED, from
+            # category8_awards.py's first pilot row), so a mismatch here means
+            # the operator is pointing the probe at the wrong build or row.
+            token_descriptor = getattr(args, "token_descriptor", None)
+            if step.lane == "event_award" and token_descriptor and token_descriptor != (raw, normalized):
+                print(f"REFUSING: --token-descriptor {token_descriptor} does not match the "
+                      f"statically-derived Communion descriptor {(raw, normalized)}. If you "
+                      "are deliberately probing a different category-8 row this tool does "
+                      "not know about yet, add it to popup_probe.py first.")
+                return 1
+            refused = _gate_descriptor(argparse.Namespace(
+                raw=raw, normalized=normalized, unvalidated_descriptor=False))
+            if refused:
+                return refused
+            try:
+                _record_tag(journal_path, tag, "armed", probe_status="in_flight")
+                result = _popup_deliver(args, memory, base, step)
+            except KeyboardInterrupt:
+                _record_tag(journal_path, tag, "interrupted", probe_status="interrupted")
+                print(f"\ninterrupted during [{step.step_id}]. The request cell was "
+                      "disarmed. Confirm in game whether the item arrived before resuming.")
+                raise
+            print(f"delivery: {result.status}: {result.detail}")
+
+        context = popup_probe.PopupProbeContext(
+            save_id=args.save_id,
+            deliver=lambda _step, _result=result: _result or popup_probe.DeliveryResult(),
+            prompt=input,
+            now=lambda: time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        )
+        record = popup_probe.run_step(step, context)
+        popup_probe.append_record(report, record)
+        status = result.status if result is not None else "not_delivered"
+        _record_tag(journal_path, tag, status or "unknown", probe_status="recorded")
+        recorded += 1
+        print(f"[{step.step_id}] recorded to {report}")
+
+        if step.step_id == "control-vanilla-pickup" and record["observation"] != popup_probe.POPUP:
+            print("\nprobe defect: positive control failed "
+                  f"(observation={record['observation']!r}, expected 'popup'). "
+                  "Stopping the session -- see CONTRIBUTING-LIVE-PROBES.md rule 1.")
+            return 1
+
+    print(f"\n{recorded} step(s) recorded this run.")
+    records = popup_probe.read_records(report)
+    if records:
+        print()
+        print(popup_probe.render_summary(
+            records, save_ids=tuple(sorted({r.get("save_id", "?") for r in records}))))
+        print("\nPaste the block above into issue #330.")
+    return 0
+
+
 def _cmd_probe_storage(args: argparse.Namespace) -> int:
     from . import probe
 
@@ -611,6 +811,14 @@ def _hex_int(text: str) -> int:
     return int(text, 0)
 
 
+def _descriptor_pair(text: str) -> tuple[int, int]:
+    """``RAW,NORMALIZED`` (hex or decimal) for ``--token-descriptor``."""
+    parts = text.split(",")
+    if len(parts) != 2:
+        raise argparse.ArgumentTypeError("expected RAW,NORMALIZED (e.g. 0xB0002648,0x40002648)")
+    return _hex_int(parts[0]), _hex_int(parts[1])
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="bb_native_delivery", description=BANNER)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -704,6 +912,50 @@ def build_parser() -> argparse.ArgumentParser:
                               "not removable)")
     storage.add_argument("--timeout", type=float, default=120.0)
     storage.set_defaults(func=_cmd_probe_storage)
+
+    # The native-item-popup probe (issue #330, docs/NATIVE-ITEM-POPUPS.md). Same
+    # shape as probe-storage: a `grant` session with an operator in the loop.
+    popup = sub.add_parser(
+        "probe-popup",
+        help="guided native-item-popup probe: does a received AP item produce "
+             "Bloodborne's own pickup popup (issue #330)",
+    )
+    popup.add_argument("--pid", type=int, default=None)
+    popup.add_argument("--base", type=_hex_int, default=None)
+    popup.add_argument("--shad-log", default=None)
+    popup.add_argument("--arm", action="store_true",
+                        help="actually deliver; without it the run is a rehearsal")
+    popup.add_argument("--clear-stale-request", action="store_true")
+    popup.add_argument("--save-id", default=None,
+                        help="a name for the THROWAWAY save this session runs on; keys "
+                             "the journal so resume cannot cross saves")
+    popup.add_argument("--only", action="append", default=None, metavar="STEP")
+    popup.add_argument("--skip", action="append", default=None, metavar="STEP")
+    popup.add_argument("--redo", action="append", default=None, metavar="STEP",
+                        help="run a step again even though the journal has it recorded")
+    popup.add_argument("--report", default=None,
+                        help=f"append-mode JSON-lines report (default: ./{DEFAULT_POPUP_REPORT})")
+    popup.add_argument("--journal", default=None,
+                        help=f"the grant journal (default: repo root/{DEFAULT_JOURNAL_NAME}); "
+                             "probe resume state rides in it, not in a parallel store")
+    popup.add_argument("--marks", default=None,
+                        help="path to the client's mark log (default: $BB_PROBE_MARKS or "
+                             "./bb-probe-marks.jsonl); merged into --summary's output")
+    popup.add_argument("--runbook", action="store_true",
+                        help="print the operator runbook and exit; touches nothing")
+    popup.add_argument("--summary", action="store_true",
+                        help="render the verdicts from an existing report and exit")
+    popup.add_argument("--yes-throwaway-save", action="store_true",
+                        help="required with --arm: Communion is a once-per-save unique "
+                             "insert and not removable afterwards")
+    popup.add_argument(
+        "--token-descriptor", type=_descriptor_pair, default=None, metavar="RAW,NORMALIZED",
+        help="sanity-check the event-award token descriptor against this pair (hex); "
+             "refused on a mismatch. Not needed for Communion, which is derived "
+             "statically from category8_awards.py",
+    )
+    popup.add_argument("--timeout", type=float, default=120.0)
+    popup.set_defaults(func=_cmd_probe_popup)
     return parser
 
 

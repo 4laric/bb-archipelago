@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a guided operator probe (`probe-popup`) and a client `/mark` console
+  command for issue #330: whether a received AP item can produce Bloodborne's
+  own non-blocking pickup popup by going through the event-award lane. See
+  docs/NATIVE-ITEM-POPUPS.md. No delivery behavior changed.
+
 - The Windows launcher no longer fails with a `NoneType.casefold` error when
   localized `tasklist` output cannot be decoded. Process checks now preserve
   raw output and refuse overlay changes when Windows does not return a complete
