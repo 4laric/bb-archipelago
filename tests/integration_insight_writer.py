@@ -1,4 +1,12 @@
-from tests.test_insight_armor import *
+import json
+import os
+import sqlite3
+import subprocess
+import tempfile
+import unittest
+import zlib
+from pathlib import Path
+from tests.test_insight_armor import ROOT, ATTIRE_CATALOG, build_insight_armor_suppression
 
 class InsightWriterTests(unittest.TestCase):
     def test_real_binder_round_trip_and_drift_refusal(self):
