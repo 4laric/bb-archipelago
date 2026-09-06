@@ -132,12 +132,43 @@ goodsDefinition.Fields.Add(new PARAMDEF.Field(
     goodsDefinition, PARAMDEF.DefType.s32, "yesNoDialogMessageId"));
 goodsDefinition.Fields.Add(new PARAMDEF.Field(
     goodsDefinition, PARAMDEF.DefType.u8, "isOnlyOne"));
+foreach (string field in new[] { "properStrength", "properAgility", "properMagic", "properFaith" })
+    goodsDefinition.Fields.Add(new PARAMDEF.Field(goodsDefinition, PARAMDEF.DefType.u8, field));
 var goods = new PARAM { ParamType = "EquipParamGoods", ParamdefDataVersion = 1, Rows = [] };
 goods.ApplyParamdef(goodsDefinition);
 var vial = new PARAM.Row(1000, "Synthetic Blood Vial", goodsDefinition);
 vial["yesNoDialogMessageId"].Value = 0;
 vial["isOnlyOne"].Value = (byte)0;
 goods.Rows.Add(vial);
+var requirementControl = new PARAM.Row(999, "Non-tool requirement control", goodsDefinition);
+requirementControl["properStrength"].Value = (byte)1;
+requirementControl["properAgility"].Value = (byte)2;
+requirementControl["properMagic"].Value = (byte)3;
+requirementControl["properFaith"].Value = (byte)4;
+goods.Rows.Add(requirementControl);
+foreach ((int id, string name, byte strength, byte agility, byte magic, byte faith) in new[]
+{
+    (1310, "Empty Phantasm Shell", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2000, "Augur of Ebrietas", (byte)0, (byte)0, (byte)0, (byte)18),
+    (2010, "A Call Beyond", (byte)0, (byte)0, (byte)0, (byte)40),
+    (2020, "Beast Roar", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2050, "Choir Bell", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2060, "Old Hunter Bone", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2070, "Tiny Tonitrus", (byte)0, (byte)0, (byte)0, (byte)25),
+    (2080, "Executioner's Gloves", (byte)0, (byte)0, (byte)0, (byte)20),
+    (2110, "Messenger's Gift", (byte)0, (byte)0, (byte)0, (byte)10),
+    (2120, "Blacksky Eye", (byte)0, (byte)0, (byte)0, (byte)16),
+    (2130, "Accursed Brew", (byte)0, (byte)0, (byte)0, (byte)30),
+    (2140, "Madaras Whistle", (byte)0, (byte)0, (byte)18, (byte)0),
+})
+{
+    var tool = new PARAM.Row(id, name, goodsDefinition);
+    tool["properStrength"].Value = strength;
+    tool["properAgility"].Value = agility;
+    tool["properMagic"].Value = magic;
+    tool["properFaith"].Value = faith;
+    goods.Rows.Add(tool);
+}
 game.Files.Add(new BinderFile(
     Binder.FileFlags.Flag1, 1, @"N:\synthetic\param\EquipParamGoods.param", goods.Write()));
 string gameparamPath = Path.Combine(outputRoot, "param", "gameparam.parambnd.dcx");

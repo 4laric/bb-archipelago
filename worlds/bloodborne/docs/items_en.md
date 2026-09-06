@@ -103,12 +103,16 @@ additional checks or five items removed from the multiworld pool.
 
 ## Hunter Tools
 
-Hunter Tools are reusable inventory items. Their normal Bloodtinge or Arcane
-behavior is unchanged.
+Hunter Tools are reusable inventory items. The AP overlay removes their
+minimum-stat use requirements while preserving their resource costs and stat
+scaling.
 
 Augur of Ebrietas; Beast Roar; Empty Phantasm Shell; Old Hunter Bone;
 Executioner's Gloves; Tiny Tonitrus; A Call Beyond; Choir Bell; Blacksky Eye;
 and Messenger's Gift.
+
+The requirement removal also covers Accursed Brew and Madaras Whistle; it does
+not add those tools to the AP item pool.
 
 ## Upgrade materials
 
