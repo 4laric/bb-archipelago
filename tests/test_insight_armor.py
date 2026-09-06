@@ -18,7 +18,7 @@ class InsightPlanTests(unittest.TestCase):
         self.assertEqual(len({r['row_id'] for r in rows}), 80)
         self.assertEqual({r['qwc_id'] for r in rows}, {5910, 5090, 5091, 6675})
     def test_only_items_in_pool_are_suppressed(self):
-        self.assertEqual(build_insight_armor_suppression(set()), [])
+        self.assertEqual(len(build_insight_armor_suppression(set())), 0)
         keys = {p.item_key for p in ATTIRE_CATALOG if not p.dlc}
         rows = build_insight_armor_suppression(keys)
         self.assertEqual(len(rows), 60)
