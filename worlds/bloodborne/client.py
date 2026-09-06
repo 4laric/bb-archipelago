@@ -1,6 +1,6 @@
 """File bridge between Archipelago and the validated Cheat Engine grant harness."""
 from __future__ import annotations
-import argparse, asyncio, json, logging
+import argparse, asyncio, json, logging, os
 from datetime import datetime, timezone
 from difflib import get_close_matches
 from pathlib import Path
@@ -17,7 +17,18 @@ from . import (
     RUNTIME_BUILD,
     WORLD_VERSION,
 )
+from .probe_marks import DEFAULT_MARKS_FILENAME, append_mark
 from .runtime_bindings import DELIVERY_FIXTURES, ITEM_BINDINGS
+
+#: docs/NATIVE-ITEM-POPUPS.md's ``mark`` command writes here by default; the
+#: env var lets a probe session point every mark at one shared file regardless
+#: of the client's working directory.
+PROBE_MARKS_ENV = "BB_PROBE_MARKS"
+
+
+def probe_marks_path() -> Path:
+    override = os.environ.get(PROBE_MARKS_ENV)
+    return Path(override) if override else Path.cwd() / DEFAULT_MARKS_FILENAME
 
 logger = logging.getLogger("BloodborneClient")
 ITEM_KEY_BY_AP_ID = {value: key for key, value in ITEM_ID_BY_KEY.items()}
@@ -90,6 +101,27 @@ class BloodborneCommandProcessor(ClientCommandProcessor):
         """Re-inspect the running shadPS4 process: guest base and hook sites."""
         for line in attach_report_lines():
             self.output(line)
+        return True
+
+    def _cmd_mark(self, label: str = "") -> bool:
+        """Stamp a labelled moment for a live probe: /mark <label>.
+
+        docs/NATIVE-ITEM-POPUPS.md and CONTRIBUTING-LIVE-PROBES.md rule 3: an
+        operator's recollection after the fact is not a label, so this writes
+        one immediately, with a clock, to the same file the popup probe's
+        summary reads. Path is BB_PROBE_MARKS or ./bb-probe-marks.jsonl.
+        """
+        path = probe_marks_path()
+        try:
+            record = append_mark(path, label)
+        except ValueError as exc:
+            self.output(f"/mark needs a label: {exc}")
+            return False
+        except OSError as exc:
+            logger.warning("Could not write probe mark: %s", exc)
+            self.output(f"Could not write the mark to {path}: {exc}")
+            return False
+        self.output(f"marked {record['label']!r} at {record['at']} -> {path}")
         return True
 
 
