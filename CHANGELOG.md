@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- The Windows launcher no longer fails with a `NoneType.casefold` error when
+  localized `tasklist` output cannot be decoded. Process checks now preserve
+  raw output and refuse overlay changes when Windows does not return a complete
+  result.
+
 - Laurence's Skull no longer completes the vanilla event that owns the
   Forbidden Woods password flag. Its AP witness and multiplayer guards now
   wait without ending the event, preventing premature password dialogue after
