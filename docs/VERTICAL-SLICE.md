@@ -137,8 +137,8 @@ Ward) and `m23_00_00_00` (Old Yharnam). `SLICE_MAPS` in
 - **166 network locations total.**
 - **Goal:** Vicar Amelia (`12401800`). The client reads the goal
   from slot data's `goal_location`, so this is a seed-owned move, not a client
-  rebuild. Blood-starved Beast remains in-scope as the Old Yharnam boss and the
-  alternate Healing Church Workshop route prerequisite, but Amelia is the
+  rebuild. Blood-starved Beast remains in-scope as the Old Yharnam boss. Sword
+  Hunter Badge opens the alternate Healing Church Workshop route, while Amelia is the
   completion boundary.
 
 ### Regions and gates
@@ -148,20 +148,16 @@ Menu -> Hunter's Dream -> Central Yharnam
 Central Yharnam --(Oedon Tomb Key + Father Gascoigne defeated)--> Cathedral Ward
 Cathedral Ward --(free)--> Old Yharnam            [Blood-starved Beast]
 Cathedral Ward --(Hunter Chief Emblem)--------------------> Grand Cathedral
-Cathedral Ward --(defeat BSB)--> Healing Church Workshop --> Grand Cathedral
+Cathedral Ward --(Sword Hunter Badge)--> Healing Church Workshop --> Grand Cathedral
 ```
 
-**Why the emblem is modelled as a single-clause gate.** The audited edge in
+**Why the routes are modelled separately.** The audited edge in
 `PROGRESSION-DAG.md` is "Hunter Chief Emblem **or** the Healing Church Workshop
-route". Written as one two-clause rule on one entrance, it is vacuous: Old
-Yharnam is free from Cathedral Ward and the Blood-starved Beast is free inside
-it, so the Beast clause is always satisfiable and the emblem can never be the
-requirement. The route is two hops in the game, and it is now two hops in the
-model: the emblem opens the gate directly, while the workshop is entered behind
-the Beast and reaches the same plaza from the other side. The Workshop is a
-transit-only region in the Amelia slice. Defeating Blood-starved Beast therefore
-opens the long route, so the emblem is a shortcut and is not required for Go
-mode.
+route". The route is two hops in the game and remains two hops here: the emblem
+opens the gate directly, while Sword Hunter Badge opens object `2401202` into
+the Workshop and that route reaches the same plaza from the other side. The
+Workshop is a transit-only region in the Amelia slice. The final policy for the
+direct Emblem shortcut is tracked by #376 while this implementation is draft.
 
 The Hunter Chief Emblem remains in **both** pools — the full pool and the
 reduced `SLICE_ITEM_KEYS` pool — as a useful route shortcut.

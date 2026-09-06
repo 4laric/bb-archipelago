@@ -3,6 +3,9 @@
 
 ## Unreleased
 
+- The Healing Church Workshop door now opens when the player receives the
+  shuffled Sword Hunter Badge instead of when Blood-starved Beast dies. The
+  larger Amelia-route policy is still awaiting a decision in draft form (#376).
 - Suppress boss Insight armor shop rows only for attire included in the AP pool; preserve NPC armor and other stock (#377).
 - Added a guided operator probe (`probe-popup`) and a client `/mark` console
   command for issue #330: whether a received AP item can produce Bloodborne's
