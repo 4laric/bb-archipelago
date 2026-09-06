@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Hemwick now has its own shuffled access gate.** New seeds place Hemwick
+  Access and keep the existing Cathedral Ward–Hemwick boundary fog closed
+  until it is received, putting Hemwick and downstream Cainhurst checks behind
+  an explicit Archipelago progression item. Existing seed files omit the gate
+  contract and keep their previous traversal behavior.
+
 - The Windows launcher no longer fails with a `NoneType.casefold` error when
   localized `tasklist` output cannot be decoded. Process checks now preserve
   raw output and refuse overlay changes when Windows does not return a complete

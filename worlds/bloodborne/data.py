@@ -27,6 +27,7 @@ ITEMS = (
     Item("oedon_tomb_key", "Oedon Tomb Key", P),
     Item("lunarium_key", "Lunarium Key", P),
     Item("forbidden_woods_password", '"Fear the Old Blood"', P),
+    Item("hemwick_access", "Hemwick Access", P),
     Item("cainhurst_summons", "Cainhurst Summons", P),
     Item("tonsil_stone", "Tonsil Stone", P),
     Item("upper_cathedral_key", "Upper Cathedral Key", P),
@@ -303,7 +304,8 @@ ENTRANCES = (
              "Grand Cathedral"),
     # The road to Hemwick starts left of the Grand Cathedral entrance, so it is
     # behind the plaza, not free from Cathedral Ward.
-    Entrance("Road to Hemwick", "Grand Cathedral", "Hemwick Charnel Lane"),
+    Entrance("Road to Hemwick", "Grand Cathedral", "Hemwick Charnel Lane",
+             Rule.all("hemwick_access")),
     Entrance("Forbidden Woods password door", "Cathedral Ward", "Forbidden Woods",
              Rule.all("forbidden_woods_password")),
     Entrance("Forbidden Woods clinic passage", "Forbidden Woods", "Iosefka's Clinic"),
@@ -529,6 +531,7 @@ SLICE_ITEM_KEYS = frozenset({
     "oedon_tomb_key",
     "lunarium_key",
     "forbidden_woods_password",
+    "hemwick_access",
     "saw_spear",
     "augur_of_ebrietas",
     "quicksilver_bullets",

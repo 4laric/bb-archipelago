@@ -36,6 +36,7 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     # second clause here: folding it in made the emblem clause unreachable as a
     # requirement, because Blood-starved Beast is free from Cathedral Ward.
     "Cathedral Ward plaza gate": {frozenset({"hunter_chief_emblem"})},
+    "Road to Hemwick": {frozenset({"hemwick_access"})},
     "Forbidden Woods password door": {frozenset({"forbidden_woods_password"})},
     "Path to Byrgenwerth": {frozenset({"event_shadows_defeated"})},
     "Lunarium door": {frozenset({"lunarium_key"})},
@@ -69,9 +70,6 @@ DOCUMENTED_FREE = {
     # The workshop's own door already costs Blood-starved Beast; the walk from
     # it to the plaza costs nothing more.
     "Healing Church Workshop plaza route",
-    # The road starts left of the Grand Cathedral entrance, so it is behind the
-    # plaza. Its requirement is now the plaza edge itself, not a copy of it.
-    "Road to Hemwick",
     "Lecture Hall giant door",
     "Lecture Building frontier door",
     "Research Hall summit",

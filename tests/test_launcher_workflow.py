@@ -7,6 +7,9 @@ from pathlib import Path
 import json
 
 from bb_launcher.core import (
+    CATHEDRAL_EVENT_PATH,
+    COMMON_EVENT_PATH,
+    HEMWICK_EVENT_PATH,
     SUPPRESSION_CHECK_PLAN,
     SUPPRESSION_CHECK_SOURCE,
     SUPPRESSION_OVERRIDE_KNOB,
@@ -17,6 +20,7 @@ from bb_launcher.workflow import (
     LEGACY_REQUEST_FORMAT,
     REQUEST_FORMAT,
     _request_identity,
+    _source_hashes,
     _validate_suppression,
 )
 
@@ -188,6 +192,52 @@ class RequestIdentityFormatTests(unittest.TestCase):
         self.assertIn(REQUEST_FORMAT, message)
         self.assertIn(LEGACY_REQUEST_FORMAT, message)
 
+    def test_hemwick_gate_contract_joins_seed_identity(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload["hemwick_gate"] = {
+            "enabled": True,
+            "access_flag": 12201898,
+            "cathedral_object": 2401995,
+            "cathedral_sfx": 2403995,
+            "hemwick_object": 2201999,
+            "hemwick_sfx": 2203999,
+        }
+        payload["runtime_items"] = {"12255783": {
+            "normalized_item_id": 12201898,
+            "raw_descriptor": 12201898,
+            "item_category": 255,
+            "descriptor_evidence": "event_flag_effect",
+        }}
+        identity = self._identity_for(payload)
+        self.assertEqual(payload["hemwick_gate"], identity["hemwick_gate"])
+
+    def test_malformed_hemwick_gate_contract_is_refused(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload["hemwick_gate"] = {
+            "enabled": True,
+            "access_flag": 12201899,
+            "cathedral_object": 2401995,
+            "cathedral_sfx": 2403995,
+            "hemwick_object": 2201999,
+            "hemwick_sfx": 2203999,
+        }
+        with self.assertRaisesRegex(ValidationError, "unsupported Hemwick"):
+            self._identity_for(payload)
+
+    def test_hemwick_gate_requires_matching_runtime_binding(self):
+        payload = _request_payload(REQUEST_FORMAT)
+        payload["hemwick_gate"] = {
+            "enabled": True,
+            "access_flag": 12201898,
+            "cathedral_object": 2401995,
+            "cathedral_sfx": 2403995,
+            "hemwick_object": 2201999,
+            "hemwick_sfx": 2203999,
+        }
+        with self.assertRaisesRegex(ValidationError, "Hemwick Access runtime binding"):
+            self._identity_for(payload)
+
+
     def test_starting_weapon_choices_join_seed_identity(self):
         payload = _request_payload(REQUEST_FORMAT)
         payload.update({
@@ -329,6 +379,32 @@ class RequestIdentityFormatTests(unittest.TestCase):
         })
         with self.assertRaisesRegex(ValidationError, "enemy drop assignment"):
             self._identity_for(payload)
+
+
+class HemwickSourceIdentityTests(unittest.TestCase):
+    def test_new_gate_hashes_hemwick_source_while_legacy_does_not_require_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = DoctorFixture(Path(tmp))
+            install = GameInstall.from_root(fixture.root / "game")
+            for relative, payload in (
+                (CATHEDRAL_EVENT_PATH, b"cathedral"),
+                (COMMON_EVENT_PATH, b"common"),
+            ):
+                path = install.patch.joinpath(*relative.split("/"))
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(payload)
+
+            legacy = _source_hashes(install, None, cathedral=True)
+            self.assertNotIn(HEMWICK_EVENT_PATH, legacy)
+            with self.assertRaisesRegex(ValidationError, "m22_00_00_00"):
+                _source_hashes(install, None, cathedral=True, hemwick=True)
+
+            hemwick = install.patch.joinpath(*HEMWICK_EVENT_PATH.split("/"))
+            hemwick.write_bytes(b"hemwick-v1")
+            first = _source_hashes(install, None, cathedral=True, hemwick=True)
+            hemwick.write_bytes(b"hemwick-v2")
+            second = _source_hashes(install, None, cathedral=True, hemwick=True)
+            self.assertNotEqual(first[HEMWICK_EVENT_PATH], second[HEMWICK_EVENT_PATH])
 
 
 if __name__ == "__main__":

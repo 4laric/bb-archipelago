@@ -931,6 +931,14 @@ else:
                 "alternate_hypogean_gaol_routes": bool(
                     self._alternate_gaol_enabled()),
                 "one_time_enemy_checks": self._one_time_enemy_checks_enabled(),
+                "hemwick_gate": {
+                    "enabled": True,
+                    "access_flag": 12201898,
+                    "cathedral_object": 2401995,
+                    "cathedral_sfx": 2403995,
+                    "hemwick_object": 2201999,
+                    "hemwick_sfx": 2203999,
+                },
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
                 "toast_placeholders": self._toast_placeholder_plan(),

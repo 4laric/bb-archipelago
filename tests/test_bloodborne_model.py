@@ -304,9 +304,8 @@ class BloodborneModelTests(unittest.TestCase):
         # Review finding W5 removed 16 seeded locations, so the weighted
         # remainder now falls to a different set of these names. The split is
         # restated per name rather than as one shared number.
-        for name in ("Antidote x2", "Sedatives x2"):
-            self.assertEqual(counts[name], 11, name)
-        for name in ("Poison Knife x3", "Blue Elixir", "Beast Blood Pellet",
+        self.assertEqual(counts["Antidote x2"], 11)
+        for name in ("Sedatives x2", "Poison Knife x3", "Blue Elixir", "Beast Blood Pellet",
                      "Lead Elixir", "Oil Urn x2", "Numbing Mist x2",
                      "Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
@@ -349,7 +348,7 @@ class BloodborneModelTests(unittest.TestCase):
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 652 - 21 one-each = 631 slots over five weighted names.
         self.assertEqual(counts["Blood Vial"], 224)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 145)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 144)
         self.assertEqual(counts["Blood Stone Shards x2"], 112)
         self.assertEqual(counts["Pebbles x3"], 75)
         self.assertEqual(counts["Molotov Cocktails x2"], 75)
@@ -357,7 +356,7 @@ class BloodborneModelTests(unittest.TestCase):
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         # Seventeen original slice items, the eight region gates added by review
         # finding W4, and Blood Vial.
-        self.assertEqual(len(slot_data["runtime_items"]), 26)
+        self.assertEqual(len(slot_data["runtime_items"]), 27)
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""

@@ -145,6 +145,11 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
         12401803, 12401803,
         "vanilla Grand Cathedral memory event flag; delivered as an idempotent event-flag effect",
         item_category=255, descriptor_evidence="event_flag_effect"),
+    "hemwick_access": RuntimeItemBinding(
+        12201898, 12201898,
+        "AP-owned Hemwick access flag; collision-audited against the committed EMEVD corpus; "
+        "delivered as an idempotent event-flag effect",
+        item_category=255, descriptor_evidence="event_flag_effect"),
     "cainhurst_summons": RuntimeItemBinding(0x40000FA3, 0xB0000FA3, "FMG/param + validated goods formula"),
     "tonsil_stone": RuntimeItemBinding(0x400010D6, 0xB00010D6, "FMG/param + validated goods formula"),
     "upper_cathedral_key": RuntimeItemBinding(0x40000FAA, 0xB0000FAA, "FMG/param + validated goods formula"),

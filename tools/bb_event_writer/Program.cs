@@ -29,6 +29,7 @@ internal static class Program
                 "dump" => Dump(args.Skip(1).ToArray()),
                 "decompress" => Decompress(args.Skip(1).ToArray()),
                 "cathedral" => Cathedral(args.Skip(1).ToArray()),
+                "hemwick" => Hemwick(args.Skip(1).ToArray()),
                 "common" => Common(args.Skip(1).ToArray()),
                 _ => throw new UsageException(),
             };
@@ -39,6 +40,7 @@ internal static class Program
                 "usage: BBEventWriter dump <emevd.dcx> [eventId ...]\n" +
                 "       BBEventWriter decompress <in.emevd.dcx> <out.emevd>\n" +
                 "       BBEventWriter cathedral --source <m24_00_00_00.emevd.dcx> --output <path> --manifest <path>\n" +
+                "       BBEventWriter hemwick --source <m22_00_00_00.emevd.dcx> --output <path> --manifest <path> --access-flag <flag>\n" +
                 "       BBEventWriter common --source <common.emevd.dcx> --request <rows.json> --output <path> --manifest <path>");
             return 2;
         }
@@ -191,6 +193,9 @@ internal static class Program
     private const int WitnessFlag = 12401898;
     private const int PasswordFlag = 12401803;
     private const int FarSideFlag = 12400170;
+    private const int HemwickAccessFlag = 12201898;
+    private const long CathedralHemwickGateEvent = 12409990;
+    private const long HemwickGateEvent = 12209990;
 
     private static int Cathedral(string[] args)
     {
@@ -199,15 +204,22 @@ internal static class Program
         if (!Path.GetFileName(o["source"]).Equals("m24_00_00_00.emevd.dcx", StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("source must be named m24_00_00_00.emevd.dcx");
         var emevd = Load(o["source"]);
-        var untouched = emevd.Events.Where(e => e.ID != LaurenceEvent && e.ID != EmblemEvent)
+        var gateEnabled = o.TryGetValue("access-flag", out var requestedFlag);
+        if (gateEnabled && requestedFlag != HemwickAccessFlag.ToString())
+            throw new InvalidDataException($"unsupported Hemwick access flag {requestedFlag}");
+        var owned = new HashSet<long> { LaurenceEvent, EmblemEvent, 0 };
+        if (gateEnabled) owned.Add(CathedralHemwickGateEvent);
+        var untouched = emevd.Events.Where(e => !owned.Contains(e.ID))
             .Select(e => (e.ID, Fingerprint(e))).ToList();
         var eventCount = emevd.Events.Count;
 
         PatchLaurence(emevd);
         PatchEmblem(emevd);
+        if (gateEnabled)
+            PatchHemwickBoundary(emevd, CathedralHemwickGateEvent, 24, 2401995, 2403995);
 
-        if (emevd.Events.Count != eventCount)
-            throw new InvalidDataException("Cathedral transform must not add or remove events");
+        if (emevd.Events.Count != eventCount + (gateEnabled ? 1 : 0))
+            throw new InvalidDataException("Cathedral transform changed the event count unexpectedly");
         foreach (var (id, fingerprint) in untouched)
             if (Fingerprint(EventById(emevd, id)) != fingerprint)
                 throw new InvalidDataException($"unrelated event {id} changed");
@@ -221,9 +233,15 @@ internal static class Program
             source_sha256 = Sha256(o["source"]),
             output_sha256 = Sha256(o["output"]),
             output_relative_path = "dvdroot_ps4/event/m24_00_00_00.emevd.dcx",
-            owned_events = new[] { EmblemEvent, LaurenceEvent },
+            owned_events = gateEnabled
+                ? new[] { EmblemEvent, LaurenceEvent, CathedralHemwickGateEvent }
+                : new[] { EmblemEvent, LaurenceEvent },
             laurence_witness_flag = WitnessFlag,
             suppressed_password_flag = PasswordFlag,
+            hemwick_gate = gateEnabled ? new {
+                @event = CathedralHemwickGateEvent, access_flag = HemwickAccessFlag,
+                @object = 2401995, sfx = 2403995,
+            } : null,
         });
         return 0;
     }
@@ -295,6 +313,79 @@ internal static class Program
         foreach (var ins in e.Instructions)
             if (ins.Bank == 5 && ins.ID == 2 && Hex(ins.ArgData).EndsWith(farSide, StringComparison.Ordinal))
                 throw new InvalidDataException("gate patch left a far-side success path");
+    }
+
+    // --------------------------------------------------------------- hemwick
+
+    private static int Hemwick(string[] args)
+    {
+        var o = Options(args, "source", "output", "manifest", "access-flag");
+        RefuseOverwrite(o["output"], o["manifest"]);
+        if (!Path.GetFileName(o["source"]).Equals("m22_00_00_00.emevd.dcx", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("source must be named m22_00_00_00.emevd.dcx");
+        if (o["access-flag"] != HemwickAccessFlag.ToString())
+            throw new InvalidDataException($"unsupported Hemwick access flag {o["access-flag"]}");
+        var emevd = Load(o["source"]);
+        var untouched = emevd.Events.Where(e => e.ID != 0 && e.ID != HemwickGateEvent)
+            .Select(e => (e.ID, Fingerprint(e))).ToList();
+        var count = emevd.Events.Count;
+        PatchHemwickBoundary(emevd, HemwickGateEvent, 0, 2201999, 2203999);
+        if (emevd.Events.Count != count + 1)
+            throw new InvalidDataException("Hemwick transform must add exactly one event");
+        foreach (var (id, fingerprint) in untouched)
+            if (Fingerprint(EventById(emevd, id)) != fingerprint)
+                throw new InvalidDataException($"unrelated event {id} changed");
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(o["output"]))!);
+        emevd.Write(o["output"]);
+        WriteManifest(o["manifest"], new {
+            format = "bb-hemwick-emevd-build-v1", writer = "BBEventWriter",
+            source_sha256 = Sha256(o["source"]), output_sha256 = Sha256(o["output"]),
+            output_relative_path = "dvdroot_ps4/event/m22_00_00_00.emevd.dcx",
+            @event = HemwickGateEvent, access_flag = HemwickAccessFlag,
+            @object = 2201999, sfx = 2203999,
+        });
+        return 0;
+    }
+
+    private static void PatchHemwickBoundary(EMEVD emevd, long eventId, int slot, int obj, int sfx)
+    {
+        if (emevd.Events.Any(e => e.ID == eventId))
+            throw new InvalidDataException($"Hemwick gate event {eventId} is already present");
+        var constructor = EventById(emevd, 0);
+        var vanilla = Hex(Args(slot, 7600, obj, sfx));
+        var matches = constructor.Instructions
+            .Select((ins, index) => (ins, index))
+            .Where(pair => pair.ins.Bank == 2000 && pair.ins.ID == 0 && Hex(pair.ins.ArgData) == vanilla)
+            .ToList();
+        if (matches.Count != 1)
+            throw new InvalidDataException("map does not contain exactly one supported Hemwick boundary initializer");
+        // InitializeEvent uses a variable-width argument record; this no-argument
+        // instance is eight bytes even when the source map has no such template.
+        constructor.Instructions[matches[0].index] = new EMEVD.Instruction(
+            2000, 0, Args(0, (int)eventId));
+
+        var gate = new EMEVD.Event(eventId, EMEVD.Event.RestBehaviorType.Restart);
+        var instructions = new (int bank, int id, byte[] args)[] {
+            (2000, 2, Args((byte)0)),
+            (2005, 3, Args(obj, (byte)0)),
+            (2006, 1, Args(sfx, (byte)1)),
+            (3, 0, Args((byte)255, (byte)0, (byte)0, (byte)0, HemwickAccessFlag)),
+            (3, 6, Args((byte)255, (byte)3, (byte)0, (byte)0)),
+            (3, 6, Args((byte)255, (byte)2, (byte)0, (byte)0)),
+            (0, 0, Args((byte)0, (byte)1, (byte)255, (byte)0)),
+            (2005, 3, Args(obj, (byte)1)),
+            (2006, 2, Args(sfx)),
+            (3, 0, Args((byte)1, (byte)1, (byte)0, (byte)0, HemwickAccessFlag)),
+            (3, 6, Args((byte)2, (byte)3, (byte)0, (byte)0)),
+            (0, 0, Args((byte)1, (byte)0, (byte)2, (byte)0)),
+            (3, 6, Args((byte)3, (byte)2, (byte)0, (byte)0)),
+            (0, 0, Args((byte)1, (byte)0, (byte)3, (byte)0)),
+            (0, 0, Args((byte)0, (byte)1, (byte)1, (byte)0)),
+            (1000, 4, Args((byte)1)),
+        };
+        foreach (var (bank, id, args) in instructions)
+            gate.Instructions.Add(new EMEVD.Instruction(bank, id, args));
+        emevd.Events.Add(gate);
     }
 
     // --------------------------------------------------------------- common

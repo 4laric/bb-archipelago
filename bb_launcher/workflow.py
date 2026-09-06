@@ -14,6 +14,7 @@ from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
     CATHEDRAL_EVENT_PATH,
+    HEMWICK_EVENT_PATH,
     COMMON_EVENT_PATH,
     STALE_BARE_SERIAL_REMEDY,
     SUPPRESSION_CHECK_PLAN,
@@ -495,7 +496,7 @@ class EnemizerToolchain:
 
     def write_cathedral_event(
         self, *, source: Path, output: Path, manifest: Path,
-        soulsformats_next: Path | None, progress: Progress,
+        soulsformats_next: Path | None, progress: Progress, access_flag: int | None = None,
     ) -> None:
         """Write the Laurence's Skull / Hunter Chief Emblem overlay for m24_00_00_00.
 
@@ -508,10 +509,24 @@ class EnemizerToolchain:
             "cathedral", "--source", str(source), "--output", str(output),
             "--manifest", str(manifest),
         ])
+        if access_flag is not None:
+            command.extend(["--access-flag", str(access_flag)])
         progress("Writing and verifying the Cathedral event overlay...")
         self.runner(command, self.repo_root, progress)
         if not output.is_file() or not manifest.is_file():
             raise ValidationError("event writer produced no Cathedral event overlay")
+
+    def write_hemwick_event(
+        self, *, source: Path, output: Path, manifest: Path, access_flag: int,
+        soulsformats_next: Path | None, progress: Progress,
+    ) -> None:
+        command = self._event_writer_command(soulsformats_next)
+        command.extend(["hemwick", "--source", str(source), "--output", str(output),
+                        "--manifest", str(manifest), "--access-flag", str(access_flag)])
+        progress("Writing and verifying the Hemwick access gate overlay...")
+        self.runner(command, self.repo_root, progress)
+        if not output.is_file() or not manifest.is_file():
+            raise ValidationError("event writer produced no Hemwick event overlay")
 
     def write_common_event(
         self, *, request_path: Path, source: Path, output: Path, manifest: Path,
@@ -784,6 +799,27 @@ def _request_identity(
         raise ValidationError(
             "category-8 award acknowledgement flag is outside 12400900..12400999"
         )
+    hemwick_gate = request.get("hemwick_gate")
+    expected_hemwick_gate = {
+        "enabled": True, "access_flag": 12201898,
+        "cathedral_object": 2401995, "cathedral_sfx": 2403995,
+        "hemwick_object": 2201999, "hemwick_sfx": 2203999,
+    }
+    if hemwick_gate is not None and hemwick_gate != expected_hemwick_gate:
+        raise ValidationError("AP request has an unsupported Hemwick gate contract")
+    if hemwick_gate is not None:
+        runtime_items = request.get("runtime_items")
+        access_binding = (
+            runtime_items.get("12255783") if isinstance(runtime_items, dict) else None
+        )
+        if (not isinstance(access_binding, dict)
+                or access_binding.get("normalized_item_id") != 12201898
+                or access_binding.get("raw_descriptor") != 12201898
+                or access_binding.get("item_category") != 255
+                or access_binding.get("descriptor_evidence") != "event_flag_effect"):
+            raise ValidationError(
+                "AP request has no supported Hemwick Access runtime binding"
+            )
     seed_name = request.get("seed_name")
     return {
         "request": request,
@@ -804,6 +840,7 @@ def _request_identity(
             enemy_drop_assignments if randomize_enemy_drops else None),
         "enemy_drop_mode": enemy_drop_mode if randomize_enemy_drops else None,
         "category8_awards": category8_awards,
+        "hemwick_gate": hemwick_gate,
     }
 
 
@@ -994,13 +1031,14 @@ def _write_seed_suppression_manifest(
 
 
 def _source_hashes(
-    install: GameInstall, map_root: Path | None, *, cathedral: bool = False
+    install: GameInstall, map_root: Path | None, *, cathedral: bool = False,
+    hemwick: bool = False,
 ) -> dict[str, str]:
-    paths = (
-        (SUPPRESSION_PATH, CATHEDRAL_EVENT_PATH, COMMON_EVENT_PATH)
-        if cathedral
-        else (SUPPRESSION_PATH,)
-    )
+    paths = [SUPPRESSION_PATH]
+    if cathedral:
+        paths.extend((CATHEDRAL_EVENT_PATH, COMMON_EVENT_PATH))
+    if hemwick:
+        paths.append(HEMWICK_EVENT_PATH)
     hashes = install.source_hashes(paths)
     if map_root is None:
         return hashes
@@ -1149,7 +1187,10 @@ class LauncherWorkflow:
                     )
 
                 map_root = max(candidates, key=map_count)
-        sources = _source_hashes(install, map_root, cathedral=True)
+        sources = _source_hashes(
+            install, map_root, cathedral=True,
+            hemwick=request["hemwick_gate"] is not None,
+        )
         identity = SeedIdentity(
             seed=request["seed"],
             slot=request["slot"],
@@ -1166,6 +1207,7 @@ class LauncherWorkflow:
                 "shop_gate_permutation": request["shop_gate_permutation"],
                 "enemy_drop_assignments": request["enemy_drop_assignments"],
                 "category8_awards": request["category8_awards"],
+                "hemwick_gate": request["hemwick_gate"],
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -1196,6 +1238,7 @@ class LauncherWorkflow:
             composed_binder = binder
             cathedral_output = None
             common_output = None
+            hemwick_output = None
             completed = False
             try:
                 if (options.enabled or request["starting_weapons"] is not None
@@ -1216,7 +1259,20 @@ class LauncherWorkflow:
                     source=source_event, output=cathedral_output,
                     manifest=cathedral_manifest,
                     soulsformats_next=settings.soulsformats_next, progress=progress,
+                    access_flag=(request["hemwick_gate"] or {}).get("access_flag"),
                 )
+                if request["hemwick_gate"] is not None:
+                    hemwick_output = temporary / HEMWICK_EVENT_PATH
+                    hemwick_manifest = temporary / "hemwick-event-manifest.json"
+                    source_hemwick = install.resolve_file(
+                        HEMWICK_EVENT_PATH, include_mods=False
+                    )[1]
+                    self.toolchain.write_hemwick_event(
+                        source=source_hemwick, output=hemwick_output,
+                        manifest=hemwick_manifest,
+                        access_flag=request["hemwick_gate"]["access_flag"],
+                        soulsformats_next=settings.soulsformats_next, progress=progress,
+                    )
                 # The bridge carries the complete reviewed category-8 table, not
                 # only this seed's rows, exactly as the compiled overlay did:
                 # an initializer for an unshuffled row is inert because its
@@ -1277,6 +1333,7 @@ class LauncherWorkflow:
                 progress("Composing and verifying the seed cache...")
                 result = cache.build(
                     identity, composed_binder, map_output, cathedral_output, common_output,
+                    hemwick_output,
                     enemizer_plan=None if enemizer is None else enemizer.plan_path,
                     enemizer_options=None if enemizer is None else {
                         "allow_tier_mixing": options.allow_tier_mixing,

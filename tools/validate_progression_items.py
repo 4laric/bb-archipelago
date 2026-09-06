@@ -26,6 +26,7 @@ EXPECTED = [
     # Synthetic AP progression item: the client applies the vanilla memory
     # event flag rather than inserting nonexistent inventory goods.
     ('"Fear the Old Blood"', "event_effect", "Grand Cathedral altar"),
+    ("Hemwick Access", "event_effect", "Cathedral Ward--Hemwick boundary"),
     ("Oedon Tomb Key", "boss_reward", "Father Gascoigne"),
     ("Old Hunter Bell", "treasure", "Hunter's Dream"),
     ("Orphanage Key", "enemy_drop", "Upper Cathedral Ward Brainsucker"),

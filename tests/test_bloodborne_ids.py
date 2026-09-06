@@ -263,6 +263,7 @@ GOLDEN_ITEMS = {
     "blood_of_adella": 0xBB0224,
     "iosefkas_blood_vial": 0xBB0225,
     "blood_of_adeline": 0xBB0226,
+    "hemwick_access": 0xBB0227,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,

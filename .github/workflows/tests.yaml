@@ -568,7 +568,7 @@ jobs:
             work/integration/common-dump.txt work/integration/category8-rows.json --mutation-controls
       - name: Verify the Cathedral writer matches the reviewed event compile
         run: |
-          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- cathedral --source work/integration/fixtures/event/m24_00_00_00.emevd.dcx --output work/integration/m24_00_00_00.emevd.dcx --manifest work/integration/cathedral-manifest.json
+          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- cathedral --source work/integration/fixtures/event/m24_00_00_00.emevd.dcx --output work/integration/m24_00_00_00.emevd.dcx --manifest work/integration/cathedral-manifest.json --access-flag 12201898
           dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- dump work/integration/m24_00_00_00.emevd.dcx 12401803 > work/integration/laurence-dump.txt
           python - <<'PY'
           from pathlib import Path
@@ -581,6 +581,12 @@ jobs:
           assert instructions(actual) == instructions(expected), (actual, expected)
           PY
           python -m unittest tests.test_laurence_skull_event_runtime
+      - name: Verify both Hemwick boundary writers and lifecycle
+        run: |
+          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- hemwick --source work/integration/fixtures/event/m22_00_00_00.emevd.dcx --output work/integration/m22_00_00_00.emevd.dcx --manifest work/integration/hemwick-manifest.json --access-flag 12201898
+          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- dump work/integration/m24_00_00_00.emevd.dcx 12409990 > work/integration/hemwick-cathedral-dump.txt
+          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- dump work/integration/m22_00_00_00.emevd.dcx 12209990 > work/integration/hemwick-map-dump.txt
+          python tools/check_hemwick_gate_runtime.py work/integration/hemwick-cathedral-dump.txt work/integration/hemwick-map-dump.txt --mutation-controls
       - name: Execute native inventory guards in an x86-64 CPU emulator
         run: |
           python -m pip install unicorn==2.1.4
