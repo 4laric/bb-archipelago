@@ -397,6 +397,11 @@ if ($Package) {
 
     $suppressionOut = Join-Path $Repo "work\vanilla-suppression-build"
     if (Test-Path -LiteralPath (Join-Path $suppressionOut "build-manifest.json") -PathType Leaf) {
+        $suppressionManifest = Get-Content -LiteralPath (Join-Path $suppressionOut "build-manifest.json") -Raw | ConvertFrom-Json
+        $expectedToolPolicy = "EquipParamGoods:1310,2000,2010,2020,2050,2060,2070,2080,2110,2120,2130,2140:properStrength,properAgility,properMagic,properFaith=0:v1"
+        if ($suppressionManifest.hunter_tool_requirements -ne $expectedToolPolicy) {
+            throw "Existing suppression binder predates the Hunter's Tools baseline patch. Remove $suppressionOut and rebuild."
+        }
         Write-Host "  suppression binder kept: $suppressionOut (remove it to rebuild)" -ForegroundColor Green
     } else {
         Step "Player package: building the vanilla suppression binder"

@@ -79,14 +79,19 @@ BinderFile itemLotFile = RequireSingleFile(game, "ItemLotParam.param");
 PARAM itemLots = PARAM.Read(itemLotFile.Bytes);
 PARAMDEF definition = ReadMatchingDefinition(defs, itemLots);
 itemLots.ApplyParamdef(definition);
+BinderFile goodsFile = RequireSingleFile(game, "EquipParamGoods.param");
+PARAM goods = PARAM.Read(goodsFile.Bytes);
+PARAMDEF goodsDefinition = ReadMatchingDefinition(defs, goods);
+goods.ApplyParamdef(goodsDefinition);
 
 var originalFiles = game.Files.Select(file =>
     new FileState(file.ID, file.Name, (byte[])file.Bytes.Clone())).ToList();
 var originalRows = itemLots.Rows.Select(RowState.Capture).ToList();
+var originalGoodsRows = goods.Rows.Select(RowState.Capture).ToList();
 var changes = new List<Applied>();
 
-// Transactional preflight: resolve and validate every requested row before
-// changing the in-memory binder or creating the output file.
+// Resolve and validate every suppression row before changing ItemLotParam.
+// All edits remain in memory until both parameter sets pass validation.
 foreach (Edit edit in plan.Edits)
 {
     if (!Int32.TryParse(edit.ItemLotId, out int lotId)
@@ -124,15 +129,36 @@ foreach (Applied change in changes)
     RequireCell(row, $"lotItemNum{change.Slot:00}").Value = plan.Placeholder.Quantity;
 }
 
+List<HunterToolRequirement> hunterTools = HunterToolRequirements();
+string[] requirementFields = ["properStrength", "properAgility", "properMagic", "properFaith"];
+foreach (HunterToolRequirement tool in hunterTools)
+{
+    List<PARAM.Row> matches = goods.Rows.Where(row => row.ID == tool.GoodsId).ToList();
+    if (matches.Count != 1)
+        throw new InvalidDataException(
+            $"{tool.Name}: expected one EquipParamGoods row {tool.GoodsId}, found {matches.Count}");
+    PARAM.Row row = matches[0];
+    int[] actual = requirementFields.Select(field => Convert.ToInt32(RequireCell(row, field).Value)).ToArray();
+    if (!actual.SequenceEqual(tool.OriginalRequirements))
+        throw new InvalidDataException(
+            $"{tool.Name}: requirement provenance changed for EquipParamGoods {tool.GoodsId}: "
+            + $"expected [{String.Join(',', tool.OriginalRequirements)}], found [{String.Join(',', actual)}]");
+    foreach (string field in requirementFields)
+        RequireCell(row, field).Value = (byte)0;
+}
+goodsFile.Bytes = goods.Write();
+
 itemLotFile.Bytes = itemLots.Write();
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 game.Write(outputPath);
 
 VerifyOutput(
-    outputPath, definition, originalFiles, originalRows, changes,
+    outputPath, definition, goodsDefinition, originalFiles, originalRows,
+    originalGoodsRows, changes, hunterTools,
     placeholderGoods, plan.Placeholder.Quantity);
 Console.WriteLine(
-    $"suppressed={changes.Count} placeholder_goods={placeholderGoods} output={outputPath}");
+    $"suppressed={changes.Count} hunter_tool_requirements_removed={hunterTools.Count} "
+    + $"placeholder_goods={placeholderGoods} output={outputPath}");
 foreach (Applied change in changes)
     Console.WriteLine(
         $"  lot={change.LotId} slot={change.Slot:00} "
@@ -760,9 +786,12 @@ static PARAM.Cell RequireCell(PARAM.Row row, string name) => row[name]
 static void VerifyOutput(
     string outputPath,
     PARAMDEF definition,
+    PARAMDEF goodsDefinition,
     List<FileState> originalFiles,
     List<RowState> originalRows,
+    List<RowState> originalGoodsRows,
     List<Applied> changes,
+    List<HunterToolRequirement> hunterTools,
     int placeholderGoods,
     int placeholderQuantity)
 {
@@ -770,13 +799,14 @@ static void VerifyOutput(
     if (output.Files.Count != originalFiles.Count)
         throw new InvalidDataException("round-trip changed the binder file count");
     BinderFile itemLotFile = RequireSingleFile(output, "ItemLotParam.param");
+    BinderFile goodsFile = RequireSingleFile(output, "EquipParamGoods.param");
     for (int index = 0; index < output.Files.Count; index++)
     {
         BinderFile file = output.Files[index];
         FileState before = originalFiles[index];
         if (file.ID != before.Id || file.Name != before.Name)
             throw new InvalidDataException($"round-trip changed binder identity at index {index}");
-        if (file != itemLotFile && !file.Bytes.SequenceEqual(before.Bytes))
+        if (file != itemLotFile && file != goodsFile && !file.Bytes.SequenceEqual(before.Bytes))
             throw new InvalidDataException($"round-trip changed unrelated binder file {file.Name}");
     }
 
@@ -810,7 +840,46 @@ static void VerifyOutput(
         if (Convert.ToInt32(RequireCell(row, "getItemFlagId").Value) != change.AcquisitionFlag)
             throw new InvalidDataException($"row {row.ID}: acquisition flag changed");
     }
+
+    PARAM goods = PARAM.Read(goodsFile.Bytes);
+    goods.ApplyParamdef(goodsDefinition);
+    if (goods.Rows.Count != originalGoodsRows.Count)
+        throw new InvalidDataException("round-trip changed the EquipParamGoods row count");
+    var changedGoods = hunterTools.ToDictionary(tool => tool.GoodsId);
+    var requirementFields = new HashSet<string>
+        { "properStrength", "properAgility", "properMagic", "properFaith" };
+    for (int index = 0; index < goods.Rows.Count; index++)
+    {
+        PARAM.Row row = goods.Rows[index];
+        RowState before = originalGoodsRows[index];
+        RowState after = RowState.Capture(row);
+        if (!changedGoods.TryGetValue(row.ID, out HunterToolRequirement? tool))
+        {
+            before.RequireEqual(after, $"unplanned EquipParamGoods row {row.ID}");
+            continue;
+        }
+        before.RequireEqualExcept(after, requirementFields, $"Hunter's Tool row {row.ID}");
+        foreach (string field in requirementFields)
+            if (Convert.ToInt32(RequireCell(row, field).Value) != 0)
+                throw new InvalidDataException($"{tool.Name}: EquipParamGoods {row.ID} retained {field}");
+    }
 }
+
+static List<HunterToolRequirement> HunterToolRequirements() =>
+[
+    new(1310, "Empty Phantasm Shell", [0, 0, 0, 15]),
+    new(2000, "Augur of Ebrietas", [0, 0, 0, 18]),
+    new(2010, "A Call Beyond", [0, 0, 0, 40]),
+    new(2020, "Beast Roar", [0, 0, 0, 15]),
+    new(2050, "Choir Bell", [0, 0, 0, 15]),
+    new(2060, "Old Hunter Bone", [0, 0, 0, 15]),
+    new(2070, "Tiny Tonitrus", [0, 0, 0, 25]),
+    new(2080, "Executioner's Gloves", [0, 0, 0, 20]),
+    new(2110, "Messenger's Gift", [0, 0, 0, 10]),
+    new(2120, "Blacksky Eye", [0, 0, 0, 16]),
+    new(2130, "Accursed Brew", [0, 0, 0, 30]),
+    new(2140, "Madaras Whistle", [0, 0, 18, 0]),
+];
 
 sealed record Plan(
     [property: JsonPropertyName("format")] string Format,
@@ -828,6 +897,7 @@ sealed record Edit(
     [property: JsonPropertyName("acquisition_flag")] string AcquisitionFlag);
 sealed record Applied(
     string ItemKey, int LotId, int Slot, int ItemCategory, int GoodsId, int AcquisitionFlag);
+sealed record HunterToolRequirement(int GoodsId, string Name, int[] OriginalRequirements);
 sealed record EnemyDropAssignment(
     [property: JsonPropertyName("npc_param_id")] int NpcParamId,
     [property: JsonPropertyName("drop_field")] string DropField,

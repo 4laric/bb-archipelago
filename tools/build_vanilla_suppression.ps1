@@ -55,6 +55,7 @@ $ManifestJson = @{
     source_gameparam_sha256 = (Get-FileHash -LiteralPath $GameParam -Algorithm SHA256).Hash.ToLower()
     source_paramdef_sha256 = (Get-FileHash -LiteralPath $Paramdef -Algorithm SHA256).Hash.ToLower()
     plan_sha256 = (Get-FileHash -LiteralPath $Plan -Algorithm SHA256).Hash.ToLower()
+    hunter_tool_requirements = "EquipParamGoods:1310,2000,2010,2020,2050,2060,2070,2080,2110,2120,2130,2140:properStrength,properAgility,properMagic,properFaith=0:v1"
     output_gameparam_sha256 = (Get-FileHash -LiteralPath $OutputParam -Algorithm SHA256).Hash.ToLower()
     output_relative_path = "param/gameparam/gameparam.parambnd.dcx"
     installed = $false
