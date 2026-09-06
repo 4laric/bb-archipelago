@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from bb_launcher import core
 from bb_launcher.core import (
@@ -464,6 +465,62 @@ class LauncherCoreTests(unittest.TestCase):
         with self.assertRaisesRegex(ConflictError, "shadPS4 is running"):
             activate_build(install, build, process_is_running=lambda: True)
         self.assertFalse(install.mods.exists())
+
+    def test_windows_process_probe_matches_raw_tasklist_output(self):
+        completed = core.subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=b'"shadPS4.exe","8420",\xff\r\n', stderr=b""
+        )
+        with patch.object(core.sys, "platform", "win32"), patch.object(
+            core.subprocess, "run", return_value=completed
+        ) as run:
+            self.assertTrue(core.process_is_running_by_name("shadPS4.exe"))
+        self.assertNotIn("text", run.call_args.kwargs)
+
+    def test_windows_process_probe_handles_raw_localized_no_match_output(self):
+        completed = core.subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=b"\xffINFO: no matching tasks\r\n", stderr=b""
+        )
+        with patch.object(core.sys, "platform", "win32"), patch.object(
+            core.subprocess, "run", return_value=completed
+        ):
+            self.assertFalse(core.process_is_running_by_name("shadPS4.exe"))
+
+    def test_windows_process_probe_refuses_missing_output(self):
+        for stdout in (None, b"", b"\r\n"):
+            with self.subTest(stdout=stdout):
+                completed = core.subprocess.CompletedProcess(
+                    args=[], returncode=0, stdout=stdout, stderr=b""
+                )
+                with patch.object(core.sys, "platform", "win32"), patch.object(
+                    core.subprocess, "run", return_value=completed
+                ), self.assertRaisesRegex(ValidationError, "tasklist returned no output"):
+                    core.process_is_running_by_name("shadPS4.exe")
+
+    def test_windows_process_probe_refuses_nonzero_exit(self):
+        completed = core.subprocess.CompletedProcess(
+            args=[], returncode=1, stdout=b"error", stderr=b"access denied"
+        )
+        with patch.object(core.sys, "platform", "win32"), patch.object(
+            core.subprocess, "run", return_value=completed
+        ), self.assertRaisesRegex(ValidationError, "tasklist exited with code 1"):
+            core.process_is_running_by_name("shadPS4.exe")
+
+    def test_failed_default_process_probe_refuses_activation_without_mutation(self):
+        install = make_install(self.root / "game")
+        before_base = snapshot_tree(install.base)
+        before_patch = snapshot_tree(install.patch)
+        _cache, build = make_build(self.root / "build", "seed", b"suppressed")
+        completed = core.subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=None, stderr=b""
+        )
+        with patch.object(core.sys, "platform", "win32"), patch.object(
+            core.subprocess, "run", return_value=completed
+        ), self.assertRaisesRegex(ValidationError, "tasklist returned no output"):
+            activate_build(install, build)
+        self.assertEqual(snapshot_tree(install.base), before_base)
+        self.assertEqual(snapshot_tree(install.patch), before_patch)
+        self.assertFalse(install.mods.exists())
+        self.assertFalse((install.root / core.TRANSACTION_NAME).exists())
 
     def test_interrupted_activation_finishes_from_verified_stage(self):
         install = make_install(self.root / "game")

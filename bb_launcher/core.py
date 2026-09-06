@@ -1125,16 +1125,57 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
     return owner
 
 
-def _shad_is_running() -> bool:
-    if sys.platform == "win32":
+def _windows_process_is_running(name: str) -> bool:
+    """Query tasklist without decoding its locale-dependent output.
+
+    CPython's subprocess reader can leave ``stdout`` as ``None`` when decoding
+    tasklist output fails. Process image names used by the launcher are ASCII,
+    so comparing bytes avoids that failure and works in every Windows locale.
+    An incomplete scan must stop activation instead of being mistaken for an
+    all-clear result.
+    """
+
+    try:
+        encoded_name = name.encode("ascii")
+    except UnicodeEncodeError as exc:
+        raise ValidationError(
+            f"cannot check whether {name!r} is running: process names must be ASCII"
+        ) from exc
+    if not encoded_name or any(character in encoded_name for character in b'\r\n"'):
+        raise ValidationError(f"cannot check whether {name!r} is running: invalid process name")
+
+    try:
         result = subprocess.run(
-            ["tasklist", "/FI", "IMAGENAME eq shadPS4.exe", "/FO", "CSV", "/NH"],
+            ["tasklist", "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
             check=False,
             capture_output=True,
-            text=True,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
-        return "shadps4.exe" in result.stdout.casefold()
+    except OSError as exc:
+        raise ValidationError(
+            f"could not check whether {name} is running: tasklist could not start; "
+            "close shadPS4 manually and retry"
+        ) from exc
+    if result.returncode != 0:
+        raise ValidationError(
+            f"could not check whether {name} is running: tasklist exited with "
+            f"code {result.returncode}; close shadPS4 manually and retry"
+        )
+    if not isinstance(result.stdout, bytes) or not result.stdout.strip():
+        raise ValidationError(
+            f"could not check whether {name} is running: tasklist returned no output; "
+            "close shadPS4 manually and retry"
+        )
+    expected_field = b'"' + encoded_name.lower() + b'",'
+    return any(
+        line.lstrip().lower().startswith(expected_field)
+        for line in result.stdout.splitlines()
+    )
+
+
+def _shad_is_running() -> bool:
+    if sys.platform == "win32":
+        return _windows_process_is_running("shadPS4.exe")
     proc = Path("/proc")
     if proc.is_dir():
         for command in proc.glob("[0-9]*/comm"):
@@ -1229,14 +1270,7 @@ def process_is_running_by_name(name: str) -> bool:
     """
 
     if sys.platform == "win32":
-        result = subprocess.run(
-            ["tasklist", "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
-            check=False,
-            capture_output=True,
-            text=True,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
-        return name.casefold() in result.stdout.casefold()
+        return _windows_process_is_running(name)
     proc = Path("/proc")
     if proc.is_dir():
         for command in proc.glob("[0-9]*/comm"):
