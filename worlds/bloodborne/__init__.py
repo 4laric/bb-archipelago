@@ -907,7 +907,9 @@ else:
                 build_enemy_drop_assignments(seed, enemy_drop_mode)
                 if enemy_drop_enabled else None
             )
+            from .insight_armor import build_insight_armor_suppression
             return {
+                "insight_armor_suppression": build_insight_armor_suppression(self._pool_item_keys()),
                 "version": 4,
                 "world_version": WORLD_VERSION,
                 "runtime_build": RUNTIME_BUILD,

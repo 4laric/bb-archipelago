@@ -1,5 +1,7 @@
 # Changelog
 
+- Suppress boss Insight armor shop rows only for attire included in the AP pool; preserve NPC armor and other stock (#377).
+
 ## Unreleased
 
 - The Windows launcher no longer fails with a `NoneType.casefold` error when
