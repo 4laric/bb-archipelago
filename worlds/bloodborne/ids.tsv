@@ -1013,3 +1013,6 @@ item	blood_of_adella	0xBB0224
 item	iosefkas_blood_vial	0xBB0225
 item	blood_of_adeline	0xBB0226
 location	fixed_yahargul_lot_2800610	0xBB12A3
+location	fixed_yahargul_lot_2800170	0xBB12A4
+location	pickup_mensis_beast_blood_pellet	0xBB12A5
+location	pickup_forbidden_woods_doorkeeper_corpse	0xBB12A6

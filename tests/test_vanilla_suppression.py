@@ -256,7 +256,7 @@ class RealCorpusTests(unittest.TestCase):
         # acquisition-flag award groups. The 58 category-8 rune and gem lots
         # are planned like every other pickup since their AP copies arrive
         # through the event-award lane (#214).
-        self.assertEqual(len(location_edits), 687)
+        self.assertEqual(len(location_edits), 691)
         self.assertEqual(
             {edit.item_lot_id for edit in location_edits if "related_lot" in edit.item_key},
             {
@@ -281,6 +281,10 @@ class RealCorpusTests(unittest.TestCase):
                 # 2800610-2800613 group (one check, four rows replaced)
                 "2800521", "2800522", "2800523",
                 "2800611", "2800612", "2800613",
+                # The Yahar'gul Gaol/cathedral-side corpse pair: two separate
+                # corpses on acquisition flag 52800170. One check keyed on
+                # 2800170 (MERGED_FLAG_HEADS), both vanilla awards replaced.
+                "2800320",
                 # Choir and Gascoigne sets (Upper Cathedral Ward)
                 "2420151", "2420152",
                 "2420231", "2420232", "2420233", "2420234",
@@ -328,7 +332,7 @@ class RealCorpusTests(unittest.TestCase):
         # (clinic pair, post-Rom ribbon, and the 17 NG+-only replacement lots
         # -- 2410295 from #220 plus the 16 from review finding W5) are not
         # network locations, so they are not iterated here.
-        self.assertEqual(checked, 609)
+        self.assertEqual(checked, 612)
 
     def test_every_category_eight_check_is_suppressed_and_planned(self):
         from worlds.bloodborne import NETWORK_LOCATIONS
