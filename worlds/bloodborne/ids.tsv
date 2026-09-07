@@ -1016,3 +1016,5 @@ location	fixed_yahargul_lot_2800610	0xBB12A3
 location	fixed_yahargul_lot_2800170	0xBB12A4
 location	pickup_mensis_beast_blood_pellet	0xBB12A5
 location	pickup_forbidden_woods_doorkeeper_corpse	0xBB12A6
+item	category8_cathedral_ward_avatar_beast_rune	0xBB0227
+location	enemy_cathedral_ward_avatar	0xBB12A7

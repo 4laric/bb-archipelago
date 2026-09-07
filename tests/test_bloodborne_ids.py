@@ -271,9 +271,17 @@ GOLDEN_ITEMS = {
     "augur_of_ebrietas": 0xBB0105,
     "oedon_tomb_key": 0xBB0106,
 }
+# The category-8 block was assigned as 58 contiguous ids and is now full:
+# 0xBB01C1, the id the 59th row of the block would take, belongs to `evelyn`.
+# A category-8 award added afterwards therefore appends at the end of the
+# registry like any other key, and this snapshot names it (#388).
+CATEGORY8_BLOCK_ROWS = 58
 GOLDEN_ITEMS.update({
     row.item_key: 0xBB0187 + index
-    for index, row in enumerate(CATEGORY8_AWARDS)
+    for index, row in enumerate(CATEGORY8_AWARDS[:CATEGORY8_BLOCK_ROWS])
+})
+GOLDEN_ITEMS.update({
+    "category8_cathedral_ward_avatar_beast_rune": 0xBB0227,
 })
 GOLDEN_ITEMS.update({
     row.item_key: 0xBB01D9 + index
@@ -416,7 +424,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB12A6)
+        self.assertEqual(max(ids), 0xBB12A7)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

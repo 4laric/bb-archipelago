@@ -3,6 +3,21 @@
 
 ## Unreleased
 
+- A Cathedral Ward enemy no longer hands you a vanilla Beast rune. Its death
+  event (m24_00_00_00 event 12400860, entity 2400450) awarded Caryll rune
+  recipe 102401 outright, or Madman's Knowledge if you already had the rune.
+  Neither award lot carries an acquisition flag, so the pickup was invisible to
+  both the fixed-treasure catalog and the acquisition-flag suppression pass and
+  nothing replaced it. Killing that enemy is now an Archipelago check --
+  **Cathedral Ward - Beast Rune** -- witnessed by the encounter's own saved
+  defeat flag, so any kill counts, a reload does not resend it, and a save on
+  which the enemy is already dead reconciles the check. Both branches of the
+  award are replaced with the placeholder, and the rune itself joins the item
+  pool as **Cathedral Ward - Beast Rune**, so it is randomized rather than
+  removed. Every existing Caryll rune and blood gem keeps its token, award lot
+  and acknowledgement flag exactly as before. Seeds gain one location (657
+  network locations) and one item; the suppression plan digest moved. Existing
+  seeds are unaffected. (#388)
 - Three more unsuppressed vanilla pickups became Archipelago checks. The
   Nightmare of Mensis Beast Blood Pellet (lot 2600570, flag 52600570, awarded
   by object event 12600125) and the Forbidden Woods doorkeeper's corpse

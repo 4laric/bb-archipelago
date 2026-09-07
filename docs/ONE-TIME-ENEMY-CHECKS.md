@@ -8,6 +8,7 @@ Ordinary respawning enemies and item-acquisition flags are never sufficient.
 
 | Encounter | Map/entity | Witness | Classification | Reason |
 |---|---|---|---|---|
+| Cathedral Ward avatar (`c7500_0000`) | `m24_00_00_00`, `2400450` | saved defeat flag `12400861` | safe standalone check, **not** option-gated | Event 12400860 waits for `CharacterDead(2400450)`, awards a Caryll rune, sets 12400861, and disables the character on any later load while that flag is on. Unlike the rows below this check is unconditional: its vanilla award is suppressed unconditionally (bb-archipelago#388), so gating the check would delete the rune from the seed instead of randomizing it. |
 | Yurie, the Last Scholar | `m32_00_00_00`, `3200110` | event-slot flag `13200500` | safe standalone check | MSB places `c0000_0002` with NpcParam `6450`; that row has `disableRespawn=1`. Dedicated EMEVD event `13200500` waits for `CharacterDead(3200110)`, and its completed event-slot flag survives reload. The witness is independent of Yurie’s drop lot. |
 | Byrgenwerth Patches | `m32_00_00_00`, `3200101` | quest state `1431` on death | excluded: quest NPC | Patches can remain friendly and alive. A kill-only check would make a hostile quest outcome mandatory; no equivalent peaceful-resolution witness is established. |
 | Master Willem | `m32_00_00_00`, `3200100` | quest state `1061` on death | excluded: non-hostile NPC | Not a hostile encounter; killing him must not become progression. |
@@ -19,7 +20,8 @@ Ordinary respawning enemies and item-acquisition flags are never sufficient.
 
 ## Runtime and migration behavior
 
-The client polls `13200500` like every other runtime location flag. AP’s
+The client polls `13200500` and `12400861` like every other runtime location
+flag. AP’s
 checked-location set provides exactly-once network behavior. Because the
 witness is persistent, an existing save on which Yurie is already defeated
 reconciles the check when the client next reads the flag; no item-drop state is

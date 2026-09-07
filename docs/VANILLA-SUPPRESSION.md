@@ -49,6 +49,33 @@ than the whole future model. The current full-world canonical plan contains
   boss badges and Amelia's randomized Gold Pendant;
 - every seeded fixed-location award and its related shared-flag rows.
 
+## The event-award lane: a lot named directly, and both of its branches
+
+`SCRIPT_AWARD_SUPPRESSIONS` owns *every* lot that awards an item, which is the
+right ownership rule for a key and the wrong one for a common good. It also
+cannot express a branch. The Cathedral Ward avatar's death event
+(bb-archipelago#388) is both shapes at once:
+`event/m24_00_00_00.emevd.dcx.js:2001` — event 12400860 waits on
+`CharacterDead(2400450)` and awards lot 75002400 (category 8, GemGenParam
+recipe 102401, the Beast rune family) when flag 6333 is off, or lot 75002405
+(Madman's Knowledge) when it is on. Dozens of rows award Madman's Knowledge, so
+the goods-to-lot census would have claimed all of them.
+
+`EVENT_AWARD_SUPPRESSIONS` is the third table: scoped to the lot like
+`BOSS_AWARD_SUPPRESSIONS`, but with no boss framing and with every branch of
+the event listed, so the branch that is *not* taken cannot leak the vanilla
+item instead. `plan_event_awards` verifies category, item id and the row's
+literal `getItemFlagId` against the corpus before planning either edit; both
+rows carry `-1`, and both plans record `-1`.
+
+Flag 6333 is read here and written nowhere in this map. It stays as it is: it
+selects which vanilla award the event would have made, and once both awards are
+replaced it selects between two placeholders. The check is the event's own
+saved defeat flag 12400861, which the same event sets after the award and reads
+back on a later load to disable the character — so a save on which the enemy is
+already dead reconciles the check rather than resending it, and no acquisition
+flag (which any AP-delivered copy of the rune would also set) is involved.
+
 ## The script-award lane, and a lot with no flag
 
 Most edits are found by search: resolve the randomized item to the one row that

@@ -1131,6 +1131,33 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "treasure_underground_cell_inner_chamber_key": RuntimeLocationBinding(
         50002360, "MSB treasure m36_00_00_00 + ItemLotParam 43221 acquisition flag",
         43221, "treasure", "m36_00_00_00", 4, 4015),
+    # bb-archipelago#388. m24_00_00_00.emevd.dcx.js:2001 - event 12400860
+    # (敵アバター撃破) disables entity 2400450 outright when flag 12400861 is
+    # already on, otherwise waits on CharacterDead(2400450) and awards lot
+    # 75002400 (category 8, GemGenParam recipe 102401, the Beast rune family)
+    # or, when flag 6333 is on, replacement lot 75002405 (Madman's Knowledge).
+    # It then sets 12400861. That flag is the witness: it is the event's own
+    # saved defeat flag, it is set on any death (the WaitFor names no killer),
+    # and the reload branch proves the game itself reads it back from the save.
+    # `item_lot_id` is deliberately None -- neither award lot carries an
+    # acquisition flag (getItemFlagId -1 on both, research/joined/lot_items.tsv),
+    # so no lot is a detection target here and the suppression of the two lots
+    # is declared separately in EVENT_AWARD_SUPPRESSIONS. `inferred`.
+    "enemy_cathedral_ward_avatar": RuntimeLocationBinding(
+        12400861,
+        "EMEVD m24_00_00_00.emevd.dcx.js:2001 event 12400860 waits on "
+        "CharacterDead(2400450) and sets saved defeat flag 12400861; the same "
+        "event disables the character on a later load while 12400861 is on. "
+        "MSB m24_00_00_00/m24_00_00_01 place c7500_0000 as entity 2400450 with "
+        "NpcParam 750100 (敵アバター　聖堂街AC連絡用). Award lots 75002400 "
+        "(category 8, recipe 102401) and 75002405 both carry getItemFlagId -1, "
+        "so the defeat flag and not an acquisition flag is the check",
+        None,
+        "one_time_enemy",
+        "m24_00_00_00.emevd.dcx.js:2001; msb_enemies.tsv; NpcParam 750100",
+        8,
+        102401,
+    ),
 }
 
 for location in FIXED_LOCATIONS:
@@ -1288,6 +1315,51 @@ BOSS_AWARD_SUPPRESSIONS: dict[str, BossAwardSuppression] = {
         ("laurence", 3401850, 8, 200040, 6673, "m34 event 13401850 AwardItemLot(3401850)"),
         ("laurence_repeat", 3401852, 4, 1500, -1, "m34 event 13401850 AwardItemLot(3401852)"),
         ("orphan_of_kos", 3601800, 0, 38000000, 53601800, "m36 event 13601800 AwardItemLot(3601800)"),
+    )
+}
+
+
+@dataclass(frozen=True)
+class EventAwardSuppression:
+    """One reviewed EMEVD award lot identified by the lot row alone.
+
+    ``ScriptAwardSuppression`` owns *every* lot that awards an item, which is
+    the right rule when the AP copy of that item must not be obtainable from
+    any vanilla source. It is the wrong rule for an event that hands out a
+    common item -- Madman's Knowledge is awarded by dozens of rows -- and it
+    cannot express a branch, where the same event awards one of two lots.
+
+    This declaration is therefore scoped to the lot, like
+    ``BossAwardSuppression``, but without the boss framing: the check is some
+    other durable witness the same event sets, and every branch of the event
+    is listed so no branch can leak. The planner verifies category, item and
+    the literal ``getItemFlagId`` against the committed corpus before planning
+    an edit, and ``-1``/``0`` mean the row has no acquisition flag at all.
+    """
+
+    key: str
+    item_lot_id: int
+    item_category: int
+    item_id: int
+    acquisition_flag: int
+    witness_flag: int
+    evidence: str
+
+
+# bb-archipelago#388. Both branches of the Cathedral Ward avatar's death event.
+# Suppressing only the rune branch would let the flag-6333 branch hand out the
+# vanilla replacement instead, so both lots are replaced; flag 6333 itself is
+# not touched, and neither is the saved defeat flag 12400861 that the check
+# reads.
+EVENT_AWARD_SUPPRESSIONS: dict[str, EventAwardSuppression] = {
+    key: EventAwardSuppression(key, lot, category, item, flag, witness, evidence)
+    for key, lot, category, item, flag, witness, evidence in (
+        ("cathedral_ward_avatar_beast_rune", 75002400, 8, 102401, -1, 12400861,
+         "m24_00_00_00.emevd.dcx.js:2001 event 12400860, !EventFlag(6333) branch: "
+         "AwardItemLot(75002400) after CharacterDead(2400450)"),
+        ("cathedral_ward_avatar_replacement", 75002405, 4, 1500, -1, 12400861,
+         "m24_00_00_00.emevd.dcx.js:2001 event 12400860, EventFlag(6333) branch: "
+         "AwardItemLot(75002405) after CharacterDead(2400450)"),
     )
 }
 
