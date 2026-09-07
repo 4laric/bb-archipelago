@@ -275,17 +275,18 @@ jobs:
       # them -- docs/ carries the location-hint vocabulary and the naming
       # contract the hint gates check the table against (#222).
       #
-      # site/, release/ and the issue template come along for the same reason:
-      # tests/test_site_assets.py reads them by path. The suite is meant to be
-      # the SAME suite in both tiers, so the alternative -- letting those tests
-      # error here -- would mean either a second, weaker ledger or tests that
-      # skip themselves whenever their inputs are missing, which is the exact
-      # silent hole tools/run_tests.py exists to close.
+      # site/, release/, examples/ and the issue template come along for the
+      # same reason: tests/test_site_assets.py and the generators it re-runs
+      # read them by path. The suite is meant to be the SAME suite in both
+      # tiers, so the alternative -- letting those tests error here -- would
+      # mean either a second, weaker ledger or tests that skip themselves
+      # whenever their inputs are missing, which is the exact silent hole
+      # tools/run_tests.py exists to close.
       - name: Install the world
         run: |
           rm -rf _ap/worlds/bloodborne
           cp -r worlds/bloodborne _ap/worlds/bloodborne
-          cp -r bb_launcher tools tests research packaging docs site release _ap/
+          cp -r bb_launcher tools tests research packaging docs site release examples _ap/
           mkdir -p _ap/.github
           cp -r .github/ISSUE_TEMPLATE _ap/.github/
           cp build.ps1 _ap/
