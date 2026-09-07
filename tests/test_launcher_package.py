@@ -282,8 +282,11 @@ class LauncherPackageTests(unittest.TestCase):
             self.assertIn(path, tests_workflow, path)
             # A filter entry that names a file nobody ships is a filter that
             # will quietly stop matching.
+            # Probe against the repository that owns the workflows: in the
+            # Archipelago tier self.repo is the _ap/ checkout tests were copied
+            # into, not this repository.
             probe = path.strip("^$").replace("\\", "").rstrip("/")
-            self.assertTrue((self.repo / probe).exists(), probe)
+            self.assertTrue((workflows.parent.parent / probe).exists(), probe)
 
     def test_partial_package_does_not_claim_to_be_bundled(self):
         (self.app / "tools" / "MSBBMiner.exe").unlink()
