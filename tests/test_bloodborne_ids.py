@@ -281,7 +281,7 @@ GOLDEN_ITEMS.update({
     for index, row in enumerate(CATEGORY8_AWARDS[:CATEGORY8_BLOCK_ROWS])
 })
 GOLDEN_ITEMS.update({
-    "category8_cathedral_ward_avatar_beast_rune": 0xBB0227,
+    "category8_cathedral_ward_avatar_beast_rune": 0xBB0228,
 })
 GOLDEN_ITEMS.update({
     row.item_key: 0xBB01D9 + index
