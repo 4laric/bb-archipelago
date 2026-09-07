@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,23 +11,33 @@ from bb_launcher.local_session_ui import LocalSessionPanel, write_solo_player
 
 class LocalSessionUiTests(unittest.TestCase):
     def test_solo_yaml_preserves_name_and_dlc_choice(self):
-        import yaml
+        # write_solo_player emits YAML by hand (see its docstring comment) so the
+        # launcher does not depend on PyYAML, which the frozen build may lack.
+        # Parse it back the same minimal way rather than importing yaml here.
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             first = write_solo_player(root, 'A: "Hunter"', False)
-            value = yaml.safe_load((first / 'Bloodborne.yaml').read_text(encoding='utf-8'))
-            self.assertEqual(value, {'name': 'A: "Hunter"', 'game': 'Bloodborne', 'Bloodborne': {'include_dlc': False}})
+            text = (first / 'Bloodborne.yaml').read_text(encoding='utf-8')
+            lines = text.splitlines()
+            self.assertEqual('name: "A: \\"Hunter\\""', lines[0])
+            name = json.loads(lines[0][len('name: '):])
+            self.assertEqual('A: "Hunter"', name)
+            self.assertEqual('game: Bloodborne', lines[1])
+            self.assertEqual('Bloodborne:', lines[2])
+            self.assertEqual('  include_dlc: false', lines[3])
             second = write_solo_player(root, 'Hunter', True)
             self.assertNotEqual(first, second)
-            self.assertEqual(value['name'], 'A: "Hunter"')
 
     def test_invalid_player_name_creates_no_input(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            sentinel = root / "sentinel.txt"
+            sentinel.write_text("untouched", encoding="utf-8")
             for name in ('', 'x' * 17, 'Hunter\nOther'):
                 with self.assertRaises(ValidationError):
                     write_solo_player(root, name, False)
-            self.assertEqual(list(root.iterdir()), [])
+            self.assertEqual([sentinel], list(root.iterdir()),
+                              "witness: no player directory was created")
 
     def test_generated_seed_flows_into_play_without_manual_path_entry(self):
         app = SimpleNamespace(_set_busy=Mock(), _accept_ap_request=Mock(), fields={'ap_request': Mock()},

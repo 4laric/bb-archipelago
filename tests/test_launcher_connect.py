@@ -85,32 +85,35 @@ class ConnectToRunningTests(unittest.TestCase):
     def assert_refused_without_mutation(self, running, message):
         before = self.snapshot_overlay()
         state = self.root / "state"
+        self.launched.append("sentinel")
         with self.assertRaisesRegex(ValidationError, message):
             self.workflow(running).connect_to_running(
                 self.fixture.settings(), player_name="Hunter"
             )
-        self.assertEqual([], self.launched)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
         self.assertEqual(before, self.snapshot_overlay())
         self.assertFalse(state.exists())
 
     def test_refuses_when_no_launcher_owned_overlay_is_active(self):
         owner = self.install.mods / ".bb-ap-owner.json"
         owner.unlink()
+        self.launched.append("sentinel")
         with self.assertRaisesRegex(Exception, "ownership manifest"):
             self.workflow(lambda name: name.casefold() == "shadps4.exe").connect_to_running(
                 self.fixture.settings(), player_name="Hunter"
             )
-        self.assertEqual([], self.launched)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
         self.assertFalse((self.root / "state").exists())
 
     def test_refuses_when_shadps4_is_not_running(self):
         before = self.snapshot_overlay()
+        self.launched.append("sentinel")
         with self.assertRaisesRegex(ValidationError, "already be running"):
             self.workflow(lambda _name: False, lambda: ()).connect_to_running(
                 self.fixture.settings(), player_name="Hunter"
             )
         self.assertEqual(before, self.snapshot_overlay())
-        self.assertEqual([], self.launched)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
 
     def test_refuses_a_duplicate_client(self):
         self.assert_refused_without_mutation(
@@ -122,37 +125,41 @@ class ConnectToRunningTests(unittest.TestCase):
         other = self.root / "other" / "shadPS4.exe"
         other.parent.mkdir()
         other.write_bytes(b"shad")
+        self.launched.append("sentinel")
         with self.assertRaisesRegex(ValidationError, "running shadPS4 executable"):
             self.workflow(
                 lambda name: False,
                 lambda: (self.process(executable=other),),
             ).connect_to_running(self.fixture.settings(), player_name="Hunter")
-        self.assertEqual([], self.launched)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
 
     def test_refuses_a_shadps4_running_the_wrong_game(self):
         wrong = self.root / "other-game" / "CUSA03173"
+        self.launched.append("sentinel")
         with self.assertRaisesRegex(ValidationError, "running shadPS4 game"):
             self.workflow(
                 lambda name: False,
                 lambda: (self.process(game=wrong),),
             ).connect_to_running(self.fixture.settings(), player_name="Hunter")
-        self.assertEqual([], self.launched)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
 
     def test_refuses_multiple_shadps4_processes(self):
+        self.launched.append("sentinel")
         with self.assertRaisesRegex(ValidationError, "2 shadPS4 processes"):
             self.workflow(
                 lambda name: False,
                 lambda: (self.process(pid=1), self.process(pid=2)),
             ).connect_to_running(self.fixture.settings(), player_name="Hunter")
-        self.assertEqual([], self.launched)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
 
     def test_refuses_when_verified_process_disappears_before_spawn(self):
         calls = iter(((self.process(),), ()))
+        self.launched.append("sentinel")
         with self.assertRaisesRegex(ValidationError, "stopped before"):
             self.workflow(lambda _name: False, lambda: next(calls)).connect_to_running(
                 self.fixture.settings(), player_name="Hunter"
             )
-        self.assertEqual([], self.launched)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
 
     def test_game_argument_normalizes_eboot_and_ignores_later_option_values(self):
         eboot = self.install.base / "eboot.bin"
