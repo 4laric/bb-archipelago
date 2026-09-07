@@ -3,6 +3,20 @@
 
 ## Unreleased
 
+- Added the `consumable_quantity_bonus` YAML option (`Range`, default `0`,
+  maximum `20`). It adds a flat `+X` to the delivered quantity of every item
+  in the reviewed `CONSUMABLE_ITEM_KEYS` classification -- vials, bullets,
+  cures, pellets, throwables, papers, marks, insight items, and Coldblood --
+  and leaves everything else alone, including weapons, attire, keys, badges,
+  runes, blood gems, umbilical cords, one-per-game goods, and reinforcement
+  materials. Item names are permanent network identifiers and keep their
+  authored base quantity; the bonus is applied when the seed emits its
+  runtime item bindings, clamped to each good's `maxNum` held-stack cap and
+  to the grant contract's ceiling of 99. The per-check pickup-sustain
+  Vial/Bullet award is unchanged. At the default `0`, slot data is
+  byte-for-byte identical to before. No client change: the client already
+  delivers the quantity the seed publishes.
+
 - The Yahar'gul Black set on the coachman's-seat corpse in Yahar'gul is now
   an Archipelago check (`Yahar'gul - Yahar'gul Black Set (coachman's seat)`)
   and its four vanilla lots are suppressed. It had been excluded by hand

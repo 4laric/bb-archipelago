@@ -84,6 +84,13 @@ unique-enemy checks. It defaults off; the initial conservative tranche contains
 Yurie at Byrgenwerth, whose dedicated persistent death-event flag is independent
 of her drop. The evidence census and explicit exclusions are in
 `docs/ONE-TIME-ENEMY-CHECKS.md`.
+Set `consumable_quantity_bonus: X` (0 by default, maximum 20) to add a flat
+`+X` copies to every consumable item the seed delivers: at `2`, a Blood Vial
+arrives as three and Quicksilver Bullets x3 arrive as five. Only reviewed
+spendable consumables are eligible, item names keep their authored base
+quantity, a bonused stack is capped by the good's own held-stack limit, and the
+per-check pickup-sustain Vial/Bullet award is unaffected. The eligibility
+classification is `CONSUMABLE_ITEM_KEYS` in `worlds/bloodborne/data.py`.
 Set `randomize_shops: true` to shuffle which of the ten hunter badges unlocks
 each ordinary Blood Echo Bath Messenger stock group. It defaults off and does
 not alter prices, stock contents, Insight shops, or Chalice shops.
