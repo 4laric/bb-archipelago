@@ -191,7 +191,7 @@ class BloodborneModelTests(unittest.TestCase):
         # Review finding W5: 16 NG+ "replacement" lots left the seeded manifest
         # (668 -> 652). Each shared a corpse with a first-cycle row that is
         # still seeded, so no corpse lost its check.
-        self.assertEqual(652, len(NETWORK_LOCATIONS))
+        self.assertEqual(653, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -200,7 +200,7 @@ class BloodborneModelTests(unittest.TestCase):
              "Hemwick Charnel Lane": 33, "Castle Cainhurst": 29,
              "Forbidden Woods": 76, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
              "Moonside Lake": 1,
-            "Yahar'gul": 48, "Lecture Building 1F": 9,
+            "Yahar'gul": 49, "Lecture Building 1F": 9,
              "Lecture Building 2F": 8, "Nightmare Frontier": 41,
              "Nightmare of Mensis": 55, "Hunter's Dream": 3,
              "Hunter's Nightmare": 68, "Underground Corpse Pile": 1,
@@ -305,7 +305,7 @@ class BloodborneModelTests(unittest.TestCase):
         # remainder now falls to a different set of these names. The split is
         # restated per name rather than as one shared number.
         self.assertEqual(counts["Antidote x2"], 11)
-        self.assertEqual(counts["Sedatives x2"], 10)
+        self.assertEqual(counts["Sedatives x2"], 11)
         for name in ("Poison Knife x3", "Blue Elixir", "Beast Blood Pellet",
                      "Lead Elixir", "Oil Urn x2", "Numbing Mist x2",
                      "Pungent Blood Cocktail x2", "Shaman Bone Blade",
@@ -349,7 +349,7 @@ class BloodborneModelTests(unittest.TestCase):
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 652 - 21 one-each = 631 slots over five weighted names.
         self.assertEqual(counts["Blood Vial"], 224)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 145)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 146)
         self.assertEqual(counts["Blood Stone Shards x2"], 112)
         self.assertEqual(counts["Pebbles x3"], 75)
         self.assertEqual(counts["Molotov Cocktails x2"], 75)
@@ -363,12 +363,18 @@ class BloodborneModelTests(unittest.TestCase):
         """A short flag is valid; sharing one between lots is not."""
         with (ROOT / "research/joined/lot_items.tsv").open(encoding="utf-8", newline="") as handle:
             rows = list(csv.DictReader(handle, delimiter="\t"))
+        # Which MSB treasure entries place each lot. A flag shared by lots on
+        # two different corpses cannot be one check (the excluded 52800170);
+        # a flag shared by several lot fields of ONE corpse is one placement
+        # and one check (the Yahar'gul Black coachman's seat names 2800610
+        # and 2800611 of the 2800610-2800613 award group).
+        placements_by_lot: dict[str, set[tuple[str, str]]] = {}
         with (ROOT / "research/joined/fixed_treasure_lots.tsv").open(
                 encoding="utf-8", newline="") as handle:
-            placed_lots = {
-                row["item_lot_id"] for row in csv.DictReader(handle, delimiter="\t")
-                if row["item_lot_id"]
-            }
+            for row in csv.DictReader(handle, delimiter="	"):
+                if row["item_lot_id"]:
+                    placements_by_lot.setdefault(row["item_lot_id"], set()).add(
+                        (row["map_path"], row["event_name"]))
         lots_by_flag = {}
         for row in rows:
             for flag in filter(None, row["all_acquisition_flags"].split(";")):
@@ -381,10 +387,14 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn(item_lot_flag, lots_by_flag, location)
             lots = lots_by_flag[item_lot_flag]
             self.assertIn(str(binding.item_lot_id), lots, location)
-            self.assertTrue(
-                all(lot not in placed_lots for lot in lots - {str(binding.item_lot_id)}),
-                f"{location}: acquisition flag is shared by another placed lot",
-            )
+            own_placements = placements_by_lot.get(str(binding.item_lot_id), set())
+            for lot in lots - {str(binding.item_lot_id)}:
+                foreign = placements_by_lot.get(lot, set()) - own_placements
+                self.assertFalse(
+                    foreign,
+                    f"{location}: acquisition flag is shared by lot {lot} placed on "
+                    f"another treasure entry {sorted(foreign)}",
+                )
 
         self.assertEqual({"3401810"}, lots_by_flag[9470])
 

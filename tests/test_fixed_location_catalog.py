@@ -142,7 +142,7 @@ class FixedLocationCatalogTests(unittest.TestCase):
         )
 
         # Base game, queue-jumped Frontier, and all three DLC maps.
-        self.assertEqual(625, len(FIXED_LOCATIONS))
+        self.assertEqual(626, len(FIXED_LOCATIONS))
         self.assertEqual(
             [row.__dict__ for row in FIXED_LOCATIONS],
             [
