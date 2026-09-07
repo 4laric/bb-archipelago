@@ -197,8 +197,10 @@ class OptionWiringTests(unittest.TestCase):
         self.assertEqual(0, ConsumableQuantityBonus.default)
         self.assertEqual(0, ConsumableQuantityBonus.range_start)
         self.assertEqual(20, ConsumableQuantityBonus.range_end)
-        self.assertIs(
-            ConsumableQuantityBonus,
+        # The world module uses postponed annotations, so the dataclass field
+        # carries the class NAME rather than the class object.
+        self.assertEqual(
+            ConsumableQuantityBonus.__name__,
             BloodborneOptions.__annotations__["consumable_quantity_bonus"],
         )
 
