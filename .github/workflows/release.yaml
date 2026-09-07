@@ -23,6 +23,10 @@ on:
       client_ref:
         description: "from-software-archipelago-clients ref to build (blank: the pin in packaging/client-ref.txt)"
         default: ""
+      allow_stale_client:
+        description: "Build even though the pin is behind the clients repo's main"
+        type: boolean
+        default: false
       scan_only:
         description: "Rescan an existing release without rebuilding it"
         type: boolean
@@ -94,6 +98,42 @@ jobs:
           if (-not "${{ github.event.inputs.client_ref }}" -and $sha -ne "${{ steps.client-pin.outputs.pin }}") {
             throw "checked-out client $sha is not the pinned ${{ steps.client-pin.outputs.pin }}"
           }
+
+      # Shipping the pinned commit is not enough: the pin also has to be
+      # current. v0.1.0-beta.6 shipped the beta.5 client because nobody bumped
+      # packaging/client-ref.txt, and nothing in the release noticed. A pin
+      # behind the clients repo's main head is now a loud failure. A manual
+      # client_ref is an explicit experiment, and allow_stale_client is the
+      # deliberate escape hatch for re-cutting an old client on purpose.
+      - name: The client pin is current
+        if: ${{ !inputs.allow_stale_client && !github.event.inputs.client_ref }}
+        shell: pwsh
+        env:
+          PIN: ${{ steps.client-pin.outputs.pin }}
+        run: |
+          git -C _client fetch --depth=1 origin main
+          if ($LASTEXITCODE -ne 0) {
+            throw "could not fetch from-software-archipelago-clients main to check the pin"
+          }
+          $head = "$(git -C _client rev-parse FETCH_HEAD)".Trim()
+          if ($head -ne $env:PIN) {
+            $lines = @(
+              "packaging/client-ref.txt is stale, so this release would ship an old client.",
+              "  packaging/client-ref.txt: $env:PIN",
+              "  clients repo main head:   $head",
+              "",
+              "Fix it before tagging:",
+              "  1. Put $head in packaging/client-ref.txt in its own pull request and let",
+              "     the packaging smoke prove the world/client pair before it merges.",
+              "  2. Re-tag the next beta from main once that pull request has landed.",
+              "     Never move a tag that has already been published.",
+              "",
+              "To ship the older client on purpose, dispatch this workflow with",
+              "allow_stale_client, or build a one-off with an explicit client_ref."
+            )
+            throw ($lines -join [Environment]::NewLine)
+          }
+          Write-Host "client pin $head is the clients repo's main head"
 
       - name: Build the AP client (cargo release)
         shell: pwsh
