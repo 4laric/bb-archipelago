@@ -8,6 +8,36 @@ native client's runtime configuration and names its per-session ledger, so no
 tester-authored JSON remains in the flow. A prebuilt client can be added at
 package time; live overlay canaries remain a follow-up slice.
 
+## Play, reconnect, and create a local seed
+
+**Play → Connect to running game** starts only the native AP client. Select the
+same seed and server as usual, then connect while shadPS4 is already running.
+The launcher checks the running executable/game path and the previously
+activated, launcher-owned overlay. It does not rebuild files, replace mods, or
+start another emulator. An arbitrary BBLauncher-managed overlay is not yet
+supported by this action (external activation is tracked in #192).
+
+**Create & host** uses an existing Archipelago installation with the matching
+Bloodborne `.apworld` installed. Select that installation, enter a solo player
+name and DLC choice, then choose **Create seed**. For a multiworld or custom
+settings, select a folder of player YAMLs instead. Source checkouts can use an
+explicit Python executable; packaged Archipelago installations need no Python
+selection. World metadata checks are compatibility checks, not proof of exact
+apworld source identity; the generated request still passes normal validation.
+
+The generated ZIP is selected automatically on Play. With local hosting enabled,
+the launcher starts MultiServer on this PC and fills in its local address. Keep
+the launcher open while playing. **Stop server** requests a save and shutdown;
+closing the launcher while hosting asks before doing so. Generation is
+cancellable, retains its log, and writes to a fresh directory each time.
+
+Hosting currently binds only to localhost. It is suitable for local play, not
+for accepting friends over the internet. Joining an existing online room still
+uses the server field on Play. Server and generation logs remain beside the
+generated seed; ledgers are never cleared by generating or rebuilding a seed.
+
+The broader UX roadmap is in [LAUNCHER-UX.md](LAUNCHER-UX.md).
+
 ## Safety model
 
 The launcher recognizes one game target: `CUSA03173` AppVer `01.09`. It reads

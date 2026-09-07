@@ -9,6 +9,7 @@ from .data import (
     ALTERNATE_GAOL_LOCATION_KEYS,
     ALTERNATE_GAOL_REGIONS,
     ATTIRE_ITEM_KEYS,
+    CONSUMABLE_ITEM_KEYS,
     DLC_ATTIRE_ITEM_KEYS,
     PHANTOM_ATTIRE_ITEM_KEYS,
     DLC_ENTRANCE_NAMES,
@@ -29,7 +30,13 @@ from .data import (
 )
 from .model import ItemKind, Rule
 from .resource_data import read_resource_text
-from .runtime_bindings import ITEM_BINDINGS, LOCATION_BINDINGS, validate_runtime_item_binding
+from .runtime_bindings import (
+    CONSUMABLE_STACK_CAPS,
+    ITEM_BINDINGS,
+    LOCATION_BINDINGS,
+    MAX_GRANT_QUANTITY,
+    validate_runtime_item_binding,
+)
 from .toast_placeholders import ToastPlacement, build_toast_placeholder_plan
 from .enemy_drops import build_enemy_drop_assignments
 from .category8_awards import CATEGORY8_AWARDS
@@ -38,7 +45,7 @@ GAME = "Bloodborne"
 WORLD_VERSION = json.loads(read_resource_text("archipelago.json"))["world_version"]
 RUNTIME_BUILD = "bb-0.1.0-r10"
 SUPPRESSION_MANIFEST_FORMAT = "bb-vanilla-suppression-build-v1"
-SUPPRESSION_PLAN_SHA256 = "256a863686bc55e28c3f10352f24cdbfbc18f5c0ceb33a298c84dc229d6250f4"
+SUPPRESSION_PLAN_SHA256 = "6d829c91e8c1937ba285b30f7520912750f6337fffcbe756b3d8f1efa877c9ba"
 ID_BASE = 0xBB0000
 ALL_NETWORK_LOCATIONS = tuple(
     location for location in MODEL.locations
@@ -455,10 +462,27 @@ LOCATION_NAME_TO_ID = {
 }
 
 
+def consumable_delivery_quantity(key: str, base_quantity: int, bonus: int) -> int:
+    """Return the quantity a delivery of `key` carries under a flat `+bonus`.
+
+    bb-archipelago#295. The bonus applies only to keys listed in the reviewed
+    `CONSUMABLE_ITEM_KEYS` classification -- an unlisted or unreviewed key
+    fails closed and keeps its authored quantity. The result is clamped to the
+    good's own held-stack cap and to the grant contract's ceiling, so the seed
+    never publishes a descriptor the client would refuse; a base quantity that
+    already sits at or above the cap is never lowered.
+    """
+    if bonus <= 0 or key not in CONSUMABLE_ITEM_KEYS:
+        return base_quantity
+    cap = min(CONSUMABLE_STACK_CAPS[key], MAX_GRANT_QUANTITY)
+    return max(base_quantity, min(base_quantity + bonus, cap))
+
+
 def build_runtime_slot_data(
     item_keys: Iterable[str] | None = None,
     goal_location_key: str = GOAL_LOCATION_KEY,
     location_keys: Iterable[str] | None = None,
+    consumable_quantity_bonus: int = 0,
 ) -> dict[str, Any]:
     """Return the address-free world/client contract for this seed.
 
@@ -486,8 +510,13 @@ def build_runtime_slot_data(
     active_location_bindings = {
         key: LOCATION_BINDINGS[key] for key in locations_by_key
     }
+    quantities = {
+        key: consumable_delivery_quantity(
+            key, items_by_key[key].quantity, consumable_quantity_bonus)
+        for key in active_item_bindings
+    }
     for key, binding in active_item_bindings.items():
-        validate_runtime_item_binding(key, binding, items_by_key[key].quantity)
+        validate_runtime_item_binding(key, binding, quantities[key])
     locations = {
         str(LOCATION_ID_BY_KEY[key]): {
             "event_flag": binding.event_flag,
@@ -501,7 +530,7 @@ def build_runtime_slot_data(
             "raw_descriptor": binding.raw_descriptor,
             "item_category": binding.item_category,
             "descriptor_evidence": binding.descriptor_evidence,
-            "quantity": items_by_key[key].quantity,
+            "quantity": quantities[key],
             "reinforcement_level": binding.reinforcement_level,
             "feed_effect": binding.feed_effect,
             "award_lot_id": binding.award_lot_id,
@@ -515,7 +544,10 @@ def build_runtime_slot_data(
         "raw_descriptor": 0xB00003E8,
         "item_category": 4,
         "descriptor_evidence": "goods_formula_observed",
-        "quantity": 1,
+        # The filler item is the Blood Vial, an eligible consumable, so it
+        # takes the same flat bonus every other placed Vial-class item does.
+        "quantity": consumable_delivery_quantity(
+            "blood_vial", 1, consumable_quantity_bonus),
         "reinforcement_level": None,
         "feed_effect": "not_equippable",
     }
@@ -573,19 +605,48 @@ else:
     class DeathLink(Toggle):
         """Receive linked deaths from other players.
 
-        Sending your own deaths remains disabled until Bloodborne's live death
-        signal has been validated; enabling this option currently participates
-        in the receive half of DeathLink only.
+        On its own this is the receive half only, which is what the display
+        name still says: your own deaths are not broadcast unless you also turn
+        on DeathLink Send, which is experimental and off by default.
         """
         display_name = "DeathLink (Receive Only)"
+        default = 0
+
+    class DeathLinkSend(Toggle):
+        """EXPERIMENTAL: also broadcast YOUR deaths to other players.
+
+        Not validated live. Bloodborne has no death event flag, so the client
+        infers a death from the player's HP reaching zero -- the same memory
+        cell an incoming DeathLink already writes through -- and nobody has yet
+        confirmed against a real session that every death produces that edge
+        and that nothing else does. Expect missed deaths, or deaths reported
+        for something that was not one. Requires DeathLink; on its own this
+        does nothing. Leave it off unless you are deliberately testing the
+        signal, and read docs/DEATHLINK-SEND-PROBE.md if you are.
+        """
+        display_name = "DeathLink Send (Experimental, Unvalidated)"
+        default = 0
+
+    class DeathLinkFirstDeathGrace(Toggle):
+        """Forgive your very first death of the run outright.
+
+        The first qualifying local death is not sent and does not count
+        against DeathLink Amnesty, so your amnesty cadence starts fresh at your
+        second death. Spent once per slot and remembered across reconnects and
+        relaunches; incoming DeathLinks never consume it. Like DeathLink
+        Amnesty, this only matters when DeathLink Send is on -- with sending
+        off, nothing is ever broadcast and there is nothing to forgive.
+        """
+        display_name = "DeathLink First Death Grace"
         default = 0
 
     class DeathLinkAmnesty(Range):
         """Forgive this many qualifying local deaths before sending DeathLink.
 
         The counter resets after a DeathLink is sent. Incoming DeathLinks do
-        not consume amnesty. This seed-owned setting is inert while DeathLink
-        is disabled and while the client is receive-only.
+        not consume amnesty. This seed-owned setting only matters when
+        DeathLink Send is on: with sending off nothing is ever broadcast, so
+        there is nothing to forgive.
         """
         display_name = "DeathLink Amnesty (Local Deaths Forgiven per Cycle)"
         range_start = 0
@@ -732,11 +793,38 @@ else:
         display_name = "Questlines Can Hold Progression Items"
         default = 0
 
+    class ConsumableQuantityBonus(Range):
+        """Add this many extra copies to every consumable item you find.
+
+        A flat bonus, not a multiplier: at 2, a Blood Vial x1 arrives as 3 and
+        Quicksilver Bullets x3 arrive as 5. Item names keep their authored
+        base quantity ("Quicksilver Bullets x3" is a stable network name), and
+        the bonus is applied when the seed hands the item over.
+
+        Only the reviewed spendable consumables are eligible -- vials,
+        bullets, cures, pellets, throwables, papers, and Coldblood. Weapons,
+        attire, keys, badges, runes, blood gems, umbilical cords,
+        one-per-game goods, and reinforcement materials are never affected. A
+        bonused stack is capped by the good's own held-stack limit, so a Lead
+        Elixir never exceeds 3 whatever this is set to.
+
+        The one Vial and one Bullet the client grants after each check are a
+        separate pickup-sustain award and are NOT changed by this option.
+        This is seed-owned placement metadata, so changing it needs a new
+        seed.
+        """
+        display_name = "Consumable Quantity Bonus"
+        range_start = 0
+        range_end = 20
+        default = 0
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
         auto_equip: AutoEquip
         death_link: DeathLink
+        death_link_send: DeathLinkSend
+        death_link_first_death_grace: DeathLinkFirstDeathGrace
         death_link_amnesty: DeathLinkAmnesty
         full_item_pool: FullItemPool
         uncanny_weapons: UncannyWeapons
@@ -751,6 +839,7 @@ else:
         alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
         one_time_enemy_checks: OneTimeEnemyChecks
         questlines_hold_progression: QuestlinesHoldProgression
+        consumable_quantity_bonus: ConsumableQuantityBonus
 
     class BloodborneItem(APItem):
         game = GAME
@@ -878,6 +967,11 @@ else:
             # questline awards.
             return bool(getattr(self.options, "questlines_hold_progression", False))
 
+        def _consumable_quantity_bonus(self) -> int:
+            # Fail closed (no bonus) for old generated option objects and
+            # small test doubles, and never let a negative value through.
+            return max(0, int(getattr(self.options, "consumable_quantity_bonus", 0)))
+
         def _pool_item_keys(self) -> frozenset[str]:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
             if not self.options.include_dlc:
@@ -949,6 +1043,12 @@ else:
                 "auto_upgrade": bool(self.options.auto_upgrade),
                 "auto_equip": bool(self.options.auto_equip),
                 "death_link": bool(self.options.death_link),
+                # bb-archipelago#78 / #383. Both default off, so a default
+                # roll's slot data is what it always was plus two `false`s.
+                "death_link_send": bool(self.options.death_link_send),
+                "death_link_first_death_grace": bool(
+                    self.options.death_link_first_death_grace
+                ),
                 "death_link_amnesty": int(self.options.death_link_amnesty),
                 "full_item_pool": bool(self.options.full_item_pool),
                 "randomize_armor": bool(getattr(self.options, "randomize_armor", False)),
@@ -975,6 +1075,7 @@ else:
                     "hemwick_sfx": 2203999,
                 },
                 "questlines_hold_progression": self._questlines_hold_progression_enabled(),
+                "consumable_quantity_bonus": self._consumable_quantity_bonus(),
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
                 "toast_placeholders": self._toast_placeholder_plan(),
@@ -994,6 +1095,7 @@ else:
                     self._pool_item_keys() | STARTING_TOOL_KEYS,
                     self._goal_location_key(),
                     (location.key for location in self._active_locations()),
+                    self._consumable_quantity_bonus(),
                 ),
             }
 

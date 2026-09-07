@@ -1062,9 +1062,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         short display, taking the Randomize Enemies toggle with it.
         """
         tabs, parent_of, texts_by_parent = self._build_widget_tree()
-        self.assertEqual(set(tabs), {"Setup", "Enemy randomization", "Troubleshooting"})
+        self.assertEqual(set(tabs), {"Play", "Enemy randomization", "Troubleshooting"})
         enemy_tab = tabs["Enemy randomization"]
-        setup_tab = tabs["Setup"]
+        setup_tab = tabs["Play"]
         troubleshooting_tab = tabs["Troubleshooting"]
         self.assertEqual(parent_of[enemy_tab], "notebook")
         self.assertEqual(parent_of[setup_tab], "notebook")

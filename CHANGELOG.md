@@ -3,6 +3,64 @@
 
 ## Unreleased
 
+- A Cathedral Ward enemy no longer hands you a vanilla Beast rune. Its death
+  event (m24_00_00_00 event 12400860, entity 2400450) awarded Caryll rune
+  recipe 102401 outright, or Madman's Knowledge if you already had the rune.
+  Neither award lot carries an acquisition flag, so the pickup was invisible to
+  both the fixed-treasure catalog and the acquisition-flag suppression pass and
+  nothing replaced it. Killing that enemy is now an Archipelago check --
+  **Cathedral Ward - Beast Rune** -- witnessed by the encounter's own saved
+  defeat flag, so any kill counts, a reload does not resend it, and a save on
+  which the enemy is already dead reconciles the check. Both branches of the
+  award are replaced with the placeholder, and the rune itself joins the item
+  pool as **Cathedral Ward - Beast Rune**, so it is randomized rather than
+  removed. Every existing Caryll rune and blood gem keeps its token, award lot
+  and acknowledgement flag exactly as before. Seeds gain one location (657
+  network locations) and one item; the suppression plan digest moved. Existing
+  seeds are unaffected. (#388)
+- Added two DeathLink options, both `Toggle` and both default off.
+  `death_link_send` (**"DeathLink Send (Experimental, Unvalidated)"**) asks the
+  client to broadcast your own deaths as well as receive them; it requires
+  `death_link` and does nothing on its own. It is off by default and labelled
+  experimental because it is: Bloodborne publishes no death event flag, so the
+  client infers a death from the player's HP reaching zero, and that inference
+  has never been checked against a real session. `docs/DEATHLINK-SEND-PROBE.md`
+  is the runbook that promotes or kills it. `death_link_first_death_grace`
+  (#383) forgives a slot's very first qualifying local death outright: it is
+  not sent, it does not count against `death_link_amnesty`, it is spent once
+  per slot and remembered across reconnects, and incoming DeathLinks never
+  consume it. Like amnesty, it only matters when sending is on. Slot data
+  gains the two keys; a default roll is otherwise unchanged, and existing seeds
+  are unaffected.
+
+- Three more unsuppressed vanilla pickups became Archipelago checks. The
+  Nightmare of Mensis Beast Blood Pellet (lot 2600570, flag 52600570, awarded
+  by object event 12600125) and the Forbidden Woods doorkeeper's corpse
+  (lot 37000, flag 50002000, awarded by event 12400403 on interaction flag
+  72400441, #389) are EMEVD script awards with no MSB treasure placement, so
+  the fixed-treasure catalog never saw them and nothing replaced their vanilla
+  items. The doorkeeper's corpse is placed in the Forbidden Woods region, which
+  is behind the password door and does not require Amelia. The Yahar'gul
+  corpse pair on shared acquisition flag 52800170 (lots 2800170 and 2800320)
+  had been excluded by hand; exclusion did not make it safe, it left both
+  corpses handing out vanilla items. It is now one check keyed on lot 2800170
+  with both vanilla awards replaced, and the second corpse becomes an inert
+  placeholder pickup (#328). Seeds gain three locations (656 network
+  locations); the suppression plan digest moved. Existing seeds are unaffected.
+- Added the `consumable_quantity_bonus` YAML option (`Range`, default `0`,
+  maximum `20`). It adds a flat `+X` to the delivered quantity of every item
+  in the reviewed `CONSUMABLE_ITEM_KEYS` classification -- vials, bullets,
+  cures, pellets, throwables, papers, marks, insight items, and Coldblood --
+  and leaves everything else alone, including weapons, attire, keys, badges,
+  runes, blood gems, umbilical cords, one-per-game goods, and reinforcement
+  materials. Item names are permanent network identifiers and keep their
+  authored base quantity; the bonus is applied when the seed emits its
+  runtime item bindings, clamped to each good's `maxNum` held-stack cap and
+  to the grant contract's ceiling of 99. The per-check pickup-sustain
+  Vial/Bullet award is unchanged. At the default `0`, slot data is
+  byte-for-byte identical to before. No client change: the client already
+  delivers the quantity the seed publishes.
+
 - **Hemwick now has its own shuffled access gate.** New seeds place Hemwick
   Access and keep the existing Cathedral Ward–Hemwick boundary fog closed
   until it is received, putting Hemwick and downstream Cainhurst checks behind

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -21,6 +22,7 @@ from .core import (
     SUPPRESSION_CHECK_SOURCE,
     SUPPRESSION_OVERRIDE_KNOB,
     SUPPRESSION_PATH,
+    SEED_MANIFEST_NAME,
     EarlyExit,
     GameInstall,
     LauncherError,
@@ -28,6 +30,7 @@ from .core import (
     SeedCache,
     SeedIdentity,
     ValidationError,
+    _load_owner,
     activate_build,
     dead_path_warnings,
     deactivate_overlay,
@@ -74,6 +77,119 @@ PLAN_FORMAT = "bb-enemizer-plan-v2"
 PARAMDEF_PATH = "dvdroot_ps4/paramdef/paramdef.paramdefbnd.dcx"
 Progress = Callable[[str], None]
 CommandRunner = Callable[[Sequence[str], Path, Progress], None]
+
+
+@dataclass(frozen=True)
+class RunningProcess:
+    pid: int
+    executable: Path | None
+    arguments: tuple[str, ...] | None
+
+
+def _windows_command_line_args(command: str) -> tuple[str, ...]:
+    """Parse a Windows command line with the same rules as the target process."""
+
+    import ctypes
+    from ctypes import wintypes
+
+    count = ctypes.c_int()
+    command_line_to_argv = ctypes.windll.shell32.CommandLineToArgvW
+    command_line_to_argv.argtypes = (wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_int))
+    command_line_to_argv.restype = ctypes.POINTER(wintypes.LPWSTR)
+    pointer = command_line_to_argv(command, ctypes.byref(count))
+    if not pointer:
+        raise ValidationError("Windows could not parse the shadPS4 command line")
+    try:
+        return tuple(pointer[index] for index in range(count.value))
+    finally:
+        local_free = ctypes.windll.kernel32.LocalFree
+        local_free.argtypes = (wintypes.HLOCAL,)
+        local_free.restype = wintypes.HLOCAL
+        local_free(pointer)
+
+
+def running_shad_processes() -> tuple[RunningProcess, ...]:
+    """Enumerate shadPS4 processes with enough identity to attach safely."""
+
+    if sys.platform == "win32":
+        script = (
+            "$ErrorActionPreference='Stop'; "
+            "@(Get-CimInstance Win32_Process -Filter \"Name='shadPS4.exe'\" | "
+            "Select-Object ProcessId,ExecutablePath,CommandLine) | ConvertTo-Json -Compress"
+        )
+        try:
+            result = subprocess.run(
+                ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+                check=False, capture_output=True, text=True,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
+        except OSError as exc:
+            raise ValidationError(
+                "could not inspect running shadPS4 processes; run the launcher with "
+                "permission to query process paths and command lines"
+            ) from exc
+        if result.returncode != 0:
+            raise ValidationError(
+                "could not inspect running shadPS4 process identity; Windows denied or "
+                "failed the process query. Run the launcher at the same privilege level as shadPS4"
+            )
+        try:
+            raw = json.loads(result.stdout or "[]")
+        except json.JSONDecodeError as exc:
+            raise ValidationError("Windows returned invalid shadPS4 process identity data") from exc
+        records = raw if isinstance(raw, list) else ([] if raw is None else [raw])
+        found = []
+        for record in records:
+            command = record.get("CommandLine") if isinstance(record, dict) else None
+            arguments = None
+            if isinstance(command, str) and command.strip():
+                arguments = _windows_command_line_args(command)
+            executable = record.get("ExecutablePath") if isinstance(record, dict) else None
+            found.append(RunningProcess(
+                int(record.get("ProcessId", 0)),
+                Path(executable).resolve() if isinstance(executable, str) and executable else None,
+                arguments,
+            ))
+        return tuple(found)
+    found = []
+    for comm in Path("/proc").glob("[0-9]*/comm"):
+        try:
+            if comm.read_text(encoding="utf-8").strip().casefold() != "shadps4.exe":
+                continue
+            process_root = comm.parent
+            executable = Path(os.readlink(process_root / "exe")).resolve()
+            argv = tuple(
+                part.decode(errors="replace")
+                for part in (process_root / "cmdline").read_bytes().split(b"\0") if part
+            )
+            found.append(RunningProcess(int(process_root.name), executable, argv))
+        except OSError:
+            found.append(RunningProcess(int(comm.parent.name), None, None))
+    return tuple(found)
+
+
+def _shad_game_argument(arguments: Sequence[str]) -> Path | None:
+    values = tuple(arguments[1:]) if arguments else ()
+    for index, value in enumerate(values):
+        lowered = value.casefold()
+        if lowered in {"-g", "--game"}:
+            game = Path(values[index + 1]).expanduser().resolve() if index + 1 < len(values) else None
+            return game.parent if game is not None and game.name.casefold() == "eboot.bin" else game
+        if lowered.startswith("--game=") or lowered.startswith("-g="):
+            game = Path(value.split("=", 1)[1]).expanduser().resolve()
+            return game.parent if game.name.casefold() == "eboot.bin" else game
+    index = 0
+    while index < len(values):
+        value = values[index]
+        if value.casefold() in {"-f", "--fullscreen"}:
+            index += 2
+            continue
+        if value.startswith("-"):
+            index += 1
+            continue
+        game = Path(value).expanduser().resolve()
+        return game.parent if game.name.casefold() == "eboot.bin" else game
+    return None
 
 
 class WorkflowError(LauncherError):
@@ -1111,6 +1227,7 @@ class LauncherWorkflow:
         process_launcher: Callable[[Sequence[ProcessSpec]], list[Any]] = launch_processes,
         process_running: Callable[[str], bool] = process_is_running_by_name,
         process_watcher: Callable[..., EarlyExit | None] = wait_for_early_exit,
+        shad_processes: Callable[[], Sequence[RunningProcess]] = running_shad_processes,
     ):
         self.repo_root = Path(repo_root).expanduser().resolve()
         self.toolchain = toolchain or EnemizerToolchain(self.repo_root)
@@ -1119,6 +1236,179 @@ class LauncherWorkflow:
         self.process_watcher = process_watcher
         # Injectable so the stray-Cheat-Engine refusal is testable off Windows.
         self.process_running = process_running
+        self.shad_processes = shad_processes
+
+    def connect_to_running(
+        self,
+        settings: LauncherSettings,
+        *,
+        allow_suppression_mismatch: bool = False,
+        allow_seed_mismatch: bool = False,
+        research_captures: bool = False,
+        player_name: str = "",
+        progress: Progress = lambda _message: None,
+    ) -> WorkflowResult:
+        """Start only the native AP client for an already-running shadPS4.
+
+        This mode is deliberately limited to an overlay previously activated
+        by this launcher.  It neither builds nor activates content, and it does
+        not implement the separate BBLauncher/external-overlay mode (#192).
+        """
+
+        progress("Validating the active seed and running shadPS4...")
+        install = GameInstall.from_root(settings.game_root)
+        request = _request_identity(
+            settings.ap_request,
+            player_name=player_name,
+            state_root=settings.state_root,
+        )
+        request["category8_awards"] = _validate_category8_bridge_rows(
+            request["category8_awards"]
+        )
+        plan = load_process_plan(settings.process_plan)
+        refuse_stale_plan(plan)
+        if plan.runtime_build != request["runtime_build"]:
+            raise ValidationError(
+                f"AP seed requires runtime {request['runtime_build']}, "
+                f"process plan supplies {plan.runtime_build}"
+            )
+        shad_specs = tuple(spec for spec in plan.processes if spec.name == SHAD_PROCESS_NAME)
+        client_specs = tuple(spec for spec in plan.processes if spec.name == CLIENT_PROCESS_NAME)
+        if len(shad_specs) != 1 or len(client_specs) != 1:
+            raise ValidationError("connect requires exactly one shadPS4 and one AP client process")
+        shad_spec, client_spec = shad_specs[0], client_specs[0]
+        validate_processes((shad_spec, client_spec))
+        require_no_stray_cheat_engine(plan.processes, self.process_running)
+        running = tuple(self.shad_processes())
+        if not running:
+            raise ValidationError("connect requires shadPS4 to already be running")
+        if len(running) != 1:
+            raise ValidationError(
+                f"connect found {len(running)} shadPS4 processes; close all but the selected instance"
+            )
+        target = running[0]
+        if target.executable is None or target.arguments is None:
+            raise ValidationError(
+                "could not verify the running shadPS4 executable and game path; run the launcher "
+                "at the same privilege level as shadPS4"
+            )
+        if target.executable.resolve() != shad_spec.executable.resolve():
+            raise ValidationError(
+                f"running shadPS4 executable is {target.executable}, expected {shad_spec.executable}"
+            )
+        running_game = _shad_game_argument(target.arguments)
+        if running_game is None or running_game.resolve() != install.base.resolve():
+            raise ValidationError(
+                f"running shadPS4 game is {running_game or 'unknown'}, expected {install.base}"
+            )
+        if self.process_running(client_spec.executable.name):
+            raise ValidationError("the AP client is already running")
+        server = _ap_client_server(plan)
+        if (server is None or not server.strip() or server.startswith("-")
+                or "{" in server or "}" in server):
+            raise ValidationError("AP client process has no valid server address")
+
+        binder = settings.suppression_binder.expanduser().resolve()
+        suppression = _validate_suppression(
+            install,
+            binder,
+            settings.suppression_manifest.expanduser().resolve(),
+            request["suppression_plan_sha256"],
+            allow_mismatch=allow_suppression_mismatch,
+            progress=progress,
+        )
+        owner = _load_owner(install.mods)
+        cache_key = str(owner["cache_key"])
+        build = SeedCache(settings.cache_root).verify(
+            SeedCache(settings.cache_root).path_for(cache_key), expected_key=cache_key
+        )
+        if owner.get("build_manifest_sha256") != sha256_file(build.path / SEED_MANIFEST_NAME):
+            raise ValidationError("active overlay does not match its cached build manifest")
+        if owner.get("identity") != build.manifest.get("identity"):
+            raise ValidationError("active overlay identity does not match its cached build")
+
+        identity = build.manifest["identity"]
+        active_options = identity.get("options")
+        if not isinstance(active_options, dict):
+            raise ValidationError("active cached build has no options identity")
+        request_options = {
+            "starting_weapons": request["starting_weapons"],
+            "weapon_requirement_families": request["weapon_requirement_families"],
+            "shop_gate_permutation": request["shop_gate_permutation"],
+            "enemy_drop_assignments": request["enemy_drop_assignments"],
+            "category8_awards": request["category8_awards"],
+        }
+        expected_fields = {
+            "seed": request["seed"],
+            "slot": request["slot"],
+            "world_build": request["world_build"],
+            "runtime_build": request["runtime_build"],
+            "shad_build": plan.shad_build,
+            "suppression_plan_sha256": request["suppression_plan_sha256"],
+            "suppression_binder_sha256": sha256_file(binder),
+        }
+        mismatched = [name for name, value in expected_fields.items() if identity.get(name) != value]
+        mismatched.extend(
+            f"options.{name}"
+            for name, value in request_options.items()
+            if active_options.get(name) != value
+        )
+        if mismatched:
+            raise ValidationError(
+                "active overlay does not match the selected seed/options/runtime: "
+                + ", ".join(mismatched)
+            )
+        validation = owner.get("suppression_validation")
+        active_bypasses = (
+            tuple(validation.get("bypassed", ())) if isinstance(validation, dict) else ()
+        )
+        if active_bypasses != suppression.bypassed:
+            raise ValidationError("active overlay suppression override does not match this launch")
+
+        check_seed_slot_identity(
+            settings.state_root or default_state_root(),
+            server=server, seed=request["seed"], slot=request["slot"],
+            allow_mismatch=allow_seed_mismatch,
+        )
+        client_manifest = settings.suppression_manifest.expanduser().resolve()
+        if _composes_seed_binder(request):
+            client_manifest = (
+                (settings.state_root or default_state_root()).expanduser().resolve()
+                / "seed-manifests" / f"{cache_key}.json"
+            )
+        paths = write_client_runtime_config(
+            settings.state_root or default_state_root(),
+            seed=request["seed"], slot=request["slot"], install=install, owner=owner,
+            suppression_manifest=client_manifest,
+            shad_log=settings.shad_log or default_shad_log(),
+            auto_upgrade=request["auto_upgrade"], auto_equip=request["auto_equip"],
+            research_captures=research_captures,
+        )
+        resolved = resolve_process_plan(
+            ProcessPlan(plan.shad_build, plan.runtime_build, (client_spec,)),
+            paths,
+            game_path=install.base,
+        )
+        # Recheck immediately before spawn; the client owns its normal attach
+        # retry while shadPS4 finishes becoming ready.
+        late = tuple(self.shad_processes())
+        if len(late) != 1 or late[0] != target:
+            raise ValidationError("shadPS4 stopped before the AP client could start")
+        if self.process_running(client_spec.executable.name):
+            raise ValidationError("the AP client is already running")
+        require_no_stray_cheat_engine(plan.processes, self.process_running)
+        progress("Starting the AP client and attaching to the running shadPS4...")
+        started = self.process_launcher(resolved.processes)
+        early_exit = self.process_watcher(started, resolved.processes)
+        return WorkflowResult(
+            cache_key=cache_key, build_path=build.path, reused=True,
+            enemizer_enabled=bool(build.manifest.get("enemizer", {}).get("enabled")),
+            enemizer_swaps=int(build.manifest.get("enemizer", {}).get("file_count", 0)),
+            process_ids=tuple(getattr(process, "pid", None) for process in started),
+            client_config=paths.config, ledger=paths.ledger,
+            client_log=paths.client_log, shad_process_log=None,
+            early_exit=early_exit, grants_bridge=False,
+        )
 
     def randomize_and_launch(
         self,

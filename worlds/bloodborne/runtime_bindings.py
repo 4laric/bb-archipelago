@@ -51,12 +51,17 @@ CATEGORY_0_EVIDENCE = frozenset({LIVE_CATEGORY_0_EVIDENCE, INFERRED_CATEGORY_0_E
 INFERRED_CATEGORY_1_EVIDENCE = "param_id_inferred"
 CATEGORY_1_EVIDENCE = frozenset({LIVE_CATEGORY_0_EVIDENCE, INFERRED_CATEGORY_1_EVIDENCE})
 
+# The widest quantity a single grant descriptor may carry. The client accepts
+# 1..=99; anything outside that is refused before play rather than truncated
+# at runtime.
+MAX_GRANT_QUANTITY = 99
+
 
 def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantity: int) -> None:
     """Reject runtime rows that do not carry the evidence their category needs."""
     if binding.normalized_item_id is None or binding.raw_descriptor is None:
         raise ValueError(f"{key}: runtime descriptor is not mapped")
-    if not 1 <= quantity <= 99:
+    if not 1 <= quantity <= MAX_GRANT_QUANTITY:
         raise ValueError(f"{key}: quantity {quantity} is outside the grant contract")
     if binding.item_category == 4:
         compatible = (
@@ -1029,6 +1034,31 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "script_award_orphanage_key": RuntimeLocationBinding(
         52420900, "EMEVD award m24_02_00_00:252 + ItemLotParam 2420900 acquisition flag",
         2420900, "script_award", "m24_02_00_00.emevd.dcx.js:252", 4, 4006),
+    # m26_00_00_00.emevd.dcx.js:298 initialises slot 0 of the generic treasure
+    # event 12600125 (:2138) with object 2601008 and item lot 2600570. The
+    # event waits on ActionButtonInArea(2600030, 2601008) and calls
+    # AwardItemLot(2600570); lot 2600570 awards category 4 goods 1110 (Beast
+    # Blood Pellet) in slot 01 and carries getItemFlagId 52600570
+    # (params/ItemLotParam.csv; research/joined/lot_items.tsv). The lot has no
+    # MSB treasure placement, which is why the fixed-location catalog never
+    # saw it and nothing suppressed its vanilla award. `inferred`.
+    "pickup_mensis_beast_blood_pellet": RuntimeLocationBinding(
+        52600570,
+        "EMEVD award m26_00_00_00:298/2138 + ItemLotParam 2600570 acquisition flag",
+        2600570, "script_award", "m26_00_00_00.emevd.dcx.js:298", 4, 1110),
+    # m24_00_00_00.emevd.dcx.js:1119 - event 12400403 (門番_門を開いた状態で話し
+    # かけ、SAN値UP) is host-only and alive-guarded, waits on interaction flag
+    # 72400441 and calls AwardItemLot(37000). Lot 37000 awards category 4 goods
+    # 1500 (Madman's Knowledge) in slot 01 and carries getItemFlagId 50002000.
+    # The door's own flags (12400131 opened, 72400440 door interaction) are
+    # deliberately NOT the witness: opening the door must not send this check.
+    # `inferred`.
+    "pickup_forbidden_woods_doorkeeper_corpse": RuntimeLocationBinding(
+        50002000,
+        "EMEVD award m24_00_00_00:1119 (event 12400403) + ItemLotParam 37000 "
+        "acquisition flag; the door-open flag 12400131 and door interaction flag "
+        "72400440 are separate and are not this check's witness",
+        37000, "script_award", "m24_00_00_00.emevd.dcx.js:1119", 4, 1500),
     "pickup_eye_of_blood_drunk_hunter": RuntimeLocationBinding(
         12101028,
         "EMEVD gift event 12101028 completes after interaction flag 12101029 and award lot "
@@ -1106,6 +1136,33 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "treasure_underground_cell_inner_chamber_key": RuntimeLocationBinding(
         50002360, "MSB treasure m36_00_00_00 + ItemLotParam 43221 acquisition flag",
         43221, "treasure", "m36_00_00_00", 4, 4015),
+    # bb-archipelago#388. m24_00_00_00.emevd.dcx.js:2001 - event 12400860
+    # (敵アバター撃破) disables entity 2400450 outright when flag 12400861 is
+    # already on, otherwise waits on CharacterDead(2400450) and awards lot
+    # 75002400 (category 8, GemGenParam recipe 102401, the Beast rune family)
+    # or, when flag 6333 is on, replacement lot 75002405 (Madman's Knowledge).
+    # It then sets 12400861. That flag is the witness: it is the event's own
+    # saved defeat flag, it is set on any death (the WaitFor names no killer),
+    # and the reload branch proves the game itself reads it back from the save.
+    # `item_lot_id` is deliberately None -- neither award lot carries an
+    # acquisition flag (getItemFlagId -1 on both, research/joined/lot_items.tsv),
+    # so no lot is a detection target here and the suppression of the two lots
+    # is declared separately in EVENT_AWARD_SUPPRESSIONS. `inferred`.
+    "enemy_cathedral_ward_avatar": RuntimeLocationBinding(
+        12400861,
+        "EMEVD m24_00_00_00.emevd.dcx.js:2001 event 12400860 waits on "
+        "CharacterDead(2400450) and sets saved defeat flag 12400861; the same "
+        "event disables the character on a later load while 12400861 is on. "
+        "MSB m24_00_00_00/m24_00_00_01 place c7500_0000 as entity 2400450 with "
+        "NpcParam 750100 (敵アバター　聖堂街AC連絡用). Award lots 75002400 "
+        "(category 8, recipe 102401) and 75002405 both carry getItemFlagId -1, "
+        "so the defeat flag and not an acquisition flag is the check",
+        None,
+        "one_time_enemy",
+        "m24_00_00_00.emevd.dcx.js:2001; msb_enemies.tsv; NpcParam 750100",
+        8,
+        102401,
+    ),
 }
 
 for location in FIXED_LOCATIONS:
@@ -1267,10 +1324,109 @@ BOSS_AWARD_SUPPRESSIONS: dict[str, BossAwardSuppression] = {
 }
 
 
+@dataclass(frozen=True)
+class EventAwardSuppression:
+    """One reviewed EMEVD award lot identified by the lot row alone.
+
+    ``ScriptAwardSuppression`` owns *every* lot that awards an item, which is
+    the right rule when the AP copy of that item must not be obtainable from
+    any vanilla source. It is the wrong rule for an event that hands out a
+    common item -- Madman's Knowledge is awarded by dozens of rows -- and it
+    cannot express a branch, where the same event awards one of two lots.
+
+    This declaration is therefore scoped to the lot, like
+    ``BossAwardSuppression``, but without the boss framing: the check is some
+    other durable witness the same event sets, and every branch of the event
+    is listed so no branch can leak. The planner verifies category, item and
+    the literal ``getItemFlagId`` against the committed corpus before planning
+    an edit, and ``-1``/``0`` mean the row has no acquisition flag at all.
+    """
+
+    key: str
+    item_lot_id: int
+    item_category: int
+    item_id: int
+    acquisition_flag: int
+    witness_flag: int
+    evidence: str
+
+
+# bb-archipelago#388. Both branches of the Cathedral Ward avatar's death event.
+# Suppressing only the rune branch would let the flag-6333 branch hand out the
+# vanilla replacement instead, so both lots are replaced; flag 6333 itself is
+# not touched, and neither is the saved defeat flag 12400861 that the check
+# reads.
+EVENT_AWARD_SUPPRESSIONS: dict[str, EventAwardSuppression] = {
+    key: EventAwardSuppression(key, lot, category, item, flag, witness, evidence)
+    for key, lot, category, item, flag, witness, evidence in (
+        ("cathedral_ward_avatar_beast_rune", 75002400, 8, 102401, -1, 12400861,
+         "m24_00_00_00.emevd.dcx.js:2001 event 12400860, !EventFlag(6333) branch: "
+         "AwardItemLot(75002400) after CharacterDead(2400450)"),
+        ("cathedral_ward_avatar_replacement", 75002405, 4, 1500, -1, 12400861,
+         "m24_00_00_00.emevd.dcx.js:2001 event 12400860, EventFlag(6333) branch: "
+         "AwardItemLot(75002405) after CharacterDead(2400450)"),
+    )
+}
+
+
 # Known delivery fixtures, not currently part of the randomized design pool.
 DELIVERY_FIXTURES: dict[str, RuntimeItemBinding] = {
     "quicksilver_bullet": ITEM_BINDINGS["quicksilver_bullets"],
     "blood_vial": RuntimeItemBinding(0x400003E8, 0xB00003E8, "inferred/observed"),
     "pebble": ITEM_BINDINGS["pebbles"],
     "augur_of_ebrietas": ITEM_BINDINGS["augur_of_ebrietas"],
+}
+
+
+# bb-archipelago#295. Held-stack caps for the reviewed consumables, read from
+# the repository's own bundled params/EquipParamGoods.csv `maxNum` column
+# (`python tools/bb_inputs.py --get params/EquipParamGoods.csv`, joined in
+# research/joined/goods_runtime_ids.tsv). These are game facts, so they live
+# here rather than in data.py; tests/test_consumable_quantity_bonus.py checks
+# every row back against the bundled param.
+#
+# A cap is the most a single grant may carry, so a bonused quantity is clamped
+# to it (and to MAX_GRANT_QUANTITY). Storage overflow is the game's business,
+# not the seed's: the seed never emits a descriptor the grant contract or the
+# goods row would refuse.
+CONSUMABLE_STACK_CAPS: dict[str, int] = {
+    "blood_vial": 20,
+    "quicksilver_bullets": 20,
+    "antidote": 10,
+    "sedatives": 10,
+    "beast_blood_pellet": 10,
+    "blue_elixir": 10,
+    "lead_elixir": 3,
+    "pebbles": 20,
+    "molotov_cocktails": 10,
+    "delayed_molotov_cocktails": 10,
+    "rope_molotov_cocktails": 10,
+    "delayed_rope_molotov_cocktails": 10,
+    "poison_knife": 20,
+    "throwing_knife": 20,
+    "oil_urn": 10,
+    "numbing_mist": 10,
+    "pungent_blood_cocktail": 10,
+    "shaman_bone_blade": 3,
+    "shining_coins": 99,
+    "fire_paper": 10,
+    "bolt_paper": 10,
+    "bone_marrow_ash": 10,
+    "bold_hunters_mark": 99,
+    "madmans_knowledge": 99,
+    "great_ones_wisdom": 99,
+    "coldblood_dew": 99,
+    "coldblood_dew_1": 99,
+    "coldblood_dew_2": 99,
+    "thick_coldblood": 99,
+    "thick_coldblood_4": 99,
+    "thick_coldblood_5": 99,
+    "frenzied_coldblood": 99,
+    "frenzied_coldblood_7": 99,
+    "frenzied_coldblood_9": 99,
+    "kin_coldblood": 99,
+    "kin_coldblood_10": 99,
+    "kin_coldblood_12": 99,
+    "great_one_coldblood": 99,
+    "old_great_one_coldblood": 99,
 }

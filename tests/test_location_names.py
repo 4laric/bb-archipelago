@@ -25,9 +25,9 @@ DATA_PY = ROOT / "worlds" / "bloodborne" / "data.py"
 # MVP candidates, or the slice ships another named row, these numbers move in
 # the same commit that names (or un-names) the rows.
 TOTAL_CATALOG_ROWS = 651
-TOTAL_TABLE_ROWS = 687  # catalog rows + the scripted checks below
+TOTAL_TABLE_ROWS = 690  # catalog rows + the scripted checks below
 MVP_CANDIDATES = 83
-SHIPPED_NAMED_ROWS = 626
+SHIPPED_NAMED_ROWS = 627
 
 # Non-catalog checks the table names: boss defeats, EMEVD script awards, and
 # the one evidenced interaction, each keyed by the check flag committed in
@@ -65,6 +65,9 @@ SCRIPTED_CHECK_FLAGS = {
     "52110800",   # pickup_small_hair_ornament
     "52110810",   # pickup_workshop_umbilical_cord
     "53200810",   # pickup_lunarium_key
+    "52600570",   # pickup_mensis_beast_blood_pellet
+    "50002000",   # pickup_forbidden_woods_doorkeeper_corpse
+    "12400861",   # enemy_cathedral_ward_avatar (#388)
     "50001900",   # award_crow_hunter_badge
     "50001700",   # award_powder_keg_hunter_badge
     "50001810",   # award_wheel_hunter_badge
@@ -102,6 +105,9 @@ DATA_PY_TABLED_CHECKS = {
     "pickup_cainhurst_summons": 52410990,
     "pickup_upper_cathedral_key": 52800290,
     "pickup_lunarium_key": 53200810,
+    "pickup_mensis_beast_blood_pellet": 52600570,
+    "pickup_forbidden_woods_doorkeeper_corpse": 50002000,
+    "enemy_cathedral_ward_avatar": 12400861,
     "script_award_orphanage_key": 52420900,
     "pickup_eye_of_blood_drunk_hunter": 12101028,
     "pickup_eye_pendant": 9470,
@@ -147,7 +153,7 @@ LANDMARK_UNRESOLVED = ROOT / "docs" / "location_landmark_unresolved.tsv"
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
 HINTED_ROWS = 188
-BARE_ROWS = 499
+BARE_ROWS = 502
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an

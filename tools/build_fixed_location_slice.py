@@ -136,10 +136,6 @@ EXCLUDED_FLAGS = {
         "already published by data.py as treasure_executioners_gloves with "
         "its own permanent network id and runtime binding"
     ),
-    52800170: (
-        "two unrelated Yahar'gul corpses (lots 2800170 and 2800320) share one "
-        "acquisition flag; they cannot be separate Archipelago checks"
-    ),
     52800290: (
         "already published by data.py as pickup_upper_cathedral_key with its "
         "own permanent network id and runtime binding"
@@ -162,6 +158,31 @@ EXCLUDED_FLAGS = {
     53400600: (
         "two unrelated Hunter's Nightmare corpses (lots 3400600 and 3400610) "
         "share one acquisition flag and cannot be separate Archipelago checks"
+    ),
+}
+
+# Flags whose catalog rows name lots on *different* MSB treasures, reviewed and
+# deliberately collapsed onto one check keyed on the named head lot.
+#
+# The award group heuristic below only recognises one corpse naming several rows
+# of one consecutive ItemLotParam group. These do not have that shape: two
+# separate corpses carry one acquisition flag, so the game already treats them
+# as a single acquisition -- looting either sets the flag and the second corpse
+# can no longer be told apart at runtime. Excluding them (as 52800170 was until
+# this table existed) does not make them safe, it only leaves *both* corpses
+# handing out their vanilla items with nothing suppressing them. One check plus
+# suppression of every lot on the flag is strictly better: the player loses no
+# reward, and no vanilla item leaks.
+#
+# The cost is stated rather than hidden: the second corpse becomes an inert
+# pickup that awards the placeholder and sends no additional check.
+MERGED_FLAG_HEADS: dict[int, tuple[int, str]] = {
+    52800170: (
+        2800170,
+        "two Yahar'gul corpses (lots 2800170 in the Gaol and 2800320 by the "
+        "cathedral-side terminus) share acquisition flag 52800170; the flag "
+        "cannot distinguish them, so they are one check keyed on 2800170 and "
+        "the planner replaces both vanilla awards",
     ),
 }
 
@@ -263,7 +284,15 @@ def build_rows(repo: Path = REPO) -> list[dict[str, str]]:
             if flag in REPLACEMENT_FLAGS or flag in EXCLUDED_FLAGS:
                 continue
             matches = items_by_flag.get(flag, [])
-            if len(matches) > 1:
+            if len(matches) > 1 and flag in MERGED_FLAG_HEADS:
+                head, _reason = MERGED_FLAG_HEADS[flag]
+                named = sorted(int(m["item_lot_id"]) for m in matches)
+                if head not in named:
+                    raise ValueError(
+                        f"flag {flag}: MERGED_FLAG_HEADS names head lot {head}, but the "
+                        f"catalog item rows are {named}")
+                matches = [m for m in matches if int(m["item_lot_id"]) == head]
+            elif len(matches) > 1:
                 # One corpse can name several rows of one consecutive award
                 # group on a single acquisition flag (the Yahar'gul Black
                 # coachman's seat names 2800610 and 2800611 of 2800610-2800613).
@@ -276,7 +305,8 @@ def build_rows(repo: Path = REPO) -> list[dict[str, str]]:
                 if any(lot - head >= len(lots_named) + 2 for lot in lots_named):
                     raise ValueError(
                         f"flag {flag}: catalog item rows {lots_named} are not one "
-                        "consecutive award group; add an EXCLUDED_FLAGS entry with a reason")
+                        "consecutive award group; add a MERGED_FLAG_HEADS or EXCLUDED_FLAGS "
+                        "entry with a reason")
                 matches = [m for m in matches if int(m["item_lot_id"]) == head]
             if len(matches) != 1:
                 raise ValueError(

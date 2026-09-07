@@ -446,7 +446,7 @@ class LauncherApp:
         title.grid(row=0, column=0, sticky="w")
         ttk.Label(
             outer,
-            text="Build a seed-owned shadPS4 overlay, activate it safely, and launch every component.",
+            text="Choose a seed, create a local game, or reconnect to your running game.",
         ).grid(row=1, column=0, sticky="w", pady=(2, 12))
 
         notebook = ttk.Notebook(outer)
@@ -455,11 +455,15 @@ class LauncherApp:
 
         setup = ttk.Frame(notebook, padding=10)
         setup.columnconfigure(1, weight=1)
-        notebook.add(setup, text="Setup")
+        notebook.add(setup, text="Play")
+        self.play_tab = setup
 
         options = ttk.Frame(notebook, padding=10)
         options.columnconfigure(1, weight=1)
         notebook.add(options, text="Enemy randomization")
+
+        from .local_session_ui import LocalSessionPanel
+        self.local_session_panel = LocalSessionPanel(self, notebook)
 
         # Troubleshooting carries every operator path plus the recovery
         # actions, which is taller than the notebook on a short display, so
@@ -672,8 +676,12 @@ class LauncherApp:
             style="Accent.TButton",
         )
         self.launch_button.grid(row=0, column=1, sticky="e")
+        self.connect_button = ttk.Button(
+            controls, text="Connect to running game", command=self._start_connect,
+        )
+        self.connect_button.grid(row=1, column=1, sticky="e", pady=(6, 0))
         ttk.Label(controls, textvariable=self.launch_hint, style="Muted.TLabel").grid(
-            row=1, column=0, columnspan=2, sticky="e", pady=(6, 0)
+            row=2, column=0, columnspan=2, sticky="e", pady=(6, 0)
         )
 
         actions = ttk.LabelFrame(troubleshooting, text="Recovery actions", padding=10)
@@ -711,6 +719,7 @@ class LauncherApp:
             wraplength=520,
         ).grid(row=1, column=2, columnspan=4, sticky="w", pady=(8, 0))
         self._action_buttons = (
+            self.connect_button,
             self.vanilla_button,
             self.restore_button,
             self.rebuild_button,
@@ -1105,6 +1114,32 @@ class LauncherApp:
             name="bloodborne-randomize-launch",
         ).start()
 
+    def _start_connect(self) -> None:
+        """Start only the AP client; the backend verifies the installed seed."""
+        if self._busy or not self._generate_plan():
+            return
+        try:
+            settings = self._settings()
+            player = self.player_name.get().strip()
+            captures = self.research_captures.get()
+        except LauncherError as exc:
+            self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
+            return
+        self._save_settings()
+        self._set_busy(True)
+        self._append_log("Connecting the AP client to the running game...")
+        def connect():
+            try:
+                result = self.workflow.connect_to_running(
+                    settings, player_name=player, research_captures=captures,
+                    progress=self._progress_message,
+                )
+            except Exception as exc:
+                self.root.after(0, self._action_failed, "Connect to running game", exc)
+            else:
+                self.root.after(0, lambda: self._finished(result, action="Client connection"))
+        threading.Thread(target=connect, daemon=True, name="bloodborne-client-connect").start()
+
     def _confirm_elevation(self) -> bool:
         """True to proceed. Nudges when shadPS4 may out-elevate the client."""
         if launcher_is_elevated():
@@ -1477,10 +1512,10 @@ class LauncherApp:
         self._append_log(f"REFUSED: {exc}")
         self.messagebox.showerror("Randomize & Launch refused", str(exc), parent=self.root)
 
-    def _finished(self, result: Any) -> None:
+    def _finished(self, result: Any, *, action: str = "Launch") -> None:
         self._set_busy(False)
         mode = "enemy randomization enabled" if result.enemizer_enabled else "enemies unchanged"
-        self._append_log(f"Launch started ({mode}); cache {result.cache_key[:12]}.")
+        self._append_log(f"{action} started ({mode}); cache {result.cache_key[:12]}.")
         self._append_log(f"Client runtime config: {result.client_config}")
         self._append_log(f"Receive ledger: {result.ledger}")
         client_log = getattr(result, "client_log", None)

@@ -321,6 +321,7 @@ fixed_yahargul_lot_2800140	Yahar'gul - Arcane Lake +5% Arcane Reduction #3	Yahar
 fixed_yahargul_lot_2800145	Yahar'gul - Madman's Knowledge #2	Yahar'gul	52800145	2800145	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800150	Yahar'gul - Madman's Knowledge #3	Yahar'gul	52800150	2800150	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800160	Yahar'gul - Madman's Knowledge #4	Yahar'gul	52800160	2800160	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800170	Yahar'gul - Quicksilver Bullets x10 and Frenzied Coldblood (7)	Yahar'gul	52800170	2800170	4	900	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800180	Yahar'gul - Quicksilver Bullets x10 #1	Yahar'gul	52800180	2800180	4	900	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800210	Yahar'gul - Blood Stone Chunk #3	Yahar'gul	52800210	2800210	4	3020	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800300	Yahar'gul - Pungent Blood Cocktail	Yahar'gul	52800300	2800300	4	1260	filler	treasure	m28_00_00_00;m28_00_00_01	True

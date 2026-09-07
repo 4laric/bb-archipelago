@@ -97,6 +97,16 @@ def slice_reachable(held: set[str], *, locations=None) -> set[str]:
         owned |= events
 
 
+# Script awards whose item is plain filler, so the progression-item census
+# cannot name them. Each is a lot with an acquisition flag but no MSB treasure
+# placement, which is exactly why the fixed-treasure catalog never saw it and
+# nothing suppressed its vanilla award.
+SCRIPT_AWARDS_OUTSIDE_THE_PROGRESSION_CENSUS = {
+    "pickup_mensis_beast_blood_pellet",           # lot 2600570, flag 52600570
+    "pickup_forbidden_woods_doorkeeper_corpse",   # lot 37000, flag 50002000 (#389)
+}
+
+
 class BloodborneModelTests(unittest.TestCase):
     def test_dlc_weapon_boundary_is_imported_by_the_world_module(self):
         import worlds.bloodborne as world
@@ -104,15 +114,25 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertIs(world.DLC_WEAPON_KEYS, DLC_WEAPON_KEYS)
 
     def test_category8_awards_cover_the_reviewed_fixed_catalog(self):
+        from worlds.bloodborne.category8_awards import _EVENT_AWARDS
+
         reviewed = {
             row.item_lot_id: row.item_id
             for row in FIXED_LOCATIONS if row.item_category == 8
         }
         self.assertEqual(58, len(reviewed))
+        # Rows appended outside the fixed-location catalog (#388) are named
+        # here, so "every catalog row has an award" stays an exact equality
+        # instead of being weakened to a subset check.
+        event_awards = {row.source_lot_id: row.gemgen_id for row in _EVENT_AWARDS}
+        self.assertEqual({75_002_400: 102_401}, event_awards)
         self.assertEqual(
-            reviewed,
+            reviewed | event_awards,
             {row.source_lot_id: row.gemgen_id for row in CATEGORY8_AWARDS},
         )
+        # The appended rows sit at the end: a catalog row's index, and so its
+        # token, award lot and ack flag, cannot move when one is added.
+        self.assertEqual(list(_EVENT_AWARDS), list(CATEGORY8_AWARDS)[-len(_EVENT_AWARDS):])
 
     def test_category8_award_lots_are_spaced_like_vanilla_lots(self):
         """Consecutive ItemLotParam ids award together; a stride of one hands
@@ -138,7 +158,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(0, len(intruders), intruders)
 
     def test_category8_runtime_ids_and_ack_flags_are_unique(self):
-        self.assertEqual(58, len(CATEGORY8_AWARDS))
+        self.assertEqual(59, len(CATEGORY8_AWARDS))
         for field in ("item_key", "display_name", "token_goods_id",
                       "item_lot_id", "ack_flag", "source_lot_id"):
             values = [getattr(row, field) for row in CATEGORY8_AWARDS]
@@ -191,18 +211,18 @@ class BloodborneModelTests(unittest.TestCase):
         # Review finding W5: 16 NG+ "replacement" lots left the seeded manifest
         # (668 -> 652). Each shared a corpse with a first-cycle row that is
         # still seeded, so no corpse lost its check.
-        self.assertEqual(653, len(NETWORK_LOCATIONS))
+        self.assertEqual(657, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
-            {"Central Yharnam": 47, "Cathedral Ward": 64,
+            {"Central Yharnam": 47, "Cathedral Ward": 65,
              "Old Yharnam": 56, "Grand Cathedral": 2,
              "Hemwick Charnel Lane": 33, "Castle Cainhurst": 29,
-             "Forbidden Woods": 76, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
+             "Forbidden Woods": 77, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
              "Moonside Lake": 1,
-            "Yahar'gul": 49, "Lecture Building 1F": 9,
+            "Yahar'gul": 50, "Lecture Building 1F": 9,
              "Lecture Building 2F": 8, "Nightmare Frontier": 41,
-             "Nightmare of Mensis": 55, "Hunter's Dream": 3,
+             "Nightmare of Mensis": 56, "Hunter's Dream": 3,
              "Hunter's Nightmare": 68, "Underground Corpse Pile": 1,
              "Research Hall": 37, "Lumenwood Garden": 1,
              "Astral Clocktower": 1, "Fishing Hamlet": 41,
@@ -290,7 +310,7 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 22)
+        self.assertEqual(counts["Blood Vial"], 21)
         self.assertEqual(counts["Quicksilver Bullets x3"], 6)
         self.assertEqual(counts["Blood Stone Shards x2"], 31)
         self.assertEqual(counts["Twin Blood Stone Shards x2"], 31)
@@ -304,9 +324,10 @@ class BloodborneModelTests(unittest.TestCase):
         # Review finding W5 removed 16 seeded locations, so the weighted
         # remainder now falls to a different set of these names. The split is
         # restated per name rather than as one shared number.
-        self.assertEqual(counts["Antidote x2"], 11)
-        for name in ("Sedatives x2", "Poison Knife x3", "Blue Elixir", "Beast Blood Pellet",
-                     "Lead Elixir", "Oil Urn x2", "Numbing Mist x2",
+        for name in ("Antidote x2", "Sedatives x2", "Poison Knife x3",
+                     "Blue Elixir", "Beast Blood Pellet", "Lead Elixir"):
+            self.assertEqual(counts[name], 11, name)
+        for name in ("Oil Urn x2", "Numbing Mist x2",
                      "Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
             self.assertEqual(counts[name], 10, name)
@@ -331,8 +352,9 @@ class BloodborneModelTests(unittest.TestCase):
         Yharnam. Review finding W4 added the eight region gates (tonsil stone,
         Upper Cathedral key, Cainhurst summons, the four DLC keys and
         Laurence's skull) so that turning the option off no longer seals the
-        regions the manifest still seeds. Hemwick Access joined the one-off set
-        with the Hemwick gate. 653 - 22 one-off items = 631 filler
+        regions the manifest still seeds. Hemwick Access is NOT here: the
+        Hemwick access gate is off by default, so it stays out of the pool.
+        657 - 21 one-off items = 636 filler
         slots over the slice's own five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
@@ -347,10 +369,10 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
-        # play experience. 653 - 22 one-each = 631 slots over five weighted names.
-        self.assertEqual(counts["Blood Vial"], 224)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 145)
-        self.assertEqual(counts["Blood Stone Shards x2"], 112)
+        # play experience. 652 - 21 one-each = 631 slots over five weighted names.
+        self.assertEqual(counts["Blood Vial"], 226)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 147)
+        self.assertEqual(counts["Blood Stone Shards x2"], 113)
         self.assertEqual(counts["Pebbles x3"], 75)
         self.assertEqual(counts["Molotov Cocktails x2"], 75)
         self.assertNotIn("Fire Paper x2", counts)  # control: goods stay out
@@ -368,6 +390,9 @@ class BloodborneModelTests(unittest.TestCase):
         # a flag shared by several lot fields of ONE corpse is one placement
         # and one check (the Yahar'gul Black coachman's seat names 2800610
         # and 2800611 of the 2800610-2800613 award group).
+        # MERGED_FLAG_HEADS is the reviewed third shape: two corpses that really
+        # do share one flag, collapsed onto one check on purpose.
+        from tools.build_fixed_location_slice import MERGED_FLAG_HEADS
         placements_by_lot: dict[str, set[tuple[str, str]]] = {}
         with (ROOT / "research/joined/fixed_treasure_lots.tsv").open(
                 encoding="utf-8", newline="") as handle:
@@ -387,6 +412,15 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn(item_lot_flag, lots_by_flag, location)
             lots = lots_by_flag[item_lot_flag]
             self.assertIn(str(binding.item_lot_id), lots, location)
+            merged = MERGED_FLAG_HEADS.get(int(item_lot_flag))
+            if merged is not None:
+                # A reviewed merge: two separate corpses do share this flag, so
+                # the game itself cannot tell them apart and neither can the
+                # client. They are deliberately one check keyed on the declared
+                # head lot, and the suppression plan replaces every lot on the
+                # flag (test_vanilla_suppression pins the related-lot set).
+                self.assertEqual(merged[0], binding.item_lot_id, location)
+                continue
             own_placements = placements_by_lot.get(str(binding.item_lot_id), set())
             for lot in lots - {str(binding.item_lot_id)}:
                 foreign = placements_by_lot.get(lot, set()) - own_placements
@@ -419,6 +453,26 @@ class BloodborneModelTests(unittest.TestCase):
                 # must carry the flag itself.
                 self.assertIsNone(binding.item_lot_id)
                 self.assertIn(str(binding.event_flag), binding.evidence)
+                continue
+            if key in SCRIPT_AWARDS_OUTSIDE_THE_PROGRESSION_CENSUS:
+                # Filler script awards. progression_items.tsv is a census of
+                # progression items, so it can never name these; the evidence
+                # is checked against the param corpus directly instead, which
+                # is a narrower claim than the census lookup, not a weaker one.
+                with (ROOT / "research/joined/lot_items.tsv").open(
+                        encoding="utf-8", newline="") as handle:
+                    lot_rows = [row for row in csv.DictReader(handle, delimiter="	")
+                                if row["item_lot_id"] == str(binding.item_lot_id)]
+                self.assertEqual(1, len(lot_rows), key)
+                row = lot_rows[0]
+                self.assertEqual(str(binding.item_category), row["item_category"], key)
+                self.assertEqual(str(binding.item_id), row["item_id"], key)
+                item_lot_flag = binding.item_lot_flag or binding.event_flag
+                self.assertEqual([str(item_lot_flag)],
+                                 row["all_acquisition_flags"].split(";"), key)
+                # The source_ref must point into a committed EMEVD decompile.
+                self.assertRegex(binding.source_ref, r"^m\d\d(_\d\d){3}\.emevd\.dcx\.js:\d+$", key)
+                self.assertIn(str(binding.item_lot_id), binding.evidence, key)
                 continue
             if binding.source_kind in ("script_award", "npc_or_enemy_award", "npc_award"):
                 candidates = [
@@ -1011,6 +1065,29 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         option = BloodborneOptions.type_hints["death_link"]
         self.assertEqual(0, option.default)
         self.assertEqual("DeathLink (Receive Only)", option.display_name)
+
+    def test_death_link_send_is_experimental_and_defaults_off(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["death_link_send"]
+        self.assertEqual(0, option.default)
+        self.assertIn("Experimental", option.display_name)
+        # The docstring is the only warning a player gets in the YAML
+        # template, so it has to say plainly that this is not validated.
+        doc = option.__doc__ or ""
+        self.assertIn("Not validated live", doc)
+
+    def test_death_link_first_death_grace_defaults_off(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["death_link_first_death_grace"]
+        self.assertEqual(0, option.default)
+        self.assertEqual("DeathLink First Death Grace", option.display_name)
+        self.assertIn("DeathLink Send is on", option.__doc__ or "")
 
     def test_death_link_amnesty_is_independent_and_defaults_off(self):
         if not AP_AVAILABLE:
