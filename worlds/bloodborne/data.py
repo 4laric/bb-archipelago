@@ -759,6 +759,20 @@ SLICE_LOCATION_KEYS = frozenset({
 # witness; do not add acquisition flags or inferred entity-death state here.
 ONE_TIME_ENEMY_LOCATION_KEYS = frozenset({"hunter_yurie"})
 
+# Questline locations are NPC/ESD dialogue awards -- the goods acquisition
+# flag fires when a quest NPC hands over their badge at the end of a
+# questline (Eileen, Djura, Alfred, the Vileblood oath), rather than a
+# placed ItemLotParam treasure, a boss defeat, a shop purchase, or an enemy
+# drop. They are the only locations declared with `key` under "award_" and
+# a `docs/LOCATION-NAMING.md` name ending in " award"; both are asserted in
+# tests/test_bloodborne_questlines.py so a future award location is picked
+# up automatically or the naming/keying convention breaks loudly instead of
+# silently under-covering the option below.
+QUESTLINE_LOCATION_KEYS = frozenset(
+    location.key for location in LOCATIONS
+    if location.key.startswith("award_") and location.name.endswith(" award")
+)
+
 # The Old Hunters is one optional branch of the seeded graph. These explicit
 # sets let generation remove the complete branch without changing permanent
 # item or location IDs.

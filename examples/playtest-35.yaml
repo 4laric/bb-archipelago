@@ -35,3 +35,8 @@ Bloodborne:
   death_link: false
   death_link_amnesty: 0
   alternate_hypogean_gaol_routes: false
+
+  # Off (the default): the Eileen/Djura/Alfred/Cainhurst badge awards stay
+  # useful/filler-only, so a missed or failed questline never gates another
+  # player's progression.
+  questlines_hold_progression: false
