@@ -111,6 +111,9 @@ class HemwickGateOptionTests(unittest.TestCase):
         multiworld.set_seed(0)
         world = BloodborneWorld(multiworld, 1)
         world.options = self._Options(enabled)
+        # CollectionState asserts on this, and `collect` dispatches through it.
+        # Generation would fill it; these tests drive create_regions directly.
+        multiworld.worlds = {1: world}
         world.create_regions()
         return world
 
