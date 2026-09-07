@@ -1029,6 +1029,31 @@ LOCATION_BINDINGS: dict[str, RuntimeLocationBinding] = {
     "script_award_orphanage_key": RuntimeLocationBinding(
         52420900, "EMEVD award m24_02_00_00:252 + ItemLotParam 2420900 acquisition flag",
         2420900, "script_award", "m24_02_00_00.emevd.dcx.js:252", 4, 4006),
+    # m26_00_00_00.emevd.dcx.js:298 initialises slot 0 of the generic treasure
+    # event 12600125 (:2138) with object 2601008 and item lot 2600570. The
+    # event waits on ActionButtonInArea(2600030, 2601008) and calls
+    # AwardItemLot(2600570); lot 2600570 awards category 4 goods 1110 (Beast
+    # Blood Pellet) in slot 01 and carries getItemFlagId 52600570
+    # (params/ItemLotParam.csv; research/joined/lot_items.tsv). The lot has no
+    # MSB treasure placement, which is why the fixed-location catalog never
+    # saw it and nothing suppressed its vanilla award. `inferred`.
+    "pickup_mensis_beast_blood_pellet": RuntimeLocationBinding(
+        52600570,
+        "EMEVD award m26_00_00_00:298/2138 + ItemLotParam 2600570 acquisition flag",
+        2600570, "script_award", "m26_00_00_00.emevd.dcx.js:298", 4, 1110),
+    # m24_00_00_00.emevd.dcx.js:1119 - event 12400403 (門番_門を開いた状態で話し
+    # かけ、SAN値UP) is host-only and alive-guarded, waits on interaction flag
+    # 72400441 and calls AwardItemLot(37000). Lot 37000 awards category 4 goods
+    # 1500 (Madman's Knowledge) in slot 01 and carries getItemFlagId 50002000.
+    # The door's own flags (12400131 opened, 72400440 door interaction) are
+    # deliberately NOT the witness: opening the door must not send this check.
+    # `inferred`.
+    "pickup_forbidden_woods_doorkeeper_corpse": RuntimeLocationBinding(
+        50002000,
+        "EMEVD award m24_00_00_00:1119 (event 12400403) + ItemLotParam 37000 "
+        "acquisition flag; the door-open flag 12400131 and door interaction flag "
+        "72400440 are separate and are not this check's witness",
+        37000, "script_award", "m24_00_00_00.emevd.dcx.js:1119", 4, 1500),
     "pickup_eye_of_blood_drunk_hunter": RuntimeLocationBinding(
         12101028,
         "EMEVD gift event 12101028 completes after interaction flag 12101029 and award lot "

@@ -448,7 +448,7 @@ location_flag	region	name	basis
 52800145	Yahar'gul	Yahar'gul - Madman's Knowledge #2	map m28_00; unestablished
 52800150	Yahar'gul	Yahar'gul - Madman's Knowledge #3	map m28_00; unestablished
 52800160	Yahar'gul	Yahar'gul - Madman's Knowledge #4	map m28_00; unestablished
-52800170	Yahar'gul	Yahar'gul - Quicksilver Bullets x10 and Frenzied Coldblood (7)	map m28_00
+52800170	Yahar'gul	Yahar'gul - Quicksilver Bullets x10 and Frenzied Coldblood (7)	map m28_00; two corpses (event tags 宝死体17 and 宝死体32_初回_聖堂脇終点, lots 2800170 and 2800320) share acquisition flag 52800170, so one name covers both awards
 52800180	Yahar'gul	Yahar'gul - Quicksilver Bullets x10 #1	map m28_00; unestablished
 52800210	Yahar'gul	Yahar'gul - Blood Stone Chunk #3	map m28_00; unestablished
 52800300	Yahar'gul	Yahar'gul - Pungent Blood Cocktail	map m28_00
@@ -686,3 +686,5 @@ location_flag	region	name	basis
 12501800	Castle Cainhurst	Martyr Logarius	published (data.py boss_martyr_logarius); boss-defeat event flag committed in runtime_bindings.py
 12421700	Upper Cathedral Ward	Celestial Emissary	published (data.py boss_celestial_emissary); boss-defeat event flag committed in runtime_bindings.py
 12421800	Upper Cathedral Ward	Ebrietas, Daughter of the Cosmos	published (data.py boss_ebrietas); boss-defeat event flag committed in runtime_bindings.py
+52600570	Nightmare of Mensis	Nightmare of Mensis - Beast Blood Pellet	script award m26_00_00_00.emevd.dcx.js event 12600125 slot 0 (object 2601008, lot 2600570); lot tag 宝死体47
+50002000	Forbidden Woods	Forbidden Woods entrance - Doorkeeper's corpse	script award m24_00_00_00.emevd.dcx.js event 12400403 waits on interaction flag 72400441 and calls AwardItemLot(37000); lot tag 門番_ミイラ死体を調べたときに手に入るもの (what you get when you inspect the gatekeeper's mummified corpse); the lot's acquisition flag is 50002000

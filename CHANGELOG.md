@@ -3,6 +3,20 @@
 
 ## Unreleased
 
+- Three more unsuppressed vanilla pickups became Archipelago checks. The
+  Nightmare of Mensis Beast Blood Pellet (lot 2600570, flag 52600570, awarded
+  by object event 12600125) and the Forbidden Woods doorkeeper's corpse
+  (lot 37000, flag 50002000, awarded by event 12400403 on interaction flag
+  72400441, #389) are EMEVD script awards with no MSB treasure placement, so
+  the fixed-treasure catalog never saw them and nothing replaced their vanilla
+  items. The doorkeeper's corpse is placed in the Forbidden Woods region, which
+  is behind the password door and does not require Amelia. The Yahar'gul
+  corpse pair on shared acquisition flag 52800170 (lots 2800170 and 2800320)
+  had been excluded by hand; exclusion did not make it safe, it left both
+  corpses handing out vanilla items. It is now one check keyed on lot 2800170
+  with both vanilla awards replaced, and the second corpse becomes an inert
+  placeholder pickup (#328). Seeds gain three locations (656 network
+  locations); the suppression plan digest moved. Existing seeds are unaffected.
 - Added the `consumable_quantity_bonus` YAML option (`Range`, default `0`,
   maximum `20`). It adds a flat `+X` to the delivered quantity of every item
   in the reviewed `CONSUMABLE_ITEM_KEYS` classification -- vials, bullets,

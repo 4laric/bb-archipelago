@@ -299,6 +299,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Forbidden Woods - Twin Blood Stone Shards x2 #5
 - Forbidden Woods - Twin Blood Stone Shards x3
 - Forbidden Woods - White Church Hat
+- Forbidden Woods entrance - Doorkeeper's corpse
 - Shadows of Yharnam
 
 ## Grand Cathedral
@@ -531,6 +532,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 
 - Mergo's Wet Nurse
 - Micolash, Host of the Nightmare
+- Nightmare of Mensis - Beast Blood Pellet
 - Nightmare of Mensis - Blood Gem #1
 - Nightmare of Mensis - Blood Gem #2
 - Nightmare of Mensis - Blood Gem #3

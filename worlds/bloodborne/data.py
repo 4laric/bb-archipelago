@@ -389,6 +389,17 @@ LOCATIONS = (
     Location("pickup_lunarium_key", location_name(53200810), "Byrgenwerth",
              vanilla_award_suppressed=True),
     Location("script_award_orphanage_key", location_name(52420900), "Upper Cathedral Ward"),
+    # Object-triggered EMEVD awards with no MSB treasure placement, so the
+    # fixed-treasure catalog never saw them and nothing suppressed the vanilla
+    # item (#389 and the Nightmare of Mensis pellet report).
+    Location("pickup_mensis_beast_blood_pellet", location_name(52600570),
+             "Nightmare of Mensis", vanilla_award_suppressed=True),
+    # Behind the Forbidden Woods password door. The region is the woods side of
+    # that door, so the check needs the password and NOT Amelia: the player has
+    # live-confirmed that an AP password opens the door before Amelia, and the
+    # "Forbidden Woods password door" entrance already models exactly that.
+    Location("pickup_forbidden_woods_doorkeeper_corpse", location_name(50002000),
+             "Forbidden Woods", vanilla_award_suppressed=True),
     Location("pickup_eye_of_blood_drunk_hunter", location_name(12101028), "Hunter's Dream",
              Rule.all("event_laurences_skull_inspected")),
     Location("pickup_eye_pendant", location_name(9470), "Hunter's Nightmare"),
@@ -663,6 +674,8 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "boss_rom",
     "hunter_yurie",
     "pickup_lunarium_key",
+    "pickup_mensis_beast_blood_pellet",
+    "pickup_forbidden_woods_doorkeeper_corpse",
     "boss_the_one_reborn",
     "boss_micolash",
     "boss_mergos_wet_nurse",
