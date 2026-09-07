@@ -419,7 +419,10 @@ if ($Package) {
     }
 
     Step "Player package: building the launcher package"
+    # -Package implies -Apworld above, so build\bloodborne.apworld already
+    # exists and goes into the package the launcher installs from.
     & (Join-Path $Repo "packaging\build_launcher.ps1") `
-        -SoulsFormatsNextRoot $SoulsFormatsNextRoot -ClientPath $ClientPath
+        -SoulsFormatsNextRoot $SoulsFormatsNextRoot -ClientPath $ClientPath `
+        -ApworldPath (Join-Path $BuildDir "bloodborne.apworld")
     Write-Host "  player build complete: $BuildDir" -ForegroundColor Green
 }

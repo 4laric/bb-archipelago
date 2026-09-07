@@ -1,16 +1,22 @@
 """Run Archipelago generation and a localhost server without a shell.
 
-This module deliberately treats an Archipelago installation as read-only.  In
-particular, discovering that Bloodborne is missing or incompatible produces an
-actionable diagnostic; the launcher never installs an ``.apworld`` for the
-user.
+This module treats an Archipelago installation as read-only with exactly one
+exception, and that exception is never silent: :func:`install_bloodborne_world`
+copies the ``bloodborne.apworld`` this package ships into the installation's
+``custom_worlds`` directory, and only when the player asks for it from the UI.
+Nothing else here writes into the installation. Discovering that Bloodborne is
+missing or incompatible still produces an actionable diagnostic
+(:class:`BloodborneWorldUnavailable`), which now says *which* of the two it is
+so the caller can offer "install" or "update" rather than a wall of prose.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import queue
 import re
+import shutil
 import socket
 import subprocess
 import sys
@@ -23,7 +29,7 @@ from pathlib import Path
 from typing import Callable, Mapping
 
 from .core import ValidationError
-from .resources import resource_root
+from .resources import application_root, resource_root
 
 
 OutputCallback = Callable[[str], None]
@@ -47,6 +53,62 @@ class GenerationCancelled(ValidationError):
     pass
 
 
+class BloodborneWorldUnavailable(ValidationError):
+    """The selected Archipelago install cannot generate this launcher's seeds.
+
+    ``reason`` separates the two cases a caller has to offer different words
+    for: ``"missing"`` (no Bloodborne world at all) and ``"mismatch"`` (a
+    Bloodborne world of the wrong version). The UI turns that into "Install
+    Bloodborne world" or "Update Bloodborne world to X".
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        reason: str,
+        expected_version: str = "",
+        installed_version: str = "",
+        path: Path | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.reason = reason
+        self.expected_version = expected_version
+        self.installed_version = installed_version
+        self.path = path
+
+    @property
+    def missing(self) -> bool:
+        return self.reason == "missing"
+
+    @property
+    def mismatch(self) -> bool:
+        return self.reason == "mismatch"
+
+
+def _packaged_ap_tools(root: Path) -> tuple[Path, Path] | None:
+    generate = root / "ArchipelagoGenerate.exe"
+    server = root / "ArchipelagoServer.exe"
+    return (generate, server) if generate.is_file() and server.is_file() else None
+
+
+def _source_ap_tools(root: Path) -> tuple[Path, Path] | None:
+    generate = root / "Generate.py"
+    server = root / "MultiServer.py"
+    return (generate, server) if generate.is_file() and server.is_file() else None
+
+
+def is_archipelago_root(ap_root: Path | str) -> bool:
+    """Whether this folder is an Archipelago install the launcher recognises.
+
+    The same packaged/source detection :func:`discover_ap_tools` runs, without
+    its Python-executable requirement: installing a world into a source
+    checkout does not need an interpreter chosen first.
+    """
+    root = Path(ap_root).expanduser().resolve()
+    return bool(_packaged_ap_tools(root) or _source_ap_tools(root))
+
+
 def discover_ap_tools(ap_root: Path | str, python_executable: Path | str | None = None) -> APTools:
     """Resolve packaged AP tools, or an explicitly selected source checkout.
 
@@ -54,19 +116,20 @@ def discover_ap_tools(ap_root: Path | str, python_executable: Path | str | None 
     fragile.  A frozen launcher cannot safely use its embedded interpreter.
     """
     root = Path(ap_root).expanduser().resolve()
-    generate_exe = root / "ArchipelagoGenerate.exe"
-    server_exe = root / "ArchipelagoServer.exe"
-    if generate_exe.is_file() and server_exe.is_file():
+    packaged = _packaged_ap_tools(root)
+    if packaged is not None:
+        generate_exe, server_exe = packaged
         return APTools(root, (str(generate_exe),), (str(server_exe),))
 
+    source = _source_ap_tools(root)
     generate_py = root / "Generate.py"
     server_py = root / "MultiServer.py"
-    if generate_py.is_file() and server_py.is_file() and python_executable is not None:
+    if source is not None and python_executable is not None:
         python = Path(python_executable).expanduser().resolve()
         if not python.is_file():
             raise ValidationError(f"the selected Python executable does not exist: {python}")
         return APTools(root, (str(python), str(generate_py)), (str(python), str(server_py)))
-    if generate_py.is_file() and server_py.is_file() and not getattr(sys, "frozen", False):
+    if source is not None and not getattr(sys, "frozen", False):
         return APTools(root, (sys.executable, str(generate_py)), (sys.executable, str(server_py)))
 
     detail = " Select a Python executable for this source checkout." if generate_py.is_file() else ""
@@ -99,6 +162,7 @@ def validate_bloodborne_world(
             expected_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise ValidationError(f"the launcher cannot read its Bloodborne version metadata: {exc}") from exc
+    expected_world = str(expected_manifest.get("world_version", ""))
     candidates = (
         root / "custom_worlds" / "bloodborne.apworld",
         root / "worlds" / "bloodborne",
@@ -106,29 +170,120 @@ def validate_bloodborne_world(
     )
     package = next(((path, _read_world_manifest(path)) for path in candidates if path.exists()), None)
     if package is None or package[1] is None:
-        raise ValidationError(
+        raise BloodborneWorldUnavailable(
             "Bloodborne generation support was not found in the selected Archipelago install. "
-            "Install the bloodborne.apworld supplied with this launcher using ArchipelagoLauncher, "
-            "then select that same Archipelago folder."
+            "This launcher ships the matching bloodborne.apworld and can install it into "
+            f"{root / 'custom_worlds'} for you.",
+            reason="missing",
+            expected_version=expected_world,
+            path=root,
         )
     path, actual = package
     expected_ap = str(expected_manifest.get("minimum_ap_version", ""))
-    expected_world = str(expected_manifest.get("world_version", ""))
     if actual.get("game") != "Bloodborne" or str(actual.get("world_version", "")) != expected_world:
-        raise ValidationError(
+        raise BloodborneWorldUnavailable(
             f"{path} is not the Bloodborne world version this launcher expects "
             f"({actual.get('world_version', 'unknown')} installed; {expected_world} required). "
-            "Install the matching bloodborne.apworld, then try again."
+            "This launcher ships the matching bloodborne.apworld and can install it for you.",
+            reason="mismatch",
+            expected_version=expected_world,
+            installed_version=str(actual.get("world_version", "")),
+            path=path,
         )
     # minimum_ap_version describes the world's floor, not the installed AP
     # version.  Comparing this manifest field still catches mismatched builds;
     # probing AP itself is intentionally left to a future supported version API.
     if expected_ap and str(actual.get("minimum_ap_version", "")) != expected_ap:
-        raise ValidationError(
+        raise BloodborneWorldUnavailable(
             f"{path} targets Archipelago {actual.get('minimum_ap_version', 'unknown')} or newer; "
-            f"this launcher package expects {expected_ap}. Install its matching bloodborne.apworld."
+            f"this launcher package expects {expected_ap}. This launcher ships the matching "
+            "bloodborne.apworld and can install it for you.",
+            reason="mismatch",
+            expected_version=expected_world,
+            installed_version=str(actual.get("world_version", "")),
+            path=path,
         )
     return actual
+
+
+def bundled_apworld_path() -> Path:
+    """Return the ``bloodborne.apworld`` this build installs.
+
+    The packaged location is ``<package>/worlds/bloodborne.apworld``, resolved
+    from :func:`application_root` exactly like ``tools/bb-ap-client.exe``. A
+    source checkout has no package layout, so ``build/bloodborne.apworld`` --
+    what ``./build.ps1 -Apworld`` writes -- is accepted there instead. The
+    packaged path is returned either way when neither exists, so a caller's
+    error message names the file the package is supposed to carry.
+    """
+    root = application_root()
+    packaged = root / "worlds" / "bloodborne.apworld"
+    if packaged.is_file():
+        return packaged
+    if not getattr(sys, "frozen", False):
+        built = root / "build" / "bloodborne.apworld"
+        if built.is_file():
+            return built
+    return packaged
+
+
+# ArchipelagoLauncher enumerates and imports worlds once, at start. Installing
+# a world under a running Archipelago changes nothing that process can see, and
+# the resulting "my world is still missing" is indistinguishable from a failed
+# copy -- so every caller says this, unconditionally, rather than guessing at
+# process state it cannot read reliably.
+RESTART_NOTICE = (
+    "Archipelago loads its worlds at start: if Archipelago or ArchipelagoLauncher "
+    "is open, close and reopen it before generating."
+)
+
+
+def install_bloodborne_world(ap_root: Path | str) -> Path:
+    """Install this package's ``bloodborne.apworld`` into ``ap_root``.
+
+    Returns the installed path. The copy is atomic (temporary file plus
+    replace) so an interrupted install cannot leave a half-written world where
+    a working one was, and it is verified by re-running
+    :func:`validate_bloodborne_world` before returning.
+
+    A *source* Archipelago install that carries Bloodborne under ``worlds/`` or
+    ``lib/worlds/`` is refused rather than shadowed: that checkout is the thing
+    to update, and an apworld next to it would leave two versions on disk.
+    """
+    root = Path(ap_root).expanduser().resolve()
+    if not is_archipelago_root(root):
+        raise ValidationError(
+            f"{root} is not an Archipelago installation, so there is nowhere to install the "
+            "Bloodborne world. Choose the extracted Archipelago folder."
+        )
+    for existing in (root / "worlds" / "bloodborne", root / "lib" / "worlds" / "bloodborne"):
+        if existing.is_dir():
+            raise ValidationError(
+                f"{existing} is a source install of the Bloodborne world. Update that checkout "
+                "instead; installing an .apworld beside it would leave two versions installed."
+            )
+    source = bundled_apworld_path()
+    if not source.is_file():
+        raise ValidationError(
+            f"this launcher build does not carry a bloodborne.apworld ({source} is missing). "
+            "Download bloodborne.apworld from the release and install it with ArchipelagoLauncher, "
+            "or, from a checkout, run ./build.ps1 -Apworld first."
+        )
+    destination_directory = root / "custom_worlds"
+    destination = destination_directory / "bloodborne.apworld"
+    try:
+        destination_directory.mkdir(parents=True, exist_ok=True)
+        staged = destination_directory / f".bloodborne.apworld.{uuid.uuid4().hex}.part"
+        try:
+            shutil.copyfile(source, staged)
+            os.replace(staged, destination)
+        finally:
+            if staged.exists():
+                staged.unlink()
+    except OSError as exc:
+        raise ValidationError(f"could not install {source} into {destination_directory}: {exc}") from exc
+    validate_bloodborne_world(root)
+    return destination
 
 
 def _run_streaming(

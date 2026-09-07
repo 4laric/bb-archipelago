@@ -3,7 +3,8 @@
 Run from the frozen package (``BloodborneAPLauncher.exe --self-check report.json``)
 this proves what CI could not see before beta 2 shipped: that every apworld
 table the launcher imports is bundled, that the seed contract can be built,
-and that every native tool the seed build calls is next to the executable.
+that every native tool the seed build calls is next to the executable, and
+that the bloodborne.apworld the launcher installs for players ships with it.
 It never touches game files or the network.
 """
 
@@ -14,6 +15,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .local_session import bundled_apworld_path
 from .resources import application_root, resource_root
 from .workflow import EnemizerToolchain
 
@@ -82,6 +84,14 @@ def run_self_check(report: Path | None, *, require_bundled_tools: bool | None = 
         for name, present in result["tools"].items():
             if not present:
                 result["problems"].append(f"bundled tool missing: {name}")
+
+    # The seed generator's half of the package: the launcher installs this file
+    # into an Archipelago installation's custom_worlds on request, so a package
+    # without it can only tell the player to go find one.
+    apworld = bundled_apworld_path()
+    result["apworld"] = {"path": str(apworld), "present": apworld.is_file()}
+    if require_bundled_tools and not apworld.is_file():
+        result["problems"].append(f"bundled bloodborne.apworld missing: {apworld}")
 
     result["ok"] = not result["problems"]
     text = json.dumps(result, indent=2, sort_keys=True) + "\n"
