@@ -588,9 +588,11 @@ def sustain_item_binding() -> dict[str, Any]:
     }
 
 try:
-    from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region
+    from BaseClasses import (
+        Item as APItem, ItemClassification, Location as APLocation, Region, Tutorial,
+    )
     from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
-    from worlds.AutoWorld import Tutorial, WebWorld, World
+    from worlds.AutoWorld import WebWorld, World
 except ImportError:
     __all__ = ["MODEL"]
 else:

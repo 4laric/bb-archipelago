@@ -78,4 +78,4 @@ jobs:
         run: bash -n tools/deploy_site.sh
 
       - name: site guards
-        run: python -m pytest -q tests/test_site_assets.py
+        run: python -m unittest -v tests.test_site_assets
