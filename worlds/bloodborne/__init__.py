@@ -590,7 +590,7 @@ def sustain_item_binding() -> dict[str, Any]:
 try:
     from BaseClasses import Item as APItem, ItemClassification, Location as APLocation, Region
     from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
-    from worlds.AutoWorld import World
+    from worlds.AutoWorld import Tutorial, WebWorld, World
 except ImportError:
     __all__ = ["MODEL"]
 else:
@@ -877,6 +877,33 @@ else:
         names = {item.key: item.name for item in MODEL.items}
         return lambda state: any(all(state.has(names[key], player) for key in clause) for clause in clauses)
 
+    class BloodborneWeb(WebWorld):
+        """The WebHost's view of this world.
+
+        `docs/items_en.md` and `docs/locations_en.md` have linked each other and
+        a setup page as `/tutorial/Bloodborne/...` since they were written, but
+        with no WebWorld those links were 404s: Archipelago serves a doc only
+        when a Tutorial entry names it. These three entries are what make the
+        pages the docs already point at exist, and they give the apworld its own
+        copy of the setup guide the site hosts at /bb/.
+        """
+        theme = "dirt"
+        tutorials = [
+            Tutorial(
+                "Multiworld Setup Guide",
+                "A guide to setting up Bloodborne for Archipelago multiworld games.",
+                "English", "setup_en.md", "setup/en", ["4laric"],
+            ),
+            Tutorial(
+                "Items", "The items this world shuffles, and how they are delivered.",
+                "English", "items_en.md", "items/en", ["4laric"],
+            ),
+            Tutorial(
+                "Locations", "Every check this world publishes, by region.",
+                "English", "locations_en.md", "locations/en", ["4laric"],
+            ),
+        ]
+
     class BloodborneWorld(World):
         game = GAME
         options_dataclass = BloodborneOptions
@@ -884,6 +911,7 @@ else:
         item_name_to_id = ITEM_NAME_TO_ID
         location_name_to_id = LOCATION_NAME_TO_ID
         origin_region_name = "Menu"
+        web = BloodborneWeb()
 
         def get_filler_item_name(self) -> str:
             """Archipelago's default picks a RANDOM name from item_name_to_id, and

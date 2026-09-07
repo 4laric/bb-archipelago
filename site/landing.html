@@ -1,0 +1,182 @@
+<!-- site/landing.html -- the Bloodborne front page at /bb/.
+     A FREE PAGE: it carries no option surface and no data stamp, so tools/deploy_site.sh installs
+     it from main rather than from the stable tag. Keep it that way -- quoting a check count or an
+     option default here would couple it to a build and it would go stale silently.
+     The footer is hand-copied on purpose: this page never passes through Jinja. -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bloodborne Archipelago</title>
+<style>
+:root{--bg:#14110f;--bg2:#1c1917;--panel:#232019;--text:#e8e0cf;--dim:#9a8f78;
+ --gold:#c8a95a;--gold-dim:#8a7440;--blood:#8c2b25;--ok:#6f9f5c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,'Times New Roman',serif}
+a{color:var(--gold)}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px 80px}
+header.hero{border-bottom:1px solid var(--gold-dim);background:var(--bg2);padding:46px 0 36px;
+ text-align:center}
+header.hero h1{margin:0 0 10px;font-size:38px;letter-spacing:.05em;color:var(--gold);font-weight:normal}
+header.hero p{margin:0 auto;max-width:640px;color:var(--dim);font-size:16px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.cta a{display:inline-block;padding:10px 22px;border:1px solid var(--gold);border-radius:5px;
+ text-decoration:none;color:var(--gold);letter-spacing:.04em;font-size:14px}
+.cta a.primary{background:var(--gold-dim);color:#fff}
+.cta a:hover{background:var(--gold);color:#14110f}
+h2{font-size:22px;color:var(--gold);letter-spacing:.03em;margin:44px 0 8px;font-weight:normal}
+h3{font-size:16px;color:var(--text);margin:20px 0 4px}
+.panel{background:var(--panel);border:1px solid #3a332a;border-radius:6px;padding:16px 20px;margin:14px 0}
+.cards{display:flex;gap:14px;flex-wrap:wrap}
+.cards .panel{flex:1 1 240px;margin:0}
+.cards h3{margin-top:0;color:var(--gold)}
+ol,ul{padding-left:22px}
+li{margin:6px 0}
+code{font-family:ui-monospace,Consolas,monospace;font-size:13.5px;background:#100e0c;
+ border:1px solid #302a22;border-radius:3px;padding:1px 5px}
+.note{color:var(--dim);font-size:14px}
+.warn{border-left:3px solid var(--blood);padding-left:14px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:6px}
+th,td{text-align:left;padding:6px 9px;border-bottom:1px solid #302a22;vertical-align:top}
+th{color:var(--gold);font-weight:normal}
+footer{border-top:1px solid #302a22;margin-top:56px;padding:22px 0;color:var(--dim);font-size:13px}
+</style>
+
+<div id="er-tabs" data-tab=""></div>
+<script src="/bb/tabs.js" defer></script>
+
+<header class="hero">
+  <h1>Bloodborne Archipelago</h1>
+  <p>Yharnam, shuffled. Every treasure, boss reward and script award in the game becomes an
+     Archipelago check, and the things that open the city up arrive from other players' worlds.
+     Runs under shadPS4 on Windows, against your own copy of the game.</p>
+  <div class="cta">
+    <a class="primary" href="/bb/wizard.html">Build a yaml</a>
+    <a href="/downloads/bb">Downloads</a>
+    <a href="/hosting">Host a room</a>
+    <a href="/bb/checks.html">Browse the checks</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+<h2>What a run is</h2>
+<p>You start in Central Yharnam with whatever the seed decided your starting weapon and firearm
+   are, and the city opens the way the base game opens it &mdash; except that the keys are
+   somewhere else.</p>
+
+<h3>The Hunter Chief Emblem is the chokepoint</h3>
+<p>Cathedral Ward is behind it, and behind Cathedral Ward is most of the game. In a randomized
+   seed the Emblem is an Archipelago item like any other, so an early seed can feel small until
+   it turns up &mdash; in your world or in somebody else's. That is the run's one real bottleneck
+   and it is worth knowing before you start rather than after twenty minutes of wondering whether
+   something is broken.</p>
+
+<h3>Lamps are the only fast travel</h3>
+<p>No Torrent, no warping from anywhere. Route accordingly: a check on the far side of a region
+   is a walk back.</p>
+
+<h3>The DLC is a gate, not a side area</h3>
+<p>With <code>include_dlc</code> off, The Old Hunters' checks do not exist in the seed at all &mdash;
+   they are not "optional content you can skip", they are absent. There is a separate switch,
+   <code>include_dlc_gear</code>, for DLC weapons and attire in the pool: that one is independent,
+   so you can play a base-game route and still find Old Hunters gear.</p>
+
+<h3>Three endings, and you pick one</h3>
+<p>Submit to Gehrman ends after Mergo's Wet Nurse; refusing him means beating Gehrman; Moon
+   Presence, the default, additionally wants any three of the four shuffled Third Umbilical
+   Cords.</p>
+
+<h2>How big is the seed?</h2>
+<p>That depends on your options, and rather than print a number here that will be wrong by the
+   next release, the <a href="/bb/wizard.html">yaml builder</a> counts it live from the world's
+   own location table as you toggle things &mdash; per region, base game and DLC separately. The
+   <a href="/bb/checks.html">check browser</a> lists every one of them by name, with the vanilla
+   item each replaced and the AP id it was published under.</p>
+<p class="note">One thing the count does <em>not</em> move with: <b>Randomize Enemy Consumable
+   Drops</b>. It shuffles local loot tables and adds no Archipelago checks at all.</p>
+
+<h2>The two channels</h2>
+<div class="cards">
+  <div class="panel">
+    <h3>Stable</h3>
+    <p class="note">A tagged release. The launcher zip and the apworld both come from it, and the
+       pages on this site that describe an option surface or a check list are built from the same
+       tag &mdash; so the wizard you used and the apworld your host generated with are the same
+       thing.</p>
+  </div>
+  <div class="panel">
+    <h3>Development</h3>
+    <p class="note">Whatever is on <code>main</code>. Newer, and occasionally broken in ways
+       nobody has noticed yet. If you are playtesting, this is the one to be on; if you want to
+       finish a seed, it is not.</p>
+  </div>
+</div>
+<p class="note">Which tag each channel points at lives in
+   <a href="https://github.com/4laric/bb-archipelago/blob/main/release/CHANNELS.tsv">release/CHANNELS.tsv</a>,
+   append-only, so "when did stable last move, and to what" stays answerable.</p>
+
+<h2>What is on this site</h2>
+<table>
+<tr><th>Page</th><th>What it is for</th></tr>
+<tr><td><a href="/bb/wizard.html">Builder</a></td>
+    <td>Pick your options and copy out a yaml. Renders from the apworld's own option surface, and
+        stamps the apworld version into the yaml so a host can see which wizard wrote it.</td></tr>
+<tr><td><a href="/downloads/bb">Downloads</a></td>
+    <td>The launcher zip and the apworld, from the same release. Take both from the same one.</td></tr>
+<tr><td><a href="/hosting">Hosting</a></td>
+    <td>Hand in yamls, get a room. No Archipelago install needed to run a seed for friends.</td></tr>
+<tr><td><a href="/bb/checks.html">Checks</a></td>
+    <td>Every published check: region, kind, classification, the vanilla item, the event flag and
+        the AP id. Filterable, permalinkable, exportable, and diffable against another build.</td></tr>
+<tr><td><a href="/bb/report.html">Report a bug</a></td>
+    <td>The form that asks for the files a diagnosis is actually made from.</td></tr>
+</table>
+
+<h2>Setup in five minutes</h2>
+<p class="warn"><b>You need your own game files.</b> A PS4 dump of <code>CUSA03173</code>
+   (Game of the Year Edition) at update <b>01.09</b>. Nothing here distributes game files, and no
+   other release works &mdash; not <code>CUSA00900</code>, not <code>CUSA00207</code>, and not a
+   pre-modded repack.</p>
+<ol>
+  <li>Get <code>BloodborneAPLauncher-win-x64.zip</code> and <code>bloodborne.apworld</code> from
+      the <a href="/downloads/bb">same release</a>. Unzip the launcher anywhere.</li>
+  <li>Install <b>shadPS4 0.18.0</b>. You do not have to configure it &mdash; the launcher hands it
+      the game folder. (That means the folder <em>containing</em> <code>CUSA03173</code>.)</li>
+  <li>Run <b>BloodborneAPLauncher.exe</b> and fill in the four things it cannot guess: shadPS4.exe,
+      the AP seed file your host sent, the server address, and your player name spelled exactly as
+      your host spelled it. <b>Save Setup</b>.</li>
+  <li><b>Generate Launch Plan</b>, once.</li>
+  <li><b>Doctor</b>. Every line should say <code>PASS</code>; a <code>FAIL</code> prints its own
+      remedy underneath.</li>
+  <li><b>Randomize &amp; Launch</b>.</li>
+</ol>
+<p class="note">Cheat Engine is <em>not</em> needed. Item delivery is native and the launcher does
+   not open it at all.</p>
+<p>The long version, and everything this page condensed:
+   <a href="https://github.com/4laric/bb-archipelago/blob/main/docs/PLAYTESTING.md">PLAYTESTING.md</a>
+   &middot;
+   <a href="https://github.com/4laric/bb-archipelago/blob/main/docs/LAUNCHER.md">LAUNCHER.md</a>
+   &middot;
+   <a href="https://github.com/4laric/bb-archipelago/blob/main/docs/KNOWN-LIMITATIONS.md">KNOWN-LIMITATIONS.md</a>
+   &middot;
+   <a href="https://github.com/4laric/bb-archipelago/blob/main/SECURITY.md">SECURITY.md</a>
+</p>
+
+<h2>Contact</h2>
+<div class="panel">
+  <p>Something went wrong in a seed: use the <a href="/bb/report.html">bug report form</a>. It
+     asks for the session folder, which is what a diagnosis is made from.</p>
+  <p>Anything else &mdash; questions, patches, a seed you want another pair of eyes on &mdash;
+     <a href="https://github.com/4laric/bb-archipelago/issues">open an issue</a>. Security
+     problems have their own private channel in
+     <a href="https://github.com/4laric/bb-archipelago/blob/main/SECURITY.md">SECURITY.md</a>;
+     please use it rather than a public issue.</p>
+</div>
+
+<footer>
+  Bloodborne Archipelago is an unofficial fan project. Bloodborne is a trademark of Sony
+  Interactive Entertainment Inc.; the game was developed by FromSoftware, Inc. Neither company is
+  involved in, endorses, or supports this project, and no game files are distributed with it.
+  Archipelago is an independent multiworld randomizer project.
+</footer>
+
+</div>
