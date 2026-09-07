@@ -36,7 +36,6 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
     # second clause here: folding it in made the emblem clause unreachable as a
     # requirement, because Blood-starved Beast is free from Cathedral Ward.
     "Cathedral Ward plaza gate": {frozenset({"hunter_chief_emblem"})},
-    "Road to Hemwick": {frozenset({"hemwick_access"})},
     "Forbidden Woods password door": {frozenset({"forbidden_woods_password"})},
     "Path to Byrgenwerth": {frozenset({"event_shadows_defeated"})},
     "Lunarium door": {frozenset({"lunarium_key"})},
@@ -62,6 +61,11 @@ DOCUMENTED_GATES: dict[str, set[frozenset[str]]] = {
 # documented above; the point is that "no rule" becomes a deliberate claim.
 DOCUMENTED_FREE = {
     "Begin the Hunt",
+    # bb-archipelago#326. The vanilla road to Hemwick opens on reaching the
+    # Grand Cathedral plaza and costs nothing more; the authored entrance says
+    # so. The optional `hemwick_access_gate` adds a requirement on top of it --
+    # that shape is pinned in DOCUMENTED_OPTIONAL_GATES below, not here.
+    "Road to Hemwick",
     "Awaken in Central Yharnam",
     "Road into Old Yharnam",
     "Blood Moon path to Hypogean Gaol",
@@ -74,6 +78,14 @@ DOCUMENTED_FREE = {
     "Lecture Building frontier door",
     "Research Hall summit",
     "Nightmare Grand Cathedral",
+}
+
+
+# Entrance name -> the clauses an off-by-default YAML option installs on top of
+# the authored (vanilla) rule. These entrances are free in the model and stay
+# free in a default seed; the world substitutes the rule when the option is on.
+DOCUMENTED_OPTIONAL_GATES: dict[str, set[frozenset[str]]] = {
+    "Road to Hemwick": {frozenset({"hemwick_access"})},
 }
 
 
@@ -112,13 +124,39 @@ class GateTests(unittest.TestCase):
                 self.assertNotIn(frozenset(), clauses(by_name[name].rule),
                                  "a gate with an empty clause is satisfied by nothing at all")
 
+    def test_optional_gates_are_free_in_the_model_but_gated_by_their_option(self):
+        """An option-installed gate must not leak into a default seed.
+
+        Both halves matter: the authored entrance stays free (so a default
+        roll is what it always was), and the rule the option installs really
+        carries the requirement the docs claim.
+        """
+        from worlds.bloodborne.data import (
+            HEMWICK_GATE_ENTRANCE_NAME, HEMWICK_GATE_ENTRANCE_RULE,
+        )
+        installed = {HEMWICK_GATE_ENTRANCE_NAME: HEMWICK_GATE_ENTRANCE_RULE}
+        # Witness: the population under test is non-empty and is exactly the
+        # set this table documents, so a silently dropped optional gate fails
+        # here rather than passing as "nothing to check".
+        self.assertEqual(set(installed), set(DOCUMENTED_OPTIONAL_GATES))
+        self.assertTrue(DOCUMENTED_OPTIONAL_GATES)
+        by_name = {e.name: e for e in ENTRANCES}
+        for name, expected in DOCUMENTED_OPTIONAL_GATES.items():
+            with self.subTest(entrance=name):
+                self.assertIn(name, by_name)
+                self.assertEqual(clauses(by_name[name].rule), {frozenset()},
+                                 "an optional gate must be free by default")
+                self.assertEqual(clauses(installed[name]), expected)
+                self.assertNotIn(frozenset(), clauses(installed[name]))
+
     def test_no_entrance_appears_twice(self):
         names = [e.name for e in ENTRANCES]
         self.assertEqual(len(names), len(set(names)))
 
     def test_every_referenced_key_exists(self):
         known = {i.key for i in ITEMS}
-        for name, expected in DOCUMENTED_GATES.items():
+        tables = {**DOCUMENTED_GATES, **DOCUMENTED_OPTIONAL_GATES}
+        for name, expected in tables.items():
             for clause in expected:
                 for key in clause:
                     with self.subTest(entrance=name, key=key):
@@ -211,7 +249,8 @@ class EventItemTests(unittest.TestCase):
         granted = {l.locked_item for l in LOCATIONS if l.locked_item}
         events = {i.key for i in ITEMS if i.kind is ItemKind.EVENT}
         used = set()
-        for expected in DOCUMENTED_GATES.values():
+        for expected in (*DOCUMENTED_GATES.values(),
+                         *DOCUMENTED_OPTIONAL_GATES.values()):
             for clause in expected:
                 used |= {k for k in clause if k in events}
         for key in sorted(used):

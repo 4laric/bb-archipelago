@@ -379,7 +379,7 @@ class BloodborneModelTests(unittest.TestCase):
         slot_data = build_runtime_slot_data(SLICE_ITEM_KEYS)
         # Seventeen original slice items, the eight region gates added by review
         # finding W4, and Blood Vial.
-        self.assertEqual(len(slot_data["runtime_items"]), 27)
+        self.assertEqual(len(slot_data["runtime_items"]), 26)
 
     def test_runtime_location_flags_are_specific_to_one_item_lot(self):
         """A short flag is valid; sharing one between lots is not."""
