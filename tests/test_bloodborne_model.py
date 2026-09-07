@@ -190,6 +190,28 @@ class BloodborneModelTests(unittest.TestCase):
         expected = {item.key for item in SHUFFLABLE_ITEMS}
         self.assertTrue(expected <= set(ITEM_BINDINGS))
 
+    def test_the_four_umbilical_cords_deliver_four_distinct_goods(self):
+        """The Moon Presence gate counts distinct cord SpEffects, not copies.
+
+        common.emevd event 9905 is initialised once per cord SpEffect
+        (4685/4686/4687/4688, the ``refId`` of goods 4320/4321/4322/4323); each
+        slot fires once and increments EventValue(9901, 4), and event 9909 sets
+        flag 9900 at three. Binding two AP cords to the same goods silently
+        caps that counter below three and makes the goal unreachable, which is
+        exactly what shipped and was reported live on 2026-09-07. Assert the
+        four goods ids, not merely that they differ, so a future edit cannot
+        satisfy this test with four wrong-but-distinct rows.
+        """
+        keys = [f"third_umbilical_cord_{n}" for n in (1, 2, 3, 4)]
+        normalized = [ITEM_BINDINGS[key].normalized_item_id for key in keys]
+        self.assertEqual([0x400010E0, 0x400010E1, 0x400010E2, 0x400010E3],
+                         normalized)
+        self.assertEqual(4, len(set(normalized)))
+        for key, goods in zip(keys, (4320, 4321, 4322, 4323)):
+            binding = ITEM_BINDINGS[key]
+            self.assertEqual(4, binding.item_category, key)
+            self.assertIn(str(goods), binding.evidence, key)
+
     def test_fixed_pickup_flags_cover_randomized_pickups(self):
         expected = {location.key for location in NETWORK_LOCATIONS}
         self.assertTrue(expected <= set(LOCATION_BINDINGS))

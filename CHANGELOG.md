@@ -6,6 +6,21 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Fixed: the Moon Presence ending was unreachable.** Bloodborne ships four
+  *different* Third Umbilical Cord goods, and the ending gate counts one
+  SpEffect per distinct cord (common.emevd event 9905 runs in four slots, one
+  per cord SpEffect 4685-4688; each slot fires once and bumps a counter, and
+  event 9909 raises flag 9900 at three). All four Archipelago cords were bound
+  to the same goods, so eating three of them only ever raised the counter to
+  one, flag 9900 stayed clear, and Gehrman's death gave the normal ending --
+  reported live on 2026-09-07 by a player who ate three cords and got no Moon
+  Presence. The four Archipelago cords now deliver the four distinct goods
+  (4320, 4321, 4322, 4323), so any three of them satisfy the gate. New seeds
+  are fixed automatically. **A seed already in progress is not**: cords you
+  have already received were all the same goods. Before you fight Gehrman, run
+  the client's `rescue moon-presence CONFIRM` recipe, which grants the missing
+  distinct cords for the ones you have already earned.
+
 - The bundled `tools/bb-ap-client.exe` moves to the current client
   (`4da24d3d`); releases through v0.1.0-beta.6 shipped the client pinned back
   at v0.1.0-beta.5. Bundled now: a held delivery plan re-derives its

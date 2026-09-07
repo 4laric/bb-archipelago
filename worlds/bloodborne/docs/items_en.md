@@ -42,10 +42,10 @@ interaction as owning its vanilla counterpart unless noted below.
 | Cosmic Eye Watcher Badge | Unlocks Choir weapon stock at the Bath Messengers when received. |
 | Gold Pendant | A randomized Vicar Amelia trophy. It can still be consumed to obtain its Blood Gem. |
 | Laurence's Skull | Enables the optional Laurence encounter in the Hunter's Nightmare. This inventory item is not the Grand Cathedral skull interaction used to learn the Forbidden Woods password. |
-| Third Umbilical Cord #1 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
-| Third Umbilical Cord #2 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
-| Third Umbilical Cord #3 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
-| Third Umbilical Cord #4 | One of four independently shuffled Third Umbilical Cords. Receive any three before defeating Gehrman to unlock the Moon Presence fight. |
+| Third Umbilical Cord #1 | One of four independently shuffled Third Umbilical Cords, delivered as the game's own cord goods 4320. The four are distinct items in Bloodborne and the ending gate counts distinct cords, so receive any three of the four before defeating Gehrman to unlock the Moon Presence fight. |
+| Third Umbilical Cord #2 | One of four independently shuffled Third Umbilical Cords, delivered as the game's own cord goods 4321. The four are distinct items in Bloodborne and the ending gate counts distinct cords, so receive any three of the four before defeating Gehrman to unlock the Moon Presence fight. |
+| Third Umbilical Cord #3 | One of four independently shuffled Third Umbilical Cords, delivered as the game's own cord goods 4322. The four are distinct items in Bloodborne and the ending gate counts distinct cords, so receive any three of the four before defeating Gehrman to unlock the Moon Presence fight. |
+| Third Umbilical Cord #4 | One of four independently shuffled Third Umbilical Cords, delivered as the game's own cord goods 4323. The four are distinct items in Bloodborne and the ending gate counts distinct cords, so receive any three of the four before defeating Gehrman to unlock the Moon Presence fight. |
 
 The two Workshop Tools are part of the public item catalog because the client
 must be able to deliver them, but current seeds precollect them for the player.

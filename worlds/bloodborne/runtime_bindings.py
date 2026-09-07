@@ -196,18 +196,42 @@ ITEM_BINDINGS: dict[str, RuntimeItemBinding] = {
     "gold_pendant": RuntimeItemBinding(
         0x40000FA1, 0xB0000FA1,
         "EquipParamGoods 4001 + Vicar Amelia lot 50000001; validated category-4 goods formula"),
+    # Bloodborne ships FOUR distinct Third Umbilical Cord goods, and the Moon
+    # Presence gate counts SpEffects, not copies. common.emevd event 9905 is
+    # initialised in four slots -- $InitializeEvent(0, 9905, 4685),
+    # (1, 9905, 4686), (2, 9905, 4687), (3, 9905, 4688) -- one per cord's
+    # EquipParamGoods refId, and each slot fires once and then
+    # IncrementEventValue(9901, 4, 4). Event 9909 sets flag 9900 when
+    # EventValue(9901, 4) >= 3, and m21 reads flag 9900 to route Gehrman's
+    # death to the Moon Presence fight. Binding every AP cord to one goods id
+    # therefore capped the counter at 1 and made the goal unreachable
+    # (live report 2026-09-07: three AP cords eaten, normal ending). The four
+    # AP items are bound to the four distinct goods so three of any four
+    # raise three distinct SpEffects.
     "third_umbilical_cord_1": RuntimeItemBinding(
-        0x400010E3, 0xB00010E3,
-        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
+        0x400010E0, 0xB00010E0,
+        "EquipParamGoods 4320 (3本目のへその緒A) refId SpEffect 4685 + workshop altar "
+        "lot 2110810; common.emevd $InitializeEvent(0, 9905, 4685) increments "
+        "EventValue(9901, 4) once and event 9909 sets flag 9900 at >= 3; "
+        "validated category-4 goods formula (research/joined/goods_runtime_ids.tsv)"),
     "third_umbilical_cord_2": RuntimeItemBinding(
-        0x400010E3, 0xB00010E3,
-        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
+        0x400010E1, 0xB00010E1,
+        "EquipParamGoods 4321 (3本目のへその緒B) refId SpEffect 4686 + Arianna's child "
+        "lot 28040; common.emevd $InitializeEvent(1, 9905, 4686) increments "
+        "EventValue(9901, 4) once and event 9909 sets flag 9900 at >= 3; "
+        "validated category-4 goods formula (research/joined/goods_runtime_ids.tsv)"),
     "third_umbilical_cord_3": RuntimeItemBinding(
-        0x400010E3, 0xB00010E3,
-        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
+        0x400010E2, 0xB00010E2,
+        "EquipParamGoods 4322 (3本目のへその緒A) refId SpEffect 4687 + Iosefka "
+        "lot 24075; common.emevd $InitializeEvent(2, 9905, 4687) increments "
+        "EventValue(9901, 4) once and event 9909 sets flag 9900 at >= 3; "
+        "validated category-4 goods formula (research/joined/goods_runtime_ids.tsv)"),
     "third_umbilical_cord_4": RuntimeItemBinding(
         0x400010E3, 0xB00010E3,
-        "EquipParamGoods 4323 + lot 55100000; validated category-4 goods formula"),
+        "EquipParamGoods 4323 (3本目のへその緒B) refId SpEffect 4688 + Wet Nurse "
+        "lot 55100000; common.emevd $InitializeEvent(3, 9905, 4688) increments "
+        "EventValue(9901, 4) once and event 9909 sets flag 9900 at >= 3; "
+        "validated category-4 goods formula (research/joined/goods_runtime_ids.tsv)"),
     "laurences_skull": RuntimeItemBinding(0x40000FAE, 0xB0000FAE, "FMG/param + validated goods formula"),
     # Category-0 equipment has no ItemLot-to-runtime formula. Each row here is
     # a live canary, not a derivation from fixed_locations.tsv.
@@ -1270,7 +1294,7 @@ SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
         ),
     ),
     "third_umbilical_cord_wet_nurse": ScriptAwardSuppression(
-        item_key="third_umbilical_cord_1",
+        item_key="third_umbilical_cord_4",
         item_category=4,
         item_id=4323,
         item_lot_ids=(55100000,),
@@ -1281,8 +1305,13 @@ SCRIPT_AWARD_SUPPRESSIONS: dict[str, ScriptAwardSuppression] = {
             "12601800 calls HandleBossDefeat(2600803), then AwardItemLot(55100000). "
             "That lot awards category 4 item 4323 in slot 01 and carries "
             "getItemFlagId 50000305 (ItemLotParam.csv; research/joined/lot_items.tsv). "
-            "All four logical Third Umbilical Cord items use goods 4323, so the "
-            "vanilla Wet Nurse copy is removed while the lot flag remains intact."
+            "Goods 4323 is the fourth of Bloodborne's four distinct Third "
+            "Umbilical Cord goods and is the one bound to AP item "
+            "third_umbilical_cord_4, so the vanilla Wet Nurse copy is removed "
+            "while the lot flag remains intact. The other three goods (4320 "
+            "workshop altar, 4321 Arianna's child, 4322 Iosefka) have their own "
+            "lots; only 4320's lot 2110810 is a catalogued fixed location and it "
+            "is suppressed through that location edit."
         ),
     ),
 }
