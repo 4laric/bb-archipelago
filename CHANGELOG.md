@@ -3,6 +3,15 @@
 
 ## Unreleased
 
+- The Yahar'gul Black set on the coachman's-seat corpse in Yahar'gul is now
+  an Archipelago check (`Yahar'gul - Yahar'gul Black Set (coachman's seat)`)
+  and its four vanilla lots are suppressed. It had been excluded by hand
+  because the corpse names two lot rows on one acquisition flag, but that is
+  the same shape as the seeded Hunter Set, whose sibling rows the suppression
+  planner already replaces; the excuse was stale and the corpse handed out
+  the vanilla set unsuppressed. Seeds gain one location (653 network
+  locations); the suppression plan digest moved. Existing seeds are
+  unaffected.
 - Added the `questlines_hold_progression` YAML option, off by default. Off,
   the four NPC/ESD questline badge awards (Eileen's Crow Hunter Badge,
   Djura's Powder Keg Hunter Badge, Alfred's Wheel Hunter Badge, and the

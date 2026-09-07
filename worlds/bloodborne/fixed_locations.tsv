@@ -341,6 +341,7 @@ fixed_yahargul_lot_2800500	Yahar'gul - Tiny Tonitrus (chest)	Yahar'gul	52800500	
 fixed_yahargul_lot_2800510	Yahar'gul - Choir Bell (chest)	Yahar'gul	52800510	2800510	4	2050	useful	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800520	Yahar'gul - Bone Ash Mask (chest)	Yahar'gul	52800520	2800520	1	40000	useful	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800530	Yahar'gul - Blood Gem #5 (chest)	Yahar'gul	52800530	2800530	8	228001	optional	treasure	m28_00_00_00;m28_00_00_01	True
+fixed_yahargul_lot_2800610	Yahar'gul - Yahar'gul Black Set (coachman's seat)	Yahar'gul	52800610	2800610	1	20000	useful	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800620	Yahar'gul - Madman's Knowledge #6	Yahar'gul	52800620	2800620	4	1500	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800630	Yahar'gul - Frenzied Coldblood (7) #3	Yahar'gul	52800630	2800630	4	1516	filler	treasure	m28_00_00_00;m28_00_00_01	True
 fixed_yahargul_lot_2800640	Yahar'gul - Thick Coldblood (6)	Yahar'gul	52800640	2800640	4	1515	filler	treasure	m28_00_00_00;m28_00_00_01	True

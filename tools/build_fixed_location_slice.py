@@ -140,10 +140,6 @@ EXCLUDED_FLAGS = {
         "two unrelated Yahar'gul corpses (lots 2800170 and 2800320) share one "
         "acquisition flag; they cannot be separate Archipelago checks"
     ),
-    52800610: (
-        "Yahar'gul armor-set lots 2800610 and 2800611 share one acquisition "
-        "flag and cannot be separate Archipelago checks"
-    ),
     52800290: (
         "already published by data.py as pickup_upper_cathedral_key with its "
         "own permanent network id and runtime binding"
@@ -267,6 +263,21 @@ def build_rows(repo: Path = REPO) -> list[dict[str, str]]:
             if flag in REPLACEMENT_FLAGS or flag in EXCLUDED_FLAGS:
                 continue
             matches = items_by_flag.get(flag, [])
+            if len(matches) > 1:
+                # One corpse can name several rows of one consecutive award
+                # group on a single acquisition flag (the Yahar'gul Black
+                # coachman's seat names 2800610 and 2800611 of 2800610-2800613).
+                # It is one check, keyed on the group head exactly like the
+                # Hunter Set (2410610), and the suppression planner replaces
+                # every related row on the flag. Anything else is a genuine
+                # ambiguity and still refuses.
+                lots_named = sorted(int(m["item_lot_id"]) for m in matches)
+                head = lots_named[0]
+                if any(lot - head >= len(lots_named) + 2 for lot in lots_named):
+                    raise ValueError(
+                        f"flag {flag}: catalog item rows {lots_named} are not one "
+                        "consecutive award group; add an EXCLUDED_FLAGS entry with a reason")
+                matches = [m for m in matches if int(m["item_lot_id"]) == head]
             if len(matches) != 1:
                 raise ValueError(
                     f"flag {flag}: expected one catalog item row, found {len(matches)}")
