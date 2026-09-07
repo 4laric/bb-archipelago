@@ -123,18 +123,21 @@ class HemwickGateOptionTests(unittest.TestCase):
         )
 
     def test_option_off_leaves_the_road_to_hemwick_unconditional(self):
+        from BaseClasses import CollectionState
+
         world = self._build_world(0)
         entrance = self._hemwick_entrance(world)
-        # An empty state satisfies it: nothing has been collected at all.
-        self.assertTrue(entrance.access_rule(world.multiworld.state))
+        # A fresh state satisfies it: nothing has been collected at all.
+        state = CollectionState(world.multiworld)
+        self.assertTrue(entrance.access_rule(state))
 
     def test_option_on_closes_the_road_until_hemwick_access_is_received(self):
-        from BaseClasses import ItemClassification
+        from BaseClasses import CollectionState, ItemClassification
         from worlds.bloodborne import BloodborneItem, ITEM_NAME_TO_ID
 
         world = self._build_world(1)
         entrance = self._hemwick_entrance(world)
-        state = world.multiworld.state
+        state = CollectionState(world.multiworld)
         self.assertFalse(entrance.access_rule(state))
         state.collect(BloodborneItem(
             "Hemwick Access", ItemClassification.progression,
