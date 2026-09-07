@@ -55,7 +55,11 @@ EXPECTED_SOURCE_SHA256 = "581e28302a231a10ad333806dfc90f41425db4f9f146799dca625f
 # by construction. Owed: one live session on a CI-built binder (#200).
 # Rebuilt 2026-09-06 from the pinned source and SFN 7cef52a7 when the Hunter's
 # Tool requirement edit joined the baseline overlay (#385).
-EXPECTED_OUTPUT_SHA256 = "bf6a3ff5980a7406da5c8f8ca06a0fa7aa9631b8558ca174cae240434f7201db"
+# Rebuilt 2026-09-07 (CI run on d0f001c, built twice, identical) after the
+# plan grew by the Yahar'gul Black set (#391), the Mensis pellet, doorkeeper
+# corpse and Gaol pair (#394), and the avatar Beast rune lots (#396). The
+# binder job only runs on main, so those PRs could not move this pin.
+EXPECTED_OUTPUT_SHA256 = "675c29f148286872c1443d9f45d8c363c4568ff8f500d1fab6aa0c6c4d2927ca"
 
 
 def read_bundle_source_sha(bundle: Path) -> str:
