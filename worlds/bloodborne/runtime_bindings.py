@@ -51,12 +51,17 @@ CATEGORY_0_EVIDENCE = frozenset({LIVE_CATEGORY_0_EVIDENCE, INFERRED_CATEGORY_0_E
 INFERRED_CATEGORY_1_EVIDENCE = "param_id_inferred"
 CATEGORY_1_EVIDENCE = frozenset({LIVE_CATEGORY_0_EVIDENCE, INFERRED_CATEGORY_1_EVIDENCE})
 
+# The widest quantity a single grant descriptor may carry. The client accepts
+# 1..=99; anything outside that is refused before play rather than truncated
+# at runtime.
+MAX_GRANT_QUANTITY = 99
+
 
 def validate_runtime_item_binding(key: str, binding: RuntimeItemBinding, quantity: int) -> None:
     """Reject runtime rows that do not carry the evidence their category needs."""
     if binding.normalized_item_id is None or binding.raw_descriptor is None:
         raise ValueError(f"{key}: runtime descriptor is not mapped")
-    if not 1 <= quantity <= 99:
+    if not 1 <= quantity <= MAX_GRANT_QUANTITY:
         raise ValueError(f"{key}: quantity {quantity} is outside the grant contract")
     if binding.item_category == 4:
         compatible = (
@@ -1293,4 +1298,58 @@ DELIVERY_FIXTURES: dict[str, RuntimeItemBinding] = {
     "blood_vial": RuntimeItemBinding(0x400003E8, 0xB00003E8, "inferred/observed"),
     "pebble": ITEM_BINDINGS["pebbles"],
     "augur_of_ebrietas": ITEM_BINDINGS["augur_of_ebrietas"],
+}
+
+
+# bb-archipelago#295. Held-stack caps for the reviewed consumables, read from
+# the repository's own bundled params/EquipParamGoods.csv `maxNum` column
+# (`python tools/bb_inputs.py --get params/EquipParamGoods.csv`, joined in
+# research/joined/goods_runtime_ids.tsv). These are game facts, so they live
+# here rather than in data.py; tests/test_consumable_quantity_bonus.py checks
+# every row back against the bundled param.
+#
+# A cap is the most a single grant may carry, so a bonused quantity is clamped
+# to it (and to MAX_GRANT_QUANTITY). Storage overflow is the game's business,
+# not the seed's: the seed never emits a descriptor the grant contract or the
+# goods row would refuse.
+CONSUMABLE_STACK_CAPS: dict[str, int] = {
+    "blood_vial": 20,
+    "quicksilver_bullets": 20,
+    "antidote": 10,
+    "sedatives": 10,
+    "beast_blood_pellet": 10,
+    "blue_elixir": 10,
+    "lead_elixir": 3,
+    "pebbles": 20,
+    "molotov_cocktails": 10,
+    "delayed_molotov_cocktails": 10,
+    "rope_molotov_cocktails": 10,
+    "delayed_rope_molotov_cocktails": 10,
+    "poison_knife": 20,
+    "throwing_knife": 20,
+    "oil_urn": 10,
+    "numbing_mist": 10,
+    "pungent_blood_cocktail": 10,
+    "shaman_bone_blade": 3,
+    "shining_coins": 99,
+    "fire_paper": 10,
+    "bolt_paper": 10,
+    "bone_marrow_ash": 10,
+    "bold_hunters_mark": 99,
+    "madmans_knowledge": 99,
+    "great_ones_wisdom": 99,
+    "coldblood_dew": 99,
+    "coldblood_dew_1": 99,
+    "coldblood_dew_2": 99,
+    "thick_coldblood": 99,
+    "thick_coldblood_4": 99,
+    "thick_coldblood_5": 99,
+    "frenzied_coldblood": 99,
+    "frenzied_coldblood_7": 99,
+    "frenzied_coldblood_9": 99,
+    "kin_coldblood": 99,
+    "kin_coldblood_10": 99,
+    "kin_coldblood_12": 99,
+    "great_one_coldblood": 99,
+    "old_great_one_coldblood": 99,
 }

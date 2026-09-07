@@ -142,6 +142,25 @@ Dream storage box.
 | Special blood vials | Blood of Arianna; Blood of Adella; Iosefka's Blood Vial; Blood of Adeline (DLC) |
 | Blood Echoes | Coldblood Dew (1); Coldblood Dew (2); Coldblood Dew (3); Thick Coldblood (4); Thick Coldblood (5); Thick Coldblood (6); Frenzied Coldblood (7); Frenzied Coldblood (8); Frenzied Coldblood (9); Kin Coldblood (10); Kin Coldblood (11); Kin Coldblood (12); Great One Coldblood; Old Great One Coldblood |
 
+### Consumable quantity bonus
+
+The `consumable_quantity_bonus` YAML option adds a flat `+X` (0 by default, up
+to 20) to every consumable listed in the table above when the seed hands it
+over. It is a bonus, not a multiplier: at `2`, a Blood Vial arrives as three
+and Quicksilver Bullets x3 arrive as five. Item names keep their authored base
+quantity, because a name is a permanent network identifier -- "Quicksilver
+Bullets x3" is still the item's name in a seed that delivers five.
+
+A bonused stack is capped by the good's own held-stack limit (and never
+exceeds 99), so Lead Elixir and Shaman Bone Blade stop at three however high
+the option is set. Nothing else is eligible: weapons, firearms, attire, keys,
+badges, Hunter Tools, runes, blood gems, Third Umbilical Cords, one-per-game
+goods such as Hunter's Mark and the named blood vials, and weapon-upgrade
+materials all keep their existing quantity. The single Blood Vial and
+Quicksilver Bullet the client grants after each check is a separate
+pickup-sustain award and is not affected by this option. The value is seed-owned
+placement metadata, so changing it requires generating a new seed.
+
 The catalog deliberately excludes progression keys, badges, reusable Hunter
 Tools, weapon-upgrade materials, blood gems and runes (all modeled in their own
 sections), chalices and ritual materials, gestures and messenger cosmetics,

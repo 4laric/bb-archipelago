@@ -836,3 +836,75 @@ ALTERNATE_GAOL_ENTRANCE_NAMES = frozenset({
     "Descent to Paarl", "Paarl's rear gate",
 })
 ALTERNATE_GAOL_LOCATION_KEYS = frozenset({"boss_darkbeast_paarl"})
+
+# bb-archipelago#295. An explicit, reviewed classification of which AP items
+# are spendable stackable consumables, used by the `consumable_quantity_bonus`
+# option. Eligibility is NEVER inferred from an item name or from category 4
+# alone: a key must be listed here to receive the flat bonus, so an unreviewed
+# or newly added item fails closed and keeps its authored quantity.
+#
+# The rule applied when reviewing each row: the good is spent in play, stacks
+# (`maxNum > 1` and `isOnlyOne = 0` in EquipParamGoods), and carries no
+# progression, capability, or equipment meaning.
+#
+# Deliberately NOT eligible:
+#   - weapons, firearms, and attire (categories 0 and 1 are quantity-one);
+#   - keys, workshop tools, badges, pendants, and other capability unlocks;
+#   - Third Umbilical Cords, Caryll runes, Blood Gems, and category-8 awards;
+#   - one-per-game goods (`isOnlyOne = 1`), including Hunter's Mark, the named
+#     NPC blood vials, and every hunter tool;
+#   - reinforcement materials (Blood Stone Shards/Chunks, Blood Rock). They are
+#     stackable and spendable, but they are upgrade economy rather than
+#     consumable sustain, so this option deliberately leaves them alone;
+#   - event items and synthetic tokens, which have no goods row at all.
+#
+# `blood_vial` is listed even though it is not a MODEL item: it is the seed's
+# filler item ("Blood Vial") and is delivered through its own runtime row.
+CONSUMABLE_ITEM_KEYS = frozenset({
+    # Sustain.
+    "blood_vial",
+    "quicksilver_bullets",
+    # Status cures and buff pellets.
+    "antidote",
+    "sedatives",
+    "beast_blood_pellet",
+    "blue_elixir",
+    "lead_elixir",
+    # Throwables.
+    "pebbles",
+    "molotov_cocktails",
+    "delayed_molotov_cocktails",
+    "rope_molotov_cocktails",
+    "delayed_rope_molotov_cocktails",
+    "poison_knife",
+    "throwing_knife",
+    "oil_urn",
+    "numbing_mist",
+    "pungent_blood_cocktail",
+    "shaman_bone_blade",
+    "shining_coins",
+    # Weapon coatings and utility.
+    "fire_paper",
+    "bolt_paper",
+    "bone_marrow_ash",
+    "bold_hunters_mark",
+    # Insight items: spent at the Insight shop and the altar, and no seeded
+    # rule reads Insight, so a larger stack changes economy and not logic.
+    "madmans_knowledge",
+    "great_ones_wisdom",
+    # Coldblood echo packets, every reviewed denomination.
+    "coldblood_dew",
+    "coldblood_dew_1",
+    "coldblood_dew_2",
+    "thick_coldblood",
+    "thick_coldblood_4",
+    "thick_coldblood_5",
+    "frenzied_coldblood",
+    "frenzied_coldblood_7",
+    "frenzied_coldblood_9",
+    "kin_coldblood",
+    "kin_coldblood_10",
+    "kin_coldblood_12",
+    "great_one_coldblood",
+    "old_great_one_coldblood",
+})
