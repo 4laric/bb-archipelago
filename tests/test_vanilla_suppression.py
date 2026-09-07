@@ -149,7 +149,7 @@ class RealCorpusTests(unittest.TestCase):
 
     def test_the_slice_pool_item_can_be_suppressed(self):
         item_edits = [edit for edit in self.plan.edits
-                      if not edit.item_key.startswith(("location:", "boss:"))]
+                      if not edit.item_key.startswith(("location:", "boss:", "event:"))]
         self.assertEqual(sorted(edit.item_key for edit in item_edits), [
             "cainhurst_badge",
             "crow_hunter_badge", "crow_hunter_badge", "crow_hunter_badge",
@@ -338,16 +338,31 @@ class RealCorpusTests(unittest.TestCase):
         from worlds.bloodborne import NETWORK_LOCATIONS
         from worlds.bloodborne.runtime_bindings import LOCATION_BINDINGS
 
+        from worlds.bloodborne.runtime_bindings import EVENT_AWARD_SUPPRESSIONS
+
         rows = [location for location in NETWORK_LOCATIONS
                 if LOCATION_BINDINGS[location.key].item_category == 8]
-        self.assertEqual(len(rows), 58)
+        self.assertEqual(len(rows), 59)
         planned_lots = {edit.item_lot_id for edit in self.plan.edits}
+        # The one category-8 check whose award lot is not its detection target
+        # (#388): both branches of the death event are suppressed by lot, and
+        # the check is the event's saved defeat flag instead.
+        by_witness = {}
+        for declared in EVENT_AWARD_SUPPRESSIONS.values():
+            by_witness.setdefault(declared.witness_flag, set()).add(str(declared.item_lot_id))
+        lot_only = 0
         for location in rows:
             with self.subTest(location=location.key):
                 self.assertTrue(location.vanilla_award_suppressed)
-                self.assertIn(
-                    str(LOCATION_BINDINGS[location.key].item_lot_id), planned_lots
-                )
+                binding = LOCATION_BINDINGS[location.key]
+                if binding.item_lot_id is None:
+                    lots = by_witness[binding.event_flag]
+                    self.assertEqual({"75002400", "75002405"}, lots)
+                    self.assertLessEqual(lots, planned_lots)
+                    lot_only += 1
+                    continue
+                self.assertIn(str(binding.item_lot_id), planned_lots)
+        self.assertEqual(1, lot_only)  # witness: the branch above ran
 
     def test_the_unseeded_ng_plus_lot_is_still_suppressed(self):
         """#220 unseeded lot 2410295 but deliberately kept its plan edit.

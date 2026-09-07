@@ -114,15 +114,25 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertIs(world.DLC_WEAPON_KEYS, DLC_WEAPON_KEYS)
 
     def test_category8_awards_cover_the_reviewed_fixed_catalog(self):
+        from worlds.bloodborne.category8_awards import _EVENT_AWARDS
+
         reviewed = {
             row.item_lot_id: row.item_id
             for row in FIXED_LOCATIONS if row.item_category == 8
         }
         self.assertEqual(58, len(reviewed))
+        # Rows appended outside the fixed-location catalog (#388) are named
+        # here, so "every catalog row has an award" stays an exact equality
+        # instead of being weakened to a subset check.
+        event_awards = {row.source_lot_id: row.gemgen_id for row in _EVENT_AWARDS}
+        self.assertEqual({75_002_400: 102_401}, event_awards)
         self.assertEqual(
-            reviewed,
+            reviewed | event_awards,
             {row.source_lot_id: row.gemgen_id for row in CATEGORY8_AWARDS},
         )
+        # The appended rows sit at the end: a catalog row's index, and so its
+        # token, award lot and ack flag, cannot move when one is added.
+        self.assertEqual(list(_EVENT_AWARDS), list(CATEGORY8_AWARDS)[-len(_EVENT_AWARDS):])
 
     def test_category8_award_lots_are_spaced_like_vanilla_lots(self):
         """Consecutive ItemLotParam ids award together; a stride of one hands
@@ -148,7 +158,7 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertEqual(0, len(intruders), intruders)
 
     def test_category8_runtime_ids_and_ack_flags_are_unique(self):
-        self.assertEqual(58, len(CATEGORY8_AWARDS))
+        self.assertEqual(59, len(CATEGORY8_AWARDS))
         for field in ("item_key", "display_name", "token_goods_id",
                       "item_lot_id", "ack_flag", "source_lot_id"):
             values = [getattr(row, field) for row in CATEGORY8_AWARDS]
@@ -201,11 +211,11 @@ class BloodborneModelTests(unittest.TestCase):
         # Review finding W5: 16 NG+ "replacement" lots left the seeded manifest
         # (668 -> 652). Each shared a corpse with a first-cycle row that is
         # still seeded, so no corpse lost its check.
-        self.assertEqual(656, len(NETWORK_LOCATIONS))
+        self.assertEqual(657, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
-            {"Central Yharnam": 47, "Cathedral Ward": 64,
+            {"Central Yharnam": 47, "Cathedral Ward": 65,
              "Old Yharnam": 56, "Grand Cathedral": 2,
              "Hemwick Charnel Lane": 33, "Castle Cainhurst": 29,
              "Forbidden Woods": 77, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
@@ -300,7 +310,7 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 22)
+        self.assertEqual(counts["Blood Vial"], 21)
         self.assertEqual(counts["Quicksilver Bullets x3"], 6)
         self.assertEqual(counts["Blood Stone Shards x2"], 31)
         self.assertEqual(counts["Twin Blood Stone Shards x2"], 31)
@@ -315,9 +325,9 @@ class BloodborneModelTests(unittest.TestCase):
         # remainder now falls to a different set of these names. The split is
         # restated per name rather than as one shared number.
         for name in ("Antidote x2", "Sedatives x2", "Poison Knife x3",
-                     "Blue Elixir", "Beast Blood Pellet"):
+                     "Blue Elixir", "Beast Blood Pellet", "Lead Elixir"):
             self.assertEqual(counts[name], 11, name)
-        for name in ("Lead Elixir", "Oil Urn x2", "Numbing Mist x2",
+        for name in ("Oil Urn x2", "Numbing Mist x2",
                      "Pungent Blood Cocktail x2", "Shaman Bone Blade",
                      "Madman's Knowledge"):
             self.assertEqual(counts[name], 10, name)
@@ -359,7 +369,7 @@ class BloodborneModelTests(unittest.TestCase):
         # goods variety does not reach it: this pool is the canary set, not a
         # play experience. 652 - 21 one-each = 631 slots over five weighted names.
         self.assertEqual(counts["Blood Vial"], 226)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 146)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 147)
         self.assertEqual(counts["Blood Stone Shards x2"], 113)
         self.assertEqual(counts["Pebbles x3"], 75)
         self.assertEqual(counts["Molotov Cocktails x2"], 75)

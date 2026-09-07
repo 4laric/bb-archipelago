@@ -164,7 +164,7 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertTrue(data["ok"], data["problems"])
         self.assertGreater(data["world"]["attire_catalog"], 68)
         self.assertGreater(data["world"]["runtime_items"], 200)
-        self.assertEqual(58, data["world"]["category8_awards"])
+        self.assertEqual(59, data["world"]["category8_awards"])
         self.assertIn("BBEventWriter.exe", data["tools"])
 
     def test_self_check_fails_when_a_bundled_tool_is_required_and_missing(self):

@@ -412,13 +412,13 @@ jobs:
                   # items, and the expanded filler mix are all explicit
                   # category-4 delivery contracts. Category-8 awards use one
                   # synthetic category-4 token each, so keep the 87 ordinary
-                  # contracts and the 58 award bridges independently visible.
+                  # contracts and the 59 award bridges independently visible.
                   goods = [row for row in payload["runtime_items"].values()
                            if row["item_category"] == 4]
                   # The three boss trophies and all ten ordinary Bath badges
                   # are randomized category-4 goods.
                   awards = payload["category8_awards"]
-                  assert len(awards) == 58, (
+                  assert len(awards) == 59, (
                       name, payload["player_name"], len(awards))
                   assert len(goods) == 87 + len(awards), (
                       name, payload["player_name"], len(goods))

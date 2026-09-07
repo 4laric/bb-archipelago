@@ -207,8 +207,12 @@ Research Hall - Blood Gem #1 (tower); Research Hall - Blood Gem #2 (tower);
 Research Hall - Blood Gem #3 (tower 6.5F chest); Research Hall - Blood Gem #4 (chapel chest);
 Fishing Hamlet - Blood Gem #1 (upper hamlet); Fishing Hamlet - Blood Gem #2 (upper hamlet);
 Fishing Hamlet - Blood Gem #3 (lower hamlet); Fishing Hamlet - Blood Gem #4 (fish tank middle);
-Fishing Hamlet - Blood Gem #5 (culvert lower); Fishing Hamlet - Blood Gem #6 (culvert lower); and
-Fishing Hamlet - Blood Gem #7 (fish tank lower).
+Fishing Hamlet - Blood Gem #5 (culvert lower); Fishing Hamlet - Blood Gem #6 (culvert lower);
+Fishing Hamlet - Blood Gem #7 (fish tank lower); and Cathedral Ward - Beast Rune.
+
+Cathedral Ward - Beast Rune is the one rune in this list that does not come
+from a placed pickup. Its vanilla copy is handed out by a Cathedral Ward
+enemy's death event, which now sends its check instead.
 
 All 127 obtainable attire pieces are useful items in the general pool. Each
 piece is independent: a seed can place a hat, chest piece, gloves, or trousers
@@ -338,7 +342,7 @@ category8_research_hall_lot_3501100 category8_research_hall_lot_3501500
 category8_fishing_hamlet_lot_3600140 category8_fishing_hamlet_lot_3600160
 category8_fishing_hamlet_lot_3600340 category8_fishing_hamlet_lot_3600430
 category8_fishing_hamlet_lot_3600560 category8_fishing_hamlet_lot_3600570
-category8_fishing_hamlet_lot_3600610
+category8_fishing_hamlet_lot_3600610 category8_cathedral_ward_avatar_beast_rune
 attire_charred_hunter_head attire_charred_hunter_body attire_charred_hunter_arms attire_charred_hunter_legs attire_yharnam_hunter_head attire_yharnam_hunter_body attire_yharnam_hunter_arms attire_yharnam_hunter_legs attire_knight_head attire_knight_body attire_knight_arms attire_knight_legs attire_cainhurst_head attire_cainhurst_body attire_cainhurst_arms attire_cainhurst_legs attire_black_church_head attire_black_church_body attire_black_church_arms attire_black_church_legs attire_choir_head attire_choir_body attire_choir_arms attire_choir_legs attire_gascoigne_head attire_gascoigne_body attire_gascoigne_arms attire_gascoigne_legs attire_tomb_prospector_head attire_tomb_prospector_body attire_tomb_prospector_arms attire_tomb_prospector_legs attire_executioner_head attire_executioner_body attire_executioner_arms attire_executioner_legs attire_crowfeather_head attire_crowfeather_body attire_crowfeather_arms attire_crowfeather_legs attire_madman_head attire_madman_body attire_madman_arms attire_madman_legs attire_doll_head attire_doll_body attire_doll_arms attire_doll_legs attire_foreign_head attire_foreign_body attire_foreign_arms attire_foreign_legs attire_old_hunter_head attire_old_hunter_body attire_old_hunter_arms attire_old_hunter_legs attire_maria_hunter_head attire_maria_hunter_body attire_maria_hunter_arms attire_maria_hunter_legs attire_constable_head attire_constable_body attire_constable_arms attire_constable_legs attire_yamamura_head attire_yamamura_body attire_yamamura_arms attire_yamamura_legs
 attire_yahargul_black_head attire_yahargul_black_body attire_yahargul_black_arms attire_yahargul_black_legs
 attire_graveguard_head attire_graveguard_body attire_graveguard_arms attire_graveguard_legs

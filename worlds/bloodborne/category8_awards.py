@@ -47,7 +47,7 @@ _REVIEWED_ROWS = tuple(
     if row.item_category == 8 and row.item_lot_id not in _PILOT_SOURCE_LOTS
 )
 
-CATEGORY8_AWARDS = _PILOTS + tuple(
+_GENERATED = tuple(
     Category8Award(
         f"category8_{row.key.removeprefix('fixed_')}",
         row.name,
@@ -59,3 +59,28 @@ CATEGORY8_AWARDS = _PILOTS + tuple(
     )
     for index, row in enumerate(_REVIEWED_ROWS, start=len(_PILOTS))
 )
+
+# Category-8 awards that are NOT fixed-location treasures, appended after the
+# generated block and never inside it (bb-archipelago#388).
+#
+# Every generated identity above is derived from a row's POSITION in
+# FIXED_LOCATIONS, so inserting a row anywhere in that catalog would renumber
+# every later token, award lot and acknowledgement flag -- and an ack flag is
+# the save-resident record that a delivery already happened. Rows here are
+# therefore written out in full, in a reserved band that the generated block
+# cannot grow into: tokens from 9_900, award lots from 98_100_000, and ack
+# flags from 12_400_980. `tests/test_category8_id_stability.py` pins both the
+# generated assignments and the gap between the two bands.
+_EVENT_AWARDS = (
+    Category8Award(
+        "category8_cathedral_ward_avatar_beast_rune",
+        "Cathedral Ward - Beast Rune",
+        9_900, 98_100_000, 102_401, 12_400_980, 75_002_400,
+    ),
+)
+
+CATEGORY8_AWARDS = _PILOTS + _GENERATED + _EVENT_AWARDS
+
+# The lowest reserved identity, so a test can assert the generated block still
+# has headroom instead of discovering a collision through a duplicate ack flag.
+EVENT_AWARD_BAND = (9_900, 98_100_000, 12_400_980)

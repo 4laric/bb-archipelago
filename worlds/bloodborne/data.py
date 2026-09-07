@@ -389,6 +389,16 @@ LOCATIONS = (
     Location("pickup_lunarium_key", location_name(53200810), "Byrgenwerth",
              vanilla_award_suppressed=True),
     Location("script_award_orphanage_key", location_name(52420900), "Upper Cathedral Ward"),
+    # bb-archipelago#388. A one-time enemy in the Cathedral Ward whose death
+    # event awards a Beast rune outright, with no acquisition flag on either
+    # award lot, so neither the fixed-treasure catalog nor the acquisition-flag
+    # suppression pass ever saw it. The check is the event's own saved defeat
+    # flag; the two award lots are suppressed through EVENT_AWARD_SUPPRESSIONS.
+    # Unlike hunter_yurie this is NOT option-gated: its vanilla award is
+    # replaced unconditionally, so gating the check would delete the rune from
+    # the seed rather than randomize it.
+    Location("enemy_cathedral_ward_avatar", location_name(12400861),
+             "Cathedral Ward", vanilla_award_suppressed=True),
     # Object-triggered EMEVD awards with no MSB treasure placement, so the
     # fixed-treasure catalog never saw them and nothing suppressed the vanilla
     # item (#389 and the Nightmare of Mensis pellet report).
@@ -676,6 +686,7 @@ SLICE_SCRIPTED_LOCATION_KEYS = frozenset({
     "pickup_lunarium_key",
     "pickup_mensis_beast_blood_pellet",
     "pickup_forbidden_woods_doorkeeper_corpse",
+    "enemy_cathedral_ward_avatar",
     "boss_the_one_reborn",
     "boss_micolash",
     "boss_mergos_wet_nurse",

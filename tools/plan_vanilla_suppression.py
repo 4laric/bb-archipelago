@@ -40,6 +40,13 @@ a contributor records the decision those refusals ask for, and
 it. The Oedon Tomb Key is the first: EMEVD hands it out on Gascoigne's death
 through `AwardItemLot(31000)`, and lot 31000 has no acquisition flag at all.
 
+`SCRIPT_AWARD_SUPPRESSIONS` owns every lot that awards an item, which is right
+for a key and absurd for a common good, and it cannot describe a branch.
+`EVENT_AWARD_SUPPRESSIONS` is the third reviewed table for exactly that gap:
+one EMEVD award lot named directly, every branch of the event declared so the
+untaken branch cannot leak instead, and the check supplied by some other
+durable witness the same event sets.
+
 It plans. It reads the committed research corpus, resolves each randomized item
 to the row that awards it, and refuses to emit a plan for anything ambiguous.
 It does not open a param file — writing needs the game dump and belongs in a
@@ -321,6 +328,57 @@ def plan_boss_awards(plan: Plan, research: Path, occupied_lots: set[str]) -> Non
         occupied_lots.add(lot)
 
 
+def plan_event_awards(plan: Plan, research: Path, occupied_lots: set[str]) -> None:
+    """Plan reviewed EMEVD award lots that no other pass can reach.
+
+    An event award whose lot has no acquisition flag is invisible to the
+    location pass, which resolves a check to its lot through that flag. An
+    event award of a common item is invisible to ``plan_script_awards``, whose
+    ownership rule is "every lot that awards this item" -- correct for a key,
+    absurd for Madman's Knowledge. ``EVENT_AWARD_SUPPRESSIONS`` covers the
+    remaining shape: the lot is named directly, every branch of the event is
+    declared, and each declared field is checked against the corpus so a param
+    change refuses here rather than leaking a vanilla item in a playtest.
+    """
+    sys.path.insert(0, str(REPO))
+    from worlds.bloodborne.runtime_bindings import EVENT_AWARD_SUPPRESSIONS
+
+    rows = read_tsv(research / "joined" / "lot_items.tsv")
+    facts = collect_lot_facts(research)
+    for key, declared in sorted(EVENT_AWARD_SUPPRESSIONS.items()):
+        lot = str(declared.item_lot_id)
+        item_key = f"event:{key}"
+        category, goods_id = str(declared.item_category), str(declared.item_id)
+        matches = [row for row in rows if row["item_lot_id"] == lot]
+        exact = [row for row in matches
+                 if row["item_category"] == category and row["item_id"] == goods_id]
+        if len(matches) != 1 or len(exact) != 1:
+            plan.refusals.append(Refusal(
+                item_key, category, goods_id, "event_award_declaration_mismatch",
+                f"lot {lot} expected exactly one declared award row; corpus has "
+                f"{len(matches)} row(s), {len(exact)} exact match(es)"))
+            continue
+        actual_flag = (exact[0].get("generic_acquisition_flag") or "").strip()
+        if actual_flag != str(declared.acquisition_flag):
+            plan.refusals.append(Refusal(
+                item_key, category, goods_id, "event_award_flag_mismatch",
+                f"lot {lot} carries getItemFlagId {actual_flag}; declaration says "
+                f"{declared.acquisition_flag}"))
+            continue
+        if lot in occupied_lots:
+            plan.refusals.append(Refusal(
+                item_key, category, goods_id, "lot_already_planned",
+                f"lot {lot} is already edited by another plan entry"))
+            continue
+        fact = facts[lot]
+        plan.edits.append(PlannedEdit(
+            item_key, category, goods_id, lot, fact.lot_name, actual_flag,
+            fact.placements,
+            f"reviewed event award; {declared.evidence}; the check is the event's own "
+            f"witness flag {declared.witness_flag} and the row's getItemFlagId is preserved"))
+        occupied_lots.add(lot)
+
+
 def load_item_goods() -> dict[str, tuple[str, str]]:
     """Map each randomized item key to its param category/id pair."""
     sys.path.insert(0, str(REPO))
@@ -347,6 +405,7 @@ def build_complete_plan(research: Path, placeholder: Placeholder) -> Plan:
     occupied_lots = {edit.item_lot_id for edit in plan.edits}
     plan_script_awards(plan, research, occupied_lots)
     plan_boss_awards(plan, research, occupied_lots)
+    plan_event_awards(plan, research, occupied_lots)
     facts = collect_lot_facts(research)
     rows = read_tsv(research / "joined" / "lot_items.tsv")
 

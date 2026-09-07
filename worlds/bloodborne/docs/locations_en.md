@@ -54,6 +54,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 
 - Cathedral Ward - Alfred's Wheel Hunter Badge award
 - Cathedral Ward - Antidote
+- Cathedral Ward - Beast Rune
 - Cathedral Ward - Black Church Hat (Foggy Alley alcove) — Foggy Alley alcove.
 - Cathedral Ward - Black Messenger Hat (second rooftop past Oedon Chapel Gate) — second rooftop past Oedon Chapel Gate.
 - Cathedral Ward - Blood Gem #1
