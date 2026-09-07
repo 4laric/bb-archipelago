@@ -626,15 +626,32 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             || itemLots.Rows.Any(row => row.ID == award.ItemLotId))
             throw new InvalidDataException($"category-8 award ids collide for {award.ItemKey}");
         PARAM.Row sourceLot = itemLots.Rows.Single(row => row.ID == award.SourceLotId);
-        // The input binder is the suppressed one, so the source lot's first
-        // slot is either the vanilla category-8 recipe (unsuppressed build)
-        // or the category-4 placeholder the suppression plan wrote over it.
-        // The world's catalog test ties source_lot_id to gemgen_id; the
-        // writer only refuses a lot that is neither shape.
-        int sourceCategory = Convert.ToInt32(RequireCell(sourceLot, "lotItemCategory01").Value);
-        int sourceItem = Convert.ToInt32(RequireCell(sourceLot, "lotItemId01").Value);
-        bool vanillaRecipe = sourceCategory == 8 && sourceItem == award.GemgenId;
-        bool suppressedRecipe = sourceCategory == 4;
+        // The input binder is the suppressed one, so the source lot witnesses
+        // the recipe either as the vanilla category-8 row (unsuppressed build)
+        // or as the category-4 placeholder the suppression plan wrote over it.
+        // Neither shape is pinned to slot 01: the plan finds the recipe by
+        // scanning slots 01-08 (see the `matchingSlots` search above) and
+        // rewrites whichever slot held it, and vanilla rows are free to leave
+        // earlier slots empty -- ItemLotParam 75002400, the Cathedral Ward
+        // Avatar's Beast rune award, has an empty slot 01 (category -1) and
+        // keeps its recipe in slot 02. So scan every slot for either shape and
+        // refuse only when no slot witnesses one. Matching category 4 in any
+        // slot rather than only the slot the plan edited is deliberate: this
+        // entry point has no plan and therefore no placeholder goods id, and
+        // the rule is no weaker than the shipped one, which accepted a bare
+        // category 4 in slot 01. The world's catalog test is what ties
+        // source_lot_id to gemgen_id; this is a witness check, not the pin.
+        bool vanillaRecipe = false;
+        bool suppressedRecipe = false;
+        for (int slot = 1; slot <= 8; slot++)
+        {
+            int sourceCategory = Convert.ToInt32(RequireCell(sourceLot, $"lotItemCategory{slot:00}").Value);
+            int sourceItem = Convert.ToInt32(RequireCell(sourceLot, $"lotItemId{slot:00}").Value);
+            if (sourceCategory == 8 && sourceItem == award.GemgenId)
+                vanillaRecipe = true;
+            else if (sourceCategory == 4)
+                suppressedRecipe = true;
+        }
         if (!vanillaRecipe && !suppressedRecipe)
             throw new InvalidDataException($"{award.ItemKey}: source lot does not witness GemGenParam {award.GemgenId}");
         var lot = new PARAM.Row(sourceLot) { ID = award.ItemLotId, Name = $"AP {award.ItemKey}" };
