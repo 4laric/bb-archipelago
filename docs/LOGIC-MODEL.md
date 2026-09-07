@@ -50,7 +50,7 @@ reward. The full post-Gascoigne model remains research scaffolding only.
 4. **Answered for the slice (2026-08-24).** Cathedral Ward's alternate routing
    is now modelled as what it is: two edges into the Grand Cathedral, one
    costing the Hunter Chief Emblem and one running through the Healing Church
-   Workshop behind the Blood-starved Beast. The seeded slice contains only the
+   Workshop behind the shuffled Sword Hunter Badge. The seeded slice contains only the
    first, so the emblem gates real checks. Whether later slices should keep
    both routes seeded — which makes the emblem optional again, exactly as in
    vanilla — is the open half.

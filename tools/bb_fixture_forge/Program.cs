@@ -132,12 +132,43 @@ goodsDefinition.Fields.Add(new PARAMDEF.Field(
     goodsDefinition, PARAMDEF.DefType.s32, "yesNoDialogMessageId"));
 goodsDefinition.Fields.Add(new PARAMDEF.Field(
     goodsDefinition, PARAMDEF.DefType.u8, "isOnlyOne"));
+foreach (string field in new[] { "properStrength", "properAgility", "properMagic", "properFaith" })
+    goodsDefinition.Fields.Add(new PARAMDEF.Field(goodsDefinition, PARAMDEF.DefType.u8, field));
 var goods = new PARAM { ParamType = "EquipParamGoods", ParamdefDataVersion = 1, Rows = [] };
 goods.ApplyParamdef(goodsDefinition);
 var vial = new PARAM.Row(1000, "Synthetic Blood Vial", goodsDefinition);
 vial["yesNoDialogMessageId"].Value = 0;
 vial["isOnlyOne"].Value = (byte)0;
 goods.Rows.Add(vial);
+var requirementControl = new PARAM.Row(999, "Non-tool requirement control", goodsDefinition);
+requirementControl["properStrength"].Value = (byte)1;
+requirementControl["properAgility"].Value = (byte)2;
+requirementControl["properMagic"].Value = (byte)3;
+requirementControl["properFaith"].Value = (byte)4;
+goods.Rows.Add(requirementControl);
+foreach ((int id, string name, byte strength, byte agility, byte magic, byte faith) in new[]
+{
+    (1310, "Empty Phantasm Shell", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2000, "Augur of Ebrietas", (byte)0, (byte)0, (byte)0, (byte)18),
+    (2010, "A Call Beyond", (byte)0, (byte)0, (byte)0, (byte)40),
+    (2020, "Beast Roar", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2050, "Choir Bell", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2060, "Old Hunter Bone", (byte)0, (byte)0, (byte)0, (byte)15),
+    (2070, "Tiny Tonitrus", (byte)0, (byte)0, (byte)0, (byte)25),
+    (2080, "Executioner's Gloves", (byte)0, (byte)0, (byte)0, (byte)20),
+    (2110, "Messenger's Gift", (byte)0, (byte)0, (byte)0, (byte)10),
+    (2120, "Blacksky Eye", (byte)0, (byte)0, (byte)0, (byte)16),
+    (2130, "Accursed Brew", (byte)0, (byte)0, (byte)0, (byte)30),
+    (2140, "Madaras Whistle", (byte)0, (byte)0, (byte)18, (byte)0),
+})
+{
+    var tool = new PARAM.Row(id, name, goodsDefinition);
+    tool["properStrength"].Value = strength;
+    tool["properAgility"].Value = agility;
+    tool["properMagic"].Value = magic;
+    tool["properFaith"].Value = faith;
+    goods.Rows.Add(tool);
+}
 game.Files.Add(new BinderFile(
     Binder.FileFlags.Flag1, 1, @"N:\synthetic\param\EquipParamGoods.param", goods.Write()));
 string gameparamPath = Path.Combine(outputRoot, "param", "gameparam.parambnd.dcx");
@@ -235,9 +266,25 @@ emblem.Instructions[14] = new EMEVD.Instruction(0, 0, Convert.FromHexString("ff0
 emblem.Instructions[15] = new EMEVD.Instruction(0, 0, Convert.FromHexString("0001ff00"));
 cathedral.Events.Add(emblem);
 
+var workshopDoor = new EMEVD.Event(12405710, EMEVD.Event.RestBehaviorType.Restart);
+foreach (var (bank, id, hex) in new[] {
+    (1003, 101, "00000000ed240000"),
+    (2005, 7, "b2a3240001000000"),
+    (2010, 5, "b2a3240003000000"),
+    (1000, 4, "00000000"),
+    (1014, 0, ""),
+    (2000, 2, "00000000"),
+    (3, 24, "00000000581b0000b2a32400"),
+    (2007, 1, "3bbe980001000100b2a324000000a040"),
+    (1000, 4, "01000000"),
+})
+    workshopDoor.Instructions.Add(new EMEVD.Instruction(bank, id, Convert.FromHexString(hex)));
+cathedral.Events.Add(workshopDoor);
+
 var cathedralShapes = new EMEVD.Event(2);
 foreach (var (bank, id, length) in new[] {
-    (3, 0, 8), (3, 6, 4), (0, 0, 4), (2003, 2, 8), (1000, 4, 4),
+    (3, 0, 8), (3, 4, 12), (3, 6, 4), (0, 0, 4), (2003, 2, 8), (1000, 4, 4),
+    (1000, 101, 4),
 })
     cathedralShapes.Instructions.Add(new EMEVD.Instruction(bank, id, new byte[length]));
 cathedral.Events.Add(cathedralShapes);

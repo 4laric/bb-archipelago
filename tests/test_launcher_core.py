@@ -319,7 +319,7 @@ class LauncherCoreTests(unittest.TestCase):
     def test_cache_identity_tracks_overlay_build_format(self):
         material = identity("seed").cache_material()
         self.assertEqual(material["overlay_build_format"], SEED_MANIFEST_FORMAT)
-        self.assertEqual(SEED_MANIFEST_FORMAT, "bb-launcher-seed-build-v3")
+        self.assertEqual(SEED_MANIFEST_FORMAT, "bb-launcher-seed-build-v4")
         old_material = {**material, "overlay_build_format": "bb-launcher-seed-build-v2"}
         old_key = hashlib.sha256(core.canonical_json(old_material)).hexdigest()
         self.assertNotEqual(identity("seed").cache_key, old_key)
@@ -380,6 +380,8 @@ class LauncherCoreTests(unittest.TestCase):
                          owner["cathedral_event"]["laurence_witness_flag"])
         self.assertEqual(12401803,
                          owner["cathedral_event"]["suppressed_password_flag"])
+        self.assertEqual(2401202, owner["cathedral_event"]["workshop_door_object"])
+        self.assertEqual(4114, owner["cathedral_event"]["workshop_badge_goods"])
         active = install.mods.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
         self.assertEqual(cathedral.read_bytes(), active.read_bytes())
 
@@ -405,6 +407,10 @@ class LauncherCoreTests(unittest.TestCase):
                 "laurence_witness_flag", 12401897)),
             ("wrong password flag", lambda value: value["cathedral_event"].__setitem__(
                 "suppressed_password_flag", 12401804)),
+            ("wrong Workshop door", lambda value: value["cathedral_event"].__setitem__(
+                "workshop_door_object", 2401203)),
+            ("wrong Workshop badge", lambda value: value["cathedral_event"].__setitem__(
+                "workshop_badge_goods", 4115)),
         )
         for message, mutate in mutations:
             with self.subTest(message=message):
@@ -425,7 +431,9 @@ class LauncherCoreTests(unittest.TestCase):
         manifest["cathedral_event"] = {
             "path": CATHEDRAL_EVENT_PATH,
             "sha256": "0" * 64,
-            "events": [12400760, 12401803],
+            "events": [12400760, 12401803, 12405710],
+            "workshop_door_object": 2401202,
+            "workshop_badge_goods": 4114,
             "laurence_witness_flag": 12401898,
             "suppressed_password_flag": 12401803,
         }

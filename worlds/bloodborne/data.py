@@ -38,7 +38,7 @@ ITEMS = (
     # Boss trophies are ordinary category-4 goods once received. Their vanilla
     # award lots are suppressed so the shop unlocks and Pendant conversion
     # follow the AP item instead of the boss kill.
-    Item("sword_hunter_badge", "Sword Hunter Badge", U),
+    Item("sword_hunter_badge", "Sword Hunter Badge", P),
     Item("old_hunter_badge", "Old Hunter Badge", U),
     Item("saw_hunter_badge", "Saw Hunter Badge", U),
     Item("crow_hunter_badge", "Crow Hunter Badge", U),
@@ -289,11 +289,11 @@ ENTRANCES = (
     Entrance("Paarl's rear gate", "Graveyard of the Darkbeast", "Old Yharnam",
              Rule.all("event_darkbeast_paarl_defeated")),
     Entrance("Healing Church Workshop door", "Cathedral Ward", "Healing Church Workshop",
-             Rule.all("event_blood_starved_beast_defeated")),
+             Rule.all("sword_hunter_badge")),
     # The audited edge is "Hunter Chief Emblem OR the Healing Church Workshop
     # route". Collapsing that into one two-clause rule on a single entrance is
     # what made the emblem vacuous: the workshop route's own prerequisite
-    # (Blood-starved Beast) is free from Cathedral Ward, so the emblem clause
+    # (Sword Hunter Badge) is separately represented, so the emblem clause
     # could never be the required one. The route is two hops in the game and is
     # now two hops here — the emblem opens the gate directly, the workshop
     # reaches the same plaza the long way round.
@@ -471,7 +471,7 @@ DLC_ATTIRE_ITEM_KEYS = frozenset(
 #    sphere 0 rather than a corridor the seed starts on the far side of;
 #  - Old Yharnam, reached freely from the Cathedral Ward lamp, ending at the
 #    Blood-starved Beast;
-#  - the Healing Church Workshop transit route, opened by defeating the Beast;
+#  - the Healing Church Workshop transit route, opened by Sword Hunter Badge;
 #  - the Grand Cathedral, reached either through that route or directly with
 #    the Hunter Chief Emblem, ending at Vicar Amelia.
 SLICE_REGIONS = (
@@ -758,6 +758,20 @@ SLICE_LOCATION_KEYS = frozenset({
 # the vanilla treasure/boss manifest. Each row must have a unique, durable
 # witness; do not add acquisition flags or inferred entity-death state here.
 ONE_TIME_ENEMY_LOCATION_KEYS = frozenset({"hunter_yurie"})
+
+# Questline locations are NPC/ESD dialogue awards -- the goods acquisition
+# flag fires when a quest NPC hands over their badge at the end of a
+# questline (Eileen, Djura, Alfred, the Vileblood oath), rather than a
+# placed ItemLotParam treasure, a boss defeat, a shop purchase, or an enemy
+# drop. They are the only locations declared with `key` under "award_" and
+# a `docs/LOCATION-NAMING.md` name ending in " award"; both are asserted in
+# tests/test_bloodborne_questlines.py so a future award location is picked
+# up automatically or the naming/keying convention breaks loudly instead of
+# silently under-covering the option below.
+QUESTLINE_LOCATION_KEYS = frozenset(
+    location.key for location in LOCATIONS
+    if location.key.startswith("award_") and location.name.endswith(" award")
+)
 
 # The Old Hunters is one optional branch of the seeded graph. These explicit
 # sets let generation remove the complete branch without changing permanent

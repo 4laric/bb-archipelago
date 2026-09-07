@@ -287,6 +287,30 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(payload["shop_gate_permutation"],
                          manifest["seed_weapon_edits"]["shop_gate_permutation"])
 
+    def test_insight_only_seed_forwards_plan_and_separates_cache(self):
+        plan = [{"row_id": 200040, "equip_id": 130000, "qwc_id": 5910}]
+        payload = json.loads(self.request.read_text(encoding="utf-8"))
+        payload["insight_armor_suppression"] = plan
+        self.request.write_text(json.dumps(payload), encoding="utf-8")
+        toolchain = FakeToolchain()
+        workflow = LauncherWorkflow(self.repo, toolchain=toolchain,
+            process_launcher=lambda _: [Process(10), Process(11)])
+        def launch():
+            return workflow.randomize_and_launch(self.settings(enemy_inputs=False),
+                EnemizerOptions(enabled=False), process_is_running=lambda: False)
+        first = launch()
+        self.assertEqual(len(toolchain.starting_calls), 1)
+        self.assertEqual(toolchain.starting_calls[0]['request_snapshot']['insight_armor_suppression'], plan)
+        config = json.loads(first.client_config.read_text(encoding="utf-8"))
+        manifest = json.loads(Path(config['suppression_manifest']).read_text(encoding="utf-8"))
+        self.assertEqual(manifest['seed_weapon_edits']['insight_armor_suppression'], plan)
+        second = launch()
+        self.assertTrue(second.reused)
+        self.assertEqual(len(toolchain.starting_calls), 1)
+        payload.pop('insight_armor_suppression')
+        self.request.write_text(json.dumps(payload), encoding="utf-8")
+        self.assertNotEqual(launch().cache_key, first.cache_key)
+
     def test_category8_only_seed_republishes_the_manifest_for_its_binder(self):
         """Review W2: an award-table-only seed still composes a binder.
 

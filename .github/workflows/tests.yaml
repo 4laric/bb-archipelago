@@ -570,6 +570,7 @@ jobs:
         run: |
           dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- cathedral --source work/integration/fixtures/event/m24_00_00_00.emevd.dcx --output work/integration/m24_00_00_00.emevd.dcx --manifest work/integration/cathedral-manifest.json
           dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- dump work/integration/m24_00_00_00.emevd.dcx 12401803 > work/integration/laurence-dump.txt
+          dotnet run --project tools/bb_event_writer -c Release --no-build -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -- dump work/integration/m24_00_00_00.emevd.dcx 12405710 > work/integration/workshop-dump.txt
           python - <<'PY'
           from pathlib import Path
           import re
@@ -578,6 +579,9 @@ jobs:
           instructions = lambda text: [
               line.rstrip() for line in re.findall(r"^  \[\d+\].*$", text, re.M)
           ]
+          assert instructions(actual) == instructions(expected), (actual, expected)
+          expected = Path("tests/fixtures/workshop_badge_emitted_dump.txt").read_text()
+          actual = Path("work/integration/workshop-dump.txt").read_text()
           assert instructions(actual) == instructions(expected), (actual, expected)
           PY
           python -m unittest tests.test_laurence_skull_event_runtime
@@ -653,3 +657,22 @@ jobs:
             echo "or the bundle is stale. Both are real; neither is cosmetic."
             exit 1
           fi
+
+  insight-armor-writer:
+    name: Insight armor production writer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: |
+          git clone https://github.com/4laric/SoulsFormatsNEXT.git _soulsformats
+          git -C _soulsformats checkout 7cef52a7366678448d85930eeb8e94093b179d24
+          dotnet build tools/bb_suppression_writer -c Release -p:SoulsFormatsNextRoot="$PWD/_soulsformats"
+      - run: python -m unittest tests.test_insight_armor tests.integration_insight_writer
+        env:
+          BB_INSIGHT_WRITER: tools/bb_suppression_writer/bin/Release/net9.0/BBSuppressionWriter.dll

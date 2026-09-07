@@ -1,6 +1,33 @@
 # Changelog
 
+
 ## Unreleased
+
+- The Yahar'gul Black set on the coachman's-seat corpse in Yahar'gul is now
+  an Archipelago check (`Yahar'gul - Yahar'gul Black Set (coachman's seat)`)
+  and its four vanilla lots are suppressed. It had been excluded by hand
+  because the corpse names two lot rows on one acquisition flag, but that is
+  the same shape as the seeded Hunter Set, whose sibling rows the suppression
+  planner already replaces; the excuse was stale and the corpse handed out
+  the vanilla set unsuppressed. Seeds gain one location (653 network
+  locations); the suppression plan digest moved. Existing seeds are
+  unaffected.
+- Added the `questlines_hold_progression` YAML option, off by default. Off,
+  the four NPC/ESD questline badge awards (Eileen's Crow Hunter Badge,
+  Djura's Powder Keg Hunter Badge, Alfred's Wheel Hunter Badge, and the
+  Vileblood oath's Cainhurst Badge) may only receive useful or filler items,
+  so a questline that is missed, failed, or ends with the NPC dead can never
+  gate another player's progression. Useful and filler placement, and the
+  awards' vanilla suppression, are unchanged. Turning it on restores today's
+  unrestricted placement.
+- The Healing Church Workshop door now opens when the player receives the
+  shuffled Sword Hunter Badge instead of when Blood-starved Beast dies. The
+  larger Amelia-route policy is still awaiting a decision in draft form (#376).
+- Suppress boss Insight armor shop rows only for attire included in the AP pool; preserve NPC armor and other stock (#377).
+- Added a guided operator probe (`probe-popup`) and a client `/mark` console
+  command for issue #330: whether a received AP item can produce Bloodborne's
+  own non-blocking pickup popup by going through the event-award lane. See
+  docs/NATIVE-ITEM-POPUPS.md. No delivery behavior changed.
 
 - The Windows launcher no longer fails with a `NoneType.casefold` error when
   localized `tasklist` output cannot be decoded. Process checks now preserve

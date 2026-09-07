@@ -11,7 +11,7 @@ flowchart LR
     Menu --> Dream[Hunter's Dream] --> CY[Central Yharnam]
     CY -->|Oedon Tomb Key + Father Gascoigne defeated| CW[Cathedral Ward]
     CW --> OY[Old Yharnam]
-    OY -->|Blood-starved Beast defeated| HCW[Healing Church Workshop]
+    CW -->|Sword Hunter Badge| HCW[Healing Church Workshop]
     CW -->|Hunter Chief Emblem| GC[Grand Cathedral]
     HCW --> GC
     GC --> Hemwick[Hemwick Charnel Lane]
@@ -45,7 +45,7 @@ flowchart LR
 | Edge or gate | Result | Evidence |
 |---|---|---|
 | Gascoigne -> Cathedral Ward | Matches | Two requirements, not one. The door out of the Tomb of Oedon (object 2411304) is the generic key door: `m24_01_00_00.emevd.dcx.js:168` initializes event 12410110 slot 5 with `objParameterId 2410080`, so the item requirement is an ObjActParam property and no `PlayerHasItem` condition exists in EMEVD. The door also sits behind Gascoigne's arena. Vanilla hid the coupling by awarding the key on his death (`:1394`, `AwardItemLot(31000)`); with the key shuffled the edge costs both. |
-| Cathedral plaza | **Corrected 2026-08-24** | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. The disjunction is real, but modelling it as one two-clause rule made the emblem clause dead: Old Yharnam is free from Cathedral Ward and Blood-starved Beast is free inside it, so the other clause was always satisfiable. It is now two edges — `Cathedral Ward --emblem--> Grand Cathedral` and `Healing Church Workshop --> Grand Cathedral` — which is what the game does and what lets a bounded slice make the emblem matter. |
+| Cathedral plaza | **Changed for #376** | Hunter Chief Emblem or the Healing Church Workshop route reaches the plaza. The physical Workshop door is object `2401202`, controlled by event `12405710`; AP changes its opening condition from BSB mirror flag `9453` to possession of Sword Hunter Badge goods `4114`. The two routes remain separate while the direct Emblem-route policy is decided. |
 | Amelia -> Forbidden Woods | **Strengthened 2026-08-30** | Inspecting Laurence's Skull after Amelia remains an AP check, but no longer grants access directly. The independently shuffled "Fear the Old Blood" item teaches the vanilla password when received and gates the woods door. |
 | Forbidden Woods -> Byrgenwerth | Matches | Defeating Shadows of Yharnam opens the path. |
 | Byrgenwerth -> Moonside Lake | **Corrected 2026-08-30** | The Lunarium Key opens the second-floor terrace door leading past Willem to Moonside Lake and Rom. Vanilla requires it; only a geometry exploit bypasses the door. The key is now shuffled and its attic-desk award is an AP check. |

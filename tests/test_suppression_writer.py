@@ -12,6 +12,9 @@ it, and that is only worth knowing about the actual file.
 from __future__ import annotations
 
 import json
+import csv
+import io
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -101,6 +104,36 @@ class RoundTripTests(unittest.TestCase):
         self.assertIn('Enumerable.Range(12101000, 10)', source)
         self.assertIn('representative row {rowId} no longer matches its stock witness', source)
         self.assertIn('ordinary Bath gate groups are incomplete', source)
+
+    @unittest.skipUnless(BUNDLE.exists(), "needs the committed inputs bundle")
+    def test_hunter_tool_requirement_inventory_matches_the_bundled_param(self):
+        expected = {
+            1310: (0, 0, 0, 15), 2000: (0, 0, 0, 18),
+            2010: (0, 0, 0, 40), 2020: (0, 0, 0, 15),
+            2050: (0, 0, 0, 15), 2060: (0, 0, 0, 15),
+            2070: (0, 0, 0, 25), 2080: (0, 0, 0, 20),
+            2110: (0, 0, 0, 10), 2120: (0, 0, 0, 16),
+            2130: (0, 0, 0, 30), 2140: (0, 0, 18, 0),
+        }
+        text = subprocess.check_output(
+            [sys.executable, "tools/bb_inputs.py", "--get", "params/EquipParamGoods.csv"],
+            cwd=REPO, text=True, encoding="utf-8",
+        )
+        rows = {int(row["ID"]): row for row in csv.DictReader(io.StringIO(text))}
+        fields = ("properStrength", "properAgility", "properMagic", "properFaith")
+        actual = {goods_id: tuple(int(rows[goods_id][field]) for field in fields)
+                  for goods_id in expected}
+        self.assertEqual(actual, expected)
+        self.assertEqual(tuple(int(rows[999][field]) for field in fields), (1, 2, 3, 4))
+
+    def test_native_writer_zeroes_only_all_four_requirements_for_the_full_inventory(self):
+        source = NATIVE_WRITER.read_text(encoding="utf-8")
+        for goods_id in (1310, 2000, 2010, 2020, 2050, 2060,
+                         2070, 2080, 2110, 2120, 2130, 2140):
+            self.assertIn(f"new({goods_id},", source)
+        self.assertIn('"properStrength", "properAgility", "properMagic", "properFaith"', source)
+        self.assertIn("before.RequireEqualExcept(after, requirementFields", source)
+        self.assertIn("unplanned EquipParamGoods row", source)
 
     def test_native_writer_applies_only_a_bijective_ordinary_bath_permutation(self):
         source = NATIVE_WRITER.read_text(encoding="utf-8")

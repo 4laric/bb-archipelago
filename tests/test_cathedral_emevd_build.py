@@ -12,12 +12,15 @@ from tools.build_cathedral_emevd import (
 )
 from tools.patch_emblem_chokepoint import NEW as EMBLEM_NEW, patch as patch_emblem
 from tools.patch_laurence_skull import patch as patch_laurence
+from tools.patch_sword_badge_workshop import NEW as WORKSHOP_NEW, patch as patch_workshop
 
 
 class CathedralEmevdBuildTests(unittest.TestCase):
     def test_owned_transforms_compose_from_one_pinned_source(self):
         source = bundled_source()
-        patched = patch_laurence(patch_emblem(source), verify_source=False)
+        patched = patch_workshop(
+            patch_laurence(patch_emblem(source), verify_source=False), verify_source=False
+        )
         text = patched.decode("utf-8")
         self.assertIn(EMBLEM_NEW, event(text, "12400760"))
         skull = event(text, "12401803")
@@ -28,6 +31,7 @@ class CathedralEmevdBuildTests(unittest.TestCase):
         self.assertEqual(
             unrelated_events(source.decode("utf-8-sig")), unrelated_events(text)
         )
+        self.assertIn(WORKSHOP_NEW, event(text, "12405710"))
 
     def test_compiler_and_overlay_contract_are_pinned(self):
         self.assertEqual(DARKSCRIPT_VERSION, "3.6.3")
