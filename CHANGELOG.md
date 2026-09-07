@@ -6,6 +6,18 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- The bundled `tools/bb-ap-client.exe` moves to the current client
+  (`4da24d3d`); releases through v0.1.0-beta.6 shipped the client pinned back
+  at v0.1.0-beta.5. Bundled now: a held delivery plan re-derives its
+  auto-upgrade level, so a weapon handed over while it is already in your
+  inventory arrives at the right +level (clients#655); a local-death detector
+  for DeathLink, with the send lane still gated off behind the
+  `death_link_send` option (clients#654); the retired storage safeguard
+  (clients#644); the shield clamp and legacy plan parking (clients#640,
+  clients#641); and the v0.6.0.4 window (clients#657). `RUNTIME_BUILD` is
+  unchanged at `bb-0.1.0-r10`, so an in-progress seed keeps working -- players
+  mid-run can swap just the client binary.
+
 - A Cathedral Ward enemy no longer hands you a vanilla Beast rune. Its death
   event (m24_00_00_00 event 12400860, entity 2400450) awarded Caryll rune
   recipe 102401 outright, or Madman's Knowledge if you already had the rune.
