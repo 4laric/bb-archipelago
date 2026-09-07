@@ -29,11 +29,15 @@ class HemwickGatePatchTests(unittest.TestCase):
             ).fetchall()
         finally:
             db.close()
-        collisions = [
-            path for path, blob in rows
-            if str(ACCESS_FLAG).encode() in zlib.decompress(blob)
-        ]
-        self.assertEqual([], collisions)
+        sources = {path: zlib.decompress(blob) for path, blob in rows}
+        # Witness: the corpus holds both boundary maps and the search does
+        # find a flag that is known to be present, so an empty collision list
+        # means the access flag is genuinely unowned rather than unsearched.
+        self.assertLessEqual({f"event/{name}.emevd.dcx.js" for name in BOUNDARY}, sources.keys())
+        self.assertIn(b"12401803", sources["event/m24_00_00_00.emevd.dcx.js"])
+        collisions = [path for path, source in sources.items()
+                      if str(ACCESS_FLAG).encode() in source]
+        self.assertFalse(collisions, collisions)
 
     def test_patch_replaces_only_the_owned_boundary_initializer(self):
         for map_name in sorted(BOUNDARY):
