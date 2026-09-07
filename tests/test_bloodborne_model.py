@@ -1054,6 +1054,29 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         self.assertEqual(0, option.default)
         self.assertEqual("DeathLink (Receive Only)", option.display_name)
 
+    def test_death_link_send_is_experimental_and_defaults_off(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["death_link_send"]
+        self.assertEqual(0, option.default)
+        self.assertIn("Experimental", option.display_name)
+        # The docstring is the only warning a player gets in the YAML
+        # template, so it has to say plainly that this is not validated.
+        doc = option.__doc__ or ""
+        self.assertIn("Not validated live", doc)
+
+    def test_death_link_first_death_grace_defaults_off(self):
+        if not AP_AVAILABLE:
+            self.skipTest("requires Archipelago options")
+        from worlds.bloodborne import BloodborneOptions
+
+        option = BloodborneOptions.type_hints["death_link_first_death_grace"]
+        self.assertEqual(0, option.default)
+        self.assertEqual("DeathLink First Death Grace", option.display_name)
+        self.assertIn("DeathLink Send is on", option.__doc__ or "")
+
     def test_death_link_amnesty_is_independent_and_defaults_off(self):
         if not AP_AVAILABLE:
             self.skipTest("requires Archipelago options")
