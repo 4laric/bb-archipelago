@@ -3,6 +3,14 @@
 
 ## Unreleased
 
+- Added the `questlines_hold_progression` YAML option, off by default. Off,
+  the four NPC/ESD questline badge awards (Eileen's Crow Hunter Badge,
+  Djura's Powder Keg Hunter Badge, Alfred's Wheel Hunter Badge, and the
+  Vileblood oath's Cainhurst Badge) may only receive useful or filler items,
+  so a questline that is missed, failed, or ends with the NPC dead can never
+  gate another player's progression. Useful and filler placement, and the
+  awards' vanilla suppression, are unchanged. Turning it on restores today's
+  unrestricted placement.
 - The Healing Church Workshop door now opens when the player receives the
   shuffled Sword Hunter Badge instead of when Blood-starved Beast dies. The
   larger Amelia-route policy is still awaiting a decision in draft form (#376).

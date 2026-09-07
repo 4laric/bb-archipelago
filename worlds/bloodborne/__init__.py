@@ -25,6 +25,7 @@ from .data import (
     UNCANNY_WEAPONS,
     MODEL,
     ONE_TIME_ENEMY_LOCATION_KEYS,
+    QUESTLINE_LOCATION_KEYS,
 )
 from .model import ItemKind, Rule
 from .resource_data import read_resource_text
@@ -716,6 +717,21 @@ else:
         display_name = "One-Time Hunter and Unique-Enemy Checks"
         default = 0
 
+    class QuestlinesHoldProgression(Toggle):
+        """Allow NPC questline badge awards to hold progression items.
+
+        Off by default: the Crow Hunter Badge, Powder Keg Hunter Badge, Wheel
+        Hunter Badge, and Vileblood Cainhurst Badge awards (Eileen, Djura,
+        Alfred, and the Annalise oath) may still receive useful and filler
+        items, just never a progression-classified one. This keeps a
+        questline's completion from gating access to another player's
+        progression behind an NPC quest that can be missed, failed, or
+        killed off. Enable it to restore unrestricted placement on these
+        checks.
+        """
+        display_name = "Questlines Can Hold Progression Items"
+        default = 0
+
     @dataclass
     class BloodborneOptions(PerGameCommonOptions):
         auto_upgrade: AutoUpgrade
@@ -734,12 +750,17 @@ else:
         include_dlc_gear: IncludeDLCGear
         alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
         one_time_enemy_checks: OneTimeEnemyChecks
+        questlines_hold_progression: QuestlinesHoldProgression
 
     class BloodborneItem(APItem):
         game = GAME
 
     class BloodborneLocation(APLocation):
         game = GAME
+
+    def _questline_item_rule(item) -> bool:
+        """Accept useful/filler items on a questline award, reject progression."""
+        return not item.advancement
 
     def _rule(rule: Rule, player: int):
         clauses = tuple(tuple(key for key in clause) for clause in rule.any_of)
@@ -785,9 +806,15 @@ else:
                 if name in active_regions
             }
             self.multiworld.regions.extend(regions.values())
+            questlines_hold_progression = self._questlines_hold_progression_enabled()
             for data in self._active_locations():
                 location = BloodborneLocation(self.player, data.name, LOCATION_ID_BY_KEY[data.key], regions[data.region])
                 location.access_rule = _rule(data.rule, self.player)
+                if not questlines_hold_progression and data.key in QUESTLINE_LOCATION_KEYS:
+                    # Off by default: a questline badge award can be missed,
+                    # failed, or the NPC killed off, so progression must not
+                    # rely on reaching one. Useful/filler stay unrestricted.
+                    location.item_rule = _questline_item_rule
                 regions[data.region].locations.append(location)
                 if data.locked_item:
                     # Boss defeated-events live on their own address-less
@@ -844,6 +871,12 @@ else:
         def _one_time_enemy_checks_enabled(self) -> bool:
             # Fail closed for old generated option objects and small test doubles.
             return bool(getattr(self.options, "one_time_enemy_checks", False))
+
+        def _questlines_hold_progression_enabled(self) -> bool:
+            # Fail closed (restrict) for old generated option objects and
+            # small test doubles: default behaviour keeps progression off
+            # questline awards.
+            return bool(getattr(self.options, "questlines_hold_progression", False))
 
         def _pool_item_keys(self) -> frozenset[str]:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
@@ -933,6 +966,7 @@ else:
                 "alternate_hypogean_gaol_routes": bool(
                     self._alternate_gaol_enabled()),
                 "one_time_enemy_checks": self._one_time_enemy_checks_enabled(),
+                "questlines_hold_progression": self._questlines_hold_progression_enabled(),
                 "weapon_requirement_families": requirement_families,
                 "enemizer_seed": seed,
                 "toast_placeholders": self._toast_placeholder_plan(),
