@@ -2,11 +2,21 @@
   "randomize_starting_weapons": false,
   "remove_weapon_requirements": false,
   "randomize_shops": true,
-  "shop_gate_permutation": 10,
+  "shop_gate_permutation": {
+    "12101000": 12101009,
+    "12101001": 12101008,
+    "12101002": 12101007,
+    "12101003": 12101006,
+    "12101004": 12101005,
+    "12101005": 12101004,
+    "12101006": 12101003,
+    "12101007": 12101002,
+    "12101008": 12101001,
+    "12101009": 12101000
+  },
   "category8_awards": [
     {
       "item_key": "caryll_rune_communion_1",
-      "display_name": "Communion (+1 Blood Vial)",
       "token_goods_id": 9800,
       "item_lot_id": 98000000,
       "gemgen_id": 102901,
@@ -15,7 +25,6 @@
     },
     {
       "item_key": "blood_gem_old_yharnam_123000",
-      "display_name": "Old Yharnam Blood Gem (123000)",
       "token_goods_id": 9801,
       "item_lot_id": 98000010,
       "gemgen_id": 123000,
@@ -24,7 +33,6 @@
     },
     {
       "item_key": "category8_central_yharnam_lot_2410640",
-      "display_name": "Iosefka's Clinic - Communion +3 Blood Vials (chest)",
       "token_goods_id": 9802,
       "item_lot_id": 98000020,
       "gemgen_id": 102903,
@@ -33,7 +41,6 @@
     },
     {
       "item_key": "category8_cathedral_ward_lot_2400300",
-      "display_name": "Cathedral Ward - Blood Gem #1",
       "token_goods_id": 9803,
       "item_lot_id": 98000030,
       "gemgen_id": 124002,
@@ -42,7 +49,6 @@
     },
     {
       "item_key": "category8_cathedral_ward_lot_2400430",
-      "display_name": "Cathedral Ward - Blood Gem #2 (Grand Cathedral approach)",
       "token_goods_id": 9804,
       "item_lot_id": 98000040,
       "gemgen_id": 124003,
@@ -51,7 +57,6 @@
     },
     {
       "item_key": "category8_cathedral_ward_lot_2400760",
-      "display_name": "Cathedral Ward - Blood Gem #3 (chest)",
       "token_goods_id": 9805,
       "item_lot_id": 98000050,
       "gemgen_id": 124001,
@@ -60,7 +65,6 @@
     },
     {
       "item_key": "category8_cathedral_ward_lot_2400650",
-      "display_name": "Cathedral Ward - Blood Gem #5 (Grand Cathedral approach chest)",
       "token_goods_id": 9806,
       "item_lot_id": 98000060,
       "gemgen_id": 124004,
@@ -69,7 +73,6 @@
     },
     {
       "item_key": "category8_cathedral_ward_lot_2400690",
-      "display_name": "Cathedral Ward - Formless Oedon +4 Quicksilver Bullets #6 (chest)",
       "token_goods_id": 9807,
       "item_lot_id": 98000070,
       "gemgen_id": 103104,
@@ -78,7 +81,6 @@
     },
     {
       "item_key": "category8_cathedral_ward_lot_2400740",
-      "display_name": "Cathedral Ward - Blood Gem #7",
       "token_goods_id": 9808,
       "item_lot_id": 98000080,
       "gemgen_id": 124000,
@@ -87,7 +89,6 @@
     },
     {
       "item_key": "category8_old_yharnam_lot_2300300",
-      "display_name": "Old Yharnam - Blood Gem (chest)",
       "token_goods_id": 9809,
       "item_lot_id": 98000090,
       "gemgen_id": 123001,
@@ -96,7 +97,6 @@
     },
     {
       "item_key": "category8_hemwick_lot_2200190",
-      "display_name": "Hemwick Charnel Lane - Blood Gem #1",
       "token_goods_id": 9810,
       "item_lot_id": 98000100,
       "gemgen_id": 122000,
@@ -105,7 +105,6 @@
     },
     {
       "item_key": "category8_hemwick_lot_2200280",
-      "display_name": "Hemwick Charnel Lane - Blood Gem #2 (chest)",
       "token_goods_id": 9811,
       "item_lot_id": 98000110,
       "gemgen_id": 122001,
@@ -114,7 +113,6 @@
     },
     {
       "item_key": "category8_hemwick_lot_2200380",
-      "display_name": "Hemwick Charnel Lane - Lake +3% #3",
       "token_goods_id": 9812,
       "item_lot_id": 98000120,
       "gemgen_id": 101701,
@@ -123,7 +121,6 @@
     },
     {
       "item_key": "category8_cainhurst_lot_2501040",
-      "display_name": "Castle Cainhurst - Blood Gem #1 (chest)",
       "token_goods_id": 9813,
       "item_lot_id": 98000130,
       "gemgen_id": 125000,
@@ -132,7 +129,6 @@
     },
     {
       "item_key": "category8_cainhurst_lot_2501060",
-      "display_name": "Castle Cainhurst - Blood Gem #2",
       "token_goods_id": 9814,
       "item_lot_id": 98000140,
       "gemgen_id": 125001,
@@ -141,7 +137,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700180",
-      "display_name": "Forbidden Woods - Clear Deep Sea +100 Slow Poison RES #1",
       "token_goods_id": 9815,
       "item_lot_id": 98000150,
       "gemgen_id": 102001,
@@ -150,7 +145,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700200",
-      "display_name": "Forbidden Woods - Dissipating Lake +5% Bolt Reduction #2",
       "token_goods_id": 9816,
       "item_lot_id": 98000160,
       "gemgen_id": 101601,
@@ -159,7 +153,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700300",
-      "display_name": "Forbidden Woods - Blood Gem #3",
       "token_goods_id": 9817,
       "item_lot_id": 98000170,
       "gemgen_id": 127001,
@@ -168,7 +161,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700380",
-      "display_name": "Forbidden Woods - Anti-Clockwise Metamorphosis +10% Stamina #4",
       "token_goods_id": 9818,
       "item_lot_id": 98000180,
       "gemgen_id": 100401,
@@ -177,7 +169,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700540",
-      "display_name": "Forbidden Woods - Deep Sea +200 Frenzy RES #5",
       "token_goods_id": 9819,
       "item_lot_id": 98000190,
       "gemgen_id": 102202,
@@ -186,7 +177,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700570",
-      "display_name": "Forbidden Woods - Clockwise Metamorphosis +5% HP #6",
       "token_goods_id": 9820,
       "item_lot_id": 98000200,
       "gemgen_id": 100301,
@@ -195,7 +185,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700650",
-      "display_name": "Forbidden Woods - Blood Gem #7",
       "token_goods_id": 9821,
       "item_lot_id": 98000210,
       "gemgen_id": 127003,
@@ -204,7 +193,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700660",
-      "display_name": "Forbidden Woods - Blood Gem #8",
       "token_goods_id": 9822,
       "item_lot_id": 98000220,
       "gemgen_id": 127004,
@@ -213,7 +201,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700690",
-      "display_name": "Forbidden Woods - Blood Gem #9",
       "token_goods_id": 9823,
       "item_lot_id": 98000230,
       "gemgen_id": 127002,
@@ -222,7 +209,6 @@
     },
     {
       "item_key": "category8_forbidden_woods_lot_2700700",
-      "display_name": "Forbidden Woods - Blood Gem #10",
       "token_goods_id": 9824,
       "item_lot_id": 98000240,
       "gemgen_id": 127000,
@@ -231,7 +217,6 @@
     },
     {
       "item_key": "category8_yahargul_lot_2800020",
-      "display_name": "Yahar'gul - Blood Gem #1",
       "token_goods_id": 9825,
       "item_lot_id": 98000250,
       "gemgen_id": 128000,
@@ -240,7 +225,6 @@
     },
     {
       "item_key": "category8_yahargul_lot_2800050",
-      "display_name": "Yahar'gul - Heir +40% Visceral Blood Echoes #2",
       "token_goods_id": 9826,
       "item_lot_id": 98000260,
       "gemgen_id": 100802,
@@ -249,7 +233,6 @@
     },
     {
       "item_key": "category8_yahargul_lot_2800140",
-      "display_name": "Yahar'gul - Arcane Lake +5% Arcane Reduction #3",
       "token_goods_id": 9827,
       "item_lot_id": 98000270,
       "gemgen_id": 101301,
@@ -258,7 +241,6 @@
     },
     {
       "item_key": "category8_yahargul_lot_2800350",
-      "display_name": "Yahar'gul - Moon +10% Blood Echoes #4",
       "token_goods_id": 9828,
       "item_lot_id": 98000280,
       "gemgen_id": 100001,
@@ -267,7 +249,6 @@
     },
     {
       "item_key": "category8_yahargul_lot_2800530",
-      "display_name": "Yahar'gul - Blood Gem #5 (chest)",
       "token_goods_id": 9829,
       "item_lot_id": 98000290,
       "gemgen_id": 228001,
@@ -276,7 +257,6 @@
     },
     {
       "item_key": "category8_yahargul_lot_2800710",
-      "display_name": "Yahar'gul - Blood Gem #6",
       "token_goods_id": 9830,
       "item_lot_id": 98000300,
       "gemgen_id": 132000,
@@ -285,7 +265,6 @@
     },
     {
       "item_key": "category8_lecture_building_lot_3200010",
-      "display_name": "Lecture Building 2F - Arcane Lake +7% Arcane Reduction (corpse)",
       "token_goods_id": 9831,
       "item_lot_id": 98000310,
       "gemgen_id": 101302,
@@ -294,7 +273,6 @@
     },
     {
       "item_key": "category8_lecture_building_lot_3200640",
-      "display_name": "Lecture Building 2F - Communion +2 Blood Vials (chest)",
       "token_goods_id": 9832,
       "item_lot_id": 98000320,
       "gemgen_id": 102902,
@@ -303,7 +281,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600150",
-      "display_name": "Nightmare of Mensis - Blood Gem #1",
       "token_goods_id": 9833,
       "item_lot_id": 98000330,
       "gemgen_id": 126002,
@@ -312,7 +289,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600200",
-      "display_name": "Nightmare of Mensis - Blood Gem #2",
       "token_goods_id": 9834,
       "item_lot_id": 98000340,
       "gemgen_id": 126003,
@@ -321,7 +297,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600220",
-      "display_name": "Nightmare of Mensis - Blood Gem #3",
       "token_goods_id": 9835,
       "item_lot_id": 98000350,
       "gemgen_id": 126000,
@@ -330,7 +305,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600300",
-      "display_name": "Nightmare of Mensis - Eye +50 Discovery #4",
       "token_goods_id": 9836,
       "item_lot_id": 98000360,
       "gemgen_id": 100201,
@@ -339,7 +313,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600390",
-      "display_name": "Nightmare of Mensis - Moon +20% Blood Echoes #5",
       "token_goods_id": 9837,
       "item_lot_id": 98000370,
       "gemgen_id": 100002,
@@ -348,7 +321,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600480",
-      "display_name": "Nightmare of Mensis - Blood Gem #6",
       "token_goods_id": 9838,
       "item_lot_id": 98000380,
       "gemgen_id": 126004,
@@ -357,7 +329,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600510",
-      "display_name": "Nightmare of Mensis - Blood Gem #7",
       "token_goods_id": 9839,
       "item_lot_id": 98000390,
       "gemgen_id": 126001,
@@ -366,7 +337,6 @@
     },
     {
       "item_key": "category8_nightmare_mensis_lot_2600530",
-      "display_name": "Nightmare of Mensis - Blood Gem #8",
       "token_goods_id": 9840,
       "item_lot_id": 98000400,
       "gemgen_id": 126000,
@@ -375,7 +345,6 @@
     },
     {
       "item_key": "category8_nightmare_frontier_lot_3300010",
-      "display_name": "Nightmare Frontier - Fading Lake +5% Fire Reduction #1",
       "token_goods_id": 9841,
       "item_lot_id": 98000410,
       "gemgen_id": 101401,
@@ -384,7 +353,6 @@
     },
     {
       "item_key": "category8_nightmare_frontier_lot_3300050",
-      "display_name": "Nightmare Frontier - Great Deep Sea +100 All RES #2",
       "token_goods_id": 9842,
       "item_lot_id": 98000420,
       "gemgen_id": 102302,
@@ -393,7 +361,6 @@
     },
     {
       "item_key": "category8_nightmare_frontier_lot_3300220",
-      "display_name": "Nightmare Frontier - Clear Deep Sea +200 Slow Poison RES #3",
       "token_goods_id": 9843,
       "item_lot_id": 98000430,
       "gemgen_id": 102002,
@@ -402,7 +369,6 @@
     },
     {
       "item_key": "category8_nightmare_frontier_lot_3300320",
-      "display_name": "Nightmare Frontier - Clockwise Metamorphosis +10% HP #4",
       "token_goods_id": 9844,
       "item_lot_id": 98000440,
       "gemgen_id": 100302,
@@ -411,7 +377,6 @@
     },
     {
       "item_key": "category8_nightmare_frontier_lot_3300380",
-      "display_name": "Nightmare Frontier - Stunning Deep Sea +200 Rapid Poison RES #5",
       "token_goods_id": 9845,
       "item_lot_id": 98000450,
       "gemgen_id": 102102,
@@ -420,7 +385,6 @@
     },
     {
       "item_key": "category8_upper_cathedral_lot_2420120",
-      "display_name": "Upper Cathedral Ward - Great Lake +4%",
       "token_goods_id": 9846,
       "item_lot_id": 98000460,
       "gemgen_id": 101802,
@@ -429,7 +393,6 @@
     },
     {
       "item_key": "category8_research_hall_lot_3500160",
-      "display_name": "Research Hall - Blood Gem #1 (tower)",
       "token_goods_id": 9847,
       "item_lot_id": 98000470,
       "gemgen_id": 135000,
@@ -438,7 +401,6 @@
     },
     {
       "item_key": "category8_research_hall_lot_3500190",
-      "display_name": "Research Hall - Blood Gem #2 (tower)",
       "token_goods_id": 9848,
       "item_lot_id": 98000480,
       "gemgen_id": 135004,
@@ -447,7 +409,6 @@
     },
     {
       "item_key": "category8_research_hall_lot_3501100",
-      "display_name": "Research Hall - Blood Gem #3 (tower 6.5F chest)",
       "token_goods_id": 9849,
       "item_lot_id": 98000490,
       "gemgen_id": 134000,
@@ -456,7 +417,6 @@
     },
     {
       "item_key": "category8_research_hall_lot_3501500",
-      "display_name": "Research Hall - Blood Gem #4 (chapel chest)",
       "token_goods_id": 9850,
       "item_lot_id": 98000500,
       "gemgen_id": 135005,
@@ -465,7 +425,6 @@
     },
     {
       "item_key": "category8_fishing_hamlet_lot_3600140",
-      "display_name": "Fishing Hamlet - Blood Gem #1 (upper hamlet)",
       "token_goods_id": 9851,
       "item_lot_id": 98000510,
       "gemgen_id": 134001,
@@ -474,7 +433,6 @@
     },
     {
       "item_key": "category8_fishing_hamlet_lot_3600160",
-      "display_name": "Fishing Hamlet - Blood Gem #2 (upper hamlet)",
       "token_goods_id": 9852,
       "item_lot_id": 98000520,
       "gemgen_id": 136002,
@@ -483,7 +441,6 @@
     },
     {
       "item_key": "category8_fishing_hamlet_lot_3600340",
-      "display_name": "Fishing Hamlet - Blood Gem #3 (lower hamlet)",
       "token_goods_id": 9853,
       "item_lot_id": 98000530,
       "gemgen_id": 136001,
@@ -492,7 +449,6 @@
     },
     {
       "item_key": "category8_fishing_hamlet_lot_3600430",
-      "display_name": "Fishing Hamlet - Blood Gem #4 (fish tank middle)",
       "token_goods_id": 9854,
       "item_lot_id": 98000540,
       "gemgen_id": 136004,
@@ -501,7 +457,6 @@
     },
     {
       "item_key": "category8_fishing_hamlet_lot_3600560",
-      "display_name": "Fishing Hamlet - Blood Gem #5 (culvert lower)",
       "token_goods_id": 9855,
       "item_lot_id": 98000550,
       "gemgen_id": 136003,
@@ -510,7 +465,6 @@
     },
     {
       "item_key": "category8_fishing_hamlet_lot_3600570",
-      "display_name": "Fishing Hamlet - Blood Gem #6 (culvert lower)",
       "token_goods_id": 9856,
       "item_lot_id": 98000560,
       "gemgen_id": 136006,
@@ -519,7 +473,6 @@
     },
     {
       "item_key": "category8_fishing_hamlet_lot_3600610",
-      "display_name": "Fishing Hamlet - Blood Gem #7 (fish tank lower)",
       "token_goods_id": 9857,
       "item_lot_id": 98000570,
       "gemgen_id": 136005,
@@ -528,7 +481,6 @@
     },
     {
       "item_key": "category8_cathedral_ward_avatar_beast_rune",
-      "display_name": "Cathedral Ward - Beast Rune",
       "token_goods_id": 9900,
       "item_lot_id": 98100000,
       "gemgen_id": 102401,

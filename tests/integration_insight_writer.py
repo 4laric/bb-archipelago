@@ -1,4 +1,3 @@
-import dataclasses
 import json
 import os
 import sqlite3
@@ -8,6 +7,7 @@ import unittest
 import zlib
 from pathlib import Path
 from tests.test_insight_armor import ROOT, ATTIRE_CATALOG, build_insight_armor_suppression
+from tools.build_seed_request_fixture import award_row
 from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
 
 class InsightWriterTests(unittest.TestCase):
@@ -31,7 +31,7 @@ class InsightWriterTests(unittest.TestCase):
             # The award table rides along so this real-binder run exercises the
             # category-8 path against vanilla ItemLotParam rows, including the
             # Beast rune award whose source lot keeps its recipe in slot 02.
-            awards = [dataclasses.asdict(a) for a in CATEGORY8_AWARDS]
+            awards = [award_row(a) for a in CATEGORY8_AWARDS]
             self.assertTrue(any(
                 a['item_key'] == 'category8_cathedral_ward_avatar_beast_rune'
                 for a in awards))

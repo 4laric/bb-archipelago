@@ -13,21 +13,37 @@ Usage:
     python tools/build_seed_request_fixture.py          # rewrite the fixture
     python tools/build_seed_request_fixture.py --check   # verify, do not write
 
-The `category8_awards` rows use the writer's own field names, which are the
-`Category8Award` dataclass fields, so the fixture stays readable next to
-`worlds/bloodborne/category8_awards.py`.
+The `category8_awards` rows carry exactly the six fields the launcher puts in a
+real `.bbseed.json` request (`_validate_category8_bridge_rows` in
+`bb_launcher/workflow.py` rejects any other key), so the fixture is the shape
+the writer actually sees in the field, not a repo-only variant.
 """
 
 from __future__ import annotations
 
 import argparse
-import dataclasses
 import json
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 FIXTURE = REPO / "tests" / "fixtures" / "shop-seed-request.json"
+
+# The reviewed ten-gate Bath permutation this fixture has always exercised: the
+# ordinary Bath stock gates 12101000..12101009 reversed onto each other.
+SHOP_GATE_PERMUTATION = {
+    str(12_101_000 + index): 12_101_009 - index for index in range(10)
+}
+
+# The fields a real request carries per award, in the launcher's order.
+AWARD_FIELDS = (
+    "item_key", "token_goods_id", "item_lot_id", "gemgen_id", "ack_flag",
+    "source_lot_id",
+)
+
+
+def award_row(award) -> dict:
+    return {field: getattr(award, field) for field in AWARD_FIELDS}
 
 
 def build_request() -> dict:
@@ -38,10 +54,8 @@ def build_request() -> dict:
         "randomize_starting_weapons": False,
         "remove_weapon_requirements": False,
         "randomize_shops": True,
-        "shop_gate_permutation": 10,
-        "category8_awards": [
-            dataclasses.asdict(award) for award in CATEGORY8_AWARDS
-        ],
+        "shop_gate_permutation": SHOP_GATE_PERMUTATION,
+        "category8_awards": [award_row(award) for award in CATEGORY8_AWARDS],
     }
 
 

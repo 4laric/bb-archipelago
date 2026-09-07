@@ -11,7 +11,6 @@ is regenerated with `python tools/build_seed_request_fixture.py`.
 
 from __future__ import annotations
 
-import dataclasses
 import json
 import sys
 import unittest
@@ -21,7 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools.build_seed_request_fixture import FIXTURE, render, build_request  # noqa: E402
+from tools.build_seed_request_fixture import (  # noqa: E402
+    FIXTURE, SHOP_GATE_PERMUTATION, award_row, build_request, render)
 from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS  # noqa: E402
 
 
@@ -38,8 +38,7 @@ class SeedRequestFixtureTests(unittest.TestCase):
             "category8_cathedral_ward_avatar_beast_rune",
             {row["item_key"] for row in rows},
         )
-        self.assertEqual(
-            rows, [dataclasses.asdict(award) for award in CATEGORY8_AWARDS])
+        self.assertEqual(rows, [award_row(award) for award in CATEGORY8_AWARDS])
 
     def test_fixture_is_byte_for_byte_what_the_builder_writes(self):
         self.assertEqual(
@@ -48,7 +47,8 @@ class SeedRequestFixtureTests(unittest.TestCase):
     def test_fixture_still_requests_the_bath_shop_permutation(self):
         request = json.loads(FIXTURE.read_text(encoding="utf-8"))
         self.assertTrue(request["randomize_shops"])
-        self.assertEqual(request["shop_gate_permutation"], 10)
+        self.assertEqual(request["shop_gate_permutation"], SHOP_GATE_PERMUTATION)
+        self.assertEqual(len(SHOP_GATE_PERMUTATION), 10)
 
 
 if __name__ == "__main__":
