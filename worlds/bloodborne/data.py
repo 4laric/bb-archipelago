@@ -50,9 +50,11 @@ ITEMS = (
     Item("spark_hunter_badge", "Spark Hunter Badge", U),
     Item("cosmic_eye_watcher_badge", "Cosmic Eye Watcher Badge", U),
     Item("gold_pendant", "Gold Pendant", U),
-    # Three independently placed progression pieces, all delivered as the
-    # game's real Third Umbilical Cord (goods 4323). Distinct AP names make
-    # the 3/3 Go Mode requirement visible to trackers and generation logic.
+    # Four independently placed progression pieces, each delivered as one of
+    # Bloodborne's four distinct Third Umbilical Cord goods (4320/4321/4322/
+    # 4323). The Moon Presence gate counts distinct cord SpEffects, not copies,
+    # so the four AP items must not share a goods id. Distinct AP names make
+    # the 3/4 Go Mode requirement visible to trackers and generation logic.
     Item("third_umbilical_cord_1", "Third Umbilical Cord #1", P),
     Item("third_umbilical_cord_2", "Third Umbilical Cord #2", P),
     Item("third_umbilical_cord_3", "Third Umbilical Cord #3", P),
