@@ -381,6 +381,8 @@ class LauncherCoreTests(unittest.TestCase):
                          owner["cathedral_event"]["laurence_witness_flag"])
         self.assertEqual(12401803,
                          owner["cathedral_event"]["suppressed_password_flag"])
+        self.assertEqual(2401202, owner["cathedral_event"]["workshop_door_object"])
+        self.assertEqual(4114, owner["cathedral_event"]["workshop_badge_goods"])
         active = install.mods.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
         self.assertEqual(cathedral.read_bytes(), active.read_bytes())
 
@@ -406,6 +408,10 @@ class LauncherCoreTests(unittest.TestCase):
                 "laurence_witness_flag", 12401897)),
             ("wrong password flag", lambda value: value["cathedral_event"].__setitem__(
                 "suppressed_password_flag", 12401804)),
+            ("wrong Workshop door", lambda value: value["cathedral_event"].__setitem__(
+                "workshop_door_object", 2401203)),
+            ("wrong Workshop badge", lambda value: value["cathedral_event"].__setitem__(
+                "workshop_badge_goods", 4115)),
         )
         for message, mutate in mutations:
             with self.subTest(message=message):
@@ -429,7 +435,7 @@ class LauncherCoreTests(unittest.TestCase):
             cathedral_event=cathedral, hemwick_event=hemwick,
         )
         self.assertEqual(
-            [12400760, 12401803, 12409990],
+            [12400760, 12401803, 12405710, 12409990],
             build.manifest["cathedral_event"]["events"],
         )
         self.assertEqual(
@@ -454,7 +460,9 @@ class LauncherCoreTests(unittest.TestCase):
         manifest["cathedral_event"] = {
             "path": CATHEDRAL_EVENT_PATH,
             "sha256": "0" * 64,
-            "events": [12400760, 12401803],
+            "events": [12400760, 12401803, 12405710],
+            "workshop_door_object": 2401202,
+            "workshop_badge_goods": 4114,
             "laurence_witness_flag": 12401898,
             "suppressed_password_flag": 12401803,
         }

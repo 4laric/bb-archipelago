@@ -55,7 +55,7 @@ location_flag	region	name	basis
 52800500	Yahar'gul	Yahar'gul - Tiny Tonitrus (chest)	map m28_00; event tag 宝箱00; hint from MSB in_chest
 52800510	Yahar'gul	Yahar'gul - Choir Bell (chest)	map m28_00; event tag 宝箱01; hint from MSB in_chest
 52800520	Yahar'gul	Yahar'gul - Bone Ash Mask (chest)	map m28_00; event tag 宝箱02; hint from MSB in_chest
-52800610	Yahar'gul	Yahar'gul - Black Hooded Iron Helm and Yahar'gul Black Garb (coachman's seat)	event tag 宝死体46_御者席; one corpse awards both lots
+52800610	Yahar'gul	Yahar'gul - Yahar'gul Black Set (coachman's seat)	event tag 宝死体46_御者席; one corpse names lots 2800610 and 2800611 of the consecutive award group 2800610-2800613 (the full set), one check keyed on the group head like the Hunter Set
 53200500	Lecture Building 2F	Lecture Building 2F - Empty Phantasm Shell (observatory chest)	event tag 宝箱00_学長室天文台; floor follows the headmaster's-room tag
 53200540	Lecture Building 2F	Lecture Building 2F - Student Uniform (Headmaster's Room chest)	event tag 宝箱04_学長室2F
 53200600	Lecture Building 1F	Lecture Building 1F - Augur of Ebrietas (classroom chest)	published (data.py treasure_augur_of_ebrietas); event tag 宝箱10_悪夢教室1F; hint from lot tag 教室 (m32_00_00_00); hint from MSB in_chest

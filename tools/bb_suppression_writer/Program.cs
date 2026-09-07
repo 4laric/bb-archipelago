@@ -79,14 +79,19 @@ BinderFile itemLotFile = RequireSingleFile(game, "ItemLotParam.param");
 PARAM itemLots = PARAM.Read(itemLotFile.Bytes);
 PARAMDEF definition = ReadMatchingDefinition(defs, itemLots);
 itemLots.ApplyParamdef(definition);
+BinderFile goodsFile = RequireSingleFile(game, "EquipParamGoods.param");
+PARAM goods = PARAM.Read(goodsFile.Bytes);
+PARAMDEF goodsDefinition = ReadMatchingDefinition(defs, goods);
+goods.ApplyParamdef(goodsDefinition);
 
 var originalFiles = game.Files.Select(file =>
     new FileState(file.ID, file.Name, (byte[])file.Bytes.Clone())).ToList();
 var originalRows = itemLots.Rows.Select(RowState.Capture).ToList();
+var originalGoodsRows = goods.Rows.Select(RowState.Capture).ToList();
 var changes = new List<Applied>();
 
-// Transactional preflight: resolve and validate every requested row before
-// changing the in-memory binder or creating the output file.
+// Resolve and validate every suppression row before changing ItemLotParam.
+// All edits remain in memory until both parameter sets pass validation.
 foreach (Edit edit in plan.Edits)
 {
     if (!Int32.TryParse(edit.ItemLotId, out int lotId)
@@ -124,15 +129,36 @@ foreach (Applied change in changes)
     RequireCell(row, $"lotItemNum{change.Slot:00}").Value = plan.Placeholder.Quantity;
 }
 
+List<HunterToolRequirement> hunterTools = HunterToolRequirements();
+string[] requirementFields = ["properStrength", "properAgility", "properMagic", "properFaith"];
+foreach (HunterToolRequirement tool in hunterTools)
+{
+    List<PARAM.Row> matches = goods.Rows.Where(row => row.ID == tool.GoodsId).ToList();
+    if (matches.Count != 1)
+        throw new InvalidDataException(
+            $"{tool.Name}: expected one EquipParamGoods row {tool.GoodsId}, found {matches.Count}");
+    PARAM.Row row = matches[0];
+    int[] actual = requirementFields.Select(field => Convert.ToInt32(RequireCell(row, field).Value)).ToArray();
+    if (!actual.SequenceEqual(tool.OriginalRequirements))
+        throw new InvalidDataException(
+            $"{tool.Name}: requirement provenance changed for EquipParamGoods {tool.GoodsId}: "
+            + $"expected [{String.Join(',', tool.OriginalRequirements)}], found [{String.Join(',', actual)}]");
+    foreach (string field in requirementFields)
+        RequireCell(row, field).Value = (byte)0;
+}
+goodsFile.Bytes = goods.Write();
+
 itemLotFile.Bytes = itemLots.Write();
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 game.Write(outputPath);
 
 VerifyOutput(
-    outputPath, definition, originalFiles, originalRows, changes,
+    outputPath, definition, goodsDefinition, originalFiles, originalRows,
+    originalGoodsRows, changes, hunterTools,
     placeholderGoods, plan.Placeholder.Quantity);
 Console.WriteLine(
-    $"suppressed={changes.Count} placeholder_goods={placeholderGoods} output={outputPath}");
+    $"suppressed={changes.Count} hunter_tool_requirements_removed={hunterTools.Count} "
+    + $"placeholder_goods={placeholderGoods} output={outputPath}");
 foreach (Applied change in changes)
     Console.WriteLine(
         $"  lot={change.LotId} slot={change.Slot:00} "
@@ -398,6 +424,29 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         && randomizeShopElement.ValueKind == JsonValueKind.True;
     bool randomizeDrops = root.TryGetProperty("randomize_enemy_drops", out JsonElement randomizeDropsElement)
         && randomizeDropsElement.ValueKind == JsonValueKind.True;
+    var insightRows = new Dictionary<int, (int Equip, int Gate)>();
+    if (root.TryGetProperty("insight_armor_suppression", out JsonElement insight))
+    {
+        if (insight.ValueKind != JsonValueKind.Array)
+            throw new InvalidDataException("Insight suppression must be an array");
+        foreach (var row in insight.EnumerateArray())
+        {
+            int id = row.GetProperty("row_id").GetInt32();
+            int equip = row.GetProperty("equip_id").GetInt32();
+            int gate = row.GetProperty("qwc_id").GetInt32();
+            int family = id / 10000 * 10000, suffix = id % 10000;
+            var expected = suffix switch {
+                >= 40 and <= 43 => (130000 + (suffix - 40) * 1000, 5910),
+                >= 60 and <= 63 => (40000 + (suffix - 60) * 1000, 5090),
+                >= 64 and <= 67 => (210000 + (suffix - 64) * 1000, 5091),
+                >= 90 and <= 93 => (370000 + (suffix - 90) * 1000, 6675),
+                _ => (-1, -1),
+            };
+            if (family < 200000 || family > 240000 || expected != (equip, gate)
+                || !insightRows.TryAdd(id, (equip, gate)))
+                throw new InvalidDataException($"unreviewed Insight armor row {id}");
+        }
+    }
     List<Category8Award> category8Awards = [];
     if (root.TryGetProperty("category8_awards", out JsonElement awardsElement))
     {
@@ -413,7 +462,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         ).ToList();
     }
     if (!randomizeStarting && !removeRequirements && !randomizeShops && !randomizeDrops
-        && category8Awards.Count == 0)
+        && category8Awards.Count == 0 && insightRows.Count == 0)
         throw new InvalidDataException("request contains no seed parameter edits");
     int[] right = [];
     int[] left = [];
@@ -495,6 +544,18 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     var originalFiles = game.Files.Select(file =>
         new FileState(file.ID, file.Name, (byte[])file.Bytes.Clone())).ToList();
     var originalShopRows = shops.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
+    // Remove only reviewed shop rows; preserve unlock and purchase flags globally.
+    foreach (var (id, expected) in insightRows)
+    {
+        var row = shops.Rows.SingleOrDefault(row => row.ID == id)
+            ?? throw new InvalidDataException($"missing Insight armor row {id}");
+        if (Convert.ToInt32(RequireCell(row, "equipId").Value) != expected.Equip
+            || Convert.ToInt32(RequireCell(row, "qwcId").Value) != expected.Gate
+            || Convert.ToInt32(RequireCell(row, "shopType").Value) != 5
+            || Convert.ToInt32(RequireCell(row, "equipType").Value) != 1)
+            throw new InvalidDataException($"Insight armor source drift at {id}");
+    }
+    shops.Rows.RemoveAll(row => insightRows.ContainsKey(row.ID));
     var originalWeaponRows = weapons.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
     var originalNpcRows = npcs.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
     var startingAssignments = new[] { 2000, 2001, 2002 }.Zip(right)
@@ -638,6 +699,9 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     }
     PARAM checkedShops = PARAM.Read(checkedShopFile.Bytes);
     checkedShops.ApplyParamdef(shopDefinition);
+    if (!checkedShops.Rows.Select(row => row.ID).ToHashSet().SetEquals(
+            originalShopRows.Keys.Where(id => !insightRows.ContainsKey(id))))
+        throw new InvalidDataException("Insight suppression changed unexpected shop row IDs");
     var startingRows = startingAssignments.Select(pair => pair.First).ToHashSet();
     foreach (PARAM.Row row in checkedShops.Rows)
     {
@@ -723,7 +787,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         if (Convert.ToInt32(RequireCell(token, "isDeposit").Value) != 0)
             throw new InvalidDataException($"{award.ItemKey}: token remained depositable");
     }
-    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count} output={outputPath}");
+    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} insight_armor_rows_removed={insightRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count} output={outputPath}");
 }
 
 static BinderFile RequireSingleFile(BND4 binder, string suffix)
@@ -760,9 +824,12 @@ static PARAM.Cell RequireCell(PARAM.Row row, string name) => row[name]
 static void VerifyOutput(
     string outputPath,
     PARAMDEF definition,
+    PARAMDEF goodsDefinition,
     List<FileState> originalFiles,
     List<RowState> originalRows,
+    List<RowState> originalGoodsRows,
     List<Applied> changes,
+    List<HunterToolRequirement> hunterTools,
     int placeholderGoods,
     int placeholderQuantity)
 {
@@ -770,13 +837,14 @@ static void VerifyOutput(
     if (output.Files.Count != originalFiles.Count)
         throw new InvalidDataException("round-trip changed the binder file count");
     BinderFile itemLotFile = RequireSingleFile(output, "ItemLotParam.param");
+    BinderFile goodsFile = RequireSingleFile(output, "EquipParamGoods.param");
     for (int index = 0; index < output.Files.Count; index++)
     {
         BinderFile file = output.Files[index];
         FileState before = originalFiles[index];
         if (file.ID != before.Id || file.Name != before.Name)
             throw new InvalidDataException($"round-trip changed binder identity at index {index}");
-        if (file != itemLotFile && !file.Bytes.SequenceEqual(before.Bytes))
+        if (file != itemLotFile && file != goodsFile && !file.Bytes.SequenceEqual(before.Bytes))
             throw new InvalidDataException($"round-trip changed unrelated binder file {file.Name}");
     }
 
@@ -810,7 +878,46 @@ static void VerifyOutput(
         if (Convert.ToInt32(RequireCell(row, "getItemFlagId").Value) != change.AcquisitionFlag)
             throw new InvalidDataException($"row {row.ID}: acquisition flag changed");
     }
+
+    PARAM goods = PARAM.Read(goodsFile.Bytes);
+    goods.ApplyParamdef(goodsDefinition);
+    if (goods.Rows.Count != originalGoodsRows.Count)
+        throw new InvalidDataException("round-trip changed the EquipParamGoods row count");
+    var changedGoods = hunterTools.ToDictionary(tool => tool.GoodsId);
+    var requirementFields = new HashSet<string>
+        { "properStrength", "properAgility", "properMagic", "properFaith" };
+    for (int index = 0; index < goods.Rows.Count; index++)
+    {
+        PARAM.Row row = goods.Rows[index];
+        RowState before = originalGoodsRows[index];
+        RowState after = RowState.Capture(row);
+        if (!changedGoods.TryGetValue(row.ID, out HunterToolRequirement? tool))
+        {
+            before.RequireEqual(after, $"unplanned EquipParamGoods row {row.ID}");
+            continue;
+        }
+        before.RequireEqualExcept(after, requirementFields, $"Hunter's Tool row {row.ID}");
+        foreach (string field in requirementFields)
+            if (Convert.ToInt32(RequireCell(row, field).Value) != 0)
+                throw new InvalidDataException($"{tool.Name}: EquipParamGoods {row.ID} retained {field}");
+    }
 }
+
+static List<HunterToolRequirement> HunterToolRequirements() =>
+[
+    new(1310, "Empty Phantasm Shell", [0, 0, 0, 15]),
+    new(2000, "Augur of Ebrietas", [0, 0, 0, 18]),
+    new(2010, "A Call Beyond", [0, 0, 0, 40]),
+    new(2020, "Beast Roar", [0, 0, 0, 15]),
+    new(2050, "Choir Bell", [0, 0, 0, 15]),
+    new(2060, "Old Hunter Bone", [0, 0, 0, 15]),
+    new(2070, "Tiny Tonitrus", [0, 0, 0, 25]),
+    new(2080, "Executioner's Gloves", [0, 0, 0, 20]),
+    new(2110, "Messenger's Gift", [0, 0, 0, 10]),
+    new(2120, "Blacksky Eye", [0, 0, 0, 16]),
+    new(2130, "Accursed Brew", [0, 0, 0, 30]),
+    new(2140, "Madaras Whistle", [0, 0, 18, 0]),
+];
 
 sealed record Plan(
     [property: JsonPropertyName("format")] string Format,
@@ -828,6 +935,7 @@ sealed record Edit(
     [property: JsonPropertyName("acquisition_flag")] string AcquisitionFlag);
 sealed record Applied(
     string ItemKey, int LotId, int Slot, int ItemCategory, int GoodsId, int AcquisitionFlag);
+sealed record HunterToolRequirement(int GoodsId, string Name, int[] OriginalRequirements);
 sealed record EnemyDropAssignment(
     [property: JsonPropertyName("npc_param_id")] int NpcParamId,
     [property: JsonPropertyName("drop_field")] string DropField,

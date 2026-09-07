@@ -190,6 +190,9 @@ internal static class Program
 
     private const long LaurenceEvent = 12401803;
     private const long EmblemEvent = 12400760;
+    private const long WorkshopDoorEvent = 12405710;
+    private const int WorkshopDoorObject = 2401202;
+    private const int SwordHunterBadgeGoods = 4114;
     private const int WitnessFlag = 12401898;
     private const int PasswordFlag = 12401803;
     private const int FarSideFlag = 12400170;
@@ -207,7 +210,7 @@ internal static class Program
         var gateEnabled = o.TryGetValue("access-flag", out var requestedFlag);
         if (gateEnabled && requestedFlag != HemwickAccessFlag.ToString())
             throw new InvalidDataException($"unsupported Hemwick access flag {requestedFlag}");
-        var owned = new HashSet<long> { LaurenceEvent, EmblemEvent, 0 };
+        var owned = new HashSet<long> { LaurenceEvent, EmblemEvent, WorkshopDoorEvent, 0 };
         if (gateEnabled) owned.Add(CathedralHemwickGateEvent);
         var untouched = emevd.Events.Where(e => !owned.Contains(e.ID))
             .Select(e => (e.ID, Fingerprint(e))).ToList();
@@ -215,6 +218,7 @@ internal static class Program
 
         PatchLaurence(emevd);
         PatchEmblem(emevd);
+        PatchWorkshopDoor(emevd);
         if (gateEnabled)
             PatchHemwickBoundary(emevd, CathedralHemwickGateEvent, 24, 2401995, 2403995);
 
@@ -234,8 +238,10 @@ internal static class Program
             output_sha256 = Sha256(o["output"]),
             output_relative_path = "dvdroot_ps4/event/m24_00_00_00.emevd.dcx",
             owned_events = gateEnabled
-                ? new[] { EmblemEvent, LaurenceEvent, CathedralHemwickGateEvent }
-                : new[] { EmblemEvent, LaurenceEvent },
+                ? new[] { EmblemEvent, LaurenceEvent, WorkshopDoorEvent, CathedralHemwickGateEvent }
+                : new[] { EmblemEvent, LaurenceEvent, WorkshopDoorEvent },
+            workshop_door_object = WorkshopDoorObject,
+            workshop_badge_goods = SwordHunterBadgeGoods,
             laurence_witness_flag = WitnessFlag,
             suppressed_password_flag = PasswordFlag,
             hemwick_gate = gateEnabled ? new {
@@ -386,6 +392,36 @@ internal static class Program
         foreach (var (bank, id, args) in instructions)
             gate.Instructions.Add(new EMEVD.Instruction(bank, id, args));
         emevd.Events.Add(gate);
+    }
+
+    /// <summary>
+    /// tools/patch_sword_badge_workshop.py in instructions: the Workshop door
+    /// opens when the player owns the Sword Hunter Badge instead of when the
+    /// Blood-starved Beast mirror flag is set. Door animation, collision,
+    /// persistence and the locked interaction remain vanilla-owned.
+    /// </summary>
+    private static void PatchWorkshopDoor(EMEVD emevd)
+    {
+        var e = EventById(emevd, WorkshopDoorEvent);
+        if (e.Instructions.Count != 9 || e.Parameters.Count != 0)
+            throw new InvalidDataException(
+                $"event {WorkshopDoorEvent} does not have the supported Workshop-door shape");
+        // Vanilla begins with GotoIfEventFlag(L0, OFF, EventFlag, 9453).
+        Expect(e.Instructions[0], 1003, 101, "00000000ed240000", "Workshop door BSB guard");
+        // DarkScript 3.6.3 compiles
+        // `if (PlayerHasItem(ItemType.Goods, 4114))` into this condition and
+        // branch pair. The remaining nine instructions are byte-identical.
+        e.Instructions[0] = Clone(
+            emevd, 3, 4, Args((byte)1, (byte)3, (byte)0, (byte)0,
+                              SwordHunterBadgeGoods, (byte)0));
+        e.Instructions.Insert(1, Clone(
+            emevd, 1000, 101, Args((byte)0, (byte)1, (byte)1, (byte)0)));
+
+        if (e.Instructions.Count != 10)
+            throw new InvalidDataException("Workshop-door transform emitted the wrong instruction count");
+        Expect(e.Instructions[2], 2005, 7, "b2a3240001000000", "Workshop door animation");
+        Expect(e.Instructions[8], 2007, 1,
+               "3bbe980001000100b2a324000000a040", "Workshop door locked dialog");
     }
 
     // --------------------------------------------------------------- common

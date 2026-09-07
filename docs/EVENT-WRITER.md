@@ -10,13 +10,14 @@ runtime it needed.
 
 | overlay | file | edits |
 | --- | --- | --- |
-| Cathedral | `dvdroot_ps4/event/m24_00_00_00.emevd.dcx` | event `12401803`: the self-completion guard becomes `WaitFor(!EventFlag(12401898))`, the client-only completion path becomes `WaitFor(!HasMultiplayerState(MultiplayerState.Client))`, and the tail gains `SetEventFlag(12401898, ON); RestartEvent();`. Event `12400760`: the `ObjActEventFlag(12400170)` disjunct and its OR-group compile are removed. |
+| Cathedral | `dvdroot_ps4/event/m24_00_00_00.emevd.dcx` | event `12401803`: the self-completion guard becomes `WaitFor(!EventFlag(12401898))`, the client-only completion path becomes `WaitFor(!HasMultiplayerState(MultiplayerState.Client))`, and the tail gains `SetEventFlag(12401898, ON); RestartEvent();`. Event `12400760`: the `ObjActEventFlag(12400170)` disjunct and its OR-group compile are removed. Event `12405710`: object `2401202`, the Healing Church Workshop door, opens from possession of Sword Hunter Badge goods `4114` instead of Blood-starved Beast mirror flag `9453`; its animation, locked prompt and persistence stay vanilla-owned. |
 | Common | `dvdroot_ps4/event/common.emevd.dcx` | event `0` gains one `InitializeEvent(0, 98000000 + rowIndex, token, lot, ackFlag)` per reviewed category-8 row at the top of the constructor. One isolated Restart event per row is appended: wait for the token including the storage box, clear the ack, consume every copy of the token in a labelled loop, `AwardItemLot` once, raise the ack, restart. Each event has twelve instructions and six parameter records. |
 
 The reviewed specifications remain the source transforms in
-`tools/patch_laurence_skull.py`, `tools/patch_emblem_chokepoint.py`, and
-`tools/patch_category8_awards.py`. The writer is an instruction-level
-rendering of those three; it adds no behaviour.
+`tools/patch_laurence_skull.py`, `tools/patch_emblem_chokepoint.py`,
+`tools/patch_sword_badge_workshop.py`, and `tools/patch_category8_awards.py`.
+The writer is an instruction-level rendering of those four; it adds no
+behaviour.
 
 ## How it avoids an instruction table
 
@@ -42,11 +43,13 @@ The verification record for `CUSA03173` 01.09 (2026-09-03, owner's files):
 - A plain SoulsFormatsNEXT read and write of both vanilla files reproduces
   the decompressed EMEVD byte for byte (0 differing bytes). Only the DCX
   container bytes differ, as with any recompression.
-- Owned events `98000000`, `12401803`, and `12400760`, and the 58 new
+- Owned events `98000000`, `12401803`, `12400760`, and `12405710`, and the 58 new
   initializers in common event `0`, are instruction- and parameter-identical
   to the DarkScript3 3.6.3 compile of the same transforms. Re-verified on
   2026-09-03 after the bridge gained the storage-box wait and the
-  consume-all loop (#342).
+  consume-all loop (#342). Event `12405710` was re-verified on 2026-09-05:
+  its ten instructions match DarkScript3 3.6.3's compilation of the badge
+  possession transform exactly.
 - The DarkScript3 compile itself is **not** faithful to vanilla: its
   decompile-and-recompile re-encoded 23 of 83 events in `common` and 112 of
   246 events in `m24_00_00_00` that nothing had edited, renumbering condition

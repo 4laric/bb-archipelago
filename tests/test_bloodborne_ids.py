@@ -417,7 +417,7 @@ class GoldenIdTests(unittest.TestCase):
             self.assertEqual(value, LOCATION_ID_BY_KEY[key], key)
         ids = sorted(LOCATION_ID_BY_KEY.values())
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual(max(ids), 0xBB12A2)
+        self.assertEqual(max(ids), 0xBB12A3)
 
     def test_ids_are_stable_under_reordering(self):
         """The property the old scheme did not have."""

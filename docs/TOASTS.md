@@ -42,9 +42,10 @@ The feature may be promoted only if all of the following are witnessed:
 4. The dummy can enter storage and return without corrupting inventory.
 5. A shop opens normally with the dummy present.
 
-Record `mark popup` or `mark modal` in the client console beside the pickup and
-export diagnostics. A modal result is a permanent refusal for this approach,
-not a prompt to call the modal path from the client.
+Record the result with the client's `/mark` console command (see
+docs/NATIVE-ITEM-POPUPS.md) beside the pickup and export diagnostics. A modal
+result is a permanent refusal for this approach, not a prompt to call the
+modal path from the client.
 
 ## What remains after a passing verdict
 

@@ -628,8 +628,11 @@ class SeedCache:
                             record["sha256"] for record in records
                             if record["path"] == CATHEDRAL_EVENT_PATH
                         ),
-                        "events": ([12400760, 12401803, 12409990]
-                                   if hemwick_event is not None else [12400760, 12401803]),
+                        "events": ([12400760, 12401803, 12405710, 12409990]
+                                   if hemwick_event is not None
+                                   else [12400760, 12401803, 12405710]),
+                        "workshop_door_object": 2401202,
+                        "workshop_badge_goods": 4114,
                         "laurence_witness_flag": 12401898,
                         "suppressed_password_flag": 12401803,
                         "hemwick_gate": (None if hemwick_event is None else {
@@ -761,11 +764,15 @@ class SeedCache:
                 raise ValidationError("Cathedral event output has the wrong component")
             if cathedral.get("sha256") != cathedral_record.get("sha256"):
                 raise ValidationError("Cathedral event witness hash does not match its record")
-            expected_cathedral_events = ([12400760, 12401803, 12409990]
+            expected_cathedral_events = ([12400760, 12401803, 12405710, 12409990]
                                          if hemwick_record is not None
-                                         else [12400760, 12401803])
+                                         else [12400760, 12401803, 12405710])
             if cathedral.get("events") != expected_cathedral_events:
                 raise ValidationError("Cathedral event witness has unexpected owned events")
+            if cathedral.get("workshop_door_object") != 2401202:
+                raise ValidationError("Cathedral event witness has the wrong Workshop door")
+            if cathedral.get("workshop_badge_goods") != 4114:
+                raise ValidationError("Cathedral event witness has the wrong Workshop badge")
             if cathedral.get("laurence_witness_flag") != 12401898:
                 raise ValidationError("Cathedral event witness has the wrong Laurence flag")
             if cathedral.get("suppressed_password_flag") != 12401803:

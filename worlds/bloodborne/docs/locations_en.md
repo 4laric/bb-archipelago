@@ -722,7 +722,6 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 
 - The One Reborn
 - Yahar'gul - Arcane Lake +5% Arcane Reduction #3
-- Yahar'gul - Black Hooded Iron Helm and Yahar'gul Black Garb (coachman's seat)
 - Yahar'gul - Blood Gem #1
 - Yahar'gul - Blood Gem #5 (chest)
 - Yahar'gul - Blood Gem #6
@@ -773,3 +772,4 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Yahar'gul - Tonitrus (main street dead end)
 - Yahar'gul - Twin Blood Stone Shards
 - Yahar'gul - Upper Cathedral Key (mummified corpse)
+- Yahar'gul - Yahar'gul Black Set (coachman's seat)

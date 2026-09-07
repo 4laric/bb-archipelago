@@ -185,6 +185,15 @@ if (-not $SuppressionBuild) {
     }
 }
 if ($SuppressionBuild) {
+    $suppressionManifestPath = Join-Path $SuppressionBuild "build-manifest.json"
+    if (-not (Test-Path -LiteralPath $suppressionManifestPath -PathType Leaf)) {
+        throw "Suppression build is missing build-manifest.json: $suppressionManifestPath"
+    }
+    $suppressionManifest = Get-Content -LiteralPath $suppressionManifestPath -Raw | ConvertFrom-Json
+    $expectedToolPolicy = "EquipParamGoods:1310,2000,2010,2020,2050,2060,2070,2080,2110,2120,2130,2140:properStrength,properAgility,properMagic,properFaith=0:v1"
+    if ($suppressionManifest.hunter_tool_requirements -ne $expectedToolPolicy) {
+        throw "Suppression build predates the Hunter's Tools baseline patch: $SuppressionBuild"
+    }
     $suppressionDestination = Join-Path $package "work\vanilla-suppression-build"
     New-Item -ItemType Directory -Path $suppressionDestination -Force | Out-Null
     foreach ($name in @("gameparam.parambnd.dcx", "build-manifest.json")) {

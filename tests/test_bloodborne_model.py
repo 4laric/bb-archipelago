@@ -191,7 +191,7 @@ class BloodborneModelTests(unittest.TestCase):
         # Review finding W5: 16 NG+ "replacement" lots left the seeded manifest
         # (668 -> 652). Each shared a corpse with a first-cycle row that is
         # still seeded, so no corpse lost its check.
-        self.assertEqual(652, len(NETWORK_LOCATIONS))
+        self.assertEqual(653, len(NETWORK_LOCATIONS))
         by_region = Counter(location.region for location in NETWORK_LOCATIONS)
         self.assertEqual(
             dict(by_region),
@@ -200,7 +200,7 @@ class BloodborneModelTests(unittest.TestCase):
              "Hemwick Charnel Lane": 33, "Castle Cainhurst": 29,
              "Forbidden Woods": 76, "Iosefka's Clinic": 3, "Byrgenwerth": 1,
              "Moonside Lake": 1,
-            "Yahar'gul": 48, "Lecture Building 1F": 9,
+            "Yahar'gul": 49, "Lecture Building 1F": 9,
              "Lecture Building 2F": 8, "Nightmare Frontier": 41,
              "Nightmare of Mensis": 55, "Hunter's Dream": 3,
              "Hunter's Nightmare": 68, "Underground Corpse Pile": 1,
@@ -290,7 +290,7 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1, name)
         # The exact weighted shares are restated here so an economy edit is a
         # visible pool change, not a silent one.
-        self.assertEqual(counts["Blood Vial"], 21)
+        self.assertEqual(counts["Blood Vial"], 22)
         self.assertEqual(counts["Quicksilver Bullets x3"], 6)
         self.assertEqual(counts["Blood Stone Shards x2"], 31)
         self.assertEqual(counts["Twin Blood Stone Shards x2"], 31)
@@ -331,7 +331,8 @@ class BloodborneModelTests(unittest.TestCase):
         Yharnam. Review finding W4 added the eight region gates (tonsil stone,
         Upper Cathedral key, Cainhurst summons, the four DLC keys and
         Laurence's skull) so that turning the option off no longer seals the
-        regions the manifest still seeds. 652 - 21 one-off items = 631 filler
+        regions the manifest still seeds. Hemwick Access joined the one-off set
+        with the Hemwick gate. 653 - 22 one-off items = 631 filler
         slots over the slice's own five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
@@ -346,9 +347,9 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertEqual(counts[name], 1)
         # The slice pool keeps its four validated filler types, so wave 1's
         # goods variety does not reach it: this pool is the canary set, not a
-        # play experience. 652 - 21 one-each = 631 slots over five weighted names.
+        # play experience. 653 - 22 one-each = 631 slots over five weighted names.
         self.assertEqual(counts["Blood Vial"], 224)
-        self.assertEqual(counts["Quicksilver Bullets x3"], 144)
+        self.assertEqual(counts["Quicksilver Bullets x3"], 145)
         self.assertEqual(counts["Blood Stone Shards x2"], 112)
         self.assertEqual(counts["Pebbles x3"], 75)
         self.assertEqual(counts["Molotov Cocktails x2"], 75)
@@ -362,12 +363,18 @@ class BloodborneModelTests(unittest.TestCase):
         """A short flag is valid; sharing one between lots is not."""
         with (ROOT / "research/joined/lot_items.tsv").open(encoding="utf-8", newline="") as handle:
             rows = list(csv.DictReader(handle, delimiter="\t"))
+        # Which MSB treasure entries place each lot. A flag shared by lots on
+        # two different corpses cannot be one check (the excluded 52800170);
+        # a flag shared by several lot fields of ONE corpse is one placement
+        # and one check (the Yahar'gul Black coachman's seat names 2800610
+        # and 2800611 of the 2800610-2800613 award group).
+        placements_by_lot: dict[str, set[tuple[str, str]]] = {}
         with (ROOT / "research/joined/fixed_treasure_lots.tsv").open(
                 encoding="utf-8", newline="") as handle:
-            placed_lots = {
-                row["item_lot_id"] for row in csv.DictReader(handle, delimiter="\t")
-                if row["item_lot_id"]
-            }
+            for row in csv.DictReader(handle, delimiter="	"):
+                if row["item_lot_id"]:
+                    placements_by_lot.setdefault(row["item_lot_id"], set()).add(
+                        (row["map_path"], row["event_name"]))
         lots_by_flag = {}
         for row in rows:
             for flag in filter(None, row["all_acquisition_flags"].split(";")):
@@ -380,10 +387,14 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn(item_lot_flag, lots_by_flag, location)
             lots = lots_by_flag[item_lot_flag]
             self.assertIn(str(binding.item_lot_id), lots, location)
-            self.assertTrue(
-                all(lot not in placed_lots for lot in lots - {str(binding.item_lot_id)}),
-                f"{location}: acquisition flag is shared by another placed lot",
-            )
+            own_placements = placements_by_lot.get(str(binding.item_lot_id), set())
+            for lot in lots - {str(binding.item_lot_id)}:
+                foreign = placements_by_lot.get(lot, set()) - own_placements
+                self.assertFalse(
+                    foreign,
+                    f"{location}: acquisition flag is shared by lot {lot} placed on "
+                    f"another treasure entry {sorted(foreign)}",
+                )
 
         self.assertEqual({"3401810"}, lots_by_flag[9470])
 
@@ -493,8 +504,8 @@ class BloodborneModelTests(unittest.TestCase):
         """Reachability, without needing an Archipelago checkout.
 
         Every seeded location must be reachable with the seeded pool. The
-        emblem is a shortcut, not a Go-mode requirement: after Blood-starved
-        Beast, the Workshop route reaches the same plaza.
+        emblem is a shortcut, not a Go-mode requirement: after receiving Sword
+        Hunter Badge, the Workshop route reaches the same plaza.
         """
         from worlds.bloodborne.data import SLICE_ITEM_KEYS, SLICE_REGIONS
 
@@ -511,7 +522,7 @@ class BloodborneModelTests(unittest.TestCase):
             (set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)) - {"hunter_chief_emblem"})
         self.assertEqual(with_everything, without_emblem)
 
-    def test_abandoned_workshop_checks_open_after_blood_starved_beast(self):
+    def test_abandoned_workshop_checks_open_with_sword_hunter_badge(self):
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
 
         workshop_keys = {
@@ -530,14 +541,10 @@ class BloodborneModelTests(unittest.TestCase):
         self.assertFalse(locked_workshop, locked_workshop)
 
         inventory = set(SLICE_ITEM_KEYS) | set(FULL_POOL_ITEM_KEYS)
-        without_beast = slice_reachable(
-            inventory - {"event_blood_starved_beast_defeated"},
-            locations=[location for location in locations.values()
-                       if location.key != "boss_blood_starved_beast"],
-        )
-        self.assertTrue(workshop_keys.isdisjoint(without_beast), sorted(without_beast))
-        with_beast = slice_reachable(inventory)
-        self.assertTrue(workshop_keys <= with_beast, sorted(with_beast))
+        without_badge = slice_reachable(inventory - {"sword_hunter_badge"})
+        self.assertTrue(workshop_keys.isdisjoint(without_badge), sorted(without_badge))
+        with_badge = slice_reachable(inventory)
+        self.assertTrue(workshop_keys <= with_badge, sorted(with_badge))
 
     def test_withholding_the_oedon_tomb_key_strands_the_seed_in_central_yharnam(self):
         """The point of shuffling the key: sphere 0 is a place, not the world.
@@ -624,7 +631,7 @@ class BloodborneModelTests(unittest.TestCase):
                          LOCATION_ID_BY_KEY["fixed_central_yharnam_lot_2410295"])
 
     def test_the_goal_requires_the_oedon_and_lunarium_keys_but_not_the_emblem(self):
-        """BSB opens the Workshop route, making the emblem an optional shortcut."""
+        """Sword Hunter Badge opens the Workshop route, keeping Emblem optional."""
         from worlds.bloodborne import GOAL_LOCATION_KEY
         from worlds.bloodborne.data import SLICE_ITEM_KEYS
 
@@ -651,6 +658,8 @@ class BloodborneModelTests(unittest.TestCase):
             self.assertIn("Lunarium Key", build_item_pool_names(keys))
             self.assertIn("forbidden_woods_password", keys)
             self.assertIn('"Fear the Old Blood"', build_item_pool_names(keys))
+            self.assertIn("sword_hunter_badge", keys)
+            self.assertIn("Sword Hunter Badge", build_item_pool_names(keys))
 
     def test_every_playable_region_contributes_a_location(self):
         populated = {location.region for location in MODEL.locations}
