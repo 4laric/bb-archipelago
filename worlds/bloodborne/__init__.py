@@ -605,19 +605,48 @@ else:
     class DeathLink(Toggle):
         """Receive linked deaths from other players.
 
-        Sending your own deaths remains disabled until Bloodborne's live death
-        signal has been validated; enabling this option currently participates
-        in the receive half of DeathLink only.
+        On its own this is the receive half only, which is what the display
+        name still says: your own deaths are not broadcast unless you also turn
+        on DeathLink Send, which is experimental and off by default.
         """
         display_name = "DeathLink (Receive Only)"
+        default = 0
+
+    class DeathLinkSend(Toggle):
+        """EXPERIMENTAL: also broadcast YOUR deaths to other players.
+
+        Not validated live. Bloodborne has no death event flag, so the client
+        infers a death from the player's HP reaching zero -- the same memory
+        cell an incoming DeathLink already writes through -- and nobody has yet
+        confirmed against a real session that every death produces that edge
+        and that nothing else does. Expect missed deaths, or deaths reported
+        for something that was not one. Requires DeathLink; on its own this
+        does nothing. Leave it off unless you are deliberately testing the
+        signal, and read docs/DEATHLINK-SEND-PROBE.md if you are.
+        """
+        display_name = "DeathLink Send (Experimental, Unvalidated)"
+        default = 0
+
+    class DeathLinkFirstDeathGrace(Toggle):
+        """Forgive your very first death of the run outright.
+
+        The first qualifying local death is not sent and does not count
+        against DeathLink Amnesty, so your amnesty cadence starts fresh at your
+        second death. Spent once per slot and remembered across reconnects and
+        relaunches; incoming DeathLinks never consume it. Like DeathLink
+        Amnesty, this only matters when DeathLink Send is on -- with sending
+        off, nothing is ever broadcast and there is nothing to forgive.
+        """
+        display_name = "DeathLink First Death Grace"
         default = 0
 
     class DeathLinkAmnesty(Range):
         """Forgive this many qualifying local deaths before sending DeathLink.
 
         The counter resets after a DeathLink is sent. Incoming DeathLinks do
-        not consume amnesty. This seed-owned setting is inert while DeathLink
-        is disabled and while the client is receive-only.
+        not consume amnesty. This seed-owned setting only matters when
+        DeathLink Send is on: with sending off nothing is ever broadcast, so
+        there is nothing to forgive.
         """
         display_name = "DeathLink Amnesty (Local Deaths Forgiven per Cycle)"
         range_start = 0
@@ -794,6 +823,8 @@ else:
         auto_upgrade: AutoUpgrade
         auto_equip: AutoEquip
         death_link: DeathLink
+        death_link_send: DeathLinkSend
+        death_link_first_death_grace: DeathLinkFirstDeathGrace
         death_link_amnesty: DeathLinkAmnesty
         full_item_pool: FullItemPool
         uncanny_weapons: UncannyWeapons
@@ -1012,6 +1043,12 @@ else:
                 "auto_upgrade": bool(self.options.auto_upgrade),
                 "auto_equip": bool(self.options.auto_equip),
                 "death_link": bool(self.options.death_link),
+                # bb-archipelago#78 / #383. Both default off, so a default
+                # roll's slot data is what it always was plus two `false`s.
+                "death_link_send": bool(self.options.death_link_send),
+                "death_link_first_death_grace": bool(
+                    self.options.death_link_first_death_grace
+                ),
                 "death_link_amnesty": int(self.options.death_link_amnesty),
                 "full_item_pool": bool(self.options.full_item_pool),
                 "randomize_armor": bool(getattr(self.options, "randomize_armor", False)),

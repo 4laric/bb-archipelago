@@ -18,6 +18,21 @@
   and acknowledgement flag exactly as before. Seeds gain one location (657
   network locations) and one item; the suppression plan digest moved. Existing
   seeds are unaffected. (#388)
+- Added two DeathLink options, both `Toggle` and both default off.
+  `death_link_send` (**"DeathLink Send (Experimental, Unvalidated)"**) asks the
+  client to broadcast your own deaths as well as receive them; it requires
+  `death_link` and does nothing on its own. It is off by default and labelled
+  experimental because it is: Bloodborne publishes no death event flag, so the
+  client infers a death from the player's HP reaching zero, and that inference
+  has never been checked against a real session. `docs/DEATHLINK-SEND-PROBE.md`
+  is the runbook that promotes or kills it. `death_link_first_death_grace`
+  (#383) forgives a slot's very first qualifying local death outright: it is
+  not sent, it does not count against `death_link_amnesty`, it is spent once
+  per slot and remembered across reconnects, and incoming DeathLinks never
+  consume it. Like amnesty, it only matters when sending is on. Slot data
+  gains the two keys; a default roll is otherwise unchanged, and existing seeds
+  are unaffected.
+
 - Three more unsuppressed vanilla pickups became Archipelago checks. The
   Nightmare of Mensis Beast Blood Pellet (lot 2600570, flag 52600570, awarded
   by object event 12600125) and the Forbidden Woods doorkeeper's corpse
