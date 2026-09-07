@@ -1,0 +1,359 @@
+{
+ "schema": 1,
+ "game": "Bloodborne",
+ "apworld_version": "0.1.0",
+ "source": "worlds/bloodborne/__init__.py -> BloodborneOptions (parsed)",
+ "source_sha256": "2bf44fb1ddd15f27fd3ee8a33d74021e026e0aee5ab381d292759e8278716f71",
+ "field_order": [
+  "auto_upgrade",
+  "auto_equip",
+  "death_link",
+  "death_link_send",
+  "death_link_first_death_grace",
+  "death_link_amnesty",
+  "full_item_pool",
+  "uncanny_weapons",
+  "randomize_armor",
+  "randomize_starting_weapons",
+  "remove_weapon_requirements",
+  "randomize_shops",
+  "randomize_enemy_drops",
+  "goal",
+  "include_dlc",
+  "include_dlc_gear",
+  "alternate_hypogean_gaol_routes",
+  "one_time_enemy_checks",
+  "questlines_hold_progression",
+  "hemwick_access_gate",
+  "consumable_quantity_bonus"
+ ],
+ "groups": [
+  {
+   "name": "Goal",
+   "options": [
+    "goal"
+   ]
+  },
+  {
+   "name": "Seed size",
+   "options": [
+    "include_dlc",
+    "include_dlc_gear",
+    "one_time_enemy_checks",
+    "randomize_enemy_drops",
+    "randomize_shops"
+   ]
+  },
+  {
+   "name": "Items",
+   "options": [
+    "full_item_pool",
+    "uncanny_weapons",
+    "randomize_armor",
+    "randomize_starting_weapons",
+    "remove_weapon_requirements",
+    "consumable_quantity_bonus"
+   ]
+  },
+  {
+   "name": "Routing",
+   "options": [
+    "alternate_hypogean_gaol_routes",
+    "hemwick_access_gate",
+    "questlines_hold_progression"
+   ]
+  },
+  {
+   "name": "Client",
+   "options": [
+    "auto_upgrade",
+    "auto_equip",
+    "death_link",
+    "death_link_send",
+    "death_link_first_death_grace",
+    "death_link_amnesty"
+   ]
+  }
+ ],
+ "options": [
+  {
+   "key": "auto_upgrade",
+   "class": "AutoUpgrade",
+   "kind": "toggle",
+   "display_name": "Auto Upgrade Received Weapons",
+   "description": "Raise received weapons to the player's validated reinforcement target.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "auto_equip",
+   "class": "AutoEquip",
+   "kind": "toggle",
+   "display_name": "Auto Equip Received Gear",
+   "description": "Equip received gear in deterministic Archipelago feed order.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "death_link",
+   "class": "DeathLink",
+   "kind": "toggle",
+   "display_name": "DeathLink (Receive Only)",
+   "description": "Receive linked deaths from other players.\n\nOn its own this is the receive half only, which is what the display\nname still says: your own deaths are not broadcast unless you also turn\non DeathLink Send, which is experimental and off by default.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "death_link_send",
+   "class": "DeathLinkSend",
+   "kind": "toggle",
+   "display_name": "DeathLink Send (Experimental, Unvalidated)",
+   "description": "EXPERIMENTAL: also broadcast YOUR deaths to other players.\n\nNot validated live. Bloodborne has no death event flag, so the client\ninfers a death from the player's HP reaching zero -- the same memory\ncell an incoming DeathLink already writes through -- and nobody has yet\nconfirmed against a real session that every death produces that edge\nand that nothing else does. Expect missed deaths, or deaths reported\nfor something that was not one. Requires DeathLink; on its own this\ndoes nothing. Leave it off unless you are deliberately testing the\nsignal, and read docs/DEATHLINK-SEND-PROBE.md if you are.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "death_link_first_death_grace",
+   "class": "DeathLinkFirstDeathGrace",
+   "kind": "toggle",
+   "display_name": "DeathLink First Death Grace",
+   "description": "Forgive your very first death of the run outright.\n\nThe first qualifying local death is not sent and does not count\nagainst DeathLink Amnesty, so your amnesty cadence starts fresh at your\nsecond death. Spent once per slot and remembered across reconnects and\nrelaunches; incoming DeathLinks never consume it. Like DeathLink\nAmnesty, this only matters when DeathLink Send is on -- with sending\noff, nothing is ever broadcast and there is nothing to forgive.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "death_link_amnesty",
+   "class": "DeathLinkAmnesty",
+   "kind": "range",
+   "display_name": "DeathLink Amnesty (Local Deaths Forgiven per Cycle)",
+   "description": "Forgive this many qualifying local deaths before sending DeathLink.\n\nThe counter resets after a DeathLink is sent. Incoming DeathLinks do\nnot consume amnesty. This seed-owned setting only matters when\nDeathLink Send is on: with sending off nothing is ever broadcast, so\nthere is nothing to forgive.",
+   "default": 0,
+   "choices": null,
+   "range": {
+    "start": 0,
+    "end": 255
+   }
+  },
+  {
+   "key": "full_item_pool",
+   "class": "FullItemPool",
+   "kind": "toggle",
+   "display_name": "Full Item Pool",
+   "description": "Place every validated item in the Yharnam slice, not only the slice items.\n\nThe playable area is unchanged either way: the reduced pool still\ncarries every key that gates a seeded region, so every seeded check\nstays reachable. Turning this off only shrinks the variety of what\nyou find, not where you can go.",
+   "default": true,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "uncanny_weapons",
+   "class": "UncannyWeapons",
+   "kind": "toggle",
+   "display_name": "Uncanny Weapon Variants",
+   "description": "Add the Uncanny variant of every weapon in your item pool.\n\nUncanny weapons are normally locked behind Chalice dungeons. They are\nthe same weapon with a different blood-gem slot layout, so a second\nfind is a real build choice rather than a duplicate. They replace\nfiller (Blood Vials and the like), never checks, so the seed keeps\nexactly as many items as it has locations.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "randomize_armor",
+   "class": "RandomizeArmor",
+   "kind": "toggle",
+   "display_name": "Randomize Armor",
+   "description": "Add each reviewed attire piece once to the general item pool.\n\nArmor replaces filler and does not create additional checks. This is\nopt-in while most category-1 delivery rows remain inferred; Old\nHunters attire additionally requires the DLC option.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "randomize_starting_weapons",
+   "class": "RandomizeStartingWeapons",
+   "kind": "toggle",
+   "display_name": "Randomize Starting Weapons",
+   "description": "Randomize the independent weapon and firearm choices in Hunter's Dream.",
+   "default": true,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "remove_weapon_requirements",
+   "class": "RemoveWeaponRequirements",
+   "kind": "toggle",
+   "display_name": "Remove Weapon Requirements",
+   "description": "Remove stat requirements from player weapons while preserving scaling.",
+   "default": true,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "randomize_shops",
+   "class": "RandomizeShops",
+   "kind": "toggle",
+   "display_name": "Randomize Bath Messenger Shops",
+   "description": "Shuffle which hunter badge unlocks each ordinary Bath stock group.\n\nPrices, stock contents, NG-cycle copies, Insight shops, and Chalice\nshops are unchanged. This is opt-in because it deliberately changes\nfamiliar Bloodborne shop progression.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "randomize_enemy_drops",
+   "class": "RandomizeEnemyDrops",
+   "kind": "choice",
+   "display_name": "Randomize Enemy Consumable Drops",
+   "description": "Shuffle safe repeatable enemy consumable and material loot tables.\n\nThis changes local consumable and material drops only. Enemy kills do\nnot become Archipelago checks, and equipment, runes, blood gems,\nprogression goods, and acquisition-flagged rewards are excluded. The\nbalanced mode preserves loot-table cadence and rarity; dropsanity\nshuffles every eligible table together without compatibility grouping.",
+   "default": "off",
+   "choices": [
+    {
+     "name": "off",
+     "value": 0,
+     "label": "off"
+    },
+    {
+     "name": "balanced",
+     "value": 1,
+     "label": "balanced"
+    },
+    {
+     "name": "dropsanity",
+     "value": 2,
+     "label": "dropsanity"
+    }
+   ],
+   "range": null
+  },
+  {
+   "key": "goal",
+   "class": "Goal",
+   "kind": "choice",
+   "display_name": "Goal",
+   "description": "Choose which of Bloodborne's three endings completes the seed.\n\nSubmit to Gehrman ends after Mergo's Wet Nurse; refusing his offer\nrequires defeating Gehrman; Moon Presence additionally requires any\nthree of the four shuffled Third Umbilical Cords.",
+   "default": "moon_presence",
+   "choices": [
+    {
+     "name": "submit_to_gehrman",
+     "value": 0,
+     "label": "Submit to Gehrman (Mergo's Wet Nurse)"
+    },
+    {
+     "name": "refuse_gehrman",
+     "value": 1,
+     "label": "Refuse Gehrman (Gehrman)"
+    },
+    {
+     "name": "moon_presence",
+     "value": 2,
+     "label": "Moon Presence (Three Umbilical Cords)"
+    }
+   ],
+   "range": null
+  },
+  {
+   "key": "include_dlc",
+   "class": "IncludeDLC",
+   "kind": "toggle",
+   "display_name": "Include The Old Hunters DLC",
+   "description": "Include The Old Hunters regions, checks, and progression items.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "include_dlc_gear",
+   "class": "IncludeDLCGear",
+   "kind": "toggle",
+   "display_name": "Include The Old Hunters Gear",
+   "description": "Allow Old Hunters weapons and attire in the pool.\n\nThis is independent of DLC world access: DLC gear can be received and\nused in a base-game route. Disable it to restrict equipment to the base\ngame even when The Old Hunters locations are enabled.",
+   "default": true,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "alternate_hypogean_gaol_routes",
+   "class": "AlternateHypogeanGaolRoutes",
+   "kind": "toggle",
+   "display_name": "Alternate Hypogean Gaol Routes",
+   "description": "Enable Snatcher abduction, Darkbeast Paarl, and the rear Old Yharnam gate.\n\nThis intentionally permits nonstandard progression after the Blood\nMoon. It is off by default. Early abduction still requires defeating\nBlood-starved Beast and uses an authored Snatcher that enemy\nrandomization is required to preserve.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "one_time_enemy_checks",
+   "class": "OneTimeEnemyChecks",
+   "kind": "toggle",
+   "display_name": "One-Time Hunter and Unique-Enemy Checks",
+   "description": "Add checks for reviewed non-respawning hunters and unique enemies.\n\nOnly encounters with a unique, durable, save-backed completion witness\nare eligible. Quest NPCs and composite fights remain excluded until\ntheir alternate outcomes can be represented safely.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "questlines_hold_progression",
+   "class": "QuestlinesHoldProgression",
+   "kind": "toggle",
+   "display_name": "Questlines Can Hold Progression Items",
+   "description": "Allow NPC questline badge awards to hold progression items.\n\nOff by default: the Crow Hunter Badge, Powder Keg Hunter Badge, Wheel\nHunter Badge, and Vileblood Cainhurst Badge awards (Eileen, Djura,\nAlfred, and the Annalise oath) may still receive useful and filler\nitems, just never a progression-classified one. This keeps a\nquestline's completion from gating access to another player's\nprogression behind an NPC quest that can be missed, failed, or\nkilled off. Enable it to restore unrestricted placement on these\nchecks.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "hemwick_access_gate",
+   "class": "HemwickAccessGate",
+   "kind": "toggle",
+   "display_name": "Hemwick Access Gate",
+   "description": "Put Hemwick Charnel Lane behind a shuffled Hemwick Access item.\n\nOff by default: the road to Hemwick opens as it does in the vanilla\ngame once you reach the Grand Cathedral plaza, and no gate item is\nplaced. Enable it to close the Cathedral Ward-Hemwick boundary fog\nuntil Hemwick Access is received, which puts Hemwick and the\ndownstream Cainhurst checks behind an explicit Archipelago\nprogression item. Turning it on adds one item to the pool and asks\nthe launcher to build the Hemwick and Cathedral fog-gate event\noverlays; leaving it off produces the same build as before the\noption existed.",
+   "default": false,
+   "choices": null,
+   "range": null
+  },
+  {
+   "key": "consumable_quantity_bonus",
+   "class": "ConsumableQuantityBonus",
+   "kind": "range",
+   "display_name": "Consumable Quantity Bonus",
+   "description": "Add this many extra copies to every consumable item you find.\n\nA flat bonus, not a multiplier: at 2, a Blood Vial x1 arrives as 3 and\nQuicksilver Bullets x3 arrive as 5. Item names keep their authored\nbase quantity (\"Quicksilver Bullets x3\" is a stable network name), and\nthe bonus is applied when the seed hands the item over.\n\nOnly the reviewed spendable consumables are eligible -- vials,\nbullets, cures, pellets, throwables, papers, and Coldblood. Weapons,\nattire, keys, badges, runes, blood gems, umbilical cords,\none-per-game goods, and reinforcement materials are never affected. A\nbonused stack is capped by the good's own held-stack limit, so a Lead\nElixir never exceeds 3 whatever this is set to.\n\nThe one Vial and one Bullet the client grants after each check are a\nseparate pickup-sustain award and are NOT changed by this option.\nThis is seed-owned placement metadata, so changing it needs a new\nseed.",
+   "default": 0,
+   "choices": null,
+   "range": {
+    "start": 0,
+    "end": 20
+   }
+  }
+ ],
+ "presets": [
+  {
+   "id": "defaults",
+   "title": "Defaults",
+   "tagline": "The base game, exactly as the apworld ships it.",
+   "description": "Every option at its default: base game only, the full item pool, randomized starting weapons, and the Moon Presence goal. The seed the world is tested against.",
+   "values": {}
+  },
+  {
+   "id": "central_yharnam_variety",
+   "title": "Central Yharnam variety",
+   "tagline": "A varied-grant playtest seed, DLC on.",
+   "description": "The varied-grant playtest configuration: The Old Hunters in play, the full item pool, and no optional check categories -- a broad delivery test rather than a maximal one.",
+   "values": {
+    "include_dlc": true
+   }
+  },
+  {
+   "id": "playtest_35",
+   "title": "Playtest 35",
+   "tagline": "Full-world, high-coverage solo seed.",
+   "description": "The long-form coverage seed: DLC, Uncanny variants, randomized armor and shops, and auto-upgrade on. Everything the world can place, placed.",
+   "values": {
+    "uncanny_weapons": true,
+    "randomize_armor": true,
+    "randomize_shops": true,
+    "auto_upgrade": true,
+    "include_dlc": true
+   }
+  }
+ ]
+}

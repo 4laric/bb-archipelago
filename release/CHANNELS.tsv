@@ -1,0 +1,21 @@
+# CHANNELS.tsv -- which TAG each published channel currently points at. Append-only.
+#
+# THE CHANNEL IS A POINTER, NOT A VERSION SUFFIX, and that is forced rather than chosen:
+# Archipelago calls tuplize_version() on archipelago.json's world_version when it loads an apworld,
+# and that raises on any prerelease form ('0.1.0-beta.5' -> ValueError). A suffix would be a
+# load-time crash, not a label. So the apworld keeps a strict X.Y.Z world_version, the RELEASE
+# carries the -beta.N tag, and a channel names one tag.
+#
+# Promotion is a new ROW, never an edit: "when did stable last move, and to what" is a question
+# somebody will ask after a bad release, and an overwritten cell cannot answer it.
+#
+# EVERY BLOODBORNE RELEASE IS A GITHUB PRERELEASE TODAY. The site resolves a channel by this
+# ledger, not by GitHub's prerelease flag -- the ledger is the pointer, the flag is UI. Draft
+# releases stay excluded. See SPEC-peliarch-bloodborne.md 2.4.
+#
+# Website label: `beta -> main` is the Development channel. There is no rolling `dev` release for
+# Bloodborne yet, so the Development block on /downloads stays hidden until there is one.
+#
+# channel	tag	promoted_on	note
+stable	v0.1.0-beta.5	2026-09-07	newest tag at the time this ledger was created; the first release the site serves
+beta	main	2026-09-07	development follows main

@@ -61,6 +61,25 @@ jobs:
         with:
           dotnet-version: 9.0.x
 
+      # THE SITE IS DEPLOYED FROM THIS TAG. tools/deploy_site.sh fetches site/wizard.html,
+      # site/checks.html and site/options-metadata.json at whatever release/CHANNELS.tsv calls
+      # stable, so a tag carrying a stale site/ publishes a wizard describing the PREVIOUS
+      # apworld -- and Archipelago does not error on an option the installed world has never
+      # heard of, it prints one buried line and generates the seed without it. Fail the release
+      # instead. The generators parse the world and import no Archipelago, so this costs nothing.
+      - name: site/ is current for this tag
+        shell: bash
+        run: |
+          python tools/dump_options_metadata.py
+          python tools/build_wizard.py
+          python tools/build_check_browser.py
+          python tools/gen_latest_json.py
+          git diff --exit-code -- site release || {
+            echo "::error::site/ is stale at ${RELEASE_TAG}. Regenerate it and re-tag: a release"
+            echo "::error::whose wizard describes the previous apworld is worse than no wizard."
+            exit 1
+          }
+
       - name: Fetch the pinned SoulsFormatsNEXT packaging dependency
         shell: pwsh
         run: |

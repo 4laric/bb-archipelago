@@ -1,0 +1,81 @@
+name: site checks
+
+# The guards for the site/ tree, ported from er-archipelago's wizard checks.
+#
+# WHY A STALENESS GATE AND NOT JUST A TEST. site/wizard.html and site/checks.html are GENERATED,
+# and they are served to players from a tag. If a commit moves an option or a location table and
+# does not regenerate them, nothing fails: the page keeps describing the previous build, and
+# Archipelago does not error on an option the installed apworld has never heard of -- it prints one
+# buried line and generates the seed WITHOUT it. So "regenerating produces no diff" is the check,
+# and it runs on every PR that touches either end.
+#
+# It installs nothing. Both generators parse the world rather than importing Archipelago, which is
+# the whole reason they were written that way.
+
+on:
+  pull_request:
+    paths:
+      - "worlds/bloodborne/**"
+      - "site/**"
+      - "tools/dump_options_metadata.py"
+      - "tools/build_wizard.py"
+      - "tools/build_check_browser.py"
+      - "tools/gen_latest_json.py"
+      - "tools/install_apworld.py"
+      - "tools/deploy_site.sh"
+      - "release/**"
+      - "examples/**"
+      - "tests/test_site_assets.py"
+      - ".github/workflows/site-checks.yaml"
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    name: site/ is current and its guards pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Each --check is run separately so the log names the artifact that went stale rather than
+      # "something under site/".
+      - name: options-metadata.json matches BloodborneOptions
+        run: python tools/dump_options_metadata.py --check
+      - name: wizard.html matches the metadata
+        run: python tools/build_wizard.py --check
+      - name: checks.html matches the location tables
+        run: python tools/build_check_browser.py --check
+      - name: latest.json matches the channel ledger and the contract
+        run: python tools/gen_latest_json.py --check
+
+      # And the belt-and-braces version: regenerate everything for real and demand a clean tree.
+      # A --check that agreed while the writer disagreed would be a gate testing itself.
+      - name: regenerating site/ produces no diff
+        run: |
+          python tools/dump_options_metadata.py
+          python tools/build_wizard.py
+          python tools/build_check_browser.py
+          python tools/gen_latest_json.py
+          git diff --exit-code -- site release || {
+            echo "::error::site/ or release/ is stale; run the four generators and commit the result"
+            exit 1
+          }
+
+      - name: the apworld installer agrees with build.ps1
+        run: python tools/install_apworld.py --ap-dir . --dry-run
+
+      # `bash -n` rather than shellcheck: the deploy script is only ever run by bash, and a
+      # syntax error in it is the failure that would otherwise be found on the host box at
+      # deploy time. Style opinions are not worth a red here.
+      - name: the deploy script parses
+        run: bash -n tools/deploy_site.sh
+
+      - name: site guards
+        run: python -m unittest -v tests.test_site_assets

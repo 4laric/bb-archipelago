@@ -207,6 +207,10 @@ def verify(bundle: Path) -> int:
 NON_PARAM_CSVS = {
     "intersection.csv",     # written by tools/event_flag_session.ps1
     "candidates.csv",       # written by tools/compare_event_snapshots.ps1
+    # "bloodborne-checks.csv", the file tools/build_check_browser.py's page hands
+    # the player on Export CSV. The scan below sees it as "checks.csv" because a
+    # hyphen ends the match; it is an output of a tool, never a dump input.
+    "checks.csv",
 }
 
 

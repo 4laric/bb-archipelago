@@ -1,0 +1,132 @@
+/* tabs.js -- the site's tab strip, for the Bloodborne pages that are not Jinja templates.
+ *
+ * WHAT THIS IS FOR. peliarch.ca is two kinds of page. /downloads, /hosting and /room/<id> are
+ * templates that inherit their chrome from webgui/templates/base.html. landing.html, wizard.html,
+ * checks.html and report.html are single files built HERE, installed by tools/deploy_site.sh, and
+ * they never pass through Jinja -- so they cannot inherit anything. Without this file the answer
+ * would be to hand-copy the navigation into each one, which is four surfaces to forget.
+ *
+ * One file, four pages, one definition. Each page carries only
+ *
+ *     <div id="er-tabs" data-tab="builder"></div>
+ *     <script src="/bb/tabs.js" defer></script>
+ *
+ * !! THE HOST ID IS `er-tabs` ON PURPOSE. It is the id peliarch's own pages already use, and the
+ * webgui half of this feature reads the same attribute for both games. Renaming it to `bb-tabs`
+ * would be tidier and would silently give the Bloodborne pages no navigation on the day the
+ * shared reader is pointed at them.
+ *
+ * !! ABSENCE MUST BE SILENT, AND THAT IS A REQUIREMENT RATHER THAN A NICETY. wizard.html also
+ * ships as a file:// page inside every release zip. There, `/bb/tabs.js` resolves to
+ * file:///bb/tabs.js and does not load -- so the placeholder stays empty, and it must therefore be
+ * an empty div with no border, no reserved height and no "loading" text. A strip of links to
+ * /downloads and /hosting would be dead on a file:// page anyway, so not rendering it there is
+ * the correct outcome and not a degradation.
+ *
+ * !! THE OTHER COPY OF THIS STRIP IS IN ANOTHER REPO: peliarch's webgui/templates/base.html
+ * renders the same links server-side for game `bb`, because a templated page whose only navigation
+ * came from a script that 404s on an undeployed box would have no navigation at all. That is a
+ * deliberate two-copy trade, and both copies are pinned by a test: TestTabStrip in peliarch's
+ * webgui/test_app.py, and tests/test_site_assets.py here.
+ *
+ * Sentinel for deploy_site.sh's install_one: id="er-tabs-strip", which appears in the markup below.
+ *
+ * !! DO NOT NAME EITHER COUPLING MARKER IN THIS FILE, not even in a comment saying it has neither.
+ * The coupled/free split is decided by GREPPING a page for the option-surface and data-stamp
+ * marker strings, so writing one down here would make this file look coupled to a build and knock
+ * it off the free-page fast path. It carries no option surface and no data stamp; the way to say
+ * that is in these words, and not in the others.
+ */
+(function () {
+  "use strict";
+
+  /* The BUILDER IS FIRST because it is what people arrive for: the only surface anyone can use
+     before deciding whether to install anything. Hosting is a tab, not the front page.
+     Bloodborne runs under shadPS4 and has no Nexus page, and it has no questline DAG, so this
+     strip is the ER one minus Questlines. */
+  var TABS = [
+    ["builder",   "/bb/wizard.html", "Builder"],
+    ["downloads", "/downloads",      "Downloads"],
+    ["hosting",   "/hosting",        "Hosting"],
+    ["checks",    "/bb/checks.html", "Checks"],
+    ["report",    "/bb/report.html", "Report a bug"]
+  ];
+
+  /* The brand-adjacent game switcher. Two entries today; it is the only element the Bloodborne
+     pages share with the ER ones, and the ER half of it lives in peliarch's base.html. */
+  var GAMES = [
+    ["er", "/",    "ER"],
+    ["bb", "/bb/", "BB"]
+  ];
+  var GAME = "bb";
+
+  var host = document.getElementById("er-tabs");
+  if (!host) { return; }
+
+  /* The page says which tab it is. Falling back to the URL keeps a page that forgot the attribute
+     from rendering a strip with nothing marked -- but the attribute is authoritative, because
+     /bb/beta/wizard.html is still the builder and its path does not say so. */
+  var current = host.getAttribute("data-tab") || "";
+  if (!current) {
+    var p = location.pathname;
+    if (p.indexOf("wizard") !== -1)        { current = "builder"; }
+    else if (p.indexOf("checks") !== -1)   { current = "checks"; }
+    else if (p.indexOf("report") !== -1)   { current = "report"; }
+    else if (p.indexOf("downloads") !== -1){ current = "downloads"; }
+    else if (p.indexOf("hosting") !== -1)  { current = "hosting"; }
+  }
+
+  /* Palette comes from the pages' own :root variables, with fallbacks, so the strip is native on
+     all four rather than a widget bolted onto them. */
+  var css = document.createElement("style");
+  css.textContent = [
+    "#er-tabs-strip{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;",
+    "  border-bottom:1px solid var(--gold-dim,#8a7440);background:var(--bg2,#1c1917);",
+    "  font:14px/1 Georgia,'Times New Roman',serif}",
+    "#er-tabs-strip a{display:block;padding:12px 18px;text-decoration:none;",
+    "  color:var(--dim,#9a8f78);letter-spacing:.06em;text-transform:uppercase;font-size:12.5px;",
+    "  border-bottom:2px solid transparent;transition:.15s}",
+    "#er-tabs-strip a:hover{color:var(--text,#e8e0cf);background:var(--panel,#232019)}",
+    /* Marked with an underline, not just a brighter grey: "which page am I on" should not depend
+       on telling two greys apart. */
+    "#er-tabs-strip a.on{color:var(--gold,#c8a95a);border-bottom-color:var(--gold,#c8a95a)}",
+    "#er-tabs-strip .sp{flex:1}",
+    "#er-tabs-strip .games{display:flex;align-items:center;gap:2px;padding:0 12px 0 4px;",
+    "  border-right:1px solid #3a332a}",
+    "#er-tabs-strip .games a{padding:6px 9px;font-size:11.5px;border:1px solid transparent;",
+    "  border-radius:4px;letter-spacing:.08em}",
+    "#er-tabs-strip .games a.here{color:var(--gold,#c8a95a);border-color:var(--gold-dim,#8a7440)}",
+    "#er-tabs-strip a.support{color:#fff;background:var(--gold-dim,#8a7440);",
+    "  border:1px solid var(--gold,#c8a95a);border-radius:999px;margin:6px 10px;padding:5px 13px;",
+    "  align-self:center;text-transform:none;letter-spacing:.02em;font-family:system-ui,sans-serif;",
+    "  font-size:12px;font-weight:600}",
+    "#er-tabs-strip a.support:hover{color:#fff;background:var(--gold,#c8a95a)}",
+    "#er-tabs-strip a:focus-visible{outline:2px solid var(--gold,#c8a95a);outline-offset:2px}",
+    "@media(max-width:620px){#er-tabs-strip a{padding:10px 12px;font-size:11.5px}}"
+  ].join("");
+  document.head.appendChild(css);
+
+  var html = ['<nav id="er-tabs-strip" aria-label="Site sections">'];
+  html.push('<span class="games" aria-label="Game">');
+  for (var g = 0; g < GAMES.length; g++) {
+    var here = (GAMES[g][0] === GAME);
+    html.push('<a href="' + GAMES[g][1] + '"' + (here ? ' class="here" aria-current="true"' : "") +
+      ">" + GAMES[g][2] + "</a>");
+  }
+  html.push("</span>");
+  for (var i = 0; i < TABS.length; i++) {
+    var id = TABS[i][0], href = TABS[i][1], label = TABS[i][2];
+    var on = (id === current);
+    html.push(
+      '<a href="' + href + '"' + (on ? ' class="on" aria-current="page"' : "") + '>' + label + "</a>"
+    );
+  }
+  html.push('<span class="sp"></span>');
+  html.push(
+    '<a class="support" href="https://buymeacoffee.com/fazuzu" target="_blank" ' +
+    'rel="noopener noreferrer" aria-label="Support Peliarch (opens in a new tab)">' +
+    '&#9749; Support Peliarch</a>'
+  );
+  html.push("</nav>");
+  host.innerHTML = html.join("");
+})();
