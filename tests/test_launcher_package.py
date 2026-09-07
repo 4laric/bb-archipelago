@@ -224,6 +224,70 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn("[string]$ClientRef", script)
         self.assertIn("ref = if ($ClientRef)", script)
 
+    def test_release_refuses_a_client_pin_behind_the_clients_repo_main(self):
+        # v0.1.0-beta.6 shipped the beta.5 client: the pin was valid and the
+        # checked-out SHA matched it, but nobody had bumped it. Shipping the
+        # pin is not enough; the pin has to be current.
+        workflows = next(
+            candidate / ".github" / "workflows"
+            for candidate in (self.repo, *self.repo.parents)
+            if (candidate / ".github" / "workflows" / "release.yaml").is_file()
+        )
+        release = (workflows / "release.yaml").read_text(encoding="utf-8")
+        self.assertIn("The client pin is current", release)
+        self.assertIn("allow_stale_client", release)
+        self.assertIn("git -C _client fetch --depth=1 origin main", release)
+        # The escape hatches, and only those, skip the check.
+        self.assertIn(
+            "if: ${{ !inputs.allow_stale_client && !github.event.inputs.client_ref }}",
+            release,
+        )
+        # The existing "checked-out SHA equals the pin" enforcement stays.
+        self.assertIn("is not the pinned", release)
+        # The failure has to tell the operator how to get out of it.
+        self.assertIn("packaging/client-ref.txt in its own pull request", release)
+
+    def test_binder_job_runs_on_pull_requests_that_touch_its_inputs(self):
+        # #391..#397 left main red because the binder job could not see a pull
+        # request move SUPPRESSION_PLAN_SHA256 away from EXPECTED_OUTPUT_SHA256.
+        workflows = next(
+            candidate / ".github" / "workflows"
+            for candidate in (self.repo, *self.repo.parents)
+            if (candidate / ".github" / "workflows" / "release.yaml").is_file()
+        )
+        tests_workflow = (workflows / "tests.yaml").read_text(encoding="utf-8")
+        self.assertIn("binder-inputs:", tests_workflow)
+        self.assertIn("needs.binder-inputs.outputs.changed == 'true'", tests_workflow)
+        # The dispatch and main-push paths are unchanged.
+        for unchanged in (
+            "github.ref == 'refs/heads/main'",
+            "github.event_name == 'workflow_dispatch'",
+            "github.event_name == 'repository_dispatch'",
+        ):
+            self.assertIn(unchanged, tests_workflow)
+        # Every file the binder build reads is in the filter.
+        for path in (
+            r"^worlds/bloodborne/__init__\.py$",
+            r"^tools/plan_vanilla_suppression\.py$",
+            r"^tools/check_suppression_plan_pin\.py$",
+            r"^tools/build_vanilla_suppression\.ps1$",
+            r"^tools/bb_inputs\.py$",
+            "^tools/bb_suppression_writer/",
+            "^tools/bb_objact_miner/",
+            r"^research/bb_inputs\.db$",
+            r"^research/joined/objact_params\.tsv$",
+            r"^tests/fixtures/shop-seed-request\.json$",
+            r"^\.github/workflows/tests\.yaml$",
+        ):
+            self.assertIn(path, tests_workflow, path)
+            # A filter entry that names a file nobody ships is a filter that
+            # will quietly stop matching.
+            # Probe against the repository that owns the workflows: in the
+            # Archipelago tier self.repo is the _ap/ checkout tests were copied
+            # into, not this repository.
+            probe = path.strip("^$").replace("\\", "").rstrip("/")
+            self.assertTrue((workflows.parent.parent / probe).exists(), probe)
+
     def test_partial_package_does_not_claim_to_be_bundled(self):
         (self.app / "tools" / "MSBBMiner.exe").unlink()
         toolchain = EnemizerToolchain(self.repo, app_root=self.app)

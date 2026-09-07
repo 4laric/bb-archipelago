@@ -91,6 +91,33 @@ before it merges. A client-commit dispatch or a manual `client_ref` builds
 against another ref without changing what a release ships. Never point the
 file at a branch name.
 
+## Cutting a release
+
+`v0.1.0-beta.6` shipped the `beta.5` client because the pin was never bumped and
+nothing in the release noticed. Work the list in order; it is short because each
+line is a thing that has already gone wrong once.
+
+1. **Main is green.** Not "green except the slow tier" -- the binder and
+   packaging jobs too. A tag builds from main; a red main is a red release.
+2. **The client pin is current.** `packaging/client-ref.txt` must hold the
+   `from-software-archipelago-clients` `main` head, not merely a valid SHA. If
+   it is behind, bump it in its own pull request first (see *The client pin*
+   above), let it merge, and tag after that. The release workflow now checks
+   this for you: its `The client pin is current` step fetches the clients repo's
+   `main` and fails the build when the pin is not that head. A manual
+   `client_ref`, or the `allow_stale_client` dispatch input, is the deliberate
+   way to build an older client on purpose.
+3. **`RUNTIME_BUILD` is identical in both repos.** The world's `RUNTIME_BUILD`
+   and the client's must be the same string, or the bridge handshake rejects
+   every session in the package you just shipped.
+4. **Tag.** Push the `v*` tag from the merge commit you checked, or dispatch the
+   workflow with that tag.
+5. **Watch the run.** Do not announce the prerelease until the workflow has
+   finished and the attached zip's manifest names the client SHA you expect.
+6. **Never move a published tag.** If a tag shipped something wrong, fix
+   forward: land the fix and cut the next beta. Re-pointing a tag people have
+   already downloaded makes the build unreproducible and the report unreadable.
+
 ## Checks
 
 Run the repository gate before opening a pull request:
@@ -102,6 +129,20 @@ Run the repository gate before opening a pull request:
 Use `-Data` only when intentionally regenerating derived research, and inspect
 the resulting diff. Generated tables must be reproducible; never hand-edit them
 to make a test pass. Use `-Apworld` when the change affects packaging.
+
+The slow suppression binder job normally runs only on main and on manual or
+client dispatches, so most pull requests get a fast verdict. It also runs on a
+pull request that touches anything the binder build reads -- the plan pin in
+`worlds/bloodborne/__init__.py`, `tools/plan_vanilla_suppression.py`,
+`tools/check_suppression_plan_pin.py`, `tools/build_vanilla_suppression.ps1`,
+`tools/bb_inputs.py`, `tools/bb_suppression_writer/`, `tools/bb_objact_miner/`,
+`research/bb_inputs.db`, `research/joined/objact_params.tsv`,
+`tests/fixtures/shop-seed-request.json`, or `.github/workflows/tests.yaml`. The
+`binder inputs touched` job decides this from a plain `git diff` against the
+pull request's base. Moving `SUPPRESSION_PLAN_SHA256` without repinning
+`EXPECTED_OUTPUT_SHA256` left main red from #391 to #397; that pair is now
+checked before the merge, not after. If you add a new input to the binder
+build, add its path to that job's list in the same pull request.
 
 Tests that assert an empty result or universal property need a separate witness
 that their input population was non-empty and the intended records were

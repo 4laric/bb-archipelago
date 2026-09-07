@@ -22,6 +22,61 @@ env:
     orjson colorama certifi bsdiff4 jinja2
 
 jobs:
+  # Does this pull request touch anything the suppression binder build reads?
+  # #391..#397 left main red because a pull request moved
+  # SUPPRESSION_PLAN_SHA256 while the binder job only ran on main, so nothing
+  # noticed that EXPECTED_OUTPUT_SHA256 had gone stale until after the merge.
+  # A plain git diff answers this; no third-party action is needed. The job
+  # runs unconditionally and simply reports false off pull requests, so that
+  # the binder job never has a skipped dependency to reason about.
+  binder-inputs:
+    name: binder inputs touched
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Diff the pull request against its base
+        id: filter
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # Everything the suppression-binder job reads: the plan pin and its
+          # checker, the planner and the build script, the native writer and
+          # the ObjAct miner, the inputs bundle and the committed mine output,
+          # the shop fixture -- and this workflow itself, so a change to the
+          # filter exercises the path it claims to add.
+          patterns='
+          ^worlds/bloodborne/__init__\.py$
+          ^tools/plan_vanilla_suppression\.py$
+          ^tools/check_suppression_plan_pin\.py$
+          ^tools/build_vanilla_suppression\.ps1$
+          ^tools/bb_inputs\.py$
+          ^tools/bb_suppression_writer/
+          ^tools/bb_objact_miner/
+          ^research/bb_inputs\.db$
+          ^research/joined/objact_params\.tsv$
+          ^tests/fixtures/shop-seed-request\.json$
+          ^\.github/workflows/tests\.yaml$
+          '
+          regex="$(echo "$patterns" | grep -v '^[[:space:]]*$' | sed 's/^[[:space:]]*//' | paste -sd'|' -)"
+          git diff --name-only "$BASE_SHA...$HEAD_SHA" > changed.txt
+          echo "changed files:"
+          cat changed.txt
+          if grep -Eq "$regex" changed.txt; then
+            echo "binder inputs touched:"
+            grep -E "$regex" changed.txt
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "no binder inputs touched"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   native-suppression-writer:
     name: native suppression writer builds
     runs-on: windows-latest
@@ -49,9 +104,20 @@ jobs:
   # a binder CI cannot reproduce byte-for-byte is a binder nobody can check.
   suppression-binder:
     name: suppression binder from the inputs bundle
-    # Slow and never waited on for review: run for main and manual/dispatch
-    # runs only, so a pull request gets its verdict from the fast tier.
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch'
+    # Slow and never waited on for review, so a pull request normally gets its
+    # verdict from the fast tier -- unless the pull request moves something the
+    # binder build reads, in which case only this job can catch the break
+    # before it reaches main. Main pushes and manual/client dispatches run it
+    # exactly as before. The job clones only public sources and reads only
+    # committed files, so it needs no secrets and is safe on fork pull
+    # requests; the downstream launcher-package job keeps its own main-only
+    # condition and simply stays skipped here.
+    needs: binder-inputs
+    if: >-
+      github.ref == 'refs/heads/main'
+      || github.event_name == 'workflow_dispatch'
+      || github.event_name == 'repository_dispatch'
+      || needs.binder-inputs.outputs.changed == 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
