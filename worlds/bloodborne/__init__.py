@@ -17,6 +17,9 @@ from .data import (
     DLC_LOCATION_KEYS,
     DLC_REGIONS,
     DLC_WEAPON_KEYS,
+    HEMWICK_GATE_ENTRANCE_NAME,
+    HEMWICK_GATE_ENTRANCE_RULE,
+    HEMWICK_GATE_ITEM_KEYS,
     SLICE_ENTRANCES,
     SLICE_ITEM_KEYS,
     SLICE_LOCATION_KEYS,
@@ -74,6 +77,7 @@ FULL_POOL_ITEM_KEYS = frozenset(
     and item.key not in STARTING_TOOL_KEYS
     and item.key not in ATTIRE_ITEM_KEYS
     and item.key not in PHANTOM_ATTIRE_ITEM_KEYS
+    and item.key not in HEMWICK_GATE_ITEM_KEYS
 )
 POOL_SUPPRESSION_ITEM_KEYS = SLICE_POOL_SUPPRESSION_KEYS
 EVENT_ITEMS = tuple(item for item in MODEL.items if item.kind is ItemKind.EVENT)
@@ -793,6 +797,22 @@ else:
         display_name = "Questlines Can Hold Progression Items"
         default = 0
 
+    class HemwickAccessGate(Toggle):
+        """Put Hemwick Charnel Lane behind a shuffled Hemwick Access item.
+
+        Off by default: the road to Hemwick opens as it does in the vanilla
+        game once you reach the Grand Cathedral plaza, and no gate item is
+        placed. Enable it to close the Cathedral Ward-Hemwick boundary fog
+        until Hemwick Access is received, which puts Hemwick and the
+        downstream Cainhurst checks behind an explicit Archipelago
+        progression item. Turning it on adds one item to the pool and asks
+        the launcher to build the Hemwick and Cathedral fog-gate event
+        overlays; leaving it off produces the same build as before the
+        option existed.
+        """
+        display_name = "Hemwick Access Gate"
+        default = 0
+
     class ConsumableQuantityBonus(Range):
         """Add this many extra copies to every consumable item you find.
 
@@ -839,6 +859,7 @@ else:
         alternate_hypogean_gaol_routes: AlternateHypogeanGaolRoutes
         one_time_enemy_checks: OneTimeEnemyChecks
         questlines_hold_progression: QuestlinesHoldProgression
+        hemwick_access_gate: HemwickAccessGate
         consumable_quantity_bonus: ConsumableQuantityBonus
 
     class BloodborneItem(APItem):
@@ -916,11 +937,20 @@ else:
                     event_location.place_locked_item(
                         BloodborneItem(event.name, ItemClassification.progression, None, self.player))
                     regions[data.region].locations.append(event_location)
+            hemwick_gate = self._hemwick_access_gate_enabled()
             for data in SLICE_ENTRANCES:
                 if data.name in DLC_ENTRANCE_NAMES and not self.options.include_dlc:
                     continue
                 entrance = regions[data.source].create_exit(data.name)
-                entrance.access_rule = _rule(data.rule, self.player)
+                if data.name == HEMWICK_GATE_ENTRANCE_NAME and hemwick_gate:
+                    # `data.py` authors the vanilla entrance and states the
+                    # gated shape separately; the option decides which one
+                    # applies, the way the alternate gaol routes decide which
+                    # authored entrances exist at all.
+                    entrance.access_rule = _rule(
+                        HEMWICK_GATE_ENTRANCE_RULE, self.player)
+                else:
+                    entrance.access_rule = _rule(data.rule, self.player)
                 entrance.connect(regions[data.target])
             if self._alternate_gaol_enabled():
                 for data in MODEL.entrances:
@@ -961,6 +991,13 @@ else:
             # Fail closed for old generated option objects and small test doubles.
             return bool(getattr(self.options, "one_time_enemy_checks", False))
 
+        def _hemwick_access_gate_enabled(self) -> bool:
+            # Fail closed (no gate) for old generated option objects and small
+            # test doubles: the default build has no Hemwick gate at all, so
+            # a world that cannot answer must not ask the launcher to patch
+            # events it will not know how to witness.
+            return bool(getattr(self.options, "hemwick_access_gate", False))
+
         def _questlines_hold_progression_enabled(self) -> bool:
             # Fail closed (restrict) for old generated option objects and
             # small test doubles: default behaviour keeps progression off
@@ -974,6 +1011,11 @@ else:
 
         def _pool_item_keys(self) -> frozenset[str]:
             base = FULL_POOL_ITEM_KEYS if self.options.full_item_pool else SLICE_ITEM_KEYS
+            if self._hemwick_access_gate_enabled():
+                # Opt-in, like the Uncanny variants: with the gate off the
+                # road to Hemwick is unconditional, so the access item gates
+                # nothing and must not consume a location slot.
+                base |= HEMWICK_GATE_ITEM_KEYS
             if not self.options.include_dlc:
                 # World access owns DLC progression and DLC-only consumables;
                 # equipment has its own default-on pool policy below.
@@ -1066,6 +1108,20 @@ else:
                 "alternate_hypogean_gaol_routes": bool(
                     self._alternate_gaol_enabled()),
                 "one_time_enemy_checks": self._one_time_enemy_checks_enabled(),
+                # `None` is the launcher's own "no gate" shape: it is what
+                # skips the Hemwick event overlay entirely and keeps the
+                # Cathedral event owning [12400760, 12401803, 12405710]. A
+                # dict with `enabled: False` would be a second way to say the
+                # same thing that every reader would have to learn.
+                "hemwick_gate": ({
+                    "enabled": True,
+                    "access_flag": 12201898,
+                    "cathedral_object": 2401995,
+                    "cathedral_sfx": 2403995,
+                    "hemwick_object": 2201999,
+                    "hemwick_sfx": 2203999,
+                } if self._hemwick_access_gate_enabled() else None),
+                "hemwick_access_gate": self._hemwick_access_gate_enabled(),
                 "questlines_hold_progression": self._questlines_hold_progression_enabled(),
                 "consumable_quantity_bonus": self._consumable_quantity_bonus(),
                 "weapon_requirement_families": requirement_families,

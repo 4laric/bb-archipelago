@@ -61,6 +61,17 @@
   byte-for-byte identical to before. No client change: the client already
   delivers the quantity the seed publishes.
 
+- Added the `hemwick_access_gate` YAML option (`Toggle`, **"Hemwick Access
+  Gate"**, default off). Turn it on and Hemwick gets its own shuffled access
+  gate: the seed places **Hemwick Access**, and the Cathedral Ward–Hemwick
+  boundary fog stays closed until you receive it, putting Hemwick and the
+  Cainhurst checks beyond it behind an explicit Archipelago progression item.
+  Left off -- the default -- nothing changes at all: the road to Hemwick opens
+  on reaching the Grand Cathedral plaza exactly as it does in the vanilla game,
+  Hemwick Access is not in the pool and costs no location slot, and the
+  launcher builds the same files it built before the option existed. A default
+  roll's item pool, logic graph and slot data are unchanged, and existing seed
+  files keep their previous traversal behavior. (#326)
 - The Yahar'gul Black set on the coachman's-seat corpse in Yahar'gul is now
   an Archipelago check (`Yahar'gul - Yahar'gul Black Set (coachman's seat)`)
   and its four vanilla lots are suppressed. It had been excluded by hand

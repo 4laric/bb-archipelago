@@ -19,10 +19,15 @@ sys.path.insert(0, str(REPO))
 
 def widest_slot_data() -> dict:
     from worlds.bloodborne import FULL_POOL_ITEM_KEYS, STARTING_TOOL_KEYS, build_runtime_slot_data
-    from worlds.bloodborne.data import ATTIRE_ITEM_KEYS, UNCANNY_ITEM_KEYS
+    from worlds.bloodborne.data import (
+        ATTIRE_ITEM_KEYS, HEMWICK_GATE_ITEM_KEYS, UNCANNY_ITEM_KEYS,
+    )
 
+    # Every opt-in key set belongs here, including the ones no default seed
+    # places: the point is the widest binding the world can ever publish.
     return build_runtime_slot_data(
-        FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS | ATTIRE_ITEM_KEYS | STARTING_TOOL_KEYS
+        FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS | ATTIRE_ITEM_KEYS
+        | HEMWICK_GATE_ITEM_KEYS | STARTING_TOOL_KEYS
     )
 
 

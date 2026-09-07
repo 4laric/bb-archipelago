@@ -51,6 +51,7 @@ TRANSACTION_FORMAT = "bb-launcher-activation-transaction-v1"
 DVDROOT_PREFIX = "dvdroot_ps4/"
 SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
 CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
+HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
 MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 # The enemizer plan is retained beside the seed manifest, outside the overlay
@@ -201,7 +202,7 @@ def _safe_overlay_path(raw: str) -> str:
         and "/" not in normalized[len(MAP_PREFIX):]
         and normalized.lower().endswith(".msb.dcx")
     )
-    is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, COMMON_EVENT_PATH}
+    is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH}
     if not is_suppression and not is_map and not is_owned_event:
         raise ValidationError(
             f"overlay path is outside the param/map/event contract: {normalized}"
@@ -225,6 +226,8 @@ def canonical_overlay_case(value: str) -> str:
         return SUPPRESSION_PATH
     if normalized.casefold() == CATHEDRAL_EVENT_PATH.casefold():
         return CATHEDRAL_EVENT_PATH
+    if normalized.casefold() == HEMWICK_EVENT_PATH.casefold():
+        return HEMWICK_EVENT_PATH
     if normalized.casefold() == COMMON_EVENT_PATH.casefold():
         return COMMON_EVENT_PATH
     if normalized.casefold().startswith(MAP_PREFIX.casefold()):
@@ -493,6 +496,7 @@ class SeedCache:
         map_studio: Path | str | None = None,
         cathedral_event: Path | str | None = None,
         common_event: Path | str | None = None,
+        hemwick_event: Path | str | None = None,
         enemizer_plan: Path | str | None = None,
         enemizer_options: Mapping[str, Any] | None = None,
     ) -> BuildResult:
@@ -563,6 +567,11 @@ class SeedCache:
                 if not event.is_file() or event.is_symlink():
                     raise ValidationError(f"Common event is not a regular file: {event}")
                 inputs.append((COMMON_EVENT_PATH, event, "common-event"))
+            if hemwick_event is not None:
+                event = Path(hemwick_event).expanduser().resolve()
+                if not event.is_file() or event.is_symlink():
+                    raise ValidationError(f"Hemwick event is not a regular file: {event}")
+                inputs.append((HEMWICK_EVENT_PATH, event, "hemwick-event"))
             inputs.extend(
                 (f"{MAP_PREFIX}{path.name}", path, "enemizer") for path in maps
             )
@@ -619,11 +628,17 @@ class SeedCache:
                             record["sha256"] for record in records
                             if record["path"] == CATHEDRAL_EVENT_PATH
                         ),
-                        "events": [12400760, 12401803, 12405710],
+                        "events": ([12400760, 12401803, 12405710, 12409990]
+                                   if hemwick_event is not None
+                                   else [12400760, 12401803, 12405710]),
                         "workshop_door_object": 2401202,
                         "workshop_badge_goods": 4114,
                         "laurence_witness_flag": 12401898,
                         "suppressed_password_flag": 12401803,
+                        "hemwick_gate": (None if hemwick_event is None else {
+                            "event": 12409990, "access_flag": 12201898,
+                            "object": 2401995, "sfx": 2403995,
+                        }),
                     }
                 ),
                 "common_event": (
@@ -632,6 +647,17 @@ class SeedCache:
                         "sha256": next(record["sha256"] for record in records
                                        if record["path"] == COMMON_EVENT_PATH),
                         "event": 98000000,
+                    }
+                ),
+                "hemwick_event": (
+                    None if hemwick_event is None else {
+                        "path": HEMWICK_EVENT_PATH,
+                        "sha256": next(record["sha256"] for record in records
+                                       if record["path"] == HEMWICK_EVENT_PATH),
+                        "event": 12209990,
+                        "access_flag": 12201898,
+                        "object": 2201999,
+                        "sfx": 2203999,
                     }
                 ),
                 "enemizer": {
@@ -723,6 +749,7 @@ class SeedCache:
             raise ValidationError("suppression witness hash does not match the binder record")
         cathedral = manifest.get("cathedral_event")
         cathedral_record = expected.get(CATHEDRAL_EVENT_PATH)
+        hemwick_record = expected.get(HEMWICK_EVENT_PATH)
         if (cathedral is None) != (cathedral_record is None):
             raise ValidationError(
                 "Cathedral event file and witness metadata must either both be present or both be absent"
@@ -737,7 +764,10 @@ class SeedCache:
                 raise ValidationError("Cathedral event output has the wrong component")
             if cathedral.get("sha256") != cathedral_record.get("sha256"):
                 raise ValidationError("Cathedral event witness hash does not match its record")
-            if cathedral.get("events") != [12400760, 12401803, 12405710]:
+            expected_cathedral_events = ([12400760, 12401803, 12405710, 12409990]
+                                         if hemwick_record is not None
+                                         else [12400760, 12401803, 12405710])
+            if cathedral.get("events") != expected_cathedral_events:
                 raise ValidationError("Cathedral event witness has unexpected owned events")
             if cathedral.get("workshop_door_object") != 2401202:
                 raise ValidationError("Cathedral event witness has the wrong Workshop door")
@@ -747,6 +777,12 @@ class SeedCache:
                 raise ValidationError("Cathedral event witness has the wrong Laurence flag")
             if cathedral.get("suppressed_password_flag") != 12401803:
                 raise ValidationError("Cathedral event witness has the wrong password flag")
+            expected_gate = (None if hemwick_record is None else {
+                "event": 12409990, "access_flag": 12201898,
+                "object": 2401995, "sfx": 2403995,
+            })
+            if cathedral.get("hemwick_gate") != expected_gate:
+                raise ValidationError("Cathedral event witness has the wrong Hemwick gate")
         common = manifest.get("common_event")
         common_record = expected.get(COMMON_EVENT_PATH)
         if (common is None) != (common_record is None):
@@ -759,6 +795,20 @@ class SeedCache:
                     or common.get("sha256") != common_record.get("sha256")
                     or common.get("event") != 98000000):
                 raise ValidationError("Common category-8 event witness is invalid")
+        hemwick = manifest.get("hemwick_event")
+        if (hemwick is None) != (hemwick_record is None):
+            raise ValidationError("Hemwick event file and witness must both be present or absent")
+        if hemwick is not None:
+            if not isinstance(hemwick, dict) or hemwick.get("path") != HEMWICK_EVENT_PATH:
+                raise ValidationError("Hemwick event witness points outside the managed event")
+            assert hemwick_record is not None
+            if (hemwick_record.get("component") != "hemwick-event"
+                    or hemwick.get("sha256") != hemwick_record.get("sha256")
+                    or hemwick.get("event") != 12209990
+                    or hemwick.get("access_flag") != 12201898
+                    or hemwick.get("object") != 2201999
+                    or hemwick.get("sfx") != 2203999):
+                raise ValidationError("Hemwick gate event witness is invalid")
         return BuildResult(root, manifest, False)
 
 

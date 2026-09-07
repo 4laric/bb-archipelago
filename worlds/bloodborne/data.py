@@ -27,6 +27,7 @@ ITEMS = (
     Item("oedon_tomb_key", "Oedon Tomb Key", P),
     Item("lunarium_key", "Lunarium Key", P),
     Item("forbidden_woods_password", '"Fear the Old Blood"', P),
+    Item("hemwick_access", "Hemwick Access", P),
     Item("cainhurst_summons", "Cainhurst Summons", P),
     Item("tonsil_stone", "Tonsil Stone", P),
     Item("upper_cathedral_key", "Upper Cathedral Key", P),
@@ -302,7 +303,9 @@ ENTRANCES = (
     Entrance("Healing Church Workshop plaza route", "Healing Church Workshop",
              "Grand Cathedral"),
     # The road to Hemwick starts left of the Grand Cathedral entrance, so it is
-    # behind the plaza, not free from Cathedral Ward.
+    # behind the plaza, not free from Cathedral Ward. Reaching the plaza is the
+    # only vanilla requirement; the optional `hemwick_access_gate` adds
+    # HEMWICK_GATE_ENTRANCE_RULE on top of this (see below).
     Entrance("Road to Hemwick", "Grand Cathedral", "Hemwick Charnel Lane"),
     Entrance("Forbidden Woods password door", "Cathedral Ward", "Forbidden Woods",
              Rule.all("forbidden_woods_password")),
@@ -847,6 +850,25 @@ ALTERNATE_GAOL_ENTRANCE_NAMES = frozenset({
     "Descent to Paarl", "Paarl's rear gate",
 })
 ALTERNATE_GAOL_LOCATION_KEYS = frozenset({"boss_darkbeast_paarl"})
+
+# bb-archipelago#326. The one entrance the `hemwick_access_gate` YAML option
+# switches. Its authored rule in ENTRANCES above is the vanilla one (free once
+# the Grand Cathedral plaza is reachable), which is what a default seed gets;
+# `create_regions` substitutes HEMWICK_GATE_ENTRANCE_RULE below only when the
+# option is on. The name is bound here so the world never matches on a literal.
+HEMWICK_GATE_ENTRANCE_NAME = "Road to Hemwick"
+# Hemwick Access is a shufflable item with a permanent network id, but like
+# the Uncanny variants it is opt-in: it enters a pool only through the
+# `hemwick_access_gate` option, so the default pool -- and every seed
+# generated before #326 -- is unchanged.
+HEMWICK_GATE_ITEM_KEY = "hemwick_access"
+HEMWICK_GATE_ITEM_KEYS = frozenset({HEMWICK_GATE_ITEM_KEY})
+# The rule the option installs on that entrance when it is on. It lives here,
+# beside the model, rather than in the world, so the gated shape is still
+# reviewable design data -- but the authored entrance above stays the vanilla
+# one, so a default seed's logic graph is byte-for-byte what it was before
+# this option existed.
+HEMWICK_GATE_ENTRANCE_RULE = Rule.all(HEMWICK_GATE_ITEM_KEY)
 
 # bb-archipelago#295. An explicit, reviewed classification of which AP items
 # are spendable stackable consumables, used by the `consumable_quantity_bonus`

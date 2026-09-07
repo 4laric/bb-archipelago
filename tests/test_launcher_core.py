@@ -14,6 +14,7 @@ from bb_launcher import core
 from bb_launcher.core import (
     APP_VERSION,
     CATHEDRAL_EVENT_PATH,
+    HEMWICK_EVENT_PATH,
     SESSION_HEADER_PREFIX,
     EXCLUDED_AP_OWNED,
     EXCLUDED_DEAD_PATH,
@@ -420,6 +421,34 @@ class LauncherCoreTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValidationError, message):
                     cache.verify(build.path)
         manifest_path.write_text(json.dumps(original), encoding="utf-8")
+
+    def test_cache_carries_and_verifies_both_hemwick_gate_events(self):
+        binder = self.root / "binder.dcx"
+        binder.write_bytes(b"suppressed")
+        cathedral = self.root / "m24_00_00_00.emevd.dcx"
+        cathedral.write_bytes(b"cathedral gate")
+        hemwick = self.root / "m22_00_00_00.emevd.dcx"
+        hemwick.write_bytes(b"hemwick gate")
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(
+            identity("seed", b"suppressed"), binder,
+            cathedral_event=cathedral, hemwick_event=hemwick,
+        )
+        self.assertEqual(
+            [12400760, 12401803, 12405710, 12409990],
+            build.manifest["cathedral_event"]["events"],
+        )
+        self.assertEqual(
+            HEMWICK_EVENT_PATH, build.manifest["hemwick_event"]["path"]
+        )
+        cache.verify(build.path)
+
+        manifest_path = build.path / core.SEED_MANIFEST_NAME
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["hemwick_event"]["access_flag"] += 1
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "Hemwick gate event witness"):
+            cache.verify(build.path)
 
     def test_cache_refuses_cathedral_witness_without_event_file_record(self):
         binder = self.root / "binder.dcx"

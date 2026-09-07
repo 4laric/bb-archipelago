@@ -236,6 +236,10 @@ if (EMEVD.Read(commonPath).Events.Count != 2)
 // event has the reviewed vanilla instruction shape, while the separate shape
 // event supplies the opcodes cloned by the writer. No game bytes are included.
 var cathedral = new EMEVD(EMEVD.Game.Bloodborne);
+var cathedralConstructor = new EMEVD.Event(0);
+cathedralConstructor.Instructions.Add(new EMEVD.Instruction(
+    2000, 0, Convert.FromHexString("18000000b01d0000cba624009bae2400")));
+cathedral.Events.Add(cathedralConstructor);
 var laurence = new EMEVD.Event(12401803);
 foreach (var (bank, id, hex) in new[] {
     (2006, 1, "55ac240000000000"),
@@ -292,6 +296,16 @@ string cathedralPath = Path.Combine(outputRoot, "event", "m24_00_00_00.emevd.dcx
 cathedral.Write(cathedralPath);
 if (EMEVD.Read(cathedralPath).Events.Single(e => e.ID == 12401803).Instructions.Count != 16)
     throw new InvalidDataException("synthetic Cathedral event fixture did not round-trip");
+
+var hemwick = new EMEVD(EMEVD.Game.Bloodborne);
+var hemwickConstructor = new EMEVD.Event(0);
+hemwickConstructor.Instructions.Add(new EMEVD.Instruction(
+    2000, 0, Convert.FromHexString("00000000b01d00008f9921005fa12100")));
+hemwick.Events.Add(hemwickConstructor);
+string hemwickPath = Path.Combine(outputRoot, "event", "m22_00_00_00.emevd.dcx");
+hemwick.Write(hemwickPath);
+if (EMEVD.Read(hemwickPath).Events.Single(e => e.ID == 0).Instructions.Count != 1)
+    throw new InvalidDataException("synthetic Hemwick event fixture did not round-trip");
 
 Console.WriteLine(
     $"forge maps=2 placements_per_map={placements.Length} enemies_total={forgedEnemies} "

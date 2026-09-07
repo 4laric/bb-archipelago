@@ -263,6 +263,7 @@ GOLDEN_ITEMS = {
     "blood_of_adella": 0xBB0224,
     "iosefkas_blood_vial": 0xBB0225,
     "blood_of_adeline": 0xBB0226,
+    "hemwick_access": 0xBB0227,
     "blood_vial": 0xBB0100,
     "quicksilver_bullets": 0xBB0101,
     "pebbles": 0xBB0102,
@@ -565,10 +566,13 @@ class RuntimeItemContractTests(unittest.TestCase):
         self.assertEqual(emitted, accepted_by_build[RUNTIME_BUILD])
 
     def test_every_runtime_item_declares_receive_policy_metadata(self):
-        # The widest pool a seed can ask for: the default full pool plus the
-        # Uncanny variants the option adds. Every id the datapackage publishes
-        # must be deliverable in the pool that can place it.
-        from worlds.bloodborne.data import ATTIRE_ITEM_KEYS, UNCANNY_ITEM_KEYS
+        # The widest pool a seed can ask for: the default full pool plus every
+        # opt-in key set (the Uncanny variants, attire, and the Hemwick access
+        # gate item). Every id the datapackage publishes must be deliverable in
+        # the pool that can place it.
+        from worlds.bloodborne.data import (
+            ATTIRE_ITEM_KEYS, HEMWICK_GATE_ITEM_KEYS, UNCANNY_ITEM_KEYS,
+        )
         from worlds.bloodborne import FULL_POOL_ITEM_KEYS, STARTING_TOOL_KEYS
 
         from worlds.bloodborne import ITEM_ID_BY_KEY
@@ -576,7 +580,7 @@ class RuntimeItemContractTests(unittest.TestCase):
 
         runtime_items = build_runtime_slot_data(
             FULL_POOL_ITEM_KEYS | UNCANNY_ITEM_KEYS | ATTIRE_ITEM_KEYS
-            | STARTING_TOOL_KEYS)["runtime_items"]
+            | HEMWICK_GATE_ITEM_KEYS | STARTING_TOOL_KEYS)["runtime_items"]
         # Phantom attire keeps its datapackage id but is never placeable.
         phantom_ids = {str(ITEM_ID_BY_KEY[key]) for key in PHANTOM_ATTIRE_ITEM_KEYS}
         self.assertEqual(

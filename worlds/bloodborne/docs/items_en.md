@@ -21,6 +21,7 @@ interaction as owning its vanilla counterpart unless noted below.
 | Hunter Chief Emblem | Opens the round-plaza gate in Cathedral Ward. The current game also permits the longer route through the Healing Church Workshop after Blood-starved Beast; that bypass is tracked for removal in issue #243. |
 | Oedon Tomb Key | Opens the gate beyond Father Gascoigne's arena. Defeating Gascoigne and receiving the key are separate requirements. |
 | Lunarium Key | Opens Byrgenwerth's second-floor terrace door, giving access to Provost Willem and the Moonside Lake arena where Rom is fought. |
+| Hemwick Access | Placed only when the **Hemwick Access Gate** YAML option is on (it is off by default). It opens the boundary fog between Cathedral Ward and Hemwick Charnel Lane; with the option on, Hemwick and Castle Cainhurst beyond it stay closed until it is received. With the option off the item is not in the pool and the road to Hemwick opens as it does in the vanilla game. |
 | Cainhurst Summons | Enables the Cainhurst carriage at the Hemwick obelisk after the Witch of Hemwick has been defeated. |
 | Tonsil Stone | Lets the Amygdala at the chapel-side grab take you to Lecture Building 1F, whose large door leads to Nightmare Frontier. It does not open Lecture Building 2F. |
 | Upper Cathedral Key | Opens the locked entrance to Upper Cathedral Ward. Reaching that door also requires the Healing Church Workshop route opened by defeating Blood-starved Beast. |
@@ -283,7 +284,7 @@ opens the password conversation at the Forbidden Woods door. It is not consumed.
 
 <!-- ITEM-DOC-KEYS
 blood_vial blood_gem_workshop_tool rune_workshop_tool hunter_chief_emblem
-oedon_tomb_key lunarium_key forbidden_woods_password cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
+oedon_tomb_key lunarium_key forbidden_woods_password hemwick_access cainhurst_summons tonsil_stone upper_cathedral_key orphanage_key
 eye_of_blood_drunk_hunter eye_pendant astral_clocktower_key celestial_dial
  sword_hunter_badge old_hunter_badge saw_hunter_badge crow_hunter_badge
 powder_keg_hunter_badge radiant_sword_hunter_badge wheel_hunter_badge

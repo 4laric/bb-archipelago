@@ -79,6 +79,12 @@ alternate progression graph. It defaults off because the late Blood Moon path
 can bypass the expected Blood-starved Beast route into Old Yharnam. Early
 abduction still requires Blood-starved Beast, and enemy randomization preserves
 an authored Cathedral Ward Snatcher so access never depends on a lucky roll.
+Set `hemwick_access_gate: true` to close the Cathedral Ward-Hemwick boundary
+fog until the shuffled Hemwick Access item is received, putting Hemwick and the
+Cainhurst checks beyond it behind an explicit progression item. It defaults off,
+and with it off the road to Hemwick opens as it does in the vanilla game and no
+access item is placed. The static mapping, the flag, and the evidence boundary
+are in `docs/HEMWICK-ACCESS-GATE.md`.
 Set `one_time_enemy_checks: true` to add the reviewed non-respawning hunter and
 unique-enemy checks. It defaults off; the initial conservative tranche contains
 Yurie at Byrgenwerth, whose dedicated persistent death-event flag is independent

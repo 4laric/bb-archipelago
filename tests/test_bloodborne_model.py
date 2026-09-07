@@ -352,7 +352,9 @@ class BloodborneModelTests(unittest.TestCase):
         Yharnam. Review finding W4 added the eight region gates (tonsil stone,
         Upper Cathedral key, Cainhurst summons, the four DLC keys and
         Laurence's skull) so that turning the option off no longer seals the
-        regions the manifest still seeds. 652 - 21 one-off items = 631 filler
+        regions the manifest still seeds. Hemwick Access is NOT here: the
+        Hemwick access gate is off by default, so it stays out of the pool.
+        657 - 21 one-off items = 636 filler
         slots over the slice's own five filler names.
         """
         counts = Counter(build_item_pool_names(SLICE_ITEM_KEYS))
