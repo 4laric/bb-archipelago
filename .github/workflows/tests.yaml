@@ -248,7 +248,10 @@ jobs:
             Write-Error "the writer accepted a quantity past the good's maxNum"
             exit 1
           }
+          # The writer exits non-zero on purpose here; pwsh would otherwise
+          # inherit $LASTEXITCODE and fail the step for the expected refusal.
           Write-Host "forged v2 rewrite refused as expected"
+          exit 0
       - uses: actions/upload-artifact@v4
         with:
           name: vanilla-suppression-binder
