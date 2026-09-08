@@ -33,8 +33,11 @@ under `Unreleased` and move into a dated version section when released.
   distinct cords for the ones you have already earned.
 
 - The bundled `tools/bb-ap-client.exe` moves to the current client
-  (`4da24d3d`); releases through v0.1.0-beta.6 shipped the client pinned back
-  at v0.1.0-beta.5. Bundled now: a held delivery plan re-derives its
+  (`e3d7e42`); releases through v0.1.0-beta.6 shipped the client pinned back
+  at v0.1.0-beta.5. Bundled now: the `rescue moon-presence CONFIRM` recipe the
+  Third Umbilical Cord fix above tells you to run on a seed already in progress
+  (clients#658); a client-set key-item flag is no longer polled back as a check
+  of its own (clients#659); a held delivery plan re-derives its
   auto-upgrade level, so a weapon handed over while it is already in your
   inventory arrives at the right +level (clients#655); a local-death detector
   for DeathLink, with the send lane still gated off behind the
