@@ -25,6 +25,22 @@ Archipelago installations need no Python selection. World metadata checks are
 compatibility checks, not proof of exact apworld source identity; the generated
 request still passes normal validation.
 
+The player-YAML picker opens in the selected installation's `Players` folder
+when it has one (matched without regard to case), and otherwise in whatever the
+field already holds, or in the installation root. Ticking **Use existing player
+YAML files instead** while that field is empty fills it in with the same folder.
+
+Archipelago generates from *every* YAML file directly in that folder -- not the
+ones in subfolders such as `Players\Templates` -- and it aborts on the first
+file it cannot read, with a traceback that names neither the fix nor the other
+files with the same mistake. The launcher therefore reads the folder first and
+refuses in one message that lists every bad file: a document with no top-level
+`name` or `game` key, `name`/`game` indented under the game block (the common
+mistake, since the options *do* go there), or a `game` value whose spelling
+differs from `Bloodborne` only in case. Option values are not checked -- that
+is Archipelago's job. A folder in which no file targets Bloodborne is a warning
+in the progress log, not a refusal, so mixed multiworlds still generate.
+
 The package carries the matching `worlds\bloodborne.apworld`, and the launcher
 can install it. When the selected installation has no Bloodborne world, or has
 one of a different version, **Create seed** stops, says which of the two it is,

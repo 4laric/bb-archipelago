@@ -353,6 +353,156 @@ def _run_streaming(
     return code
 
 
+BLOODBORNE_GAME = "Bloodborne"
+_DOCUMENT_BREAK = re.compile(r"^(---|\.\.\.)(\s|$)")
+_TOP_LEVEL_KEY = re.compile(r"^(?P<key>[^\s#][^:]*?)\s*:(?:\s+(?P<value>.*?))?\s*$")
+_INDENTED_KEY = re.compile(r"^\s+(?P<key>[^\s#][^:]*?)\s*:(?:\s+(?P<value>.*?))?\s*$")
+# Archipelago's own Generate.py skips dotfiles and treats these two names as
+# meta/weights inputs rather than as players, so neither is a missing-"game" bug.
+_NOT_PLAYER_FILES = {"meta.yaml", "weights.yaml"}
+
+
+@dataclass(frozen=True)
+class PlayerYaml:
+    """One player document found in the player-files folder."""
+
+    path: Path
+    document: int
+    name: str
+    game: str
+
+    @property
+    def is_bloodborne(self) -> bool:
+        return self.game == BLOODBORNE_GAME
+
+
+def _unquote(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        return value[1:-1]
+    # An unquoted scalar can carry a trailing comment.
+    return value.split(" #", 1)[0].strip()
+
+
+def _scan_documents(text: str) -> list[tuple[dict[str, str], dict[str, list[str]]]]:
+    """Split ``text`` into documents of top-level keys plus indented name/game keys.
+
+    The launcher is deliberately dependency-free (see :func:`write_solo_player`;
+    the frozen build installs nothing but PyInstaller), so this reads the two
+    keys Archipelago cannot start without instead of importing PyYAML. It never
+    judges an option *value* — Archipelago still does all of that.
+    """
+    documents: list[tuple[dict[str, str], dict[str, list[str]]]] = []
+    top: dict[str, str] = {}
+    nested: dict[str, list[str]] = {}
+    owner = ""
+    seen_content = False
+
+    def flush() -> None:
+        nonlocal top, nested, owner, seen_content
+        if seen_content:
+            documents.append((top, nested))
+        top, nested, owner, seen_content = {}, {}, "", False
+
+    for raw in text.splitlines():
+        line = raw.rstrip()
+        if _DOCUMENT_BREAK.match(line):
+            flush()
+            continue
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        seen_content = True
+        match = _TOP_LEVEL_KEY.match(line)
+        if match:
+            key = _unquote(match.group("key"))
+            top[key] = _unquote(match.group("value") or "")
+            owner = key
+            continue
+        indented = _INDENTED_KEY.match(line)
+        if indented and owner:
+            key = _unquote(indented.group("key"))
+            if key in ("name", "game"):
+                nested.setdefault(key, []).append(owner)
+    flush()
+    return documents
+
+
+def _document_label(path: Path, index: int, count: int) -> str:
+    return path.name if count == 1 else f"{path.name} (document #{index})"
+
+
+def validate_player_yamls(folder: Path | str) -> list[PlayerYaml]:
+    """Read a player-YAML folder the way Archipelago will, before generating.
+
+    Only the two keys Archipelago refuses to start without are checked, and
+    every bad file is reported at once: generation aborts on the first one with
+    a traceback that names neither the fix nor the other files that share the
+    mistake.
+    """
+    root = Path(folder).expanduser()
+    if not root.is_dir():
+        raise ValidationError(f"the player YAML folder does not exist: {root}")
+    # Archipelago scans the files directly in this folder; it does not recurse,
+    # so the Templates subfolder it ships is not part of the seed.
+    files = sorted(
+        (entry for entry in root.iterdir()
+         if entry.is_file()
+         and entry.suffix.lower() in (".yaml", ".yml")
+         and not entry.name.startswith(".")
+         and entry.name.lower() not in _NOT_PLAYER_FILES),
+        key=lambda entry: entry.name.lower(),
+    )
+    if not files:
+        raise ValidationError(
+            f"no player YAML files in {root}. Archipelago reads the .yaml files directly in "
+            "this folder, not the ones in subfolders such as Templates."
+        )
+    players: list[PlayerYaml] = []
+    problems: list[str] = []
+    for path in files:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            problems.append(f"{path.name}: cannot be read as UTF-8 text ({exc}).")
+            continue
+        documents = _scan_documents(text)
+        if not documents:
+            problems.append(f'{path.name}: the file is empty; it needs top-level "name" and "game" keys.')
+            continue
+        for index, (top, nested) in enumerate(documents, start=1):
+            label = _document_label(path, index, len(documents))
+            missing = [key for key in ("name", "game") if not top.get(key)]
+            if missing:
+                owners = sorted({owner for key in missing for owner in nested.get(key, [])})
+                if owners:
+                    keys = " and ".join(f'"{key}"' for key in missing)
+                    verb = "is" if len(missing) == 1 else "are"
+                    where = " and ".join(f'"{owner}:"' for owner in owners)
+                    problems.append(
+                        f"{label}: {keys} {verb} indented under {where}; they must be top-level keys."
+                    )
+                else:
+                    problems.append(
+                        f"{label}: " + " and ".join(f'no top-level "{key}" key' for key in missing) + "."
+                    )
+                continue
+            game = top["game"]
+            players.append(PlayerYaml(path, index, top["name"], game))
+            if game != BLOODBORNE_GAME and game.lower() == BLOODBORNE_GAME.lower():
+                problems.append(
+                    f'{label}: game is "{game}"; Archipelago matches the game name exactly, '
+                    f'so it must be spelled "{BLOODBORNE_GAME}".'
+                )
+    if problems:
+        raise ValidationError(
+            "These player YAML files cannot be generated as they are:\n  - "
+            + "\n  - ".join(problems)
+            + '\nEvery player file needs a top-level "name" and "game"; the game options belong '
+            "under a block named after the game."
+        )
+    return players
+
+
 def _contains_multidata(archive: Path) -> bool:
     try:
         with zipfile.ZipFile(archive) as bundle:

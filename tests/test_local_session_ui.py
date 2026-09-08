@@ -136,5 +136,133 @@ class LocalSessionUiTests(unittest.TestCase):
         app.root.destroy.assert_not_called()
 
 
+class PlayerFolderPickerTests(unittest.TestCase):
+    """The picker opens where Archipelago actually keeps player YAML files."""
+
+    def panel(self, ap_root, players=""):
+        return SimpleNamespace(
+            app=SimpleNamespace(filedialog=Mock()),
+            ap_root=SimpleNamespace(get=lambda: str(ap_root)),
+            players=Mock(get=Mock(return_value=players)),
+            use_folder=Mock(get=Mock(return_value=True)),
+        )
+
+    def bind(self, panel):
+        panel._players_directory = lambda: LocalSessionPanel._players_directory(panel)
+        panel._players_initialdir = lambda: LocalSessionPanel._players_initialdir(panel)
+        return panel
+
+    def test_the_picker_opens_in_the_installs_players_folder(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            # Archipelago capitalises this folder by convention only.
+            (root / "players" / "Templates").mkdir(parents=True)
+            panel = self.bind(self.panel(root))
+            panel.app.filedialog.askdirectory.return_value = ""
+            LocalSessionPanel._browse_players(panel)
+            self.assertEqual(str(root / "players"),
+                             panel.app.filedialog.askdirectory.call_args.kwargs["initialdir"])
+
+    def test_without_a_players_folder_the_picker_falls_back(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            panel = self.bind(self.panel(root, players=str(root / "elsewhere")))
+            panel.app.filedialog.askdirectory.return_value = ""
+            LocalSessionPanel._browse_players(panel)
+            self.assertEqual(str(root / "elsewhere"),
+                             panel.app.filedialog.askdirectory.call_args.kwargs["initialdir"])
+            # With nothing typed in the field either, the install root itself.
+            panel.players.get.return_value = ""
+            LocalSessionPanel._browse_players(panel)
+            self.assertEqual(str(root),
+                             panel.app.filedialog.askdirectory.call_args.kwargs["initialdir"])
+
+    def test_ticking_the_box_prefills_the_players_folder(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "Players").mkdir()
+            panel = self.bind(self.panel(root))
+            panel._prefill_players = lambda: LocalSessionPanel._prefill_players(panel)
+            panel._prefill_players()
+            panel.players.set.assert_called_once_with(str(root / "Players"))
+            # A folder the player already chose is never overwritten.
+            panel.players.set.reset_mock()
+            panel.players.get.return_value = str(root / "mine")
+            panel._prefill_players()
+            panel.players.set.assert_not_called()
+
+    def test_no_prefill_without_an_install_or_a_players_folder(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            panel = self.bind(self.panel(Path(temporary)))
+            panel._prefill_players = lambda: LocalSessionPanel._prefill_players(panel)
+            panel._prefill_players()
+            panel.players.set.assert_not_called()
+
+    def test_settings_round_trip_still_carries_the_chosen_folder(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "local-session-settings.json"
+            panel = SimpleNamespace(
+                config_path=config,
+                **{key: Mock(get=Mock(return_value=key.upper())) for key in
+                   ("ap_root", "python", "name", "players", "port")})
+            LocalSessionPanel._save(panel)
+            self.assertEqual("PLAYERS", json.loads(config.read_text(encoding="utf-8"))["players"])
+            LocalSessionPanel._load(panel)
+            panel.players.set.assert_called_once_with("PLAYERS")
+
+
+class PlayerFolderValidationTests(unittest.TestCase):
+    """A bad folder is refused with words, not with Archipelago's traceback."""
+
+    def manifest_root(self, near):
+        """A stand-in resource root holding the bundled world manifest."""
+        root = near / "resources"
+        world = root / "worlds" / "bloodborne"
+        world.mkdir(parents=True, exist_ok=True)
+        (world / "archipelago.json").write_text('{"game": "Bloodborne"}', encoding="utf-8")
+        return root
+
+    def generating_panel(self, players):
+        app = SimpleNamespace(
+            _busy=False, _append_log=Mock(), _state_root=Mock(return_value=Path("state")),
+            _progress_message=Mock(), _set_busy=Mock(), root=Mock())
+        return SimpleNamespace(
+            app=app, host=None, status=Mock(), cancel=Mock(), cancel_button=Mock(),
+            players=Mock(get=Mock(return_value=str(players))),
+            use_folder=Mock(get=Mock(return_value=True)),
+            auto_host=Mock(get=Mock(return_value=False)),
+            _tools=Mock(return_value=SimpleNamespace(root=Path("C:/Archipelago"))),
+            _save=Mock(), _error=Mock(), _clear_world_install=Mock(), _offer_world_install=Mock(),
+        )
+
+    def test_generation_is_refused_before_archipelago_ever_runs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            players = Path(temporary)
+            (players / "Player-EldenRing.yaml").write_text("name: Tarnished\n", encoding="utf-8")
+            panel = self.generating_panel(players)
+            with patch("bb_launcher.local_session_ui.validate_bloodborne_world"), \
+                 patch("bb_launcher.local_session_ui.resource_root",
+                       return_value=self.manifest_root(players)), \
+                 patch("bb_launcher.local_session_ui.generate_seed") as generate:
+                LocalSessionPanel._generate(panel)
+            generate.assert_not_called()
+            panel._error.assert_called_once()
+            self.assertIn('no top-level "game" key', panel._error.call_args.args[0])
+
+    def test_a_folder_with_no_bloodborne_player_warns_but_generates(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            players = Path(temporary)
+            (players / "Other.yaml").write_text("name: T\ngame: Elden Ring\n", encoding="utf-8")
+            panel = self.generating_panel(players)
+            with patch("bb_launcher.local_session_ui.validate_bloodborne_world"), \
+                 patch("bb_launcher.local_session_ui.resource_root",
+                       return_value=self.manifest_root(players)), \
+                 patch("bb_launcher.local_session_ui.threading.Thread") as thread:
+                LocalSessionPanel._generate(panel)
+            panel._error.assert_not_called()
+            thread.assert_called_once()
+            self.assertIn("no player YAML", panel.app._append_log.call_args.args[0])
+
+
 if __name__ == '__main__':
     unittest.main()

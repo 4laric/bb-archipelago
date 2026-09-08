@@ -15,6 +15,7 @@ from .local_session import (
     install_bloodborne_world,
     start_server,
     validate_bloodborne_world,
+    validate_player_yamls,
 )
 from .resources import resource_root
 from .seed_request import archive_slots
@@ -78,7 +79,8 @@ class LocalSessionPanel:
         self._field(frame, 3, "Your player name", self.name)
         ttk.Checkbutton(frame, text="Include The Old Hunters DLC", variable=self.include_dlc).grid(
             row=4, column=1, sticky="w")
-        ttk.Checkbutton(frame, text="Use existing player YAML files instead", variable=self.use_folder).grid(
+        ttk.Checkbutton(frame, text="Use existing player YAML files instead", variable=self.use_folder,
+                        command=self._prefill_players).grid(
             row=5, column=0, columnspan=3, sticky="w", pady=(6, 0))
         self._field(frame, 6, "Player YAML folder", self.players, self._browse_players)
         ttk.Checkbutton(frame, text="Start local server after generation", variable=self.auto_host).grid(
@@ -121,8 +123,51 @@ class LocalSessionPanel:
         if value:
             self.python.set(value)
 
+    def _players_directory(self):
+        """Where the Archipelago install keeps player YAML files, if it does.
+
+        Archipelago ships a ``Players`` folder (holding ``Templates``), and that
+        is where a player's own yaml almost always is, so the picker should open
+        there rather than in the home directory. Matched case-insensitively
+        because the folder is only capitalised by convention.
+        """
+        root = self.ap_root.get().strip()
+        if not root:
+            return None
+        try:
+            base = Path(root)
+            if not base.is_dir():
+                return None
+            for entry in base.iterdir():
+                if entry.is_dir() and entry.name.lower() == "players":
+                    return entry
+        except OSError:
+            return None
+        return None
+
+    def _players_initialdir(self):
+        players = self._players_directory()
+        if players is not None:
+            return str(players)
+        current = self.players.get().strip()
+        if current:
+            return current
+        root = self.ap_root.get().strip()
+        return root or None
+
+    def _prefill_players(self):
+        """Point an empty folder field at <ap_root>/Players when it exists."""
+        if not self.use_folder.get() or self.players.get().strip():
+            return
+        players = self._players_directory()
+        if players is not None:
+            self.players.set(str(players))
+
     def _browse_players(self):
-        value = self.app.filedialog.askdirectory(title="Folder containing player YAML files")
+        initial = self._players_initialdir()
+        kwargs = {"initialdir": initial} if initial else {}
+        value = self.app.filedialog.askdirectory(
+            title="Folder containing player YAML files", **kwargs)
         if value:
             self.players.set(value)
             self.use_folder.set(True)
@@ -174,6 +219,14 @@ class LocalSessionPanel:
                 if not self.players.get().strip():
                     raise ValidationError("Choose the folder containing your player YAML files.")
                 players = Path(self.players.get().strip())
+                # Archipelago generates from every yaml in this folder and dies
+                # on the first bad one with a raw traceback; say what is wrong
+                # with all of them, in words that name the fix, first.
+                found = validate_player_yamls(players)
+                if not any(entry.is_bloodborne for entry in found):
+                    self.app._append_log(
+                        "WARNING: no player YAML in this folder has \"game: Bloodborne\"; "
+                        "the generated seed will contain no Bloodborne slot.")
             else:
                 players = write_solo_player(state, self.name.get(), self.include_dlc.get())
             self._save()

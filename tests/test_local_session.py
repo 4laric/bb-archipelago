@@ -22,6 +22,7 @@ from bb_launcher.local_session import (
     is_archipelago_root,
     start_server,
     validate_bloodborne_world,
+    validate_player_yamls,
 )
 
 WORLD_MANIFEST = {"game": "Bloodborne", "world_version": "0.1.0", "minimum_ap_version": "0.6.7"}
@@ -266,6 +267,92 @@ class LocalSessionTests(unittest.TestCase):
             popen.return_value = process
             with self.assertRaisesRegex(ValidationError, "exited during startup with code 7"):
                 start_server(APTools(root, ("generate",), ("server",)), archive)
+
+
+class PlayerYamlValidationTests(unittest.TestCase):
+    """Say what is wrong with a player folder before Archipelago dies on it."""
+
+    def folder(self, files):
+        root = Path(tempfile.mkdtemp())
+        for name, text in files.items():
+            path = root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+        return root
+
+    def test_a_good_folder_lists_its_players(self):
+        root = self.folder({
+            "Bloodborne.yaml": "name: Hunter\ngame: Bloodborne\nBloodborne:\n  include_dlc: true\n",
+            "Friend.yml": 'name: "Friend"\ngame: Bloodborne\n',
+        })
+        found = validate_player_yamls(root)
+        self.assertEqual([("Hunter", "Bloodborne"), ("Friend", "Bloodborne")],
+                         sorted(((entry.name, entry.game) for entry in found), reverse=True))
+        self.assertEqual([True, True], [entry.is_bloodborne for entry in found])
+
+    def test_multiple_documents_in_one_file_are_each_checked(self):
+        root = self.folder({
+            "Both.yaml": "name: A\ngame: Bloodborne\n---\ndescription: second\ngame: Bloodborne\n",
+        })
+        with self.assertRaises(ValidationError) as raised:
+            validate_player_yamls(root)
+        self.assertIn('Both.yaml (document #2): no top-level "name" key.', str(raised.exception))
+
+    def test_a_file_without_a_game_key_is_named_with_its_fix(self):
+        root = self.folder({
+            "Bloodborne.yaml": "name: Hunter\ngame: Bloodborne\n",
+            "Player-EldenRing.yaml": "name: Tarnished\ndescription: template\n",
+        })
+        with self.assertRaises(ValidationError) as raised:
+            validate_player_yamls(root)
+        message = str(raised.exception)
+        self.assertIn('Player-EldenRing.yaml: no top-level "game" key.', message)
+        self.assertNotIn("Bloodborne.yaml:", message)
+
+    def test_name_and_game_indented_under_the_game_block_are_called_out(self):
+        root = self.folder({
+            "Bloodborne.yaml": "description: mine\nBloodborne:\n  name: Hunter\n  game: Bloodborne\n",
+        })
+        with self.assertRaises(ValidationError) as raised:
+            validate_player_yamls(root)
+        self.assertIn(
+            'Bloodborne.yaml: "name" and "game" are indented under "Bloodborne:"; '
+            "they must be top-level keys.",
+            str(raised.exception))
+
+    def test_wrong_casing_names_the_exact_spelling(self):
+        root = self.folder({"Mine.yaml": "name: Hunter\ngame: bloodborne\n"})
+        with self.assertRaises(ValidationError) as raised:
+            validate_player_yamls(root)
+        self.assertIn('game is "bloodborne"', str(raised.exception))
+        self.assertIn('must be spelled "Bloodborne"', str(raised.exception))
+
+    def test_option_values_are_left_to_archipelago(self):
+        root = self.folder({
+            "Mine.yaml": "name: Hunter\ngame: Bloodborne\nBloodborne:\n  goal: not_a_real_goal\n",
+        })
+        self.assertEqual(1, len(validate_player_yamls(root)))
+
+    def test_subfolders_and_non_player_files_are_ignored(self):
+        root = self.folder({
+            "Mine.yaml": "name: Hunter\ngame: Bloodborne\n",
+            "Templates/Bloodborne.yaml": "# a template has no name or game\ndescription: template\n",
+            "meta.yaml": "meta_description: nothing\n",
+            "notes.txt": "not a yaml",
+        })
+        self.assertEqual(["Hunter"], [entry.name for entry in validate_player_yamls(root)])
+
+    def test_a_folder_with_no_player_yaml_says_where_to_look(self):
+        root = self.folder({"Templates/Bloodborne.yaml": "description: template\n"})
+        with self.assertRaises(ValidationError) as raised:
+            validate_player_yamls(root)
+        self.assertIn("subfolders such as Templates", str(raised.exception))
+
+    def test_a_non_bloodborne_folder_still_validates(self):
+        root = self.folder({"Other.yaml": "name: Tarnished\ngame: Elden Ring\n"})
+        found = validate_player_yamls(root)
+        self.assertEqual([("Tarnished", "Elden Ring", False)],
+                         [(entry.name, entry.game, entry.is_bloodborne) for entry in found])
 
 
 if __name__ == "__main__":

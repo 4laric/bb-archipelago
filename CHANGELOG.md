@@ -6,6 +6,20 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The player-YAML folder is easier to find and is checked before
+  generation.** **Browse...** for that folder now opens in the selected
+  Archipelago installation's `Players` folder when it has one, and ticking
+  **Use existing player YAML files instead** fills the field in with it. Before
+  generating, the launcher reads every `.yaml`/`.yml` file directly in the
+  chosen folder -- the same files Archipelago reads, so `Templates` and other
+  subfolders are ignored -- and refuses with one message naming every file that
+  is missing a top-level `name` or `game`, has them indented under the game
+  block, or spells `Bloodborne` with the wrong case. Previously any of those
+  surfaced as a raw Archipelago traceback (`File Player-EldenRing.yaml document
+  #1 ... "game" not specified`) part-way through generation. Option values are
+  still Archipelago's to judge, and a folder with no Bloodborne player only
+  warns.
+
 - **The launcher package now carries `bloodborne.apworld` and can install it
   for you.** Seed generators previously had to download the separate apworld
   asset and place it in `Archipelago\custom_worlds` by hand before **Create &
