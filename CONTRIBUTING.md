@@ -111,7 +111,23 @@ line is a thing that has already gone wrong once.
    and the client's must be the same string, or the bridge handshake rejects
    every session in the package you just shipped.
 4. **Tag.** Push the `v*` tag from the merge commit you checked, or dispatch the
-   workflow with that tag.
+   workflow with that tag. The tag spells the release number:
+
+   - **`vV.R.M.F`** (`v0.1.0.0`) for a player release --
+     Version.Release.Modification.Fixpack. The workflow publishes it as a
+     normal, latest GitHub release, not a prerelease. `V.R.M` is the
+     seed-compatibility line and must equal the world's `world_version`, so
+     `v0.1.0.F` is the only four-part form a `0.1.0` apworld can tag; `F` is
+     the fixpack, and any two clients sharing `V.R.M` are drop-in swaps on the
+     same seed.
+   - **`vV.R.M-beta.N`** (`v0.1.0-beta.9`) for a playtest build. These stay
+     prereleases. `-signing-canary.N` behaves the same way.
+
+   Tag the paired client in `from-software-archipelago-clients` as
+   **`bb-V.R.M.F`** (`bb-0.1.0.0`) on the commit in `packaging/client-ref.txt`,
+   so a player can read from the two numbers alone whether an update is a
+   binary swap or a paired upgrade. The clients repo's `AGENTS.md` owns the
+   full V.R.M.F policy.
 5. **Watch the run.** Do not announce the prerelease until the workflow has
    finished and the attached zip's manifest names the client SHA you expect.
 6. **Never move a published tag.** If a tag shipped something wrong, fix

@@ -421,9 +421,59 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertEqual(stable.file_version, "1.2.3.0")
         self.assertFalse(stable.prerelease)
 
+    def test_four_part_vrmf_tags_are_player_releases_not_prereleases(self):
+        # Version.Release.Modification.Fixpack: v0.1.0.0 is a player release
+        # whose paired client tag is bb-0.1.0.0. The first three fields are the
+        # seed-compatibility line and must still equal the world's
+        # world_version, so the Windows file version is unchanged in shape.
+        module = load_version_metadata_module()
+        version = module.parse_release_version("v0.1.0.0")
+        self.assertEqual(version.product_version, "0.1.0.0")
+        self.assertEqual(version.file_version, "0.1.0.0")
+        self.assertEqual(version.file_version_tuple, (0, 1, 0, 0))
+        self.assertFalse(version.prerelease)
+        fixpack = module.parse_release_version("v0.1.0.3")
+        self.assertEqual(fixpack.product_version, "0.1.0.3")
+        self.assertEqual(fixpack.file_version_tuple, (0, 1, 0, 3))
+        self.assertFalse(fixpack.prerelease)
+
+    def test_release_publishes_four_part_tags_as_latest_not_prerelease(self):
+        workflows = next(
+            candidate / ".github" / "workflows"
+            for candidate in (self.repo, *self.repo.parents)
+            if (candidate / ".github" / "workflows" / "release.yaml").is_file()
+        )
+        release = (workflows / "release.yaml").read_text(encoding="utf-8")
+        # Both jobs resolve the tag, and both classify it the same way.
+        self.assertEqual(
+            2, release.count("RELEASE_PRERELEASE=$prerelease")
+        )
+        self.assertEqual(
+            2,
+            release.count(
+                r"""$prerelease = if ($tag -match '^v\d+\.\d+\.\d+\.\d+$')"""
+            ),
+        )
+        # The publish step honours it instead of hard-coding --prerelease.
+        self.assertIn('$isPrerelease = $env:RELEASE_PRERELEASE -eq "true"', release)
+        self.assertIn('@("--latest")', release)
+        self.assertIn('@("--prerelease=false", "--latest")', release)
+        self.assertNotIn(
+            "--notes-file packaging/PACKAGE-README.txt --prerelease `", release
+        )
+
     def test_invalid_or_unrepresentable_release_versions_are_rejected(self):
         module = load_version_metadata_module()
-        for value in ("beta.1", "v0.1", "v0.1.0-beta", "v65536.0.0"):
+        for value in (
+            "beta.1",
+            "v0.1",
+            "v0.1.0-beta",
+            "v65536.0.0",
+            "v0.1.0.0.1",
+            "v0.1.0.",
+            "v0.1.0.0-beta.1",
+            "v0.1.0.65536",
+        ):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 module.parse_release_version(value)
 

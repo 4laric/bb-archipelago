@@ -1,4 +1,18 @@
-"""Generate deterministic Windows version resources for packaged executables."""
+"""Generate deterministic Windows version resources for packaged executables.
+
+Two release tag forms are accepted:
+
+* ``vV.R.M.F`` -- a player release under the Version.Release.Modification.Fixpack
+  scheme (``v0.1.0.0``). ``V.R.M`` is the seed-compatibility line shared with
+  the paired client tag ``bb-V.R.M.F``; ``F`` is the fixpack, a drop-in client
+  swap. These are not prereleases.
+* ``vV.R.M-<suffix>.N`` -- a prerelease (``v0.1.0-beta.1``,
+  ``v0.1.0-signing-canary.2``). ``N`` becomes the fourth Windows
+  file-version field.
+
+Either way the Windows file version is ``(V, R, M, F-or-N)`` and its first three
+fields must equal the world's ``world_version``.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +28,8 @@ PUBLISHER = "4laric"
 COPYRIGHT = "Copyright (c) 2026 4laric"
 _VERSION = re.compile(
     r"^v?(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
-    r"(?P<suffix>-(?:[0-9A-Za-z-]+\.)*(?P<sequence>\d+))?$"
+    r"(?:\.(?P<fixpack>\d+)"
+    r"|(?P<suffix>-(?:[0-9A-Za-z-]+\.)*(?P<sequence>\d+)))?$"
 )
 
 
@@ -31,11 +46,12 @@ def parse_release_version(raw: str) -> ReleaseVersion:
     match = _VERSION.fullmatch(value)
     if match is None:
         raise ValueError(
-            "release version must look like v0.1.0, v0.1.0-beta.1, "
+            "release version must look like v0.1.0.0 (Version.Release."
+            "Modification.Fixpack), v0.1.0, v0.1.0-beta.1, "
             "or v0.1.0-signing-canary.2"
         )
     parts = tuple(int(match.group(name)) for name in ("major", "minor", "patch"))
-    sequence = int(match.group("sequence") or 0)
+    sequence = int(match.group("fixpack") or match.group("sequence") or 0)
     numeric = (*parts, sequence)
     if any(part > 65535 for part in numeric):
         raise ValueError("Windows file-version components must be between 0 and 65535")
