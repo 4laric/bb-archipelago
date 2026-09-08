@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from bb_launcher.resources import application_root, resource_root
 from bb_launcher.workflow import EnemizerToolchain, ValidationError
@@ -154,6 +155,70 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn('Get-ChildItem -LiteralPath (Join-Path $repo "worlds\\bloodborne") -File', script)
         self.assertIn('".tsv", ".json"', script)
         self.assertIn("@worldData", script)
+
+    def test_package_bundles_the_apworld_the_launcher_installs(self):
+        """The zip must contain worlds/bloodborne.apworld, built before it.
+
+        Players who generate seeds had to fetch the separate release asset and
+        place it by hand; the launcher can only install what it ships.
+        """
+        script = (self.repo / "packaging" / "build_launcher.ps1").read_text(encoding="utf-8")
+        self.assertIn("[string]$ApworldPath", script)
+        self.assertIn("[switch]$SkipApworld", script)
+        self.assertIn('$worldsDestination = Join-Path $package "worlds"', script)
+        self.assertIn('Copy-Item -LiteralPath $resolvedApworld', script)
+        self.assertIn('bloodborne.apworld not found', script)
+        self.assertIn("includes_apworld = (-not $SkipApworld)", script)
+        # The manifest hashes every file under the package, so the apworld is
+        # covered without naming it; keep that enumeration.
+        self.assertIn("Get-ChildItem -LiteralPath $package -File -Recurse", script)
+        # The local full build makes the apworld before it makes the package.
+        driver = (self.repo / "build.ps1").read_text(encoding="utf-8")
+        self.assertIn('-ApworldPath (Join-Path $BuildDir "bloodborne.apworld")', driver)
+        # -Package turns on -Apworld, and the packaging stage runs after it.
+        self.assertIn("$Apworld = $true", driver)
+        self.assertLess(driver.rindex("if ($Apworld) {"), driver.rindex("if ($Package) {"))
+
+    def test_both_workflows_build_the_apworld_before_the_launcher_package(self):
+        workflows = next(
+            candidate / ".github" / "workflows"
+            for candidate in (self.repo, *self.repo.parents)
+            if (candidate / ".github" / "workflows" / "release.yaml").is_file()
+        )
+        for name, package_step in (
+            ("release.yaml", "- name: Build the launcher package"),
+            ("tests.yaml", "- name: Build the full commit playtest distribution"),
+        ):
+            workflow = (workflows / name).read_text(encoding="utf-8")
+            self.assertIn("-ApworldPath $PWD\\build\\bloodborne.apworld", workflow, name)
+            apworld_step = workflow.index("- name: Package the apworld")
+            self.assertLess(apworld_step, workflow.index(package_step), name)
+            # Exactly one apworld build; the old post-package step is gone.
+            self.assertEqual(1, workflow.count("run: ./build.ps1 -Apworld"), name)
+            # The standalone artifact survives.
+            self.assertIn("build/bloodborne.apworld", workflow, name)
+
+    def test_self_check_reports_the_bundled_apworld_and_fails_a_package_without_it(self):
+        from bb_launcher.self_check import run_self_check
+        report = self.root / "apworld-check.json"
+        bundled = self.app / "worlds" / "bloodborne.apworld"
+        marker = "bundled bloodborne.apworld missing"
+        with patch("bb_launcher.self_check.bundled_apworld_path", return_value=bundled):
+            self.assertEqual(1, run_self_check(report, require_bundled_tools=True))
+            absent = json.loads(report.read_text(encoding="utf-8"))
+            self.assertFalse(absent["apworld"]["present"])
+            self.assertEqual(str(bundled), absent["apworld"]["path"])
+            self.assertTrue([p for p in absent["problems"] if marker in p], absent["problems"])
+
+            bundled.parent.mkdir(parents=True)
+            bundled.write_bytes(b"apworld")
+            run_self_check(report, require_bundled_tools=True)
+            present = json.loads(report.read_text(encoding="utf-8"))
+            self.assertTrue(present["apworld"]["present"])
+            self.assertFalse([p for p in present["problems"] if marker in p], present["problems"])
+            # Witness: the report still examined the same package, and the only
+            # thing that changed is the apworld complaint.
+            self.assertTrue(absent["problems"], "witness: the missing case did report problems")
 
     def test_self_check_passes_on_a_checkout_and_reports_the_world(self):
         from bb_launcher.self_check import run_self_check

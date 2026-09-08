@@ -7,7 +7,9 @@ param(
     [string]$OutputRoot,
     [string]$SuppressionBuild,
     [string]$ReleaseVersion,
+    [string]$ApworldPath,
     [switch]$SkipClient,
+    [switch]$SkipApworld,
     [switch]$NoArchive
 )
 
@@ -174,6 +176,25 @@ Copy-Item -LiteralPath (Join-Path $repo "SECURITY.md") -Destination (Join-Path $
 Copy-Item -LiteralPath (Join-Path $repo "packaging\PACKAGE-README.txt") -Destination (Join-Path $package "README.txt")
 Copy-Item -LiteralPath (Join-Path $repo "tables\Bloodborne-native-item-grant-auto-v2.CT") -Destination (Join-Path $package "tools")
 
+# The seed generator's half of the package. The launcher installs this file
+# into an Archipelago installation's custom_worlds on request, so it must be
+# built BEFORE the package (./build.ps1 -Apworld) rather than alongside the
+# release upload. Release still attaches build\bloodborne.apworld separately
+# for people who prefer to copy it by hand.
+if (-not $SkipApworld) {
+    if (-not $ApworldPath) {
+        $ApworldPath = Join-Path $repo "build\bloodborne.apworld"
+    }
+    $resolvedApworld = [IO.Path]::GetFullPath($ApworldPath)
+    if (-not (Test-Path -LiteralPath $resolvedApworld -PathType Leaf)) {
+        throw "bloodborne.apworld not found: $resolvedApworld. Run ./build.ps1 -Apworld first, or pass -SkipApworld for a dev build."
+    }
+    $worldsDestination = Join-Path $package "worlds"
+    New-Item -ItemType Directory -Path $worldsDestination -Force | Out-Null
+    Copy-Item -LiteralPath $resolvedApworld -Destination (Join-Path $worldsDestination "bloodborne.apworld")
+    Write-Host "  bundled apworld: $resolvedApworld"
+}
+
 # Ship the suppression binder + manifest beside the launcher so the UI
 # auto-fills the pair from application_root()/work/vanilla-suppression-build
 # and the player never has to locate either file.
@@ -221,6 +242,7 @@ $manifest = [ordered]@{
     revision = $revision
     dirty_worktree = $dirty
     includes_client = (-not $SkipClient)
+    includes_apworld = (-not $SkipApworld)
     includes_suppression = [bool]$SuppressionBuild
     includes_game_files = $false
     runtime_version = $runtimeVersion

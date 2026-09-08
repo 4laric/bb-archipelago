@@ -189,6 +189,14 @@ jobs:
         shell: pwsh
         run: python tools/check_suppression_plan_pin.py --manifest work/release-binder/build-manifest.json
 
+      # Before the launcher package, not after it: the package carries this file
+      # at worlds/bloodborne.apworld so the launcher can install it into a
+      # player's Archipelago installation. It is still attached to the release
+      # on its own for anyone who prefers to copy it by hand.
+      - name: Package the apworld
+        shell: pwsh
+        run: ./build.ps1 -Apworld
+
       - name: Build the launcher package
         shell: pwsh
         run: >-
@@ -197,6 +205,7 @@ jobs:
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
           -ClientRef ${{ steps.client-sha.outputs.sha }}
           -SuppressionBuild $PWD\work\release-binder
+          -ApworldPath $PWD\build\bloodborne.apworld
           -ReleaseVersion $env:RELEASE_TAG
           -NoArchive
 
@@ -324,10 +333,6 @@ jobs:
             -CompressionLevel Optimal
         env:
           EXPECTED_SIGNER_SUBJECT: ${{ vars.ARTIFACT_SIGNING_EXPECTED_SUBJECT }}
-
-      - name: Package the apworld
-        shell: pwsh
-        run: ./build.ps1 -Apworld
 
       - name: Attest the release artifacts
         uses: actions/attest-build-provenance@v2

@@ -6,7 +6,20 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from bb_launcher.core import ValidationError
+from bb_launcher.local_session import BloodborneWorldUnavailable
 from bb_launcher.local_session_ui import LocalSessionPanel, write_solo_player
+
+
+def install_panel(install_root=None):
+    """A headless panel with just the world-install collaborators wired."""
+    app = SimpleNamespace(_busy=False, _append_log=Mock(), messagebox=Mock(), root=Mock())
+    panel = SimpleNamespace(
+        app=app, status=Mock(), install_label=Mock(), install_button=Mock(),
+        _install_root=install_root, _generate=Mock(), _error=Mock(),
+    )
+    # The real disarm, so "the button cannot install twice" is proven, not staged.
+    panel._clear_world_install = lambda: LocalSessionPanel._clear_world_install(panel)
+    return panel
 
 
 class LocalSessionUiTests(unittest.TestCase):
@@ -67,6 +80,52 @@ class LocalSessionUiTests(unittest.TestCase):
             LocalSessionPanel._generated(panel, Path('bad.zip'), True)
         panel._host_selected.assert_not_called()
         app.fields['ap_request'].set.assert_not_called()
+
+    def test_missing_world_arms_an_install_button_and_installs_nothing_yet(self):
+        panel = install_panel()
+        error = BloodborneWorldUnavailable("no Bloodborne world.", reason="missing",
+                                           expected_version="0.1.0")
+        with patch("bb_launcher.local_session_ui.install_bloodborne_world") as install:
+            LocalSessionPanel._offer_world_install(panel, Path("C:/Archipelago"), error)
+        install.assert_not_called()
+        panel.install_label.set.assert_called_once_with("Install Bloodborne world")
+        panel.install_button.configure.assert_called_once_with(state="normal")
+        self.assertEqual(Path("C:/Archipelago"), panel._install_root)
+        message = panel.status.set.call_args.args[0]
+        self.assertIn("no Bloodborne world.", message)
+        self.assertIn("close and reopen it", message, "the restart warning is shown")
+
+    def test_version_mismatch_offers_an_update_naming_the_version(self):
+        panel = install_panel()
+        error = BloodborneWorldUnavailable("wrong version.", reason="mismatch",
+                                           expected_version="0.2.0", installed_version="0.1.0")
+        LocalSessionPanel._offer_world_install(panel, Path("C:/Archipelago"), error)
+        panel.install_label.set.assert_called_once_with("Update Bloodborne world to 0.2.0")
+
+    def test_one_click_installs_once_and_re_runs_the_original_request(self):
+        panel = install_panel(install_root=Path("C:/Archipelago"))
+        installed = Path("C:/Archipelago/custom_worlds/bloodborne.apworld")
+        with patch("bb_launcher.local_session_ui.install_bloodborne_world",
+                   return_value=installed) as install:
+            LocalSessionPanel._install_world(panel)
+            install.assert_called_once_with(Path("C:/Archipelago"))
+            panel._generate.assert_called_once_with()
+            # The button is disarmed, so a second click cannot install again.
+            panel.install_button.configure.assert_called_once_with(state="disabled")
+            self.assertIsNone(panel._install_root)
+            LocalSessionPanel._install_world(panel)
+            install.assert_called_once_with(Path("C:/Archipelago"))
+        self.assertIn("close and reopen it", panel.status.set.call_args.args[0])
+
+    def test_a_failed_install_does_not_pretend_the_world_is_ready(self):
+        panel = install_panel(install_root=Path("C:/Archipelago"))
+        with patch("bb_launcher.local_session_ui.install_bloodborne_world",
+                   side_effect=ValidationError("source install")):
+            LocalSessionPanel._install_world(panel)
+        panel._error.assert_called_once_with("source install")
+        panel._generate.assert_not_called()
+        self.assertEqual(Path("C:/Archipelago"), panel._install_root,
+                         "witness: the button stays armed for a retry")
 
     def test_close_does_not_stop_server_without_user_choice(self):
         app = SimpleNamespace(_busy=False, messagebox=Mock(), root=Mock())

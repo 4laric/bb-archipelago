@@ -17,13 +17,31 @@ activated, launcher-owned overlay. It does not rebuild files, replace mods, or
 start another emulator. An arbitrary BBLauncher-managed overlay is not yet
 supported by this action (external activation is tracked in #192).
 
-**Create & host** uses an existing Archipelago installation with the matching
-Bloodborne `.apworld` installed. Select that installation, enter a solo player
-name and DLC choice, then choose **Create seed**. For a multiworld or custom
-settings, select a folder of player YAMLs instead. Source checkouts can use an
-explicit Python executable; packaged Archipelago installations need no Python
-selection. World metadata checks are compatibility checks, not proof of exact
-apworld source identity; the generated request still passes normal validation.
+**Create & host** uses an existing Archipelago installation. Select that
+installation, enter a solo player name and DLC choice, then choose **Create
+seed**. For a multiworld or custom settings, select a folder of player YAMLs
+instead. Source checkouts can use an explicit Python executable; packaged
+Archipelago installations need no Python selection. World metadata checks are
+compatibility checks, not proof of exact apworld source identity; the generated
+request still passes normal validation.
+
+The package carries the matching `worlds\bloodborne.apworld`, and the launcher
+can install it. When the selected installation has no Bloodborne world, or has
+one of a different version, **Create seed** stops, says which of the two it is,
+and offers a single button -- **Install Bloodborne world**, or **Update
+Bloodborne world to \<version\>** -- that copies the bundled apworld into that
+installation's `custom_worlds` and then re-validates and continues. Nothing is
+installed without that click. The copy is atomic, so an interrupted install
+cannot replace a working world with a half-written one. Archipelago loads its
+worlds at start, so if ArchipelagoLauncher is open, close and reopen it before
+generating; the launcher says so after every install.
+
+Two things it refuses rather than doing: an installation it does not recognise
+as Archipelago at all, and a *source* Archipelago that already carries
+Bloodborne under `worlds\bloodborne` or `lib\worlds\bloodborne` -- that checkout
+is the thing to update, and an apworld beside it would leave two versions
+installed. Copying `bloodborne.apworld` into `custom_worlds` by hand, or with
+ArchipelagoLauncher, still works exactly as before.
 
 The generated ZIP is selected automatically on Play. With local hosting enabled,
 the launcher starts MultiServer on this PC and fills in its local address. Keep
@@ -388,9 +406,18 @@ Build a Windows x64 folder and zip from PowerShell after installing
 
 The package uses a PyInstaller one-folder launcher and one-file planner, plus
 self-contained single-file .NET publishes for the native tools. It includes the
-CE table and documentation, writes a SHA-256 `package-manifest.json`, and emits
+CE table, documentation, and `worlds\bloodborne.apworld`, writes a SHA-256
+`package-manifest.json` that hashes every file including that apworld, and emits
 `build/BloodborneAPLauncher-win-x64.zip`. It never includes game or emulator
 files. `-SkipClient` exists for CI artifacts and is deliberately explicit.
+
+`-ApworldPath` names the apworld to bundle and defaults to
+`build\bloodborne.apworld`, so `./build.ps1 -Apworld` must run first --
+`./build.ps1 -Package` does that for you, and both workflows build the apworld
+immediately before the package. A missing apworld fails the build; `-SkipApworld`
+is the deliberate, explicit opt-out for a development package. The frozen
+launcher's `--self-check` reports the bundled apworld and fails without it, so
+CI proves the release package carries the file the launcher installs.
 
 The manifest records the client explicitly: a `client` object naming
 `tools/bb-ap-client.exe`, its SHA-256, and the client commit it was built

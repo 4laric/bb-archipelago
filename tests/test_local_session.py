@@ -13,12 +13,31 @@ from unittest.mock import Mock, patch
 from bb_launcher.core import ValidationError
 from bb_launcher.local_session import (
     APTools,
+    BloodborneWorldUnavailable,
     GenerationCancelled,
+    bundled_apworld_path,
     discover_ap_tools,
     generate_seed,
+    install_bloodborne_world,
+    is_archipelago_root,
     start_server,
     validate_bloodborne_world,
 )
+
+WORLD_MANIFEST = {"game": "Bloodborne", "world_version": "0.1.0", "minimum_ap_version": "0.6.7"}
+
+
+def make_apworld(path: Path, manifest: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(path, "w") as bundle:
+        bundle.writestr("bloodborne/archipelago.json", json.dumps(manifest))
+
+
+def make_ap_install(root: Path) -> Path:
+    root.mkdir(parents=True, exist_ok=True)
+    (root / "ArchipelagoGenerate.exe").touch()
+    (root / "ArchipelagoServer.exe").touch()
+    return root
 
 
 class LocalSessionTests(unittest.TestCase):
@@ -49,10 +68,100 @@ class LocalSessionTests(unittest.TestCase):
             with self.assertRaisesRegex(ValidationError, "0.0.9 installed; 0.1.0 required"):
                 validate_bloodborne_world(tmp, expected_manifest=expected)
 
-    def test_missing_world_explains_that_installation_is_manual(self):
+    def test_missing_and_mismatched_worlds_are_distinguishable_by_the_caller(self):
+        # The UI offers "Install" or "Update ... to X"; prose alone cannot
+        # choose between them.
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaisesRegex(ValidationError, "Install the bloodborne.apworld"):
-                validate_bloodborne_world(tmp)
+            root = Path(tmp)
+            with self.assertRaises(BloodborneWorldUnavailable) as missing:
+                validate_bloodborne_world(root, expected_manifest=WORLD_MANIFEST)
+            self.assertTrue(missing.exception.missing)
+            self.assertFalse(missing.exception.mismatch)
+            self.assertEqual("0.1.0", missing.exception.expected_version)
+
+            make_apworld(root / "custom_worlds" / "bloodborne.apworld",
+                         {**WORLD_MANIFEST, "world_version": "0.0.9"})
+            with self.assertRaises(BloodborneWorldUnavailable) as stale:
+                validate_bloodborne_world(root, expected_manifest=WORLD_MANIFEST)
+            self.assertTrue(stale.exception.mismatch)
+            self.assertEqual("0.0.9", stale.exception.installed_version)
+            self.assertEqual("0.1.0", stale.exception.expected_version)
+
+    def test_install_creates_custom_worlds_and_copies_the_bundled_apworld(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_ap_install(Path(tmp) / "Archipelago")
+            source = Path(tmp) / "package" / "worlds" / "bloodborne.apworld"
+            make_apworld(source, self.repo_manifest())
+            self.assertFalse((root / "custom_worlds").exists(), "witness: nothing installed yet")
+            with patch("bb_launcher.local_session.bundled_apworld_path", return_value=source):
+                installed = install_bloodborne_world(root)
+            self.assertEqual(root / "custom_worlds" / "bloodborne.apworld", installed)
+            self.assertEqual(source.read_bytes(), installed.read_bytes())
+            # No staging leftovers, and the world now validates for real.
+            self.assertEqual(["bloodborne.apworld"],
+                             sorted(path.name for path in (root / "custom_worlds").iterdir()))
+            validate_bloodborne_world(root)
+
+    def test_install_replaces_a_mismatched_world_in_place(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_ap_install(Path(tmp) / "Archipelago")
+            destination = root / "custom_worlds" / "bloodborne.apworld"
+            make_apworld(destination, {**WORLD_MANIFEST, "world_version": "0.0.9"})
+            stale = destination.read_bytes()
+            source = Path(tmp) / "package" / "worlds" / "bloodborne.apworld"
+            make_apworld(source, self.repo_manifest())
+            with patch("bb_launcher.local_session.bundled_apworld_path", return_value=source):
+                installed = install_bloodborne_world(root)
+            self.assertEqual(destination, installed)
+            self.assertNotEqual(stale, destination.read_bytes())
+            self.assertEqual(source.read_bytes(), destination.read_bytes())
+
+    def test_install_refuses_a_source_world_checkout_instead_of_shadowing_it(self):
+        for relative in ("worlds/bloodborne", "lib/worlds/bloodborne"):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as tmp:
+                root = make_ap_install(Path(tmp) / "Archipelago")
+                (root / relative).mkdir(parents=True)
+                source = Path(tmp) / "package" / "worlds" / "bloodborne.apworld"
+                make_apworld(source, self.repo_manifest())
+                with patch("bb_launcher.local_session.bundled_apworld_path", return_value=source):
+                    with self.assertRaisesRegex(ValidationError, "Update that checkout instead"):
+                        install_bloodborne_world(root)
+                self.assertFalse((root / "custom_worlds").exists(),
+                                 "witness: the refusal wrote nothing")
+
+    def test_install_without_a_bundled_apworld_names_the_missing_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_ap_install(Path(tmp) / "Archipelago")
+            absent = Path(tmp) / "package" / "worlds" / "bloodborne.apworld"
+            with patch("bb_launcher.local_session.bundled_apworld_path", return_value=absent):
+                with self.assertRaisesRegex(ValidationError, "does not carry a bloodborne.apworld"):
+                    install_bloodborne_world(root)
+            self.assertFalse((root / "custom_worlds").exists(),
+                             "witness: the refusal wrote nothing")
+
+    def test_install_refuses_a_folder_that_is_not_an_archipelago_install(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Downloads"
+            root.mkdir()
+            self.assertFalse(is_archipelago_root(root))
+            with self.assertRaisesRegex(ValidationError, "is not an Archipelago installation"):
+                install_bloodborne_world(root)
+            self.assertEqual([], list(root.iterdir()), "witness: nothing was created")
+
+    def test_bundled_apworld_prefers_the_package_and_falls_back_to_a_build(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "build").mkdir()
+            (root / "build" / "bloodborne.apworld").write_bytes(b"built")
+            with patch("bb_launcher.local_session.application_root", return_value=root):
+                self.assertEqual(root / "build" / "bloodborne.apworld", bundled_apworld_path())
+                (root / "worlds").mkdir()
+                (root / "worlds" / "bloodborne.apworld").write_bytes(b"packaged")
+                self.assertEqual(root / "worlds" / "bloodborne.apworld", bundled_apworld_path())
+
+    def repo_manifest(self) -> dict:
+        path = Path(__file__).resolve().parents[1] / "worlds" / "bloodborne" / "archipelago.json"
+        return json.loads(path.read_text(encoding="utf-8"))
 
     @patch("bb_launcher.local_session.subprocess.Popen")
     def test_generation_streams_and_validates_one_hostable_zip(self, popen):

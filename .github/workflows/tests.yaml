@@ -243,6 +243,12 @@ jobs:
           path: work/commit-binder
       - name: Install the pinned Windows packager
         run: python -m pip install --disable-pip-version-check -r packaging/requirements-build.txt
+      # Built before the package: the package bundles it at
+      # worlds/bloodborne.apworld for the launcher's world installer, and the
+      # standalone copy is uploaded with the bundle as before.
+      - name: Package the apworld
+        shell: pwsh
+        run: ./build.ps1 -Apworld
       - name: Build the full commit playtest distribution
         shell: pwsh
         run: >-
@@ -251,6 +257,7 @@ jobs:
           -ClientPath $PWD\_client\target\release\bb-ap-client.exe
           -ClientRef $(git -C _client rev-parse HEAD)
           -SuppressionBuild $PWD\work\commit-binder
+          -ApworldPath $PWD\build\bloodborne.apworld
       - name: Packaging smoke - the frozen launcher loads every apworld table and finds its tools
         shell: pwsh
         run: |
@@ -271,9 +278,6 @@ jobs:
           python tools/export_runtime_contract.py --output work\contract.json
           & "$PWD\build\BloodborneAPLauncher\tools\bb-ap-client.exe" --check-contract "$PWD\work\contract.json"
           if ($LASTEXITCODE -ne 0) { throw "the built client refuses or would park items from the built apworld's contract" }
-      - name: Package the apworld
-        shell: pwsh
-        run: ./build.ps1 -Apworld
       - uses: actions/upload-artifact@v4
         with:
           name: Bloodborne-playtest-${{ github.sha }}

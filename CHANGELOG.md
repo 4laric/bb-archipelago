@@ -6,6 +6,20 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The launcher package now carries `bloodborne.apworld` and can install it
+  for you.** Seed generators previously had to download the separate apworld
+  asset and place it in `Archipelago\custom_worlds` by hand before **Create &
+  host** would work; getting that wrong looked like the launcher not
+  supporting Bloodborne. The zip now contains `worlds\bloodborne.apworld`, and
+  when the Archipelago installation you selected has no Bloodborne world, or a
+  different version of it, **Create seed** stops and offers one button --
+  **Install Bloodborne world**, or **Update Bloodborne world to \<version\>**
+  -- that installs it and continues. Nothing is installed without that click.
+  Archipelago reads its worlds at start, so close and reopen
+  ArchipelagoLauncher afterwards; the launcher says so. A source Archipelago
+  that already carries the world under `worlds\bloodborne` is refused rather
+  than shadowed -- update that checkout instead. `bloodborne.apworld` is still
+  attached to each release on its own, and copying it by hand still works.
 - **Fixed: beta.7 seeds were refused at launch.** Every seed built with
   v0.1.0-beta.7 failed at *Randomize & Launch* with a `BBSuppressionWriter`
   error naming `category8_cathedral_ward_avatar_beast_rune`. The Cathedral Ward

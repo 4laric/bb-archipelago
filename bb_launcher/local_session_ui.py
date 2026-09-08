@@ -7,7 +7,15 @@ import uuid
 from pathlib import Path
 
 from .core import ValidationError
-from .local_session import discover_ap_tools, generate_seed, start_server, validate_bloodborne_world
+from .local_session import (
+    RESTART_NOTICE,
+    BloodborneWorldUnavailable,
+    discover_ap_tools,
+    generate_seed,
+    install_bloodborne_world,
+    start_server,
+    validate_bloodborne_world,
+)
 from .resources import resource_root
 from .seed_request import archive_slots
 
@@ -43,6 +51,11 @@ class LocalSessionPanel:
         self.auto_host = tk.BooleanVar(value=True)
         self.port = tk.StringVar(value="38281")
         self.status = tk.StringVar(value="Create a solo seed, or use a folder of player YAML files.")
+        # Installing the world is never automatic: the button appears only
+        # after a validation failure names it, and one click does exactly one
+        # install and then re-validates.
+        self.install_label = tk.StringVar(value="Install Bloodborne world")
+        self._install_root = None
         self._load()
         host_frame = ttk.Frame(notebook)
         host_frame.columnconfigure(0, weight=1)
@@ -83,6 +96,9 @@ class LocalSessionPanel:
         self.host_button.pack(side="left", padx=6)
         self.stop_button = ttk.Button(actions, text="Stop server", command=self._stop, state="disabled")
         self.stop_button.pack(side="left")
+        self.install_button = ttk.Button(
+            actions, textvariable=self.install_label, command=self._install_world, state="disabled")
+        self.install_button.pack(side="left", padx=6)
         ttk.Label(frame, textvariable=self.status, wraplength=680).grid(
             row=11, column=0, columnspan=3, sticky="w")
         app.root.protocol("WM_DELETE_WINDOW", self._close)
@@ -140,7 +156,19 @@ class LocalSessionPanel:
             tools = self._tools()
             manifest = resource_root() / "worlds" / "bloodborne" / "archipelago.json"
             expected = json.loads(manifest.read_text(encoding="utf-8"))
+        except Exception as exc:
+            self._error(str(exc))
+            return
+        try:
             validate_bloodborne_world(tools.root, expected_manifest=expected)
+        except BloodborneWorldUnavailable as exc:
+            self._offer_world_install(tools.root, exc)
+            return
+        except Exception as exc:
+            self._error(str(exc))
+            return
+        self._clear_world_install()
+        try:
             state = self.app._state_root()
             if self.use_folder.get():
                 if not self.players.get().strip():
@@ -166,6 +194,44 @@ class LocalSessionPanel:
             else:
                 self.app.root.after(0, self._generated, result.archive, auto_host)
         threading.Thread(target=run, daemon=True, name="ap-generate").start()
+
+    def _offer_world_install(self, root, error):
+        """Name the problem and arm the one button that fixes it.
+
+        Nothing is installed here. The player sees what is wrong, where the
+        world would go, and a button whose label says which of the two things
+        it will do.
+        """
+        self._install_root = root
+        if error.mismatch and error.expected_version:
+            label = f"Update Bloodborne world to {error.expected_version}"
+        elif error.mismatch:
+            label = "Update Bloodborne world"
+        else:
+            label = "Install Bloodborne world"
+        self.install_label.set(label)
+        self.install_button.configure(state="normal")
+        self.status.set(f"{error} Choose “{label}” to install it into {root}. {RESTART_NOTICE}")
+        self.app._append_log(f"ERROR: {error}")
+
+    def _clear_world_install(self):
+        self._install_root = None
+        self.install_button.configure(state="disabled")
+
+    def _install_world(self):
+        if self.app._busy or self._install_root is None:
+            return
+        root = self._install_root
+        try:
+            installed = install_bloodborne_world(root)
+        except Exception as exc:
+            self._error(str(exc))
+            return
+        self._clear_world_install()
+        self.status.set(f"Installed {installed}. {RESTART_NOTICE}")
+        self.app._append_log(f"Installed the Bloodborne world: {installed}. {RESTART_NOTICE}")
+        # Re-validate and carry on with what the player originally asked for.
+        self._generate()
 
     def _generation_failed(self, message):
         self.generating = False
