@@ -6,6 +6,24 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **A modified `CUSA03173-mods` no longer blocks Randomize & Launch; the
+  launcher rebuilds it.** A player who copied their mods into both
+  `CUSA03173-mods` and `CUSA03173-mods-user` had a mod overwrite the
+  Archipelago gameparam binder inside the launcher-owned overlay, and every
+  run then refused with `owned overlay file size changed:
+  dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx`. Activation rewrites that
+  directory from a verified seed anyway, so it now heals instead of policing:
+  the modified tree is moved aside to `CUSA03173-mods.bb-ap-foreign-<date-time>`
+  (never deleted), the overlay is rebuilt, and the launch log says so. The new
+  ownership manifest records a `healed_from` note naming the reason and the
+  folder, so a later bug report is still attributable. **Player mods belong in
+  `CUSA03173-mods-user` only.** A directory with no Archipelago ownership
+  manifest at all, or one written by another launcher, is still refused and
+  never moved -- it may be your own mod folder -- and the refusal now tells you
+  to rename it. The launch-time check against an overlay shadPS4 has already
+  loaded stays strict, and now ends with `Run Randomize & Launch again to
+  rebuild the overlay.`
+
 - **`randomize_enemy_drops` now rewrites what enemies drop instead of swapping
   their loot tables around.** The old shuffle moved whole vanilla tables
   between enemies, and because 35% of vanilla enemy loot is Blood Vials and

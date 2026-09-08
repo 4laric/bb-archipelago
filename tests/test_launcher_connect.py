@@ -105,6 +105,30 @@ class ConnectToRunningTests(unittest.TestCase):
         self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
         self.assertFalse((self.root / "state").exists())
 
+    def test_a_tampered_active_overlay_is_refused_with_the_rebuild_hint(self):
+        """bb-archipelago#408: launch time guards, it never heals.
+
+        ``activate_build`` rebuilds this directory and so may repair it.  This
+        check runs against the overlay shadPS4 has *already loaded*, so it
+        stays strict -- and names the one action that fixes it.
+        """
+        decoy = self.install.root / "CUSA03173-mods.bb-ap-foreign-00000000-000000"
+        decoy.mkdir(parents=True)
+        tampered = self.install.mods.joinpath(*SUPPRESSION_PATH.split("/"))
+        tampered.write_bytes(b"A MOD OVERWROTE THIS")
+        self.launched.append("sentinel")
+        with self.assertRaises(Exception) as caught:
+            self.workflow(
+                lambda name: name.casefold() == self.fixture.shad_exe.name.casefold()
+            ).connect_to_running(self.fixture.settings(), player_name="Hunter")
+        message = str(caught.exception)
+        self.assertIn("owned overlay file size changed", message)
+        self.assertIn("Run Randomize & Launch again to rebuild the overlay.", message)
+        self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
+        # Refusing means refusing: nothing was moved aside here.
+        self.assertEqual(tampered.read_bytes(), b"A MOD OVERWROTE THIS")
+        self.assertEqual(list(self.install.root.glob("*bb-ap-foreign-*")), [decoy])
+
     def test_refuses_when_shadps4_is_not_running(self):
         before = self.snapshot_overlay()
         self.launched.append("sentinel")
