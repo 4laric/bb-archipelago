@@ -6,6 +6,16 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Fixed: `0.1.0.0` seeds with enemy drop randomization were refused at launch
+  when a rewritten enemy's vanilla lot id is duplicated in the param table.**
+  Randomize & Launch died with `expected one ItemLotParam row 11800010, found
+  2`. Vanilla `ItemLotParam` ships 14 duplicated row ids, and the writer used
+  the enemy's vanilla lot only as a template for the new row's shape but
+  insisted on finding exactly one. It now takes the first such row in file
+  order; the duplicates differ only in fields the writer overwrites, so the
+  emitted drop table is unchanged. Regenerate any `0.1.0.0` seed rolled with
+  enemy drop randomization; seeds without it are unaffected.
+
 - **Releases are numbered `V.R.M.F` -- Version.Release.Modification.Fixpack.**
   A tag like `v0.1.0.0` now publishes a normal, latest GitHub release instead
   of a prerelease; `-beta.N` tags still publish prereleases. The first three

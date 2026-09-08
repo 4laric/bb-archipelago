@@ -671,12 +671,28 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         if (itemLotIds.Contains(edit.Lot.Id))
             throw new InvalidDataException(
                 $"enemy drop lot {edit.Lot.Id} already exists in the input binder");
-        List<PARAM.Row> sourceRows = itemLots.Rows
-            .Where(row => row.ID == edit.SourceLotId).ToList();
-        if (sourceRows.Count != 1)
-            throw new InvalidDataException(
-                $"expected one ItemLotParam row {edit.SourceLotId}, found {sourceRows.Count}");
-        PARAM.Row template = sourceRows[0];
+        // Vanilla ItemLotParam ships 14 duplicated row ids (2902000, 2902010,
+        // 2902100, 2902110, 10502950..10502962 even, 11800010, 101542000,
+        // 101552150). Requiring exactly one row here refused every seed whose
+        // rewritten enemy happened to drop from one of them -- 0.1.0.0 died at
+        // launch on 11800010 -- so take the FIRST row in file order instead.
+        //
+        // That choice is safe, not merely arbitrary. Comparing each duplicate
+        // pair in the bundled params (tests/test_enemy_drops.py's
+        // test_duplicate_source_lots_are_interchangeable_templates) shows the
+        // pairs differ only in `Name` and, for 101542000 and 101552150, in
+        // `lotItemId01`/`lotItemNum01`. This template only seeds the new row's
+        // shape and defaults: `Name` is overwritten below, every slot 01-08 is
+        // cleared and rewritten from the plan, and the non-slot fields the
+        // catalog reads (`lotItem_Rarity`) are set from `edit.Lot`. So both
+        // duplicates produce a byte-identical output row and first-in-file
+        // order is a deterministic, immaterial pick. It also agrees with the
+        // rest of the pipeline where it can: tools/build_enemy_drop_catalog.py
+        // keys a dict by row id, and the fields it keeps from a source lot are
+        // exactly the ones proven identical across every duplicate pair.
+        PARAM.Row template = itemLots.Rows.FirstOrDefault(row => row.ID == edit.SourceLotId)
+            ?? throw new InvalidDataException(
+                $"expected an ItemLotParam row {edit.SourceLotId}, found none");
         var usedSlots = new HashSet<int>();
         foreach (EnemyDropSlot slot in edit.Lot.Slots)
         {

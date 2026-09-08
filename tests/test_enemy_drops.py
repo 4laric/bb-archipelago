@@ -231,6 +231,100 @@ def test_the_reserved_lot_band_is_free_of_vanilla_and_category8_rows():
     assert not ids & vanilla
 
 
+def duplicate_vanilla_lot_ids() -> set[int]:
+    """ItemLotParam row ids that appear more than once in the shipped table.
+
+    Vanilla ships 14 of them. The writer fetches a rewritten enemy's vanilla lot
+    as a template, and until this was fixed it demanded exactly one match, so
+    0.1.0.0 refused every enemy-drop seed that rewrote a field pointing at one
+    (the field report was 11800010). Read from the bundle rather than a
+    hard-coded list so a rebundled param table cannot make this stale.
+    """
+    import csv
+
+    from tools.bb_inputs import read_blob
+
+    text = read_blob(ROOT / "research" / "bb_inputs.db", "params/ItemLotParam.csv")
+    counts = Counter(
+        int(row["ID"])
+        for row in csv.DictReader(text.decode("utf-8-sig").splitlines())
+    )
+    assert counts, "witness: the vanilla lot table was actually read"
+    return {lot_id for lot_id, count in counts.items() if count > 1}
+
+
+def test_duplicate_source_lots_are_interchangeable_templates():
+    """Why the writer may take the first duplicate in file order.
+
+    The template only seeds the new row's non-slot shape: the writer overwrites
+    `Name`, clears and rewrites every slot 01-08 from the plan, and sets
+    `lotItem_Rarity` from the assignment. Prove the duplicate pairs differ in
+    nothing else, so which one is used cannot change the emitted row.
+    """
+    import csv
+
+    from tools.bb_inputs import read_blob
+
+    text = read_blob(ROOT / "research" / "bb_inputs.db", "params/ItemLotParam.csv")
+    rows = list(csv.DictReader(text.decode("utf-8-sig").splitlines()))
+    by_id: dict[int, list[dict]] = {}
+    for row in rows:
+        by_id.setdefault(int(row["ID"]), []).append(row)
+    duplicates = {k: v for k, v in by_id.items() if len(v) > 1}
+    assert len(duplicates) == 14, "witness: the duplicated ids were found"
+    assert 11_800_010 in duplicates, "the id the field report died on"
+    # Fields the writer rewrites unconditionally for a v2 enemy drop lot.
+    rewritten = {"Name", "lotItem_Rarity", "getItemFlagId", "cumulateNumFlagId",
+                 "cumulateNumMax"}
+    for index in range(1, 9):
+        rewritten |= {
+            f"lotItemCategory{index:02}", f"lotItemId{index:02}",
+            f"lotItemNum{index:02}", f"lotItemBasePoint{index:02}",
+            f"cumulateLotPoint{index:02}", f"getItemFlagId{index:02}",
+            f"enableLuck{index:02}", f"cumulateReset{index:02}",
+        }
+    checked = 0
+    for lot_id, group in sorted(duplicates.items()):
+        first, *rest = group
+        for other in rest:
+            differing = {f for f in first if first[f] != other[f]}
+            assert not differing - rewritten, (
+                f"lot {lot_id} duplicates differ in {sorted(differing - rewritten)}, "
+                "so first-in-file-order is no longer an immaterial choice"
+            )
+            checked += 1
+    assert checked == 14, "witness: every duplicate pair was compared"
+
+
+def test_generated_plan_covers_a_duplicated_source_lot():
+    """The regression the fixture must keep exercising."""
+    duplicates = duplicate_vanilla_lot_ids()
+    assert duplicates, "witness: the duplicate id set is non-empty"
+    assignments = build_enemy_drop_assignments(FIXTURE_SEED, "dropsanity")
+    assert assignments, "witness: the plan was actually generated"
+    hit = sorted(
+        {row["source_lot_id"] for row in assignments} & duplicates
+    )
+    assert hit == [11_800_010], (
+        "the fixture seed no longer rewrites a duplicated vanilla lot; pin a "
+        "seed that does, or the binder job stops covering the duplicate path"
+    )
+
+
+def test_v2_fixture_exercises_the_duplicate_template_path():
+    """The binder job feeds this fixture to `--seed-weapons`; if no row's
+    source lot is duplicated, CI never compiles the path that broke 0.1.0.0."""
+    fixture = json.loads(
+        (ROOT / "tests/fixtures/enemy-drop-request-v2.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    sources = {row["source_lot_id"] for row in fixture["enemy_drop_assignments"]}
+    assert sources & duplicate_vanilla_lot_ids(), (
+        "the committed v2 fixture no longer covers a duplicated source lot"
+    )
+
+
 def build_v2_fixture() -> dict:
     """The committed v2 writer fixture, derived from the world it must match."""
     assignments = build_enemy_drop_assignments(FIXTURE_SEED, "dropsanity")
@@ -242,13 +336,22 @@ def build_v2_fixture() -> dict:
         row for row in assignments
         if all(slot["category"] == -1 for slot in row["lot"]["slots"])
     )
-    plain = [
+    # A field whose vanilla lot id is duplicated in ItemLotParam. Without one
+    # the binder job never exercises the template fetch that refused every
+    # 0.1.0.0 enemy-drop seed rolling such a field.
+    duplicates = duplicate_vanilla_lot_ids()
+    duplicated = next(
         row for row in assignments
         if row is not gem and row is not empty
+        and row["source_lot_id"] in duplicates
+    )
+    plain = [
+        row for row in assignments
+        if row is not gem and row is not empty and row is not duplicated
         and any(slot["category"] == 4 for slot in row["lot"]["slots"])
     ][:2]
     chosen = sorted(
-        [*plain, gem, empty],
+        [*plain, gem, empty, duplicated],
         key=lambda row: (row["npc_param_id"], row["drop_field"]),
     )
     return {
@@ -321,5 +424,12 @@ def test_native_writer_handles_both_plan_formats():
     assert "awards unwitnessed gem recipe {slot.ItemId}" in source
     assert "uses forbidden category {slot.Category}" in source
     assert "seed parameter write changed the ItemLotParam row set" in source
+    # The template fetch tolerates vanilla's duplicated lot ids (0.1.0.0 died
+    # on 11800010) and no longer demands exactly one match.
+    assert "expected an ItemLotParam row {edit.SourceLotId}, found none" in source
+    assert "FirstOrDefault(row => row.ID == edit.SourceLotId)" in source
+    # ...while the suppression path, whose plan provably touches no duplicated
+    # id, keeps its strict one-row rule.
+    assert "expected one ItemLotParam row {lotId}, found {lotRows.Count}" in source
     assert "slot {slot} failed round-trip verification" in source
     assert "originalNpcRows[row.ID].RequireEqualExcept" in source
