@@ -1,14 +1,19 @@
 name: release
 
-# Tag-triggered player prerelease: pushing v* (e.g. v0.1.0-beta.1) builds
-# the full Windows launcher package -- launcher, native tools, CE table, and
-# the bb-ap-client built from the client repo's main -- and attaches the zip
-# plus bloodborne.apworld to a GitHub prerelease, so a playtester needs no
-# GitHub login to download.
+# Tag-triggered player release: pushing v* builds the full Windows launcher
+# package -- launcher, native tools, CE table, and the bb-ap-client built from
+# the pinned client commit -- and attaches the zip plus bloodborne.apworld to a
+# GitHub release, so a player needs no GitHub login to download.
+#
+# Two tag forms ship from here. A four-part vV.R.M.F tag (v0.1.0.0), the
+# Version.Release.Modification.Fixpack scheme, is a player release: published
+# as a normal, latest release, paired with the clients repo's bb-V.R.M.F tag.
+# Every other form (v0.1.0-beta.1, v0.1.0-signing-canary.2) is published as a
+# prerelease.
 #
 # The suppression binder is built here too, from the committed inputs bundle
 # (#138/#164), held to the world's plan pin, and bundled into the zip via
-# -SuppressionBuild -- so the prerelease is self-contained. The binder is
+# -SuppressionBuild -- so the package is self-contained. The binder is
 # licensed-game-derived; this repository already commits the same data in
 # research/bb_inputs.db, so the zip adds no new exposure.
 
@@ -18,7 +23,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to create (e.g. v0.1.0-beta.1)"
+        description: "Release tag to create (e.g. v0.1.0.0 or v0.1.0-beta.1)"
         required: true
       client_ref:
         description: "from-software-archipelago-clients ref to build (blank: the pin in packaging/client-ref.txt)"
@@ -39,7 +44,7 @@ permissions:
 
 jobs:
   package:
-    name: player prerelease package
+    name: player release package
     if: ${{ github.event_name != 'workflow_dispatch' || !inputs.scan_only }}
     runs-on: windows-latest
     environment: release-signing
@@ -52,7 +57,14 @@ jobs:
           $tag = "${{ github.event.inputs.tag }}"
           if ("${{ github.ref_type }}" -eq "tag") { $tag = "${{ github.ref_name }}" }
           if (-not $tag.StartsWith("v")) { throw "release tags must start with v: $tag" }
+          # Two tag forms ship from here. vV.R.M.F (v0.1.0.0) is a player
+          # release under the Version.Release.Modification.Fixpack scheme and
+          # is published as the latest, non-prerelease GitHub release. Anything
+          # else -- v0.1.0-beta.8, v0.1.0-signing-canary.2 -- stays a
+          # prerelease. packaging/version_metadata.py accepts both.
+          $prerelease = if ($tag -match '^v\d+\.\d+\.\d+\.\d+$') { "false" } else { "true" }
           "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "RELEASE_PRERELEASE=$prerelease" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - uses: actions/setup-python@v5
         with:
@@ -351,25 +363,38 @@ jobs:
           }
           Add-Content packaging\PACKAGE-README.txt ($lines -join "`n")
 
-      - name: Publish the prerelease with the package zip
+      - name: Publish the release with the package zip
         shell: pwsh
         run: |
-          # A moved prerelease tag rebuilds the same release. Keep its existing
-          # downloads until signing, smoke checks, attestation and hashing pass.
+          # A four-part vV.R.M.F tag is a player release: not a prerelease, and
+          # marked latest. Every other tag form stays a prerelease.
+          $isPrerelease = $env:RELEASE_PRERELEASE -eq "true"
+          $createFlags = if ($isPrerelease) {
+            @("--prerelease")
+          } else {
+            @("--latest")
+          }
+          $editFlags = if ($isPrerelease) {
+            @("--prerelease")
+          } else {
+            @("--prerelease=false", "--latest")
+          }
+          # A moved tag rebuilds the same release. Keep its existing downloads
+          # until signing, smoke checks, attestation and hashing pass.
           gh release view "$env:RELEASE_TAG" --repo ${{ github.repository }} *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload "$env:RELEASE_TAG" --repo ${{ github.repository }} `
               build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld --clobber
-            if ($LASTEXITCODE -ne 0) { throw "Replacing prerelease artifacts failed" }
+            if ($LASTEXITCODE -ne 0) { throw "Replacing release artifacts failed" }
             gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
-              --notes-file packaging/PACKAGE-README.txt
-            if ($LASTEXITCODE -ne 0) { throw "Updating prerelease hashes failed" }
+              --notes-file packaging/PACKAGE-README.txt @editFlags
+            if ($LASTEXITCODE -ne 0) { throw "Updating release hashes failed" }
           } else {
             gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
               --title "Bloodborne Archipelago $env:RELEASE_TAG" `
-              --notes-file packaging/PACKAGE-README.txt --prerelease `
+              --notes-file packaging/PACKAGE-README.txt @createFlags `
               build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
-            if ($LASTEXITCODE -ne 0) { throw "Creating prerelease failed" }
+            if ($LASTEXITCODE -ne 0) { throw "Creating the release failed" }
           }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -390,7 +415,14 @@ jobs:
           $tag = "${{ github.event.inputs.tag }}"
           if ("${{ github.ref_type }}" -eq "tag") { $tag = "${{ github.ref_name }}" }
           if (-not $tag.StartsWith("v")) { throw "release tags must start with v: $tag" }
+          # Two tag forms ship from here. vV.R.M.F (v0.1.0.0) is a player
+          # release under the Version.Release.Modification.Fixpack scheme and
+          # is published as the latest, non-prerelease GitHub release. Anything
+          # else -- v0.1.0-beta.8, v0.1.0-signing-canary.2 -- stays a
+          # prerelease. packaging/version_metadata.py accepts both.
+          $prerelease = if ($tag -match '^v\d+\.\d+\.\d+\.\d+$') { "false" } else { "true" }
           "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "RELEASE_PRERELEASE=$prerelease" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: VirusTotal API key is not configured
         if: env.VIRUSTOTAL_API_KEY == ''
