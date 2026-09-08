@@ -7,6 +7,8 @@ import unittest
 import zlib
 from pathlib import Path
 from tests.test_insight_armor import ROOT, ATTIRE_CATALOG, build_insight_armor_suppression
+from tools.build_seed_request_fixture import award_row
+from worlds.bloodborne.category8_awards import CATEGORY8_AWARDS
 
 class InsightWriterTests(unittest.TestCase):
     def test_real_binder_round_trip_and_drift_refusal(self):
@@ -26,7 +28,15 @@ class InsightWriterTests(unittest.TestCase):
             game, defs = root/'gameparam.parambnd.dcx', root/'paramdef.paramdefbnd.dcx'
             plan = build_insight_armor_suppression({p.item_key for p in ATTIRE_CATALOG})
             request, output = root/'request.json', root/'output.dcx'
-            request.write_text(json.dumps({'insight_armor_suppression':plan}))
+            # The award table rides along so this real-binder run exercises the
+            # category-8 path against vanilla ItemLotParam rows, including the
+            # Beast rune award whose source lot keeps its recipe in slot 02.
+            awards = [award_row(a) for a in CATEGORY8_AWARDS]
+            self.assertTrue(any(
+                a['item_key'] == 'category8_cathedral_ward_avatar_beast_rune'
+                for a in awards))
+            body = {'insight_armor_suppression':plan, 'category8_awards':awards}
+            request.write_text(json.dumps(body))
             before = run('--inspect-shops', game, defs)
             run('--seed-weapons', request, game, defs, output, '--apply')
             after = run('--inspect-shops', output, defs)
@@ -36,6 +46,6 @@ class InsightWriterTests(unittest.TestCase):
             self.assertEqual(after, expected)
             bad = root/'bad.dcx'
             plan[0]['equip_id'] += 1
-            request.write_text(json.dumps({'insight_armor_suppression':plan}))
+            request.write_text(json.dumps({**body, 'insight_armor_suppression':plan}))
             run('--seed-weapons', request, game, defs, bad, '--apply', ok=False)
             self.assertFalse(bad.exists())

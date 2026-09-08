@@ -13,5 +13,479 @@
     "12101007": 12101002,
     "12101008": 12101001,
     "12101009": 12101000
-  }
+  },
+  "category8_awards": [
+    {
+      "item_key": "caryll_rune_communion_1",
+      "token_goods_id": 9800,
+      "item_lot_id": 98000000,
+      "gemgen_id": 102901,
+      "ack_flag": 12400990,
+      "source_lot_id": 2400640
+    },
+    {
+      "item_key": "blood_gem_old_yharnam_123000",
+      "token_goods_id": 9801,
+      "item_lot_id": 98000010,
+      "gemgen_id": 123000,
+      "ack_flag": 12400991,
+      "source_lot_id": 2300040
+    },
+    {
+      "item_key": "category8_central_yharnam_lot_2410640",
+      "token_goods_id": 9802,
+      "item_lot_id": 98000020,
+      "gemgen_id": 102903,
+      "ack_flag": 12400900,
+      "source_lot_id": 2410640
+    },
+    {
+      "item_key": "category8_cathedral_ward_lot_2400300",
+      "token_goods_id": 9803,
+      "item_lot_id": 98000030,
+      "gemgen_id": 124002,
+      "ack_flag": 12400901,
+      "source_lot_id": 2400300
+    },
+    {
+      "item_key": "category8_cathedral_ward_lot_2400430",
+      "token_goods_id": 9804,
+      "item_lot_id": 98000040,
+      "gemgen_id": 124003,
+      "ack_flag": 12400902,
+      "source_lot_id": 2400430
+    },
+    {
+      "item_key": "category8_cathedral_ward_lot_2400760",
+      "token_goods_id": 9805,
+      "item_lot_id": 98000050,
+      "gemgen_id": 124001,
+      "ack_flag": 12400903,
+      "source_lot_id": 2400760
+    },
+    {
+      "item_key": "category8_cathedral_ward_lot_2400650",
+      "token_goods_id": 9806,
+      "item_lot_id": 98000060,
+      "gemgen_id": 124004,
+      "ack_flag": 12400904,
+      "source_lot_id": 2400650
+    },
+    {
+      "item_key": "category8_cathedral_ward_lot_2400690",
+      "token_goods_id": 9807,
+      "item_lot_id": 98000070,
+      "gemgen_id": 103104,
+      "ack_flag": 12400905,
+      "source_lot_id": 2400690
+    },
+    {
+      "item_key": "category8_cathedral_ward_lot_2400740",
+      "token_goods_id": 9808,
+      "item_lot_id": 98000080,
+      "gemgen_id": 124000,
+      "ack_flag": 12400906,
+      "source_lot_id": 2400740
+    },
+    {
+      "item_key": "category8_old_yharnam_lot_2300300",
+      "token_goods_id": 9809,
+      "item_lot_id": 98000090,
+      "gemgen_id": 123001,
+      "ack_flag": 12400907,
+      "source_lot_id": 2300300
+    },
+    {
+      "item_key": "category8_hemwick_lot_2200190",
+      "token_goods_id": 9810,
+      "item_lot_id": 98000100,
+      "gemgen_id": 122000,
+      "ack_flag": 12400908,
+      "source_lot_id": 2200190
+    },
+    {
+      "item_key": "category8_hemwick_lot_2200280",
+      "token_goods_id": 9811,
+      "item_lot_id": 98000110,
+      "gemgen_id": 122001,
+      "ack_flag": 12400909,
+      "source_lot_id": 2200280
+    },
+    {
+      "item_key": "category8_hemwick_lot_2200380",
+      "token_goods_id": 9812,
+      "item_lot_id": 98000120,
+      "gemgen_id": 101701,
+      "ack_flag": 12400910,
+      "source_lot_id": 2200380
+    },
+    {
+      "item_key": "category8_cainhurst_lot_2501040",
+      "token_goods_id": 9813,
+      "item_lot_id": 98000130,
+      "gemgen_id": 125000,
+      "ack_flag": 12400911,
+      "source_lot_id": 2501040
+    },
+    {
+      "item_key": "category8_cainhurst_lot_2501060",
+      "token_goods_id": 9814,
+      "item_lot_id": 98000140,
+      "gemgen_id": 125001,
+      "ack_flag": 12400912,
+      "source_lot_id": 2501060
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700180",
+      "token_goods_id": 9815,
+      "item_lot_id": 98000150,
+      "gemgen_id": 102001,
+      "ack_flag": 12400913,
+      "source_lot_id": 2700180
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700200",
+      "token_goods_id": 9816,
+      "item_lot_id": 98000160,
+      "gemgen_id": 101601,
+      "ack_flag": 12400914,
+      "source_lot_id": 2700200
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700300",
+      "token_goods_id": 9817,
+      "item_lot_id": 98000170,
+      "gemgen_id": 127001,
+      "ack_flag": 12400915,
+      "source_lot_id": 2700300
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700380",
+      "token_goods_id": 9818,
+      "item_lot_id": 98000180,
+      "gemgen_id": 100401,
+      "ack_flag": 12400916,
+      "source_lot_id": 2700380
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700540",
+      "token_goods_id": 9819,
+      "item_lot_id": 98000190,
+      "gemgen_id": 102202,
+      "ack_flag": 12400917,
+      "source_lot_id": 2700540
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700570",
+      "token_goods_id": 9820,
+      "item_lot_id": 98000200,
+      "gemgen_id": 100301,
+      "ack_flag": 12400918,
+      "source_lot_id": 2700570
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700650",
+      "token_goods_id": 9821,
+      "item_lot_id": 98000210,
+      "gemgen_id": 127003,
+      "ack_flag": 12400919,
+      "source_lot_id": 2700650
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700660",
+      "token_goods_id": 9822,
+      "item_lot_id": 98000220,
+      "gemgen_id": 127004,
+      "ack_flag": 12400920,
+      "source_lot_id": 2700660
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700690",
+      "token_goods_id": 9823,
+      "item_lot_id": 98000230,
+      "gemgen_id": 127002,
+      "ack_flag": 12400921,
+      "source_lot_id": 2700690
+    },
+    {
+      "item_key": "category8_forbidden_woods_lot_2700700",
+      "token_goods_id": 9824,
+      "item_lot_id": 98000240,
+      "gemgen_id": 127000,
+      "ack_flag": 12400922,
+      "source_lot_id": 2700700
+    },
+    {
+      "item_key": "category8_yahargul_lot_2800020",
+      "token_goods_id": 9825,
+      "item_lot_id": 98000250,
+      "gemgen_id": 128000,
+      "ack_flag": 12400923,
+      "source_lot_id": 2800020
+    },
+    {
+      "item_key": "category8_yahargul_lot_2800050",
+      "token_goods_id": 9826,
+      "item_lot_id": 98000260,
+      "gemgen_id": 100802,
+      "ack_flag": 12400924,
+      "source_lot_id": 2800050
+    },
+    {
+      "item_key": "category8_yahargul_lot_2800140",
+      "token_goods_id": 9827,
+      "item_lot_id": 98000270,
+      "gemgen_id": 101301,
+      "ack_flag": 12400925,
+      "source_lot_id": 2800140
+    },
+    {
+      "item_key": "category8_yahargul_lot_2800350",
+      "token_goods_id": 9828,
+      "item_lot_id": 98000280,
+      "gemgen_id": 100001,
+      "ack_flag": 12400926,
+      "source_lot_id": 2800350
+    },
+    {
+      "item_key": "category8_yahargul_lot_2800530",
+      "token_goods_id": 9829,
+      "item_lot_id": 98000290,
+      "gemgen_id": 228001,
+      "ack_flag": 12400927,
+      "source_lot_id": 2800530
+    },
+    {
+      "item_key": "category8_yahargul_lot_2800710",
+      "token_goods_id": 9830,
+      "item_lot_id": 98000300,
+      "gemgen_id": 132000,
+      "ack_flag": 12400928,
+      "source_lot_id": 2800710
+    },
+    {
+      "item_key": "category8_lecture_building_lot_3200010",
+      "token_goods_id": 9831,
+      "item_lot_id": 98000310,
+      "gemgen_id": 101302,
+      "ack_flag": 12400929,
+      "source_lot_id": 3200010
+    },
+    {
+      "item_key": "category8_lecture_building_lot_3200640",
+      "token_goods_id": 9832,
+      "item_lot_id": 98000320,
+      "gemgen_id": 102902,
+      "ack_flag": 12400930,
+      "source_lot_id": 3200640
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600150",
+      "token_goods_id": 9833,
+      "item_lot_id": 98000330,
+      "gemgen_id": 126002,
+      "ack_flag": 12400931,
+      "source_lot_id": 2600150
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600200",
+      "token_goods_id": 9834,
+      "item_lot_id": 98000340,
+      "gemgen_id": 126003,
+      "ack_flag": 12400932,
+      "source_lot_id": 2600200
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600220",
+      "token_goods_id": 9835,
+      "item_lot_id": 98000350,
+      "gemgen_id": 126000,
+      "ack_flag": 12400933,
+      "source_lot_id": 2600220
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600300",
+      "token_goods_id": 9836,
+      "item_lot_id": 98000360,
+      "gemgen_id": 100201,
+      "ack_flag": 12400934,
+      "source_lot_id": 2600300
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600390",
+      "token_goods_id": 9837,
+      "item_lot_id": 98000370,
+      "gemgen_id": 100002,
+      "ack_flag": 12400935,
+      "source_lot_id": 2600390
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600480",
+      "token_goods_id": 9838,
+      "item_lot_id": 98000380,
+      "gemgen_id": 126004,
+      "ack_flag": 12400936,
+      "source_lot_id": 2600480
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600510",
+      "token_goods_id": 9839,
+      "item_lot_id": 98000390,
+      "gemgen_id": 126001,
+      "ack_flag": 12400937,
+      "source_lot_id": 2600510
+    },
+    {
+      "item_key": "category8_nightmare_mensis_lot_2600530",
+      "token_goods_id": 9840,
+      "item_lot_id": 98000400,
+      "gemgen_id": 126000,
+      "ack_flag": 12400938,
+      "source_lot_id": 2600530
+    },
+    {
+      "item_key": "category8_nightmare_frontier_lot_3300010",
+      "token_goods_id": 9841,
+      "item_lot_id": 98000410,
+      "gemgen_id": 101401,
+      "ack_flag": 12400939,
+      "source_lot_id": 3300010
+    },
+    {
+      "item_key": "category8_nightmare_frontier_lot_3300050",
+      "token_goods_id": 9842,
+      "item_lot_id": 98000420,
+      "gemgen_id": 102302,
+      "ack_flag": 12400940,
+      "source_lot_id": 3300050
+    },
+    {
+      "item_key": "category8_nightmare_frontier_lot_3300220",
+      "token_goods_id": 9843,
+      "item_lot_id": 98000430,
+      "gemgen_id": 102002,
+      "ack_flag": 12400941,
+      "source_lot_id": 3300220
+    },
+    {
+      "item_key": "category8_nightmare_frontier_lot_3300320",
+      "token_goods_id": 9844,
+      "item_lot_id": 98000440,
+      "gemgen_id": 100302,
+      "ack_flag": 12400942,
+      "source_lot_id": 3300320
+    },
+    {
+      "item_key": "category8_nightmare_frontier_lot_3300380",
+      "token_goods_id": 9845,
+      "item_lot_id": 98000450,
+      "gemgen_id": 102102,
+      "ack_flag": 12400943,
+      "source_lot_id": 3300380
+    },
+    {
+      "item_key": "category8_upper_cathedral_lot_2420120",
+      "token_goods_id": 9846,
+      "item_lot_id": 98000460,
+      "gemgen_id": 101802,
+      "ack_flag": 12400944,
+      "source_lot_id": 2420120
+    },
+    {
+      "item_key": "category8_research_hall_lot_3500160",
+      "token_goods_id": 9847,
+      "item_lot_id": 98000470,
+      "gemgen_id": 135000,
+      "ack_flag": 12400945,
+      "source_lot_id": 3500160
+    },
+    {
+      "item_key": "category8_research_hall_lot_3500190",
+      "token_goods_id": 9848,
+      "item_lot_id": 98000480,
+      "gemgen_id": 135004,
+      "ack_flag": 12400946,
+      "source_lot_id": 3500190
+    },
+    {
+      "item_key": "category8_research_hall_lot_3501100",
+      "token_goods_id": 9849,
+      "item_lot_id": 98000490,
+      "gemgen_id": 134000,
+      "ack_flag": 12400947,
+      "source_lot_id": 3501100
+    },
+    {
+      "item_key": "category8_research_hall_lot_3501500",
+      "token_goods_id": 9850,
+      "item_lot_id": 98000500,
+      "gemgen_id": 135005,
+      "ack_flag": 12400948,
+      "source_lot_id": 3501500
+    },
+    {
+      "item_key": "category8_fishing_hamlet_lot_3600140",
+      "token_goods_id": 9851,
+      "item_lot_id": 98000510,
+      "gemgen_id": 134001,
+      "ack_flag": 12400949,
+      "source_lot_id": 3600140
+    },
+    {
+      "item_key": "category8_fishing_hamlet_lot_3600160",
+      "token_goods_id": 9852,
+      "item_lot_id": 98000520,
+      "gemgen_id": 136002,
+      "ack_flag": 12400950,
+      "source_lot_id": 3600160
+    },
+    {
+      "item_key": "category8_fishing_hamlet_lot_3600340",
+      "token_goods_id": 9853,
+      "item_lot_id": 98000530,
+      "gemgen_id": 136001,
+      "ack_flag": 12400951,
+      "source_lot_id": 3600340
+    },
+    {
+      "item_key": "category8_fishing_hamlet_lot_3600430",
+      "token_goods_id": 9854,
+      "item_lot_id": 98000540,
+      "gemgen_id": 136004,
+      "ack_flag": 12400952,
+      "source_lot_id": 3600430
+    },
+    {
+      "item_key": "category8_fishing_hamlet_lot_3600560",
+      "token_goods_id": 9855,
+      "item_lot_id": 98000550,
+      "gemgen_id": 136003,
+      "ack_flag": 12400953,
+      "source_lot_id": 3600560
+    },
+    {
+      "item_key": "category8_fishing_hamlet_lot_3600570",
+      "token_goods_id": 9856,
+      "item_lot_id": 98000560,
+      "gemgen_id": 136006,
+      "ack_flag": 12400954,
+      "source_lot_id": 3600570
+    },
+    {
+      "item_key": "category8_fishing_hamlet_lot_3600610",
+      "token_goods_id": 9857,
+      "item_lot_id": 98000570,
+      "gemgen_id": 136005,
+      "ack_flag": 12400955,
+      "source_lot_id": 3600610
+    },
+    {
+      "item_key": "category8_cathedral_ward_avatar_beast_rune",
+      "token_goods_id": 9900,
+      "item_lot_id": 98100000,
+      "gemgen_id": 102401,
+      "ack_flag": 12400980,
+      "source_lot_id": 75002400
+    }
+  ]
 }

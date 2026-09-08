@@ -20,6 +20,16 @@ under `Unreleased` and move into a dated version section when released.
   that already carries the world under `worlds\bloodborne` is refused rather
   than shadowed -- update that checkout instead. `bloodborne.apworld` is still
   attached to each release on its own, and copying it by hand still works.
+- **Fixed: beta.7 seeds were refused at launch.** Every seed built with
+  v0.1.0-beta.7 failed at *Randomize & Launch* with a `BBSuppressionWriter`
+  error naming `category8_cathedral_ward_avatar_beast_rune`. The Cathedral Ward
+  Avatar's Beast rune award is the first award whose source ItemLotParam row
+  (75002400) leaves slot 01 empty and keeps its recipe in slot 02; the writer
+  checked slot 01 only and refused the whole build. It now scans all eight
+  slots for the recipe, so the rune award is accepted and the AP award lot
+  still hands out exactly one rune. **Regenerate any beta.7 seed** after
+  installing beta.8's apworld and launcher; runs already in progress on beta.5
+  or beta.6 seeds are unaffected.
 
 - **Fixed: the Moon Presence ending was unreachable.** Bloodborne ships four
   *different* Third Umbilical Cord goods, and the ending gate counts one
