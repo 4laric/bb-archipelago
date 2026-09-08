@@ -286,8 +286,11 @@ short version for the beta:
   `stress:echoes:m24_01`, or `stress:family=c4060:m24_01`. Central Yharnam
   then gets the harshest allowed swap in every slot and every other area
   stays vanilla. Report what breaks the same way.
-- DeathLink is receive-only; chat and other multiworld sync beyond items are
-  not in this build.
+- DeathLink defaults to receive-only. Outbound sending exists behind
+  `death_link_send` and was seen working live on 2026-09-08, but only for an
+  ordinary death; it may still over-report, so see
+  [KNOWN-LIMITATIONS.md](KNOWN-LIMITATIONS.md) before enabling it. Chat and
+  other multiworld sync beyond items are not in this build.
 
 ### If you get stuck: the rescue console
 

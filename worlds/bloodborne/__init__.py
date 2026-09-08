@@ -622,14 +622,18 @@ else:
     class DeathLinkSend(Toggle):
         """EXPERIMENTAL: also broadcast YOUR deaths to other players.
 
-        Not validated live. Bloodborne has no death event flag, so the client
-        infers a death from the player's HP reaching zero -- the same memory
-        cell an incoming DeathLink already writes through -- and nobody has yet
-        confirmed against a real session that every death produces that edge
-        and that nothing else does. Expect missed deaths, or deaths reported
-        for something that was not one. Requires DeathLink; on its own this
-        does nothing. Leave it off unless you are deliberately testing the
-        signal, and read docs/DEATHLINK-SEND-PROBE.md if you are.
+        Only partly validated live. Bloodborne has no death event flag, so the
+        client infers a death from the player's HP reaching zero -- the same
+        memory cell an incoming DeathLink already writes through. On
+        2026-09-08 an ordinary player death was observed producing that edge
+        and reaching the multiworld, so the basic path works. What is still
+        unconfirmed is the other half: that nothing *else* produces the edge.
+        Cutscene and fake-death deaths, quit-to-title, and loading screens have
+        not been ruled out, so expect deaths reported for something that was
+        not one; first-death grace and the amnesty cycle are likewise
+        unobserved.
+        Requires DeathLink; on its own this does nothing. Read
+        docs/DEATHLINK-SEND-PROBE.md before turning it on.
         """
         display_name = "DeathLink Send (Experimental, Unvalidated)"
         default = 0
@@ -643,6 +647,10 @@ else:
         relaunches; incoming DeathLinks never consume it. Like DeathLink
         Amnesty, this only matters when DeathLink Send is on -- with sending
         off, nothing is ever broadcast and there is nothing to forgive.
+
+        The grace itself has not been observed live. The 2026-09-08 playtest
+        confirmed only that an ordinary death is detected and sent; no session
+        has yet watched a first death be forgiven or the amnesty cycle turn.
         """
         display_name = "DeathLink First Death Grace"
         default = 0
@@ -725,6 +733,13 @@ else:
         Enemy kills never become Archipelago checks. Equipment, Caryll runes,
         keys, badges, Blood Rock, and every acquisition-flagged one-time reward
         are excluded in both modes, and no vanilla loot table is edited.
+
+        Live coverage so far is one observation: on 2026-09-08 a dropsanity
+        seed dropped a rewritten item (a Delayed Rope Molotov, which only
+        exists in the rewritten pool) from the first enemy killed. Balanced
+        mode, blood gems and upgrade materials actually dropping, a second
+        rewritten archetype, and an excluded flagged reward staying vanilla
+        have all still to be seen in a game.
         """
         display_name = "Randomize Enemy Consumable Drops"
         option_off = 0

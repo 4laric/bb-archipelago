@@ -185,8 +185,22 @@ writer round-trip in CI's binder job (the only place the C# compiles and runs,
 against both a v1 and a v2 fixture plus a forged over-stacked one that must be
 refused), package integration, and seed-cache separation.
 
-Live beta acceptance is still outstanding: one `balanced` seed and one
-`dropsanity` seed, each proving two changed archetypes drop their rewritten
-contents at a sane rate, an excluded guaranteed/flagged reward remaining
-vanilla, a dropsanity gem actually dropping, and enabling the enemy enemizer not
-detaching loot from its archetype.
+Live beta acceptance is partly met. **Observed 2026-09-08** (launcher
+`v0.1.0.1`, client `bb-0.1.0.0`, playtest report by Oz): on a `dropsanity`
+seed, the first enemy killed dropped a **Delayed Rope Molotov** -- an item that
+exists only in the rewritten content pool, so it cannot have come from a
+vanilla loot table. That is one rewritten archetype dropping rewritten
+contents, in one mode, from one kill. It establishes that the v2 content
+rewrite reaches a live enemy's loot table at all; it says nothing about rates,
+breadth, or the exclusions.
+
+Still owed before this is accepted:
+
+- a second changed archetype dropping its rewritten contents, and at a sane
+  rate rather than a single lucky kill;
+- the same on a `balanced` seed, which has not been played at all;
+- a `dropsanity` blood gem or upgrade material actually dropping (only a
+  consumable has been seen);
+- an excluded guaranteed/flagged one-time reward observed remaining vanilla;
+- enabling the enemy enemizer alongside this and confirming loot stays attached
+  to the transplanted archetype.

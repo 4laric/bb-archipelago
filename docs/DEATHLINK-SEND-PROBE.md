@@ -25,9 +25,47 @@ edge**:
 - a death caused by an **incoming** DeathLink is attributed to this client and
   suppressed, so a received death cannot echo back out.
 
-This is `inferred` in the baseline's vocabulary. It is not a candidate, a
-witness or validated: it is an implementation of a hypothesis, and this session
-is what promotes or kills it.
+This was `inferred` in the baseline's vocabulary when the probe was written.
+As of **2026-09-08 it is `observed` for the positive half only** (see *Results
+so far* below): an ordinary death does produce the edge and does reach the
+multiworld. The negative half -- that nothing else produces the edge -- is
+still `inferred`, and it is the half that decides whether players can be told
+to turn sending on. The session below still needs running.
+
+## Results so far
+
+**2026-09-08**, launcher `v0.1.0.1` with client `bb-0.1.0.0`, ordinary
+multiworld session (not the scripted probe run), reported by Oz on Discord.
+Seed rolled with `death_link: true` and `death_link_send: true`.
+
+- **Step 1, ordinary death: CONFIRMED, TRUE column.** A real player death was
+  detected by the HP-edge detector and broadcast; another player in the
+  multiworld observed the arrival. The instrument sees the death it is meant
+  to see, and the send path end-to-end works.
+- **Every other row remains open.** Steps 2--9 were not exercised: no incoming
+  echo suppression check, no quit-to-title, no lamp warp, no send-disabled
+  gating, no first-death grace, no amnesty cadence. This was not a controlled
+  run -- there were no `mark` labels and no console transcript -- so it is a
+  single observation, not the session. The step 0 positive control was not run
+  either.
+- Because the false-positive rows are untouched, the detector is **not**
+  promoted to `validated` and `death_link_send` stays experimental. Run the
+  script below as written.
+
+### Open: an incoming DeathLink that did not arrive
+
+In the same session, a Balatro slot in the same multiworld ended a run and no
+DeathLink visibly arrived in Bloodborne. This is recorded as an open
+observation, not a receive regression -- receive is unchanged and was working
+in earlier betas.
+
+**Question to answer before treating it as a fault:** did the sender actually
+broadcast? A manually ended Balatro run may not emit a DeathLink at all. Check
+the Bloodborne client console for a `DeathLink received from <slot>` line: if
+that line is present, the arrival happened and the failure is in-game
+application (a real bug); if it is absent, check the Archipelago server log or
+the other slot's client for an outgoing DeathLink before blaming this client.
+Step 0 of the script below is the controlled version of this same test.
 
 ## Cost and decision
 
@@ -96,7 +134,7 @@ one alive->dead HP edge, and nothing else the player does produces one.**
 
 | step | if the hypothesis is TRUE | if it is FALSE | if the PROBE is broken |
 | --- | --- | --- | --- |
-| 1. Ordinary death | exactly one `death_observed` line, within ~1s of the YOU DIED screen | zero lines, or two or more for one death | step 0 already failed; or lines appear with no death at all |
+| 1. Ordinary death **(CONFIRMED 2026-09-08)** | exactly one `death_observed` line, within ~1s of the YOU DIED screen | zero lines, or two or more for one death | step 0 already failed; or lines appear with no death at all |
 | 2. Death by incoming DeathLink | exactly one, `suppressed_echo` | one line WITHOUT `suppressed_echo` (echo would be broadcast) | no line at all |
 | 3. Quit to title while alive, reload | no lines at all | any `death_observed` line | -- |
 | 4. Lamp warp / load screen while alive | no lines at all | any `death_observed` line | -- |
@@ -144,6 +182,9 @@ ledger, and watch the other slot for arrivals:
 Paste the console lines with their `mark` labels, in order, plus the eboot base
 and client build hash the session header prints. Then say which of the three
 columns each step landed in.
+
+Row 1 landed in the TRUE column on 2026-09-08 outside a controlled run; the
+other seven rows are still open, so the session below is still owed in full.
 
 - All eight rows in the TRUE column: the signal is promoted from `inferred` to
   **validated**, `death_link_send` can be documented as working (still

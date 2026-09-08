@@ -18,7 +18,9 @@ untested and report what happens either way.
 For scale: the furthest a live randomized playtest has reached is defeating
 Mergo's Wet Nurse, with the client running and checks sending the whole way.
 What lies beyond that (Gehrman, the Moon Presence, and the DLC) has not been
-played.
+played. Two things have since come off this list -- see
+[Verified live](#verified-live) below -- but only as far as the single
+observation each one got.
 
 ### The Old Hunters DLC
 
@@ -94,9 +96,23 @@ seed, so an unexpected "not armed" at launch is this.
 - **One character per seed.** The client binds to the first save it verifies
   and refuses a different character afterward. Do not start a new character
   mid-seed.
-- **DeathLink is receive-only.** Your deaths are not sent to others yet.
+- **DeathLink send works, but may over-report.** Your deaths *are* broadcast
+  now when `death_link: true` and `death_link_send: true`; an ordinary death
+  was seen going out on 2026-09-08. The client infers the death from your HP
+  hitting zero, and nobody has yet checked whether a cutscene death, a
+  fake-death scripted effect, a quit-to-title or a loading screen also trips
+  it. Leave sending off if a spurious death would spoil someone else's run.
+- **An incoming DeathLink has been seen arriving in only one direction.** A
+  death sent from a Balatro slot in the same multiworld on 2026-09-08 did not
+  visibly arrive in Bloodborne. It is not known whether that slot broadcast
+  anything at all, so this is an open observation rather than a known fault;
+  receive is otherwise unchanged from previous betas.
 - **Enemy randomization writes have not been playtested at scale.** A bad
   transplant can crash a map load. Untick Randomize Enemies for a cleaner run.
+- **Enemy drop randomization has one live sighting and no more.** A
+  `dropsanity` seed was seen dropping a rewritten item on 2026-09-08. The
+  `balanced` mode, gems and upgrade materials dropping, and the exclusion of
+  flagged one-time rewards are all still unobserved in a game.
 - **Shop randomization is hidden.** `randomize_shops` is accepted but the
   permutation is not applied in this beta.
 - **Chalice Dungeons are out of scope** entirely.
@@ -107,12 +123,30 @@ seed, so an unexpected "not armed" at launch is this.
   pickup popup has not been confirmed on any lane. See
   docs/NATIVE-ITEM-POPUPS.md for the plan and the guided probe.
 
-## Verified in this beta
+## Verified live
 
-Worth saying, since the list above is long: Caryll rune and blood gem
-delivery through the new event-award lane was confirmed in a live playtest
-before release. Delivered runes equip and gems imprint. Report anything
-different.
+Worth saying, since the list above is long. Each line is what was actually
+seen, not what the feature is supposed to do.
+
+- **Caryll rune and blood gem delivery** through the event-award lane, in a
+  live playtest before this beta. Delivered runes equip and gems imprint.
+- **Enemy drop randomization, `dropsanity` mode** -- 2026-09-08, launcher
+  `v0.1.0.1` with client `bb-0.1.0.0`. The first enemy killed dropped a
+  Delayed Rope Molotov, an item that exists only in the rewritten drop pool,
+  so the rewritten content reaches a real enemy's loot table in game. One
+  archetype, one mode. Still unseen: a second rewritten archetype, the
+  `balanced` mode, a blood gem or upgrade material dropping, and an excluded
+  flagged reward staying vanilla.
+- **DeathLink outbound send** -- 2026-09-08, launcher `v0.1.0.1` with client
+  `bb-0.1.0.0`, seed rolled with `death_link: true` and
+  `death_link_send: true`. An ordinary player death was detected by the
+  HP-edge detector and broadcast to the multiworld, and another player saw it
+  arrive. Still unseen: every false-positive case the probe runbook lists
+  (cutscene deaths, fake-death SpEffects, quit-to-title, loading screens),
+  first-death grace, and the amnesty cycle. Sending remains experimental
+  because over-reporting has not been ruled out.
+
+Report anything different.
 
 ## If you get stuck: the rescue console
 

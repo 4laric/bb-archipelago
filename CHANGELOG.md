@@ -6,6 +6,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Docs: two experimental features were confirmed working in a live game on
+  2026-09-08** (launcher `v0.1.0.1`, client `bb-0.1.0.0`). Enemy drop
+  randomization in `dropsanity` mode dropped a rewritten item from a real
+  enemy, and an ordinary player death with `death_link_send: true` was
+  detected and broadcast to the multiworld. Both stay experimental: only one
+  drop archetype and one mode were seen, and none of the cases that would make
+  the death detector report a death that was not one (cutscenes, fake-death
+  effects, quit-to-title, loading) have been checked. `docs/KNOWN-LIMITATIONS.md`
+  now separates what was verified live from what is still unplayed, and the
+  option descriptions say which half is which.
+
 - **The shipped client pin moves to
   `584263cd7d227e81ec82c2fc2a4f66cb1f6c9e70`.** Between the previous pin
   (`2f1ee16`) and this commit, `crates/bb-archipelago` is byte-for-byte
