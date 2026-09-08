@@ -150,6 +150,41 @@
           }
         ]
       }
+    },
+    {
+      "npc_param_id": 118001,
+      "drop_field": "itemLotId_1",
+      "source_lot_id": 11800010,
+      "lot": {
+        "id": 99000480,
+        "rarity": 1,
+        "slots": [
+          {
+            "slot": 1,
+            "category": 4,
+            "item_id": 1200,
+            "quantity": 2,
+            "base_point": 790,
+            "luck": false
+          },
+          {
+            "slot": 2,
+            "category": 4,
+            "item_id": 900,
+            "quantity": 1,
+            "base_point": 160,
+            "luck": true
+          },
+          {
+            "slot": 3,
+            "category": 4,
+            "item_id": 1240,
+            "quantity": 1,
+            "base_point": 50,
+            "luck": false
+          }
+        ]
+      }
     }
   ]
 }
