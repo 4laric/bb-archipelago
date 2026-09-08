@@ -456,11 +456,17 @@ class LauncherPackageTests(unittest.TestCase):
         )
         # The publish step honours it instead of hard-coding --prerelease.
         self.assertIn('$isPrerelease = $env:RELEASE_PRERELEASE -eq "true"', release)
-        self.assertIn('@("--latest")', release)
-        self.assertIn('@("--prerelease=false", "--latest")', release)
-        self.assertNotIn(
-            "--notes-file packaging/PACKAGE-README.txt --prerelease `", release
+        self.assertIn(
+            "--notes-file packaging/PACKAGE-README.txt --latest `", release
         )
+        self.assertIn(
+            "--notes-file packaging/PACKAGE-README.txt --prerelease=false --latest",
+            release,
+        )
+        # Splatting the flags from an array reached gh as a bare "-" and failed
+        # the first v0.1.0.0 release. Each branch spells its command out.
+        self.assertNotIn("@createFlags", release)
+        self.assertNotIn("@editFlags", release)
 
     def test_invalid_or_unrepresentable_release_versions_are_rejected(self):
         module = load_version_metadata_module()
