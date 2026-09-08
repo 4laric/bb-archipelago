@@ -286,6 +286,8 @@ Parameterize `.github/scripts/check_er_channels.py` into `check_channels.py --ga
 2. **Bloodborne stable.** Every release is a GitHub prerelease. Either accept the ledger-pointer
    rule in §2.4, or start cutting a non-prerelease tag once the beta stabilizes. The spec works
    either way; the first is needed to ship anything now.
+   *Resolved 2026-09-08: both. The ledger-pointer rule shipped and stays, and stable now points at
+   `v0.1.0.2`, the first non-prerelease V.R.M.F tag.*
 3. **Contact.** One Discord handle for both games, or a Bloodborne-specific one in the contact card?
 4. **Client update check.** `/bb/latest.json` is cheap to publish. The consumer in
    `crates/bb-archipelago` is a separate clients-repo change; the launcher today fetches nothing.

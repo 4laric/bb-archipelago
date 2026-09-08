@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The website's stable download is now `v0.1.0.2`.** The channel ledger was still
+  pointing `/bb/` at `v0.1.0-beta.5`. Stable now names the first non-prerelease V.R.M.F
+  release, so /downloads and `/bb/latest.json` offer the build with the apworld-in-zip
+  launcher install, distinct umbilical cords, the dropsanity rewrite, and client
+  `bb-0.1.0.1`. The Development channel still follows `main`.
+
 - **Client pin moved to bb-0.1.0.1 (6779f30).** Incoming DeathLinks now kill the player on shadPS4 0.18.0: the client writes the HP cell directly and only falls back to changing page protection when the direct write is refused, and a failed kill stays queued (clients#667). Runtime build unchanged at bb-0.1.0-r10, so this is a drop-in client swap for existing seeds.
 
 - **Docs: two experimental features were confirmed working in a live game on

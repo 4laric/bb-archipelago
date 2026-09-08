@@ -17,9 +17,9 @@ The spec names the clients repo's copy at
 `crates/bb-archipelago/contract/bb-native-grant-contract.v5.json`. This tool hashes THIS repo's
 copy at `research/runtime/bb-native-grant-contract.v5.json` instead, which is the same document:
 
-  * `packaging/client-ref.txt` pins the exact clients commit every release is built against
-    (currently `fcbdf5d37c5d32374c9047622f09f1391c7e8028`), and at that pin the two files are
-    canonically identical -- verified when this tool was written;
+  * `packaging/client-ref.txt` pins the exact clients commit every release is built against,
+    and at that pin the two files are canonically identical -- verified when this tool was
+    written, and re-verified on every run of the drift check below;
   * `tools/check_contract_drift.py` fails CI the moment they stop agreeing.
 
 So the local copy IS the contract as built into the release, and reading it keeps this tool

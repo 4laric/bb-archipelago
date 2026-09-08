@@ -439,7 +439,8 @@ class ChannelLedgerTests(unittest.TestCase):
     def test_stable_names_a_tag_and_beta_names_a_branch(self):
         stable = [row for row in self.rows if row[0] == "stable"][-1]
         beta = [row for row in self.rows if row[0] == "beta"][-1]
-        self.assertRegex(stable[1], r"^v\d+\.\d+\.\d+(-beta\.\d+)?$")
+        # Either release form: a playtest tag `vV.R.M-beta.N` or a player tag `vV.R.M.F`.
+        self.assertRegex(stable[1], r"^v\d+\.\d+\.\d+(\.\d+|-beta\.\d+)?$")
         self.assertEqual("main", beta[1])
 
     def test_latest_json_projects_the_stable_row(self):
