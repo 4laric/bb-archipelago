@@ -368,17 +368,13 @@ jobs:
         run: |
           # A four-part vV.R.M.F tag is a player release: not a prerelease, and
           # marked latest. Every other tag form stays a prerelease.
+          #
+          # Each branch spells its whole gh command out. Splatting the differing
+          # flags into the call from a PowerShell array reached gh as a bare
+          # "-" instead, and failed the first v0.1.0.0 release with "no matches
+          # found for -", so every flag here is a literal argument and nothing
+          # is expanded into the argument list.
           $isPrerelease = $env:RELEASE_PRERELEASE -eq "true"
-          $createFlags = if ($isPrerelease) {
-            @("--prerelease")
-          } else {
-            @("--latest")
-          }
-          $editFlags = if ($isPrerelease) {
-            @("--prerelease")
-          } else {
-            @("--prerelease=false", "--latest")
-          }
           # A moved tag rebuilds the same release. Keep its existing downloads
           # until signing, smoke checks, attestation and hashing pass.
           gh release view "$env:RELEASE_TAG" --repo ${{ github.repository }} *> $null
@@ -386,14 +382,26 @@ jobs:
             gh release upload "$env:RELEASE_TAG" --repo ${{ github.repository }} `
               build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld --clobber
             if ($LASTEXITCODE -ne 0) { throw "Replacing release artifacts failed" }
-            gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
-              --notes-file packaging/PACKAGE-README.txt @editFlags
+            if ($isPrerelease) {
+              gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+                --notes-file packaging/PACKAGE-README.txt --prerelease
+            } else {
+              gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+                --notes-file packaging/PACKAGE-README.txt --prerelease=false --latest
+            }
             if ($LASTEXITCODE -ne 0) { throw "Updating release hashes failed" }
           } else {
-            gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
-              --title "Bloodborne Archipelago $env:RELEASE_TAG" `
-              --notes-file packaging/PACKAGE-README.txt @createFlags `
-              build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+            if ($isPrerelease) {
+              gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+                --title "Bloodborne Archipelago $env:RELEASE_TAG" `
+                --notes-file packaging/PACKAGE-README.txt --prerelease `
+                build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+            } else {
+              gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+                --title "Bloodborne Archipelago $env:RELEASE_TAG" `
+                --notes-file packaging/PACKAGE-README.txt --latest `
+                build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+            }
             if ($LASTEXITCODE -ne 0) { throw "Creating the release failed" }
           }
         env:
