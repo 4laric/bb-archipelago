@@ -584,7 +584,10 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     shops.Rows.RemoveAll(row => insightRows.ContainsKey(row.ID));
     var originalWeaponRows = weapons.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
     var originalNpcRows = npcs.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
-    var originalLotRows = itemLots.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
+    // ItemLotParam contains duplicate row IDs (2902000 occurs twice), so this
+    // baseline is positional, exactly like the suppression path's. New rows are
+    // appended, so the original rows stay at the head in order.
+    var originalLotRows = itemLots.Rows.Select(RowState.Capture).ToList();
     var startingAssignments = new[] { 2000, 2001, 2002 }.Zip(right)
         .Concat(new[] { 2010, 2011 }.Zip(left)).ToList();
     foreach ((int rowId, int equipId) in startingAssignments)
@@ -650,8 +653,9 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         for (int slot = 1; slot <= 8; slot++)
             if (Convert.ToInt32(RequireCell(row, $"lotItemCategory{slot:00}").Value) == 8)
                 gemWitnesses.Add(Convert.ToInt32(RequireCell(row, $"lotItemId{slot:00}").Value));
-    var goodsMaxNum = goods.Rows.ToDictionary(
-        row => row.ID, row => Convert.ToInt32(RequireCell(row, "maxNum").Value));
+    var goodsMaxNum = new Dictionary<int, int>();
+    foreach (PARAM.Row row in goods.Rows)
+        goodsMaxNum.TryAdd(row.ID, Convert.ToInt32(RequireCell(row, "maxNum").Value));
     var newDropLots = new HashSet<int>();
     foreach (EnemyDropRewrite edit in dropRewrites)
     {
@@ -667,9 +671,12 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         if (itemLotIds.Contains(edit.Lot.Id))
             throw new InvalidDataException(
                 $"enemy drop lot {edit.Lot.Id} already exists in the input binder");
-        PARAM.Row template = itemLots.Rows.SingleOrDefault(row => row.ID == edit.SourceLotId)
-            ?? throw new InvalidDataException(
-                $"enemy drop source lot {edit.SourceLotId} does not exist");
+        List<PARAM.Row> sourceRows = itemLots.Rows
+            .Where(row => row.ID == edit.SourceLotId).ToList();
+        if (sourceRows.Count != 1)
+            throw new InvalidDataException(
+                $"expected one ItemLotParam row {edit.SourceLotId}, found {sourceRows.Count}");
+        PARAM.Row template = sourceRows[0];
         var usedSlots = new HashSet<int>();
         foreach (EnemyDropSlot slot in edit.Lot.Slots)
         {
@@ -904,13 +911,16 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     // treasure and the vanilla suppression plan own many of them. Prove that
     // the only difference is exactly the rows this request declared.
     var expectedNewLots = newDropLots
-        .Concat(category8Awards.Select(award => award.ItemLotId)).ToHashSet();
-    if (!checkedLots.Rows.Select(row => row.ID).ToHashSet().SetEquals(
-            originalLotRows.Keys.Concat(expectedNewLots)))
+        .Concat(category8Awards.Select(award => award.ItemLotId)).ToList();
+    if (checkedLots.Rows.Count != originalLotRows.Count + expectedNewLots.Count)
+        throw new InvalidDataException("seed parameter write changed the ItemLotParam row count");
+    for (int index = 0; index < originalLotRows.Count; index++)
+        originalLotRows[index].RequireEqual(
+            RowState.Capture(checkedLots.Rows[index]),
+            $"ItemLotParam row {checkedLots.Rows[index].ID}");
+    if (!checkedLots.Rows.Skip(originalLotRows.Count).Select(row => row.ID).ToHashSet()
+            .SetEquals(expectedNewLots))
         throw new InvalidDataException("seed parameter write changed the ItemLotParam row set");
-    foreach (PARAM.Row row in checkedLots.Rows)
-        if (originalLotRows.TryGetValue(row.ID, out RowState? beforeLot))
-            beforeLot.RequireEqual(RowState.Capture(row), $"ItemLotParam row {row.ID}");
     foreach (EnemyDropRewrite edit in dropRewrites)
     {
         PARAM.Row lot = checkedLots.Rows.Single(row => row.ID == edit.Lot.Id);
