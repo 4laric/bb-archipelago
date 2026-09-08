@@ -204,7 +204,7 @@
    "class": "RandomizeEnemyDrops",
    "kind": "choice",
    "display_name": "Randomize Enemy Consumable Drops",
-   "description": "Shuffle safe repeatable enemy consumable and material loot tables.\n\nThis changes local consumable and material drops only. Enemy kills do\nnot become Archipelago checks, and equipment, runes, blood gems,\nprogression goods, and acquisition-flagged rewards are excluded. The\nbalanced mode preserves loot-table cadence and rarity; dropsanity\nshuffles every eligible table together without compatibility grouping.",
+   "description": "Rewrite what ordinary enemies drop, without adding any checks.\n\nBalanced rebuilds every eligible enemy loot table from the safe\nrepeatable consumable pool, reusing a vanilla drop-chance and quantity\ncadence so farm rates stay in vanilla range. Enemies whose vanilla\ntable is empty can gain a drop, and some tables go empty, so the\noverall drop density stays near vanilla. Dropsanity does the same from\na wider pool: consumables plus repeatable upgrade materials, Coldblood\necho packets, and the blood-gem recipes vanilla enemies already drop.\n\nEnemy kills never become Archipelago checks. Equipment, Caryll runes,\nkeys, badges, Blood Rock, and every acquisition-flagged one-time reward\nare excluded in both modes, and no vanilla loot table is edited.",
    "default": "off",
    "choices": [
     {

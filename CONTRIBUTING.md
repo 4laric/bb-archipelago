@@ -137,7 +137,9 @@ pull request that touches anything the binder build reads -- the plan pin in
 `tools/check_suppression_plan_pin.py`, `tools/build_vanilla_suppression.ps1`,
 `tools/bb_inputs.py`, `tools/bb_suppression_writer/`, `tools/bb_objact_miner/`,
 `research/bb_inputs.db`, `research/joined/objact_params.tsv`,
-`tests/fixtures/shop-seed-request.json`, or `.github/workflows/tests.yaml`. The
+`tests/fixtures/shop-seed-request.json`, `tests/fixtures/enemy-drop-request.json`,
+`tests/fixtures/enemy-drop-request-v2.json`,
+`worlds/bloodborne/enemy_drop_catalog.json`, or `.github/workflows/tests.yaml`. The
 `binder inputs touched` job decides this from a plain `git diff` against the
 pull request's base. Moving `SUPPRESSION_PLAN_SHA256` without repinning
 `EXPECTED_OUTPUT_SHA256` left main red from #391 to #397; that pair is now

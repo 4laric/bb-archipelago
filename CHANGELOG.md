@@ -6,6 +6,25 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **`randomize_enemy_drops` now rewrites what enemies drop instead of swapping
+  their loot tables around.** The old shuffle moved whole vanilla tables
+  between enemies, and because 35% of vanilla enemy loot is Blood Vials and
+  21% Quicksilver Bullets, it almost always swapped one vial table for
+  another -- "the only difference is 5x vials and 3x bullets". Each eligible
+  enemy now gets a freshly built drop table: `balanced` fills it from the safe
+  repeatable consumable pool, `dropsanity` adds repeatable upgrade materials,
+  Coldblood echo packets and the blood gems vanilla enemies already drop. 65
+  enemies whose vanilla table was empty can now drop something, some tables go
+  empty in exchange, and the overall drop rate stays where vanilla put it
+  because every new table reuses a drop-chance and quantity shape a real
+  Bloodborne enemy already has. Blood Vials and Quicksilver Bullets are still
+  the two commonest drops, at around 12% and 11% of populated slots instead of
+  35% and 21%. Enemy kills still never become Archipelago checks, no vanilla
+  loot table is edited, and equipment, Caryll runes, keys, badges, Blood Rock
+  and one-time flagged rewards remain excluded. **Roll a new seed** to get the
+  new behaviour; seeds already generated keep working unchanged. Not yet
+  playtested in game -- see `docs/ENEMY-DROP-RANDOMIZATION.md`.
+
 - **The launcher package now carries `bloodborne.apworld` and can install it
   for you.** Seed generators previously had to download the separate apworld
   asset and place it in `Archipelago\custom_worlds` by hand before **Create &

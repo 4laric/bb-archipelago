@@ -500,13 +500,30 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             || !shopPermutation.Values.ToHashSet().SetEquals(shopGates))
             throw new InvalidDataException("shop gate permutation must be a bijection over the ten ordinary Bath gates");
     }
-    List<EnemyDropAssignment> dropAssignments = randomizeDrops
+    // Enemy drop plans come in two shapes. The v1 plan permuted whole vanilla
+    // loot tables and names a target_lot_id per NPC field. The v2 plan rewrites
+    // table CONTENTS: it carries a brand new ItemLotParam row per field, which
+    // this writer adds and then repoints the NpcParam cell at. Seeds rolled by
+    // an older world carry no marker and are still in flight, so the shape is
+    // decided by the marker alone and never guessed from the payload.
+    string dropPlanFormat = root.TryGetProperty("enemy_drop_plan_format", out JsonElement dropFormatElement)
+        && dropFormatElement.ValueKind == JsonValueKind.String
+        ? dropFormatElement.GetString() ?? "" : "";
+    bool dropPlanV2 = dropPlanFormat == "bb-enemy-drop-plan-v2";
+    if (dropPlanFormat.Length > 0 && !dropPlanV2)
+        throw new InvalidDataException($"unsupported enemy drop plan format {dropPlanFormat}");
+    List<EnemyDropAssignment> dropAssignments = randomizeDrops && !dropPlanV2
         ? JsonSerializer.Deserialize<List<EnemyDropAssignment>>(
             root.GetProperty("enemy_drop_assignments").GetRawText())
             ?? throw new InvalidDataException("enemy drop assignments are empty")
         : [];
+    List<EnemyDropRewrite> dropRewrites = randomizeDrops && dropPlanV2
+        ? JsonSerializer.Deserialize<List<EnemyDropRewrite>>(
+            root.GetProperty("enemy_drop_assignments").GetRawText())
+            ?? throw new InvalidDataException("enemy drop assignments are empty")
+        : [];
     string[] dropFields = Enumerable.Range(1, 6).Select(index => $"itemLotId_{index}").ToArray();
-    if (randomizeDrops && (dropAssignments.Count == 0
+    if (randomizeDrops && !dropPlanV2 && (dropAssignments.Count == 0
         || dropAssignments.Any(edit => edit.NpcParamId <= 0
             || !dropFields.Contains(edit.DropField)
             || edit.SourceLotId <= 0 || edit.TargetLotId <= 0
@@ -514,6 +531,15 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         || dropAssignments.Select(edit => (edit.NpcParamId, edit.DropField)).Distinct().Count()
             != dropAssignments.Count))
         throw new InvalidDataException("enemy drop assignments contain an invalid or repeated NPC field");
+    if (randomizeDrops && dropPlanV2 && (dropRewrites.Count == 0
+        || dropRewrites.Any(edit => edit.NpcParamId <= 0
+            || !dropFields.Contains(edit.DropField)
+            || edit.SourceLotId <= 0 || edit.Lot is null || edit.Lot.Id <= 0
+            || edit.Lot.Slots is null || edit.Lot.Slots.Count is < 1 or > 8)
+        || dropRewrites.Select(edit => (edit.NpcParamId, edit.DropField)).Distinct().Count()
+            != dropRewrites.Count
+        || dropRewrites.Select(edit => edit.Lot.Id).Distinct().Count() != dropRewrites.Count))
+        throw new InvalidDataException("enemy drop rewrites contain an invalid or repeated NPC field");
 
     BND4 game = BND4.Read(inputPath);
     BND4 defs = BND4.Read(paramdefPath);
@@ -558,6 +584,10 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     shops.Rows.RemoveAll(row => insightRows.ContainsKey(row.ID));
     var originalWeaponRows = weapons.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
     var originalNpcRows = npcs.Rows.Select(RowState.Capture).ToDictionary(row => row.Id);
+    // ItemLotParam contains duplicate row IDs (2902000 occurs twice), so this
+    // baseline is positional, exactly like the suppression path's. New rows are
+    // appended, so the original rows stay at the head in order.
+    var originalLotRows = itemLots.Rows.Select(RowState.Capture).ToList();
     var startingAssignments = new[] { 2000, 2001, 2002 }.Zip(right)
         .Concat(new[] { 2010, 2011 }.Zip(left)).ToList();
     foreach ((int rowId, int equipId) in startingAssignments)
@@ -613,6 +643,107 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
             dropRows[row.ID] = fields = [];
         fields.Add(edit.DropField);
         RequireCell(row, edit.DropField).Value = edit.TargetLotId;
+    }
+    // GemGenParam is not one of the params this tool opens, so a category-8
+    // recipe is proved to exist the way the world's catalog proves it: some
+    // vanilla ItemLotParam row already awards it. That is the same evidence
+    // the seed generator used to build its pool, and it needs no new input.
+    var gemWitnesses = new HashSet<int>();
+    foreach (PARAM.Row row in itemLots.Rows)
+        for (int slot = 1; slot <= 8; slot++)
+            if (Convert.ToInt32(RequireCell(row, $"lotItemCategory{slot:00}").Value) == 8)
+                gemWitnesses.Add(Convert.ToInt32(RequireCell(row, $"lotItemId{slot:00}").Value));
+    var goodsMaxNum = new Dictionary<int, int>();
+    foreach (PARAM.Row row in goods.Rows)
+        goodsMaxNum.TryAdd(row.ID, Convert.ToInt32(RequireCell(row, "maxNum").Value));
+    var newDropLots = new HashSet<int>();
+    foreach (EnemyDropRewrite edit in dropRewrites)
+    {
+        List<PARAM.Row> matches = npcs.Rows.Where(row => row.ID == edit.NpcParamId).ToList();
+        if (matches.Count != 1)
+            throw new InvalidDataException(
+                $"enemy drop rewrite expected one NpcParam row {edit.NpcParamId}, found {matches.Count}");
+        PARAM.Row npcRow = matches[0];
+        int actual = Convert.ToInt32(RequireCell(npcRow, edit.DropField).Value);
+        if (actual != edit.SourceLotId)
+            throw new InvalidDataException(
+                $"NpcParam {edit.NpcParamId} {edit.DropField} is {actual}, request says {edit.SourceLotId}");
+        if (itemLotIds.Contains(edit.Lot.Id))
+            throw new InvalidDataException(
+                $"enemy drop lot {edit.Lot.Id} already exists in the input binder");
+        List<PARAM.Row> sourceRows = itemLots.Rows
+            .Where(row => row.ID == edit.SourceLotId).ToList();
+        if (sourceRows.Count != 1)
+            throw new InvalidDataException(
+                $"expected one ItemLotParam row {edit.SourceLotId}, found {sourceRows.Count}");
+        PARAM.Row template = sourceRows[0];
+        var usedSlots = new HashSet<int>();
+        foreach (EnemyDropSlot slot in edit.Lot.Slots)
+        {
+            if (slot.Slot is < 1 or > 8 || !usedSlots.Add(slot.Slot) || slot.BasePoint <= 0)
+                throw new InvalidDataException($"enemy drop lot {edit.Lot.Id} has an invalid slot");
+            switch (slot.Category)
+            {
+                case -1:
+                    // The explicit "nothing" outcome. Slots 01-08 are ONE
+                    // weighted pick, so without it the enemy drops every kill.
+                    if (slot.ItemId != 0 || slot.Quantity != 0)
+                        throw new InvalidDataException(
+                            $"enemy drop lot {edit.Lot.Id} slot {slot.Slot} is a malformed empty slot");
+                    break;
+                case 4:
+                    if (!goodsMaxNum.TryGetValue(slot.ItemId, out int maxNum))
+                        throw new InvalidDataException(
+                            $"enemy drop lot {edit.Lot.Id} awards unknown goods {slot.ItemId}");
+                    if (slot.Quantity < 1 || slot.Quantity > maxNum)
+                        throw new InvalidDataException(
+                            $"enemy drop lot {edit.Lot.Id} awards {slot.Quantity} of goods "
+                            + $"{slot.ItemId}, whose maxNum is {maxNum}");
+                    break;
+                case 8:
+                    if (slot.Quantity != 1 || !gemWitnesses.Contains(slot.ItemId))
+                        throw new InvalidDataException(
+                            $"enemy drop lot {edit.Lot.Id} awards unwitnessed gem recipe {slot.ItemId}");
+                    break;
+                default:
+                    throw new InvalidDataException(
+                        $"enemy drop lot {edit.Lot.Id} uses forbidden category {slot.Category}");
+            }
+        }
+        var lot = new PARAM.Row(template)
+        {
+            ID = edit.Lot.Id,
+            Name = $"AP enemy drop {edit.NpcParamId} {edit.DropField}",
+        };
+        SetCell(lot, "getItemFlagId", -1);
+        SetCell(lot, "cumulateNumFlagId", -1);
+        SetCell(lot, "cumulateNumMax", 0);
+        SetCell(lot, "lotItem_Rarity", edit.Lot.Rarity);
+        for (int slot = 1; slot <= 8; slot++)
+        {
+            SetCell(lot, $"lotItemCategory{slot:00}", 0);
+            SetCell(lot, $"lotItemId{slot:00}", 0);
+            SetCell(lot, $"lotItemNum{slot:00}", 0);
+            SetCell(lot, $"lotItemBasePoint{slot:00}", 0);
+            SetCell(lot, $"cumulateLotPoint{slot:00}", 0);
+            SetCell(lot, $"getItemFlagId{slot:00}", 0);
+            SetCell(lot, $"enableLuck{slot:00}", 0);
+            SetCell(lot, $"cumulateReset{slot:00}", 0);
+        }
+        foreach (EnemyDropSlot slot in edit.Lot.Slots)
+        {
+            SetCell(lot, $"lotItemCategory{slot.Slot:00}", slot.Category);
+            SetCell(lot, $"lotItemId{slot.Slot:00}", slot.ItemId);
+            SetCell(lot, $"lotItemNum{slot.Slot:00}", slot.Quantity);
+            SetCell(lot, $"lotItemBasePoint{slot.Slot:00}", slot.BasePoint);
+            SetCell(lot, $"enableLuck{slot.Slot:00}", slot.Luck ? 1 : 0);
+        }
+        itemLots.Rows.Add(lot);
+        newDropLots.Add(edit.Lot.Id);
+        if (!dropRows.TryGetValue(npcRow.ID, out HashSet<string>? rewriteFields))
+            dropRows[npcRow.ID] = rewriteFields = [];
+        rewriteFields.Add(edit.DropField);
+        SetCell(npcRow, edit.DropField, edit.Lot.Id);
     }
     if (category8Awards.Any(row => row.TokenGoodsId <= 0 || row.ItemLotId <= 0
         || row.GemgenId <= 0 || row.AckFlag <= 0 || row.SourceLotId <= 0)
@@ -776,6 +907,48 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
     }
     PARAM checkedLots = PARAM.Read(checkedItemLotFile.Bytes);
     checkedLots.ApplyParamdef(itemLotDefinition);
+    // Nothing in this entry point edits a vanilla ItemLotParam row: fixed
+    // treasure and the vanilla suppression plan own many of them. Prove that
+    // the only difference is exactly the rows this request declared.
+    var expectedNewLots = newDropLots
+        .Concat(category8Awards.Select(award => award.ItemLotId)).ToList();
+    if (checkedLots.Rows.Count != originalLotRows.Count + expectedNewLots.Count)
+        throw new InvalidDataException("seed parameter write changed the ItemLotParam row count");
+    for (int index = 0; index < originalLotRows.Count; index++)
+        originalLotRows[index].RequireEqual(
+            RowState.Capture(checkedLots.Rows[index]),
+            $"ItemLotParam row {checkedLots.Rows[index].ID}");
+    if (!checkedLots.Rows.Skip(originalLotRows.Count).Select(row => row.ID).ToHashSet()
+            .SetEquals(expectedNewLots))
+        throw new InvalidDataException("seed parameter write changed the ItemLotParam row set");
+    foreach (EnemyDropRewrite edit in dropRewrites)
+    {
+        PARAM.Row lot = checkedLots.Rows.Single(row => row.ID == edit.Lot.Id);
+        var declared = edit.Lot.Slots.ToDictionary(slot => slot.Slot);
+        if (!CellEquals(lot, "getItemFlagId", -1)
+            || !CellEquals(lot, "cumulateNumFlagId", -1)
+            || !CellEquals(lot, "cumulateNumMax", 0))
+            throw new InvalidDataException(
+                $"enemy drop lot {edit.Lot.Id} failed round-trip verification");
+        for (int slot = 1; slot <= 8; slot++)
+        {
+            EnemyDropSlot? want = declared.GetValueOrDefault(slot);
+            if (!CellEquals(lot, $"lotItemCategory{slot:00}", want?.Category ?? 0)
+                || !CellEquals(lot, $"lotItemId{slot:00}", want?.ItemId ?? 0)
+                || !CellEquals(lot, $"lotItemNum{slot:00}", want?.Quantity ?? 0)
+                || !CellEquals(lot, $"lotItemBasePoint{slot:00}", want?.BasePoint ?? 0)
+                || !CellEquals(lot, $"enableLuck{slot:00}", want is not null && want.Luck ? 1 : 0)
+                || !CellEquals(lot, $"cumulateLotPoint{slot:00}", 0)
+                || !CellEquals(lot, $"getItemFlagId{slot:00}", 0)
+                || !CellEquals(lot, $"cumulateReset{slot:00}", 0))
+                throw new InvalidDataException(
+                    $"enemy drop lot {edit.Lot.Id} slot {slot} failed round-trip verification");
+        }
+        PARAM.Row npcRow = checkedNpcs.Rows.Single(row => row.ID == edit.NpcParamId);
+        if (Convert.ToInt32(RequireCell(npcRow, edit.DropField).Value) != edit.Lot.Id)
+            throw new InvalidDataException(
+                $"NpcParam {edit.NpcParamId} did not retain {edit.DropField}={edit.Lot.Id}");
+    }
     PARAM checkedGoods = PARAM.Read(checkedGoodsFile.Bytes);
     checkedGoods.ApplyParamdef(goodsDefinition);
     foreach (Category8Award award in category8Awards)
@@ -804,7 +977,7 @@ static void WriteSeedWeapons(string requestPath, string inputPath, string paramd
         if (Convert.ToInt32(RequireCell(token, "isDeposit").Value) != 0)
             throw new InvalidDataException($"{award.ItemKey}: token remained depositable");
     }
-    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} insight_armor_rows_removed={insightRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count} output={outputPath}");
+    Console.WriteLine($"starting_weapons={string.Join(',', right)} firearms={string.Join(',', left)} requirement_rows={requirementRows.Count} shop_rows={shopRows.Count} insight_armor_rows_removed={insightRows.Count} enemy_drop_rows={dropRows.Count} enemy_drop_fields={dropAssignments.Count + dropRewrites.Count} enemy_drop_new_lots={newDropLots.Count} output={outputPath}");
 }
 
 static BinderFile RequireSingleFile(BND4 binder, string suffix)
@@ -837,6 +1010,39 @@ static PARAMDEF ReadMatchingDefinition(BND4 binder, PARAM param)
 
 static PARAM.Cell RequireCell(PARAM.Row row, string name) => row[name]
     ?? throw new InvalidDataException($"ItemLotParam row {row.ID} has no field {name}");
+
+// PARAM cells are strongly typed by their PARAMDEF, and the same logical field
+// is a different CLR type in different params (lotItemCategory is a one-byte
+// cell whose vanilla "nothing" value reads back as -1 or 255 depending on the
+// def's signedness). Write and compare through the cell's own type so a
+// rewritten row is byte-identical to what the def says it should be.
+static void SetCell(PARAM.Row row, string name, int value)
+{
+    PARAM.Cell cell = RequireCell(row, name);
+    object current = cell.Value;
+    object next;
+    if (current is byte) next = unchecked((byte)value);
+    else if (current is sbyte) next = unchecked((sbyte)value);
+    else if (current is ushort) next = unchecked((ushort)value);
+    else if (current is short) next = unchecked((short)value);
+    else if (current is uint) next = unchecked((uint)value);
+    else if (current is int) next = value;
+    else throw new InvalidDataException(
+        $"unsupported cell type {current.GetType().Name} for {name}");
+    cell.Value = next;
+}
+
+static bool CellEquals(PARAM.Row row, string name, int value)
+{
+    object current = RequireCell(row, name).Value;
+    if (current is byte cellByte) return cellByte == unchecked((byte)value);
+    if (current is sbyte cellSByte) return cellSByte == unchecked((sbyte)value);
+    if (current is ushort cellUShort) return cellUShort == unchecked((ushort)value);
+    if (current is short cellShort) return cellShort == unchecked((short)value);
+    if (current is uint cellUInt) return cellUInt == unchecked((uint)value);
+    if (current is int cellInt) return cellInt == value;
+    return false;
+}
 
 static void VerifyOutput(
     string outputPath,
@@ -958,6 +1164,22 @@ sealed record EnemyDropAssignment(
     [property: JsonPropertyName("drop_field")] string DropField,
     [property: JsonPropertyName("source_lot_id")] int SourceLotId,
     [property: JsonPropertyName("target_lot_id")] int TargetLotId);
+sealed record EnemyDropRewrite(
+    [property: JsonPropertyName("npc_param_id")] int NpcParamId,
+    [property: JsonPropertyName("drop_field")] string DropField,
+    [property: JsonPropertyName("source_lot_id")] int SourceLotId,
+    [property: JsonPropertyName("lot")] EnemyDropLot Lot);
+sealed record EnemyDropLot(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("rarity")] int Rarity,
+    [property: JsonPropertyName("slots")] List<EnemyDropSlot> Slots);
+sealed record EnemyDropSlot(
+    [property: JsonPropertyName("slot")] int Slot,
+    [property: JsonPropertyName("category")] int Category,
+    [property: JsonPropertyName("item_id")] int ItemId,
+    [property: JsonPropertyName("quantity")] int Quantity,
+    [property: JsonPropertyName("base_point")] int BasePoint,
+    [property: JsonPropertyName("luck")] bool Luck);
 sealed record Category8Award(
     [property: JsonPropertyName("item_key")] string ItemKey,
     [property: JsonPropertyName("token_goods_id")] int TokenGoodsId,

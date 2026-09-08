@@ -16,7 +16,7 @@ panel moves when the data moves. Importing `worlds.bloodborne` costs no Archipel
 the location key sets live outside the `try: from Options import ...` guard.
 
   ⚠️  `randomize_enemy_drops` DOES NOT ADD CHECKS, whatever a reading of the spec suggests. Its
-      docstring is explicit -- "Enemy kills do not become Archipelago checks" -- it shuffles local
+      docstring is explicit -- "Enemy kills never become Archipelago checks" -- it rewrites local
       loot tables only. The panel says so rather than showing a number, because a "+N checks" row
       for an option that adds none is the kind of quiet wrong answer this repo gates against.
 

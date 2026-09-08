@@ -863,30 +863,72 @@ def _request_identity(
     enemy_drop_mode = request.get(
         "enemy_drop_mode", "balanced" if randomize_enemy_drops else None)
     enemy_drop_assignments = request.get("enemy_drop_assignments")
+    # v2 rewrites table contents into new ItemLotParam rows; v1 permuted whole
+    # vanilla tables. Old seeds already in flight carry no marker, so the plan
+    # shape is chosen by the marker and never guessed from the payload.
+    enemy_drop_plan_format = request.get("enemy_drop_plan_format")
+    from worlds.bloodborne.enemy_drops import PLAN_FORMAT as ENEMY_DROP_PLAN_FORMAT
     if not isinstance(randomize_enemy_drops, bool):
         raise ValidationError("AP request has invalid randomize_enemy_drops")
     if randomize_enemy_drops:
         if enemy_drop_mode not in {"balanced", "dropsanity"}:
             raise ValidationError("AP request has invalid enemy drop mode")
+        if enemy_drop_plan_format not in {None, ENEMY_DROP_PLAN_FORMAT}:
+            raise ValidationError("AP request has an unsupported enemy drop plan format")
         if not isinstance(enemy_drop_assignments, list) or not enemy_drop_assignments:
             raise ValidationError("AP request has no enemy drop assignments")
         seen_drop_fields: set[tuple[int, str]] = set()
+        seen_lot_ids: set[int] = set()
         for assignment in enemy_drop_assignments:
             if not isinstance(assignment, dict):
                 raise ValidationError("AP request has an invalid enemy drop assignment")
             npc_id = assignment.get("npc_param_id")
             field = assignment.get("drop_field")
             source_lot = assignment.get("source_lot_id")
-            target_lot = assignment.get("target_lot_id")
             key = (npc_id, field)
             if (not isinstance(npc_id, int) or npc_id <= 0
                     or not isinstance(field, str) or field not in {
                         f"itemLotId_{index}" for index in range(1, 7)}
                     or not isinstance(source_lot, int) or source_lot <= 0
-                    or not isinstance(target_lot, int) or target_lot <= 0
-                    or source_lot == target_lot or key in seen_drop_fields):
+                    or key in seen_drop_fields):
                 raise ValidationError("AP request has an invalid enemy drop assignment")
             seen_drop_fields.add(key)
+            if enemy_drop_plan_format is None:
+                target_lot = assignment.get("target_lot_id")
+                if (not isinstance(target_lot, int) or target_lot <= 0
+                        or target_lot == source_lot):
+                    raise ValidationError("AP request has an invalid enemy drop assignment")
+                continue
+            lot = assignment.get("lot")
+            if not isinstance(lot, dict):
+                raise ValidationError("AP request has an invalid enemy drop lot")
+            lot_id = lot.get("id")
+            slots = lot.get("slots")
+            if (not isinstance(lot_id, int) or lot_id <= 0
+                    or lot_id in seen_lot_ids
+                    or not isinstance(slots, list) or not 1 <= len(slots) <= 8):
+                raise ValidationError("AP request has an invalid enemy drop lot")
+            seen_lot_ids.add(lot_id)
+            seen_slots: set[int] = set()
+            for slot in slots:
+                if not isinstance(slot, dict):
+                    raise ValidationError("AP request has an invalid enemy drop slot")
+                index = slot.get("slot")
+                category = slot.get("category")
+                item_id = slot.get("item_id")
+                quantity = slot.get("quantity")
+                base_point = slot.get("base_point")
+                if (not isinstance(index, int) or not 1 <= index <= 8
+                        or index in seen_slots
+                        or category not in {-1, 4, 8}
+                        or not isinstance(item_id, int) or item_id < 0
+                        or not isinstance(quantity, int) or quantity < 0
+                        or not isinstance(base_point, int) or base_point <= 0
+                        or not isinstance(slot.get("luck"), bool)
+                        or (category == -1 and (item_id != 0 or quantity != 0))
+                        or (category != -1 and (item_id <= 0 or quantity < 1))):
+                    raise ValidationError("AP request has an invalid enemy drop slot")
+                seen_slots.add(index)
     elif enemy_drop_assignments is not None or enemy_drop_mode is not None:
         raise ValidationError("AP request disables enemy drops but still supplies a plan")
     from worlds.bloodborne.insight_armor import build_insight_armor_suppression
@@ -963,6 +1005,8 @@ def _request_identity(
         "enemy_drop_assignments": (
             enemy_drop_assignments if randomize_enemy_drops else None),
         "enemy_drop_mode": enemy_drop_mode if randomize_enemy_drops else None,
+        "enemy_drop_plan_format": (
+            enemy_drop_plan_format if randomize_enemy_drops else None),
         "category8_awards": category8_awards,
         "hemwick_gate": hemwick_gate,
         "insight_armor_suppression": insight_rows,
@@ -1336,6 +1380,7 @@ class LauncherWorkflow:
             "weapon_requirement_families": request["weapon_requirement_families"],
             "shop_gate_permutation": request["shop_gate_permutation"],
             "enemy_drop_assignments": request["enemy_drop_assignments"],
+            "enemy_drop_plan_format": request["enemy_drop_plan_format"],
             "category8_awards": request["category8_awards"],
         }
         expected_fields = {
@@ -1506,6 +1551,7 @@ class LauncherWorkflow:
                 "weapon_requirement_families": request["weapon_requirement_families"],
                 "shop_gate_permutation": request["shop_gate_permutation"],
                 "enemy_drop_assignments": request["enemy_drop_assignments"],
+                "enemy_drop_plan_format": request["enemy_drop_plan_format"],
                 "category8_awards": request["category8_awards"],
                 "hemwick_gate": request["hemwick_gate"],
                 "insight_armor_suppression": request.get("insight_armor_suppression", []),

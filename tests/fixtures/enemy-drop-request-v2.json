@@ -1,0 +1,155 @@
+{
+  "enemy_drop_plan_format": "bb-enemy-drop-plan-v2",
+  "randomize_enemy_drops": true,
+  "enemy_drop_mode": "dropsanity",
+  "enemy_drop_assignments": [
+    {
+      "npc_param_id": 100010,
+      "drop_field": "itemLotId_1",
+      "source_lot_id": 10002420,
+      "lot": {
+        "id": 99000000,
+        "rarity": 1,
+        "slots": [
+          {
+            "slot": 1,
+            "category": 4,
+            "item_id": 1511,
+            "quantity": 1,
+            "base_point": 40,
+            "luck": true
+          },
+          {
+            "slot": 2,
+            "category": 4,
+            "item_id": 1400,
+            "quantity": 2,
+            "base_point": 100,
+            "luck": false
+          },
+          {
+            "slot": 3,
+            "category": 4,
+            "item_id": 3000,
+            "quantity": 1,
+            "base_point": 150,
+            "luck": false
+          },
+          {
+            "slot": 4,
+            "category": 4,
+            "item_id": 1201,
+            "quantity": 2,
+            "base_point": 280,
+            "luck": false
+          },
+          {
+            "slot": 5,
+            "category": 4,
+            "item_id": 1593,
+            "quantity": 1,
+            "base_point": 400,
+            "luck": false
+          },
+          {
+            "slot": 6,
+            "category": 8,
+            "item_id": 90050,
+            "quantity": 1,
+            "base_point": 30,
+            "luck": false
+          }
+        ]
+      }
+    },
+    {
+      "npc_param_id": 100020,
+      "drop_field": "itemLotId_1",
+      "source_lot_id": 10002410,
+      "lot": {
+        "id": 99000010,
+        "rarity": 1,
+        "slots": [
+          {
+            "slot": 1,
+            "category": 4,
+            "item_id": 1101,
+            "quantity": 3,
+            "base_point": 920,
+            "luck": false
+          },
+          {
+            "slot": 2,
+            "category": 4,
+            "item_id": 1517,
+            "quantity": 1,
+            "base_point": 80,
+            "luck": true
+          }
+        ]
+      }
+    },
+    {
+      "npc_param_id": 100021,
+      "drop_field": "itemLotId_1",
+      "source_lot_id": 10002410,
+      "lot": {
+        "id": 99000020,
+        "rarity": 1,
+        "slots": [
+          {
+            "slot": 1,
+            "category": -1,
+            "item_id": 0,
+            "quantity": 0,
+            "base_point": 1000,
+            "luck": false
+          }
+        ]
+      }
+    },
+    {
+      "npc_param_id": 100100,
+      "drop_field": "itemLotId_1",
+      "source_lot_id": 10010000,
+      "lot": {
+        "id": 99000040,
+        "rarity": 1,
+        "slots": [
+          {
+            "slot": 1,
+            "category": 4,
+            "item_id": 1230,
+            "quantity": 1,
+            "base_point": 40,
+            "luck": true
+          },
+          {
+            "slot": 2,
+            "category": 4,
+            "item_id": 1270,
+            "quantity": 2,
+            "base_point": 150,
+            "luck": false
+          },
+          {
+            "slot": 3,
+            "category": 4,
+            "item_id": 900,
+            "quantity": 1,
+            "base_point": 760,
+            "luck": false
+          },
+          {
+            "slot": 4,
+            "category": 4,
+            "item_id": 1501,
+            "quantity": 1,
+            "base_point": 50,
+            "luck": false
+          }
+        ]
+      }
+    }
+  ]
+}

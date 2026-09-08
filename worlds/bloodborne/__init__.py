@@ -41,6 +41,7 @@ from .runtime_bindings import (
     validate_runtime_item_binding,
 )
 from .toast_placeholders import ToastPlacement, build_toast_placeholder_plan
+from .enemy_drops import PLAN_FORMAT as ENEMY_DROP_PLAN_FORMAT
 from .enemy_drops import build_enemy_drop_assignments
 from .category8_awards import CATEGORY8_AWARDS
 
@@ -711,13 +712,19 @@ else:
         default = 0
 
     class RandomizeEnemyDrops(Choice):
-        """Shuffle safe repeatable enemy consumable and material loot tables.
+        """Rewrite what ordinary enemies drop, without adding any checks.
 
-        This changes local consumable and material drops only. Enemy kills do
-        not become Archipelago checks, and equipment, runes, blood gems,
-        progression goods, and acquisition-flagged rewards are excluded. The
-        balanced mode preserves loot-table cadence and rarity; dropsanity
-        shuffles every eligible table together without compatibility grouping.
+        Balanced rebuilds every eligible enemy loot table from the safe
+        repeatable consumable pool, reusing a vanilla drop-chance and quantity
+        cadence so farm rates stay in vanilla range. Enemies whose vanilla
+        table is empty can gain a drop, and some tables go empty, so the
+        overall drop density stays near vanilla. Dropsanity does the same from
+        a wider pool: consumables plus repeatable upgrade materials, Coldblood
+        echo packets, and the blood-gem recipes vanilla enemies already drop.
+
+        Enemy kills never become Archipelago checks. Equipment, Caryll runes,
+        keys, badges, Blood Rock, and every acquisition-flagged one-time reward
+        are excluded in both modes, and no vanilla loot table is edited.
         """
         display_name = "Randomize Enemy Consumable Drops"
         option_off = 0
@@ -1132,6 +1139,11 @@ else:
                 "randomize_enemy_drops": enemy_drop_enabled,
                 "enemy_drop_mode": enemy_drop_mode,
                 "enemy_drop_assignments": enemy_drop_assignments,
+                # Marker the native writer branches on. Its absence means the
+                # v1 whole-table permutation an older launcher already has in
+                # flight; see docs/ENEMY-DROP-RANDOMIZATION.md.
+                "enemy_drop_plan_format": (
+                    ENEMY_DROP_PLAN_FORMAT if enemy_drop_enabled else None),
                 "goal": self.options.goal.current_key,
                 "include_dlc": bool(self.options.include_dlc),
                 "include_dlc_gear": bool(getattr(self.options, "include_dlc_gear", True)),
