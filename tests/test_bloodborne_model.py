@@ -1097,9 +1097,13 @@ class StartingWeaponChoiceTests(unittest.TestCase):
         self.assertEqual(0, option.default)
         self.assertIn("Experimental", option.display_name)
         # The docstring is the only warning a player gets in the YAML
-        # template, so it has to say plainly that this is not validated.
+        # template, so it has to say plainly how far validation actually got:
+        # the ordinary-death send was observed live on 2026-09-08, but the
+        # false-positive cases that would misreport a death were not.
         doc = option.__doc__ or ""
-        self.assertIn("Not validated live", doc)
+        self.assertIn("Only partly validated live", doc)
+        self.assertIn("2026-09-08", doc)
+        self.assertIn("unconfirmed", doc)
 
     def test_death_link_first_death_grace_defaults_off(self):
         if not AP_AVAILABLE:
