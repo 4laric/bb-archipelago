@@ -6,6 +6,8 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Client pin moved to bb-0.1.0.1 (6779f30).** Incoming DeathLinks now kill the player on shadPS4 0.18.0: the client writes the HP cell directly and only falls back to changing page protection when the direct write is refused, and a failed kill stays queued (clients#667). Runtime build unchanged at bb-0.1.0-r10, so this is a drop-in client swap for existing seeds.
+
 - **Docs: two experimental features were confirmed working in a live game on
   2026-09-08** (launcher `v0.1.0.1`, client `bb-0.1.0.0`). Enemy drop
   randomization in `dropsanity` mode dropped a rewritten item from a real
