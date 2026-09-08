@@ -28,6 +28,7 @@ from bb_launcher.core import (
     USER_MODS_DIR_NAME,
     ConflictError,
     DiscoveryError,
+    OverlayIntegrityError,
     EarlyExit,
     GameInstall,
     LaunchError,
@@ -42,6 +43,7 @@ from bb_launcher.core import (
     discover_game_install,
     discover_shad_executable,
     launch_processes,
+    overlay_heal_line,
     dead_path_warnings,
     dead_path_wrappers,
     plan_user_merge,
@@ -612,15 +614,19 @@ class LauncherCoreTests(unittest.TestCase):
         self.assertEqual(owner["identity"]["seed"], "seed-a")
         self.assertEqual(install.mods.joinpath(*SUPPRESSION_PATH.split("/")).read_bytes(), b"A")
 
-    def test_unowned_file_added_to_managed_overlay_blocks_next_operation(self):
+    def test_unowned_file_added_to_managed_overlay_is_carried_aside_not_deleted(self):
         install = make_install(self.root / "game")
         _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
         _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
         activate_build(install, build_a, process_is_running=lambda: False)
         (install.mods / "surprise.bin").write_bytes(b"user")
-        with self.assertRaisesRegex(ConflictError, "unowned"):
-            activate_build(install, build_b, process_is_running=lambda: False)
-        self.assertEqual((install.mods / "surprise.bin").read_bytes(), b"user")
+        activate_build(install, build_b, process_is_running=lambda: False)
+        # Activation owns and rebuilds this directory, so it heals rather than
+        # refuses -- but it never destroys what it found.
+        self.assertFalse((install.mods / "surprise.bin").exists())
+        aside = foreign_overlays(install)
+        self.assertEqual(len(aside), 1)
+        self.assertEqual((aside[0] / "surprise.bin").read_bytes(), b"user")
 
     def test_process_launch_validates_every_executable_before_starting_any(self):
         executable = self.root / "shadPS4.exe"
@@ -920,6 +926,11 @@ def write_user_mod(install, relative: str, content: bytes) -> Path:
     return path
 
 
+def foreign_overlays(install) -> list[Path]:
+    """Every damaged overlay activation carried aside (bb-archipelago#408)."""
+    return sorted(install.root.glob(f"{MODS_DIR_NAME}.bb-ap-foreign-*"))
+
+
 def digests(*paths: str) -> dict[str, str]:
     return {path: hashlib.sha256(path.encode()).hexdigest() for path in paths}
 
@@ -1141,25 +1152,41 @@ class UserModMergeActivationTests(unittest.TestCase):
         again = activate_build(self.install, build, process_is_running=lambda: False)
         self.assertEqual(again["user_merge"]["fingerprint"], second["user_merge"]["fingerprint"])
 
-    def test_a_merged_overlay_still_fails_closed_on_an_unowned_addition(self):
+    def test_an_unowned_addition_to_a_merged_overlay_is_healed_not_refused(self):
         write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
         _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
         _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
         activate_build(self.install, build_a, process_is_running=lambda: False)
         surprise = self.install.mods / "dvdroot_ps4" / "chr" / "surprise.bin"
         surprise.write_bytes(b"dropped in by hand")
-        with self.assertRaisesRegex(ConflictError, "unowned"):
-            activate_build(self.install, build_b, process_is_running=lambda: False)
-        self.assertEqual(surprise.read_bytes(), b"dropped in by hand")
+        owner = activate_build(self.install, build_b, process_is_running=lambda: False)
+        aside = foreign_overlays(self.install)
+        self.assertEqual(len(aside), 1)
+        # Nothing was deleted: the hand-dropped file still exists, unchanged.
+        self.assertEqual(
+            (aside[0] / "dvdroot_ps4" / "chr" / "surprise.bin").read_bytes(),
+            b"dropped in by hand",
+        )
+        self.assertEqual(owner["healed_from"][0]["moved_to"], aside[0].name)
+        self.assertIn("unowned", owner["healed_from"][0]["reason"])
 
-    def test_editing_a_merged_file_in_place_is_detected(self):
+    def test_editing_a_merged_file_in_place_is_healed_and_rebuilt(self):
         write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
         _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
         _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
         activate_build(self.install, build_a, process_is_running=lambda: False)
         self.install.mods.joinpath("dvdroot_ps4", "chr", "c0000.bnd.dcx").write_bytes(b"tampered")
-        with self.assertRaisesRegex(ValidationError, "hash changed"):
-            activate_build(self.install, build_b, process_is_running=lambda: False)
+        owner = activate_build(self.install, build_b, process_is_running=lambda: False)
+        self.assertIn("healed_from", owner)
+        # The rebuilt overlay carries the user file from the source of truth.
+        self.assertEqual(
+            self.install.mods.joinpath("dvdroot_ps4", "chr", "c0000.bnd.dcx").read_bytes(),
+            b"user-chr",
+        )
+        aside = foreign_overlays(self.install)
+        self.assertEqual(
+            (aside[0] / "dvdroot_ps4" / "chr" / "c0000.bnd.dcx").read_bytes(), b"tampered"
+        )
 
     def test_game_manager_file_link_is_accepted_only_when_owned_bytes_match(self):
         _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
@@ -1179,7 +1206,7 @@ class UserModMergeActivationTests(unittest.TestCase):
         activate_build(self.install, build_b, process_is_running=lambda: False)
         self.assertFalse((self.install.mods / SUPPRESSION_PATH).is_symlink())
 
-    def test_game_manager_file_link_with_changed_bytes_fails_closed(self):
+    def test_game_manager_file_link_with_changed_bytes_is_healed(self):
         _cache_a, build_a = make_build(self.root / "a", "seed-a", b"A")
         _cache_b, build_b = make_build(self.root / "b", "seed-b", b"B")
         activate_build(self.install, build_a, process_is_running=lambda: False)
@@ -1192,8 +1219,9 @@ class UserModMergeActivationTests(unittest.TestCase):
         except (OSError, NotImplementedError):
             self.skipTest("this platform does not allow creating symbolic links")
 
-        with self.assertRaisesRegex(ValidationError, "owned overlay file size changed"):
-            activate_build(self.install, build_b, process_is_running=lambda: False)
+        owner = activate_build(self.install, build_b, process_is_running=lambda: False)
+        self.assertIn("size changed", owner["healed_from"][0]["reason"])
+        self.assertFalse((self.install.mods / SUPPRESSION_PATH).is_symlink())
 
     def test_deactivate_and_restore_leave_the_user_directory_untouched(self):
         write_user_mod(self.install, "dvdroot_ps4/chr/c0000.bnd.dcx", b"user-chr")
@@ -1236,6 +1264,149 @@ class UserModMergeActivationTests(unittest.TestCase):
             list(collect_user_mod_files(self.install.user_mods)),
             ["dvdroot_ps4/chr/c0000.bnd.dcx"],
         )
+
+
+class ForeignOverlayHealingTests(unittest.TestCase):
+    """bb-archipelago#408: heal the directory we own and are about to rebuild.
+
+    A player who copied their mods into both ``CUSA03173-mods`` and
+    ``CUSA03173-mods-user`` overwrote the AP gameparam binder inside the
+    launcher-owned overlay and could no longer randomize.  Activation rewrites
+    that directory from a verified seed, so it moves the damaged tree aside
+    instead of refusing.  A directory that is *not* provably ours stays a
+    refusal: it may be the player's own work.
+    """
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        self.install = make_install(self.root / "game")
+        _cache, self.build = make_build(self.root / "build", "seed", b"suppressed")
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def activate(self):
+        return activate_build(self.install, self.build, process_is_running=lambda: False)
+
+    def sentinel_aside(self) -> Path:
+        """A decoy aside folder, so "nothing was moved" is a witnessed claim."""
+        decoy = self.install.root / f"{MODS_DIR_NAME}.bb-ap-foreign-00000000-000000"
+        decoy.mkdir(parents=True)
+        return decoy
+
+    def test_an_overwritten_owned_binder_is_healed_and_the_bytes_are_kept(self):
+        self.activate()
+        binder = self.install.mods.joinpath(*SUPPRESSION_PATH.split("/"))
+        binder.write_bytes(b"A MOD OVERWROTE THIS, A LONGER FILE")
+        owner = self.activate()
+
+        # The overlay is the verified seed again.
+        self.assertEqual(binder.read_bytes(), b"suppressed")
+        aside = foreign_overlays(self.install)
+        self.assertEqual(len(aside), 1)
+        self.assertEqual(
+            aside[0].joinpath(*SUPPRESSION_PATH.split("/")).read_bytes(),
+            b"A MOD OVERWROTE THIS, A LONGER FILE",
+        )
+        # The manifest is attributable, exactly like suppression_override.
+        note = owner["healed_from"][0]
+        self.assertEqual(note["moved_to"], aside[0].name)
+        self.assertIn("owned overlay file size changed", note["reason"])
+        self.assertEqual(
+            json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))[
+                "healed_from"
+            ],
+            owner["healed_from"],
+        )
+        line = overlay_heal_line(note)
+        self.assertIn(f"The launcher-owned overlay {MODS_DIR_NAME} had been modified", line)
+        self.assertIn(f"It was moved to {aside[0].name} and rebuilt from the verified seed", line)
+        self.assertIn(f"Player mods belong in {USER_MODS_DIR_NAME} only.", line)
+
+    def test_a_second_heal_does_not_collide_with_the_first_aside_folder(self):
+        self.activate()
+        for _ in range(2):
+            self.install.mods.joinpath(*SUPPRESSION_PATH.split("/")).write_bytes(b"tampered!")
+            self.activate()
+        self.assertEqual(len(foreign_overlays(self.install)), 2)
+
+    def test_a_healed_overlay_reports_once_and_not_on_the_next_activation(self):
+        self.activate()
+        self.install.mods.joinpath(*SUPPRESSION_PATH.split("/")).write_bytes(b"tampered!")
+        self.assertIn("healed_from", self.activate())
+        self.assertNotIn("healed_from", self.activate())
+
+    def test_a_directory_without_any_ownership_manifest_is_still_refused(self):
+        decoy = self.sentinel_aside()
+        self.install.mods.mkdir(parents=True)
+        mine = self.install.mods / "dvdroot_ps4" / "chr" / "mine.bnd.dcx"
+        mine.parent.mkdir(parents=True)
+        mine.write_bytes(b"hand made")
+        with self.assertRaises(ConflictError) as caught:
+            self.activate()
+        message = str(caught.exception)
+        self.assertIn("without a Bloodborne AP ownership manifest", message)
+        self.assertIn("If this folder is yours, rename it", message)
+        self.assertIn(f"Player mods go in {USER_MODS_DIR_NAME}.", message)
+        self.assertEqual(mine.read_bytes(), b"hand made")
+        self.assertEqual(foreign_overlays(self.install), [decoy])
+
+    def test_another_launchers_manifest_is_still_refused(self):
+        decoy = self.sentinel_aside()
+        self.install.mods.mkdir(parents=True)
+        (self.install.mods / OWNER_NAME).write_text(
+            json.dumps({"format": "some-other-launcher-v1", "launcher": "not-us"}),
+            encoding="utf-8",
+        )
+        with self.assertRaises(ConflictError) as caught:
+            self.activate()
+        message = str(caught.exception)
+        self.assertIn("is not owned by this launcher", message)
+        self.assertIn("If this folder is yours, rename it", message)
+        self.assertEqual(foreign_overlays(self.install), [decoy])
+
+    def test_crash_recovery_heals_a_damaged_predecessor_instead_of_stalling(self):
+        """An interrupted activation whose predecessor was modified meanwhile.
+
+        Recovery used to demand a byte-perfect previous overlay before it would
+        move it out of the way, so a tampered one turned an ordinary rollback
+        into "rollback also failed".
+        """
+        _cache, other = make_build(self.root / "other", "seed-2", b"other")
+        self.activate()
+
+        class Interrupt(Exception):
+            pass
+
+        def stop(phase):
+            if phase == "staged":
+                raise Interrupt
+
+        with self.assertRaises(Interrupt):
+            activate_build(
+                self.install, other, process_is_running=lambda: False, failpoint=stop
+            )
+        # Now the player's mod overwrites a file in the still-active overlay.
+        self.install.mods.joinpath(*SUPPRESSION_PATH.split("/")).write_bytes(b"overwritten!")
+
+        owner = activate_build(self.install, other, process_is_running=lambda: False)
+        self.assertEqual(owner["cache_key"], core._load_owner(self.install.mods)["cache_key"])
+        aside = foreign_overlays(self.install)
+        self.assertEqual(len(aside), 1)
+        self.assertEqual(
+            aside[0].joinpath(*SUPPRESSION_PATH.split("/")).read_bytes(), b"overwritten!"
+        )
+        self.assertEqual(owner["healed_from"][0]["moved_to"], aside[0].name)
+
+    def test_healable_reasons_are_one_exception_type_no_string_matching(self):
+        self.activate()
+        self.install.mods.joinpath(*SUPPRESSION_PATH.split("/")).write_bytes(b"tampered!")
+        with self.assertRaises(OverlayIntegrityError):
+            core._load_owner(self.install.mods)
+        # It stays both of the types the strict callers already catch.
+        self.assertTrue(issubclass(OverlayIntegrityError, ValidationError))
+        self.assertTrue(issubclass(OverlayIntegrityError, ConflictError))
 
 
 class OverlayOwnershipCaseTests(unittest.TestCase):

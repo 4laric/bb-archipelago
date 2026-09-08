@@ -27,6 +27,7 @@ from .core import (
     GameInstall,
     LauncherError,
     ProcessSpec,
+    REBUILD_OVERLAY_HINT,
     SeedCache,
     SeedIdentity,
     ValidationError,
@@ -35,6 +36,7 @@ from .core import (
     dead_path_warnings,
     deactivate_overlay,
     launch_processes,
+    overlay_heal_line,
     process_is_running_by_name,
     require_no_stray_cheat_engine,
     restore_previous_build,
@@ -1361,7 +1363,13 @@ class LauncherWorkflow:
             allow_mismatch=allow_suppression_mismatch,
             progress=progress,
         )
-        owner = _load_owner(install.mods)
+        # Launch time never heals: this check guards what shadPS4 is about to
+        # load.  It only says which button rebuilds the overlay
+        # (bb-archipelago#408).
+        try:
+            owner = _load_owner(install.mods)
+        except LauncherError as exc:
+            raise type(exc)(f"{exc}{REBUILD_OVERLAY_HINT}") from exc
         cache_key = str(owner["cache_key"])
         build = SeedCache(settings.cache_root).verify(
             SeedCache(settings.cache_root).path_for(cache_key), expected_key=cache_key
@@ -1718,6 +1726,8 @@ class LauncherWorkflow:
         common = build.manifest.get("common_event")
         if not isinstance(common, dict) or common.get("path") != COMMON_EVENT_PATH:
             raise ValidationError("activated seed is missing the category-8 common event overlay")
+        for note in owner.get("healed_from", ()):
+            progress(overlay_heal_line(note))
         for line in dead_path_warnings(owner):
             progress(line)
         progress("Writing the native client runtime configuration...")

@@ -97,9 +97,37 @@ verified stage or restores the verified previous overlay. shadPS4 must be
 stopped for activation, recovery, restore, or vanilla bypass.
 
 A pre-existing mods directory without the exact ownership manifest is a hard
-conflict. An owned directory with an added file is also a conflict. Neither is
-renamed, merged, deleted, or overwritten. The code never opens the base or
+conflict: it is not renamed, merged, deleted, or overwritten. A directory that
+still carries this launcher's ownership manifest but no longer matches it is
+healed by activation instead -- see below. The code never opens the base or
 update trees for writing.
+
+## If you put files in `CUSA03173-mods`
+
+Don't -- that directory belongs to the launcher and is rebuilt on every
+activation -- but if you already have, **Randomize & Launch** now recovers on
+its own. When the overlay still carries the Archipelago ownership manifest and
+the files under it no longer match (one was overwritten, edited, added, or
+removed), activation moves the whole tree aside to
+`CUSA03173-mods.bb-ap-foreign-<date-time>` and rebuilds the overlay from the
+verified seed. **Nothing is deleted**: your files are in that folder, and the
+launch log names it. The new ownership manifest records a `healed_from` note
+with the reason and the folder name, so a bug report against that seed is still
+attributable. Move whatever you want to keep into `CUSA03173-mods-user`, laid
+out with `dvdroot_ps4` at the top, and it will be merged into every future
+overlay instead.
+
+Two cases still refuse rather than heal, because the directory may not be the
+launcher's to move:
+
+- **No Archipelago ownership manifest at all**, or **a manifest written by a
+  different launcher.** That could be your own hand-made mod folder. Rename it
+  yourself; the launcher rebuilds `CUSA03173-mods` from scratch.
+- **A symlinked or non-directory `CUSA03173-mods` path.**
+
+The check that runs at *launch* time -- against the overlay shadPS4 is about to
+load, or has already loaded, for `Connect to running game` -- never heals; it
+refuses, and tells you to run **Randomize & Launch** again to rebuild.
 
 ## Player mods: `CUSA03173-mods-user`
 

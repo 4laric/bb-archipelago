@@ -110,6 +110,26 @@ EXCLUDED_RESERVED = "reserved"
 # (bb-archipelago#173).  Excluded, and reported by wrapper so the remedy is
 # one move per mod rather than one per file.
 EXCLUDED_DEAD_PATH = "dead-path"
+# A directory the launcher wrote, and is about to rewrite, is healed rather
+# than policed (bb-archipelago#408): a player who copied mods into both
+# CUSA03173-mods and CUSA03173-mods-user should not be stuck behind a refusal
+# about a file the next activation overwrites anyway.  The damaged tree is
+# moved aside under this name -- never deleted -- and the new ownership
+# manifest records what happened, the same way ``suppression_override`` makes
+# an overridden activation attributable.
+OVERLAY_HEAL_PREFIX = f"{MODS_DIR_NAME}.bb-ap-foreign-"
+OVERLAY_HEAL_FORMAT = "bb-launcher-overlay-heal-v1"
+# The other half of the same policy: a directory with no ownership manifest at
+# all, or one written by a different launcher, may be a player's hand-made mod
+# folder.  Moving that is a bigger decision than the launcher gets to make, so
+# it stays a refusal -- with the one instruction that resolves it.
+FOREIGN_OVERLAY_ADVICE = (
+    f"If this folder is yours, rename it; the launcher rebuilds {MODS_DIR_NAME} itself. "
+    f"Player mods go in {USER_MODS_DIR_NAME}."
+)
+# Every strict caller guards what shadPS4 is about to load, so it must not
+# heal -- but it can say which button rebuilds the overlay.
+REBUILD_OVERLAY_HINT = " Run Randomize & Launch again to rebuild the overlay."
 
 
 class LauncherError(RuntimeError):
@@ -126,6 +146,24 @@ class DiscoveryError(LauncherError):
 
 class ConflictError(LauncherError):
     """Unowned content would be affected by an operation."""
+
+
+class OverlayIntegrityError(ValidationError, ConflictError):
+    """A launcher-owned overlay no longer matches the manifest it wrote.
+
+    The directory still proves it was written by *this* launcher -- the
+    ownership manifest is present, well formed, and ours -- but its files have
+    since changed, gained an intruder, lost one, or collided by case.
+
+    ``activate_build`` is about to rebuild that directory from a verified seed,
+    so it heals the damage (moves the directory aside, never deletes) instead
+    of refusing.  Every other caller guards what shadPS4 actually loads, or
+    must never move user data, and stays strict.
+
+    It derives from both ``ValidationError`` and ``ConflictError`` because the
+    reasons it now unifies used to be raised as one or the other, and every
+    existing caller and message must keep behaving exactly as before.
+    """
 
 
 class RecoveryError(LauncherError):
@@ -1153,7 +1191,7 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
     for relative in actual:
         key = relative.casefold()
         if key in actual_by_key:
-            raise ConflictError(
+            raise OverlayIntegrityError(
                 "managed overlay holds two files differing only by case: "
                 f"{actual_by_key[key]} and {relative}"
             )
@@ -1166,7 +1204,7 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
         unowned = sorted(
             relative for relative in actual if relative.casefold() not in expected_keys
         )
-        raise ConflictError(
+        raise OverlayIntegrityError(
             "managed overlay contains unowned or missing files; "
             f"missing={missing} "
             f"unowned={unowned}"
@@ -1175,10 +1213,44 @@ def _load_owner(root: Path, *, expected_key: str | None = None) -> dict[str, Any
         digest = _require_sha256(str(record.get("sha256", "")), f"owned file {relative}")
         found = actual[actual_by_key[relative.casefold()]]
         if found.stat().st_size != record.get("size"):
-            raise ValidationError(f"owned overlay file size changed: {relative}")
+            raise OverlayIntegrityError(f"owned overlay file size changed: {relative}")
         if sha256_file(found) != digest:
-            raise ValidationError(f"owned overlay file hash changed: {relative}")
+            raise OverlayIntegrityError(f"owned overlay file hash changed: {relative}")
     return owner
+
+
+def _move_overlay_aside(install: GameInstall, reason: str) -> dict[str, Any]:
+    """Carry a damaged launcher-owned overlay out of the way, keeping its bytes.
+
+    shadPS4 resolves exactly one mods directory, so the overlay cannot simply
+    be rebuilt around the intruder.  It is renamed -- never deleted, never
+    merged -- to a timestamped sibling, and the returned note goes into the new
+    ownership manifest so a later bug report against that seed says where the
+    displaced files went and why they were displaced.
+    """
+
+    stamp = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+    destination = install.root / f"{OVERLAY_HEAL_PREFIX}{stamp}"
+    suffix = 1
+    while destination.exists():
+        destination = install.root / f"{OVERLAY_HEAL_PREFIX}{stamp}-{suffix}"
+        suffix += 1
+    os.replace(install.mods, destination)
+    return {
+        "format": OVERLAY_HEAL_FORMAT,
+        "reason": reason,
+        "moved_to": destination.name,
+    }
+
+
+def overlay_heal_line(note: Mapping[str, Any]) -> str:
+    """The one player-facing sentence for a healed overlay."""
+
+    return (
+        f"The launcher-owned overlay {MODS_DIR_NAME} had been modified "
+        f"({note.get('reason')}). It was moved to {note.get('moved_to')} and rebuilt "
+        f"from the verified seed. Player mods belong in {USER_MODS_DIR_NAME} only."
+    )
 
 
 def _windows_process_is_running(name: str) -> bool:
@@ -1412,6 +1484,7 @@ def _stage_overlay(
     merge: UserModMerge | None = None,
     suppression_override: Sequence[str] | None = None,
     activation_identity: SeedIdentity | None = None,
+    heal_notes: Sequence[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     stage.mkdir()
     for record in build.manifest["files"]:
@@ -1481,6 +1554,11 @@ def _stage_overlay(
             "knob": SUPPRESSION_OVERRIDE_KNOB,
             "bypassed": list(suppression_override),
         }
+    # Same rule as the override above: present only when it actually happened,
+    # so the presence of the key is itself the attribution
+    # (bb-archipelago#408).
+    if heal_notes:
+        owner["healed_from"] = [dict(note) for note in heal_notes]
     _write_json_atomic(stage / OWNER_NAME, owner)
     _load_owner(stage, expected_key=build.cache_key)
     return owner
@@ -1512,10 +1590,20 @@ def activate_build(
     ``suppression_override`` names the suppression checks an operator bypassed
     for this build (bb-archipelago#183); it is recorded in the ownership
     manifest so a later bug report against this overlay is attributable.
+
+    This is the one operation that *heals* rather than polices the directory it
+    owns: an overlay that still proves launcher ownership but whose files were
+    modified is moved aside and rebuilt, and the resulting owner dict carries a
+    ``healed_from`` note for the caller to report (bb-archipelago#408).  A
+    directory with no ownership manifest, or one from another launcher, is
+    still refused -- it may be the player's own work.
     """
 
     _require_shad_stopped(process_is_running)
-    recover_activation(install, process_is_running=process_is_running)
+    heal_notes: list[dict[str, Any]] = []
+    recover_activation(
+        install, process_is_running=process_is_running, heal_notes=heal_notes
+    )
     build = SeedCache(Path(build_path).resolve().parent).verify(build_path)
     if identity is not None:
         built_identity = SeedIdentity.from_dict(build.manifest["identity"])
@@ -1524,7 +1612,21 @@ def activate_build(
     user_sources, merge = plan_activation_merge(install, build)
     previous_owner = None
     if install.mods.exists():
-        previous_owner = _load_owner(install.mods)
+        try:
+            previous_owner = _load_owner(install.mods)
+        except OverlayIntegrityError as exc:
+            # Ours, and damaged.  We are about to rewrite this directory from a
+            # verified seed, so refusing only strands the player.
+            heal_notes.append(_move_overlay_aside(install, str(exc)))
+        except ConflictError as exc:
+            # No manifest at all, or another launcher's: possibly the player's
+            # own mod folder.  Moving it is not the launcher's call.  A
+            # symlinked or non-directory path is a different problem and keeps
+            # its own message.
+            if not install.mods.is_dir() or install.mods.is_symlink():
+                raise
+            raise ConflictError(f"{exc} {FOREIGN_OVERLAY_ADVICE}") from exc
+    if previous_owner is not None:
         active_fingerprint = ""
         section = previous_owner.get("user_merge")
         if isinstance(section, dict):
@@ -1535,11 +1637,22 @@ def activate_build(
         # A changed user mods directory changes the overlay even when the seed
         # build is identical, so it must run a full transaction, not short out.
         if (
-            previous_owner["cache_key"] == build.cache_key
+            # A heal earlier in this call must reach the ownership manifest, so
+            # it always runs the full transaction rather than short-circuiting
+            # on an overlay whose recovery just carried a damaged predecessor
+            # aside (bb-archipelago#408).
+            not heal_notes
+            and previous_owner["cache_key"] == build.cache_key
             and (identity is None or previous_owner.get("identity") == identity.as_dict())
             and active_fingerprint == merge.fingerprint
         ):
-            return previous_owner
+            # The manifest on disk keeps its ``healed_from`` attribution
+            # forever, but a heal is news exactly once: the run that did it.
+            # Re-reporting it on every later launch of the same seed would read
+            # as a fresh problem.
+            unchanged = dict(previous_owner)
+            unchanged.pop("healed_from", None)
+            return unchanged
     transaction_id = uuid.uuid4().hex
     stage = install.root / f".{MODS_DIR_NAME}.bb-ap-stage-{transaction_id}"
     backup = (
@@ -1560,6 +1673,7 @@ def activate_build(
             merge,
             suppression_override,
             identity,
+            heal_notes,
         )
     except Exception:
         if stage.exists():
@@ -1617,7 +1731,13 @@ def _rollback_activation(
         if phase == "staged" and previous_key is not None:
             # The previous overlay has not moved yet.  Verify and leave it in
             # place; rollback must not turn a healthy active seed into vanilla.
-            _load_owner(install.mods, expected_key=str(previous_key))
+            # A damaged but still launcher-owned overlay is also left where it
+            # is: the next activation heals it, and rollback reporting a
+            # failure about it would bury the real one.
+            try:
+                _load_owner(install.mods, expected_key=str(previous_key))
+            except OverlayIntegrityError:
+                pass
         elif phase == "staged" and previous_key is None:
             # Something outside the transaction appeared at the target.  It is
             # not ours to rename merely to make rollback convenient.
@@ -1626,8 +1746,13 @@ def _rollback_activation(
             )
         else:
             # Only preserve a directory that still proves launcher ownership.
-            # Arbitrary user content is never renamed during recovery.
-            _load_owner(install.mods)
+            # Arbitrary user content is never renamed during recovery.  A
+            # manifest that is ours but no longer describes the tree still
+            # proves ownership, and the tree is preserved with its bytes.
+            try:
+                _load_owner(install.mods)
+            except OverlayIntegrityError:
+                pass
             _preserve_failed(install.mods, install, transaction_id)
     if backup is not None and backup.exists():
         if previous_key is not None:
@@ -1643,8 +1768,14 @@ def recover_activation(
     install: GameInstall,
     *,
     process_is_running: Callable[[], bool] | None = None,
+    heal_notes: list[dict[str, Any]] | None = None,
 ) -> str:
-    """Finish or roll back the one durable activation transaction."""
+    """Finish or roll back the one durable activation transaction.
+
+    ``heal_notes`` is appended to when a damaged launcher-owned overlay had to
+    be carried aside to make recovery possible, so ``activate_build`` can
+    record it in the manifest it is about to write and report it to the player.
+    """
 
     transaction = _transaction_path(install)
     if not transaction.exists():
@@ -1685,8 +1816,19 @@ def recover_activation(
             if journal.get("previous_cache_key") is not None:
                 if not install.mods.exists() or backup is None:
                     raise RecoveryError("staged transaction lost its previous overlay")
-                _load_owner(install.mods, expected_key=str(journal["previous_cache_key"]))
-                os.replace(install.mods, backup)
+                try:
+                    _load_owner(install.mods, expected_key=str(journal["previous_cache_key"]))
+                except OverlayIntegrityError as exc:
+                    # The interrupted activation's predecessor is ours but was
+                    # modified while the launcher was not looking.  Preserving
+                    # it under the transaction's backup name would offer it to
+                    # a later rollback as a healthy overlay, so it goes to the
+                    # foreign name instead and stops being a restore candidate.
+                    note = _move_overlay_aside(install, str(exc))
+                    if heal_notes is not None:
+                        heal_notes.append(note)
+                else:
+                    os.replace(install.mods, backup)
             elif install.mods.exists():
                 raise ConflictError("an unexpected mods directory appeared during recovery")
             _set_phase(transaction, journal, "previous_moved")
