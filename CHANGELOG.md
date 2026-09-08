@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The shipped client pin moves to
+  `584263cd7d227e81ec82c2fc2a4f66cb1f6c9e70`.** Between the previous pin
+  (`2f1ee16`) and this commit, `crates/bb-archipelago` is byte-for-byte
+  unchanged -- every commit in the range is Elden Ring work (an ER seed bridge
+  and its version window). The Bloodborne client this release builds is the
+  same one `0.1.0.0` shipped, so the fixpack is a launcher-side change only.
+
 - **Fixed: `0.1.0.0` seeds with enemy drop randomization were refused at launch
   when a rewritten enemy's vanilla lot id is duplicated in the param table.**
   Randomize & Launch died with `expected one ItemLotParam row 11800010, found
