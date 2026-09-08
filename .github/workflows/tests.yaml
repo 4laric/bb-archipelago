@@ -49,7 +49,8 @@ jobs:
           # Everything the suppression-binder job reads: the plan pin and its
           # checker, the planner and the build script, the native writer and
           # the ObjAct miner, the inputs bundle and the committed mine output,
-          # the shop fixture -- and this workflow itself, so a change to the
+          # the shop and enemy-drop fixtures and the drop catalog they are
+          # generated from -- and this workflow itself, so a change to the
           # filter exercises the path it claims to add.
           patterns='
           ^worlds/bloodborne/__init__\.py$
@@ -62,6 +63,9 @@ jobs:
           ^research/bb_inputs\.db$
           ^research/joined/objact_params\.tsv$
           ^tests/fixtures/shop-seed-request\.json$
+          ^tests/fixtures/enemy-drop-request\.json$
+          ^tests/fixtures/enemy-drop-request-v2\.json$
+          ^worlds/bloodborne/enemy_drop_catalog\.json$
           ^\.github/workflows/tests\.yaml$
           '
           regex="$(echo "$patterns" | grep -v '^[[:space:]]*$' | sed 's/^[[:space:]]*//' | paste -sd'|' -)"
@@ -186,6 +190,65 @@ jobs:
             Write-Error "seed-specific Bath shop composition failed"
             exit 1
           }
+      - name: Compose and verify a v1 enemy drop permutation
+        shell: pwsh
+        run: |
+          dotnet run --project tools/bb_suppression_writer/BBSuppressionWriter.csproj `
+            -p:SoulsFormatsNextRoot=$PWD\_soulsformats --no-build -- `
+            --seed-weapons tests/fixtures/enemy-drop-request.json `
+            work/binder1/gameparam.parambnd.dcx `
+            work/inputs/parambnd/paramdef.paramdefbnd.dcx `
+            work/enemy-drop-v1-gameparam.parambnd.dcx --apply
+          if ($LASTEXITCODE -ne 0 -or `
+              -not (Test-Path work/enemy-drop-v1-gameparam.parambnd.dcx -PathType Leaf)) {
+            Write-Error "v1 enemy drop permutation composition failed"
+            exit 1
+          }
+      # The only place the v2 rewrite path compiles and runs. The fixture is
+      # generated from the world by tests/test_enemy_drops.py, so a generator
+      # change that the native writer would reject fails here rather than in a
+      # player's seed.
+      - name: Compose and verify a v2 enemy drop rewrite
+        shell: pwsh
+        run: |
+          dotnet run --project tools/bb_suppression_writer/BBSuppressionWriter.csproj `
+            -p:SoulsFormatsNextRoot=$PWD\_soulsformats --no-build -- `
+            --seed-weapons tests/fixtures/enemy-drop-request-v2.json `
+            work/binder1/gameparam.parambnd.dcx `
+            work/inputs/parambnd/paramdef.paramdefbnd.dcx `
+            work/enemy-drop-v2-gameparam.parambnd.dcx --apply
+          if ($LASTEXITCODE -ne 0 -or `
+              -not (Test-Path work/enemy-drop-v2-gameparam.parambnd.dcx -PathType Leaf)) {
+            Write-Error "v2 enemy drop rewrite composition failed"
+            exit 1
+          }
+      - name: Forge a v2 rewrite that overstacks a good
+        shell: bash
+        run: |
+          python - <<'PYEOF'
+          import json
+          from pathlib import Path
+          plan = json.loads(Path("tests/fixtures/enemy-drop-request-v2.json").read_text())
+          for row in plan["enemy_drop_assignments"]:
+              for slot in row["lot"]["slots"]:
+                  if slot["category"] == 4:
+                      slot["quantity"] = 250
+          Path("work/forged-enemy-drop-v2.json").write_text(json.dumps(plan, indent=2))
+          PYEOF
+      - name: The forged v2 rewrite is refused
+        shell: pwsh
+        run: |
+          dotnet run --project tools/bb_suppression_writer/BBSuppressionWriter.csproj `
+            -p:SoulsFormatsNextRoot=$PWD\_soulsformats --no-build -- `
+            --seed-weapons work/forged-enemy-drop-v2.json `
+            work/binder1/gameparam.parambnd.dcx `
+            work/inputs/parambnd/paramdef.paramdefbnd.dcx `
+            work/forged-gameparam.parambnd.dcx --apply
+          if ($LASTEXITCODE -eq 0) {
+            Write-Error "the writer accepted a quantity past the good's maxNum"
+            exit 1
+          }
+          Write-Host "forged v2 rewrite refused as expected"
       - uses: actions/upload-artifact@v4
         with:
           name: vanilla-suppression-binder
