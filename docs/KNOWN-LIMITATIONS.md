@@ -102,11 +102,15 @@ seed, so an unexpected "not armed" at launch is this.
   hitting zero, and nobody has yet checked whether a cutscene death, a
   fake-death scripted effect, a quit-to-title or a loading screen also trips
   it. Leave sending off if a spurious death would spoil someone else's run.
-- **An incoming DeathLink has been seen arriving in only one direction.** A
-  death sent from a Balatro slot in the same multiworld on 2026-09-08 did not
-  visibly arrive in Bloodborne. It is not known whether that slot broadcast
-  anything at all, so this is an open observation rather than a known fault;
-  receive is otherwise unchanged from previous betas.
+- **Incoming DeathLinks do not kill the player on shadPS4 0.18.0.** The
+  session bundle from 2026-09-08 shows three DeathLinks arriving from a Balatro
+  slot and the client failing each kill with `DeathLink kill unavailable:
+  VirtualProtectEx(...): The parameter is incorrect`. The client changes the
+  page protection of the player's HP cell before writing it, and that emulator
+  build refuses the change for guest-heap pages. Reads and item delivery are
+  unaffected. A client fixpack (write directly, fall back to the protection
+  change only when refused, keep the link queued on failure) is in review;
+  until it ships, receive is effectively off on current shadPS4 builds.
 - **Enemy randomization writes have not been playtested at scale.** A bad
   transplant can crash a map load. Untick Randomize Enemies for a cleaner run.
 - **Enemy drop randomization has one live sighting and no more.** A

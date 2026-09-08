@@ -52,20 +52,17 @@ Seed rolled with `death_link: true` and `death_link_send: true`.
   promoted to `validated` and `death_link_send` stays experimental. Run the
   script below as written.
 
-### Open: an incoming DeathLink that did not arrive
+### Resolved: the incoming DeathLink that did not arrive
 
-In the same session, a Balatro slot in the same multiworld ended a run and no
-DeathLink visibly arrived in Bloodborne. This is recorded as an open
-observation, not a receive regression -- receive is unchanged and was working
-in earlier betas.
-
-**Question to answer before treating it as a fault:** did the sender actually
-broadcast? A manually ended Balatro run may not emit a DeathLink at all. Check
-the Bloodborne client console for a `DeathLink received from <slot>` line: if
-that line is present, the arrival happened and the failure is in-game
-application (a real bug); if it is absent, check the Archipelago server log or
-the other slot's client for an outgoing DeathLink before blaming this client.
-Step 0 of the script below is the controlled version of this same test.
+The session bundle answered it the same day. Three DeathLinks from the Balatro
+slot did arrive; each time the client logged `DeathLink kill unavailable:
+VirtualProtectEx(0x224edd2a8, 4): The parameter is incorrect. (0x80070057)`.
+The kill writes the player's HP cell through a primitive that first sets the
+page to execute-read-write, and shadPS4 0.18.0 refuses that change for
+guest-heap pages, so the write never happens. This is a receive regression
+against newer emulator memory mapping, not a sender problem. The fix (direct
+write first, protection change only as a fallback, failed kills stay queued)
+is a client fixpack; step 0 below remains the controlled re-test once it ships.
 
 ## Cost and decision
 
