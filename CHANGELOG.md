@@ -14,11 +14,13 @@ under `Unreleased` and move into a dated version section when released.
   and keep playing. The paired client tag lives in
   `from-software-archipelago-clients` as `bb-V.R.M.F`.
 
-- **The shipped client pin moves to `45b4c752a38e1b5e49b1f0b79c1068938c6309f3`.**
-  Between the `bb-0.1.0.0` marker (`e3d7e42`) and this commit, nothing under
-  `crates/bb-archipelago` changed -- only `Cargo.lock` moved, for Elden Ring
-  work -- so the Bloodborne client this release builds is byte-identical in
-  source to `bb-0.1.0.0` and remains fixpack 0 of the `0.1.0` line.
+- **The shipped client pin moves to `2f1ee16e0092e1994a3f2eb22c6e0307833aab91`.**
+  Between the `bb-0.1.0.0` marker (`e3d7e42`) and this commit, the only change
+  under `crates/bb-archipelago` is its build script learning to read a
+  `V.R.M.F` version -- the `v0.1.0.0` release build failed on it with `release
+  version has too many numeric components`. No runtime code, contract, or
+  `RUNTIME_BUILD` moved, so the client this release builds is still fixpack 0
+  of the `0.1.0` line.
 
 - **A modified `CUSA03173-mods` no longer blocks Randomize & Launch; the
   launcher rebuilds it.** A player who copied their mods into both
