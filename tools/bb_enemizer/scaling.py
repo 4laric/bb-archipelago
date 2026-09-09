@@ -27,7 +27,8 @@ MAX_MULTIPLIER = 4.0
 # Map-level destination oracle. Evidence is the designers' 74xx NG+ area
 # names, joined to the maps whose development names represent those areas.
 # m24_00 spans several Cathedral phases; level 4 is the conservative ordinary
-# enemy baseline. Bosses and script-protected slots never reach this planner.
+# enemy baseline. The ordinary planner excludes bosses and script-protected
+# slots; the separately guarded boss canary invokes this normalization explicitly.
 MAP_LEVELS = {
     "m21_00_00_00": 13,
     "m22_00_00_00": 5,

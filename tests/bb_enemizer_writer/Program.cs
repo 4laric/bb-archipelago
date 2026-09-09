@@ -120,6 +120,7 @@ try
             "receipt records actual goal IDs rather than assuming Think ID");
         Require(requirements.GetProperty("goals").GetArrayLength() == 2, "receipt preserves same-number logic and battle");
     }
+    BossTests.Run();
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
     Plan(999);
     string failure = Path.Combine(root, "failure");

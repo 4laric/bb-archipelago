@@ -101,6 +101,32 @@ passed before this diagnostic followup. Logs:
 
 ## Next independent work
 
+### Boss batch, 2026-09-09
+
+- Implemented original encounter census for all 22 AP boss bindings:
+  `tools/build_boss_catalog.py`, `research/enemizer/boss_catalog.json`.
+  Twelve encounters have one referenced actor, ten have multiple actors/proxies.
+  Literal-only analysis records unresolved calls; it does not authorize swaps.
+- Implemented `bsb-at-cleric-v1`, a guarded combined map/AI/scaling/event writer
+  and reproducible `tools/build_boss_canary.py`. Nine pinned event replacements;
+  all other event fingerprints including AP defeat 12411700 preserved.
+  Source pins match linked decompilation of original 01.09 binaries.
+- Built two real overlays successfully: `work/boss-canary-output` and
+  `work/boss-canary-builder-output`. Three maps, one missing AI goal supplied,
+  one normalized NPC clone/effect, nine event edits. No live installation.
+- DarkScript reports unused parameters as per-file exceptions despite a zero
+  process exit code. Disabled limb event parameter names now use `unused_`;
+  builder verifies expected files exist and reports captured compiler errors.
+- Eleven Python boss tests pass; binary tests include 26 boss merge assertions,
+  79 scaling and 26 AI assertions. `./build.ps1 -Test -Preflight` passes:
+  1,148 tests, 49 skipped, repeated by preflight; log
+  `work/boss-canary/full-gate.log`. All six game binaries from the direct and
+  reproducible-builder overlays are byte-identical.
+- See `docs/ENEMIZER-BOSS-CANARY.md` for exact behavior and live test protocol.
+  Next: continue roster compatibility/encounter adapters or other offline
+  enemizer features. Compiler missing-output failure has a regression test. Keep
+  default boss protection until runtime evidence supports promotion.
+
 1. Static scaling writer (#186) is implemented. Optional launcher/cache wiring
    and a reproducible construction-canary builder remain possible followups;
    keep both experimental and default-off. Do not promote before #187.

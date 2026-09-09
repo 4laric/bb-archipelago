@@ -8,6 +8,7 @@
     <SoulsFormatsNextRoot Condition="'$(SoulsFormatsNextRoot)' == ''">$(SOULSFORMATS_NEXT)</SoulsFormatsNextRoot>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="boss-event-pins.json" LogicalName="boss-event-pins.json" />
     <ProjectReference Include="$(SoulsFormatsNextRoot)\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 </Project>

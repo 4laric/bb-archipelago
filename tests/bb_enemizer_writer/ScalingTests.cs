@@ -119,6 +119,12 @@ internal static class ScalingTests
             Check(!Directory.GetDirectories(root, ".bb-scaled-*").Any(), "staging cleaned");
         }
         Refused(() => MapTransplant.Run(planPath, maps, failure), "requires --scaled");
+        plan["boss_adapter"] = BossCanary.Adapter;
+        Save();
+        Refused(() => MapTransplant.Run(planPath, maps, failure), "requires --boss-scaled");
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure), "requires --boss-scaled");
+        plan.AsObject().Remove("boss_adapter");
+        Save();
         foreach (var (field, value, message) in new[] {
             ("have_soul_rate", 2.0, "echo-neutral"), ("hp_multiplier", 3.0, "native ladder"),
             ("cloned_npc_param_id", 7.0, "claimed range"), ("source_level", 3.0, "tier pair"),

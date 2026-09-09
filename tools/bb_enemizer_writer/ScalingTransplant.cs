@@ -56,7 +56,7 @@ internal static class ScalingTransplant
         int DestinationLevel, double HpMultiplier, double AttackMultiplier, double DefenseMultiplier);
 
     public static int Run(string planPath, string gamePath, string defsPath,
-        string mapsPath, string scriptsPath, string outputPath)
+        string mapsPath, string scriptsPath, string outputPath, bool bossPrepared = false)
     {
         string output = Path.GetFullPath(outputPath);
         Need(!Directory.Exists(output) && !File.Exists(output), "scaled output must not exist");
@@ -67,6 +67,7 @@ internal static class ScalingTransplant
                 "scaled output must be outside every input directory");
         }
         var plan = JsonNode.Parse(File.ReadAllText(planPath))!.AsObject();
+        Need(bossPrepared || !plan.ContainsKey("boss_adapter"), "boss plan requires --boss-scaled and its verified event adapter");
         var manifest = plan.Deserialize<Manifest>(Json)!;
         Need(manifest.Format == "bb-enemizer-plan-v2" && manifest.DryRun && manifest.Swaps.Count > 0, "expected non-empty dry-run enemizer plan");
         var scaling = plan["scaling"]?.Deserialize<Scaling>(Json)
@@ -181,7 +182,7 @@ internal static class ScalingTransplant
             string adjustedPlan = Path.Combine(staging, "bb-enemizer-plan.json");
             File.Copy(planPath, Path.Combine(staging, "source-enemizer-plan.json"));
             File.WriteAllText(adjustedPlan, plan.ToJsonString(Json));
-            MapTransplant.Run(adjustedPlan, mapsPath, Path.Combine(staging, "dvdroot_ps4", "map", "MapStudio"), scalingPrepared: true);
+            MapTransplant.Run(adjustedPlan, mapsPath, Path.Combine(staging, "dvdroot_ps4", "map", "MapStudio"), scalingPrepared: true, bossPrepared: bossPrepared);
             AiTransplant.Run(adjustedPlan, gamePath, defsPath, scriptsPath, Path.Combine(staging, "dvdroot_ps4", "script"), true);
             var report = new {
                 format = "bb-enemizer-scaling-v1", applied = true, live_validated = false,

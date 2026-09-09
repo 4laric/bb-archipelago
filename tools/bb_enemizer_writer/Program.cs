@@ -2,6 +2,10 @@ using System.Numerics;
 using System.Text.Json;
 using SoulsFormats;
 
+if (args.Length == 2 && args[0] == "--boss-event-pins")
+    return BossCanary.Inspect(args[1]);
+if (args.Length == 10 && args[0] == "--boss-scaled" && args[9] == "--apply")
+    return BossCanary.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
 if (args.Length == 8 && args[0] == "--scaled" && args[7] == "--apply")
     return ScalingTransplant.Run(args[1], args[2], args[3], args[4], args[5], args[6]);
 
@@ -20,6 +24,8 @@ if (args.Length != 4 || args[3] != "--apply")
         "Audit: BBEnemizerWriter --audit-ai <manifest.json> <gameparam> <paramdef> <script-input> <report.json>");
     Console.Error.WriteLine(
         "Scaling (experimental): BBEnemizerWriter --scaled <manifest.json> <built-gameparam> <paramdef> <MapStudio-input> <script-input> <new-output-root> --apply");
+    Console.Error.WriteLine(
+        "Boss canary (experimental): BBEnemizerWriter --boss-scaled <plan> <built-gameparam> <paramdef> <maps> <scripts> <original-event> <compiled-event> <new-output-root> --apply");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }
@@ -28,7 +34,7 @@ return MapTransplant.Run(args[0], args[1], args[2]);
 
 internal static class MapTransplant
 {
-public static int Run(string planPath, string mapsPath, string outputPath, bool scalingPrepared = false)
+public static int Run(string planPath, string mapsPath, string outputPath, bool scalingPrepared = false, bool bossPrepared = false)
 {
 string manifestPath = Path.GetFullPath(planPath);
 string inputRoot = Path.GetFullPath(mapsPath);
@@ -50,6 +56,8 @@ if (manifest.Format != "bb-enemizer-plan-v2" || !manifest.DryRun)
     throw new InvalidDataException("expected a dry-run bb-enemizer-plan-v2 manifest");
 
 using var planDocument = JsonDocument.Parse(File.ReadAllText(manifestPath));
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_adapter", out _))
+    throw new InvalidDataException("boss plan requires --boss-scaled and its verified event adapter");
 if (!scalingPrepared && planDocument.RootElement.TryGetProperty("scaling", out var scaling)
     && scaling.GetProperty("enabled").GetBoolean())
     throw new InvalidDataException("scaling requires --scaled; map-only mode cannot apply parameter clones");
