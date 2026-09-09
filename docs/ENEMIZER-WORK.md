@@ -101,6 +101,28 @@ passed before this diagnostic followup. Logs:
 
 ## Next independent work
 
+### Boss verification batch, 2026-09-09 09:23 local heartbeat
+
+- Boss writer receipts now hash all ten retained overlay files, including the
+  three map states and both plans. Added `tools/verify_boss_canary.py` to check
+  the exact file set, hashes/sizes, path containment and cross-component
+  plan/parameter/AI/event provenance. Older receipts require a rebuild.
+- Added a build-specific live worksheet with eleven explicitly unrun checks:
+  entry, aggression, two phase transitions, UI/camera/music, containment and
+  passive deaths, re-entry, save/reload, destination AP completion, persistent
+  victory, and separate co-op/NG+ evidence. It does not install anything.
+- Real rebuilt output `work/boss-canary-verified-output` passes verification;
+  worksheet `work/boss-canary/live-test-worksheet.md`. Receipt SHA256:
+  `61176126c3b0c8f3194a48c316a09d8549d66c88ea52995b2353c6bd5c50927b`.
+- Focused Python suite: 19 tests plus 3 subtests pass (boss construction,
+  census, verification and test-quality guard). Includes mixed/stale receipt,
+  altered map, missing/extra files, bad completion and unresolved AI controls.
+  Binary suite passes 26 boss, 79 scaling and 26 AI assertions; log
+  `work/boss-canary/receipt-tests.log`.
+- Next independent work remains wider boss compatibility/adapters, ordinary
+  placement death investigation, or experimental scaling launcher integration.
+  No live validation, installation, release or GitHub notification in this batch.
+
 ### Boss batch, 2026-09-09
 
 - Implemented original encounter census for all 22 AP boss bindings:

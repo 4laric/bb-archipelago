@@ -47,6 +47,21 @@ components before publishing the overlay directory. Receipts include
 `boss-adapter-report.json`, the source and adjusted plans, AI provenance, and
 scaling verification. The tool does not install the overlay or launch the game.
 
+Verify the completed overlay and generate a worksheet before a live run:
+
+```powershell
+python tools/verify_boss_canary.py <overlay-directory> > <worksheet-outside-overlay.md>
+```
+
+`--json` emits verification evidence instead. The boss receipt now hashes all
+ten retained files, including all map states, AI, parameters, events, both
+plans and component receipts. Verification rejects altered, missing, extra,
+duplicate or escaping files, and checks that the AI/scaling/event receipts
+refer to the same plan and binaries. Older canaries without the complete file
+receipt must be rebuilt. This establishes file consistency, not authenticity
+or runtime correctness. Keep worksheet/results outside the overlay; the exact
+file-set check deliberately rejects extra files inside it.
+
 ## Live evidence still required
 
 Use a backed-up test character with Cleric undefeated. Check first entry,

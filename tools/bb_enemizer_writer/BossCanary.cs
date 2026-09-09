@@ -95,11 +95,16 @@ internal static class BossCanary
             Directory.CreateDirectory(Path.GetDirectoryName(eventPath)!);
             File.WriteAllBytes(eventPath, events);
             Need(Hash(File.ReadAllBytes(eventPath)) == Hash(events), "boss event copy verification failed");
+            var files = Directory.GetFiles(overlay, "*", SearchOption.AllDirectories)
+                .OrderBy(path => Path.GetRelativePath(overlay, path), StringComparer.Ordinal)
+                .Select(path => new { path = Path.GetRelativePath(overlay, path).Replace('\\', '/'),
+                    sha256 = Hash(File.ReadAllBytes(path)), size = new FileInfo(path).Length }).ToArray();
             File.WriteAllText(Path.Combine(overlay, "boss-adapter-report.json"), JsonSerializer.Serialize(new {
                 format = "bb-boss-adapter-v1", adapter = Adapter, applied = true, runtime_validated = false,
                 ap_location = "boss_cleric_beast", completion_event = CompletionEvent,
                 original_event_sha256 = OriginalHash, output_event_sha256 = Hash(events),
                 changed_events = ChangedEvents, patched_event_fingerprints = pins,
+                files,
                 warning = "Experimental single encounter. Entrance, combat phases, arena fit and AP completion need live validation.",
             }, Json));
             Directory.Move(overlay, output);
