@@ -163,9 +163,10 @@ uses it to select the closest authored NpcParam variant of the chosen enemy
 family. This avoids regulation edits for the conservative first release while
 preserving area strength substantially better than a raw NPCParam swap.
 
-A later, wider mode can clone NpcParam rows and synthesize exact source-to-
-destination SpEffects in `gameparam.parambnd`; that remains separate from
-placement selection so it can be tested and disabled independently.
+The experimental `--normalize-scaling` planner and `BBEnemizerWriter --scaled`
+mode can clone NpcParam rows and synthesize source-to-destination SpEffects in
+the already-built seed gameparam. They remain separate from the default
+placement path so the mechanism can be tested and disabled independently.
 
 ## Offline release gate
 
@@ -252,4 +253,6 @@ prefix are planned exactly as before; the 308-swap pin is unchanged.
 Enemy scaling — transplant normalization and later depth scaling — is designed
 in `docs/ENEMIZER-SCALING.md` (static overlay scaling built on the NG+
 `GameClearSpEffectID` area ladder). The optional planner emits clone descriptions;
-applying synthesized scaling rows is still outside the default writer path.
+`BBEnemizerWriter --scaled` builds the combined parameter, map, and AI overlay.
+It remains outside the default launcher path pending the construction canary.
+The map-only writer rejects enabled scaling rather than silently ignoring it.

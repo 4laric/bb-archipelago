@@ -113,6 +113,7 @@ try
     string audit = Path.Combine(root, "audit.json");
     AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, audit, false);
     Require(File.Exists(audit) && !Directory.Exists(audit), "audit only emits report");
+    ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
     Plan(999);
     string failure = Path.Combine(root, "failure");
     Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, failure, true), "missing NpcThinkParam");

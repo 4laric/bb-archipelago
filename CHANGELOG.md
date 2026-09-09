@@ -6,6 +6,11 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Experimental enemy stat normalization can now build a complete overlay.**
+  The opt-in scaling writer creates per-placement NPC clones, preserves their
+  drops and rewards, and verifies matching map and AI files together. Scaling
+  plans are no longer silently ignored by the map-only writer. This remains
+  a developer playtest option pending in-game validation.
 - **Enemy replacements now bring their AI scripts into the destination map.**
   The previous enemizer changed models and Think parameters without installing
   the required map-specific AI, leaving many transplants without their behavior

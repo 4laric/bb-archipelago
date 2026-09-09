@@ -2,6 +2,9 @@ using System.Numerics;
 using System.Text.Json;
 using SoulsFormats;
 
+if (args.Length == 8 && args[0] == "--scaled" && args[7] == "--apply")
+    return ScalingTransplant.Run(args[1], args[2], args[3], args[4], args[5], args[6]);
+
 if (args.Length == 7 && args[0] == "--ai" && args[6] == "--apply")
     return AiTransplant.Run(args[1], args[2], args[3], args[4], args[5], true);
 if (args.Length == 6 && args[0] == "--audit-ai")
@@ -15,13 +18,21 @@ if (args.Length != 4 || args[3] != "--apply")
         "AI: BBEnemizerWriter --ai <manifest.json> <gameparam> <paramdef> <script-input> <script-output> --apply");
     Console.Error.WriteLine(
         "Audit: BBEnemizerWriter --audit-ai <manifest.json> <gameparam> <paramdef> <script-input> <report.json>");
+    Console.Error.WriteLine(
+        "Scaling (experimental): BBEnemizerWriter --scaled <manifest.json> <built-gameparam> <paramdef> <MapStudio-input> <script-input> <new-output-root> --apply");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }
 
-string manifestPath = Path.GetFullPath(args[0]);
-string inputRoot = Path.GetFullPath(args[1]);
-string outputRoot = Path.GetFullPath(args[2]);
+return MapTransplant.Run(args[0], args[1], args[2]);
+
+internal static class MapTransplant
+{
+public static int Run(string planPath, string mapsPath, string outputPath, bool scalingPrepared = false)
+{
+string manifestPath = Path.GetFullPath(planPath);
+string inputRoot = Path.GetFullPath(mapsPath);
+string outputRoot = Path.GetFullPath(outputPath);
 if (StringComparer.OrdinalIgnoreCase.Equals(inputRoot.TrimEnd(Path.DirectorySeparatorChar),
         outputRoot.TrimEnd(Path.DirectorySeparatorChar)))
 {
@@ -37,6 +48,11 @@ Manifest manifest = JsonSerializer.Deserialize<Manifest>(File.ReadAllText(manife
     ?? throw new InvalidDataException("manifest is empty");
 if (manifest.Format != "bb-enemizer-plan-v2" || !manifest.DryRun)
     throw new InvalidDataException("expected a dry-run bb-enemizer-plan-v2 manifest");
+
+using var planDocument = JsonDocument.Parse(File.ReadAllText(manifestPath));
+if (!scalingPrepared && planDocument.RootElement.TryGetProperty("scaling", out var scaling)
+    && scaling.GetProperty("enabled").GetBoolean())
+    throw new InvalidDataException("scaling requires --scaled; map-only mode cannot apply parameter clones");
 
 var changesByMap = new Dictionary<string, List<Change>>(StringComparer.Ordinal);
 foreach (Swap swap in manifest.Swaps)
@@ -115,6 +131,7 @@ foreach ((string map, List<Change> changes) in changesByMap.OrderBy(entry => ent
 Console.WriteLine(
     $"maps={mapsWritten} parts={partsWritten} models_added={modelsAdded} output={outputRoot}");
 return 0;
+}
 
 static string ResolveMap(string root, string map)
 {
@@ -176,6 +193,8 @@ static void VerifyRoundTrip(
     var outputModels = check.Models.Enemies.Select(model => model.Name).ToHashSet(StringComparer.Ordinal);
     if (!originalModels.IsSubsetOf(outputModels))
         throw new InvalidDataException($"round-trip removed an original enemy model: {path}");
+}
+
 }
 
 sealed record Manifest(string Format, bool DryRun, List<Swap> Swaps);
