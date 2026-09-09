@@ -3,8 +3,8 @@
 User authorization (2026-09-09): continue working through remaining enemizer
 features while the user is AFK. Heartbeat `continue-bloodborne-enemizer-implementation`
 continues this task every 30 minutes. The user subsequently authorized shipping
-the opt-in changes for public playtesting. Preparing `v0.1.0-enemizer-playtest.1`
-from this branch; follow-on development after this release stays local until
+the opt-in changes for public playtesting. Published `v0.1.0-enemizer-playtest.1`
+from commit `258d160aa7c0a44fa27a13b4d451b7e1aadb121e`; follow-on development stays local until
 separately authorized. Earlier published release: `v0.1.0-enemizer-ai.1`.
 
 Scope clarification: the user explicitly added **boss randomization** ("bosses
@@ -129,8 +129,16 @@ passed before this diagnostic followup. Logs:
   `./build.ps1 -Test -Preflight` passes: 1,156 tests / 49 skips, run twice.
   Log `work/boss-canary/release-gate.log`; real-build log
   `work/boss-canary/real-launcher-builds.log`. Focused launcher/report suite:
-  158 pass / 4 skips / 10 subtests. Publishing the branch and new prerelease
-  tag next; wait for signed packaging and scan completion before declaring shipped.
+  158 pass / 4 skips / 10 subtests. Branch CI 34364402394 passed.
+- Release https://github.com/4laric/bb-archipelago/releases/tag/v0.1.0-enemizer-playtest.1
+  is published. Run 34364420322: package, both smoke checks, Authenticode
+  signing/verification and artifact attestations passed. Windows ZIP SHA256:
+  `98473829637c1d777a98fab4e57d5543df691cdbf514ca8022c181c1e23869ae`.
+  VirusTotal publication is still running at this checkpoint; inspect its result
+  separately rather than equating a successful signing job with a clean scan.
+  The release is available now; the scan workflow publishes its links automatically.
+  Next heartbeat: inspect run 34364420322's scan outcome first and report any
+  actionable failure/detections, then resume independent enemizer development.
 
 ### Boss verification batch, 2026-09-09 09:23 local heartbeat
 
