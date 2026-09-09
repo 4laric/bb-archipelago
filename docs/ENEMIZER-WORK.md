@@ -8,6 +8,7 @@ the only authorized published release so far is `v0.1.0-enemizer-ai.1`.
 ## Current work
 
 Branch: `codex/enemizer-scaling`, based on AI repair commit `dcb2171f`.
+Scaling implementation checkpoint commit: `6413469` (local, not pushed).
 Issue #186 has been assigned to the signed-in owner; no competing PR was open.
 Completed the guarded `BBEnemizerWriter --scaled` path, matching map retargets,
 AI transplantation, and composition with the already-built suppression
@@ -54,6 +55,21 @@ Scaling validation (2026-09-09):
   launcher self-check passed locally.
 - Signed AI writer rebuilt 14 real map binders with 188 added scripts and
   zero required goals missing. No live combat test has been performed.
+- Release run 34346350626 is now fully successful, including VirusTotal reporting.
+
+## Diagnostic followup
+
+Implemented in `bb_launcher/enemy_report.py` and the AI writer receipt:
+source/replacement ThinkParam IDs, per-ThinkParam actual logic/battle goal IDs,
+per-map required goals, imported script donors/hashes, output hash matching,
+and planned-versus-applied scaling details. Older receipts remain readable
+and explicitly lack goal detail. Fixed current-settings seed misidentification
+and cross-area echo ranking when the reported area had no swaps.
+Tests: 82 focused report/AI/launcher-UI tests pass after final formatting;
+binary suite now has 73 scaling and 26 AI assertions. Full repository gate
+passed before this diagnostic followup. Logs:
+`work/enemizer-ai-inspect/diagnostic-tests.log` and
+`work/enemizer-ai-inspect/diagnostic-binary-tests.log`.
 
 ## Environment and preservation
 
@@ -76,8 +92,9 @@ Scaling validation (2026-09-09):
 1. Static scaling writer (#186) is implemented. Optional launcher/cache wiring
    and a reproducible construction-canary builder remain possible followups;
    keep both experimental and default-off. Do not promote before #187.
-2. Next: add useful AI provenance to bad-enemy reports and deterministic playtest
-   cases for missing-AI donors, scaling, and repeatedly dying placements (#321).
+2. AI/scaling bad-enemy report evidence is implemented. Next: deterministic
+   playtest case selection for missing-AI donors, scaling, and repeatedly
+   dying placements (#321), or the optional launcher/cache scaling wiring.
 3. Investigate the unresolved EMEVD callee-resolution boundary before widening
    coverage (#188); keep policy changes experimental pending map-load evidence.
 4. Build the offline boss/EMEVD coupling census described in #133, preserving

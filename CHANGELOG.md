@@ -6,6 +6,11 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Bad-enemy reports now include AI and stat-normalization evidence.**
+  Reports carry recorded goal IDs, script donors and hashes, and distinguish
+  planned scaling from written output. They identify the active seed even
+  after another seed file is selected, and keep echo matching within the
+  reported area.
 - **Experimental enemy stat normalization can now build a complete overlay.**
   The opt-in scaling writer creates per-placement NPC clones, preserves their
   drops and rewards, and verifies matching map and AI files together. Scaling

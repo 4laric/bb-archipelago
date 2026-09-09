@@ -87,6 +87,7 @@ internal static class AiTransplant
         think.ApplyParamdef(definitions.Single(d => d.ParamType == think.ParamType));
         var thinkRows = think.Rows.GroupBy(r => r.ID).ToDictionary(g => g.Key, g => g.ToList());
         var requirements = new SortedDictionary<string, HashSet<Requirement>>(StringComparer.Ordinal);
+        var thinkRequirements = new SortedDictionary<int, List<Requirement>>();
         foreach (var swap in manifest.Swaps)
         {
             if (!thinkRows.TryGetValue(swap.Target.ThinkParamId, out var rows))
@@ -103,6 +104,7 @@ internal static class AiTransplant
                 if (id > 0) goals.Add(new Requirement(id, field == "logicId"));
             }
             if (goals.Count == 0) throw new InvalidDataException($"NpcThinkParam {row.ID} has no AI goals");
+            thinkRequirements[row.ID] = goals.Distinct().OrderBy(g => g.Id).ThenBy(g => g.Logic).ToList();
             foreach (string destination in swap.DestinationKeys)
             {
                 string map = destination.Split(':')[0].Split('.')[0];
@@ -239,10 +241,12 @@ internal static class AiTransplant
             plan_sha256 = Hash(File.ReadAllBytes(planPath)),
             gameparam_sha256 = Hash(File.ReadAllBytes(gamePath)),
             paramdef_sha256 = Hash(File.ReadAllBytes(defsPath)),
+            think_parameters = thinkRequirements.Select(pair => new {think_param_id = pair.Key, goals = pair.Value}),
             sources = archives.Keys.Order().ToDictionary(n => n, n => Hash(File.ReadAllBytes(Path.Combine(inputRoot, n)))),
             maps = prepared.Select(p => new {
                 map = p.Archive.Name, missing_goals_before = p.MissingBefore, missing_goals_after = 0,
                 goals_added = p.GoalsAdded, globals_added = p.GlobalsAdded,
+                required_goals = p.Required.OrderBy(g => g.Id).ThenBy(g => g.Logic),
                 scripts_added = p.Added.Select(s => new {file = s.Name, source = s.Archive, sha256 = Hash(s.File.Bytes)}),
                 output_sha256 = apply ? Hash(File.ReadAllBytes(Path.Combine(outputPath, p.Archive.Name))) : null,
             }),

@@ -113,6 +113,13 @@ try
     string audit = Path.Combine(root, "audit.json");
     AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, audit, false);
     Require(File.Exists(audit) && !Directory.Exists(audit), "audit only emits report");
+    using (var receipt = JsonDocument.Parse(File.ReadAllText(audit))) {
+        var requirements = receipt.RootElement.GetProperty("think_parameters")[0];
+        Require(requirements.GetProperty("think_param_id").GetInt32() == 42, "receipt retains Think row ID");
+        Require(requirements.GetProperty("goals").EnumerateArray().All(g => g.GetProperty("id").GetInt32() == 900000),
+            "receipt records actual goal IDs rather than assuming Think ID");
+        Require(requirements.GetProperty("goals").GetArrayLength() == 2, "receipt preserves same-number logic and battle");
+    }
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
     Plan(999);
     string failure = Path.Combine(root, "failure");

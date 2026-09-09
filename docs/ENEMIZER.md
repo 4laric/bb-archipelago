@@ -221,6 +221,14 @@ player saw an echo reward, the enemies whose reward is nearest come first,
 which is the fastest way to catch an enemy dying on spawn. An area with no
 swaps says so, so a vanilla misbehaviour is not blamed on the enemizer.
 
+Reports also include the retained AI receipt: required goal IDs for each
+replacement ThinkParam, imported script donors/hashes, and output archive
+hashes compared with the cache manifest. Older receipts explicitly say when
+per-ThinkParam data was not recorded. Normalization details distinguish a
+planner-only request from written scaling files and retain the runtime
+validation boundary. The active ownership record supplies the AP seed/slot,
+so choosing another request in settings cannot misidentify a running build.
+
 ## Stress profiles
 
 Ordinary seeds sample the compatibility rules; a stress profile drives them

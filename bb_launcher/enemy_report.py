@@ -103,6 +103,8 @@ class SwapRow:
     target_locomotion: str
     target_echoes: int
     warnings: tuple[str, ...]
+    source_think: int
+    target_think: int
 
     @property
     def was(self) -> str:
@@ -185,6 +187,8 @@ def swap_rows(plan: Mapping[str, Any]) -> list[SwapRow]:
                     target_locomotion=str(target_tag.get("locomotion", "?")),
                     target_echoes=int(target_facts.get("echoes", 0)),
                     warnings=tuple(str(w) for w in swap.get("warnings", [])),
+                    source_think=int(source.get("think_param_id", -1)),
+                    target_think=int(target.get("think_param_id", -1)),
                 )
             )
     rows.sort(key=lambda row: (row.map_name, row.entity_id, row.part_name))
@@ -226,19 +230,19 @@ def load_context(settings: LauncherSettings, *, player_name: str = "") -> Report
             "(same seed, same swaps) and the report will work from then on"
         )
     plan = _read_json(build.path / ENEMIZER_PLAN_NAME, "retained enemizer plan")
-    seed = slot = "?"
-    request_path = str(settings.ap_request)
+    identity = owner.get("identity") if isinstance(owner.get("identity"), dict) else {}
+    seed, slot = str(identity.get("seed", "?")), str(identity.get("slot", "?"))
+    request_path = "not matched to the active overlay"
     try:
         request = _request_identity(
             settings.ap_request,
             player_name=player_name,
             state_root=settings.state_root or default_state_root(),
         )
-        seed, slot, request_path = str(request["seed"]), str(request["slot"]), str(request["path"])
+        if (str(request["seed"]), str(request["slot"])) == (seed, slot):
+            request_path = str(request["path"])
     except Exception:  # noqa: BLE001 - the report is still useful without the request
-        identity = owner.get("identity") if isinstance(owner.get("identity"), dict) else {}
-        seed = str(identity.get("seed", "?"))
-        slot = str(identity.get("slot", "?"))
+        pass
     return ReportContext(
         cache_key=str(owner["cache_key"]),
         build_path=build.path,
@@ -279,13 +283,81 @@ def _row_cells(row: SwapRow) -> list[object]:
         row.target_echoes,
         f"{row.x:.1f}, {row.y:.1f}, {row.z:.1f}",
         "; ".join(row.warnings) or "-",
+        f"{row.source_think} -> {row.target_think}",
     ]
 
 
 ROW_HEADERS = [
     "Entity", "Part", "Map", "Was", "Now", "Size/tier", "Locomotion", "Echoes",
-    "Position x, y, z", "Planner notes",
+    "Position x, y, z", "Planner notes", "ThinkParam (was -> now)",
 ]
+
+
+def _ai_evidence(context: ReportContext, rows: list[SwapRow]) -> list[str]:
+    """Report recorded file evidence without claiming a script ran in game."""
+    ai = context.manifest.get("enemizer", {}).get("ai")
+    lines = ["## AI build evidence", ""]
+    if not isinstance(ai, dict):
+        return lines + ["No AI receipt was retained by this build. Rebuild with the AI-capable launcher.", ""]
+    plan_hash = context.manifest.get("enemizer", {}).get("plan", {}).get("sha256")
+    if ai.get("plan_sha256") != plan_hash or not plan_hash:
+        return lines + ["The AI receipt does not match the retained plan; dependency evidence is unavailable.", ""]
+    lines += [
+        "This records built files, not observed detection, movement, or attacks.", "",
+        f"- AI writer applied: {'yes' if ai.get('applied') else 'no (audit only)'}",
+        f"- AI parameter input sha256: {ai.get('gameparam_sha256', '?')}",
+        f"- AI paramdef input sha256: {ai.get('paramdef_sha256', '?')}", "",
+    ]
+    maps = {area_key(row.map_name) for row in rows}
+    files = {record.get("path"): record.get("sha256") for record in context.manifest.get("files", [])}
+    selected = [record for record in ai.get("maps", []) if area_key(record.get("map", "")) in maps]
+    if selected:
+        after_label = "after writing" if ai.get("applied") else "planned after (audit)"
+        lines.extend(_table(["Map AI archive", f"Missing goals before -> {after_label}", "Scripts imported", "Output sha256", "Matches cached file"], [
+            [record["map"], f"{record.get('missing_goals_before', '?')} -> {record.get('missing_goals_after', '?')}",
+             len(record.get("scripts_added", [])), record.get("output_sha256") or "not written",
+             "yes" if record.get("output_sha256") and files.get("dvdroot_ps4/script/" + record["map"]) == record["output_sha256"] else "not established"]
+            for record in selected
+        ]))
+        lines.append("")
+        for record in selected:
+            imports = record.get("scripts_added", [])
+            if imports:
+                lines += [f"### Imported scripts for {record['map']}", ""]
+                lines.extend(_table(["Script", "Original donor archive", "Script sha256"], [
+                    [item.get("file", "?"), item.get("source", "?"), item.get("sha256", "?")]
+                    for item in imports
+                ]))
+                lines.append("")
+    goals = {record["think_param_id"]: record.get("goals", []) for record in ai.get("think_parameters", [])}
+    if goals and rows:
+        lines.extend(_table(["Replacement ThinkParam", "Required goals"], [
+            [think, ", ".join(f"{'logic' if g['logic'] else 'battle'} {g['id']}" for g in goals.get(think, [])) or "not recorded"]
+            for think in sorted({row.target_think for row in rows})
+        ]))
+        lines.append("")
+    elif rows:
+        lines += ["This receipt predates per-ThinkParam goal details; goal IDs cannot be inferred from ThinkParam IDs.", ""]
+    return lines
+
+
+def _scaling_evidence(plan: Mapping[str, Any], rows: list[SwapRow]) -> list[str]:
+    scaling = plan.get("scaling") or {}
+    if not scaling.get("enabled"):
+        return ["- Stat normalization: off", ""]
+    applied = bool(scaling.get("applied"))
+    lines = [f"- Stat normalization: {'applied to build files (runtime unvalidated)' if applied else 'planned only; application not established'}", ""]
+    keys = {row.logical_key for row in rows}
+    changes = [c for c in scaling.get("changes", []) if c.get("logical_key") in keys]
+    if changes:
+        lines += ["## Normalization details", ""]
+        lines.extend(_table(["Placement", "Donor NPC -> clone", "HP / attack / defense multipliers", "Effect"], [
+            [c["logical_key"], f"{c['source_npc_param_id']} -> {c['cloned_npc_param_id']}",
+             f"{c['hp_multiplier']} / {c['attack_multiplier']} / {c['defense_multiplier']}", c["minted_sp_effect_id"]]
+            for c in changes
+        ]))
+        lines.append("")
+    return lines
 
 
 def format_report(
@@ -342,9 +414,11 @@ def format_report(
         f"- Player note: {note.strip() or '(none)'}",
         "",
     ])
+    lines.extend(_scaling_evidence(plan, focused))
+    lines.extend(_ai_evidence(context, focused))
 
     if echoes is not None:
-        ranked = rank_by_echoes(focused or rows, echoes)[:8]
+        ranked = rank_by_echoes(focused, echoes)[:8]
         lines.append(f"## Closest matches to {echoes} echoes")
         lines.append("")
         lines.append("Enemies whose reward is nearest the figure you saw, nearest first. "
