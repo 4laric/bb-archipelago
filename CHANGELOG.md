@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Enemy replacements now bring their AI scripts into the destination map.**
+  The previous enemizer changed models and Think parameters without installing
+  the required map-specific AI, leaving many transplants without their behavior
+  scripts. The launcher now copies the required scripts, helper dependencies,
+  and goal/global registrations, verifies the written binders, and rebuilds
+  older enemy caches. File-level checks pass on the supported game build;
+  movement and combat still require a live playtest.
 - **The website's stable download is now `v0.1.0.2`.** The channel ledger was still
   pointing `/bb/` at `v0.1.0-beta.5`. Stable now names the first non-prerelease V.R.M.F
   release, so /downloads and `/bb/latest.json` offer the build with the apworld-in-zip

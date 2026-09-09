@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -14,6 +15,8 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
+    AI_PREFIX,
+    AI_FILE_PATTERN,
     CATHEDRAL_EVENT_PATH,
     HEMWICK_EVENT_PATH,
     COMMON_EVENT_PATH,
@@ -661,6 +664,55 @@ class EnemizerToolchain:
         if not output.is_file() or not manifest.is_file():
             raise ValidationError("event writer produced no common event overlay")
 
+    def write_enemy_ai(
+        self, *, manifest: Mapping[str, Any], install: GameInstall,
+        output_root: Path, soulsformats_next: Path | None, progress: Progress,
+    ) -> Path:
+        sources = enemy_ai_sources(install)
+        stage = output_root / "ai-input"
+        stage.mkdir()
+        for relative, source in sources.items():
+            destination = stage / Path(relative).name
+            shutil.copyfile(source, destination)
+            if sha256_file(source) != sha256_file(destination):
+                raise ValidationError(f"enemy AI source copy failed: {relative}")
+        plan_path = output_root / "enemy-ai-plan.json"
+        plan_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        output = output_root / "script"
+        if self.writer_executable.is_file():
+            command = [str(self.writer_executable)]
+        else:
+            if soulsformats_next is None:
+                raise ValidationError("SoulsFormatsNEXT is required for the enemy AI writer")
+            command = [self.dotnet, "run", "--project",
+                       str(self.repo_root / "tools/bb_enemizer_writer/BBEnemizerWriter.csproj"),
+                       "-c", "Release", f"-p:SoulsFormatsNextRoot={soulsformats_next}", "--"]
+        command.extend(["--ai", str(plan_path),
+                        str(install.resolve_file(SUPPRESSION_PATH, include_mods=False)[1]),
+                        str(install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]),
+                        str(stage), str(output), "--apply"])
+        progress("Transplanting and verifying enemy AI scripts...")
+        self.runner(command, self.repo_root, progress)
+        report = _read_object(output_root / "script.json", "enemy AI report")
+        if (report.get("format") != "bb-enemizer-ai-v1" or report.get("applied") is not True
+                or report.get("plan_sha256") != sha256_file(plan_path)):
+            raise ValidationError("enemy AI writer produced an invalid report")
+        records = report.get("maps")
+        if not isinstance(records, list) or not records:
+            raise ValidationError("enemy AI writer produced no map records")
+        paths = []
+        for record in records:
+            name = str(record.get("map", ""))
+            if re.fullmatch(AI_FILE_PATTERN, name) is None or record.get("missing_goals_after") != 0:
+                raise ValidationError("enemy AI report contains an invalid map or missing goals")
+            path = output / name
+            if not path.is_file() or path.is_symlink() or sha256_file(path) != record.get("output_sha256"):
+                raise ValidationError(f"enemy AI output verification failed: {name}")
+            paths.append(path)
+        if len(set(paths)) != len(paths) or set(output.iterdir()) != set(paths):
+            raise ValidationError("enemy AI output file set differs from its report")
+        return output
+
     def build(
         self,
         *,
@@ -1202,6 +1254,17 @@ def _write_seed_suppression_manifest(
     return output
 
 
+def enemy_ai_sources(install: GameInstall) -> dict[str, Path]:
+    """Resolve each licensed AI binder independently, honoring update precedence."""
+    names = {path.name for _name, layer in install.content_backends()
+             for path in (layer / AI_PREFIX).glob("*.luabnd.dcx")
+             if path.name == "aicommon.luabnd.dcx" or re.fullmatch(AI_FILE_PATTERN, path.name)}
+    if "aicommon.luabnd.dcx" not in names or len(names) < 2:
+        raise ValidationError("Randomize Enemies requires the game's common and map AI binders")
+    return {AI_PREFIX + name: install.resolve_file(AI_PREFIX + name, include_mods=False)[1]
+            for name in sorted(names)}
+
+
 def _source_hashes(
     install: GameInstall, map_root: Path | None, *, cathedral: bool = False,
     hemwick: bool = False,
@@ -1544,6 +1607,9 @@ class LauncherWorkflow:
             install, map_root, cathedral=True,
             hemwick=request["hemwick_gate"] is not None,
         )
+        if options.enabled:
+            sources.update({relative: sha256_file(path) for relative, path in enemy_ai_sources(install).items()})
+            sources.update(install.source_hashes([PARAMDEF_PATH]))
         identity = SeedIdentity(
             seed=request["seed"],
             slot=request["slot"],
@@ -1553,6 +1619,7 @@ class LauncherWorkflow:
             source_hashes=sources,
             options={
                 "enemy_randomizer": options.enabled,
+                "enemy_ai_version": 1 if options.enabled else None,
                 "allow_tier_mixing": options.allow_tier_mixing,
                 "preserve_locomotion": options.preserve_locomotion,
                 "starting_weapons": request["starting_weapons"],
@@ -1594,6 +1661,7 @@ class LauncherWorkflow:
             cathedral_output = None
             common_output = None
             hemwick_output = None
+            script_output = None
             completed = False
             try:
                 if (options.enabled or request["starting_weapons"] is not None
@@ -1685,6 +1753,10 @@ class LauncherWorkflow:
                         progress=progress,
                     )
                     map_output = enemizer.map_studio
+                    script_output = self.toolchain.write_enemy_ai(
+                        manifest=enemizer.manifest, install=install, output_root=temporary,
+                        soulsformats_next=settings.soulsformats_next, progress=progress,
+                    )
                 progress("Composing and verifying the seed cache...")
                 result = cache.build(
                     identity, composed_binder, map_output, cathedral_output, common_output,
@@ -1694,7 +1766,9 @@ class LauncherWorkflow:
                         "allow_tier_mixing": options.allow_tier_mixing,
                         "preserve_locomotion": options.preserve_locomotion,
                     },
-                )
+                    enemy_scripts=script_output,
+                    enemy_ai_report=_read_object(temporary / "script.json", "enemy AI report")
+                    if script_output is not None else None)
                 build = result
                 reused = result.reused
                 completed = True
@@ -1779,7 +1853,9 @@ class LauncherWorkflow:
         if enemizer is not None:
             swaps = len(enemizer.manifest["swaps"])
         elif options.enabled:
-            swaps = int(build.manifest.get("enemizer", {}).get("file_count", 0))
+            cached_enemizer = build.manifest.get("enemizer", {})
+            cached_plan = cached_enemizer.get("plan") or {}
+            swaps = int(cached_plan.get("swap_count", cached_enemizer.get("file_count", 0)))
         return WorkflowResult(
             cache_key=build.cache_key,
             build_path=build.path,

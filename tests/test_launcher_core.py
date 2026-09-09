@@ -1505,6 +1505,9 @@ class OverlayOwnershipCaseTests(unittest.TestCase):
         # exist on a case-sensitive filesystem: one of the two is unowned.
         twin = self.install.mods / "dvdroot_ps4" / "map" / "mapstudio" / "m24_01_00_00.msb.dcx"
         twin.parent.mkdir(parents=True, exist_ok=True)
+        original = self.install.mods.joinpath(*self.map_relative.split("/"))
+        if twin.exists() and twin.samefile(original):
+            self.skipTest("this filesystem cannot create distinct files differing only by case")
         twin.write_bytes(b"twin")
         with self.assertRaisesRegex(ConflictError, "differing only by case"):
             core._load_owner(self.install.mods)

@@ -2,10 +2,19 @@ using System.Numerics;
 using System.Text.Json;
 using SoulsFormats;
 
+if (args.Length == 7 && args[0] == "--ai" && args[6] == "--apply")
+    return AiTransplant.Run(args[1], args[2], args[3], args[4], args[5], true);
+if (args.Length == 6 && args[0] == "--audit-ai")
+    return AiTransplant.Run(args[1], args[2], args[3], args[4], args[5], false);
+
 if (args.Length != 4 || args[3] != "--apply")
 {
     Console.Error.WriteLine(
         "usage: BBEnemizerWriter <manifest.json> <MapStudio-input> <output-root> --apply");
+    Console.Error.WriteLine(
+        "AI: BBEnemizerWriter --ai <manifest.json> <gameparam> <paramdef> <script-input> <script-output> --apply");
+    Console.Error.WriteLine(
+        "Audit: BBEnemizerWriter --audit-ai <manifest.json> <gameparam> <paramdef> <script-input> <report.json>");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }

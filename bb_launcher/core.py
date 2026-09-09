@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -57,6 +58,8 @@ MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 # The enemizer plan is retained beside the seed manifest, outside the overlay
 # file set, so a bad swap can be named after the fact (bb-archipelago#321).
 ENEMIZER_PLAN_NAME = "bb-enemizer-plan.json"
+AI_PREFIX = f"{DVDROOT_PREFIX}script/"
+AI_FILE_PATTERN = r"m\d{2}_\d{2}_\d{2}_00\.luabnd\.dcx"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
 # The one operator escape hatch over suppression-binder hash skew
 # (bb-archipelago#183).  Modeled on the delivery tool's
@@ -241,9 +244,11 @@ def _safe_overlay_path(raw: str) -> str:
         and normalized.lower().endswith(".msb.dcx")
     )
     is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH}
-    if not is_suppression and not is_map and not is_owned_event:
+    is_ai = normalized.startswith(AI_PREFIX) and re.fullmatch(
+        AI_FILE_PATTERN, normalized[len(AI_PREFIX):]) is not None
+    if not is_suppression and not is_map and not is_owned_event and not is_ai:
         raise ValidationError(
-            f"overlay path is outside the param/map/event contract: {normalized}"
+            f"overlay path is outside the param/map/event/AI contract: {normalized}"
         )
     return normalized
 
@@ -270,6 +275,8 @@ def canonical_overlay_case(value: str) -> str:
         return COMMON_EVENT_PATH
     if normalized.casefold().startswith(MAP_PREFIX.casefold()):
         return MAP_PREFIX + normalized[len(MAP_PREFIX) :]
+    if normalized.casefold().startswith(AI_PREFIX.casefold()):
+        return AI_PREFIX + normalized[len(AI_PREFIX) :]
     return normalized
 
 
@@ -537,6 +544,8 @@ class SeedCache:
         hemwick_event: Path | str | None = None,
         enemizer_plan: Path | str | None = None,
         enemizer_options: Mapping[str, Any] | None = None,
+        enemy_scripts: Path | str | None = None,
+        enemy_ai_report: Mapping[str, Any] | None = None,
     ) -> BuildResult:
         key = identity.cache_key
         destination = self.path_for(key)
@@ -589,6 +598,21 @@ class SeedCache:
                 raise ValidationError("enemizer plan carries no swap list")
         elif maps:
             raise ValidationError("MapStudio outputs require the enemizer plan that produced them")
+        scripts: list[Path] = []
+        if enemy_scripts is not None:
+            script_root = Path(enemy_scripts)
+            if not script_root.is_dir() or script_root.is_symlink():
+                raise ValidationError("enemy AI scripts must be a regular directory")
+            scripts = sorted(script_root.iterdir())
+            if not scripts or any(not p.is_file() or p.is_symlink()
+                    or re.fullmatch(AI_FILE_PATTERN, p.name) is None for p in scripts):
+                raise ValidationError("enemy AI output contains no scripts or unexpected files")
+            if not maps:
+                raise ValidationError("enemy AI scripts require randomized maps")
+        if identity.options.get("enemy_ai_version"):
+            wanted = {p.name.split(".")[0][:-2] + "00.luabnd.dcx" for p in maps}
+            if not wanted or {p.name for p in scripts} != wanted:
+                raise ValidationError("randomized maps require matching enemy AI binders")
 
         self.root.mkdir(parents=True, exist_ok=True)
         stage = self.root / f".{key}.staging-{uuid.uuid4().hex}"
@@ -613,6 +637,7 @@ class SeedCache:
             inputs.extend(
                 (f"{MAP_PREFIX}{path.name}", path, "enemizer") for path in maps
             )
+            inputs.extend((f"{AI_PREFIX}{path.name}", path, "enemizer-ai") for path in scripts)
             records: list[dict[str, Any]] = []
             for relative, source, component in inputs:
                 relative = _safe_overlay_path(relative)
@@ -703,6 +728,8 @@ class SeedCache:
                     "seed": identity.enemizer_seed,
                     "file_count": len(maps),
                     "plan": plan_record,
+                    "ai_file_count": len(scripts),
+                    "ai": enemy_ai_report,
                 },
             }
             _write_json_atomic(stage / SEED_MANIFEST_NAME, manifest)
@@ -847,6 +874,18 @@ class SeedCache:
                     or hemwick.get("object") != 2201999
                     or hemwick.get("sfx") != 2203999):
                 raise ValidationError("Hemwick gate event witness is invalid")
+        ai_records = {p: r for p, r in expected.items() if p.startswith(AI_PREFIX)}
+        if any(r.get("component") != "enemizer-ai" for r in ai_records.values()):
+            raise ValidationError("enemy AI output has the wrong component")
+        if ai_records and identity.enemizer_seed is None:
+            raise ValidationError("enemy AI outputs require an enemizer seed")
+        if manifest.get("enemizer", {}).get("ai_file_count", 0) != len(ai_records):
+            raise ValidationError("enemy AI binder count does not match the manifest")
+        if identity.options.get("enemy_ai_version"):
+            wanted_ai = {AI_PREFIX + p[len(MAP_PREFIX):].split(".")[0][:-2] + "00.luabnd.dcx"
+                         for p in expected if p.startswith(MAP_PREFIX)}
+            if not wanted_ai or set(ai_records) != wanted_ai:
+                raise ValidationError("randomized maps require matching enemy AI binders")
         return BuildResult(root, manifest, False)
 
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
+import tempfile
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -23,7 +25,18 @@ def main() -> int:
     ap.add_argument("--chr", type=Path, default=Path(
         "Bloodborne.Game.of.the.Year.Edition.PS4-PRELUDE/install/CUSA03173/dvdroot_ps4/chr"))
     ap.add_argument("--output", type=Path, default=Path("research/enemizer/audit.json"))
+    ap.add_argument("--ai-writer", type=Path, help="built BBEnemizerWriter.exe or .dll; enables the AI gate")
+    ap.add_argument("--ai-gameparam", type=Path)
+    ap.add_argument("--ai-paramdef", type=Path)
+    ap.add_argument("--ai-scripts", type=Path, help="effective base/update script directory")
+    ap.add_argument("--dotnet", default="dotnet", help="runtime to use for a .dll AI writer")
     ns = ap.parse_args()
+    if ns.seeds < 1:
+        ap.error("--seeds must be positive")
+    ai_inputs = [ns.ai_writer, ns.ai_gameparam, ns.ai_paramdef, ns.ai_scripts]
+    if any(ai_inputs) and not all(ai_inputs):
+        ap.error("the AI gate requires --ai-writer, --ai-gameparam, --ai-paramdef and --ai-scripts")
+    ai_audits = []
 
     slots = load_slots(ns.inventory)
     tags = load_tags(ns.tags)
@@ -75,11 +88,37 @@ def main() -> int:
                     per_map_large[by_key[destination].map_name] += 1
         for map_name, count in per_map_large.items():
             large_by_map_peak[map_name] = max(large_by_map_peak[map_name], count)
+        if ns.ai_writer:
+            with tempfile.TemporaryDirectory(prefix="bb-ai-audit-") as directory:
+                root = Path(directory)
+                plan_path = root / "plan.json"
+                plan_path.write_text(json.dumps({
+                    "format": "bb-enemizer-plan-v2", "dry_run": True,
+                    "swaps": [swap.json() for swap in swaps],
+                }), encoding="utf-8")
+                report_path = root / "ai.json"
+                command = ([ns.dotnet] if ns.ai_writer.suffix.lower() == ".dll" else []) + [
+                    str(ns.ai_writer), "--audit-ai", str(plan_path), str(ns.ai_gameparam),
+                    str(ns.ai_paramdef), str(ns.ai_scripts), str(report_path),
+                ]
+                result = subprocess.run(command, capture_output=True, text=True)
+                if result.returncode:
+                    failures.append(f"{seed}: AI dependency audit failed: {result.stdout}{result.stderr}")
+                else:
+                    ai = json.loads(report_path.read_text(encoding="utf-8"))
+                    ai_audits.append({
+                        "seed": seed, "maps": len(ai["maps"]),
+                        "missing_goals_before": sum(m["missing_goals_before"] for m in ai["maps"]),
+                        "missing_goals_after": sum(m["missing_goals_after"] for m in ai["maps"]),
+                        "scripts_added": sum(len(m["scripts_added"]) for m in ai["maps"]),
+                    })
 
     report = {
         "seeds": ns.seeds,
         "failures": failures,
         "asset_missing": asset_missing,
+        "ai_checked": bool(ns.ai_writer),
+        "ai_audits": ai_audits,
         "swap_count_range": [min(swap_counts), max(swap_counts)] if swap_counts else [0, 0],
         "distinct_target_families": len(family_counts),
         "target_family_counts": dict(family_counts.most_common()),

@@ -1341,7 +1341,7 @@ class Wave1GoodsVarietyTests(unittest.TestCase):
 
         text = subprocess.run(
             [sys.executable, "tools/bb_inputs.py", "--get", "params/EquipParamGoods.csv"],
-            cwd=ROOT, capture_output=True, text=True, check=True).stdout
+            cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=True).stdout
         rows = {int(row["ID"]): row for row in csv.DictReader(text.splitlines())}
         self.assertIn(1000, rows)  # witness: the bundle really parsed
         for param_id, (key, _, quantity) in self.GOODS.items():

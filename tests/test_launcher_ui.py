@@ -59,6 +59,15 @@ class FakeToolchain:
         self.calls: list[dict] = []
         self.starting_calls: list[dict] = []
         self.event_calls: list[tuple[str, dict]] = []
+        self.ai_calls: list[dict] = []
+
+    def write_enemy_ai(self, **values):
+        self.ai_calls.append(values)
+        output = values["output_root"] / "script"
+        output.mkdir()
+        (output / "m24_01_00_00.luabnd.dcx").write_bytes(b"transplanted-ai")
+        (values["output_root"] / "script.json").write_text(json.dumps({"format": "bb-enemizer-ai-v1"}))
+        return output
 
     def build(self, **values):
         self.calls.append(values)
@@ -119,6 +128,10 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         paramdef = self.install.patch / "dvdroot_ps4" / "paramdef" / "paramdef.paramdefbnd.dcx"
         paramdef.parent.mkdir(parents=True)
         paramdef.write_bytes(b"paramdef")
+        scripts = self.install.base / "dvdroot_ps4" / "script"
+        scripts.mkdir(parents=True)
+        (scripts / "aicommon.luabnd.dcx").write_bytes(b"common-ai")
+        (scripts / "m24_01_00_00.luabnd.dcx").write_bytes(b"vanilla-map-ai")
         self.suppression = self.root / "suppressed.parambnd.dcx"
         self.suppression.write_bytes(b"suppressed-gameparam")
         self.suppression_manifest = self.root / "suppression-build.json"
@@ -413,8 +426,13 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual([spec.name for spec in launched], ["shadPS4", "AP client"])
         active_map = self.install.mods / "dvdroot_ps4" / "map" / "MapStudio" / "m24_01_00_00.msb.dcx"
         self.assertEqual(active_map.read_bytes(), b"randomized-map")
+        self.assertEqual(len(toolchain.ai_calls), 1)
+        active_ai = self.install.mods / "dvdroot_ps4/script/m24_01_00_00.luabnd.dcx"
+        self.assertEqual(active_ai.read_bytes(), b"transplanted-ai")
         owner = json.loads((self.install.mods / OWNER_NAME).read_text(encoding="utf-8"))
         self.assertTrue(owner["enemizer"]["enabled"])
+        self.assertEqual(owner["enemizer"]["plan"]["swap_count"], 2)
+        self.assertEqual(owner["enemizer"]["ai"]["format"], "bb-enemizer-ai-v1")
         self.assertIn("Planning deterministic enemy swaps", "\n".join(progress))
         # bb-archipelago#321: the plan the writer consumed survives the build,
         # outside the overlay, with its options and hash on the record.
