@@ -416,6 +416,13 @@ def format_report(
     ])
     lines.extend(_scaling_evidence(plan, focused))
     lines.extend(_ai_evidence(context, focused))
+    boss = context.manifest.get('enemizer', {}).get('boss')
+    if boss:
+        lines += ['## Experimental boss encounter', '',
+                  f"- Adapter: {boss.get('adapter', '?')}",
+                  f"- Preserved completion event: {boss.get('completion_event', '?')}",
+                  f"- Encounter output sha256: {boss.get('output_event_sha256', '?')}",
+                  '- Entry, phase transitions, arena fit and AP completion require live playtest evidence.', '']
 
     if echoes is not None:
         ranked = rank_by_echoes(focused, echoes)[:8]

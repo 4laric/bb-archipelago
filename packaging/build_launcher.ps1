@@ -106,6 +106,7 @@ if ($worldData.Count -lt 2) { throw "No apworld data files found to bundle." }
     --add-data "$(Join-Path $repo 'research\enemizer\enemy_tags.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\slot_policy.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\archetype_facts.json');research\enemizer" `
+    --add-data "$(Join-Path $repo 'research\bb_inputs.db');research" `
     @worldData `
     (Join-Path $repo "packaging\launcher_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }
@@ -173,6 +174,7 @@ New-Item -ItemType Directory -Path (Join-Path $package "docs") -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo "docs\LAUNCHER.md") -Destination (Join-Path $package "docs\LAUNCHER.md")
 Copy-Item -LiteralPath (Join-Path $repo "docs\PLAYTESTING.md") -Destination (Join-Path $package "docs\PLAYTESTING.md")
 Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-AI.md") -Destination (Join-Path $package "docs\ENEMIZER-AI.md")
+Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-BOSS-CANARY.md") -Destination (Join-Path $package "docs\ENEMIZER-BOSS-CANARY.md")
 Copy-Item -LiteralPath (Join-Path $repo "SECURITY.md") -Destination (Join-Path $package "SECURITY.md")
 Copy-Item -LiteralPath (Join-Path $repo "packaging\PACKAGE-README.txt") -Destination (Join-Path $package "README.txt")
 Copy-Item -LiteralPath (Join-Path $repo "tables\Bloodborne-native-item-grant-auto-v2.CT") -Destination (Join-Path $package "tools")

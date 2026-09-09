@@ -2,8 +2,10 @@
 
 User authorization (2026-09-09): continue working through remaining enemizer
 features while the user is AFK. Heartbeat `continue-bloodborne-enemizer-implementation`
-continues this task every 30 minutes. Keep later changes local and reviewable;
-the only authorized published release so far is `v0.1.0-enemizer-ai.1`.
+continues this task every 30 minutes. The user subsequently authorized shipping
+the opt-in changes for public playtesting. Preparing `v0.1.0-enemizer-playtest.1`
+from this branch; follow-on development after this release stays local until
+separately authorized. Earlier published release: `v0.1.0-enemizer-ai.1`.
 
 Scope clarification: the user explicitly added **boss randomization** ("bosses
 too"). Prioritize that track next. The older #133 note saying not to start a
@@ -100,6 +102,35 @@ passed before this diagnostic followup. Logs:
   No existing Bloodborne randomizer code or datasets may be reused.
 
 ## Next independent work
+
+### Opt-in playtest release preparation, 2026-09-09
+
+- User authorized shipping without waiting for live gameplay validation.
+  Added two default-off Advanced enemy options: ordinary-enemy normalization,
+  and BSB-at-Cleric boss playtest (other enemy placements unchanged; scaling
+  included). Master Randomize Enemies controls both. No new YAML surface.
+- Added native embedded event recipe, checked against the existing nine event
+  pins. No DarkScript/Ghidra requirement for players. Developer reproduction
+  still uses the compiler oracle. Native output's six game binaries match the
+  independently compiler-built canary exactly.
+- Launcher composes normalization after seed parameter edits, then caches
+  verified maps, AI, parameters, boss event and provenance together. Option
+  changes produce distinct cache identities. Cache verification requires the
+  event/receipt/option and AI/normalization plan hashes to agree. Mode-switch
+  tests cover removing the boss event and restoring ordinary parameters.
+- Real pipelines: `work/launcher-playtest-boss` and
+  `work/launcher-playtest-scaling`, caches `work/launcher-playtest-cache`.
+  Scaling: 308 logical swaps / 545 parts, 234 clones, 68 effects, 22 maps,
+  14 AI archives, zero missing required goals. Neither was installed live.
+- Packaged planner uses bundled original parameter data; boss guide included.
+  Client pin updated to e31f1bba560a842083092545a1ab6c579e45f75a, current main;
+  intervening changes concern ER DirectInput interception, not BB runtime.
+- Binary tests: 37 boss, 79 scaling, 26 AI assertions pass. Full release gate
+  `./build.ps1 -Test -Preflight` passes: 1,156 tests / 49 skips, run twice.
+  Log `work/boss-canary/release-gate.log`; real-build log
+  `work/boss-canary/real-launcher-builds.log`. Focused launcher/report suite:
+  158 pass / 4 skips / 10 subtests. Publishing the branch and new prerelease
+  tag next; wait for signed packaging and scan completion before declaring shipped.
 
 ### Boss verification batch, 2026-09-09 09:23 local heartbeat
 

@@ -2,6 +2,10 @@ using System.Numerics;
 using System.Text.Json;
 using SoulsFormats;
 
+if (args.Length == 2 && args[0] == "--boss-event-recipe")
+    return BossCanary.ExportRecipe(args[1]);
+if (args.Length == 9 && args[0] == "--boss-native" && args[8] == "--apply")
+    return BossCanary.Run(args[1], args[2], args[3], args[4], args[5], args[6], null, args[7]);
 if (args.Length == 2 && args[0] == "--boss-event-pins")
     return BossCanary.Inspect(args[1]);
 if (args.Length == 10 && args[0] == "--boss-scaled" && args[9] == "--apply")
@@ -26,6 +30,8 @@ if (args.Length != 4 || args[3] != "--apply")
         "Scaling (experimental): BBEnemizerWriter --scaled <manifest.json> <built-gameparam> <paramdef> <MapStudio-input> <script-input> <new-output-root> --apply");
     Console.Error.WriteLine(
         "Boss canary (experimental): BBEnemizerWriter --boss-scaled <plan> <built-gameparam> <paramdef> <maps> <scripts> <original-event> <compiled-event> <new-output-root> --apply");
+    Console.Error.WriteLine(
+        "Native boss canary: BBEnemizerWriter --boss-native <plan> <built-gameparam> <paramdef> <maps> <scripts> <original-event> <new-output-root> --apply");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }

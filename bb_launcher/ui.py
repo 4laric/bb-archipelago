@@ -279,6 +279,8 @@ class LauncherApp:
         self.launch_hint = tk.StringVar(value="Choose a seed and shadPS4 to continue.")
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
+        self.normalize_scaling = tk.BooleanVar(value=False)
+        self.boss_canary = tk.BooleanVar(value=False)
         # Operator override (bb-archipelago#183).  Deliberately absent from
         # _save_settings and _load_settings_if_present: it is per-session by
         # construction, so it can never be left on and forgotten.
@@ -618,7 +620,7 @@ class LauncherApp:
         seed_entry.grid(row=1, column=1, sticky="ew", pady=4)
         tier = ttk.Checkbutton(
             options,
-            text="Allow tier mixing (experimental: no scaling)",
+            text="Allow tier mixing (experimental)",
             variable=self.allow_tier_mixing,
         )
         tier.grid(row=2, column=0, sticky="w", padx=(24, 8))
@@ -630,6 +632,14 @@ class LauncherApp:
         locomotion.grid(row=2, column=1, sticky="w")
         self._enemy_widgets.extend((seed_entry, tier, locomotion))
         self._enemy_advanced_widgets.extend((seed_label, seed_entry, tier, locomotion))
+        scaling = ttk.Checkbutton(options, text="Normalize enemy stats (experimental playtest)",
+                                  variable=self.normalize_scaling)
+        scaling.grid(row=3, column=0, columnspan=2, sticky="w", padx=(24, 8))
+        boss = ttk.Checkbutton(options, text="Boss playtest: BSB at Cleric Beast (other enemies unchanged; includes scaling)",
+                               variable=self.boss_canary)
+        boss.grid(row=4, column=0, columnspan=2, sticky="w", padx=(24, 8))
+        self._enemy_widgets.extend((scaling, boss))
+        self._enemy_advanced_widgets.extend((scaling, boss))
 
         # Launch/build progress, not an enemizer concern: it lives outside the
         # notebook so no tab selection can hide it.
@@ -913,6 +923,8 @@ class LauncherApp:
                 "shad_executable": self.fields["shad_executable"].get().strip(),
                 "allow_tier_mixing": self.allow_tier_mixing.get(),
                 "preserve_locomotion": self.preserve_locomotion.get(),
+                "normalize_scaling": self.normalize_scaling.get(),
+                "boss_canary": self.boss_canary.get(),
             }
             self.settings_path.write_text(
                 json.dumps(value, indent=2, sort_keys=True) + "\n",
@@ -940,6 +952,8 @@ class LauncherApp:
             self.player_name.set(str(value.get("player_name", "")))
             self.allow_tier_mixing.set(bool(value.get("allow_tier_mixing", False)))
             self.preserve_locomotion.set(bool(value.get("preserve_locomotion", False)))
+            self.normalize_scaling.set(bool(value.get("normalize_scaling", False)))
+            self.boss_canary.set(bool(value.get("boss_canary", False)))
         except (OSError, UnicodeError, json.JSONDecodeError, LauncherError) as exc:
             self.messagebox.showwarning("Saved setup ignored", str(exc), parent=self.root)
 
@@ -1095,6 +1109,8 @@ class LauncherApp:
                 seed=self.enemy_seed.get().strip() or None,
                 allow_tier_mixing=self.allow_tier_mixing.get(),
                 preserve_locomotion=self.preserve_locomotion.get(),
+                normalize_scaling=self.normalize_scaling.get(),
+                boss_canary=self.boss_canary.get(),
             )
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()
@@ -1429,6 +1445,8 @@ class LauncherApp:
                 seed=self.enemy_seed.get().strip() or None,
                 allow_tier_mixing=self.allow_tier_mixing.get(),
                 preserve_locomotion=self.preserve_locomotion.get(),
+                normalize_scaling=self.normalize_scaling.get(),
+                boss_canary=self.boss_canary.get(),
             )
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()

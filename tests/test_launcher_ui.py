@@ -443,7 +443,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(owner["enemizer"]["plan"]["sha256"], digest(retained.read_bytes()))
         self.assertEqual(
             owner["enemizer"]["plan"]["options"],
-            {"allow_tier_mixing": True, "preserve_locomotion": True},
+            {"allow_tier_mixing": True, "preserve_locomotion": True, "normalize_scaling": False, "boss_canary": False},
         )
         self.assertFalse((self.install.mods / "bb-enemizer-plan.json").exists())
         active_event = self.install.mods.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
@@ -1089,7 +1089,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertLessEqual(
             {
                 "Randomize Enemies",
-                "Allow tier mixing (experimental: no scaling)",
+                "Allow tier mixing (experimental)",
+                "Normalize enemy stats (experimental playtest)",
+                "Boss playtest: BSB at Cleric Beast (other enemies unchanged; includes scaling)",
                 "Preserve locomotion (experimental: incomplete tags)",
                 "Enemy seed",
             },

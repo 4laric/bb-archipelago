@@ -4,6 +4,20 @@
 from CUSA03173 AppVer 01.09 original inputs. It is an offline construction
 canary, not a runtime-validated boss randomization option.
 
+## Launcher playtest release
+
+In Enemy randomization, enable Randomize Enemies and Advanced enemy options.
+Select **Boss playtest: BSB at Cleric Beast** and rebuild/launch. This mode
+includes normalization and leaves other enemy placements unchanged. Both
+the boss mode and the separate **Normalize enemy stats** option default off.
+Switching modes creates a distinct cache identity and removes the previous
+mode's owned files on activation. Report Bad Enemy includes the boss receipt.
+
+Players do not need DarkScript: the packaged native writer reconstructs the
+nine reviewed events from an embedded instruction recipe, checks the same
+event fingerprints, and merges them into the player's original event file.
+The developer compiler workflow below remains available for reproduction.
+
 The combined writer updates all three original map states, clones the donor
 NPC with the experimental destination normalization effect, imports its
 missing map-local AI, and merges nine reviewed encounter events. The original

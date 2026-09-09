@@ -32,6 +32,15 @@ internal static class BossCanary
         Console.WriteLine(JsonSerializer.Serialize(ChangedEvents.ToDictionary(id => id, id => Fingerprint(Event(file, id))), Json));
         return 0;
     }
+    public static int ExportRecipe(string path) {
+        var file = EMEVD.Read(path);
+        Console.WriteLine(JsonSerializer.Serialize(ChangedEvents.Select(id => Event(file, id)).ToArray(), Json));
+        return 0;
+    }
+    internal static EMEVD NativeRecipe() {
+        using var stream = typeof(BossCanary).Assembly.GetManifestResourceStream("boss-event-recipe.json")!;
+        return new EMEVD(EMEVD.Game.Bloodborne) { Events = JsonSerializer.Deserialize<List<EMEVD.Event>>(stream, Json)! };
+    }
 
     // Compiled events are used only as a development oracle. Copy the nine
     // hash-pinned events into the original file, not a whole compiler rewrite.
@@ -61,7 +70,7 @@ internal static class BossCanary
     }
 
     public static int Run(string planPath, string gamePath, string defsPath, string mapsPath,
-        string scriptsPath, string originalEvent, string compiledEvent, string outputPath)
+        string scriptsPath, string originalEvent, string? compiledEvent, string outputPath)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(planPath));
         var root = document.RootElement;
@@ -77,10 +86,10 @@ internal static class BossCanary
         Need(Hash(File.ReadAllBytes(originalEvent)) == OriginalHash, "unsupported original Central Yharnam EMEVD");
         using var pinStream = typeof(BossCanary).Assembly.GetManifestResourceStream("boss-event-pins.json")!;
         var pins = JsonSerializer.Deserialize<Dictionary<long, string>>(pinStream)!;
-        byte[] events = Merge(EMEVD.Read(originalEvent), EMEVD.Read(compiledEvent), pins);
+        byte[] events = Merge(EMEVD.Read(originalEvent), compiledEvent == null ? NativeRecipe() : EMEVD.Read(compiledEvent), pins);
         string output = Path.GetFullPath(outputPath), parent = Path.GetDirectoryName(output)!;
         Need(!Directory.Exists(output) && !File.Exists(output), "boss output must not exist");
-        foreach (string input in new[] {planPath, gamePath, defsPath, originalEvent, compiledEvent, mapsPath, scriptsPath}) {
+        foreach (string input in new[] {planPath, gamePath, defsPath, originalEvent, compiledEvent, mapsPath, scriptsPath}.OfType<string>()) {
             string directory = Directory.Exists(input) ? Path.GetFullPath(input) : Path.GetDirectoryName(Path.GetFullPath(input))!;
             string relative = Path.GetRelativePath(directory, output);
             Need(relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || Path.IsPathRooted(relative), "boss output must be outside input directories");

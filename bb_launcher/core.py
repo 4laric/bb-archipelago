@@ -54,6 +54,7 @@ SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
 CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
+BOSS_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_01_00_00.emevd.dcx"
 MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 # The enemizer plan is retained beside the seed manifest, outside the overlay
 # file set, so a bad swap can be named after the fact (bb-archipelago#321).
@@ -243,7 +244,7 @@ def _safe_overlay_path(raw: str) -> str:
         and "/" not in normalized[len(MAP_PREFIX):]
         and normalized.lower().endswith(".msb.dcx")
     )
-    is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH}
+    is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH, BOSS_EVENT_PATH}
     is_ai = normalized.startswith(AI_PREFIX) and re.fullmatch(
         AI_FILE_PATTERN, normalized[len(AI_PREFIX):]) is not None
     if not is_suppression and not is_map and not is_owned_event and not is_ai:
@@ -273,6 +274,8 @@ def canonical_overlay_case(value: str) -> str:
         return HEMWICK_EVENT_PATH
     if normalized.casefold() == COMMON_EVENT_PATH.casefold():
         return COMMON_EVENT_PATH
+    if normalized.casefold() == BOSS_EVENT_PATH.casefold():
+        return BOSS_EVENT_PATH
     if normalized.casefold().startswith(MAP_PREFIX.casefold()):
         return MAP_PREFIX + normalized[len(MAP_PREFIX) :]
     if normalized.casefold().startswith(AI_PREFIX.casefold()):
@@ -546,6 +549,9 @@ class SeedCache:
         enemizer_options: Mapping[str, Any] | None = None,
         enemy_scripts: Path | str | None = None,
         enemy_ai_report: Mapping[str, Any] | None = None,
+        boss_event: Path | str | None = None,
+        boss_report: Mapping[str, Any] | None = None,
+        scaling_report: Mapping[str, Any] | None = None,
     ) -> BuildResult:
         key = identity.cache_key
         destination = self.path_for(key)
@@ -619,6 +625,11 @@ class SeedCache:
         stage.mkdir()
         try:
             inputs = [(SUPPRESSION_PATH, binder, "suppression")]
+            if boss_event is not None:
+                event = Path(boss_event).expanduser().resolve()
+                if not event.is_file() or event.is_symlink():
+                    raise ValidationError('boss event is not a regular file')
+                inputs.append((BOSS_EVENT_PATH, event, 'boss-event'))
             if cathedral_event is not None:
                 event = Path(cathedral_event).expanduser().resolve()
                 if not event.is_file() or event.is_symlink():
@@ -730,6 +741,8 @@ class SeedCache:
                     "plan": plan_record,
                     "ai_file_count": len(scripts),
                     "ai": enemy_ai_report,
+                    "boss": boss_report,
+                    "scaling": scaling_report,
                 },
             }
             _write_json_atomic(stage / SEED_MANIFEST_NAME, manifest)
@@ -874,7 +887,46 @@ class SeedCache:
                     or hemwick.get("object") != 2201999
                     or hemwick.get("sfx") != 2203999):
                 raise ValidationError("Hemwick gate event witness is invalid")
+        boss = manifest.get('enemizer', {}).get('boss')
+        boss_record = expected.get(BOSS_EVENT_PATH)
+        boss_enabled = bool(identity.options.get('boss_canary'))
+        if boss_enabled != (boss_record is not None) or boss_enabled != (boss is not None):
+            raise ValidationError('boss option, event and receipt must agree')
+        if boss_enabled:
+            if (not isinstance(boss, dict) or boss.get('adapter') != 'bsb-at-cleric-v1'
+                    or boss.get('applied') is not True or boss.get('completion_event') != 12411700
+                    or boss_record.get('component') != 'boss-event'
+                    or boss.get('output_event_sha256') != boss_record.get('sha256')):
+                raise ValidationError('boss encounter receipt mismatch')
+            boss_files = {r['path']: r['sha256'] for r in boss.get('files', [])}
+            for relative, record in expected.items():
+                if relative in {SUPPRESSION_PATH, BOSS_EVENT_PATH} or relative.startswith((MAP_PREFIX, AI_PREFIX)):
+                    if boss_files.get(relative) != record.get('sha256'):
+                        raise ValidationError('boss receipt does not match composed overlay')
+            if not plan_record or boss_files.get(ENEMIZER_PLAN_NAME) != plan_record.get('sha256'):
+                raise ValidationError('boss receipt does not match retained plan')
+        scaling = manifest.get('enemizer', {}).get('scaling')
+        scaling_enabled = bool(identity.options.get('normalize_scaling')) or boss_enabled
+        if scaling_enabled != (scaling is not None):
+            raise ValidationError('normalization option and receipt must agree')
+        if scaling_enabled:
+            if (not isinstance(scaling, dict) or scaling.get('applied') is not True or not plan_record
+                    or scaling.get('output_plan_sha256') != plan_record.get('sha256')
+                    or scaling.get('output_gameparam_sha256') != expected[SUPPRESSION_PATH].get('sha256')):
+                raise ValidationError('normalization receipt mismatch')
         ai_records = {p: r for p, r in expected.items() if p.startswith(AI_PREFIX)}
+        if scaling_enabled:
+            ai = manifest.get('enemizer', {}).get('ai') or {}
+            if ai.get('applied') is not True or ai.get('plan_sha256') != plan_record.get('sha256'):
+                raise ValidationError('experimental AI receipt does not match plan')
+            ai_maps = ai.get('maps', [])
+            named = {AI_PREFIX + row.get('map', ''): row for row in ai_maps}
+            if len(named) != len(ai_maps) or set(named) != set(ai_records):
+                raise ValidationError('experimental AI receipt file set mismatch')
+            for relative, record in ai_records.items():
+                row = named[relative]
+                if row.get('missing_goals_after') != 0 or row.get('output_sha256') != record.get('sha256'):
+                    raise ValidationError('experimental AI output mismatch or missing goals')
         if any(r.get("component") != "enemizer-ai" for r in ai_records.values()):
             raise ValidationError("enemy AI output has the wrong component")
         if ai_records and identity.enemizer_seed is None:

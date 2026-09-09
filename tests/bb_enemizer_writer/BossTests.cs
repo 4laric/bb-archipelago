@@ -21,6 +21,14 @@ internal static class BossTests
         var pins = BossCanary.ChangedEvents.ToDictionary(id => id,
             id => BossCanary.Fingerprint(compiled.Events.Single(e => e.ID == id)));
         var merged = EMEVD.Read(BossCanary.Merge(original, compiled, pins));
+        using var pinStream = typeof(BossCanary).Assembly.GetManifestResourceStream("boss-event-pins.json")!;
+        var nativePins = System.Text.Json.JsonSerializer.Deserialize<Dictionary<long,string>>(pinStream)!;
+        var native = BossCanary.NativeRecipe();
+        Need(native.Events.Count == 9);
+        foreach (var e in native.Events) Need(BossCanary.Fingerprint(e) == nativePins[e.ID]);
+        var nativeMerged = EMEVD.Read(BossCanary.Merge(original, native, nativePins));
+        Need(BossCanary.Fingerprint(nativeMerged.Events.Single(e => e.ID == BossCanary.CompletionEvent))
+             == BossCanary.Fingerprint(original.Events.Single(e => e.ID == BossCanary.CompletionEvent)));
         foreach (var e in original.Events) {
             Need(e.Instructions[0].ArgData[0] == 0);
             Need(merged.Events.Single(x => x.ID == e.ID).Instructions[0].ArgData[0]

@@ -9,6 +9,7 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="boss-event-pins.json" LogicalName="boss-event-pins.json" />
+    <EmbeddedResource Include="boss-event-recipe.json" LogicalName="boss-event-recipe.json" />
     <ProjectReference Include="$(SoulsFormatsNextRoot)\SoulsFormats\SoulsFormats.csproj" />
   </ItemGroup>
 </Project>
