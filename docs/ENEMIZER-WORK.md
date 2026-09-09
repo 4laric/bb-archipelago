@@ -5,6 +5,18 @@ features while the user is AFK. Heartbeat `continue-bloodborne-enemizer-implemen
 continues this task every 30 minutes. Keep later changes local and reviewable;
 the only authorized published release so far is `v0.1.0-enemizer-ai.1`.
 
+Scope clarification: the user explicitly added **boss randomization** ("bosses
+too"). Prioritize that track next. The older #133 note saying not to start a
+branch is a historical project assessment, not a restriction on this newly
+authorized work. Start with the original boss/EMEVD coupling census and a
+boss-specific roster; continue into experimental compatibility, planning,
+AI/scaling and event handling where evidence supports implementation. Preserve
+the destination defeat flag and AP progression chain. Trace activation, fog,
+health bars, cutscenes and multi-actor phases; do not simply remove protection
+rules. Use original binary/Ghidra investigation where needed. Keep unvalidated
+swaps default-off and record live acceptance requirements. Do not stop at
+research if independent implementation work is possible.
+
 ## Current work
 
 Branch: `codex/enemizer-scaling`, based on AI repair commit `dcb2171f`.
@@ -97,8 +109,10 @@ passed before this diagnostic followup. Logs:
    dying placements (#321), or the optional launcher/cache scaling wiring.
 3. Investigate the unresolved EMEVD callee-resolution boundary before widening
    coverage (#188); keep policy changes experimental pending map-load evidence.
-4. Build the offline boss/EMEVD coupling census described in #133, preserving
-   the AP progression flag chain. Boss swaps themselves require live evidence.
+4. **Now prioritized by the user:** build the boss/EMEVD coupling census and
+   roster described in #133, then implement supported experimental boss swaps,
+   preserving the AP progression flag chain. Runtime behavior requires live
+   evidence before promotion; offline implementation may proceed.
 5. Assess compiled planner replacement (#318) after correctness work.
 
 Record each finished batch, tests and remaining limitations here. Pause the
