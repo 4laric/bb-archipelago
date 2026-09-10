@@ -34,6 +34,9 @@ under `Unreleased` and move into a dated version section when released.
   and goal/global registrations, verifies the written binders, and rebuilds
   older enemy caches. File-level checks pass on the supported game build;
   movement and combat still require a live playtest.
+- Updated the bundled client pin to `b984f625e4bc` for the next enemy playtest
+  package. Bloodborne runtime remains `bb-0.1.0-r10`.
+
 - **The website's stable download is now `v0.1.0.2`.** The channel ledger was still
   pointing `/bb/` at `v0.1.0-beta.5`. Stable now names the first non-prerelease V.R.M.F
   release, so /downloads and `/bb/latest.json` offer the build with the apworld-in-zip
