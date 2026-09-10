@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -27,6 +28,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable, Mapping, Sequence, TextIO
+
+from .version import launcher_version
 
 
 SERIAL = "CUSA03173"
@@ -53,10 +56,13 @@ SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
 CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
+BOSS_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_01_00_00.emevd.dcx"
 MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 # The enemizer plan is retained beside the seed manifest, outside the overlay
 # file set, so a bad swap can be named after the fact (bb-archipelago#321).
 ENEMIZER_PLAN_NAME = "bb-enemizer-plan.json"
+AI_PREFIX = f"{DVDROOT_PREFIX}script/"
+AI_FILE_PATTERN = r"m\d{2}_\d{2}_\d{2}_00\.luabnd\.dcx"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
 # The one operator escape hatch over suppression-binder hash skew
 # (bb-archipelago#183).  Modeled on the delivery tool's
@@ -240,10 +246,12 @@ def _safe_overlay_path(raw: str) -> str:
         and "/" not in normalized[len(MAP_PREFIX):]
         and normalized.lower().endswith(".msb.dcx")
     )
-    is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH}
-    if not is_suppression and not is_map and not is_owned_event:
+    is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH, BOSS_EVENT_PATH}
+    is_ai = normalized.startswith(AI_PREFIX) and re.fullmatch(
+        AI_FILE_PATTERN, normalized[len(AI_PREFIX):]) is not None
+    if not is_suppression and not is_map and not is_owned_event and not is_ai:
         raise ValidationError(
-            f"overlay path is outside the param/map/event contract: {normalized}"
+            f"overlay path is outside the param/map/event/AI contract: {normalized}"
         )
     return normalized
 
@@ -268,8 +276,12 @@ def canonical_overlay_case(value: str) -> str:
         return HEMWICK_EVENT_PATH
     if normalized.casefold() == COMMON_EVENT_PATH.casefold():
         return COMMON_EVENT_PATH
+    if normalized.casefold() == BOSS_EVENT_PATH.casefold():
+        return BOSS_EVENT_PATH
     if normalized.casefold().startswith(MAP_PREFIX.casefold()):
         return MAP_PREFIX + normalized[len(MAP_PREFIX) :]
+    if normalized.casefold().startswith(AI_PREFIX.casefold()):
+        return AI_PREFIX + normalized[len(AI_PREFIX) :]
     return normalized
 
 
@@ -537,6 +549,11 @@ class SeedCache:
         hemwick_event: Path | str | None = None,
         enemizer_plan: Path | str | None = None,
         enemizer_options: Mapping[str, Any] | None = None,
+        enemy_scripts: Path | str | None = None,
+        enemy_ai_report: Mapping[str, Any] | None = None,
+        boss_event: Path | str | None = None,
+        boss_report: Mapping[str, Any] | None = None,
+        scaling_report: Mapping[str, Any] | None = None,
     ) -> BuildResult:
         key = identity.cache_key
         destination = self.path_for(key)
@@ -589,12 +606,32 @@ class SeedCache:
                 raise ValidationError("enemizer plan carries no swap list")
         elif maps:
             raise ValidationError("MapStudio outputs require the enemizer plan that produced them")
+        scripts: list[Path] = []
+        if enemy_scripts is not None:
+            script_root = Path(enemy_scripts)
+            if not script_root.is_dir() or script_root.is_symlink():
+                raise ValidationError("enemy AI scripts must be a regular directory")
+            scripts = sorted(script_root.iterdir())
+            if not scripts or any(not p.is_file() or p.is_symlink()
+                    or re.fullmatch(AI_FILE_PATTERN, p.name) is None for p in scripts):
+                raise ValidationError("enemy AI output contains no scripts or unexpected files")
+            if not maps:
+                raise ValidationError("enemy AI scripts require randomized maps")
+        if identity.options.get("enemy_ai_version"):
+            wanted = {p.name.split(".")[0][:-2] + "00.luabnd.dcx" for p in maps}
+            if not wanted or {p.name for p in scripts} != wanted:
+                raise ValidationError("randomized maps require matching enemy AI binders")
 
         self.root.mkdir(parents=True, exist_ok=True)
         stage = self.root / f".{key}.staging-{uuid.uuid4().hex}"
         stage.mkdir()
         try:
             inputs = [(SUPPRESSION_PATH, binder, "suppression")]
+            if boss_event is not None:
+                event = Path(boss_event).expanduser().resolve()
+                if not event.is_file() or event.is_symlink():
+                    raise ValidationError('boss event is not a regular file')
+                inputs.append((BOSS_EVENT_PATH, event, 'boss-event'))
             if cathedral_event is not None:
                 event = Path(cathedral_event).expanduser().resolve()
                 if not event.is_file() or event.is_symlink():
@@ -613,6 +650,7 @@ class SeedCache:
             inputs.extend(
                 (f"{MAP_PREFIX}{path.name}", path, "enemizer") for path in maps
             )
+            inputs.extend((f"{AI_PREFIX}{path.name}", path, "enemizer-ai") for path in scripts)
             records: list[dict[str, Any]] = []
             for relative, source, component in inputs:
                 relative = _safe_overlay_path(relative)
@@ -703,6 +741,10 @@ class SeedCache:
                     "seed": identity.enemizer_seed,
                     "file_count": len(maps),
                     "plan": plan_record,
+                    "ai_file_count": len(scripts),
+                    "ai": enemy_ai_report,
+                    "boss": boss_report,
+                    "scaling": scaling_report,
                 },
             }
             _write_json_atomic(stage / SEED_MANIFEST_NAME, manifest)
@@ -847,6 +889,57 @@ class SeedCache:
                     or hemwick.get("object") != 2201999
                     or hemwick.get("sfx") != 2203999):
                 raise ValidationError("Hemwick gate event witness is invalid")
+        boss = manifest.get('enemizer', {}).get('boss')
+        boss_record = expected.get(BOSS_EVENT_PATH)
+        boss_enabled = bool(identity.options.get('boss_canary'))
+        if boss_enabled != (boss_record is not None) or boss_enabled != (boss is not None):
+            raise ValidationError('boss option, event and receipt must agree')
+        if boss_enabled:
+            if (not isinstance(boss, dict) or boss.get('adapter') != 'bsb-at-cleric-v1'
+                    or boss.get('applied') is not True or boss.get('completion_event') != 12411700
+                    or boss_record.get('component') != 'boss-event'
+                    or boss.get('output_event_sha256') != boss_record.get('sha256')):
+                raise ValidationError('boss encounter receipt mismatch')
+            boss_files = {r['path']: r['sha256'] for r in boss.get('files', [])}
+            for relative, record in expected.items():
+                if relative in {SUPPRESSION_PATH, BOSS_EVENT_PATH} or relative.startswith((MAP_PREFIX, AI_PREFIX)):
+                    if boss_files.get(relative) != record.get('sha256'):
+                        raise ValidationError('boss receipt does not match composed overlay')
+            if not plan_record or boss_files.get(ENEMIZER_PLAN_NAME) != plan_record.get('sha256'):
+                raise ValidationError('boss receipt does not match retained plan')
+        scaling = manifest.get('enemizer', {}).get('scaling')
+        scaling_enabled = bool(identity.options.get('normalize_scaling')) or boss_enabled
+        if scaling_enabled != (scaling is not None):
+            raise ValidationError('normalization option and receipt must agree')
+        if scaling_enabled:
+            if (not isinstance(scaling, dict) or scaling.get('applied') is not True or not plan_record
+                    or scaling.get('output_plan_sha256') != plan_record.get('sha256')
+                    or scaling.get('output_gameparam_sha256') != expected[SUPPRESSION_PATH].get('sha256')):
+                raise ValidationError('normalization receipt mismatch')
+        ai_records = {p: r for p, r in expected.items() if p.startswith(AI_PREFIX)}
+        if scaling_enabled:
+            ai = manifest.get('enemizer', {}).get('ai') or {}
+            if ai.get('applied') is not True or ai.get('plan_sha256') != plan_record.get('sha256'):
+                raise ValidationError('experimental AI receipt does not match plan')
+            ai_maps = ai.get('maps', [])
+            named = {AI_PREFIX + row.get('map', ''): row for row in ai_maps}
+            if len(named) != len(ai_maps) or set(named) != set(ai_records):
+                raise ValidationError('experimental AI receipt file set mismatch')
+            for relative, record in ai_records.items():
+                row = named[relative]
+                if row.get('missing_goals_after') != 0 or row.get('output_sha256') != record.get('sha256'):
+                    raise ValidationError('experimental AI output mismatch or missing goals')
+        if any(r.get("component") != "enemizer-ai" for r in ai_records.values()):
+            raise ValidationError("enemy AI output has the wrong component")
+        if ai_records and identity.enemizer_seed is None:
+            raise ValidationError("enemy AI outputs require an enemizer seed")
+        if manifest.get("enemizer", {}).get("ai_file_count", 0) != len(ai_records):
+            raise ValidationError("enemy AI binder count does not match the manifest")
+        if identity.options.get("enemy_ai_version"):
+            wanted_ai = {AI_PREFIX + p[len(MAP_PREFIX):].split(".")[0][:-2] + "00.luabnd.dcx"
+                         for p in expected if p.startswith(MAP_PREFIX)}
+            if not wanted_ai or set(ai_records) != wanted_ai:
+                raise ValidationError("randomized maps require matching enemy AI binders")
         return BuildResult(root, manifest, False)
 
 
@@ -1975,6 +2068,7 @@ def _open_process_log(path: Path) -> Any:
     handle = open(path, "ab")
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     handle.write(f"\n{SESSION_HEADER_PREFIX} {stamp} ===\n".encode("utf-8"))
+    handle.write(f"Launcher version: {launcher_version()}\n".encode("utf-8"))
     handle.flush()
     return handle
 
@@ -2145,6 +2239,15 @@ def launch_processes(
         log_handle = None
         try:
             extra: dict[str, Any] = {}
+            if spec.log_path is not None and spec.self_logging:
+                # Close before spawning: the client's own append logger retains
+                # its console and owns the subsequent SESSION START header.
+                spec.log_path.parent.mkdir(parents=True, exist_ok=True)
+                stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                with spec.log_path.open("ab") as provenance:
+                    provenance.write(
+                        f"\nLauncher version: {launcher_version()} | launching {spec.name} | {stamp}\n".encode("utf-8")
+                    )
             if spec.log_path is not None and not spec.self_logging:
                 log_handle = _open_process_log(spec.log_path)
                 # A pipe (not the file) so the pump can tee; line-buffered text

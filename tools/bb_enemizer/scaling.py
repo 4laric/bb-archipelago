@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import io
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -26,7 +27,8 @@ MAX_MULTIPLIER = 4.0
 # Map-level destination oracle. Evidence is the designers' 74xx NG+ area
 # names, joined to the maps whose development names represent those areas.
 # m24_00 spans several Cathedral phases; level 4 is the conservative ordinary
-# enemy baseline. Bosses and script-protected slots never reach this planner.
+# enemy baseline. The ordinary planner excludes bosses and script-protected
+# slots; the separately guarded boss canary invokes this normalization explicitly.
 MAP_LEVELS = {
     "m21_00_00_00": 13,
     "m22_00_00_00": 5,
@@ -94,14 +96,21 @@ def derive_ladder(effects: dict[int, dict[str, str]]) -> dict[int, LadderRung]:
         row_id = 7400 + level
         row = effects[row_id]
         name = row["Name"]
-        if f"レベル{level}" not in name:
+        if f"レベル{level}：" not in name:
             raise ValueError(f"SpEffect {row_id} is not the expected level {level} rung: {name}")
+        if int(row["spCategory"]) != 0 or float(row["effectEndurance"]) != -1:
+            raise ValueError(f"SpEffect {row_id} is not a persistent category-0 rung")
+        for suffix in ("AttackPowerRate", "DiffenceRate"):
+            rates = [float(row[f"{element}{suffix}"])
+                     for element in ("physics", "magic", "fire", "thunder")]
+            if not all(math.isfinite(rate) and rate > 0 and rate == rates[0] for rate in rates):
+                raise ValueError(f"SpEffect {row_id} has inconsistent elemental {suffix}")
         result[level] = LadderRung(
             level, row_id, name, float(row["maxHpRate"]),
             float(row["physicsAttackPowerRate"]),
             float(row["physicsDiffenceRate"]),
         )
-    if not all(rung.max_hp_rate > 1 for rung in result.values()):
+    if not all(math.isfinite(rung.max_hp_rate) and rung.max_hp_rate > 1 for rung in result.values()):
         raise ValueError("native ladder contains a non-boosting HP rung")
     return result
 

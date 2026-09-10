@@ -1,6 +1,7 @@
 # Enemizer scaling design
 
-Status: **offline planner prototype, disabled by default**, written 2026-08-24 from committed data (`research/bb_inputs.db`:
+Status: **experimental planner and binary writer, disabled by default**;
+writer added 2026-09-09. Original design written 2026-08-24 from committed data (`research/bb_inputs.db`:
 `params/NpcParam.csv`, `params/SpEffectParam.csv`) and from the Elden Ring client's
 shipped scaling stack (`from-software-archipelago-clients/crates/er-logic/src/{scaling,
 native_tiers,rescale_watch,scaling_settle}.rs`). Every number below regenerates
@@ -9,9 +10,56 @@ from the bundle; every game-behavior claim is labelled.
 `tools/bb_enemizer/scaling.py` now regenerates and asserts the ladder, map
 oracle, collision-free claimed ranges, free-slot boundary, deterministic
 clone/effect plan, clamp, and reward-preserving clone contract. It is emitted
-only with the explicit `--normalize-scaling` flag. The guarded binary writer
-does not yet apply the scaling section, so this remains non-shipping scaffolding
-for #186 rather than a player option.
+only with the explicit `--normalize-scaling` flag. The combined binary writer
+applies it through `BBEnemizerWriter --scaled`; the normal map-only command
+refuses enabled scaling instead of silently ignoring it. The launcher does
+not yet expose this experiment as a player option.
+
+## Build a normalized experimental overlay
+
+Generate a plan in a separate input directory, then invoke the combined writer:
+
+```powershell
+python -m tools.bb_enemizer.cli --seed scaling-fixture `
+  --inventory work/inputs/mined/msb_enemies.tsv --normalize-scaling `
+  --output work/scaling-inputs/plan.json
+dotnet BBEnemizerWriter.dll --scaled work/scaling-inputs/plan.json `
+  path/to/built/gameparam.parambnd.dcx path/to/paramdef.paramdefbnd.dcx `
+  path/to/effective-original/MapStudio path/to/effective-original/script `
+  work/scaling-output --apply
+```
+
+Pass the **already-built suppression/seed gameparam** so NPC clones inherit
+its drop configuration. The writer preserves every existing row and every
+unrelated binder member; replacing this input with a vanilla binder would
+produce an overlay without the seed's suppression changes. Map and script
+inputs must be original base files with update precedence, never active mods.
+The output must be a new directory outside all input directories.
+
+The output contains the combined `dvdroot_ps4/param`, `map`, and `script`
+overlay, the byte-identical `source-enemizer-plan.json`, a retargeted
+`bb-enemizer-plan.json`, an AI report, and `scaling-report.json` with input/output
+hashes and clone/effect counts. Retargeted swaps retain `unscaled_target`.
+All parameter/map/AI writes are staged and reopened before the output directory
+is published. A late failure removes staging and leaves no partial output.
+This command builds files only; it does not install them or launch the game.
+
+The writer independently verifies the tier pair and clamped rates against
+the supplied parameter ladder, unique selected source rows, free effect slots,
+the claimed ID ranges, and shared effect consistency. It applies the attack
+and defense rates to all four elemental fields, matching the native ladder.
+Template 7401 also boosts `staminaAttackRate` and `haveSoulRate`; both become
+1 in the minted row, and `bGameClearBonus` becomes 0. This explicitly chooses
+an ordinary persistent effect rather than another NG-cycle bonus. The donor's
+own `GameClearSpEffectID`, rewards, drops and other effects remain unchanged.
+Runtime application and NG+ composition are still **inferred**, not observed.
+
+Offline CUSA03173 AppVer 01.09 witness: seed `scaling-fixture` generated 308
+swaps, 237 normalized clones and 71 effects, then wrote/reopened 22 map files
+and 14 AI archives against an already-built suppression binder. Existing
+parameter rows and unrelated binder members survived unchanged. Synthetic
+integration tests exercise reward preservation, alternate states, determinism,
+range collisions, multiplier/slot refusals, and late-failure atomicity.
 
 ## Two consumers, one mechanism
 
@@ -165,6 +213,7 @@ entity-keyed before an enemy with a check attached is ever swapped or re-rowed).
 3. One extreme-clamp spot check (weakest enemy at ×4, strongest allowed at ×0.25)
    for feel, before any default flips on.
 
-Until item 1 passes, everything here is design. The enemizer writer playtest (#64)
+Until item 1 passes, the mechanism remains runtime-unvalidated despite the
+implemented and offline-tested writer. The enemizer writer playtest (#64)
 should come first regardless — scaling normalizes a mechanism that has itself never
 been seen live.

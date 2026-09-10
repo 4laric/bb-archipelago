@@ -615,6 +615,10 @@ jobs:
             dotnet build "$project" -c Release \
               -p:SoulsFormatsNextRoot="$PWD/_soulsformats" -v:minimal
           done
+      - name: Enemy AI transplant binary integration tests
+        run: >
+          dotnet run --project tests/bb_enemizer_writer -c Release
+          -p:SoulsFormatsNextRoot="$PWD/_soulsformats"
       - name: Forge the synthetic fixtures
         run: |
           python tools/plan_vanilla_suppression.py --output work/integration/suppression-plan.json

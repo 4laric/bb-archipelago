@@ -41,6 +41,7 @@ def parser() -> argparse.ArgumentParser:
         help="emit inferred static-scaling clones (experimental; off by default)",
     )
     result.add_argument("--bundle", default="research/bb_inputs.db")
+    result.add_argument("--boss-canary", action="store_true", help="experimental BSB at Cleric; other enemies unchanged")
     return result
 
 
@@ -76,6 +77,16 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError as exc:
         raise SystemExit(str(exc))
     slots = load_slots(args.inventory)
+    if args.boss_canary:
+        from .boss_canary import plan_canary
+        npcs, effects = load_params(Path(args.bundle))
+        payload = plan_canary(slots, npcs, effects)
+        payload['seed'] = args.seed
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(payload, indent=2) + '\n', encoding='utf-8')
+        print(f"experimental boss canary: 1 swap, 3 map states, output={output}")
+        return 0
     facts = load_facts(args.facts if Path(args.facts).is_file() else None)
     tags_path = args.tags if Path(args.tags).is_file() else None
     policy_path = args.slot_policy if Path(args.slot_policy).is_file() else None

@@ -1,5 +1,6 @@
 import hashlib
 import csv
+import copy
 import json
 import tempfile
 import unittest
@@ -74,6 +75,17 @@ class StaticScalingTests(unittest.TestCase):
             committed = {row["map"]: int(row["level"])
                          for row in csv.DictReader(handle, delimiter="\t")}
         self.assertEqual(MAP_LEVELS, committed)
+
+    def test_ladder_rejects_drift_and_nonfinite_rates(self):
+        for field, value in (("maxHpRate", "nan"), ("maxHpRate", "inf"),
+                             ("physicsAttackPowerRate", "0"),
+                             ("magicDiffenceRate", "7"), ("spCategory", "1"),
+                             ("effectEndurance", "60"), ("Name", "レベル10：wrong")):
+            with self.subTest(field=field, value=value):
+                effects = copy.deepcopy(self.effects)
+                effects[7401][field] = value
+                with self.assertRaises(ValueError):
+                    derive_ladder(effects)
 
     def test_claimed_ranges_are_empty_in_the_bundle(self):
         self.assertFalse(set(self.npcs) & set(range(NPC_CLONE_START, NPC_CLONE_END + 1)))

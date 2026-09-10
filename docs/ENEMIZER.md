@@ -1,9 +1,9 @@
 # Bloodborne enemizer
 
-The first implementation boundary is deliberately a **deterministic dry-run
-planner**. It consumes the physical-provenance enemy inventory already mined
-from Bloodborne's MSBB files and writes a complete swap manifest. It does not
-modify a game dump.
+The deterministic planner consumes the physical-provenance enemy inventory
+mined from Bloodborne's MSBB files and writes a swap manifest. Separate writers
+produce map and AI overlays from the player's files. The launcher installs both
+through its verified seed cache. The planner itself does not modify game files.
 
 This follows the architecture proven by `4laric/nightreign-enemy-rando`:
 
@@ -67,10 +67,9 @@ NpcParam variants from dominating the pool, then chooses that family's variant
 whose native Bloodborne scaling SpEffect is closest to the destination's. The
 source model family is excluded, so every planned swap is visually meaningful.
 
-The remaining placements are only *candidate* common-enemy slots. Their plans
-carry `size compatibility unknown` until the Bloodborne NPC/character catalog
-has real size, tier, and locomotion annotations. A manifest is therefore an
-audit artifact, not yet an installable mod.
+Without catalog tags, candidate slots carry `size compatibility unknown`.
+The shipped catalog supplies collider-derived size and inferred tiers. These
+constraints and the binary verification do not prove live combat or traversal.
 
 ## Generate a manifest
 
@@ -115,6 +114,59 @@ dotnet run --project tools/bb_enemizer_writer -c Release `
 The output is still experimental until the roster annotations and in-game
 playtest gates are complete.
 
+## AI transplantation
+
+The map writer alone is insufficient. Bloodborne's `NpcThinkParam` rows name
+`logicId`, `battleGoalID`, and optional caution/find/interest goals; these are
+not necessarily equal to the Think row's own ID. Most enemy-specific Lua lives
+in `script/mXX_XX_00_00.luabnd.dcx`, outside `aicommon.luabnd.dcx`.
+
+`BBEnemizerWriter --ai` reads the actual parameters and copies missing compiled
+Lua chunks into each destination binder. It imports donor-context helper
+scripts and registered subgoals referenced by the chunks, and merges the
+associated `LUAINFO` and `LUAGNL` registrations. It inspects Lua 5.0 bytecode
+without executing or rewriting it. Logic and battle goals sharing a numeric
+ID remain separate. Alternate MSB world states share one canonical AI binder.
+
+The importer preserves existing script bytes and metadata entries, assigns
+noncolliding binder IDs, rejects ambiguous donor versions and ambiguous selected
+Think rows, and reopens every output to verify bytes and registrations. All
+destinations pass dependency preflight before output begins. Dynamic script
+dependencies and runtime behavior still require playtesting.
+
+The dependency walk also visits retained goal/helper chunks and repairs missing
+registrations without duplicating their bytes. A map subgoal registration alone
+does not satisfy its required script. The walk is bounded by original archive
+and filename, including cycles. Same-filename helper version conflicts are
+refused; differently named chunks sharing a global are not assumed equivalent
+or incompatible from that name alone. Dynamic dependencies remain unresolved.
+
+For repeatable offline seed batches, run `python -m tools.audit_enemizer_seeds`
+with `--dotnet`, `--writer`, `--inventory`, `--gameparam`, `--paramdef`, `--scripts`
+and a new `--output` directory. `--count` defaults to 25. Use original game
+inputs; each seed gets a plan, verified AI output, provenance receipt and writer
+log. `summary.json` records failures and distinct map/Think pairs. Outputs are
+never activated, and successful archive checks do not establish combat behavior.
+
+```powershell
+dotnet BBEnemizerWriter.dll --ai plan.json gameparam.parambnd.dcx `
+  paramdef.paramdefbnd.dcx effective-script-input output-script --apply
+```
+
+`effective-script-input` must contain the original common and map binders with
+update files taking precedence over base files. The launcher stages this view
+automatically, hashes its inputs into the cache identity, and requires one AI
+binder for every randomized map. It never reads previously randomized scripts
+as donors. The writer emits a sibling `output-script.json` provenance report.
+The launcher retains the placement plan beside the seed manifest and the AI
+report in its metadata, including when the cache is reused. The activated
+ownership record includes the plan hash and AI report.
+For inspection without writing binders, use `--audit-ai` with the same five
+paths, using a report filename as the last path and omitting `--apply`.
+
+The discovery evidence, limitations, and live acceptance protocol are in
+[ENEMIZER-AI.md](ENEMIZER-AI.md).
+
 ## Scaling
 
 Elden Ring Archipelago's useful contribution is the policy shape—normalize the
@@ -125,9 +177,10 @@ uses it to select the closest authored NpcParam variant of the chosen enemy
 family. This avoids regulation edits for the conservative first release while
 preserving area strength substantially better than a raw NPCParam swap.
 
-A later, wider mode can clone NpcParam rows and synthesize exact source-to-
-destination SpEffects in `gameparam.parambnd`; that remains separate from
-placement selection so it can be tested and disabled independently.
+The experimental `--normalize-scaling` planner and `BBEnemizerWriter --scaled`
+mode can clone NpcParam rows and synthesize source-to-destination SpEffects in
+the already-built seed gameparam. They remain separate from the default
+placement path so the mechanism can be tested and disabled independently.
 
 ## Offline release gate
 
@@ -144,9 +197,14 @@ original model entry survived the persisted round trip.
 
 `tools/build_enemizer_first_boot.ps1` is the fail-closed packaging entrypoint.
 It regenerates the catalogs, runs the 25-seed release gate, creates one
-manifest, runs the guarded writer, and emits a package-shaped
-`dvdroot_ps4/map/MapStudio` tree plus its manifest, audit, and metadata. Any
-failed stage prevents a successful package result.
+manifest, runs the guarded map and AI writers, and emits a package-shaped
+`dvdroot_ps4/map/MapStudio` and `dvdroot_ps4/script` tree plus its reports.
+Supply `-ScriptRoot`, `-Gameparam`, and `-Paramdef` as well as the map and
+SoulsFormats paths. Its input catalogs still require the extraction layout
+documented above. Any failed stage prevents a successful package result.
+The standalone audit enables the same AI gate with `--ai-writer`,
+`--ai-gameparam`, `--ai-paramdef`, and `--ai-scripts`; without those inputs its
+report explicitly records `ai_checked: false`.
 
 ## Reporting a bad enemy
 
@@ -176,6 +234,14 @@ profile, then lists every swap in the chosen area in plain words. When the
 player saw an echo reward, the enemies whose reward is nearest come first,
 which is the fastest way to catch an enemy dying on spawn. An area with no
 swaps says so, so a vanilla misbehaviour is not blamed on the enemizer.
+
+Reports also include the retained AI receipt: required goal IDs for each
+replacement ThinkParam, imported script donors/hashes, and output archive
+hashes compared with the cache manifest. Older receipts explicitly say when
+per-ThinkParam data was not recorded. Normalization details distinguish a
+planner-only request from written scaling files and retain the runtime
+validation boundary. The active ownership record supplies the AP seed/slot,
+so choosing another request in settings cannot misidentify a running build.
 
 ## Stress profiles
 
@@ -208,4 +274,7 @@ prefix are planned exactly as before; the 308-swap pin is unchanged.
 
 Enemy scaling — transplant normalization and later depth scaling — is designed
 in `docs/ENEMIZER-SCALING.md` (static overlay scaling built on the NG+
-`GameClearSpEffectID` area ladder). Design only; nothing is implemented.
+`GameClearSpEffectID` area ladder). The optional planner emits clone descriptions;
+`BBEnemizerWriter --scaled` builds the combined parameter, map, and AI overlay.
+It remains outside the default launcher path pending the construction canary.
+The map-only writer rejects enabled scaling rather than silently ignoring it.

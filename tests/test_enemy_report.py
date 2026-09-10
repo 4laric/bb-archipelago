@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 
 from bb_launcher.core import ENEMIZER_PLAN_NAME, SEED_MANIFEST_NAME, ValidationError, activate_build
 from bb_launcher.enemy_report import (
@@ -134,6 +135,50 @@ class EnemyReportShapeTests(unittest.TestCase):
             self.assertNotEqual(first, second)
             self.assertEqual("one\n", first.read_text(encoding="utf-8"))
 
+    def test_ai_evidence_uses_recorded_goals_and_filters_area(self):
+        ctx = context(two_area_plan())
+        ctx.manifest["enemizer"]["ai"] = {
+            "applied": True, "plan_sha256": "d" * 64,
+            "gameparam_sha256": "a" * 64, "paramdef_sha256": "b" * 64,
+            "think_parameters": [{"think_param_id": 124400,
+                                  "goals": [{"id": 900000, "logic": False}, {"id": 10000, "logic": True}]}],
+            "maps": [
+                {"map": "m22_00_00_00.luabnd.dcx", "missing_goals_before": 2,
+                 "missing_goals_after": 0, "scripts_added": [{"file": "900000_battle.lua"}], "output_sha256": "e" * 64},
+                {"map": "m24_01_00_00.luabnd.dcx", "output_sha256": "f" * 64},
+            ],
+        }
+        ctx.manifest["files"] = [{"path": "dvdroot_ps4/script/m22_00_00_00.luabnd.dcx", "sha256": "e" * 64}]
+        text = format_report(ctx, area="m22_00")
+        self.assertIn("battle 900000, logic 10000", text)
+        self.assertNotIn("battle 124400", text)
+        self.assertIn("2 -> 0 | 1 | " + "e" * 64 + " | yes", text)
+        self.assertNotIn("m24_01_00_00.luabnd.dcx", text)
+        self.assertIn("not observed detection", text)
+        ctx.manifest["enemizer"]["ai"]["plan_sha256"] = "0" * 64
+        self.assertIn("does not match the retained plan", format_report(ctx))
+        self.assertNotIn("battle 900000", format_report(ctx))
+
+    def test_scaling_report_distinguishes_planned_from_written(self):
+        plan = two_area_plan()
+        plan["scaling"] = {"enabled": True, "changes": [{
+            "logical_key": plan["swaps"][0]["logical_key"], "source_npc_param_id": 406000,
+            "cloned_npc_param_id": 6000000, "minted_sp_effect_id": 60013,
+            "hp_multiplier": 0.5, "attack_multiplier": 0.75, "defense_multiplier": 0.75,
+        }]}
+        self.assertIn("planned only; application not established", format_report(context(plan)))
+        plan["scaling"]["applied"] = True
+        text = format_report(context(plan), area="m24_01")
+        self.assertIn("applied to build files (runtime unvalidated)", text)
+        self.assertIn("406000 -> 6000000", text)
+        self.assertIn("0.5 / 0.75 / 0.75", text)
+        self.assertNotIn("406000 -> 6000000", format_report(context(plan), area="m22_00"))
+
+    def test_echo_search_does_not_blame_other_maps_when_focus_has_no_swaps(self):
+        text = format_report(context(two_area_plan()), area="m27_00", echoes=4700)
+        self.assertNotIn("fishman large", text)
+        self.assertIn("No enemy in this area was randomized", text)
+
 
 class EnemyReportContextTests(unittest.TestCase):
     """The report reads the active overlay's retained plan and nothing else."""
@@ -184,6 +229,17 @@ class EnemyReportContextTests(unittest.TestCase):
         activate_build(self.install, build_path, process_is_running=lambda: False)
         with self.assertRaisesRegex(ValidationError, "press Rebuild once"):
             load_context(self.settings())
+
+    def test_changed_settings_request_cannot_relabel_the_active_seed(self):
+        _cache, build_path = make_build(self.root, "active-seed", b"content", with_maps=True)
+        activate_build(self.install, build_path, process_is_running=lambda: False)
+        with patch("bb_launcher.enemy_report._request_identity", return_value={
+            "seed": "another-seed", "slot": "Another Hunter", "path": "other.json",
+        }):
+            loaded = load_context(self.settings())
+        self.assertEqual("active-seed", loaded.seed)
+        self.assertEqual("Hunter", loaded.slot)
+        self.assertEqual("not matched to the active overlay", loaded.request_path)
 
 
 if __name__ == "__main__":

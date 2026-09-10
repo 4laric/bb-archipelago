@@ -6,6 +6,17 @@ guide written for players, including what to send back after a session.
 
 Quick version:
 
+Experimental enemizer playtest (v0.1.0-enemizer-playtest.1):
+On Enemy randomization, enable Randomize Enemies and Advanced enemy options.
+"Normalize enemy stats" enables experimental destination scaling.
+"Boss playtest: BSB at Cleric Beast" instead changes only that encounter,
+including its AI, scaling and phase scripts; other enemies remain vanilla.
+Both new options default off. General boss shuffling is not included.
+Use a backed-up character with Cleric undefeated and report idle enemies,
+phase failures, falls/passive Echoes, crashes or missing progression through
+Report Bad Enemy. Rebuild/relaunch after changing a mode. These features pass
+offline build checks but have not been live-validated. See the boss canary guide.
+
 1. Run BloodborneAPLauncher.exe.
 2. Pick your shadPS4.exe, your AP seed request (....bbenemizer.json, from
    whoever generated the seed), and the Archipelago server address.

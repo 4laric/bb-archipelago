@@ -226,8 +226,10 @@ def plan_swaps(
     # leaking back into ordinary slots through the global roster.
     archetypes = {
         slot.archetype.key: slot.archetype
-        for slot in slots
-        if policies[slot.key].randomize
+        for copies in grouped.values()
+        if all(policies[s.key].randomize for s in copies)
+        and all(policies[s.key] == policies[copies[0].key] for s in copies)
+        for slot in copies
     }
     target_tags = {key: tags.get(key, EnemyTag()) for key in archetypes}
     ordered_targets = sorted(archetypes)

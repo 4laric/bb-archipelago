@@ -744,7 +744,7 @@ class LauncherCoreTests(unittest.TestCase):
     def test_a_self_logging_client_is_neither_piped_nor_pumped(self):
         # bb-archipelago#181: the client writes log_path ITSELF (clients#425),
         # so the launcher must hand it the console untouched -- no pipe kwargs,
-        # no pump thread, and no launcher-written header.  log_path stays set
+        # no pump thread, and no launcher-written session header. log_path stays set
         # because it still names the file the early-exit dialog reads.
         executable = self.root / "client.exe"
         executable.write_bytes(b"exe")
@@ -760,11 +760,13 @@ class LauncherCoreTests(unittest.TestCase):
 
         console = io.StringIO()
         spec = ProcessSpec("AP client", executable, log_path=log, self_logging=True)
-        started = launch_processes([spec], popen=fake_popen, console=console)
+        with patch("bb_launcher.core.launcher_version", return_value="0.1.0-enemizer-ai.1"):
+            started = launch_processes([spec], popen=fake_popen, console=console)
         self.assertEqual(calls, [{}], "a self-logging child must inherit the console")
         self.assertFalse(hasattr(started[0], "_bb_output_pump"))
         self.assertEqual(console.getvalue(), "")
-        self.assertFalse(log.exists(), "the launcher must not open the child's own log")
+        self.assertIn("Launcher version: 0.1.0-enemizer-ai.1", log.read_text(encoding="utf-8"))
+        self.assertNotIn(SESSION_HEADER_PREFIX, log.read_text(encoding="utf-8"))
 
     def test_a_self_logging_client_that_dies_reports_the_log_it_wrote_itself(self):
         # The #171 early-exit dialog is unchanged in shape: read_session_log_tail
@@ -1505,6 +1507,9 @@ class OverlayOwnershipCaseTests(unittest.TestCase):
         # exist on a case-sensitive filesystem: one of the two is unowned.
         twin = self.install.mods / "dvdroot_ps4" / "map" / "mapstudio" / "m24_01_00_00.msb.dcx"
         twin.parent.mkdir(parents=True, exist_ok=True)
+        original = self.install.mods.joinpath(*self.map_relative.split("/"))
+        if twin.exists() and twin.samefile(original):
+            self.skipTest("this filesystem cannot create distinct files differing only by case")
         twin.write_bytes(b"twin")
         with self.assertRaisesRegex(ConflictError, "differing only by case"):
             core._load_owner(self.install.mods)

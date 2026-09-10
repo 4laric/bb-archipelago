@@ -6,6 +6,34 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Enemy AI imports now repair retained chunks as well as missing ones.**
+  Existing goals and helpers receive dependency checks, missing registrations
+  and subgoal chunks are repaired, and conflicting versions of a referenced
+  helper file are refused before output. Older AI caches rebuild automatically.
+  This is offline hardening; the reported combat freeze is not confirmed fixed.
+- Protected or policy-inconsistent alternate-state placements no longer supply
+  replacement donors unless the archetype has another eligible placement.
+
+- Session logs now record the launcher release label before each client start,
+  including prerelease suffixes. Bad-enemy reports use the same release identity.
+
+- **Bad-enemy reports now include AI and stat-normalization evidence.**
+  Reports carry recorded goal IDs, script donors and hashes, and distinguish
+  planned scaling from written output. They identify the active seed even
+  after another seed file is selected, and keep echo matching within the
+  reported area.
+- **Experimental enemy stat normalization can now build a complete overlay.**
+  The opt-in scaling writer creates per-placement NPC clones, preserves their
+  drops and rewards, and verifies matching map and AI files together. Scaling
+  plans are no longer silently ignored by the map-only writer. This remains
+  a developer playtest option pending in-game validation.
+- **Enemy replacements now bring their AI scripts into the destination map.**
+  The previous enemizer changed models and Think parameters without installing
+  the required map-specific AI, leaving many transplants without their behavior
+  scripts. The launcher now copies the required scripts, helper dependencies,
+  and goal/global registrations, verifies the written binders, and rebuilds
+  older enemy caches. File-level checks pass on the supported game build;
+  movement and combat still require a live playtest.
 - Updated the bundled client pin to `b984f625e4bc` for the next enemy playtest
   package. Bloodborne runtime remains `bb-0.1.0-r10`.
 
