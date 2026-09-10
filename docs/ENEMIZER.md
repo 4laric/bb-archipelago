@@ -134,6 +134,20 @@ Think rows, and reopens every output to verify bytes and registrations. All
 destinations pass dependency preflight before output begins. Dynamic script
 dependencies and runtime behavior still require playtesting.
 
+The dependency walk also visits retained goal/helper chunks and repairs missing
+registrations without duplicating their bytes. A map subgoal registration alone
+does not satisfy its required script. The walk is bounded by original archive
+and filename, including cycles. Same-filename helper version conflicts are
+refused; differently named chunks sharing a global are not assumed equivalent
+or incompatible from that name alone. Dynamic dependencies remain unresolved.
+
+For repeatable offline seed batches, run `python -m tools.audit_enemizer_seeds`
+with `--dotnet`, `--writer`, `--inventory`, `--gameparam`, `--paramdef`, `--scripts`
+and a new `--output` directory. `--count` defaults to 25. Use original game
+inputs; each seed gets a plan, verified AI output, provenance receipt and writer
+log. `summary.json` records failures and distinct map/Think pairs. Outputs are
+never activated, and successful archive checks do not establish combat behavior.
+
 ```powershell
 dotnet BBEnemizerWriter.dll --ai plan.json gameparam.parambnd.dcx `
   paramdef.paramdefbnd.dcx effective-script-input output-script --apply

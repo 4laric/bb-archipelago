@@ -128,6 +128,7 @@ internal static class AiTransplant
             var available = existing.SelectMany(s => s.Symbols.Definitions).ToHashSet(StringComparer.Ordinal);
             var selected = new Dictionary<string, Script>(StringComparer.Ordinal);
             var pending = new Queue<Script>();
+            var inspected = new HashSet<(string Archive, string Name)>();
             var registrations = destination.Info.Goals.ToDictionary(GoalKey, GoalState);
             int globalsBefore = destination.Globals.Globals.Count, goalsBefore = destination.Info.Goals.Count;
 
@@ -138,11 +139,16 @@ internal static class AiTransplant
                 {
                     if (!current.File.Bytes.SequenceEqual(script.File.Bytes))
                         throw new InvalidDataException($"{name}: conflicting AI script {script.Name}");
-                    return;
                 }
-                selected.Add(script.Name, script);
-                available.UnionWith(script.Symbols.Definitions);
-                pending.Enqueue(script);
+                else
+                {
+                    selected.Add(script.Name, script);
+                    available.UnionWith(script.Symbols.Definitions);
+                }
+                // Identical chunks can already exist without their metadata or
+                // helper closure. Reuse bytes, but still repair registrations
+                // and inspect the original donor context exactly once.
+                if (inspected.Add((script.Archive, script.Name))) pending.Enqueue(script);
                 var donor = archives[script.Archive];
                 foreach (var goal in donor.Info.Goals.Where(g => Exports(script, g)))
                 {
@@ -175,8 +181,17 @@ internal static class AiTransplant
             int missing = needed.Count(r => !Satisfied(r));
             foreach (var requirement in needed.OrderBy(r => r.Id).ThenBy(r => r.Logic))
             {
-                if (Satisfied(requirement)) continue;
                 string file = $"{requirement.Id:D6}_{(requirement.Logic ? "logic" : "battle")}.lua";
+                if (Satisfied(requirement))
+                {
+                    // Audit retained map goals too. Byte-identical original
+                    // copies supply donor context for a missing helper.
+                    var retained = destination.Scripts.FirstOrDefault(s => s.Name == file);
+                    if (retained != null)
+                        foreach (var context in allScripts.Where(s => s.Name == file
+                            && s.File.Bytes.SequenceEqual(retained.File.Bytes))) Add(context);
+                    continue;
+                }
                 // Require the matching registration as well as the filename. A
                 // Think row ID is NOT a Lua goal ID; both are read from the param.
                 Add(Choose(allScripts.Where(s => s.Name == file
@@ -188,18 +203,39 @@ internal static class AiTransplant
                 {
                     if (goalProviders.TryGetValue(global, out var goalChoices))
                     {
-                        bool registered = destination.Info.Goals.Concat(common.Info.Goals)
-                            .Any(g => "GOAL_" + g.Name == global);
-                        if (!registered)
-                            Add(Choose(goalChoices.SelectMany(p => p.a.Scripts.Where(s => Exports(s, p.g))), global));
+                        // Shared engine goals can be registration-only. A map
+                        // subgoal needs its chunk, even if metadata is present.
+                        if (!common.Info.Goals.Any(g => "GOAL_" + g.Name == global))
+                        {
+                            var candidates = goalChoices.SelectMany(p => p.a.Scripts.Where(s => Exports(s, p.g))).ToList();
+                            var registered = destination.Info.Goals.Where(g => "GOAL_" + g.Name == global).ToList();
+                            var retained = existing.Concat(selected.Values)
+                                .Where(s => registered.Any(g => Exports(s, g))).ToList();
+                            if (retained.Count == 0) Add(Choose(candidates, global));
+                            else foreach (var context in candidates.Where(p => retained.Any(s => s.Name == p.Name
+                                && s.File.Bytes.SequenceEqual(p.File.Bytes)))) Add(context);
+                        }
                     }
-                    if (available.Contains(global) || !providers.TryGetValue(global, out var choices)) continue;
+                    if (!providers.TryGetValue(global, out var choices)) continue;
                     var local = choices.Where(s => s.Archive == script.Archive).ToList();
                     // Runtime scratch globals can be read before assignment in
                     // vanilla scripts. Only import a provider from the donor's
                     // actual load context; similarly named variables elsewhere
                     // are not evidence of a dependency.
-                    if (local.Count > 0) Add(Choose(local, global));
+                    if (local.Count > 0)
+                    {
+                        var active = existing.Concat(selected.Values)
+                            .Where(s => s.Symbols.Definitions.Contains(global)).ToList();
+                        // A matching name alone does not prove the donor's
+                        // helper is installed. Refuse a same-file version
+                        // conflict; other chunks may legitimately share globals.
+                        if (local.Any(provider => active.Any(s => s.Name == provider.Name
+                            && !s.File.Bytes.SequenceEqual(provider.File.Bytes))))
+                            throw new InvalidDataException($"{name}: conflicting AI helper {global}");
+                        if (!available.Contains(global)) Add(Choose(local, global));
+                        else foreach (var provider in local.Where(p => active.Any(s => s.File.Bytes.SequenceEqual(p.File.Bytes))))
+                            Add(provider);
+                    }
                 }
             }
             var usedIds = destination.Binder.Files.Select(f => f.ID).ToHashSet();

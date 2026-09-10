@@ -13,7 +13,7 @@ Nothing here touches the game or the overlay; it only reads.
 
 from __future__ import annotations
 
-import sys
+from .version import launcher_version
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -65,16 +65,6 @@ def area_key(map_name: str) -> str:
 def area_name(map_name: str) -> str:
     key = area_key(map_name)
     return MAP_AREAS.get(key, f"unknown area {key}")
-
-
-def launcher_version() -> str:
-    """The packaged launcher's file version, or a marker for a source checkout."""
-    if getattr(sys, "frozen", False):
-        from .doctor import _read_windows_file_version
-
-        version = _read_windows_file_version(Path(sys.executable))
-        return version or "packaged (no version resource)"
-    return "source checkout"
 
 
 @dataclass(frozen=True)

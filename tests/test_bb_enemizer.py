@@ -91,14 +91,40 @@ class BloodborneEnemizerTests(unittest.TestCase):
         a = slot("m24_01_00_00", "c1000_0000", 1000)
         b = slot("m24_01_00_11", "c1000_0000", 1000)
         donor = slot("m22_00_00_00", "c2000_0000", 2000, "c2000")
+        other = slot("m23_00_00_00", "c3000_0000", 3000, "c3000")
         policies = {
             a.key: SlotPolicy(True, "test"),
             b.key: SlotPolicy(False, "scripted in alternate state"),
             donor.key: SlotPolicy(True, "test"),
+            other.key: SlotPolicy(True, "test"),
         }
-        swaps, rejected = plan_swaps([a, b, donor], policies, {}, EnemizerConfig("x"))
+        swaps, rejected = plan_swaps([a, b, donor, other], policies, {}, EnemizerConfig("x"))
         self.assertFalse(any(s.logical_key == a.logical_key for s in swaps))
+        self.assertEqual({donor.archetype, other.archetype}, {s.target for s in swaps})
         self.assertTrue(any(r["logical_key"] == a.logical_key for r in rejected))
+
+    def test_inconsistent_alternate_policies_cannot_supply_donors(self):
+        a = slot("m24_01_00_00", "c1000_0000", 1000)
+        b = slot("m24_01_00_11", "c1000_0000", 1000)
+        ordinary = slot("m22_00_00_00", "c2000_0000", 2000, "c2000")
+        other = slot("m23_00_00_00", "c3000_0000", 3000, "c3000")
+        policies = {a.key: SlotPolicy(True, "test", size_class="M"),
+                    b.key: SlotPolicy(True, "test", size_class="L"),
+                    ordinary.key: SlotPolicy(True, "test"), other.key: SlotPolicy(True, "test")}
+        swaps, rejected = plan_swaps([a, b, ordinary, other], policies, {}, EnemizerConfig("x"))
+        self.assertEqual({ordinary.archetype, other.archetype}, {s.target for s in swaps})
+        self.assertTrue(any(r["reason"] == "alternate-state policy mismatch" for r in rejected))
+
+    def test_separate_eligible_placement_can_still_supply_same_archetype(self):
+        a = slot("m24_01_00_00", "c1000_0000", 1000)
+        b = slot("m24_01_00_11", "c1000_0000", 1000)
+        eligible = slot("m23_00_00_00", "c1000_0001", 1000)
+        ordinary = slot("m22_00_00_00", "c2000_0000", 2000, "c2000")
+        slots = [a, b, eligible, ordinary]
+        policies = {s.key: SlotPolicy(True, "test") for s in slots}
+        policies[b.key] = SlotPolicy(False, "scripted")
+        swaps, _ = plan_swaps(slots, policies, {}, EnemizerConfig("x"))
+        self.assertEqual(a.archetype, next(s.target for s in swaps if s.logical_key == ordinary.logical_key))
 
     def test_protected_archetype_cannot_leak_into_target_pool(self):
         ordinary_a = slot("m22_00_00_00", "c1000_0000", 1000)

@@ -29,6 +29,8 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable, Mapping, Sequence, TextIO
 
+from .version import launcher_version
+
 
 SERIAL = "CUSA03173"
 APP_VERSION = "01.09"
@@ -2066,6 +2068,7 @@ def _open_process_log(path: Path) -> Any:
     handle = open(path, "ab")
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     handle.write(f"\n{SESSION_HEADER_PREFIX} {stamp} ===\n".encode("utf-8"))
+    handle.write(f"Launcher version: {launcher_version()}\n".encode("utf-8"))
     handle.flush()
     return handle
 
@@ -2236,6 +2239,15 @@ def launch_processes(
         log_handle = None
         try:
             extra: dict[str, Any] = {}
+            if spec.log_path is not None and spec.self_logging:
+                # Close before spawning: the client's own append logger retains
+                # its console and owns the subsequent SESSION START header.
+                spec.log_path.parent.mkdir(parents=True, exist_ok=True)
+                stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+                with spec.log_path.open("ab") as provenance:
+                    provenance.write(
+                        f"\nLauncher version: {launcher_version()} | launching {spec.name} | {stamp}\n".encode("utf-8")
+                    )
             if spec.log_path is not None and not spec.self_logging:
                 log_handle = _open_process_log(spec.log_path)
                 # A pipe (not the file) so the pump can tee; line-buffered text

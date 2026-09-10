@@ -103,6 +103,34 @@ passed before this diagnostic followup. Logs:
 
 ## Next independent work
 
+### Offline hardening batches, 2026-09-10
+
+- User confirmed the reported attack-then-freeze occurred with AI transplantation
+  installed. Do not attribute it to the old map-only release. No runtime cause
+  or combat fix has been established from this work.
+- AI imports now repair metadata for byte-identical retained chunks and visit
+  retained roots/helpers/subgoals. Map subgoal registrations must have chunks;
+  recursive helpers use a visited set. Referenced same-file helper version
+  conflicts fail preflight. Different filenames defining the same global remain
+  an unresolved semantic boundary, since original archives contain such overlap.
+- Launcher AI cache version advanced to 2 so old outputs rebuild. Planner donor
+  eligibility now requires a consistent eligible logical placement, preventing
+  protected alternate-state copies from supplying otherwise excluded donors.
+  Another independently eligible placement can still supply that archetype.
+- Added `python -m tools.audit_enemizer_seeds` for isolated original-input batches,
+  with per-seed output, failure logs, receipt/hash checks and cumulative coverage.
+  Final run: `work/enemizer-batches-final-audit/summary.json`; 25/25 seeds passed,
+  350 written/reopened AI binders, 905 canonical map/Think pairs, 308 swaps per seed.
+  This is static archive validation, not movement/combat evidence.
+- Binary suite: 35 AI, 79 scaling, 37 boss assertions passed; log
+  `work/enemizer-batches-binary-tests.log`. Includes missing retained metadata,
+  helper cycles, retained helper dependencies, missing registered subgoal chunks,
+  and conflicting helper versions refusing before output.
+- Final `./build.ps1 -Test -Preflight` passed both suite runs: 1,161 tests,
+  49 skips, plus generated-table/shipping-boundary checks. Log:
+  `work/enemizer-batches-final-gate.log`.
+- No installation, commit, publication or external messages in these batches.
+
 ### Opt-in playtest release preparation, 2026-09-09
 
 - User authorized shipping without waiting for live gameplay validation.

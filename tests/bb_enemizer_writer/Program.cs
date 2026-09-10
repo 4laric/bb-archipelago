@@ -122,6 +122,51 @@ try
     }
     BossTests.Run();
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
+    // A destination may contain the donor bytes but omit their registrations.
+    // Reusing that chunk must still import metadata and the helper/subgoal closure.
+    Archive(scriptRoot, "m99_00_00_00", [("800000_battle.lua", original), ("900000_battle.lua", battle)],
+        [new(800000, "OriginalBattle", true, false)], ["OriginalBattle_Activate"]);
+    string metadataRepair = Path.Combine(root, "metadata-repair");
+    AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, metadataRepair, true);
+    var repaired = BND4.Read(Path.Combine(metadataRepair, "m99_00_00_00.luabnd.dcx"));
+    Require(repaired.Files.Count(f => f.Name.EndsWith("900000_battle.lua")) == 1, "reuse existing donor chunk");
+    Require(LUAINFO.Read(repaired.Files.Single(f => f.Name.EndsWith(".luainfo")).Bytes)
+        .Goals.Any(g => g.Name == "DonorBattle"), "repair registration for existing chunk");
+    // Even an already registered root needs its transitive helper/subgoal closure.
+    Archive(scriptRoot, "m99_00_00_00", [("900000_battle.lua", battle), ("900000_logic.lua", logic)],
+        [new(900000, "DonorBattle", true, false), new(900000, "Donor_Logic", false, true, "Donor_Interupt")],
+        ["DonorBattle_Activate", "Donor_Logic"]);
+    string closureRepair = Path.Combine(root, "closure-repair");
+    AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, closureRepair, true);
+    var closure = BND4.Read(Path.Combine(closureRepair, "m99_00_00_00.luabnd.dcx"));
+    Require(closure.Files.Any(f => f.Name.EndsWith("helper.lua")), "registered root imports missing helper");
+    Require(closure.Files.Any(f => f.Name.EndsWith("900001_battle.lua")), "registered root imports subgoal");
+    Archive(scriptRoot, "m99_00_00_00", [("800000_battle.lua", original),
+        ("helper.lua", Chunk(["Helper", "DifferentImplementation"], []))],
+        [new(800000, "OriginalBattle", true, false)], ["OriginalBattle_Activate", "Helper"]);
+    string helperConflict = Path.Combine(root, "helper-conflict");
+    Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, helperConflict, true), "conflicting AI helper");
+    Require(!Directory.Exists(helperConflict), "helper conflict refuses before writing output");
+    // Registered subgoals must still have executable chunks; existing helper
+    // chunks must be traversed and cycles must terminate.
+    var cyclicHelper = Chunk(["Helper"], ["Leaf"]);
+    var leafHelper = Chunk(["Leaf"], ["Helper"]);
+    Archive(scriptRoot, "m98_00_00_00", [("900000_battle.lua", battle), ("900000_logic.lua", logic),
+        ("helper.lua", cyclicHelper), ("leaf.lua", leafHelper), ("900001_battle.lua", child)],
+        [new(900000, "DonorBattle", true, false), new(900000, "Donor_Logic", false, true, "Donor_Interupt"),
+         new(900001, "ChildBattle", true, false)], ["Helper", "Leaf", "ChildBattle_Activate"]);
+    Archive(scriptRoot, "m99_00_00_00", [("800000_battle.lua", original), ("helper.lua", cyclicHelper)],
+        [new(800000, "OriginalBattle", true, false), new(900001, "ChildBattle", true, false)],
+        ["OriginalBattle_Activate", "Helper"]);
+    string recursiveRepair = Path.Combine(root, "recursive-repair");
+    AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, recursiveRepair, true);
+    var recursive = BND4.Read(Path.Combine(recursiveRepair, "m99_00_00_00.luabnd.dcx"));
+    Require(recursive.Files.Count(f => f.Name.EndsWith("helper.lua")) == 1, "cyclic helper reused once");
+    Require(recursive.Files.Any(f => f.Name.EndsWith("leaf.lua")), "retained helper imports transitive dependency");
+    Require(recursive.Files.Any(f => f.Name.EndsWith("900001_battle.lua")), "registration alone cannot satisfy subgoal");
+    foreach (var (name, bytes) in sourceHashes) File.WriteAllBytes(Path.Combine(scriptRoot, name!), bytes);
+    Archive(scriptRoot, "m99_00_00_00", [("800000_battle.lua", original)],
+        [new(800000, "OriginalBattle", true, false)], ["OriginalBattle_Activate"]);
     Plan(999);
     string failure = Path.Combine(root, "failure");
     Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, failure, true), "missing NpcThinkParam");
