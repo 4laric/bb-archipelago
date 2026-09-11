@@ -41,7 +41,7 @@ void Archive(string directory, string name, (string, byte[])[] scripts, LUAINFO.
     Directory.CreateDirectory(directory);
     var bnd = new BND4 { Compression = DCX.Type.DCX_EDGE, Version = "TESTAI01" };
     for (int i = 0; i < scripts.Length; i++)
-        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, i, "N:\\synthetic\\" + scripts[i].Item1, scripts[i].Item2));
+        bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 1000 + i, "N:\\synthetic\\" + scripts[i].Item1, scripts[i].Item2));
     var info = new LUAINFO(false, true) { Goals = goals.ToList() };
     var gnl = new LUAGNL(false, true) { Globals = globals.ToList() };
     bnd.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 1000000, "N:\\synthetic\\map.luagnl", gnl.Write()));
@@ -98,6 +98,8 @@ try
     Require(Directory.GetFiles(output).Length == 1, "alternate states share one binder");
     Require(result.Files.Count == 7, "imports battle, logic, helper, child plus original and metadata");
     Require(result.Files.Select(f => f.ID).Distinct().Count() == result.Files.Count, "unique IDs despite donor collisions");
+    Require(result.Files.Where(f => f.Name.EndsWith(".lua")).Select(f => f.ID)
+        .SequenceEqual(new[] {1000, 1001, 1002, 1003, 1004}), "imported scripts continue authored AI ID range in file order");
     Require(result.Files.Single(f => f.Name.EndsWith("800000_battle.lua")).Bytes.SequenceEqual(original), "original unchanged");
     Require(result.Files.Single(f => f.Name.EndsWith("900000_battle.lua")).Bytes.SequenceEqual(battle), "donor unchanged");
     var info = LUAINFO.Read(result.Files.Single(f => f.Name.EndsWith(".luainfo")).Bytes);

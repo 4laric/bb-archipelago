@@ -49,6 +49,11 @@ the launcher open while playing. **Stop server** requests a save and shutdown;
 closing the launcher while hosting asks before doing so. Generation is
 cancellable, retains its log, and writes to a fresh directory each time.
 
+When **Create & host** successfully starts a selected seed, it refreshes the
+remembered seed/player for that local server address. A new seed can reuse the
+same port without the operator mismatch override. Failed server starts leave
+the previous identity unchanged, and no session ledgers or game saves are reset.
+
 Hosting currently binds only to localhost. It is suitable for local play, not
 for accepting friends over the internet. Joining an existing online room still
 uses the server field on Play. Server and generation logs remain beside the

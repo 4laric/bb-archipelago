@@ -134,6 +134,13 @@ Think rows, and reopens every output to verify bytes and registrations. All
 destinations pass dependency preflight before output begins. Dynamic script
 dependencies and runtime behavior still require playtesting.
 
+Imported chunks continue the destination's authored script ID range (at least
+1000 and below metadata at 1000000), preserving existing IDs and order. Original
+CUSA03173 01.09 common/map AI archives use this range; the earlier importer
+incorrectly allocated from zero, the range observed in `eventcommon` rather
+than the AI binders. Cache version 3 forces regeneration. The runtime effect
+on the reported attack-range freeze remains to be verified in game.
+
 The dependency walk also visits retained goal/helper chunks and repairs missing
 registrations without duplicating their bytes. A map subgoal registration alone
 does not satisfy its required script. The walk is bounded by original archive

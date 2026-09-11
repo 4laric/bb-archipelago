@@ -239,10 +239,17 @@ internal static class AiTransplant
                 }
             }
             var usedIds = destination.Binder.Files.Select(f => f.ID).ToHashSet();
-            int nextId = 0;
+            // Observed in original CUSA03173 01.09 common/map AI binders:
+            // Lua chunks occupy IDs >= 1000, metadata starts at 1000000.
+            // Do not allocate in the unrelated event-script range below 1000.
+            // Continue after authored scripts, preserving their ordering/IDs.
+            int nextId = Math.Max(1000, checked(destination.Scripts
+                .Select(s => s.File.ID).DefaultIfEmpty(999).Max() + 1));
             foreach (var script in selected.Values)
             {
                 while (usedIds.Contains(nextId)) nextId++;
+                if (nextId >= 1000000)
+                    throw new InvalidDataException($"{name}: no free AI script ID below metadata range");
                 var file = new BinderFile(script.File.Flags, nextId, script.File.Name, script.File.Bytes) {
                     CompressionType = script.File.CompressionType,
                 };
