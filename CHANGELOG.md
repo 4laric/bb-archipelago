@@ -6,6 +6,14 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Creating and hosting a new local seed now replaces the previous seed/player
+  identity for that address after the server starts successfully. Reusing the
+  local port no longer needs the seed-mismatch override; old ledgers are kept.
+- Imported enemy AI scripts now continue the original archive's script IDs
+  instead of starting at zero. The launcher rebuilds older AI caches. This
+  corrects an archive-format mismatch observed during the combat-freeze
+  investigation; recovery of combat behavior still needs an in-game check.
+
 - **Enemy AI imports now repair retained chunks as well as missing ones.**
   Existing goals and helpers receive dependency checks, missing registrations
   and subgoal chunks are repaired, and conflicting versions of a referenced

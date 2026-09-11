@@ -103,6 +103,28 @@ passed before this diagnostic followup. Logs:
 
 ## Next independent work
 
+### Local seed handoff and AI script IDs, 2026-09-10
+
+- Successful launcher-owned local hosting now records the selected archive's
+  validated seed/player for its loopback address. Identity changes happen only
+  after `start_server` reports readiness; failed starts preserve the old lock.
+  Session ledgers and other server identities are untouched. Ordinary remote
+  connections still use the existing mismatch guard.
+- Original CUSA03173 01.09 common/map AI binders use script IDs in 1000..3009
+  across the inspected corpus; metadata occupies 1000000/1000001. The separate
+  eventcommon binder uses script IDs 0/1. The AI importer previously allocated
+  new chunk IDs starting at zero. It now appends after the destination's highest
+  script ID, with minimum 1000 and a metadata-boundary check; cache version is 3.
+  Synthetic fixtures now match original AI IDs instead of masking this mismatch.
+- This is observed archive-layout evidence, not proof of the native loader's
+  filtering rule or confirmation that combat freezing is resolved. Static
+  inspection of direct numeric subgoal calls and literal callback names did
+  not identify another missing dependency in the inspected seed.
+- Binary suite: 36 AI, 79 scaling, 37 boss assertions passed. Local-host suite:
+  28 tests passed. Original-input audit: 25 seeds, 350 archives, 17,234 script
+  entries all within the original AI ID range. Evidence is under
+  `work/combat-ai-inspect/`; no original game files were changed or installed.
+
 ### Offline hardening batches, 2026-09-10
 
 - User confirmed the reported attack-then-freeze occurred with AI transplantation

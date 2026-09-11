@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 from bb_launcher.core import ValidationError
 from bb_launcher.local_session import BloodborneWorldUnavailable
 from bb_launcher.local_session_ui import LocalSessionPanel, write_solo_player
+from bb_launcher.workflow import check_seed_slot_identity, read_ap_identity_lock, WorkflowError
 
 
 def install_panel(install_root=None):
@@ -23,6 +24,53 @@ def install_panel(install_root=None):
 
 
 class LocalSessionUiTests(unittest.TestCase):
+    def test_new_local_host_rebinds_only_after_start_and_preserves_other_sessions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            address = "127.0.0.1:38281"
+            check_seed_slot_identity(root, server=address, seed="old", slot="OldHunter")
+            check_seed_slot_identity(root, server="remote:1234", seed="remote", slot="Other")
+            ledger = root / "sessions" / "old" / "ledger.json"
+            ledger.parent.mkdir(parents=True)
+            ledger.write_text('old-delivery-history', encoding="utf-8")
+            app = SimpleNamespace(_busy=False, fields={"ap_request": Mock(get=lambda: "new.zip")},
+                _state_root=lambda: root, player_name=Mock(get=lambda: "NewHunter"),
+                _set_busy=Mock(), _progress_message=Mock(), root=Mock())
+            panel = SimpleNamespace(app=app, host=None, _tools=Mock(), port=Mock(get=lambda: "38281"),
+                _save=Mock(), _error=Mock(), _host_failed=Mock(), _host_started=Mock())
+            server = Mock()
+            def start(*args, **kwargs):
+                self.assertEqual(read_ap_identity_lock(root, address), {"seed":"old", "slot":"OldHunter"})
+                return server
+            with patch("bb_launcher.local_session_ui._request_identity", return_value={"seed":"new", "slot":"NewHunter"}), patch(
+                "bb_launcher.local_session_ui.start_server", side_effect=start
+            ), patch("bb_launcher.local_session_ui.threading.Thread", side_effect=lambda **kw: SimpleNamespace(start=kw["target"])):
+                LocalSessionPanel._host_selected(panel)
+            check_seed_slot_identity(root, server=address, seed="new", slot="NewHunter")
+            with self.assertRaises(WorkflowError):
+                check_seed_slot_identity(root, server=address, seed="old", slot="OldHunter")
+            self.assertEqual(read_ap_identity_lock(root, "remote:1234"), {"seed":"remote", "slot":"Other"})
+            self.assertEqual(ledger.read_text(), 'old-delivery-history')
+            server.stop.assert_not_called()
+            self.assertEqual(app.root.after.call_args.args, (0, panel._host_started, server, 38281))
+
+    def test_failed_local_host_does_not_rebind_address(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            address = "127.0.0.1:38281"
+            check_seed_slot_identity(root, server=address, seed="old", slot="Hunter")
+            app = SimpleNamespace(_busy=False, fields={"ap_request": Mock(get=lambda: "new.zip")},
+                _state_root=lambda: root, player_name=Mock(get=lambda: "Hunter"),
+                _set_busy=Mock(), _progress_message=Mock(), root=Mock())
+            panel = SimpleNamespace(app=app, host=None, _tools=Mock(), port=Mock(get=lambda: "38281"),
+                _save=Mock(), _error=Mock(), _host_failed=Mock(), _host_started=Mock())
+            with patch("bb_launcher.local_session_ui._request_identity", return_value={"seed":"new", "slot":"Hunter"}), patch(
+                "bb_launcher.local_session_ui.start_server", side_effect=ValidationError("port occupied")
+            ), patch("bb_launcher.local_session_ui.threading.Thread", side_effect=lambda **kw: SimpleNamespace(start=kw["target"])):
+                LocalSessionPanel._host_selected(panel)
+            self.assertEqual(read_ap_identity_lock(root, address), {"seed":"old", "slot":"Hunter"})
+            self.assertEqual(app.root.after.call_args.args, (0, panel._host_failed, "port occupied"))
+
     def test_solo_yaml_preserves_name_and_dlc_choice(self):
         # write_solo_player emits YAML by hand (see its docstring comment) so the
         # launcher does not depend on PyYAML, which the frozen build may lack.

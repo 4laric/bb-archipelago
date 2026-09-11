@@ -1685,7 +1685,7 @@ class LauncherWorkflow:
             source_hashes=sources,
             options={
                 "enemy_randomizer": options.enabled,
-                "enemy_ai_version": 2 if options.enabled else None,
+                "enemy_ai_version": 3 if options.enabled else None,
                 "allow_tier_mixing": options.allow_tier_mixing,
                 "preserve_locomotion": options.preserve_locomotion,
                 "normalize_scaling": bool(options.enabled and (options.normalize_scaling or options.boss_canary)),

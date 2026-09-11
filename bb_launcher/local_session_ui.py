@@ -18,6 +18,7 @@ from .local_session import (
 )
 from .resources import resource_root
 from .seed_request import archive_slots
+from .workflow import _request_identity, check_seed_slot_identity
 
 
 def write_solo_player(root: Path, name: str, include_dlc: bool) -> Path:
@@ -266,6 +267,10 @@ class LocalSessionPanel:
             tools = self._tools()
             archive = Path(self.app.fields["ap_request"].get().strip())
             port = int(self.port.get())
+            state_root = self.app._state_root()
+            identity = _request_identity(
+                archive, player_name=self.app.player_name.get().strip(), state_root=state_root
+            )
             self._save()
         except Exception as exc:
             self._error(str(exc))
@@ -274,6 +279,17 @@ class LocalSessionPanel:
         def run():
             try:
                 server = start_server(tools, archive, host="127.0.0.1", port=port, on_output=self.app._progress_message)
+                try:
+                    # This launcher just started this archive on a previously
+                    # free port. Its verified identity replaces address history;
+                    # ordinary remote connections retain the mismatch guard.
+                    check_seed_slot_identity(
+                        state_root, server=f"127.0.0.1:{port}",
+                        seed=identity["seed"], slot=identity["slot"], allow_mismatch=True,
+                    )
+                except Exception:
+                    server.stop()
+                    raise
             except Exception as exc:
                 self.app.root.after(0, self._host_failed, str(exc))
             else:
