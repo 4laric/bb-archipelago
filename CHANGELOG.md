@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Item delivery and location checks no longer stop when shadPS4 reports a
+  different save slot.** The client now follows whichever character you load
+  instead of refusing everything because the slot was bound to another save
+  (which left players receiving nothing). Bundled client is now `bb-0.1.0.3`
+  (`cb9c1632713e`). Items already delivered are not re-sent if you genuinely
+  switch characters mid-run.
 - Creating and hosting a new local seed now replaces the previous seed/player
   identity for that address after the server starts successfully. Reusing the
   local port no longer needs the seed-mismatch override; old ledgers are kept.
