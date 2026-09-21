@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- The launcher pins the current shared client source for v0.1.0.4. Changes
+  since the previous pin concern Elden Ring; Bloodborne delivery and the
+  `bb-0.1.0-r10` runtime contract are unchanged.
+
 - **Physical pickup popups now show the randomized item and recipient.** New
   seeds cover every mapped physical pickup, including filler. Both installed
   English archives are patched automatically. Existing seeds gain names for
