@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Physical pickup popups now show the randomized item and recipient.** New
+  seeds cover every mapped physical pickup, including filler. Both installed
+  English archives are patched automatically. Existing seeds gain names for
+  the placements already recorded in their plans; generating a new seed adds
+  full filler coverage. Confirmed in gameplay with Bold Hunter's Mark x2 on
+  CUSA03173 01.09. Boss/event-only checks and received-item popups are separate.
+
 - **Item delivery and location checks no longer stop when shadPS4 reports a
   different save slot.** The client now follows whichever character you load
   instead of refusing everything because the slot was bound to another save

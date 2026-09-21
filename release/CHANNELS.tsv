@@ -22,3 +22,4 @@ stable	v0.1.0-beta.5	2026-09-07	newest tag at the time this ledger was created; 
 beta	main	2026-09-07	development follows main
 stable	v0.1.0.2	2026-09-08	first V.R.M.F release; carries the apworld-in-zip launcher install, distinct umbilical cords, dropsanity rewrite, client bb-0.1.0.1
 stable	v0.1.0.3	2026-09-18	client bb-0.1.0.3: follows the loaded shadPS4 save instead of refusing item delivery and checks on a save-identity mismatch; also ships the enemizer/AI-import work
+stable	v0.1.0.4	2026-09-21	physical pickup names for every mapped check including filler; automatic English archive selection; client bb-0.1.0.4

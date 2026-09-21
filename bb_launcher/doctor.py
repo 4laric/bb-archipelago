@@ -28,6 +28,10 @@ from .core import (
     SUPPRESSION_CHECK_SOURCE,
     SUPPRESSION_OVERRIDE_KNOB,
     SUPPRESSION_PATH,
+    ITEM_NAMES_PATH,
+    ITEM_NAMES_PATHS,
+    OWNER_NAME,
+    _load_owner,
     USER_MODS_DIR_NAME,
     GameInstall,
     LauncherError,
@@ -593,6 +597,8 @@ def _check_user_mods(chain: _Chain, *, randomize_enemies: bool) -> DoctorFinding
     # The suppression binder is owned on every seed; MapStudio maps only when
     # the enemizer is emitting them, so name that case rather than guess it.
     owned = [SUPPRESSION_PATH]
+    if chain.request and chain.request.get("toast_placeholders"):
+        owned.extend(ITEM_NAMES_PATHS)
     merge = plan_user_merge({relative: sha256_file(path) for relative, path in sources.items()}, owned)
     map_files = sorted(
         relative
@@ -968,6 +974,21 @@ def _safely(check: Callable[[], DoctorFinding]) -> DoctorFinding:
         return DoctorFinding(FAIL, "doctor internal", f"{type(exc).__name__}: {exc}")
 
 
+def _check_pickup_names(chain: _Chain) -> DoctorFinding:
+    if chain.install is None:
+        return DoctorFinding(SKIP, "pickup names", "upstream check failed")
+    root = chain.install.mods
+    if not (root / OWNER_NAME).is_file():
+        return DoctorFinding(SKIP, "pickup names", "no active launcher-owned overlay")
+    try:
+        owner = _load_owner(root)
+    except LauncherError as exc:
+        return DoctorFinding(FAIL, "pickup names", str(exc), "Run Randomize & Launch to rebuild the overlay.")
+    if not any(record["path"] in ITEM_NAMES_PATHS for record in owner["files"]):
+        return DoctorFinding(SKIP, "pickup names", "no pickup-name archive active")
+    return DoctorFinding(PASS, "pickup names", "active item-name archives and parameter binder hashes verified")
+
+
 def run_doctor(
     settings: LauncherSettings,
     *,
@@ -1007,6 +1028,7 @@ def run_doctor(
             )
         ),
         _safely(lambda: _check_map_studio(settings, chain, randomize_enemies=randomize_enemies)),
+        _safely(lambda: _check_pickup_names(chain)),
         _safely(lambda: _check_user_mods(chain, randomize_enemies=randomize_enemies)),
         _safely(lambda: _check_server(chain, server, probe)),
         _safely(

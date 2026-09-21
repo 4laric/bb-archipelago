@@ -173,6 +173,17 @@ def build_parser() -> argparse.ArgumentParser:
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
 
+    canary = commands.add_parser("pickup-name-canary", help="test one randomized pickup name on a throwaway save")
+    canary.add_argument("--settings", required=True, help="launcher settings JSON")
+    canary.add_argument("--player-name", default="")
+    canary.add_argument("--language", choices=("engus", "enggb"),
+                        help="item archive loaded by the game (check shadPS4's file-open log)")
+    selection = canary.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--list", action="store_true", help="list eligible location keys and popup text without launching")
+    selection.add_argument("--location", help="build and launch a single named pickup; use a throwaway save")
+    selection.add_argument("--all", dest="location", action="store_const", const="*",
+                           help="test every named physical pickup in the seed during normal gameplay")
+
     return parser
 
 
@@ -180,7 +191,26 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        if args.command == "discover":
+        if args.command == "pickup-name-canary":
+            from .workflow import EnemizerOptions, LauncherWorkflow
+            from .resources import application_root
+            settings_path = Path(args.settings).resolve()
+            settings = LauncherSettings.from_dict(
+                _json_file(settings_path, "launcher settings"), relative_to=settings_path.parent)
+            if args.list:
+                request = _request_identity(settings.ap_request, player_name=args.player_name,
+                                            state_root=settings.state_root)
+                plan = request["request"].get("toast_placeholders")
+                if not plan or not plan["entries"]:
+                    raise ValidationError("this seed has no named pickup candidates; generate a new seed")
+                _print(plan["entries"])
+            else:
+                LauncherWorkflow(application_root()).randomize_and_launch(
+                    settings, EnemizerOptions(enabled=False),
+                    pickup_name_canary=args.location, player_name=args.player_name,
+                    pickup_name_language=args.language,
+                    progress=print)
+        elif args.command == "discover":
             install = discover_game_install(args.game_roots)
             shad = discover_shad_executable(args.shad_roots)
             _print(

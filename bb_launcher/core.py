@@ -46,13 +46,16 @@ SEED_MANIFEST_NAME = "seed-manifest.json"
 # overlays could strand a completed delivery token after the client upgraded.
 # v3 invalidates Cathedral overlays whose Laurence event could implicitly set
 # the shuffled Forbidden Woods password flag after the altar interaction.
-SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v4"
+# v5 includes seed-owned item-name archives and pickup-plan cache material.
+SEED_MANIFEST_FORMAT = "bb-launcher-seed-build-v5"
 OWNER_NAME = ".bb-ap-owner.json"
 OWNER_FORMAT = "bb-launcher-overlay-owner-v1"
 TRANSACTION_NAME = ".bb-ap-launcher-transaction.json"
 TRANSACTION_FORMAT = "bb-launcher-activation-transaction-v1"
 DVDROOT_PREFIX = "dvdroot_ps4/"
 SUPPRESSION_PATH = f"{DVDROOT_PREFIX}param/gameparam/gameparam.parambnd.dcx"
+ITEM_NAMES_PATH = f"{DVDROOT_PREFIX}msg/engus/item.msgbnd.dcx"
+ITEM_NAMES_PATHS = {ITEM_NAMES_PATH, f"{DVDROOT_PREFIX}msg/enggb/item.msgbnd.dcx"}
 CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
@@ -249,7 +252,7 @@ def _safe_overlay_path(raw: str) -> str:
     is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH, BOSS_EVENT_PATH}
     is_ai = normalized.startswith(AI_PREFIX) and re.fullmatch(
         AI_FILE_PATTERN, normalized[len(AI_PREFIX):]) is not None
-    if not is_suppression and not is_map and not is_owned_event and not is_ai:
+    if not is_suppression and not is_map and not is_owned_event and not is_ai and normalized not in ITEM_NAMES_PATHS:
         raise ValidationError(
             f"overlay path is outside the param/map/event/AI contract: {normalized}"
         )
@@ -270,6 +273,9 @@ def canonical_overlay_case(value: str) -> str:
     normalized = value.replace("\\", "/")
     if normalized.casefold() == SUPPRESSION_PATH.casefold():
         return SUPPRESSION_PATH
+    for names_path in ITEM_NAMES_PATHS:
+        if normalized.casefold() == names_path.casefold():
+            return names_path
     if normalized.casefold() == CATHEDRAL_EVENT_PATH.casefold():
         return CATHEDRAL_EVENT_PATH
     if normalized.casefold() == HEMWICK_EVENT_PATH.casefold():
@@ -554,6 +560,8 @@ class SeedCache:
         boss_event: Path | str | None = None,
         boss_report: Mapping[str, Any] | None = None,
         scaling_report: Mapping[str, Any] | None = None,
+        item_names: Path | str | Mapping[str, Path | str] | None = None,
+        item_names_path: str = ITEM_NAMES_PATH,
     ) -> BuildResult:
         key = identity.cache_key
         destination = self.path_for(key)
@@ -627,6 +635,15 @@ class SeedCache:
         stage.mkdir()
         try:
             inputs = [(SUPPRESSION_PATH, binder, "suppression")]
+            if item_names is not None:
+                archives = item_names if isinstance(item_names, Mapping) else {item_names_path: item_names}
+                for relative, source in archives.items():
+                    if relative not in ITEM_NAMES_PATHS:
+                        raise ValidationError("unsupported pickup-name language")
+                    names = Path(source).expanduser().resolve()
+                    if not names.is_file() or names.is_symlink():
+                        raise ValidationError("item names archive is not a regular file")
+                    inputs.append((relative, names, "pickup-names"))
             if boss_event is not None:
                 event = Path(boss_event).expanduser().resolve()
                 if not event.is_file() or event.is_symlink():
@@ -793,6 +810,10 @@ class SeedCache:
             expected[relative] = record
         if SUPPRESSION_PATH not in expected:
             raise ValidationError("seed build is missing the suppression binder")
+        names_paths = identity.options.get("item_names_paths", [identity.options.get("item_names_path", ITEM_NAMES_PATH)])
+        wanted_names = set(names_paths) if identity.options.get("toast_placeholders") else set()
+        if wanted_names != ITEM_NAMES_PATHS.intersection(expected):
+            raise ValidationError("pickup-name plan and item names archive must be installed together")
         actual = _tree_files(root, ignore=(SEED_MANIFEST_NAME, ENEMIZER_PLAN_NAME))
         if set(actual) != set(expected):
             raise ValidationError(

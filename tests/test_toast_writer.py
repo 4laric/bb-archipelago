@@ -10,7 +10,8 @@ class ToastWriterContractTests(unittest.TestCase):
     def test_writer_is_double_gated_and_refuses_inert_plans(self):
         self.assertIn('args[6] != "--probe-confirmed"', SOURCE)
         self.assertIn('args[7] != "--apply"', SOURCE)
-        self.assertIn('if (!plan.Enabled)', SOURCE)
+        self.assertIn('if (!plan.Enabled && !canary)', SOURCE)
+        self.assertIn('if (canary && plan.Enabled)', SOURCE)
 
     def test_writer_asserts_popup_shape_and_claimed_ranges(self):
         self.assertIn('"yesNoDialogMessageId"', SOURCE)
