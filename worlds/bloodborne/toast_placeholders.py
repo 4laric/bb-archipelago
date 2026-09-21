@@ -1,8 +1,7 @@
 """Seed-owned plan for truthful in-game pickup names.
 
-The plan is intentionally inert until the item.msgbnd runtime-read probe has
-passed.  Generating it now makes the ID allocation, naming policy, and exact
-lot-to-name join reviewable without claiming that the game consumes the files.
+Pickup-name rendering was observed on CUSA03173 01.09 on 2026-09-21.
+The plan maps every physical check, including filler, to its seeded item name.
 """
 
 from __future__ import annotations
@@ -37,24 +36,23 @@ class ToastPlaceholder:
 
 def display_name(item_name: str, recipient: str) -> str:
     """Bound the FMG text while preserving the recipient whenever possible."""
+    def bounded(text: str, units: int) -> str:
+        return text.encode("utf-16-le")[:units * 2].decode("utf-16-le", errors="ignore")
+
     suffix = f" ({recipient.strip()})"
     clean = " ".join(item_name.split()) or "Archipelago Item"
-    if len(suffix) >= TOAST_NAME_LIMIT:
-        return suffix[:TOAST_NAME_LIMIT]
-    return clean[:TOAST_NAME_LIMIT - len(suffix)].rstrip() + suffix
+    suffix_units = len(suffix.encode("utf-16-le")) // 2
+    if suffix_units >= TOAST_NAME_LIMIT:
+        return bounded(suffix, TOAST_NAME_LIMIT)
+    return bounded(clean, TOAST_NAME_LIMIT - suffix_units).rstrip() + suffix
 
 
 def build_toast_placeholder_plan(
     placements: Iterable[ToastPlacement],
 ) -> dict:
-    """Allocate stable dummy goods only for useful/progression physical lots.
-
-    Filler keeps the ordinary Blood Vial placeholder.  This is the bounded
-    clutter ruling from the toast spec: the in-game name is reserved for the
-    placements where knowing the item materially affects routing.
-    """
+    """Allocate stable named goods for every supplied physical pickup, including filler."""
     eligible = sorted(
-        (placement for placement in placements if placement.important),
+        placements,
         key=lambda placement: (placement.location_id, placement.location_key),
     )
     capacity = TOAST_GOODS_END - TOAST_GOODS_START + 1
@@ -77,8 +75,8 @@ def build_toast_placeholder_plan(
     ]
     return {
         "format": TOAST_PLAN_FORMAT,
-        "enabled": False,
-        "activation_gate": "item_msgbnd_runtime_read_and_popup_not_modal_probe",
+        "enabled": True,
+        "evidence": "CUSA03173_01.09_pickup_name_observed_2026-09-21",
         "source_goods_id": 1000,
         "goods_range": [TOAST_GOODS_START, TOAST_GOODS_END],
         "name_limit": TOAST_NAME_LIMIT,

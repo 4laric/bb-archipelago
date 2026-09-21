@@ -1209,7 +1209,7 @@ else:
             important_mask = ItemClassification.progression | ItemClassification.useful
             for data in self._active_locations():
                 binding = LOCATION_BINDINGS[data.key]
-                if not data.vanilla_award_suppressed or binding.item_lot_id is None:
+                if binding.item_lot_id is None:
                     continue
                 placed = self.multiworld.get_location(data.name, self.player).item
                 if placed is None:

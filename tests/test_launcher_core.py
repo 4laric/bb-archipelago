@@ -322,7 +322,7 @@ class LauncherCoreTests(unittest.TestCase):
     def test_cache_identity_tracks_overlay_build_format(self):
         material = identity("seed").cache_material()
         self.assertEqual(material["overlay_build_format"], SEED_MANIFEST_FORMAT)
-        self.assertEqual(SEED_MANIFEST_FORMAT, "bb-launcher-seed-build-v4")
+        self.assertEqual(SEED_MANIFEST_FORMAT, "bb-launcher-seed-build-v5")
         old_material = {**material, "overlay_build_format": "bb-launcher-seed-build-v2"}
         old_key = hashlib.sha256(core.canonical_json(old_material)).hexdigest()
         self.assertNotEqual(identity("seed").cache_key, old_key)

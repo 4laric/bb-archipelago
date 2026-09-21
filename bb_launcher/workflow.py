@@ -19,6 +19,8 @@ from .core import (
     AI_FILE_PATTERN,
     CATHEDRAL_EVENT_PATH,
     HEMWICK_EVENT_PATH,
+    ITEM_NAMES_PATH,
+    ITEM_NAMES_PATHS,
     COMMON_EVENT_PATH,
     BOSS_EVENT_PATH,
     STALE_BARE_SERIAL_REMEDY,
@@ -61,6 +63,7 @@ from .client_config import (
     write_client_runtime_config,
 )
 from .resources import application_root
+from .pickup_names import pickup_name_plan
 from .seed_request import ResolvedRequest, resolve_request_source
 
 
@@ -619,6 +622,30 @@ class EnemizerToolchain:
             "-c", "Release", f"-p:SoulsFormatsNextRoot={soulsformats_next}", "--",
         ]
 
+    def write_pickup_names(
+        self, *, plan: Mapping[str, Any], input_binder: Path, paramdef: Path,
+        input_names: Path, output_binder: Path, output_names: Path,
+        soulsformats_next: Path | None, progress: Progress, canary: bool = False,
+    ) -> None:
+        executable = self.app_root / "tools" / "BBToastWriter.exe"
+        if executable.is_file():
+            command = [str(executable)]
+        else:
+            if soulsformats_next is None or not soulsformats_next.is_dir():
+                raise ValidationError("SoulsFormatsNEXT is required when the packaged pickup-name writer is unavailable")
+            command = [self.dotnet, "run", "--project",
+                       str(self.repo_root / "tools/bb_toast_writer/BBToastWriter.csproj"),
+                       "-c", "Release", f"-p:SoulsFormatsNextRoot={soulsformats_next}", "--"]
+        plan_path = output_binder.with_suffix(".toast-plan.json")
+        plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        command.extend([str(plan_path), str(input_binder), str(paramdef), str(input_names),
+                        str(output_binder), str(output_names),
+                        "--canary" if canary else "--probe-confirmed", "--apply"])
+        progress("Writing and verifying randomized pickup names...")
+        self.runner(command, self.repo_root, progress)
+        if not output_binder.is_file() or not output_names.is_file():
+            raise ValidationError("pickup-name writer did not produce both archives")
+
     def write_cathedral_event(
         self, *, source: Path, output: Path, manifest: Path,
         soulsformats_next: Path | None, progress: Progress, access_flag: int | None = None,
@@ -1128,6 +1155,7 @@ def _request_identity(
         "category8_awards": category8_awards,
         "hemwick_gate": hemwick_gate,
         "insight_armor_suppression": insight_rows,
+        "toast_placeholders": pickup_name_plan(request.get("toast_placeholders")),
     }
 
 
@@ -1510,6 +1538,9 @@ class LauncherWorkflow:
         active_options = identity.get("options")
         if not isinstance(active_options, dict):
             raise ValidationError("active cached build has no options identity")
+        active_canary = active_options.get("pickup_name_canary")
+        selected_names = pickup_name_plan(
+            request["request"].get("toast_placeholders"), canary_location=active_canary)
         request_options = {
             "starting_weapons": request["starting_weapons"],
             "weapon_requirement_families": request["weapon_requirement_families"],
@@ -1517,6 +1548,7 @@ class LauncherWorkflow:
             "enemy_drop_assignments": request["enemy_drop_assignments"],
             "enemy_drop_plan_format": request["enemy_drop_plan_format"],
             "category8_awards": request["category8_awards"],
+            "toast_placeholders": selected_names,
         }
         expected_fields = {
             "seed": request["seed"],
@@ -1551,7 +1583,7 @@ class LauncherWorkflow:
             allow_mismatch=allow_seed_mismatch,
         )
         client_manifest = settings.suppression_manifest.expanduser().resolve()
-        if _composes_seed_binder(request):
+        if _composes_seed_binder(request) or selected_names is not None:
             client_manifest = (
                 (settings.state_root or default_state_root()).expanduser().resolve()
                 / "seed-manifests" / f"{cache_key}.json"
@@ -1599,17 +1631,25 @@ class LauncherWorkflow:
         allow_suppression_mismatch: bool = False,
         allow_seed_mismatch: bool = False,
         research_captures: bool = False,
+        pickup_name_canary: str | None = None,
+        pickup_name_language: str | None = None,
         player_name: str = "",
         progress: Progress = lambda _message: None,
         process_is_running: Callable[[], bool] | None = None,
     ) -> WorkflowResult:
         progress("Validating CUSA03173 01.09 and launch components...")
+        if pickup_name_language not in (None, "engus", "enggb"):
+            raise ValidationError("pickup-name language must be engus or enggb")
         install = GameInstall.from_root(settings.game_root)
         request = _request_identity(
             settings.ap_request,
             player_name=player_name,
             state_root=settings.state_root,
         )
+        if pickup_name_canary is not None:
+            request["toast_placeholders"] = pickup_name_plan(
+                request["request"].get("toast_placeholders"), canary_location=pickup_name_canary)
+            progress(f"Pickup-name playtest: {len(request['toast_placeholders']['entries'])} named pickups enabled.")
         effective_awards = _validate_category8_bridge_rows(request['category8_awards'])
         migrated_awards = effective_awards != request['category8_awards']
         request['category8_awards'] = effective_awards
@@ -1671,6 +1711,15 @@ class LauncherWorkflow:
             install, map_root, cathedral=True,
             hemwick=request["hemwick_gate"] is not None,
         )
+        names_paths: list[str] = []
+        if request["toast_placeholders"] is not None:
+            names_paths = ([f"dvdroot_ps4/msg/{pickup_name_language}/item.msgbnd.dcx"]
+                           if pickup_name_language else sorted(
+                               path for path in ITEM_NAMES_PATHS
+                               if any((root / path).is_file() for _, root in install.content_backends())))
+            if not names_paths:
+                raise ValidationError("pickup names require an installed engus or enggb item.msgbnd.dcx")
+            sources.update(install.source_hashes([*names_paths, PARAMDEF_PATH]))
         if options.enabled:
             sources.update({relative: sha256_file(path) for relative, path in enemy_ai_sources(install).items()})
             sources.update(install.source_hashes([PARAMDEF_PATH]))
@@ -1699,6 +1748,9 @@ class LauncherWorkflow:
                 "category8_awards": request["category8_awards"],
                 "hemwick_gate": request["hemwick_gate"],
                 "insight_armor_suppression": request.get("insight_armor_suppression", []),
+                "toast_placeholders": request["toast_placeholders"],
+                "pickup_name_canary": pickup_name_canary,
+                "item_names_paths": names_paths,
             },
             enemizer_seed=enemy_seed if options.enabled else None,
             suppression_plan_sha256=request["suppression_plan_sha256"],
@@ -1727,6 +1779,7 @@ class LauncherWorkflow:
         else:
             map_output = None
             composed_binder = binder
+            names_output = None
             cathedral_output = None
             common_output = None
             hemwick_output = None
@@ -1801,6 +1854,27 @@ class LauncherWorkflow:
                         output_binder=composed_binder,
                         soulsformats_next=settings.soulsformats_next, progress=progress,
                     )
+                if request["toast_placeholders"] is not None:
+                    names_output = {}
+                    binder_hash = None
+                    # Each language starts from the same composed parameters;
+                    # cloning twice into the previous output would collide.
+                    for index, names_path in enumerate(names_paths):
+                        named_binder = temporary / f"gameparam.named-{index}.parambnd.dcx"
+                        names_output[names_path] = temporary / names_path
+                        self.toolchain.write_pickup_names(
+                            plan=request["toast_placeholders"], input_binder=composed_binder,
+                            paramdef=install.resolve_file(PARAMDEF_PATH, include_mods=False)[1],
+                            input_names=install.resolve_file(names_path, include_mods=False)[1],
+                            output_binder=named_binder, output_names=names_output[names_path],
+                            soulsformats_next=settings.soulsformats_next, progress=progress,
+                            canary=pickup_name_canary is not None,
+                        )
+                        current_hash = sha256_file(named_binder)
+                        if binder_hash is not None and binder_hash != current_hash:
+                            raise ValidationError("pickup-name language writers produced different parameter binders")
+                        binder_hash = current_hash
+                    composed_binder = named_binder
                 if options.enabled:
                     if map_root is None:
                         raise ValidationError(
@@ -1858,7 +1932,7 @@ class LauncherWorkflow:
                     },
                     enemy_scripts=script_output,
                     enemy_ai_report=ai_report, boss_event=boss_output, boss_report=boss_report,
-                    scaling_report=scaling_report)
+                    scaling_report=scaling_report, item_names=names_output)
                 build = result
                 reused = result.reused
                 completed = True
@@ -1896,9 +1970,8 @@ class LauncherWorkflow:
             progress(line)
         progress("Writing the native client runtime configuration...")
         client_manifest = settings.suppression_manifest.expanduser().resolve()
-        # Same predicate as the recomposition above: whatever composed the
-        # binder must also re-publish the witness the client hashes it against.
-        if _composes_seed_binder(request):
+        # Include either writer: the client must hash the final composed binder.
+        if _composes_seed_binder(request) or request["toast_placeholders"] is not None:
             client_manifest = _write_seed_suppression_manifest(
                 client_manifest,
                 state_root=settings.state_root or default_state_root(),
@@ -1910,6 +1983,7 @@ class LauncherWorkflow:
                     "shop_gate_permutation": request["shop_gate_permutation"],
                     "enemy_drop_assignments": request["enemy_drop_assignments"],
                     "insight_armor_suppression": request.get("insight_armor_suppression", []),
+                    "toast_placeholders": request["toast_placeholders"],
                 },
             )
         paths = write_client_runtime_config(

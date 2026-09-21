@@ -1,57 +1,57 @@
-# Bloodborne item-name presentations
+# Bloodborne pickup names
 
-The client overlay already shows truthful sent and received item names. This
-document covers the separate, optional path that makes Bloodborne's own pickup
-popup name an Archipelago placement.
+Normal launches now name every mapped physical pickup with its actual seeded
+item and recipient, including filler. The clone is a pickup-name placeholder;
+Archipelago still delivers the actual item through the existing client.
+Boss/event-only checks without an ItemLot binding and received-item popups are
+separate features (see NATIVE-ITEM-POPUPS.md).
 
-## Current safety boundary
+## Live observation and release decision
 
-Every generated seed contains a `toast_placeholders` plan, but the plan has
-`enabled: false`. The launcher does not apply it. This is intentional: static
-inspection can prove the archive edits are internally consistent, but cannot
-prove that Bloodborne reads the replacement archive at runtime or that its
-pickup presentation remains non-blocking.
+On 2026-09-21, the user confirmed the physical popup worked with **Bold Hunter's
+Mark x2**, after a 629-pickup build was installed for CUSA03173 AppVer 01.09 on
+shadPS4 0.18.0. The game file-open log showed `msg/enggb/item.msgbnd.dcx`; the
+initial engus-only overlay could not affect that archive. Both installed English
+archives are now patched automatically, without changing emulator settings.
 
-`BBToastWriter` is therefore a build/research tool, not part of an ordinary
-launch. It requires both `--probe-confirmed` and `--apply`, rejects an inert
-plan, refuses occupied goods IDs, and refuses any clone whose Blood Vial source
-has acquired a modal-dialog ID or unique-item flag.
+This is an **observed pickup-name rendering result**. Separate storage, shop,
+and reload outcomes were not reported and are not claimed as validated. The
+user explicitly authorized normal activation and release on this observation,
+with no further gameplay requests. Further regressions should be investigated
+from logs and offline reproduction before spending additional player time.
 
-## Seed policy
+## Seed and archive contract
 
-- Goods IDs `900000..900999` are reserved for pickup-name clones. The bundled
-  `EquipParamGoods` census proves the range is empty.
-- Allocation is deterministic by network location ID.
-- Only progression and useful placements receive a named clone. Filler keeps
-  goods 1000, bounding inventory clutter.
-- Names are at most 48 characters and use `Item name (recipient)`.
-- The goods row is cloned from Blood Vial 1000, preserving its ordinary,
-  stackable acquisition shape.
+- Goods IDs `900000..900999` come from the reserved, empty range in the bundled
+  EquipParamGoods census. New seeds allocate deterministically by location ID.
+- All physical checks with mapped lots are named, including filler. Normal
+  generation emits an enabled plan. Older inert plans are enabled at launch
+  without changing their goods IDs; older plans only name the placements they
+  contain. A new seed is needed for full filler coverage in those older plans.
+- Names use `Item name (recipient)` within 48 UTF-16 code units.
+- The goods clone retains Blood Vial 1000's stackable acquisition shape. The
+  writer refuses a modal-dialog ID, unique-item flag, occupied ID range, or lot
+  without exactly one Blood Vial placeholder slot.
+- Parameters are composed first, names next, optional enemy scaling last.
+  Each language starts from the same input parameters and must produce the same
+  parameter hash. All outputs activate together in the owned overlay.
+- Text, source archives, paramdefs, and selected playtest scope participate in
+  cache identity. Cache verification, ownership, and Doctor hash the archives.
+  The client receives the final composed parameter hash, including on reconnect.
+- Base and update game files are read-only. Languages other than English are
+  outside the currently supported naming path.
 
-## One required live verdict
+## Optional focused debugging
 
-Build one canary plan with one entry and run `BBToastWriter` against copies of
-the installed gameparam, paramdef, and English `item.msgbnd.dcx`. Place both
-outputs in the managed overlay, then acquire that exact physical lot.
+Ordinary play needs no canary command. For a focused reproduction only:
 
-The feature may be promoted only if all of the following are witnessed:
+```powershell
+python -m bb_launcher pickup-name-canary --settings path/to/launcher-settings.json --all
+python -m bb_launcher pickup-name-canary --settings path/to/launcher-settings.json --list
+python -m bb_launcher pickup-name-canary --settings path/to/launcher-settings.json --location LOCATION_KEY --language enggb
+```
 
-1. The lower-corner popup displays the canary FMG text.
-2. No modal `press X` dialog appears and input is never captured.
-3. Reloading the game still reads the replacement archive (not a stale cache).
-4. The dummy can enter storage and return without corrupting inventory.
-5. A shop opens normally with the dummy present.
-
-Record the result with the client's `/mark` console command (see
-docs/NATIVE-ITEM-POPUPS.md) beside the pickup and export diagnostics. A modal
-result is a permanent refusal for this approach, not a prompt to call the
-modal path from the client.
-
-## What remains after a passing verdict
-
-Promotion is deliberately mechanical: change the seed-plan activation verdict,
-compose the two writer outputs into the seed-owned overlay, and extend overlay
-ownership and Doctor hashing to include `msg/engus/item.msgbnd.dcx`. Received
-items continue to use client-window toasts until the native non-blocking queue
-is separately mapped; game-modal notifications are never an acceptable
-fallback.
+`--all` allows the tester to follow any route. `--location` and `--language`
+restrict a reproduction when that restriction answers a specific question.
+The playtest writer mode keeps its plan inert and does not manufacture a passing
+verdict. Both writer modes require `--apply` and verify reopened outputs.

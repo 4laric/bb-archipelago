@@ -12,6 +12,7 @@ from pathlib import Path
 from bb_launcher.core import (
     CATHEDRAL_EVENT_PATH,
     COMMON_EVENT_PATH,
+    ITEM_NAMES_PATH,
     OWNER_NAME,
     SUPPRESSION_CHECK_PLAN,
     SUPPRESSION_CHECK_SOURCE,
@@ -19,6 +20,8 @@ from bb_launcher.core import (
     SUPPRESSION_PATH,
     ConflictError,
     ValidationError,
+    SeedCache,
+    _load_owner,
 )
 from bb_launcher.core import EarlyExit
 from bb_launcher.plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
@@ -60,6 +63,13 @@ class FakeToolchain:
         self.starting_calls: list[dict] = []
         self.event_calls: list[tuple[str, dict]] = []
         self.ai_calls: list[dict] = []
+        self.toast_calls: list[dict] = []
+
+    def write_pickup_names(self, **values):
+        self.toast_calls.append(values)
+        values["output_binder"].write_bytes(values["input_binder"].read_bytes() + b"-named")
+        values["output_names"].parent.mkdir(parents=True, exist_ok=True)
+        values["output_names"].write_bytes(json.dumps(values["plan"], sort_keys=True).encode())
 
     def write_enemy_ai(self, **values):
         self.ai_calls.append(values)
@@ -225,6 +235,117 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(plan.runtime_build, "bb-runtime-r1")
         self.assertEqual(plan.processes[0].executable, self.shad.resolve())
         self.assertEqual(plan.processes[0].expected_sha256, digest(b"shad"))
+
+    def pickup_setup(self, *, enabled=False):
+        from worlds.bloodborne.toast_placeholders import ToastPlacement, build_toast_placeholder_plan
+        payload = json.loads(self.request.read_text())
+        payload["toast_placeholders"] = build_toast_placeholder_plan([
+            ToastPlacement("first", 1, 100, "Saw Cleaver", "Hunter", True),
+            ToastPlacement("second", 2, 200, "Fire Paper", "Friend", True),
+        ])
+        payload["toast_placeholders"]["enabled"] = enabled
+        self.request.write_text(json.dumps(payload))
+        names = self.install.patch / ITEM_NAMES_PATH
+        names.parent.mkdir(parents=True)
+        names.write_bytes(b"vanilla names")
+        toolchain = FakeToolchain()
+        workflow = LauncherWorkflow(self.repo, toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(10), Process(11)],
+            process_running=lambda _: False, process_watcher=lambda *a, **k: None)
+        return workflow, toolchain
+
+    def run_pickup(self, workflow, **kwargs):
+        return workflow.randomize_and_launch(self.settings(enemy_inputs=False),
+            EnemizerOptions(enabled=False), process_is_running=lambda: False, **kwargs)
+
+    def test_legacy_inert_pickup_plan_is_enabled_without_reallocating_goods(self):
+        workflow, toolchain = self.pickup_setup()
+        self.run_pickup(workflow)
+        self.assertEqual(len(toolchain.toast_calls), 1)
+        self.assertTrue(toolchain.toast_calls[0]["plan"]["enabled"])
+        self.assertTrue((self.install.mods / ITEM_NAMES_PATH).exists())
+
+    def test_pickup_canary_composes_pair_updates_client_hash_and_reuses_cache(self):
+        workflow, toolchain = self.pickup_setup()
+        first = self.run_pickup(workflow, pickup_name_canary="first")
+        second = self.run_pickup(workflow, pickup_name_canary="first")
+        self.assertTrue(second.reused)
+        self.assertEqual(first.cache_key, second.cache_key)
+        self.assertEqual(len(toolchain.toast_calls), 1)
+        call = toolchain.toast_calls[0]
+        self.assertTrue(call["canary"])
+        self.assertFalse(call["plan"]["enabled"])
+        self.assertEqual([e["location_key"] for e in call["plan"]["entries"]], ["first"])
+        self.assertEqual(b"suppressed-gameparam-named", (self.install.mods / SUPPRESSION_PATH).read_bytes())
+        owner = _load_owner(self.install.mods)
+        self.assertIn(ITEM_NAMES_PATH, [record["path"] for record in owner["files"]])
+        config = json.loads(first.client_config.read_text())
+        manifest = json.loads(Path(config["suppression_manifest"]).read_text())
+        self.assertEqual(manifest["output_gameparam_sha256"], digest(b"suppressed-gameparam-named"))
+        from bb_launcher.doctor import _Chain, _check_pickup_names, PASS, FAIL
+        chain = _Chain()
+        chain.install = self.install
+        self.assertEqual(PASS, _check_pickup_names(chain).status)
+        (self.install.mods / ITEM_NAMES_PATH).write_bytes(b"damaged")
+        self.assertEqual(FAIL, _check_pickup_names(chain).status)
+        (first.build_path / ITEM_NAMES_PATH).write_bytes(b"damaged")
+        with self.assertRaisesRegex(ValidationError, "size changed|hash changed"):
+            SeedCache(self.root / "cache").verify(first.build_path)
+
+    def test_pickup_cache_changes_with_text_source_and_selection(self):
+        workflow, _ = self.pickup_setup()
+        keys = [self.run_pickup(workflow, pickup_name_canary="first").cache_key]
+        keys.append(self.run_pickup(workflow, pickup_name_canary="second").cache_key)
+        payload = json.loads(self.request.read_text())
+        payload["toast_placeholders"]["entries"][1]["display_name"] = "Ludwig's Holy Blade (Friend)"
+        self.request.write_text(json.dumps(payload))
+        keys.append(self.run_pickup(workflow, pickup_name_canary="second").cache_key)
+        (self.install.patch / ITEM_NAMES_PATH).write_bytes(b"updated names")
+        keys.append(self.run_pickup(workflow, pickup_name_canary="second").cache_key)
+        self.assertEqual(len(set(keys)), 4)
+
+    def test_promoted_pickup_plan_installs_all_names_after_parameter_edits(self):
+        workflow, toolchain = self.pickup_setup(enabled=True)
+        payload = json.loads(self.request.read_text())
+        payload.update(remove_weapon_requirements=True, weapon_requirement_families=[2000000, 2010000])
+        self.request.write_text(json.dumps(payload))
+        self.run_pickup(workflow)
+        self.assertEqual(len(toolchain.toast_calls[0]["plan"]["entries"]), 2)
+        self.assertFalse(toolchain.toast_calls[0]["canary"])
+        self.assertEqual(b"suppressed-gameparam-starting-named", (self.install.mods / SUPPRESSION_PATH).read_bytes())
+
+    def test_leaving_canary_enables_all_pickups(self):
+        workflow, _ = self.pickup_setup()
+        self.run_pickup(workflow, pickup_name_canary="first")
+        self.assertTrue((self.install.mods / ITEM_NAMES_PATH).is_file())
+        self.run_pickup(workflow)
+        self.assertEqual(len(json.loads((self.install.mods / ITEM_NAMES_PATH).read_text())["entries"]), 2)
+
+    def test_normal_launch_patches_both_installed_english_archives(self):
+        workflow, toolchain = self.pickup_setup(enabled=True)
+        british = ITEM_NAMES_PATH.replace("/engus/", "/enggb/")
+        source = self.install.patch / british
+        source.parent.mkdir(parents=True)
+        source.write_bytes(b"British English names")
+        result = self.run_pickup(workflow)
+        self.assertEqual(len(toolchain.toast_calls), 2)
+        self.assertTrue((self.install.mods / british).is_file())
+        self.assertTrue((self.install.mods / ITEM_NAMES_PATH).is_file())
+        self.assertEqual((self.install.mods / SUPPRESSION_PATH).read_bytes(), b"suppressed-gameparam-named")
+        SeedCache(self.root / "cache").verify(result.build_path)
+
+    def test_pickup_canary_targets_british_english_archive(self):
+        workflow, toolchain = self.pickup_setup()
+        british = ITEM_NAMES_PATH.replace("/engus/", "/enggb/")
+        source = self.install.patch / british
+        source.parent.mkdir(parents=True)
+        source.write_bytes(b"British English names")
+        (self.install.patch / ITEM_NAMES_PATH).unlink()
+        self.run_pickup(workflow, pickup_name_canary="first", pickup_name_language="enggb")
+        self.assertEqual(toolchain.toast_calls[0]["input_names"], source)
+        self.assertTrue((self.install.mods / british).is_file())
+        self.assertFalse((self.install.mods / ITEM_NAMES_PATH).exists())
+        self.assertIn(british, [r["path"] for r in _load_owner(self.install.mods)["files"]])
 
     def test_starting_weapon_request_composes_seed_specific_binder(self):
         payload = json.loads(self.request.read_text(encoding="utf-8"))
