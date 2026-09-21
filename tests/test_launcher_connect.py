@@ -239,6 +239,32 @@ class ConnectToRunningTests(unittest.TestCase):
         self.assertEqual(config["suppression_manifest"], str(seed_manifest.resolve()))
         self.assertEqual([spec.name for spec in self.launched], ["AP client"])
 
+    def test_pickup_canary_reconnect_uses_named_binder_manifest_and_checks_text(self):
+        from bb_launcher.core import ITEM_NAMES_PATH
+        from worlds.bloodborne.toast_placeholders import ToastPlacement, build_toast_placeholder_plan
+        plan = build_toast_placeholder_plan([ToastPlacement("first", 1, 100, "Saw Cleaver", "Hunter", True)])
+        plan["enabled"] = False
+        request = json.loads(self.fixture.request_path.read_text())
+        request["toast_placeholders"] = plan
+        self.fixture.request_path.write_text(json.dumps(request))
+        value = self.build.manifest["identity"]
+        identity = SeedIdentity.from_dict({**value, "options": {
+            **value["options"], "toast_placeholders": plan, "pickup_name_canary": "first"}})
+        names = self.root / "item.msgbnd.dcx"
+        names.write_bytes(b"named goods")
+        build = SeedCache(self.root / "cache").build(identity, self.fixture.binder, item_names=names)
+        activate_build(self.install, build.path, process_is_running=lambda: False)
+        seed_manifest = self.root / "state" / "seed-manifests" / f"{build.cache_key}.json"
+        seed_manifest.parent.mkdir(parents=True)
+        seed_manifest.write_bytes(self.fixture.manifest_path.read_bytes())
+        result = self.workflow(lambda _: False).connect_to_running(self.fixture.settings(), player_name="Hunter")
+        self.assertEqual(json.loads(result.client_config.read_text())["suppression_manifest"], str(seed_manifest.resolve()))
+        self.assertTrue((self.install.mods / ITEM_NAMES_PATH).is_file())
+        request["toast_placeholders"]["entries"][0]["display_name"] = "Fire Paper (Hunter)"
+        self.fixture.request_path.write_text(json.dumps(request))
+        with self.assertRaisesRegex(ValidationError, "options.toast_placeholders"):
+            self.workflow(lambda _: False).connect_to_running(self.fixture.settings(), player_name="Hunter")
+
     def test_refuses_when_selected_seed_does_not_match_active_overlay(self):
         request = json.loads(self.fixture.request_path.read_text(encoding="utf-8"))
         request["seed_name"] = "another-seed"

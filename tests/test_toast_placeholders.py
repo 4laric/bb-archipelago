@@ -20,7 +20,7 @@ class ToastPlaceholderTests(unittest.TestCase):
     def placement(self, key: str, location: int, lot: int, *, important: bool = True):
         return ToastPlacement(key, location, lot, "Fire Paper x2", "oz", important)
 
-    def test_plan_is_inert_deterministic_and_filters_filler(self):
+    def test_plan_is_enabled_deterministic_and_includes_filler(self):
         placements = [
             self.placement("later", 20, 200),
             self.placement("filler", 15, 150, important=False),
@@ -29,10 +29,11 @@ class ToastPlaceholderTests(unittest.TestCase):
         first = build_toast_placeholder_plan(placements)
         second = build_toast_placeholder_plan(reversed(placements))
         self.assertEqual(first, second)
-        self.assertFalse(first["enabled"])
+        self.assertTrue(first["enabled"])
         self.assertEqual(
             [(entry["location_key"], entry["goods_id"]) for entry in first["entries"]],
-            [("first", TOAST_GOODS_START), ("later", TOAST_GOODS_START + 1)],
+            [("first", TOAST_GOODS_START), ("filler", TOAST_GOODS_START + 1),
+             ("later", TOAST_GOODS_START + 2)],
         )
 
     def test_names_are_bounded_and_keep_the_recipient(self):
@@ -45,6 +46,11 @@ class ToastPlaceholderTests(unittest.TestCase):
             build_toast_placeholder_plan([
                 self.placement("one", 1, 10), self.placement("two", 2, 10)
             ])
+
+    def test_unicode_names_fit_the_writer_limit_without_splitting_surrogates(self):
+        name = display_name("\U0001f525" * 40, "Hunter")
+        self.assertLessEqual(len(name.encode("utf-16-le")), TOAST_NAME_LIMIT * 2)
+        self.assertTrue(name.endswith(" (Hunter)"))
 
     def test_claimed_goods_range_is_empty_in_the_bundle(self):
         text = subprocess.check_output(

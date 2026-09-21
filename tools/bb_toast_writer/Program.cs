@@ -2,14 +2,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SoulsFormats;
 
-if (args.Length != 8 || args[6] != "--probe-confirmed" || args[7] != "--apply")
+if (args.Length != 8 || (args[6] != "--probe-confirmed" && args[6] != "--canary") || args[7] != "--apply")
 {
     Console.Error.WriteLine(
         "usage: BBToastWriter <toast-plan.json> <input-gameparam> <paramdef> "
         + "<input-item.msgbnd.dcx> <output-gameparam> <output-item.msgbnd.dcx> "
-        + "--probe-confirmed --apply");
+        + "(--probe-confirmed | --canary) --apply");
     Console.Error.WriteLine(
-        "The two explicit gates mean the msgbnd runtime-read and popup-not-modal probe was witnessed.");
+        "--canary tests an inert plan during gameplay; --probe-confirmed requires a promoted plan.");
     return 2;
 }
 
@@ -32,7 +32,10 @@ ToastPlan plan = JsonSerializer.Deserialize<ToastPlan>(File.ReadAllText(planPath
     ?? throw new InvalidDataException("toast plan is empty");
 if (plan.Format != "bb-toast-placeholder-plan-v1")
     throw new InvalidDataException($"unsupported toast plan format {plan.Format}");
-if (!plan.Enabled)
+bool canary = args[6] == "--canary";
+if (canary && plan.Enabled)
+    throw new InvalidDataException("a canary requires an inert plan");
+if (!plan.Enabled && !canary)
     throw new InvalidDataException(
         "toast plan is inert: promote enabled only with a reviewed runtime-read and popup-not-modal witness");
 if (plan.SourceGoodsId != 1000)

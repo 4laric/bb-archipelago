@@ -770,6 +770,23 @@ jobs:
             work/integration/fixtures/msg/engus/item.msgbnd.dcx \
             work/integration/gameparam.toast.parambnd.dcx \
             work/integration/item.toast.msgbnd.dcx --probe-confirmed --apply
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from bb_launcher.workflow import EnemizerToolchain
+          root = Path.cwd()
+          plan = json.loads((root / "work/integration/toast-plan.json").read_text())
+          plan["enabled"] = False
+          EnemizerToolchain(root).write_pickup_names(
+              plan=plan,
+              input_binder=root / "work/integration/gameparam.suppressed.parambnd.dcx",
+              paramdef=root / "work/integration/fixtures/paramdef/paramdef.paramdefbnd.dcx",
+              input_names=root / "work/integration/fixtures/msg/engus/item.msgbnd.dcx",
+              output_binder=root / "work/integration/gameparam.canary.parambnd.dcx",
+              output_names=root / "work/integration/item.canary.msgbnd.dcx",
+              soulsformats_next=root / "_soulsformats", progress=print, canary=True,
+          )
+          PY
 
   # The control that makes the inputs bundle trustworthy: extract it, re-run the
   # derivation, and require the committed research to be exactly what came out.
