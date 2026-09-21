@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- The launcher pins the current shared client source for v0.1.0.4. Changes
+  since the previous pin concern Elden Ring; Bloodborne delivery and the
+  `bb-0.1.0-r10` runtime contract are unchanged.
+
 - **Item delivery and location checks no longer stop when shadPS4 reports a
   different save slot.** The client now follows whichever character you load
   instead of refusing everything because the slot was bound to another save
