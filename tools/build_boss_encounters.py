@@ -59,6 +59,8 @@ from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, nativ
 from tools.bb_enemizer.paarl_logarius_contract import patch_paarl_at_logarius, native_plan_paarl_at_logarius
 from tools.bb_enemizer.bsb_wet_nurse_contract import patch_bsb_at_wet_nurse, native_plan_bsb_at_wet_nurse
 from tools.bb_enemizer.bsb_living_failures_contract import patch_bsb_at_living_failures, native_plan_bsb_at_living_failures
+from tools.bb_enemizer.rom_ebrietas_contract import (patch_rom_at_ebrietas, native_plan_rom_at_ebrietas,
+    helper_scaling_parents as rom_helper_scaling_parents)
 from tools.bb_enemizer.orphan_gascoigne_contract import patch_orphan_at_gascoigne, native_plan_orphan_at_gascoigne
 from tools.bb_enemizer.orphan_contract import (
     OrphanIds, NativeActorPin as OrphanActorPin,
@@ -113,6 +115,7 @@ PACKAGES['martyr-logarius'] = SpecialEndpoint('martyr-logarius', 'm25_00_00_00.e
 ARENAS['martyr-logarius'] = PACKAGES['martyr-logarius']
 ARENAS['mergos-wet-nurse'] = SpecialEndpoint('mergos-wet-nurse', 'm26_00_00_00.emevd.dcx.js')
 ARENAS['living-failures'] = SpecialEndpoint('living-failures', 'm35_00_00_00.emevd.dcx.js')
+PACKAGES['rom'] = SpecialEndpoint('rom', 'm32_00_00_00.emevd.dcx.js')
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -204,6 +207,10 @@ def is_bsb_logarius_pair(arena, package) -> bool:
 
 def is_paarl_logarius_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('martyr-logarius', 'darkbeast-paarl')
+
+
+def is_rom_ebrietas_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('ebrietas', 'rom')
 
 
 def is_bsb_living_failures_pair(arena, package) -> bool:
@@ -328,15 +335,21 @@ def pin_actor_requirements(args, requirements: list[dict]) -> list[dict]:
         if 'source_anchor_part' in requirement:
             pinned['source_provenance']['anchor_sha256'] = parts[requirement['source_anchor_part']]['fingerprint']
             pinned['source_part_kind'] = donor['kind']
+        for field in ('source_provenance', 'source_initialization'):
+            declared = requirement.get(field)
+            if declared is not None and declared != pinned[field]:
+                raise ValueError('reviewed actor ' + field + ' differs from original native source')
         output.append(pinned)
     return output
 
 
-def pin_region_requirements(args, requirements: list[dict]) -> list[dict]:
+def _pin_anchored_requirements(args, requirements: list[dict], kind: str) -> list[dict]:
     """Verify reviewed region geometry and both original anchor witnesses."""
-    cache = getattr(args, '_region_pin_cache', None)
+    cache_name = '_' + kind + '_pin_cache'
+    cache = getattr(args, cache_name, None)
     if cache is None:
-        args._region_pin_cache = cache = {}
+        cache = {}
+        setattr(args, cache_name, cache)
     output = []
     for requirement in requirements:
         name = requirement['source_map']
@@ -346,27 +359,36 @@ def pin_region_requirements(args, requirements: list[dict]) -> list[dict]:
         if name not in cache:
             path = next(args.maps / (name + suffix) for suffix in ('.msb.dcx', '.msb')
                         if (args.maps / (name + suffix)).is_file())
-            run = subprocess.run(command_for(args) + ['--boss-region-pins', str(path)],
+            run = subprocess.run(command_for(args) + ['--boss-' + kind + '-pins', str(path)],
                                  check=True, capture_output=True, text=True)
             report = json.loads(run.stdout)
-            if (report.get('format') != 'bb-boss-region-pins-v1' or report.get('map') != name
-                    or len({row['name'] for row in report['regions']}) != len(report['regions'])):
-                raise ValueError('invalid native region pin report')
+            if (report.get('format') != 'bb-boss-' + kind + '-pins-v1' or report.get('map') != name
+                    or len({row['name'] for row in report[kind + 's']}) != len(report[kind + 's'])):
+                raise ValueError('invalid native ' + kind + ' pin report')
             cache[name] = report
-        region = next((row for row in cache[name]['regions']
-                       if row['name'] == requirement['source_region']), None)
+        region = next((row for row in cache[name][kind + 's']
+                       if row['name'] == requirement['source_region' if kind == 'region' else 'source_part']), None)
         if (region is None or region['entity_id'] != requirement['source_entity_id']
                 or requirement['source_provenance'] != {
-                    'format': 'bb-boss-region-pin-v1', 'region_sha256': region['fingerprint']}):
-            raise ValueError('region requirement differs from original native source')
+                    'format': 'bb-boss-' + kind + '-pin-v1',
+                    ('region_sha256' if kind == 'region' else 'part_sha256'): region['fingerprint']}):
+            raise ValueError(kind + ' requirement differs from original native source')
         for role, report in (('source', source_actors), ('destination', destination_actors)):
             actor = next((row for row in report['parts']
                           if row['name'] == requirement[role + '_anchor_part']), None)
             if actor is None or requirement[role + '_anchor_provenance'] != {
                     'format': 'bb-boss-actor-pin-v1', 'part_sha256': actor['fingerprint']}:
-                raise ValueError(role + ' region anchor differs from original native source')
+                raise ValueError(role + ' ' + kind + ' anchor differs from original native source')
         output.append(dict(requirement))
     return output
+
+
+def pin_region_requirements(args, requirements: list[dict]) -> list[dict]:
+    return _pin_anchored_requirements(args, requirements, 'region')
+
+
+def pin_object_requirements(args, requirements: list[dict]) -> list[dict]:
+    return _pin_anchored_requirements(args, requirements, 'object')
 
 
 def verify_retained_helpers(args, plan) -> None:
@@ -448,7 +470,10 @@ def validate_allocations(bundle: Path, slots, records: list[dict], plan: dict) -
     if (regions & (set(events) | actors | generators)
             or generators & (set(events) | actors)):
         raise ValueError('added event, actor, region or generator identifiers collide')
-    allocated = set(events) | actors | regions | generators
+    objects = {row['destination_entity_id'] for row in plan.get('boss_object_additions', [])}
+    if objects & (set(events) | actors | regions | generators):
+        raise ValueError('added object identifiers collide with another encounter resource')
+    allocated = set(events) | actors | regions | generators | objects
     if any(not isinstance(value, int) or value <= 0 for value in allocated) or allocated & used:
         raise ValueError('project-owned identifier collides with an original corpus operand or actor')
 
@@ -515,6 +540,8 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[1] == 'rom' and direct_orphan[0] != 'ebrietas':
+        raise ValueError('Rom donor requires the reviewed Ebrietas arena adapter')
     if direct_orphan[0] == 'living-failures' and direct_orphan[1] != 'blood-starved-beast':
         raise ValueError('Living Failures arena requires the reviewed BSB donor adapter')
     if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] != 'blood-starved-beast':
@@ -599,7 +626,8 @@ def build(args) -> dict:
                     and not is_logarius_bsb_pair(arena, package)
                     and not is_bsb_logarius_pair(arena, package) and not is_paarl_logarius_pair(arena, package)
                     and not is_bsb_wet_nurse_pair(arena, package)
-                    and not is_bsb_living_failures_pair(arena, package)):
+                    and not is_bsb_living_failures_pair(arena, package)
+                    and not is_rom_ebrietas_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -629,6 +657,8 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_rom_ebrietas_pair(arena, package):
+                patched = patch_rom_at_ebrietas(texts[arena.event_file], texts[package.event_file])
             elif is_bsb_living_failures_pair(arena, package):
                 patched = patch_bsb_at_living_failures(texts[arena.event_file], texts[package.event_file])
             elif is_bsb_wet_nurse_pair(arena, package):
@@ -744,6 +774,10 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_rom_ebrietas_pair(arena, package):
+                plan = native_plan_rom_at_ebrietas(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_bsb_living_failures_pair(arena, package):
                 plan = native_plan_bsb_at_living_failures(slots, npcs, effects, args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
@@ -821,6 +855,8 @@ def build(args) -> dict:
                     plan['boss_actor_additions'] = materializations[arena.key]
             if plan.get('boss_region_additions'):
                 plan['boss_region_additions'] = pin_region_requirements(args, plan['boss_region_additions'])
+            if plan.get('boss_object_additions'):
+                plan['boss_object_additions'] = pin_object_requirements(args, plan['boss_object_additions'])
             verify_retained_helpers(args, plan)
             plans.append(plan)
         ordinary_plan_path = getattr(args, 'ordinary_plan', None)
@@ -847,7 +883,9 @@ def build(args) -> dict:
                 if helper in helper_parents:
                     raise ValueError('combat helper has multiple parent declarations')
                 helper_parents[helper] = parents[0]
-            for helper, parent in logarius_helper_scaling_parents(pair_plan).items():
+            declared_parents = [*logarius_helper_scaling_parents(pair_plan).items(),
+                                *rom_helper_scaling_parents(pair_plan).items()]
+            for helper, parent in declared_parents:
                 existing = helper_parents.get(helper)
                 if existing is not None and existing != parent:
                     raise ValueError('combat helper has conflicting parent declarations')

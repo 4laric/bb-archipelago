@@ -120,6 +120,33 @@ class BossPoolTests(unittest.TestCase):
         second['boss_region_additions'][0].update(destination_entity_id=-1, destination_region='other')
         self.assertEqual(2, len(combine_native_plans('r', [plan, second])['boss_region_additions']))
 
+    def test_objects_share_part_and_entity_namespaces_and_survive_ordinary_composition(self):
+        obj = {'destination_map': 'm26_00_00_00', 'destination_part': 'marker',
+               'destination_entity_id': 980200, 'source_provenance': {'part_sha256': 'a' * 64}}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'o', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_object_additions': [obj]}
+        ordinary = {'format': 'bb-enemizer-plan-v2', 'seed': 'o', 'dry_run': True, 'options': {},
+                    'swaps': [{'logical_key': 'ordinary', 'destination_keys': ['ordinary']}],
+                    'scaling': {'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                                'change_count': 0, 'changes': [], 'skip_count': 1,
+                                'skips': [{'logical_key': 'ordinary', 'reason': 'unknown tier'}]}}
+        result = combine_ordinary_and_boss_plans(ordinary, [plan])
+        self.assertEqual([obj], result['boss_object_additions'])
+        result['boss_object_additions'][0]['source_provenance']['part_sha256'] = 'b' * 64
+        self.assertEqual('a' * 64, obj['source_provenance']['part_sha256'])
+        with self.assertRaisesRegex(ValueError, 'already carries boss metadata'):
+            combine_ordinary_and_boss_plans(dict(ordinary, boss_object_additions=[obj]), [plan])
+        for row in (dict(obj, destination_entity_id=980201), dict(obj, destination_part='other')):
+            other = copy.deepcopy(plan)
+            del other['boss_object_additions']
+            other['boss_actor_additions'] = [row]
+            for pair in ([plan, other], [other, plan]):
+                with self.assertRaisesRegex(ValueError, 'overlap an added'):
+                    combine_native_plans('o', pair)
+
     def test_seeded_matching_uses_each_boss_once_without_identity(self):
         graph = {key: ('a', 'b', 'c', 'd') for key in ('a', 'b', 'c', 'd')}
         first = assign_donors('one', graph)

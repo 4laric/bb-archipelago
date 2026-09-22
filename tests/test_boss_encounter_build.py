@@ -11,7 +11,7 @@ from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_co
 from tools.build_boss_encounters import (
     ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
     event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
-    is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers, pin_region_requirements,
+    is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers, pin_region_requirements, pin_actor_requirements, pin_object_requirements,
 )
 from tools.bb_enemizer.boss_pool import compose_event_patches, assign_donors
 from tools.bb_enemizer.gascoigne_contract import patch_gascoigne_at_cleric
@@ -21,6 +21,23 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
+    def test_authored_actor_pins_are_verified_instead_of_replaced_with_current_input(self):
+        part = {'name': 'core', 'entity_id': 123, 'source_archetype': {'model_name': 'c1000'},
+                'source_initialization': {'talk_id': 0}, 'fingerprint': 'a' * 64}
+        requirement = {'source_map': 'm32_00_00_00', 'source_part': 'core',
+                       'source_entity_id': 123, 'source_archetype': part['source_archetype'],
+                       'source_provenance': {'format': 'bb-boss-actor-pin-v1', 'part_sha256': 'a' * 64},
+                       'source_initialization': {'talk_id': 0}}
+        with patch('tools.build_boss_encounters.inspect_actor_map', return_value={'parts': [part]}):
+            self.assertEqual([requirement], pin_actor_requirements(None, [requirement]))
+            part['fingerprint'] = 'b' * 64
+            with self.assertRaisesRegex(ValueError, 'reviewed actor source_provenance'):
+                pin_actor_requirements(None, [requirement])
+            part['fingerprint'] = 'a' * 64
+            part['source_initialization'] = {'talk_id': 1}
+            with self.assertRaisesRegex(ValueError, 'reviewed actor source_initialization'):
+                pin_actor_requirements(None, [requirement])
+
     def test_region_geometry_and_both_original_anchors_must_match_reviewed_pins(self):
         requirement = {'source_map': 'm32_00_00_00', 'source_region': 'warp',
                        'source_entity_id': 3202800,
@@ -43,6 +60,23 @@ class EncounterBuildTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, role + ' region anchor'):
                     pin_region_requirements(args, [requirement])
                 requirement[role + '_anchor_provenance']['part_sha256'] = 'b' * 64
+
+    def test_object_model_and_native_fields_require_reviewed_source_fingerprint(self):
+        requirement = {'source_map': 'm26_00_00_00', 'source_part': 'marker',
+                       'source_entity_id': 2601857,
+                       'source_provenance': {'format': 'bb-boss-object-pin-v1', 'part_sha256': 'a' * 64},
+                       'source_anchor_part': 'core', 'destination_map': 'm24_02_00_00',
+                       'destination_anchor_part': 'core',
+                       'source_anchor_provenance': {'format': 'bb-boss-actor-pin-v1', 'part_sha256': 'b' * 64},
+                       'destination_anchor_provenance': {'format': 'bb-boss-actor-pin-v1', 'part_sha256': 'b' * 64}}
+        obj = {'name': 'marker', 'entity_id': 2601857, 'fingerprint': 'a' * 64}
+        args = SimpleNamespace(_object_pin_cache={'m26_00_00_00': {'objects': [obj]}})
+        with patch('tools.build_boss_encounters.inspect_actor_map',
+                   return_value={'parts': [{'name': 'core', 'fingerprint': 'b' * 64}]}):
+            self.assertEqual([requirement], pin_object_requirements(args, [requirement]))
+            obj['fingerprint'] = 'c' * 64
+            with self.assertRaisesRegex(ValueError, 'object requirement'):
+                pin_object_requirements(args, [requirement])
 
     def test_retired_helper_controller_requires_the_original_native_actor(self):
         helper = {'map': 'm25_00_00_00', 'part': 'c9010_0002', 'entity_id': 2500802,

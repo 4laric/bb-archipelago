@@ -113,6 +113,8 @@ internal static class ScalingTransplant
             "boss generator additions require --boss-encounters and reviewed map evidence");
         Need(bossPrepared || !plan.ContainsKey("boss_region_additions"),
             "boss region additions require --boss-encounters and reviewed map evidence");
+        Need(bossPrepared || !plan.ContainsKey("boss_object_additions"),
+            "boss object additions require --boss-encounters and reviewed map evidence");
         Need(bossPrepared || !plan.ContainsKey("boss_external_references"),
             "boss external references require --boss-encounters and reviewed event evidence");
         var manifest = plan.Deserialize<Manifest>(Json)!;

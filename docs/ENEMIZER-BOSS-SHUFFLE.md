@@ -256,7 +256,7 @@ seed-dependent assignments.
 | Vicar Amelia | Constructed | Constructed | Yes |
 | Witch of Hemwick | Pending | Pending | Pending |
 | Shadows of Yharnam | Pending | Pending | Pending |
-| Rom | Pending | Pending | Pending |
+| Rom | Constructed | Pending | Pending |
 | The One Reborn | Pending | Pending | Pending |
 | Amygdala | Constructed | Constructed | Yes |
 | Martyr Logarius | Constructed | Constructed | Yes |
@@ -358,3 +358,22 @@ retired; five retained helpers have native provenance checks, and the camera
 cannot reactivate after completion. Seven focused tests cover this adapter;
 31 focused contract/composition/build/test-quality tests pass. Gameplay remains
 unobserved. Living Failures donor construction is still pending.
+
+Standalone Rom-at-Ebrietas verifies nine files against original native inputs.
+The package includes the core and all thirty spiders in both map states,
+four physical warp-region additions, all ninety spider controller bindings,
+and shared helper normalization. Destination completion, co-op/fog and music
+cleanup remain unchanged; the original Ebrietas owner stays inert until cleanup.
+The installed original's richer spider activation event is separately pinned
+and retained. Two foreign source replan calls are explicitly removed because
+their absent m32 entity would otherwise become the active Ebrietas core.
+Rom is not yet in the complete reviewed pool: its destination adapter is pending.
+
+Native Object additions now preserve pinned source model/model-point data,
+all persisted Object fields and original destination records/order, while
+adopting destination loading groups and relative placement. This supports
+Wet Nurse's moving duplicate-position marker; it is capability construction,
+not yet a completed Wet Nurse donor. Thirteen native Object assertions pass.
+Actor requirement binding also rejects a declared hash or initialization that
+differs from the installed original, rather than replacing authored evidence.
+The fourteen-boss native build passes this stricter binding check.

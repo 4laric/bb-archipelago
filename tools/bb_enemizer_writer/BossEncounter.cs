@@ -315,8 +315,10 @@ internal static class BossEncounter
             string overlayMaps = Path.Combine(overlay, "dvdroot_ps4", "map", "MapStudio");
             BossActorTransplant.ApplyActorsAndPrimary(planPath, mapsPath, mapsPath, overlayMaps, required: false);
             var regionAdditions = BossRegionTransplant.Apply(planPath, mapsPath, mapsPath, overlayMaps, required: false);
+            var objectAdditions = BossObjectTransplant.Apply(planPath, mapsPath, mapsPath, overlayMaps, required: false);
             BossActorTransplant.ApplyGeneratorsOnly(planPath, mapsPath, mapsPath, overlayMaps);
             BossRegionTransplant.VerifyFinal(regionAdditions, mapsPath, overlayMaps);
+            BossObjectTransplant.VerifyFinal(objectAdditions, mapsPath, overlayMaps);
             foreach (var (encounter, events) in prepared) {
                 string eventPath = Path.Combine(overlay, "dvdroot_ps4", "event", encounter.DestinationEventFile);
                 Directory.CreateDirectory(Path.GetDirectoryName(eventPath)!);
@@ -342,7 +344,7 @@ internal static class BossEncounter
                     protected_completion_event_ids = item.Encounter.ProtectedCompletionEventIds,
                     terminal_predicates = item.Encounter.TerminalPredicates ?? [],
                     compiled_event_fingerprints = item.Encounter.CompiledEventFingerprints,
-                }), external_references = externalReferences, region_additions = regionAdditions, files,
+                }), external_references = externalReferences, region_additions = regionAdditions, object_additions = objectAdditions, files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",
             }, Json));
             Directory.Move(overlay, output);

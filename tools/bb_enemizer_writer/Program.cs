@@ -14,6 +14,8 @@ if (args.Length == 2 && args[0] == "--boss-actor-pins")
     return BossActorTransplant.Inspect(args[1]);
 if (args.Length == 2 && args[0] == "--boss-region-pins")
     return BossRegionTransplant.Inspect(args[1]);
+if (args.Length == 2 && args[0] == "--boss-object-pins")
+    return BossObjectTransplant.Inspect(args[1]);
 if (args.Length == 10 && args[0] == "--boss-encounters" && args[9] == "--apply")
     return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
 if (args.Length == 10 && args[0] == "--boss-scaled" && args[9] == "--apply")
@@ -44,6 +46,7 @@ if (args.Length != 4 || args[3] != "--apply")
         "Boss encounters: BBEnemizerWriter --boss-encounters <plan> <built-gameparam> <paramdef> <maps> <scripts> <event-input-dir> <compiled-event-dir> <new-output-root> --apply");
     Console.Error.WriteLine("Actor evidence: BBEnemizerWriter --boss-actor-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("Region evidence: BBEnemizerWriter --boss-region-pins <original-map.msb.dcx>");
+    Console.Error.WriteLine("Object evidence: BBEnemizerWriter --boss-object-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }
@@ -90,6 +93,8 @@ if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_generator_add
     throw new InvalidDataException("boss generator additions require --boss-encounters and reviewed map evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_region_additions", out _))
     throw new InvalidDataException("boss region additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_object_additions", out _))
+    throw new InvalidDataException("boss object additions require --boss-encounters and reviewed map evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_external_references", out _))
     throw new InvalidDataException("boss external references require --boss-encounters and reviewed event evidence");
 if (!scalingPrepared && planDocument.RootElement.TryGetProperty("scaling", out var scaling)
