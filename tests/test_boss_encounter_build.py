@@ -19,16 +19,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
-    def test_reviewed_pool_includes_laurence_without_reusing_or_omitting_donors(self):
+    def test_reviewed_pool_includes_ludwig_without_reusing_or_omitting_donors(self):
         graph = reviewed_compatibility()
-        self.assertEqual(10, len(graph))
+        self.assertEqual(11, len(graph))
         assignments = []
-        for seed in ('seed-0', 'seed-1'):
+        for seed in ('seed-0', 'seed-2'):
             assignment = assign_donors(seed, graph)
             assignments.append(assignment)
             self.assertEqual(set(graph), set(assignment))
             self.assertEqual(set(graph), set(assignment.values()))
-            self.assertEqual('laurence', assignment['cleric-beast'])
+            self.assertEqual('ludwig', assignment['cleric-beast'])
+            self.assertEqual('laurence', assignment['ludwig'])
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)
                 self.assertIn(donor, graph[arena])

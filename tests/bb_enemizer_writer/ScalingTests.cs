@@ -161,7 +161,17 @@ internal static class ScalingTests
         plan["boss_actor_additions"]![0]!["destination_anchor_part"] = "c1000_0000";
         plan["boss_actor_scaling"]![0]!["source_archetype"]!["npc_param_id"] = 11;
         plan["boss_actor_additions"]![0]!["source_archetype"]!["npc_param_id"] = 11; Save();
-        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "own source NPC");
+        string sameNpcOutput = Path.Combine(root, "same-npc-helper-output");
+        ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, sameNpcOutput, bossPrepared: true);
+        var sameNpcBinder = BND4.Read(Path.Combine(sameNpcOutput, "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx"));
+        var sameNpcTable = PARAM.Read(sameNpcBinder.Files.Single(f => f.Name == "NpcParam.param").Bytes);
+        sameNpcTable.ApplyParamdef(npcDef);
+        var sameNpcClone = sameNpcTable.Rows.Single(row => row.ID == 6000001);
+        foreach (var cell in donor.Cells) Check(Equals(sameNpcClone[cell.Def.InternalName].Value,
+            cell.Def.InternalName == "spEffectID2" ? 60013 : cell.Value), "same-NPC helper preserves original " + cell.Def.InternalName);
+        plan["boss_actor_additions"]![0]!["source_anchor_part"] = "c1000_0001"; Save();
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "distinct original actor");
+        plan["boss_actor_additions"]![0]!["source_anchor_part"] = "c1000_0000";
         plan["boss_actor_scaling"]![0]!["source_archetype"]!["npc_param_id"] = 12;
         plan["boss_actor_additions"]![0]!["source_archetype"]!["npc_param_id"] = 12;
         plan["boss_actor_scaling"]![0]!["source_archetype"]!["npc_param_id"] = 13; Save();

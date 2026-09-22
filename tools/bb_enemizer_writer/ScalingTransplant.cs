@@ -235,8 +235,10 @@ internal static class ScalingTransplant
                 int split = key.IndexOf(':'); return split > 0 && Bare(key[..split]) == Bare(helper.DestinationMap)
                     && key[(split + 1)..] == anchor;
             }), "helper parent does not own the destination anchor");
-            Need(helper.SourceArchetype.NpcParamId != parentChange.SourceNpcParamId,
-                "helper must have its own source NPC identity");
+            Need(helper.SourceArchetype.NpcParamId != parentChange.SourceNpcParamId
+                || group.All(item => actorAdditions.Single(add => Bare(add.DestinationMap) == Bare(item.DestinationMap)
+                    && add.DestinationPart == item.DestinationPart).SourceAnchorPart != item.SourcePart),
+                "same-NPC helper must be a distinct original actor");
             Need(Enumerable.Range(0, 8).Select(i => $"spEffectID{i}").Contains(helper.SpEffectSlot), "invalid helper scaling effect slot");
             var donor = Unique(npcs, helper.SourceArchetype.NpcParamId);
             Need(donor.ID == helper.SourceArchetype.NpcParamId && NativeLevel(donor, bossTiers: true) == parentChange.SourceLevel,

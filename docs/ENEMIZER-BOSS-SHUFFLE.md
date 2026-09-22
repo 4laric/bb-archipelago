@@ -68,8 +68,8 @@ matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
-Ebrietas, Maria and Laurence, plus the reciprocal Gehrman/Moon Presence pair. The regular
-eight-boss graph has two complete assignments selected by seed; the final pair
+Ebrietas, Maria, Laurence and Ludwig, plus the reciprocal Gehrman/Moon Presence pair. The regular
+nine-boss graph has two complete assignments selected by seed; the final pair
 is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
@@ -186,9 +186,10 @@ Standalone Ludwig and Laurence donors each built ten verified files in Cleric's
 arena. Ludwig is the two-actor 3400800/3400801 encounter, distinct from Laurence
 3400850. Its adapter selects the normal three-limb configuration, replaces the
 source cutscene/warp with a destination actor-relative phase transition, and
-preserves destination progression through an explicit terminal bridge. These
-Ludwig donor remains outside the closed pool; Laurence now joins it through
-the BSB-to-Laurence and BSB-to-Maria cross-links. Their runtime phase
+preserves destination progression through an explicit terminal bridge.
+Ludwig now joins the closed pool through a Laurence-to-Ludwig adapter that
+copies Laurence's combat routines to project-owned events, preserving both
+encounters in the shared map. Their runtime phase
 behavior and arena fit remain unobserved. Ludwig's second form and Gascoigne's
 beast now receive distinct NPC clones with the parent's inferred normalization
 effect. Physical map states share one helper clone per logical fight. Native
@@ -249,18 +250,18 @@ seed-dependent assignments.
 | Rom | Pending | Pending | Pending |
 | The One Reborn | Pending | Pending | Pending |
 | Amygdala | Constructed | Constructed | Yes |
-| Martyr Logarius | In progress | Pending | Pending |
+| Martyr Logarius | Constructed | In progress | Pending |
 | Celestial Emissary | Pending | Pending | Pending |
 | Ebrietas | Constructed | Constructed | Yes |
 | Micolash | Pending | Pending | Pending |
 | Mergo's Wet Nurse | Pending | Pending | Pending |
 | Gehrman | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
-| Ludwig | Constructed | Constructed | Pending cross-links |
+| Ludwig | Constructed | Constructed | Yes |
 | Laurence | Constructed | Constructed | Yes |
 | Living Failures | Pending | Pending | Pending |
 | Lady Maria | Constructed | Constructed | Yes |
-| Orphan of Kos | Constructed | In progress | Pending |
+| Orphan of Kos | Constructed | Constructed | Pending cross-links |
 
 Latest standalone construction evidence: reciprocal Ludwig/Cleric and
 Laurence/Cleric each verify 13 output files. Orphan-at-Cleric verifies ten,
@@ -269,3 +270,19 @@ map states, source-pinned player-effect and camera routines, an independent
 combat-ready flag and a destination-owned terminal bridge. Installed Orphan
 Event 0 and health variants are accepted by exact reviewed hashes; the
 installed health damage trigger and update frequency remain intact.
+
+The eleven-boss pool verifies 34 files for each of two distinct seed assignments
+(`seed-0` and `seed-2`). Both compose the Laurence and Ludwig destinations in
+m34 while preserving both original completion events. Direct BSB-at-Orphan
+verifies eight files; its inactive phase/support actors stay alive but hidden
+until the original OR-death terminal completes, and the shadow/post-fight
+events remain unchanged. The imported camera is explicitly initialized and
+the original destination multiplayer battle-state flag remains set on entry.
+
+Helper normalization also permits distinct original actors that share an NPC
+row, as required by Logarius's core and c9010 projectile owner. Source actor
+and anchor fingerprints remain separate, and aliasing the original primary
+actor as its own helper is rejected by both planner and native verification.
+Logarius-at-BSB verifies nine output files, with separate sword and c9010
+actors in both destination map states. Each helper shares its normalized clone
+across states, and the original BSB completion event remains unchanged.

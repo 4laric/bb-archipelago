@@ -24,7 +24,7 @@ class BossActorScalingTests(unittest.TestCase):
         parent = 'm24_01_00_00:primary'
         maps = ['m24_01_00_00', 'm24_01_00_01', 'm24_01_00_11']
         additions = [{
-            'source_map': 'm34_00_00_00', 'source_part': 'phase-two',
+            'source_map': 'm34_00_00_00', 'source_part': 'phase-two', 'source_anchor_part': 'core',
             'source_entity_id': 3400801,
             'source_archetype': {'model_name': 'c4510', 'npc_param_id': 451001,
                                  'think_param_id': 451000, 'chara_init_id': 0},
@@ -88,6 +88,18 @@ class BossActorScalingTests(unittest.TestCase):
         self.assertEqual({6000240, 6000241}, {row['cloned_npc_param_id'] for row in result})
         self.assertEqual(6000240, result[0]['cloned_npc_param_id'])
         self.assertEqual({6000241}, {row['cloned_npc_param_id'] for row in result[1:]})
+
+    def test_distinct_original_helper_can_share_primary_npc_identity(self):
+        plan, npcs, parents = self.fixture()
+        npcs[451000] = dict(npcs[451001])
+        for addition in plan['boss_actor_additions']:
+            addition['source_archetype']['npc_param_id'] = 451000
+        rows = allocate_actor_scaling(plan, npcs, parents)
+        self.assertEqual({6000239}, {row['cloned_npc_param_id'] for row in rows})
+        self.assertEqual({451000}, {row['source_archetype']['npc_param_id'] for row in rows})
+        plan['boss_actor_additions'][0]['source_anchor_part'] = 'phase-two'
+        with self.assertRaisesRegex(ValueError, 'distinct original actor'):
+            allocate_actor_scaling(plan, npcs, parents)
 
 
 if __name__ == '__main__':

@@ -43,8 +43,9 @@ def allocate_actor_scaling(plan: dict, npcs: Mapping[int, dict],
         slot = free_effect_slot(row)
         if slot is None:
             raise ValueError('combat helper has no free effect slot')
-        if source_id == change['source_npc_param_id']:
-            raise ValueError('combat helper must have its own source NPC identity')
+        if (source_id == change['source_npc_param_id']
+                and addition['source_part'] == addition.get('source_anchor_part')):
+            raise ValueError('same-NPC helper must be a distinct original actor')
         # Physical map states carry distinct source-part fingerprints. Each is
         # verified independently by native code; identical NPC identities in
         # the same logical fight still share one parameter clone.
