@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
+    BuildResult,
     AI_PREFIX,
     AI_FILE_PATTERN,
     DVDROOT_PREFIX,
@@ -94,6 +95,7 @@ class RunningProcess:
     pid: int
     executable: Path | None
     arguments: tuple[str, ...] | None
+    creation_time: int | None = None
 
 
 def _windows_command_line_args(command: str) -> tuple[str, ...]:
@@ -116,6 +118,28 @@ def _windows_command_line_args(command: str) -> tuple[str, ...]:
         local_free.argtypes = (wintypes.HLOCAL,)
         local_free.restype = wintypes.HLOCAL
         local_free(pointer)
+
+
+def process_creation_time(pid: int) -> int:
+    """Read the Windows process birth identity; a reused PID is a different process."""
+    import ctypes
+    from ctypes import wintypes
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+    kernel.OpenProcess.restype = wintypes.HANDLE
+    kernel.GetProcessTimes.argtypes = (wintypes.HANDLE,) + (ctypes.POINTER(wintypes.FILETIME),) * 4
+    kernel.GetProcessTimes.restype = wintypes.BOOL
+    kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+    handle = kernel.OpenProcess(0x1000, False, pid)
+    if not handle:
+        raise ValidationError(f"Cannot verify shadPS4 process {pid}: Windows error {ctypes.get_last_error()}; run both programs at the same privilege level")
+    try:
+        created, exited, kernel_time, user_time = (wintypes.FILETIME() for _ in range(4))
+        if not kernel.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(exited), ctypes.byref(kernel_time), ctypes.byref(user_time)):
+            raise ValidationError(f"Cannot read shadPS4 process creation time: Windows error {ctypes.get_last_error()}")
+        return (created.dwHighDateTime << 32) | created.dwLowDateTime
+    finally:
+        kernel.CloseHandle(handle)
 
 
 def running_shad_processes() -> tuple[RunningProcess, ...]:
@@ -159,6 +183,7 @@ def running_shad_processes() -> tuple[RunningProcess, ...]:
                 int(record.get("ProcessId", 0)),
                 Path(executable).resolve() if isinstance(executable, str) and executable else None,
                 arguments,
+                process_creation_time(int(record.get("ProcessId", 0))),
             ))
         return tuple(found)
     found = []
@@ -230,6 +255,10 @@ class LauncherSettings:
     # event overlays are written by the bundled BBEventWriter; no compiler is
     # consulted.
     darkscript: Path | None = None
+    integration_mode: str = "standalone"
+    bblauncher_mods: Path | None = None
+    bblauncher_executable: Path | None = None
+    bblauncher_receipt: Path | None = None
 
     @classmethod
     def from_dict(cls, value: Mapping[str, Any], *, relative_to: Path | None = None) -> "LauncherSettings":
@@ -253,7 +282,14 @@ class LauncherSettings:
             path = Path(raw).expanduser()
             return (base / path).resolve() if not path.is_absolute() else path.resolve()
 
+        mode = value.get("integration_mode", "standalone")
+        if mode not in ("standalone", "bblauncher"):
+            raise ValidationError("integration_mode must be standalone or bblauncher")
         return cls(
+            integration_mode=mode,
+            bblauncher_mods=optional("bblauncher_mods"),
+            bblauncher_executable=optional("bblauncher_executable"),
+            bblauncher_receipt=optional("bblauncher_receipt"),
             game_root=required("game_root"),
             cache_root=required("cache_root"),
             ap_request=required("ap_request"),
@@ -271,6 +307,10 @@ class LauncherSettings:
     def as_dict(self) -> dict[str, Any]:
         return {
             "format": SETTINGS_FORMAT,
+            "integration_mode": self.integration_mode,
+            "bblauncher_mods": None if self.bblauncher_mods is None else str(self.bblauncher_mods),
+            "bblauncher_executable": None if self.bblauncher_executable is None else str(self.bblauncher_executable),
+            "bblauncher_receipt": None if self.bblauncher_receipt is None else str(self.bblauncher_receipt),
             "game_root": str(self.game_root),
             "cache_root": str(self.cache_root),
             "ap_request": str(self.ap_request),
@@ -317,6 +357,18 @@ class EnemizerBuild:
     # swap can be named from a player's report (bb-archipelago#321).
     plan_path: Path | None = None
     overlay: Path | None = None
+
+
+@dataclass(frozen=True)
+class PreparedSeed:
+    install: GameInstall
+    request: Mapping[str, Any]
+    plan: ProcessPlan
+    identity: SeedIdentity
+    suppression: SuppressionValidation
+    build: BuildResult
+    reused: bool
+    enemizer: EnemizerBuild | None
 
 
 @dataclass(frozen=True)
@@ -1477,13 +1529,13 @@ def enemy_ai_sources(install: GameInstall) -> dict[str, Path]:
 
 
 def enemy_map_sources(install: GameInstall, selected: Path | None) -> dict[str, Path]:
-    """Resolve maps per filename, preserving patch-over-base precedence.
+    """Resolve installed maps per file, with update overrides and base fallbacks.
 
-    An installed layer is incomplete on its own.  A selected external directory
-    is intentionally treated as a standalone author-supplied input instead.
+    Saved UI settings may point at either installed layer. Neither layer alone
+    represents the complete game. Explicit external map folders stay standalone.
     """
     installed = [root / "dvdroot_ps4" / "map" / "MapStudio"
-                 for _name, root in install.content_backends()]
+                 for _, root in install.content_backends()]
     roots = installed
     if selected is not None:
         selected = selected.expanduser().resolve()
@@ -1590,6 +1642,47 @@ def _validate_category8_bridge_rows(rows: list[dict[str, Any]]) -> list[dict[str
     return effective
 
 
+def validate_selected_build(identity: Mapping[str, Any], request: Mapping[str, Any],
+                            plan: ProcessPlan, settings: LauncherSettings):
+    """Both activation modes enforce the same selected seed, options and runtime."""
+    active_options = identity.get("options")
+    if not isinstance(active_options, dict):
+        raise ValidationError("active cached build has no options identity")
+    active_canary = active_options.get("pickup_name_canary")
+    selected_names = pickup_name_plan(
+        request["request"].get("toast_placeholders"), canary_location=active_canary)
+    request_options = {
+        "starting_weapons": request["starting_weapons"],
+        "weapon_requirement_families": request["weapon_requirement_families"],
+        "shop_gate_permutation": request["shop_gate_permutation"],
+        "enemy_drop_assignments": request["enemy_drop_assignments"],
+        "enemy_drop_plan_format": request["enemy_drop_plan_format"],
+        "category8_awards": request["category8_awards"],
+        "toast_placeholders": selected_names,
+    }
+    expected_fields = {
+        "seed": request["seed"],
+        "slot": request["slot"],
+        "world_build": request["world_build"],
+        "runtime_build": request["runtime_build"],
+        "shad_build": plan.shad_build,
+        "suppression_plan_sha256": request["suppression_plan_sha256"],
+        "suppression_binder_sha256": sha256_file(settings.suppression_binder.expanduser().resolve()),
+    }
+    mismatched = [name for name, value in expected_fields.items() if identity.get(name) != value]
+    mismatched.extend(
+        f"options.{name}"
+        for name, value in request_options.items()
+        if active_options.get(name) != value
+    )
+    if mismatched:
+        raise ValidationError(
+            "active overlay does not match the selected seed/options/runtime: "
+            + ", ".join(mismatched)
+        )
+    return selected_names
+
+
 class LauncherWorkflow:
     def __init__(
         self,
@@ -1627,6 +1720,8 @@ class LauncherWorkflow:
         not implement the separate BBLauncher/external-overlay mode (#192).
         """
 
+        if settings.integration_mode == "bblauncher":
+            raise ValidationError("Use BBLauncher Connect with the selected export receipt")
         progress("Validating the active seed and running shadPS4...")
         install = GameInstall.from_root(settings.game_root)
         request = _request_identity(
@@ -1706,41 +1801,7 @@ class LauncherWorkflow:
             raise ValidationError("active overlay identity does not match its cached build")
 
         identity = build.manifest["identity"]
-        active_options = identity.get("options")
-        if not isinstance(active_options, dict):
-            raise ValidationError("active cached build has no options identity")
-        active_canary = active_options.get("pickup_name_canary")
-        selected_names = pickup_name_plan(
-            request["request"].get("toast_placeholders"), canary_location=active_canary)
-        request_options = {
-            "starting_weapons": request["starting_weapons"],
-            "weapon_requirement_families": request["weapon_requirement_families"],
-            "shop_gate_permutation": request["shop_gate_permutation"],
-            "enemy_drop_assignments": request["enemy_drop_assignments"],
-            "enemy_drop_plan_format": request["enemy_drop_plan_format"],
-            "category8_awards": request["category8_awards"],
-            "toast_placeholders": selected_names,
-        }
-        expected_fields = {
-            "seed": request["seed"],
-            "slot": request["slot"],
-            "world_build": request["world_build"],
-            "runtime_build": request["runtime_build"],
-            "shad_build": plan.shad_build,
-            "suppression_plan_sha256": request["suppression_plan_sha256"],
-            "suppression_binder_sha256": sha256_file(binder),
-        }
-        mismatched = [name for name, value in expected_fields.items() if identity.get(name) != value]
-        mismatched.extend(
-            f"options.{name}"
-            for name, value in request_options.items()
-            if active_options.get(name) != value
-        )
-        if mismatched:
-            raise ValidationError(
-                "active overlay does not match the selected seed/options/runtime: "
-                + ", ".join(mismatched)
-            )
+        selected_names = validate_selected_build(identity, request, plan, settings)
         validation = owner.get("suppression_validation")
         active_bypasses = (
             tuple(validation.get("bypassed", ())) if isinstance(validation, dict) else ()
@@ -1793,21 +1854,18 @@ class LauncherWorkflow:
             early_exit=early_exit, grants_bridge=False,
         )
 
-    def randomize_and_launch(
+    def prepare_seed(
         self,
         settings: LauncherSettings,
         options: EnemizerOptions,
         *,
         force_rebuild: bool = False,
         allow_suppression_mismatch: bool = False,
-        allow_seed_mismatch: bool = False,
-        research_captures: bool = False,
         pickup_name_canary: str | None = None,
         pickup_name_language: str | None = None,
         player_name: str = "",
         progress: Progress = lambda _message: None,
-        process_is_running: Callable[[], bool] | None = None,
-    ) -> WorkflowResult:
+    ) -> PreparedSeed:
         progress("Validating CUSA03173 01.09 and launch components...")
         if pickup_name_language not in (None, "engus", "enggb"):
             raise ValidationError("pickup-name language must be engus or enggb")
@@ -1837,23 +1895,10 @@ class LauncherWorkflow:
         # Before the overlay is touched: a stale bare-game-ID plan (#177) would
         # cost the player a full build only to die inside shadPS4.
         refuse_stale_plan(plan)
-        # Before the overlay is touched: a bridge that cannot arm must not
-        # cost the player a build (bb-archipelago#137).
-        require_no_stray_cheat_engine(plan.processes, self.process_running)
         if plan.runtime_build != request["runtime_build"]:
             raise ValidationError(
                 f"AP seed requires runtime {request['runtime_build']}, process plan supplies {plan.runtime_build}"
             )
-        # Before the overlay is touched and no later than AP connection: a
-        # stale saved server address must not silently inherit another
-        # room's receive history onto this seed package (bb-archipelago#347).
-        check_seed_slot_identity(
-            settings.state_root or default_state_root(),
-            server=_ap_client_server(plan),
-            seed=request["seed"],
-            slot=request["slot"],
-            allow_mismatch=allow_seed_mismatch,
-        )
         binder = settings.suppression_binder.expanduser().resolve()
         # Operator override (bb-archipelago#183): off by default, and when on
         # it emits one loud line per bypassed check through this same progress
@@ -2164,6 +2209,55 @@ class LauncherWorkflow:
                         shutil.rmtree(resolved_temp)
                     else:
                         progress(f"Preserved failed enemizer build diagnostics at {resolved_temp}")
+        return PreparedSeed(install, request, plan, identity, suppression, build, reused, enemizer)
+
+    def randomize_and_launch(
+        self,
+        settings: LauncherSettings,
+        options: EnemizerOptions,
+        *,
+        force_rebuild: bool = False,
+        allow_suppression_mismatch: bool = False,
+        allow_seed_mismatch: bool = False,
+        research_captures: bool = False,
+        pickup_name_canary: str | None = None,
+        pickup_name_language: str | None = None,
+        player_name: str = "",
+        progress: Progress = lambda _message: None,
+        process_is_running: Callable[[], bool] | None = None,
+    ) -> WorkflowResult:
+        if settings.integration_mode == "bblauncher":
+            raise ValidationError("BBLauncher owns activation and deactivation in this mode. Use BBLauncher to change mods; standalone activation/restore is unavailable.")
+        # Validate the seed's bridge contract before reading a launch plan,
+        # touching the cache, inspecting processes, or activating anything.
+        # Besides keeping mismatch refusal side-effect free, this preserves the
+        # category-8 migration that prepare_seed applies to the same request.
+        request = _request_identity(settings.ap_request, player_name=player_name, state_root=settings.state_root)
+        request["category8_awards"] = _validate_category8_bridge_rows(
+            request["category8_awards"]
+        )
+        plan = load_process_plan(settings.process_plan)
+        require_no_stray_cheat_engine(plan.processes, self.process_running)
+        check_seed_slot_identity(
+            settings.state_root or default_state_root(), server=_ap_client_server(plan),
+            seed=request["seed"], slot=request["slot"], allow_mismatch=allow_seed_mismatch,
+        )
+        prepared = self.prepare_seed(
+            settings, options, force_rebuild=force_rebuild,
+            allow_suppression_mismatch=allow_suppression_mismatch,
+            pickup_name_canary=pickup_name_canary, pickup_name_language=pickup_name_language,
+            player_name=player_name, progress=progress,
+        )
+        if (prepared.plan != plan
+                or prepared.request.get("request") != request.get("request")
+                or prepared.request.get("seed") != request.get("seed")
+                or prepared.request.get("slot") != request.get("slot")):
+            raise ValidationError(
+                "AP request or process plan changed during seed preparation; retry the launch"
+            )
+        install, request, plan = prepared.install, prepared.request, prepared.plan
+        identity, suppression, build = prepared.identity, prepared.suppression, prepared.build
+        reused, enemizer = prepared.reused, prepared.enemizer
         progress("Activating verified shadPS4 overlay...")
         owner = activate_build(
             install,
@@ -2276,6 +2370,9 @@ class LauncherWorkflow:
         the game unlaunched.
         """
 
+        if settings.integration_mode == "bblauncher":
+            raise ValidationError("BBLauncher owns activation and deactivation in this mode. Use BBLauncher to change mods; standalone activation/restore is unavailable.")
+
         progress("Validating CUSA03173 01.09 and launch components...")
         install = GameInstall.from_root(settings.game_root)
         plan = load_process_plan(settings.process_plan)
@@ -2312,6 +2409,9 @@ class LauncherWorkflow:
         process_is_running: Callable[[], bool] | None = None,
     ) -> str:
         """Reactivate the previous cached seed through a full transaction."""
+
+        if settings.integration_mode == "bblauncher":
+            raise ValidationError("BBLauncher owns activation and deactivation in this mode. Use BBLauncher to change mods; standalone activation/restore is unavailable.")
 
         progress("Validating CUSA03173 01.09...")
         install = GameInstall.from_root(settings.game_root)

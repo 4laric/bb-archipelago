@@ -10,15 +10,20 @@ read back from a live armed process and matched these blobs (owner checklist
 item 1), and on the same day an armed install of these bytes ran the guest
 through native grants without Cheat Engine loaded at all (items 5 through 9).
 
-The 2026-09-05 storage guards extend those historical bytes. Instruction
-emulation passes, and a live Vial control captured held inventory; restart and
-full delivery validation of this revision remain pending.
+The 2026-09-05 storage guards and 2026-09-22 automatic inventory-root refresh
+extend those historical bytes. Instruction emulation passes, the storage guards
+have a live Vial control, and the root-refresh revision was installed and
+exercised live in a fresh no-consume session: it reacquired a deliberately
+cleared cache, drove a no-change Bullet heartbeat, and completed an absent-stack
+Pebble grant. A full emulator restart at a different eboot base preserved the
+item, reacquired inventory, and completed an existing-stack Pebble grant without
+consumption. Death and character-switch validation remain pending.
 
 Every operand in the template is a constant or a label, so the blob is static.
-Assembling at ``base = 0`` makes it fully position-independent apart from three
-``mov rax, imm64`` operands, because every other absolute in the template is
+Assembling at ``base = 0`` makes it fully position-independent apart from native
+call ``mov rax, imm64`` operands, because every other absolute in the template is
 reached through a RIP-relative or REL32 form whose displacement is a difference
-of two eboot RVAs. Those three quadwords are the entire relocation table.
+of two eboot RVAs. Those call-address quadwords form the relocation table.
 """
 
 from __future__ import annotations
@@ -48,6 +53,9 @@ EQUIPMENT_INSTANCE_REGISTRY_RVA = 0x553E990
 QUANTITY_DELTA_RVA = 0x14D94A0
 FIND_SLOT_RVA = 0x14DA2C0
 INVENTORY_STORAGE_MODE_OFFSET = 0x8C
+INVENTORY_ROOT_RVA = 0x553B130
+INVENTORY_ROOT_REFERENCE_RVA = 0x17CB922
+INVENTORY_OFFSET_REFERENCE_RVA = 0x17CBB58
 
 CONSUME_CAVE_RVA = 0x50DBA00
 HEARTBEAT_CAVE_RVA = 0x50DBC00
@@ -72,6 +80,8 @@ DESCRIPTOR_RVA = STATE_RVA + 0x60
 CONSUME_ORIGINAL = bytes((0x44, 0x89, 0xE0, 0x48, 0x83, 0xC4, 0x28))
 HEARTBEAT_ORIGINAL = bytes((0x48, 0x81, 0xC4, 0xE8, 0x07, 0x00, 0x00))
 HP_ORIGINAL = bytes((0x8B, 0x97, 0xF8, 0x00, 0x00, 0x00))
+INVENTORY_ROOT_REFERENCE = bytes.fromhex("48 8D 05 07 F8 D6 03 48 8B 00 48 8B 58 08")
+INVENTORY_OFFSET_REFERENCE = bytes.fromhex("48 8D BB 28 03 00 00")
 
 
 class AssemblyError(Exception):
@@ -318,35 +328,49 @@ def _program_heartbeat() -> list[tuple[str | None, _Insn | None]]:
         # cmp dword ptr [bbAutoManualTrigger],0 / jne original
         (None, _rip_form(b"\x83\x3d", "manual_trigger", b"\x00")),
         (None, _rel32_jump(b"\x0f\x85", "heartbeat_original")),
+        # Refresh the held inventory from the witnessed player root every
+        # frame. RAX is live at this epilogue site, so preserve it on all idle
+        # and failure paths before doing any observer work.
+        (None, _fixed(b"\x50")),                              # push rax
+        (None, _rip_form(b"\x48\x8b\x05", "inventory_root")),
+        (None, _fixed(b"\x48\x85\xc0")),                    # test rax,rax
+        (None, _rel32_jump(b"\x0f\x84", "clear_inventory")),
+        (None, _fixed(b"\x48\x8b\x40\x08")),              # mov rax,[rax+8]
+        (None, _fixed(b"\x48\x85\xc0")),
+        (None, _rel32_jump(b"\x0f\x84", "clear_inventory")),
+        (None, _fixed(b"\x48\x05" + _imm32(0x328))),       # add rax,328
+        (None, _fixed(b"\x80\xb8" + _imm32(INVENTORY_STORAGE_MODE_OFFSET) + b"\x00")),
+        (None, _rel32_jump(b"\x0f\x85", "clear_inventory")),
+        # Refuse half-constructed or implausible geometry before publishing it.
+        (None, _fixed(b"\x81\xb8\x88\x00\x00\x00" + _imm32(0x1000))),
+        (None, _rel32_jump(b"\x0f\x83", "clear_inventory")),
+        (None, _fixed(b"\x48\x83\xb8\x58\x00\x00\x00\x00")),
+        (None, _rel32_jump(b"\x0f\x84", "clear_inventory")),
+        (None, _fixed(b"\x48\x83\xb8\x48\x00\x00\x00\x00")),
+        (None, _rel32_jump(b"\x0f\x84", "clear_inventory")),
+        (None, _rip_form(b"\x48\x89\x05", "inventory")),  # mov [inventory],rax
+        (None, _fixed(b"\x58")),                              # pop rax
         # cmp dword ptr [bbAutoRequest],0 / je original
         (None, _rip_form(b"\x83\x3d", "request", b"\x00")),
         (None, _rel32_jump(b"\x0f\x84", "heartbeat_original")),
-        # cmp qword ptr [bbAutoInventory],0 / je original
-        (None, _rip_form(b"\x48\x83\x3d", "inventory", b"\x00")),
-        (None, _rel32_jump(b"\x0f\x84", "heartbeat_original")),
         # mov rdi,[bbAutoInventory]
         (None, _rip_form(b"\x48\x8b\x3d", "inventory")),
-        # Refuse a repository pointer retained from an old installation.
-        (None, _fixed(b"\x80\xbf" + _imm32(INVENTORY_STORAGE_MODE_OFFSET) + b"\x00")),
-        (None, _rel32_jump(b"\x0f\x85", "heartbeat_original")),
-        # lea rsi,[heartbeat descriptor]
-        (None, _rip_form(b"\x48\x8d\x35", "heartbeat_descriptor")),
-        # mov rax,find-slot / call rax
-        (None, _mov_rax_imm64(FIND_SLOT_RVA)),
-        (None, _fixed(CALL_RAX)),
-        # cmp eax,-1 / je original
-        (None, _fixed(b"\x83\xf8\xff")),
-        (None, _rel32_jump(b"\x0f\x84", "heartbeat_original")),
-        # mov rdi,[bbAutoInventory]
-        (None, _rip_form(b"\x48\x8b\x3d", "inventory")),
-        # mov esi,eax ; xor edx,edx
-        (None, _fixed(b"\x8b\xf0")),  # mov esi,eax (CE RM form)
+        # Slot FFFFFFFF takes quantity_delta's unsigned bounds branch directly
+        # to its accepted consume-return hook. It never reads a record, invokes
+        # a callee, or writes the inventory; this was checked against the exact
+        # target SELF by tools/check_bootstrap_native_cpu.py.
+        (None, _fixed(b"\xbe" + _imm32(0xFFFFFFFF))),
         (None, _fixed(b"\x31\xd2")),
-        # lea rcx,[heartbeat delta arg]
-        (None, _rip_form(b"\x48\x8d\x0d", "heartbeat_delta_arg")),
+        (None, _fixed(b"\x31\xc9")),
+        (None, _fixed(b"\x45\x31\xc0")),
+        (None, _fixed(b"\x45\x31\xc9")),
         # mov rax,quantity-delta / call rax
         (None, _mov_rax_imm64(QUANTITY_DELTA_RVA)),
         (None, _fixed(CALL_RAX)),
+        (None, _rel32_jump(b"\xe9", "heartbeat_original")),
+        ("clear_inventory", None),
+        (None, _rip_form(b"\x48\xc7\x05", "inventory", _imm32(0))),
+        (None, _fixed(b"\x58")),                              # pop rax
         ("heartbeat_original", None),
         # add rsp,7E8 -- the displaced original
         (None, _fixed(b"\x48\x81\xc4" + struct.pack("<I", 0x7E8))),
@@ -370,6 +394,7 @@ _EXTERNAL_LABELS = {
     "descriptor_normalized": DESCRIPTOR_RVA + 0x10,
     "descriptor_pointer": DESCRIPTOR_RVA + 0x08,
     "equipment_instance_registry": EQUIPMENT_INSTANCE_REGISTRY_RVA,
+    "inventory_root": INVENTORY_ROOT_RVA,
     "consume_return": CONSUME_RETURN_RVA,
     "heartbeat_return": HEARTBEAT_RETURN_RVA,
 }

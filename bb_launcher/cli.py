@@ -184,6 +184,19 @@ def build_parser() -> argparse.ArgumentParser:
     selection.add_argument("--all", dest="location", action="store_const", const="*",
                            help="test every named physical pickup in the seed during normal gameplay")
 
+    for command, help_text in (
+        ("bblauncher-export", "build and export an inactive BBLauncher mod"),
+        ("bblauncher-verify", "verify the activated mod while the game is stopped"),
+        ("bblauncher-connect", "verify a fresh BBLauncher game and start only the AP client"),
+    ):
+        external = commands.add_parser(command, help=help_text)
+        external.add_argument("--settings", required=True)
+        external.add_argument("--player-name", default="")
+        external.add_argument("--live-acceptance-candidate", action="store_true",
+                              help="development only: exercise the pinned build before live acceptance is complete")
+        if command == "bblauncher-export":
+            external.add_argument("--no-enemizer", action="store_true")
+
     return parser
 
 
@@ -191,7 +204,36 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
-        if args.command == "pickup-name-canary":
+        if args.command.startswith("bblauncher-"):
+            from .external_workflow import build_and_export, verify_before_boot, connect_external
+            from .workflow import LauncherWorkflow, EnemizerOptions
+            from .resources import application_root
+            path = Path(args.settings).resolve()
+            raw = _json_file(path, "launcher settings")
+            settings = LauncherSettings.from_dict(raw, relative_to=path.parent)
+            workflow = LauncherWorkflow(application_root())
+            kwargs = {"allow_live_acceptance_candidate": args.live_acceptance_candidate}
+            if args.command == "bblauncher-export":
+                result = build_and_export(workflow, settings,
+                    EnemizerOptions(enabled=not args.no_enemizer,
+                        seed=raw.get("enemy_seed"), allow_tier_mixing=bool(raw.get("allow_tier_mixing")),
+                        preserve_locomotion=bool(raw.get("preserve_locomotion")),
+                        normalize_scaling=bool(raw.get("normalize_scaling")), boss_canary=bool(raw.get("boss_canary"))),
+                    player_name=args.player_name, progress=print, **kwargs)
+                _print({"package": str(result.package_path), "receipt": str(result.receipt_path)})
+            elif args.command == "bblauncher-verify":
+                result = verify_before_boot(
+                    workflow, settings, player_name=args.player_name, **kwargs
+                )
+                _print({"status": "ready for a fresh boot from BBLauncher", "activation_fingerprint": result.activation_fingerprint})
+            else:
+                result = connect_external(workflow, settings, player_name=args.player_name, progress=print, **kwargs)
+                if result.early_exit is not None:
+                    _print({"status": "client failed to start", "message": result.early_exit.describe(),
+                            "client_log": str(result.client_log)})
+                    return 1
+                _print({"status": "client started", "process_ids": result.process_ids, "client_log": str(result.client_log)})
+        elif args.command == "pickup-name-canary":
             from .workflow import EnemizerOptions, LauncherWorkflow
             from .resources import application_root
             settings_path = Path(args.settings).resolve()

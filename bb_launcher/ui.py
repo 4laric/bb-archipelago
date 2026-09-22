@@ -467,6 +467,8 @@ class LauncherApp:
 
         from .local_session_ui import LocalSessionPanel
         self.local_session_panel = LocalSessionPanel(self, notebook)
+        from .external_ui import BBLauncherPanel
+        self.bblauncher_panel = BBLauncherPanel(self, notebook)
 
         # Troubleshooting carries every operator path plus the recovery
         # actions, which is taller than the notebook on a short display, so
@@ -885,6 +887,11 @@ class LauncherApp:
                 widget.grid_remove()
 
     def _refresh_launch_gate(self) -> None:
+        panel = getattr(self, "bblauncher_panel", None)
+        if panel and panel.enabled.get():
+            self.launch_hint.set("BBLauncher mode: use the BBLauncher tab to export, verify, and connect.")
+            self.launch_button.configure(state="disabled")
+            return
         required = (
             ("AP seed", self.fields["ap_request"].get().strip()),
             ("shadPS4", self.fields["shad_executable"].get().strip()),
@@ -912,7 +919,9 @@ class LauncherApp:
         return Path(raw).expanduser() if raw else default_state_root()
 
     def _settings(self) -> LauncherSettings:
-        return settings_from_fields({name: variable.get() for name, variable in self.fields.items()})
+        settings = settings_from_fields({name: variable.get() for name, variable in self.fields.items()})
+        panel = getattr(self, "bblauncher_panel", None)
+        return panel.settings(settings) if panel else settings
 
     def _save_settings(self) -> None:
         try:
@@ -951,6 +960,9 @@ class LauncherApp:
                 raw = value.get(name)
                 if isinstance(raw, str):
                     self.fields[name].set(raw)
+            panel = getattr(self, "bblauncher_panel", None)
+            if panel:
+                panel.load(value)
             self.randomize_enemies.set(bool(value.get("randomize_enemies", True)))
             self.enemy_seed.set(str(value.get("enemy_seed", "")))
             self.ap_server.set(str(value.get("ap_server", "")))
@@ -1025,6 +1037,10 @@ class LauncherApp:
             settings = self._settings()
         except LauncherError:
             self._set_status_text("Finish the setup paths above to see session status.")
+            return
+        panel = getattr(self, "bblauncher_panel", None)
+        if panel and panel.enabled.get():
+            panel.refresh_status(settings)
             return
         try:
             install = GameInstall.from_root(settings.game_root)
@@ -1139,6 +1155,10 @@ class LauncherApp:
 
     def _start_connect(self) -> None:
         """Start only the AP client; the backend verifies the installed seed."""
+        panel = getattr(self, "bblauncher_panel", None)
+        if panel and panel.enabled.get():
+            panel.start("connect")
+            return
         if self._busy or not self._generate_plan():
             return
         try:

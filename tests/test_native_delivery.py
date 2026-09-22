@@ -113,10 +113,11 @@ FROZEN_CONSUME_CAVE = (
     "89053A020000C70534020000010000004489E04883C428E998D93FFC"
 )
 FROZEN_HEARTBEAT_CAVE = (
-    "833D49020000000F8569000000833DEC010000000F845C00000048833DEE010000000F844E00"
-    "0000488B3DE101000080BF8C000000000F853A000000488D35FD01000048B8C0A24D01000000"
-    "00FFD083F8FF0F841E000000488B3DB10100008BF031D2488D0DE201000048B8A0944D010000"
-    "0000FFD04881C4E8070000E9072CB2FC"
+    "833D49020000000F85A500000050488B051BF545004885C00F8488000000488B40084885C00F"
+    "847B00000048052803000080B88C000000000F856800000081B888000000001000000F835800"
+    "00004883B858000000000F844A0000004883B848000000000F843C0000004889059F01000058"
+    "833D87010000000F8433000000488B3D8A010000BEFFFFFFFF31D231C94531C04531C948B8A0"
+    "944D0100000000FFD0E90C00000048C7055F01000000000000584881C4E8070000E9CB2BB2FC"
 )
 
 
@@ -141,7 +142,7 @@ class PayloadAssemblyTests(unittest.TestCase):
         )
         self.assertEqual(
             sorted([payload.ITEM_GRANT_RVA, payload.QUANTITY_DELTA_RVA,
-                    payload.QUANTITY_DELTA_RVA, payload.FIND_SLOT_RVA,
+                    payload.QUANTITY_DELTA_RVA,
                     payload.ALLOCATE_EQUIPMENT_INSTANCE_RVA,
                     payload.ALLOCATE_ARMOR_INSTANCE_RVA,
                     payload.RESOLVE_DESCRIPTOR_RVA, payload.CATEGORY8_GENERATOR_RVA,
@@ -403,7 +404,7 @@ class DeliveryStateMachineTests(unittest.TestCase):
         session = GrantSession(runtime=FakeRuntime(ready=False))
         session.submit(_command(expected_before=0))
         self.assertEqual("awaiting_inventory", session.poll())
-        self.assertIn("use one bullet once", session.state.detail)
+        self.assertIn("waiting for automatic inventory initialization", session.state.detail)
 
     def test_absent_blood_vial_insertion_is_refused(self):
         runtime = FakeRuntime()
@@ -945,15 +946,18 @@ class ContractTests(unittest.TestCase):
         self.assertGreaterEqual(len(found), 15)
         self.assertFalse(set(found) - allowed, f"unknown provenance labels in {sorted(set(found))}")
 
-    def test_the_payload_bytes_are_labelled_validated(self):
-        """Owner checklist item 1 (2026-08-24): the caves were read back from a
-        live armed shadPS4 process with tools/compare_ce_payload.py. The only
-        differences were MR-form vs RM-form encodings of three reg-to-reg movs,
-        which were switched to CE's encoding, so the shipped blob is now
-        byte-identical to what CE emits. `validated` is earned, not asserted."""
+    def test_payload_provenance_distinguishes_the_native_bootstrap_extension(self):
+        """Keep the historical core and live-tested native bootstrap distinct
+        from HP blobs whose provenance is still inferred."""
         self.assertEqual("validated", self.committed["payload"]["provenance"])
         for blob in self.committed["payload"]["blobs"]:
-            expected = "inferred" if blob["name"] in {"hp_cave", "hp_detour"} else "validated"
+            expected = (
+                "inferred"
+                if blob["name"] in {
+                    "hp_cave", "hp_detour",
+                }
+                else "validated"
+            )
             self.assertEqual(expected, blob["provenance"], blob["name"])
 
     def test_the_contract_names_only_the_validated_serial(self):
@@ -984,6 +988,10 @@ class _FakeImage:
         self._seed(payload.CONSUME_HOOK_RVA, payload.CONSUME_ORIGINAL)
         self._seed(payload.HEARTBEAT_HOOK_RVA, payload.HEARTBEAT_ORIGINAL)
         self._seed(payload.HP_HOOK_RVA, payload.HP_ORIGINAL)
+        self._seed(payload.INVENTORY_ROOT_REFERENCE_RVA,
+                   payload.INVENTORY_ROOT_REFERENCE)
+        self._seed(payload.INVENTORY_OFFSET_REFERENCE_RVA,
+                   payload.INVENTORY_OFFSET_REFERENCE)
 
     def _seed(self, address, data):
         for index, byte in enumerate(data):
