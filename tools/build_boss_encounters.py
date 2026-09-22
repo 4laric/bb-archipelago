@@ -58,6 +58,7 @@ from tools.bb_enemizer.logarius_contract import (
 from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, native_plan_bsb_at_logarius
 from tools.bb_enemizer.paarl_logarius_contract import patch_paarl_at_logarius, native_plan_paarl_at_logarius
 from tools.bb_enemizer.bsb_wet_nurse_contract import patch_bsb_at_wet_nurse, native_plan_bsb_at_wet_nurse
+from tools.bb_enemizer.orphan_gascoigne_contract import patch_orphan_at_gascoigne, native_plan_orphan_at_gascoigne
 from tools.bb_enemizer.orphan_contract import (
     OrphanIds, NativeActorPin as OrphanActorPin,
     patch_orphan_at_cleric, native_plan_orphan_at_cleric,
@@ -150,6 +151,11 @@ LOGARIUS_COMPATIBILITY = {
     'martyr-logarius': ('blood-starved-beast', 'darkbeast-paarl'),
 }
 
+GASCOIGNE_COMPATIBILITY = {
+    'cleric-beast': ('father-gascoigne',),
+    'father-gascoigne': ('cleric-beast', 'orphan-of-kos'),
+}
+
 
 def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
     """Closed roster assembled from explicitly reviewed directed adapters."""
@@ -161,6 +167,7 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
         LUDWIG_COMPATIBILITY,
         ORPHAN_COMPATIBILITY,
         LOGARIUS_COMPATIBILITY,
+        GASCOIGNE_COMPATIBILITY,
         FINAL_COMPATIBILITY,
     ):
         for arena, donors in section.items():
@@ -200,6 +207,10 @@ def is_paarl_logarius_pair(arena, package) -> bool:
 
 def is_bsb_wet_nurse_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('mergos-wet-nurse', 'blood-starved-beast')
+
+
+def is_orphan_gascoigne_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('father-gascoigne', 'orphan-of-kos')
 
 
 def is_maria_pair(arena, package) -> bool:
@@ -457,8 +468,8 @@ def build(args) -> dict:
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] != 'blood-starved-beast':
         raise ValueError('Wet Nurse arena requires the reviewed BSB donor adapter')
-    if orphan and getattr(args, 'arena', None) != 'cleric-beast':
-        raise ValueError('Orphan requires the reviewed Cleric arena adapter')
+    if orphan and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne'):
+        raise ValueError('Orphan requires a reviewed Cleric or Gascoigne arena adapter')
     reviewed_orphan_pairs = {
         ('orphan-of-kos', 'blood-starved-beast'),
         ('orphan-of-kos', 'ludwig'),
@@ -482,6 +493,7 @@ def build(args) -> dict:
     reviewed_gascoigne_pairs = {
         ('cleric-beast', 'father-gascoigne'),
         ('father-gascoigne', 'cleric-beast'),
+        ('father-gascoigne', 'orphan-of-kos'),
     }
     if direct_gascoigne[0] == 'father-gascoigne' or direct_gascoigne[1] == 'father-gascoigne':
         if direct_gascoigne not in reviewed_gascoigne_pairs:
@@ -551,7 +563,9 @@ def build(args) -> dict:
         terminals = {}
         for arena, package in pairs:
             ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
-            if package.key == 'orphan-of-kos':
+            if is_orphan_gascoigne_pair(arena, package):
+                patched = patch_orphan_at_gascoigne(texts[arena.event_file], texts[package.event_file])
+            elif package.key == 'orphan-of-kos':
                 patched = patch_orphan_at_cleric(texts[arena.event_file], texts[package.event_file], ORPHAN_ALLOCATION)
                 terminals[arena.event_file] = ({'event_id': 12411700, 'original_actor': 2410800,
                     'bridge_event_id': ORPHAN_ALLOCATION.terminal_bridge_event_id},)
@@ -658,7 +672,11 @@ def build(args) -> dict:
         plans = []
         for arena, package in pairs:
             ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
-            if package.key == 'orphan-of-kos':
+            if is_orphan_gascoigne_pair(arena, package):
+                plan = native_plan_orphan_at_gascoigne(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif package.key == 'orphan-of-kos':
                 plan = native_plan_orphan_at_cleric(slots, npcs, effects, ORPHAN_ALLOCATION,
                                                     orphan_actor_pins(args), args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])

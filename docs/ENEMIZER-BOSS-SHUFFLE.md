@@ -68,8 +68,8 @@ matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
-Ebrietas, Maria, Laurence, Ludwig, Orphan and Logarius, plus the reciprocal Gehrman/Moon Presence pair. The regular
-eleven-boss graph has two complete assignments selected by seed; the final pair
+Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius and Gascoigne, plus the reciprocal Gehrman/Moon Presence pair. The regular
+twelve-boss graph has two complete assignments selected by seed; the final pair
 is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
@@ -241,7 +241,7 @@ seed-dependent assignments.
 | Encounter | Donor adapter | Destination adapter | Reviewed pool |
 |---|---|---|---|
 | Cleric Beast | Constructed | Constructed | Yes |
-| Father Gascoigne | Constructed | Constructed | Pending cross-links |
+| Father Gascoigne | Constructed | Constructed | Yes |
 | Blood-starved Beast | Constructed | Constructed | Yes |
 | Darkbeast Paarl | Constructed | Constructed | Yes |
 | Vicar Amelia | Constructed | Constructed | Yes |
@@ -324,3 +324,13 @@ not establish the engine meaning of `2600803` or runtime validity of the bridge.
 The original map (`af32f7e1038cfd52dbf3b9f073ac1f25f47422230a4cfad3d35d62517d825919`)
 has no such ID in a pinned SoulsFormats scan of loaded MSBB tables; the source
 EMEVD contains only its terminal and camera uses. No fourth actor is invented.
+
+Orphan-at-Gascoigne brings the pool to fourteen encounters. The original human
+and beast parts become Orphan's two combat bodies across all three map states;
+only the c4543 support is added. Its independent ready flag is not aliased to
+the health event's completion flag. The original Gascoigne cutscene and OR-death
+terminal remain unchanged. Both complete assignments verify forty files,
+sixteen logical primary swaps, twenty-one source initialization records,
+twelve auxiliary actor placements, twenty total NPC clones and thirteen
+normalization effects. These counts include other encounters in the pool and
+are not evidence of live phase behavior or arena fit.
