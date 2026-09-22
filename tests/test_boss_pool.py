@@ -3,7 +3,12 @@ import copy
 import tempfile
 from pathlib import Path
 
-from tools.bb_enemizer.boss_pool import assign_donors, combine_native_plans, compose_event_patches
+from tools.bb_enemizer.boss_pool import (
+    assign_donors,
+    combine_native_plans,
+    combine_ordinary_and_boss_plans,
+    compose_event_patches,
+)
 
 
 SOURCE = '''$Event(0, Default, function() {
@@ -28,7 +33,11 @@ class BossPoolTests(unittest.TestCase):
             return {
                 'format': 'bb-enemizer-plan-v2', 'seed': 'actors', 'dry_run': True,
                 'swaps': [{'logical_key': key, 'destination_keys': [key]}],
-                'scaling': {'changes': [], 'skips': [{'logical_key': key}]},
+                'scaling': {
+                    'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                    'change_count': 0, 'changes': [],
+                    'skip_count': 1, 'skips': [{'logical_key': key, 'reason': 'unknown source or destination tier'}],
+                },
                 'boss_contract': {'arena': key},
                 'boss_actor_additions': [{
                     'destination_map': map_name, 'destination_entity_id': entity,
@@ -63,7 +72,10 @@ class BossPoolTests(unittest.TestCase):
                      'destination_event_id': 20, 'destination_entity_id': 200,
                      'spawn_part_map': {'source': 'destination'}}
         plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'g', 'dry_run': True,
-                'swaps': [], 'scaling': {'changes': [], 'skips': []}, 'boss_contract': {},
+                'swaps': [], 'scaling': {
+                    'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                    'change_count': 0, 'changes': [], 'skip_count': 0, 'skips': [],
+                }, 'boss_contract': {},
                 'boss_generator_additions': [generator]}
         result = combine_native_plans('g', [plan])
         self.assertEqual([generator], result['boss_generator_additions'])
@@ -160,6 +172,90 @@ class BossPoolTests(unittest.TestCase):
         self.assertEqual({209000, 508000}, {swap['target']['npc_param_id'] for swap in plan['swaps']})
         with self.assertRaisesRegex(ValueError, 'overlap a destination'):
             combine_native_plans('reciprocal', [plans[0], plans[0]])
+
+    def test_combined_plan_reallocates_once_and_keeps_ordinary_evidence(self):
+        def change(key, clone):
+            return {
+                'logical_key': key, 'source_npc_param_id': 100 + clone,
+                'cloned_npc_param_id': clone, 'sp_effect_slot': 'spEffectID1',
+                'minted_sp_effect_id': 60000, 'have_soul_rate': 1,
+                'source_level': 1, 'destination_level': 1,
+                'hp_multiplier': 1, 'attack_multiplier': 1, 'defense_multiplier': 1,
+            }
+
+        ordinary = {
+            'format': 'bb-enemizer-plan-v2', 'seed': 'shared', 'dry_run': True,
+            'options': {'allow_tier_mixing': False, 'preserve_locomotion': True},
+            'inventory': {'logical_slots': 2}, 'rejections': [{'logical_key': 'kept', 'reason': 'protected'}],
+            'swap_count': 2,
+            'swaps': [
+                {'logical_key': 'ordinary-change', 'destination_keys': ['m10:ordinary-change']},
+                {'logical_key': 'ordinary-skip', 'destination_keys': ['m10:ordinary-skip']},
+            ],
+            'scaling': {
+                'enabled': True, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                'change_count': 1, 'changes': [change('ordinary-change', 6000000)],
+                'skip_count': 1,
+                'skips': [{'logical_key': 'ordinary-skip', 'reason': 'unknown source or destination tier'}],
+            },
+        }
+        boss = {
+            'format': 'bb-enemizer-plan-v2', 'seed': 'shared', 'dry_run': True,
+            'swaps': [
+                {'logical_key': 'boss-change', 'destination_keys': ['m20:boss-change']},
+                {'logical_key': 'boss-skip', 'destination_keys': ['m20:boss-skip']},
+            ],
+            'scaling': {
+                'enabled': True, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                'change_count': 1, 'changes': [change('boss-change', 6000000)],
+                'skip_count': 1,
+                'skips': [{'logical_key': 'boss-skip', 'reason': 'no free spEffectID slot'}],
+            },
+            'boss_contract': {'arena': 'boss'},
+            'boss_external_references': [{'destination_event_file': 'm20.emevd.dcx',
+                                          'destination_event_id': 20, 'destination_actor': 200,
+                                          'entity_id': 201}],
+        }
+        before = copy.deepcopy((ordinary, boss))
+        result = combine_ordinary_and_boss_plans(ordinary, [boss])
+        self.assertEqual('shared', result['seed'])
+        self.assertEqual(ordinary['options'], result['options'])
+        self.assertEqual({'logical_slots': 2}, result['inventory'])
+        self.assertEqual(4, result['swap_count'])
+        self.assertEqual([6000000, 6000001], [row['cloned_npc_param_id'] for row in result['scaling']['changes']])
+        self.assertEqual({'ordinary-change', 'ordinary-skip', 'boss-change', 'boss-skip'}, {
+            row['logical_key'] for row in result['scaling']['changes'] + result['scaling']['skips']
+        })
+        self.assertEqual(201, result['boss_external_references'][0]['entity_id'])
+        result['options']['preserve_locomotion'] = False
+        self.assertEqual(before, (ordinary, boss))
+
+    def test_combined_plan_refuses_unaccounted_or_overlapping_placements(self):
+        ordinary = {
+            'format': 'bb-enemizer-plan-v2', 'seed': 'shared', 'dry_run': True,
+            'options': {}, 'swaps': [{'logical_key': 'ordinary', 'destination_keys': ['m10:part']}],
+            'scaling': {
+                'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                'change_count': 0, 'changes': [], 'skip_count': 0, 'skips': [],
+            },
+        }
+        boss = {
+            'format': 'bb-enemizer-plan-v2', 'seed': 'shared', 'dry_run': True,
+            'swaps': [{'logical_key': 'boss', 'destination_keys': ['m20:part']}],
+            'scaling': {
+                'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                'change_count': 0, 'changes': [], 'skip_count': 1,
+                'skips': [{'logical_key': 'boss', 'reason': 'unknown source or destination tier'}],
+            },
+            'boss_contract': {'arena': 'boss'},
+        }
+        with self.assertRaisesRegex(ValueError, 'ordinary plan scaling does not account'):
+            combine_ordinary_and_boss_plans(ordinary, [boss])
+        ordinary['scaling']['skip_count'] = 1
+        ordinary['scaling']['skips'] = [{'logical_key': 'ordinary', 'reason': 'unknown source or destination tier'}]
+        boss['swaps'][0]['destination_keys'] = ['m10:part']
+        with self.assertRaisesRegex(ValueError, 'physical destination'):
+            combine_ordinary_and_boss_plans(ordinary, [boss])
 
 
 if __name__ == '__main__':

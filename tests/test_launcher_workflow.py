@@ -22,6 +22,7 @@ from bb_launcher.workflow import (
     _request_identity,
     _source_hashes,
     _validate_suppression,
+    enemy_map_sources,
 )
 
 from test_launcher_doctor import PLAN_HASH, DoctorFixture
@@ -42,6 +43,23 @@ class LauncherWorkflowTests(unittest.TestCase):
             message = str(raised.exception)
             self.assertIn(str(fixture.gameparam), message)
             self.assertIn("build.ps1 -Package -GameRoot", message)
+
+
+class EnemyMapSourceTests(unittest.TestCase):
+    def test_patch_map_wins_while_base_only_maps_remain_available(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            install = GameInstall.from_root(DoctorFixture(Path(tmp)).root / "game")
+            base = install.base / "dvdroot_ps4/map/MapStudio"
+            patch = install.patch / "dvdroot_ps4/map/MapStudio"
+            base.mkdir(parents=True, exist_ok=True)
+            patch.mkdir(parents=True, exist_ok=True)
+            (base / "m24_01_00_00.msb.dcx").write_bytes(b"base cleric")
+            (base / "m35_00_00_00.msb.dcx").write_bytes(b"base maria")
+            (patch / "m24_01_00_00.msb.dcx").write_bytes(b"patch cleric")
+            sources = enemy_map_sources(install, None)
+            self.assertTrue({"m24_01_00_00.msb.dcx", "m35_00_00_00.msb.dcx"}.issubset(sources))
+            self.assertEqual(b"patch cleric", sources["m24_01_00_00.msb.dcx"].read_bytes())
+            self.assertEqual(b"base maria", sources["m35_00_00_00.msb.dcx"].read_bytes())
 
 
 class SuppressionMismatchOverrideTests(unittest.TestCase):

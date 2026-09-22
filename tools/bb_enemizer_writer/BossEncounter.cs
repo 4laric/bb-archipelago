@@ -277,6 +277,8 @@ internal static class BossEncounter
         Need(encounterList.Select(e => e.DestinationEventFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()
              == encounterList.Count, "duplicate boss encounter destination event file");
         BossActorTransplant.ValidatePlan(planPath, required: false);
+        var externalReferences = BossExternalReference.Read(planPath, required: false);
+        BossExternalReference.ValidateEncounterBindings(externalReferences, encounterList);
 
         string output = Path.GetFullPath(outputPath), parent = Path.GetDirectoryName(output)!;
         Need(!Directory.Exists(output) && !File.Exists(output), "boss encounter output must not exist");
@@ -286,6 +288,7 @@ internal static class BossEncounter
             Need(relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || Path.IsPathRooted(relative),
                 "boss encounter output must be outside input directories");
         }
+        BossExternalReference.ValidateInputs(externalReferences, mapsPath, eventInputDirectory);
         // Load and validate every binary before ScalingTransplant creates output.
         var prepared = new List<(Encounter Encounter, byte[] Events)>();
         foreach (var encounter in encounterList.OrderBy(e => e.DestinationEventFile, StringComparer.Ordinal)) {
@@ -316,6 +319,10 @@ internal static class BossEncounter
                 File.WriteAllBytes(eventPath, events);
                 Need(Hash(File.ReadAllBytes(eventPath)) == Hash(events), "boss encounter event copy verification failed");
             }
+            BossExternalReference.ValidateFinal(externalReferences,
+                Path.Combine(overlay, "dvdroot_ps4", "map", "MapStudio"), Path.Combine(overlay, "dvdroot_ps4", "event"));
+            if (externalReferences.Count > 0)
+                BossExternalReference.ValidateRetainedPlan(planPath, Path.Combine(overlay, "bb-enemizer-plan.json"));
             var files = Directory.GetFiles(overlay, "*", SearchOption.AllDirectories)
                 .OrderBy(path => Path.GetRelativePath(overlay, path), StringComparer.Ordinal)
                 .Select(path => new { path = Path.GetRelativePath(overlay, path).Replace('\\', '/'),
@@ -331,7 +338,7 @@ internal static class BossEncounter
                     protected_completion_event_ids = item.Encounter.ProtectedCompletionEventIds,
                     terminal_predicates = item.Encounter.TerminalPredicates ?? [],
                     compiled_event_fingerprints = item.Encounter.CompiledEventFingerprints,
-                }), files,
+                }), external_references = externalReferences, files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",
             }, Json));
             Directory.Move(overlay, output);

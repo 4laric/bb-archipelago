@@ -83,6 +83,8 @@ if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_initial
     throw new InvalidDataException("boss actor initializations require --boss-encounters and reviewed map evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_generator_additions", out _))
     throw new InvalidDataException("boss generator additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_external_references", out _))
+    throw new InvalidDataException("boss external references require --boss-encounters and reviewed event evidence");
 if (!scalingPrepared && planDocument.RootElement.TryGetProperty("scaling", out var scaling)
     && scaling.GetProperty("enabled").GetBoolean())
     throw new InvalidDataException("scaling requires --scaled; map-only mode cannot apply parameter clones");

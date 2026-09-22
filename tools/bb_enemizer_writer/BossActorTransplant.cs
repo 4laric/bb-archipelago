@@ -26,6 +26,14 @@ internal static class BossActorTransplant
         string SourceMap, string SourcePart, int SourceEntityId, Archetype SourceArchetype,
         PrimaryProvenance SourceProvenance, SourceInitialization SourceInitialization,
         string DestinationMap, string DestinationPart, int DestinationEntityId);
+    sealed record PrimarySwap(string LogicalKey, List<string> DestinationKeys, Archetype Target, Archetype? UnscaledTarget);
+    sealed record PrimaryPlan(string Format, bool DryRun, List<PrimarySwap> Swaps, PrimaryScaling Scaling);
+    sealed record PrimaryScaling(bool Enabled, string Mechanism, int ChangeCount, bool Applied, List<PrimaryScale> Changes);
+    sealed record PrimaryScale(string LogicalKey, int SourceNpcParamId, int ClonedNpcParamId,
+        string SpEffectSlot, int MintedSpEffectId, double HaveSoulRate, int SourceLevel,
+        int DestinationLevel, double HpMultiplier, double AttackMultiplier, double DefenseMultiplier);
+    sealed record ScalingReport(string Format, bool Applied, string SourcePlanSha256,
+        string OutputPlanSha256, string OutputGameparamSha256, List<PrimaryScale> Changes);
     internal sealed record GeneratorAddition(
         string SourceMap, string SourceEvent, int SourceEventId, int SourceEntityId, string SourceFingerprint,
         string DestinationMap, string DestinationEvent, int DestinationEventId, int DestinationEntityId,
@@ -52,6 +60,7 @@ internal static class BossActorTransplant
         _ => part.GetType().Name,
     };
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+    static string HashFile(string path) => Hash(File.ReadAllBytes(path));
     static void RequireHash(string? hash, string what) => Need(hash is { Length: 64 }
         && hash.All(c => char.IsAsciiHexDigit(c) && !char.IsUpper(c)), $"invalid {what} SHA256");
     static float[] Values(Vector3 value) => [value.X, value.Y, value.Z];
@@ -220,7 +229,7 @@ internal static class BossActorTransplant
         }
     }
     static void ApplyPrimaryInitializations(List<PrimaryInitialization> initializations,
-        string sourceMaps, string destinationMaps, string outputMaps) {
+        string planPath, string sourceMaps, string destinationMaps, string outputMaps) {
         if (initializations.Count == 0) return;
         var sources = new Dictionary<string, MSBB>(StringComparer.Ordinal);
         MSBB Source(string map) { string key = Bare(map); if (!sources.TryGetValue(key, out var value)) sources[key] = value = MSBB.Read(Resolve(sourceMaps, key)); return value; }
@@ -250,8 +259,15 @@ internal static class BossActorTransplant
             Need(target is not null && target.EntityID == item.DestinationEntityId,
                 "primary actor initialization destination provenance drift");
             var targetEnemy = target!;
-            Need(new Archetype(targetEnemy.ModelName, targetEnemy.NPCParamID, targetEnemy.ThinkParamID, targetEnemy.CharaInitID) == item.SourceArchetype,
-                "primary actor initialization target does not match source combat archetype");
+            var targetArchetype = new Archetype(targetEnemy.ModelName, targetEnemy.NPCParamID,
+                targetEnemy.ThinkParamID, targetEnemy.CharaInitID);
+            if (targetArchetype != item.SourceArchetype) {
+                Need(targetArchetype.ModelName == item.SourceArchetype.ModelName
+                    && targetArchetype.ThinkParamId == item.SourceArchetype.ThinkParamId
+                    && targetArchetype.CharaInitId == item.SourceArchetype.CharaInitId,
+                    "primary actor initialization target does not match source combat archetype");
+                RequireReviewedNormalizedClone(planPath, outputMaps, item, targetArchetype.NpcParamId);
+            }
             var before = PartInvariant.Capture(targetEnemy);
             targetEnemy.TalkID = sourceEnemy.TalkID; targetEnemy.UnkT18 = sourceEnemy.UnkT18;
             targetEnemy.InitAnimID = sourceEnemy.InitAnimID; targetEnemy.DamageAnimID = sourceEnemy.DamageAnimID;
@@ -265,6 +281,68 @@ internal static class BossActorTransplant
                 InitAnimId = initialization.InitAnimId, DamageAnimId = initialization.DamageAnimId })
                 .RequireSame(Path.GetFileName(output), persisted!);
         }
+    }
+    static string OverlayRoot(string outputMaps) {
+        var studio = new DirectoryInfo(Path.GetFullPath(outputMaps));
+        var map = studio.Parent;
+        var dvd = map?.Parent;
+        var root = dvd?.Parent;
+        Need(studio.Name == "MapStudio" && map?.Name == "map"
+            && dvd?.Name == "dvdroot_ps4" && root is not null,
+            "scaled primary initialization output layout is invalid");
+        return root!.FullName;
+    }
+    static bool IsPhysicalDestinationKey(string key, PrimaryInitialization item) {
+        int separator = key.LastIndexOf(':');
+        return separator > 0 && key.IndexOf(':') == separator
+            && Bare(key[..separator]) == Bare(item.DestinationMap)
+            && key[(separator + 1)..] == item.DestinationPart;
+    }
+    static void RequireReviewedNormalizedClone(string planPath, string outputMaps,
+        PrimaryInitialization item, int actualNpcParamId) {
+        string root = OverlayRoot(outputMaps);
+        string sourcePlan = Path.Combine(root, "source-enemizer-plan.json");
+        string adjustedPlan = Path.Combine(root, "bb-enemizer-plan.json");
+        string receiptPath = Path.Combine(root, "scaling-report.json");
+        string outputGame = Path.Combine(root, "dvdroot_ps4", "param", "gameparam", "gameparam.parambnd.dcx");
+        Need(File.Exists(sourcePlan) && File.Exists(adjustedPlan) && File.Exists(receiptPath) && File.Exists(outputGame),
+            "scaled primary initialization requires native scaling evidence");
+        Need(File.ReadAllBytes(sourcePlan).SequenceEqual(File.ReadAllBytes(planPath)),
+            "scaled primary initialization source plan does not match requested plan");
+        var original = JsonSerializer.Deserialize<PrimaryPlan>(File.ReadAllText(planPath), Json)
+            ?? throw new InvalidDataException("invalid primary initialization source plan");
+        var adjusted = JsonSerializer.Deserialize<PrimaryPlan>(File.ReadAllText(adjustedPlan), Json)
+            ?? throw new InvalidDataException("invalid adjusted primary initialization plan");
+        var receipt = JsonSerializer.Deserialize<ScalingReport>(File.ReadAllText(receiptPath), Json)
+            ?? throw new InvalidDataException("invalid scaling receipt");
+        Need(original.Format == "bb-enemizer-plan-v2" && original.DryRun, "invalid primary initialization source plan format");
+        Need(adjusted.Format == original.Format && adjusted.DryRun == original.DryRun
+            && adjusted.Scaling.Enabled && adjusted.Scaling.Applied
+            && adjusted.Scaling.Mechanism == "inferred_static_npc_clone_sp_effect",
+            "adjusted plan lacks applied native scaling");
+        Need(receipt.Format == "bb-enemizer-scaling-v1" && receipt.Applied
+            && receipt.SourcePlanSha256 == HashFile(planPath) && receipt.OutputPlanSha256 == HashFile(adjustedPlan)
+            && receipt.OutputGameparamSha256 == HashFile(outputGame),
+            "scaled primary initialization receipt does not attest native output");
+        var sourceSwaps = original.Swaps.Where(s => s.DestinationKeys.Any(key => IsPhysicalDestinationKey(key, item))).ToList();
+        Need(sourceSwaps.Count == 1 && sourceSwaps[0].Target == item.SourceArchetype,
+            "primary actor initialization source does not match logical swap");
+        var sourceSwap = sourceSwaps[0];
+        var adjustedSwaps = adjusted.Swaps.Where(s => s.LogicalKey == sourceSwap.LogicalKey).ToList();
+        Need(adjustedSwaps.Count == 1 && adjustedSwaps[0].UnscaledTarget == sourceSwap.Target
+            && adjustedSwaps[0].Target.ModelName == sourceSwap.Target.ModelName
+            && adjustedSwaps[0].Target.ThinkParamId == sourceSwap.Target.ThinkParamId
+            && adjustedSwaps[0].Target.CharaInitId == sourceSwap.Target.CharaInitId
+            && adjustedSwaps[0].Target.NpcParamId == actualNpcParamId,
+            "primary actor initialization target is not reviewed normalized clone");
+        var planChanges = adjusted.Scaling.Changes.Where(change => change.LogicalKey == sourceSwap.LogicalKey).ToList();
+        var receiptChanges = receipt.Changes.Where(change => change.LogicalKey == sourceSwap.LogicalKey).ToList();
+        Need(planChanges.Count == 1 && receiptChanges.Count == 1
+            && planChanges[0] == receiptChanges[0]
+            && planChanges[0].SourceNpcParamId == item.SourceArchetype.NpcParamId
+            && planChanges[0].ClonedNpcParamId == actualNpcParamId
+            && actualNpcParamId is >= 6000000 and <= 6099999,
+            "primary actor initialization clone lacks matching native scaling change");
     }
     static MSBB.Event.Generator Generator(MSBB map, string name, int eventId, int entityId, string role) {
         var rows = map.Events.Generators.Where(e => e.Name == name && e.EventID == eventId && e.EntityID == entityId).ToList();
@@ -345,7 +423,7 @@ internal static class BossActorTransplant
     internal static int Apply(string planPath, string sourceMaps, string destinationMaps, string outputMaps, bool required) {
         var actors = Read(planPath, required); var primary = ReadPrimaryInitializations(planPath, false); var generators = ReadGenerators(planPath, false);
         ApplyActors(actors, sourceMaps, destinationMaps, outputMaps);
-        ApplyPrimaryInitializations(primary, sourceMaps, destinationMaps, outputMaps);
+        ApplyPrimaryInitializations(primary, planPath, sourceMaps, destinationMaps, outputMaps);
         ApplyGenerators(generators, sourceMaps, destinationMaps, outputMaps);
         return actors.Count + primary.Count + generators.Count;
     }
@@ -353,7 +431,10 @@ internal static class BossActorTransplant
     internal static int Inspect(string path) {
         var map = MSBB.Read(path); string name = Bare(Path.GetFileName(path));
         Console.WriteLine(JsonSerializer.Serialize(new {
-            format = "bb-boss-actor-pins-v1", map = name,
+            format = "bb-boss-actor-pins-v1", map = name, map_sha256 = Hash(File.ReadAllBytes(path)),
+            entity_ids = map.Parts.GetEntries().Select(item => item.EntityID)
+                .Concat(map.Regions.Regions.Select(item => item.EntityID))
+                .Concat(map.Events.GetEntries().Select(item => item.EntityID)).Distinct().Order().ToArray(),
             parts = Parts(map).OrderBy(p => p.Name, StringComparer.Ordinal).Select(part => new {
                 name = part.Name, kind = Kind(part), entity_id = part.EntityID, fingerprint = Fingerprint(name, part),
                 source_archetype = part is MSBB.Part.EnemyBase enemy ? new { model_name = enemy.ModelName, npc_param_id = enemy.NPCParamID, think_param_id = enemy.ThinkParamID, chara_init_id = enemy.CharaInitID } : null,

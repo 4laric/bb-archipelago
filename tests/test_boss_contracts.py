@@ -11,10 +11,12 @@ from tools.bb_enemizer.boss_contracts import (
     AMELIA_PACKAGE,
     AMYGDALA_ARENA,
     AMYGDALA_PACKAGE,
+    actor_addition_requirements,
     BSB_ARENA,
     BSB_PACKAGE,
     CLERIC_ARENA,
     CLERIC_PACKAGE,
+    EBRIETAS_ARENA,
     EBRIETAS_PACKAGE,
     COMPATIBILITY,
     PACKAGES,
@@ -214,6 +216,22 @@ class ClericArenaContractTests(unittest.TestCase):
         # than through a broad m24->m23 numeric replacement.
         self.assertIn("EventFlag(12304800)", attached[targets[12424980]])
 
+    def test_ebrietas_at_paarl_requires_and_uses_a_pinned_helper_actor_addition(self):
+        before = event_blocks(self.old_yharnam)
+        after = event_blocks(patch_contract_swap(
+            PAARL_ARENA, EBRIETAS_PACKAGE, self.old_yharnam, self.ebrietas,
+            allow_materialized_actor_additions=True))
+        self.assertEqual([12304917, 12304918, 12304919, 12304921],
+                         sorted(set(after) - set(before)))
+        self.assertEqual(before[12301700], after[12301700])
+        self.assertIn("ForceAnimationPlayback(2300810, 7001, true", after[12301702])
+        self.assertIn("SetCharacterImmortality(2300810, Enabled)", after[12301702])
+        self.assertIn("SetSpEffect(2300810, 5647, false)", after[12301702])
+        self.assertIn("ForceAnimationPlayback(2300810, 7000, false, true", after[12301702])
+        self.assertIn("CreateBulletOwner(2300891);", after[0])
+        self.assertIn("ShootBullet(2300891, 2300810, 6, 225100310", after[12304918])
+        self.assertIn("EventFlag(12304700)", after[12304917])
+
     def test_amelia_uses_the_reusable_attachment_path_with_its_heal_choreography(self):
         before = event_blocks(self.old_yharnam)
         after = event_blocks(patch_contract_swap(BSB_ARENA, AMELIA_PACKAGE, self.old_yharnam, self.amelia))
@@ -290,6 +308,98 @@ class ClericArenaContractTests(unittest.TestCase):
         self.assertIn("SetLockcamSlotNumber(33, 0, 1)", after[13304804])
         self.assertEqual(5, after[0].count("13304930"))
 
+    def test_cleric_at_amygdala_uses_the_generic_attachment_adapter_without_touching_terminal(self):
+        before = event_blocks(self.amygdala)
+        after = event_blocks(patch_contract_swap(AMYGDALA_ARENA, CLERIC_PACKAGE,
+                                                 self.amygdala, self.cleric))
+        self.assertEqual([13304907, 13304908, 13304920, 13304930],
+                         sorted(set(after) - set(before)))
+        self.assertEqual(before[13301800], after[13301800])
+        self.assertIn("InArea(10000, 3302805)", after[13301802])
+        self.assertIn("ForceAnimationPlayback(3300800, 3028", after[13301802])
+        self.assertNotIn("ForceAnimationPlayback(3300800, 7003", after[13301802])
+        self.assertIn("DisplayBossHealthBar(Enabled, 3300800, 0, 500000)", after[13304802])
+        self.assertIn("CharacterHasEventMessage(3300800, 100)", after[13304803])
+        self.assertIn("SetLockcamSlotNumber(33, 0, 1)", after[13304804])
+        self.assertIn("HPRatio(3300800) < 0.7", after[13304907])
+        self.assertEqual(5, after[0].count("13304930"))
+        self.assertEqual(5, after[0].count("13304920"))
+
+    def test_amygdala_at_ebrietas_preserves_ebrietas_terminal_and_damage_trigger(self):
+        before = event_blocks(self.ebrietas)
+        after = event_blocks(patch_contract_swap(EBRIETAS_ARENA, AMYGDALA_PACKAGE,
+                                                 self.ebrietas, self.amygdala))
+        self.assertEqual([12424907, 12424908, 12424920, 12424930, 12424940],
+                         sorted(set(after) - set(before)))
+        self.assertEqual(before[12421800], after[12421800])
+        self.assertIn("HasDamageType(2420800, 10000, DamageType.Unspecified)", after[12421802])
+        self.assertIn("ForceAnimationPlayback(2420800, 7003, true", after[12421802])
+        self.assertIn("ForceAnimationPlayback(2420800, 7006, false", after[12421802])
+        self.assertIn("ForceAnimationPlayback(2420800, 7002, false", after[12421802])
+        self.assertNotIn("SetCharacterImmortality(2420800", after[12421802])
+        self.assertIn("DisplayBossHealthBar(Enabled, 2420800, 0, 512000)", after[12424802])
+        self.assertIn("CharacterHasEventMessage(2420800, 10)", after[12424803])
+        self.assertIn("SetLockcamSlotNumber(24, 2, 1)", after[12424804])
+        self.assertIn("HPRatio(2420800) < 0.7", after[12424907])
+        self.assertEqual(10, after[0].count("12424930"))
+        self.assertEqual(2, after[0].count("12424920"))
+
+    def test_cleric_at_ebrietas_preserves_damage_entry_and_replaces_only_ebrietas_state(self):
+        before = event_blocks(self.ebrietas)
+        after = event_blocks(patch_contract_swap(EBRIETAS_ARENA, CLERIC_PACKAGE,
+                                                 self.ebrietas, self.cleric))
+        self.assertEqual([12424907, 12424908, 12424920, 12424930],
+                         sorted(set(after) - set(before)))
+        self.assertEqual(before[12421800], after[12421800])
+        self.assertIn("HasDamageType(2420800, 10000, DamageType.Unspecified)", after[12421802])
+        self.assertIn("ForceAnimationPlayback(2420800, 3028", after[12421802])
+        self.assertNotIn("SetCharacterImmortality(2420800", after[12421802])
+        self.assertNotIn("SetSpEffect(2420800, 5647", after[12421802])
+        self.assertIn("DisplayBossHealthBar(Enabled, 2420800, 0, 500000)", after[12424802])
+        self.assertIn("SetLockcamSlotNumber(24, 2, 1)", after[12424804])
+        self.assertEqual(5, after[0].count("12424930"))
+        self.assertEqual(5, after[0].count("12424920"))
+
+    def test_bsb_at_ebrietas_reuses_two_declared_phase_slots_and_keeps_ebrietas_fog_camera(self):
+        before = event_blocks(self.ebrietas)
+        after = event_blocks(patch_contract_swap(EBRIETAS_ARENA, BSB_PACKAGE,
+                                                 self.ebrietas, self.old_yharnam))
+        changed = {event_id for event_id in before if before[event_id] != after[event_id]}
+        self.assertEqual({12421802, 12424802, 12424803, 12424870, 12424871, 12424980, 12424990},
+                         changed)
+        self.assertEqual(before[12421800], after[12421800])
+        self.assertIn("HasDamageType(2420800, 10000, DamageType.Unspecified)", after[12421802])
+        self.assertIn("ForceAnimationPlayback(2420800, 7001, false", after[12421802])
+        self.assertNotIn("SetCharacterImmortality(2420800", after[12421802])
+        self.assertIn("DisplayBossHealthBar(Enabled, 2420800, 0, 209000)", after[12424802])
+        self.assertIn("CharacterHasEventMessage(2420800, 20)", after[12424803])
+        self.assertIn("SetLockcamSlotNumber(24, 2, 1)", after[12424804])
+        self.assertIn("SetLockcamSlotNumber(24, 2, 0)", after[12424804])
+        self.assertIn("HPRatio(2420800) < 0.67", after[12424980])
+        self.assertIn("HPRatio(2420800) < 0.33 && EventFlag(12424980)", after[12424990])
+        self.assertNotIn("ShootBullet", after[12424990])
+        self.assertIn("function(unused_npcPartId, unused_npcPartId2", after[12424870])
+        self.assertIn("function(unused_npcPartId, unused_npcPartId2", after[12424871])
+
+    def test_amygdala_at_amelia_retains_cutscene_and_uses_native_wake_up_sequence(self):
+        before = event_blocks(self.amelia)
+        after = event_blocks(patch_contract_swap(AMELIA_ARENA, AMYGDALA_PACKAGE,
+                                                 self.amelia, self.amygdala))
+        self.assertEqual([12404907, 12404908, 12404910, 12404920, 12404930],
+                         sorted(set(after) - set(before)))
+        self.assertEqual(before[12401800], after[12401800])
+        self.assertIn("PlayCutsceneToPlayer(24000060", after[12401802])
+        self.assertIn("ForceAnimationPlayback(2400800, 7003, true", after[12401802])
+        self.assertIn("ForceAnimationPlayback(2400800, 7006, false", after[12401802])
+        self.assertIn("ForceAnimationPlayback(2400800, 7002, false", after[12401802])
+        self.assertNotIn("ForceAnimationPlayback(2400800, 7000", after[12401802])
+        self.assertIn("DisplayBossHealthBar(Enabled, 2400800, 0, 512000)", after[12404802])
+        self.assertIn("CharacterHasEventMessage(2400800, 10)", after[12404803])
+        self.assertIn("SetLockcamSlotNumber(24, 0, 1)", after[12404804])
+        self.assertEqual(10, after[0].count("12404920"))
+        self.assertEqual(2, after[0].count("12404910"))
+        self.assertEqual(1, after[0].count("12404930"))
+
 
 class ContractPlanningTests(unittest.TestCase):
     def test_seeded_selection_is_independent_and_metadata_names_only_typed_remaps(self):
@@ -304,15 +414,17 @@ class ContractPlanningTests(unittest.TestCase):
         self.assertEqual(508000, first["health_bar"]["label"])
         self.assertEqual(5, len(first["part_initializers"]))
 
-    def test_reviewed_registry_exposes_the_three_package_compatible_pool(self):
-        self.assertEqual({"blood-starved-beast", "darkbeast-paarl", "cleric-beast", "vicar-amelia", "amygdala"},
+    def test_reviewed_registry_exposes_the_six_package_compatible_pool(self):
+        self.assertEqual({"blood-starved-beast", "darkbeast-paarl", "cleric-beast", "vicar-amelia", "amygdala", "ebrietas"},
                          {package.key for package in PACKAGES})
         self.assertEqual(("darkbeast-paarl", "cleric-beast", "vicar-amelia"),
                          COMPATIBILITY[BSB_ARENA.key])
-        self.assertEqual(("blood-starved-beast", "cleric-beast", "vicar-amelia", "amygdala"),
+        self.assertEqual(("blood-starved-beast", "cleric-beast", "vicar-amelia", "amygdala", "ebrietas"),
                          COMPATIBILITY[PAARL_ARENA.key])
-        self.assertEqual(("cleric-beast",), COMPATIBILITY[AMELIA_ARENA.key])
-        self.assertEqual(("vicar-amelia",), COMPATIBILITY[AMYGDALA_ARENA.key])
+        self.assertEqual(("cleric-beast", "amygdala"), COMPATIBILITY[AMELIA_ARENA.key])
+        self.assertEqual(("vicar-amelia", "cleric-beast"), COMPATIBILITY[AMYGDALA_ARENA.key])
+        self.assertEqual(("amygdala", "cleric-beast", "blood-starved-beast"),
+                         COMPATIBILITY[EBRIETAS_ARENA.key])
 
     def test_attached_plan_maps_only_declared_source_events(self):
         plan = plan_contract_shuffle("cleric", BSB_ARENA, (CLERIC_PACKAGE,))
@@ -346,12 +458,42 @@ class ContractPlanningTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "requires a materialized actor addition"):
             patch_contract_swap(BSB_ARENA, EBRIETAS_PACKAGE, old_yharnam, ebrietas)
 
-    def test_five_package_registry_is_a_closed_complete_matching(self):
-        assignment = assign_donors("contract-five-cycle", COMPATIBILITY)
-        self.assertEqual(set(COMPATIBILITY), set(assignment))
-        self.assertEqual(set(COMPATIBILITY), set(assignment.values()))
-        self.assertEqual("cleric-beast", assignment[AMELIA_ARENA.key])
-        self.assertEqual("vicar-amelia", assignment[AMYGDALA_ARENA.key])
+    def test_ebrietas_actor_requirements_pair_exact_source_and_destination_map_states(self):
+        with tempfile.TemporaryDirectory() as temp:
+            inventory = Path(temp) / "slots.tsv"
+            inventory.write_bytes(read_blob(BUNDLE, "mined/msb_enemies.tsv"))
+            slots = load_slots(inventory)
+        requirements = actor_addition_requirements(PAARL_ARENA, EBRIETAS_PACKAGE, slots)
+        self.assertEqual(2, len(requirements))
+        self.assertEqual({"m24_02_00_00", "m24_02_00_01"},
+                         {row["source_map"] for row in requirements})
+        self.assertEqual({"m23_00_00_00", "m23_00_00_01"},
+                         {row["destination_map"] for row in requirements})
+        for row in requirements:
+            self.assertEqual("c9010_0003", row["source_part"])
+            self.assertEqual("c2510_0000", row["source_anchor_part"])
+            self.assertEqual({"model_name": "c9010", "npc_param_id": 251001,
+                              "think_param_id": 1, "chara_init_id": 0}, row["source_archetype"])
+            self.assertEqual("c5080_0000", row["destination_anchor_part"])
+            self.assertEqual("ap_ebrietas_bullet_owner", row["destination_part"])
+            self.assertEqual(2300891, row["destination_entity_id"])
+        npcs, effects = load_params(BUNDLE)
+        plan = plan_contract_swap(PAARL_ARENA, EBRIETAS_PACKAGE, slots, npcs, effects, "ebrietas")
+        self.assertNotIn("boss_actor_additions", plan)
+        self.assertEqual(requirements, plan["boss_actor_addition_requirements"])
+        self.assertEqual({"2420801": 2300891}, plan["boss_contract"]["remap"]["virtual_entities"])
+
+    def test_six_package_registry_is_closed_and_seeds_select_two_reviewed_matchings(self):
+        first = assign_donors("seed-0", COMPATIBILITY)
+        second = assign_donors("seed-1", COMPATIBILITY)
+        for assignment in (first, second):
+            self.assertEqual(set(COMPATIBILITY), set(assignment))
+            self.assertEqual(set(COMPATIBILITY), set(assignment.values()))
+        self.assertNotEqual(first, second)
+        self.assertEqual("blood-starved-beast", first[EBRIETAS_ARENA.key])
+        self.assertEqual("cleric-beast", second[EBRIETAS_ARENA.key])
+        self.assertEqual("amygdala", first[AMELIA_ARENA.key])
+        self.assertEqual("amygdala", second[AMELIA_ARENA.key])
 
     def test_paarl_contract_emits_the_existing_native_map_and_scaling_plan_shape(self):
         with tempfile.TemporaryDirectory() as temp:

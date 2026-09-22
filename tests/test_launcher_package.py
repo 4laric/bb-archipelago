@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from bb_launcher.resources import application_root, resource_root
@@ -237,6 +238,70 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertEqual(1, run_self_check(self.root / "r.json", require_bundled_tools=True))
         data = json.loads((self.root / "r.json").read_text(encoding="utf-8"))
         self.assertTrue(any("bundled tool missing" in problem for problem in data["problems"]))
+
+    def test_self_check_requires_reviewed_builder_and_input_bundle(self):
+        from bb_launcher.self_check import BUNDLED_TOOLS, run_self_check
+
+        app = self.root / "frozen-app"
+        tools = app / "tools"
+        for name in BUNDLED_TOOLS:
+            path = tools / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if name != "BBBossEncounterBuilder/BBBossEncounterBuilder.exe":
+                path.write_bytes(b"tool")
+        planner = tools / "BBEnemizerPlanner" / "BBEnemizerPlanner.exe"
+        planner.parent.mkdir(parents=True, exist_ok=True)
+        planner.write_bytes(b"planner")
+        apworld = app / "worlds" / "bloodborne.apworld"
+        apworld.parent.mkdir(parents=True, exist_ok=True)
+        apworld.write_bytes(b"apworld")
+        toolchain = SimpleNamespace(app_root=app, planner_executable=planner)
+        report = self.root / "reviewed-self-check.json"
+        with (
+            patch("bb_launcher.self_check.resource_root", return_value=app),
+            patch("bb_launcher.self_check.application_root", return_value=app),
+            patch("bb_launcher.self_check.bundled_apworld_path", return_value=apworld),
+            patch("bb_launcher.self_check.EnemizerToolchain", return_value=toolchain),
+        ):
+            self.assertEqual(1, run_self_check(report, require_bundled_tools=True))
+            absent = json.loads(report.read_text(encoding="utf-8"))
+            self.assertIn(
+                "bundled tool missing: BBBossEncounterBuilder/BBBossEncounterBuilder.exe",
+                absent["problems"],
+            )
+            self.assertTrue(
+                any(problem.startswith("bundled boss input bundle missing:") for problem in absent["problems"]),
+                absent["problems"],
+            )
+
+            builder = tools / "BBBossEncounterBuilder" / "BBBossEncounterBuilder.exe"
+            builder.parent.mkdir(parents=True, exist_ok=True)
+            builder.write_bytes(b"builder")
+            bundle = app / "research" / "bb_inputs.db"
+            bundle.parent.mkdir(parents=True, exist_ok=True)
+            bundle.write_bytes(b"bundle")
+            self.assertEqual(1, run_self_check(report, require_bundled_tools=True))
+            missing_builder_bundle = json.loads(report.read_text(encoding="utf-8"))
+            self.assertTrue(
+                any(problem.startswith("bundled boss builder input bundle missing:")
+                    for problem in missing_builder_bundle["problems"]),
+                missing_builder_bundle["problems"],
+            )
+            builder_bundle = builder.parent / "_internal" / "research" / "bb_inputs.db"
+            builder_bundle.parent.mkdir(parents=True, exist_ok=True)
+            builder_bundle.write_bytes(b"wrong bundle")
+            self.assertEqual(1, run_self_check(report, require_bundled_tools=True))
+            mismatched = json.loads(report.read_text(encoding="utf-8"))
+            self.assertIn(
+                "bundled boss input bundles differ between launcher and builder",
+                mismatched["problems"],
+            )
+            builder_bundle.write_bytes(bundle.read_bytes())
+            self.assertEqual(0, run_self_check(report, require_bundled_tools=True))
+            present = json.loads(report.read_text(encoding="utf-8"))
+            self.assertTrue(present["tools"]["BBBossEncounterBuilder/BBBossEncounterBuilder.exe"])
+            self.assertTrue(present["boss_inputs"]["present"])
+            self.assertEqual(present["boss_inputs"]["sha256"], present["boss_builder_inputs"]["sha256"])
 
     def test_release_and_bundle_jobs_run_the_packaging_smoke(self):
         # The Archipelago-tier job copies tests/ into the Archipelago checkout

@@ -6,8 +6,8 @@ so the registry can import it once its append-only attachment interface is
 settled.
 
 Facts are extracted from CUSA03173 AppVer 01.09 in ``research/bb_inputs.db``.
-The one unplaced health-routine event target (3500801) is represented as a
-blocking binding, never synthesized from its numeric prefix.
+The one unplaced health-routine event target (3500801) is retained as an opaque
+literal, with native source/destination absence checks and unobserved status.
 """
 from __future__ import annotations
 
@@ -25,7 +25,8 @@ from .boss_contracts import (
     PartBinding,
     event_blocks,
 )
-from .model import Archetype
+from .model import Archetype, Slot, Swap
+from .scaling import plan_scaling
 
 MARIA_EVENT_FILE = "m35_00_00_00.emevd.dcx.js"
 MARIA_ACTOR = 3500800
@@ -116,23 +117,26 @@ class MariaClericAttachmentIds:
 
 
 @dataclass(frozen=True)
-class MariaTargetBinding:
-    """A verified destination counterpart for Maria's 3500801 event target.
+class OpaqueExternalReference:
+    """Literal preserved without spawning or destination remapping."""
+    original_source_id: int
+    event_id: int
+    witness: str
+    evidence_status: str = "inferred"
+    runtime_status: str = "unobserved"
 
-    Static inputs prove that the source health event uses 3500801, but provide
-    no MSB placement or source relation for it.  The native writer must supply
-    a separately pinned materialization/binding before Maria is selectable.
-    """
 
-    source_target: int
-    destination_target: int
-    provenance: Mapping[str, str]
+MARIA_EVENT_TARGET_REFERENCE = OpaqueExternalReference(
+    3500801, 13504802, "SetCharacterEventTarget(3500800, 3500801)")
 
-    def __post_init__(self) -> None:
-        if self.source_target != MARIA_EVENT_TARGET:
-            raise ValueError("Maria target binding must name source target 3500801")
-        if not self.provenance:
-            raise ValueError("Maria target binding needs source provenance")
+# Original installed CUSA03173 01.09 patch-layer witnesses. The research bundle
+# contains an earlier m35 script. Only these two pinned blocks differ among
+# the encounter inputs: Event(0) has unrelated NPC/lift fixes, and health uses
+# Forced network authority. Adapters retain the selected source's other text.
+MARIA_PATCH_EXPECTED = {
+    0: '78d94eb81ed0b21b0f7a14aaaefc5f5ec487d28e3029e8912e6551dd71d2cf50',
+    13504802: '5f82a5c49dce37f57f43d2a0ca0542ddc336d8c387cd9bd735f84a2574561dbc',
+}
 
 
 def _verify(blocks: Mapping[int, str], expected: Mapping[int, str], role: str) -> None:
@@ -140,7 +144,10 @@ def _verify(blocks: Mapping[int, str], expected: Mapping[int, str], role: str) -
         actual = blocks.get(event_id)
         if actual is None:
             raise ValueError(f"{role} lacks pinned event {event_id}")
-        if hashlib.sha256(actual.encode()).hexdigest() != digest:
+        allowed = {digest}
+        if expected is MARIA_PACKAGE.expected and event_id in MARIA_PATCH_EXPECTED:
+            allowed.add(MARIA_PATCH_EXPECTED[event_id])
+        if hashlib.sha256(actual.encode()).hexdigest() not in allowed:
             raise ValueError(f"unsupported original {role} event {event_id}")
 
 
@@ -148,6 +155,14 @@ def _replace_once(text: str, old: str, new: str, label: str) -> str:
     if text.count(old) != 1:
         raise ValueError(f"{label} is not a unique pinned instruction")
     return text.replace(old, new, 1)
+
+
+def _noop(block: str) -> str:
+    """Keep the original event signature so existing initializers still compile."""
+    declaration = block[:block.index("{") + 1]
+    declaration = re.sub(r'function\(([^)]*)\)', lambda match: 'function(' + ', '.join(
+        'unused_' + name.strip() for name in match[1].split(',') if name.strip()) + ')', declaration)
+    return declaration + "\n    EndEvent();\n});"
 
 
 def _replace_events(source: str, edits: Mapping[int, str]) -> str:
@@ -161,10 +176,10 @@ def _replace_events(source: str, edits: Mapping[int, str]) -> str:
 
 
 def maria_at_cleric_plan(ids: MariaClericAttachmentIds) -> dict:
-    """Describe the required, still-gated Maria -> Cleric attachment."""
+    """Describe the experimental Maria -> Cleric attachment."""
     return {
         "format": "bb-maria-contract-v1",
-        "status": "blocked-until-event-target-binding",
+        "status": "experimental",
         "arena": CLERIC_ARENA.key,
         "donor": MARIA_PACKAGE.key,
         "preserved_destination_events": [CLERIC_ARENA.completion_event, CLERIC_ARENA.co_op_entry_event],
@@ -174,9 +189,8 @@ def maria_at_cleric_plan(ids: MariaClericAttachmentIds) -> dict:
         "attachments": [{"source_event": MARIA_ARENA.phase_cleanup_event,
                          "destination_event": ids.phase_cleanup_event,
                          "initializers": [asdict(x) for x in MARIA_PACKAGE.attachments[0].initializers]}],
-        "unresolved": {"source_event_target": MARIA_EVENT_TARGET,
-                       "witness": "SetCharacterEventTarget(3500800, 3500801) in 13504802",
-                       "reason": "no bundled mined MSB enemy/region placement or other event reference"},
+        "opaque_external_references": [asdict(MARIA_EVENT_TARGET_REFERENCE)],
+        "behavioral_unknown": "3500801 is preserved as an opaque source literal; static effect unobserved",
     }
 
 
@@ -184,30 +198,22 @@ def cleric_at_maria_plan() -> dict:
     """Describe the inverse: Maria terminal/cutscene remain local and untouched."""
     return {
         "format": "bb-maria-contract-v1",
-        "status": "requires-append-only-arena-attachment-interface",
+        "status": "experimental",
         "arena": "lady-maria",
         "donor": CLERIC_PACKAGE.key,
         "preserved_destination_events": [MARIA_ARENA.completion_event, MARIA_ARENA.cutscene_entry_event,
                                            MARIA_ARENA.co_op_restore_event, MARIA_ARENA.host_fog_event,
-                                           MARIA_ARENA.guest_fog_event, MARIA_ARENA.health_event,
-                                           MARIA_ARENA.music_event, MARIA_ARENA.lockcam_event,
+                                           MARIA_ARENA.guest_fog_event,
+                                           MARIA_ARENA.music_event,
                                            MARIA_ARENA.music_cleanup_event],
-        "reason": "generic ArenaContract currently replaces an existing Event(0) anchor; Maria needs append-only initializers for Cleric attachments",
+        "runtime_status": "unobserved",
+        "attachments": "Cleric phase, cloth, five limb and five cleanup initializers",
     }
 
 
 def patch_maria_at_cleric(destination: str, donor_source: str,
-                           ids: MariaClericAttachmentIds,
-                           target_binding: MariaTargetBinding | None = None) -> str:
-    """Build the known Maria/Cleric event overlay, or refuse without 3500801.
-
-    The target binding is intentionally required before any output is emitted:
-    omitting Maria's SetCharacterEventTarget relation would silently alter her
-    combat AI.  This function is the registry hook once native materialization
-    provides the verified binding.
-    """
-    if target_binding is None:
-        raise ValueError("Lady Maria requires a verified binding for unresolved event target 3500801")
+                           ids: MariaClericAttachmentIds) -> str:
+    """Build experimental Maria/Cleric overlay, retaining opaque 3500801."""
     arena, donor = event_blocks(destination), event_blocks(donor_source)
     _verify(arena, CLERIC_ARENA.expected, "Cleric arena")
     _verify(donor, MARIA_PACKAGE.expected, "Lady Maria donor")
@@ -225,8 +231,8 @@ def patch_maria_at_cleric(destination: str, donor_source: str,
         "DisplayBossHealthBar(Enabled, 2410800, 0, 452000)", "Maria health-bar label")
     health = _replace_once(health, "    SetCharacterAIState(2410800, Enabled);\n",
         "    SetCharacterAIState(2410800, Enabled);\n"
-        f"    SetCharacterEventTarget(2410800, {target_binding.destination_target});\n",
-        "Maria event-target binding")
+        "    SetCharacterEventTarget(2410800, 3500801);\n",
+        "opaque Maria event target")
     # Source 13504804's 8/10 camera radii are portable; only map/subarea and
     # actor/completion references are adapted to Cleric's declared arena.
     lockcam = donor[MARIA_ARENA.lockcam_event]
@@ -236,12 +242,16 @@ def patch_maria_at_cleric(destination: str, donor_source: str,
     cleanup = donor[MARIA_ARENA.phase_cleanup_event]
     cleanup = cleanup.replace("3500800", "2410800").replace("13501800", "12411700")
     cleanup = cleanup.replace("$Event(13504822,", f"$Event({ids.phase_cleanup_event},")
+    if arena[0].count("    $InitializeEvent(0, 12414710") != 1 or arena[0].count("    $InitializeEvent(0, 12414720") != 1:
+        raise ValueError("Cleric Event(0) limb/cloth initializer witness drift")
     edits = {
         CLERIC_ARENA.activation_event: activation,
         CLERIC_ARENA.health_bar_event: health,
         CLERIC_ARENA.lockcam_event: lockcam,
-        12414707: "$Event(12414707, Default, function() {\n    EndEvent();\n});",
-        12414708: "$Event(12414708, Default, function() {\n    EndEvent();\n});",
+        12414707: _noop(arena[12414707]),
+        12414708: _noop(arena[12414708]),
+        12414710: _noop(arena[12414710]),
+        12414720: _noop(arena[12414720]),
         0: _replace_once(arena[0], "    $InitializeEvent(0, 12414708);",
                          "    $InitializeEvent(0, 12414708);\n"
                          f"    $InitializeEvent(0, {ids.phase_cleanup_event});",
@@ -254,3 +264,85 @@ def patch_maria_at_cleric(destination: str, donor_source: str,
     if output[CLERIC_ARENA.completion_event] != arena[CLERIC_ARENA.completion_event]:
         raise ValueError("Maria adapter changed Cleric completion/progression")
     return result
+
+
+@dataclass(frozen=True)
+class ClericMariaAttachmentIds:
+    phase: int
+    cloth: int
+    limbs: int
+    limb_cleanup: int
+
+
+def patch_cleric_at_maria(destination: str, cleric_source: str, ids: ClericMariaAttachmentIds) -> str:
+    """Attach Cleric combat while retaining Maria terminal/cutscene/progression."""
+    arena, donor = event_blocks(destination), event_blocks(cleric_source)
+    _verify(arena, MARIA_PACKAGE.expected, "Maria arena")
+    _verify(donor, CLERIC_PACKAGE.expected, "Cleric donor")
+    values = {int(x) for x in re.findall(r"(?<![\w])-?\d+(?![\w])", destination)}
+    mapping = {12414707: ids.phase, 12414708: ids.cloth, 12414710: ids.limbs, 12414720: ids.limb_cleanup}
+    if len(set(mapping.values())) != 4 or values.intersection(mapping.values()):
+        raise ValueError("Cleric/Maria attachment ID collides with Maria original literal")
+    calls = []
+    for line in donor[0].splitlines():
+        matched = re.match(r"(\s*\$InitializeEvent\([^,]+,\s*)(12414707|12414708|12414710|12414720)(.*)", line)
+        if matched:
+            calls.append(matched[1] + str(mapping[int(matched[2])]) + matched[3])
+    if len(calls) != 12 or sum("12414710" in x for x in donor[0].splitlines()) != 5 or sum("12414720" in x for x in donor[0].splitlines()) != 5:
+        raise ValueError("Cleric Event(0) lacks exact twelve attachment initializer witnesses")
+    def remap(block: str, old: int, new: int) -> str:
+        return re.sub(r"(?<![\w])-?\d+(?![\w])", lambda m: str({2410800:3500800,12411700:13501800,old:new}.get(int(m[0]),int(m[0]))), block).replace(f"$Event({old},",f"$Event({new},")
+    health = _replace_once(arena[13504802], "DisplayBossHealthBar(Enabled, 3500800, 0, 452000)",
+                           "DisplayBossHealthBar(Enabled, 3500800, 0, 500000)", "Cleric health label")
+    health = _replace_once(health, "    SetCharacterEventTarget(3500800, 3500801);\n", "", "Maria-only event target")
+    lockcam = remap(donor[12414704], 12414704, 13504804).replace("SetLockcamSlotNumber(24, 1,", "SetLockcamSlotNumber(35, 0,")
+    init = _replace_once(arena[0], "    $InitializeEvent(0, 13504822);",
+                         "    $InitializeEvent(0, 13504822);\n" + "\n".join(calls), "Maria append anchor")
+    edits={0:init,13504802:health,13504804:lockcam,13504822:_noop(arena[13504822])}
+    out=_replace_events(destination,edits).rstrip()+"\n\n"+"\n\n".join(remap(donor[e],e,n) for e,n in mapping.items())+"\n"
+    result=event_blocks(out)
+    if result[13501800]!=arena[13501800] or result[13501801]!=arena[13501801]:
+        raise ValueError("Cleric-at-Maria changed Maria terminal/cutscene")
+    return out
+
+
+def native_plan_maria_at_cleric(slots: list[Slot], npcs: Mapping[int, dict], effects: Mapping[int, dict], ids: MariaClericAttachmentIds, seed: str) -> dict:
+    cleric=[s for s in slots if s.entity_id==2410800 and s.archetype==CLERIC_ARENA.archetype]
+    maria=[s for s in slots if s.entity_id==3500800 and s.archetype==MARIA_PACKAGE.archetype]
+    if len(cleric) != 3 or len(maria) != 1 or any(slot.talk_id != 0 or slot.archetype.chara_init_id != 0 for slot in cleric):
+        raise ValueError("Maria plan requires all three exact original Cleric states and one Maria part")
+    target,source=cleric[0],maria[0]
+    swap=Swap(target.logical_key,[slot.key for slot in cleric],{slot.key:slot.archetype for slot in cleric},target.archetype,source.archetype,destinations={slot.key:{"map_name":slot.map_name,"entity_id":slot.entity_id,"x":slot.x,"y":slot.y,"z":slot.z} for slot in cleric})
+    changes,skips=plan_scaling([swap],cleric,dict(npcs),dict(effects))
+    return {"format":"bb-enemizer-plan-v2","dry_run":True,"seed":seed,"swap_count":1,"swaps":[swap.json()],"boss_contract":maria_at_cleric_plan(ids),"primary_init_source_bindings":[{"source_map":source.map_name,"source_part":source.part_name,"source_entity_id":source.entity_id,"source_archetype":asdict(source.archetype),"source_talk_id":source.talk_id,"destination_map":slot.map_name,"destination_part":slot.part_name,"destination_entity_id":slot.entity_id,"required_native_fields":["talk_id","unk_t18","init_anim_id","damage_anim_id","provenance"]} for slot in cleric],"scaling":{"enabled":bool(changes),"mechanism":"inferred_static_npc_clone_sp_effect","change_count":len(changes),"changes":[x.json() for x in changes],"skip_count":len(skips),"skips":skips}}
+
+
+
+def native_plan_cleric_at_maria(slots: list[Slot], npcs: Mapping[int, dict], effects: Mapping[int, dict],
+                                ids: ClericMariaAttachmentIds, seed: str) -> dict:
+    """v2 native plan for Cleric combat in Maria's progression-owned arena."""
+    maria = [s for s in slots if s.entity_id == 3500800 and s.archetype == MARIA_PACKAGE.archetype]
+    cleric = [s for s in slots if s.entity_id == 2410800 and s.archetype == CLERIC_ARENA.archetype]
+    if len(maria) != 1 or len(cleric) != 3 or any(slot.talk_id != 0 or slot.archetype.chara_init_id != 0 for slot in cleric):
+        raise ValueError("Cleric/Maria plan requires exact Maria and all three original Cleric states")
+    target, source = maria[0], next(slot for slot in cleric if slot.map_name == "m24_01_00_00")
+    swap = Swap(target.logical_key, [target.key], {target.key: target.archetype}, target.archetype,
+                source.archetype, destinations={target.key: {"map_name": target.map_name,
+                "entity_id": target.entity_id, "x": target.x, "y": target.y, "z": target.z}})
+    changes, skips = plan_scaling([swap], [target], dict(npcs), dict(effects))
+    return {"format": "bb-enemizer-plan-v2", "dry_run": True, "seed": seed, "swap_count": 1,
+            "swaps": [swap.json()],
+            "boss_contract": {"format": "bb-maria-contract-v1", "arena": "lady-maria",
+                              "donor": "cleric-beast", "patch": "cleric-at-maria",
+                              "attachment_event_ids": asdict(ids),
+                              "preserved_destination_events": [13501800, 13501801, 13501807],
+                              "source_initialization": "native writer must populate exact original-MSB pin"},
+            "primary_init_source_bindings": [{"source_event_file": "event/m24_01_00_00.emevd.dcx.js", "source_map": source.map_name,
+                "source_part": source.part_name, "source_entity_id": source.entity_id,
+                "source_archetype": asdict(source.archetype), "source_talk_id": source.talk_id,
+                "destination_map": target.map_name, "destination_part": target.part_name,
+                "destination_entity_id": target.entity_id,
+                "required_native_fields": ["talk_id", "unk_t18", "init_anim_id", "damage_anim_id", "provenance"]}],
+            "scaling": {"enabled": bool(changes), "mechanism": "inferred_static_npc_clone_sp_effect",
+                "change_count": len(changes), "changes": [c.json() for c in changes],
+                "skip_count": len(skips), "skips": skips}}

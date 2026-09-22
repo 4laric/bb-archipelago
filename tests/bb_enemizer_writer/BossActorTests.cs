@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text.Json;
 using SoulsFormats;
 
@@ -85,6 +86,50 @@ internal static class BossActorTests
             File.Copy(Path.Combine(destination, "m24_01_00_00.msb"), Path.Combine(untransplantedOutput, "m24_01_00_00.msb"));
             File.WriteAllText(planPath, JsonSerializer.Serialize(new { boss_actor_initializations = new[] { primary } }));
             Refused(() => BossActorTransplant.Apply(planPath, source, destination, untransplantedOutput, false), "target does not match source combat archetype");
+            string scaledOverlay = Path.Combine(root, "scaled-overlay");
+            string scaledMaps = Path.Combine(scaledOverlay, "dvdroot_ps4", "map", "MapStudio");
+            string scaledGame = Path.Combine(scaledOverlay, "dvdroot_ps4", "param", "gameparam", "gameparam.parambnd.dcx");
+            string scaledSource = Path.Combine(scaledOverlay, "source-enemizer-plan.json");
+            string scaledAdjusted = Path.Combine(scaledOverlay, "bb-enemizer-plan.json");
+            string scaledReceipt = Path.Combine(scaledOverlay, "scaling-report.json");
+            string HashFile(string path) => Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(path))).ToLowerInvariant();
+            void WriteScaledMap(int npcParamId) {
+                Directory.CreateDirectory(scaledMaps);
+                var map = MSBB.Read(Path.Combine(destination, "m24_01_00_00.msb"));
+                map.Models.Enemies.Add(new MSBB.Model.Enemy { Name = "c9000", SibPath = "" });
+                var part = map.Parts.Enemies.Single(entry => entry.Name == "target_anchor");
+                part.ModelName = "c9000"; part.NPCParamID = npcParamId; part.ThinkParamID = 91; part.CharaInitID = 92;
+                map.Write(Path.Combine(scaledMaps, "m24_01_00_00.msb"));
+            }
+            void WriteScaledEvidence(int sourceTargetNpc, int adjustedNpc, int changeSourceNpc, int changeCloneNpc) {
+                var sourceTarget = new { model_name = "c9000", npc_param_id = sourceTargetNpc, think_param_id = 91, chara_init_id = 92 };
+                var adjustedTarget = new { model_name = "c9000", npc_param_id = adjustedNpc, think_param_id = 91, chara_init_id = 92 };
+                var change = new { logical_key = "m24_01_00_00:target_anchor", source_npc_param_id = changeSourceNpc,
+                    cloned_npc_param_id = changeCloneNpc, sp_effect_slot = "spEffectID1", minted_sp_effect_id = 60000,
+                    have_soul_rate = 1.0, source_level = 1, destination_level = 1,
+                    hp_multiplier = 1.0, attack_multiplier = 1.0, defense_multiplier = 1.0 };
+                var sourcePlan = new { format = "bb-enemizer-plan-v2", dry_run = true,
+                    swaps = new[] { new { logical_key = "m24_01_00_00:target_anchor", destination_keys = new[] { "m24_01_00_00.msb:target_anchor" }, target = sourceTarget } },
+                    scaling = new { enabled = true, mechanism = "inferred_static_npc_clone_sp_effect", change_count = 1, changes = new[] { change } },
+                    boss_actor_initializations = new[] { primary } };
+                File.WriteAllText(planPath, JsonSerializer.Serialize(sourcePlan));
+                Directory.CreateDirectory(scaledOverlay); File.Copy(planPath, scaledSource, true);
+                var adjustedPlan = new { format = "bb-enemizer-plan-v2", dry_run = true,
+                    swaps = new[] { new { logical_key = "m24_01_00_00:target_anchor", destination_keys = new[] { "m24_01_00_00.msb:target_anchor" }, target = adjustedTarget, unscaled_target = sourceTarget } },
+                    scaling = new { enabled = true, mechanism = "inferred_static_npc_clone_sp_effect", change_count = 1, applied = true, changes = new[] { change } },
+                    boss_actor_initializations = new[] { primary } };
+                File.WriteAllText(scaledAdjusted, JsonSerializer.Serialize(adjustedPlan));
+                Directory.CreateDirectory(Path.GetDirectoryName(scaledGame)!); File.WriteAllBytes(scaledGame, [1, 2, 3]);
+                File.WriteAllText(scaledReceipt, JsonSerializer.Serialize(new { format = "bb-enemizer-scaling-v1", applied = true,
+                    source_plan_sha256 = HashFile(planPath), output_plan_sha256 = HashFile(scaledAdjusted), output_gameparam_sha256 = HashFile(scaledGame), changes = new[] { change } }));
+            }
+            WriteScaledMap(6000000); WriteScaledEvidence(90, 6000000, 90, 6000000);
+            Need(BossActorTransplant.Apply(planPath, source, destination, scaledMaps, false) == 1);
+            Need(MSBB.Read(Path.Combine(scaledMaps, "m24_01_00_00.msb")).Parts.Enemies.Single(part => part.Name == "target_anchor").TalkID == 93);
+            WriteScaledMap(6000000); WriteScaledEvidence(89, 6000000, 89, 6000000);
+            Refused(() => BossActorTransplant.Apply(planPath, source, destination, scaledMaps, false), "source does not match logical swap");
+            WriteScaledMap(6000001); WriteScaledEvidence(90, 6000000, 90, 6000000);
+            Refused(() => BossActorTransplant.Apply(planPath, source, destination, scaledMaps, false), "target is not reviewed normalized clone");
             var addition = new {
                 source_map = "m23_00_00_00", source_part = "donor", source_anchor_part = "anchor", source_entity_id = 101,
                 source_part_kind = "enemy",

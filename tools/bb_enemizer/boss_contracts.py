@@ -57,6 +57,11 @@ class VirtualEntityBinding:
     source_entity: int
     initializer: str
     requires_actor_addition: bool = False
+    source_part: str | None = None
+    source_anchor_part: str | None = None
+    source_archetype: Archetype | None = None
+    destination_part: str | None = None
+    allocation_evidence: str | None = None
 
 
 @dataclass(frozen=True)
@@ -344,6 +349,52 @@ AMYGDALA_ARENA = ArenaContract(
     },
 )
 
+EBRIETAS_ARENA = ArenaContract(
+    key="ebrietas",
+    event_file="m24_02_00_00.emevd.dcx.js",
+    map_prefix="m24_02_",
+    actor=2420800,
+    archetype=Archetype("c2510", 251000, 251000, 0),
+    destination_count=2,
+    completion_event=12421800,
+    start_flag=12424800,
+    health_bar_event=12424802,
+    health_bar_label=251000,
+    activation_event=12421802,
+    music_event=12424803,
+    phase_music_message=100,
+    lockcam_event=12424804,
+    lockcam_map=24,
+    lockcam_subarea=2,
+    phase_slots=(12424980, 12424990),
+    co_op_entry_event=12421803,
+    part_routine_event=12424870,
+    cloth_routine_event=12424871,
+    part_slots=(
+        PartBinding(0, ("2420", "2420", "NPCPartType.Part5", "200", "480", "490", "8040")),
+        PartBinding(0, ("2421", "2421", "NPCPartType.Part1", "200", "481", "491", "8010")),
+        PartBinding(1, ("2422", "2422", "NPCPartType.Part2", "200", "482", "492", "8000")),
+        PartBinding(2, ("2423", "2423", "NPCPartType.Part3", "200", "483", "493", "8030")),
+        PartBinding(3, ("2424", "2424", "NPCPartType.Part4", "200", "484", "494", "8020")),
+    ),
+    attachment_event_ids=(12424907, 12424908, 12424920, 12424930, 12424940),
+    virtual_entity_ids=(2420890,),
+    attachment_anchor_slot=0,
+    attachment_anchor_event=12424980,
+    expected={
+        0: "cda0f114ad3f96b4b93fda3b81ac6d6ed5808bdb0be3f6d16e8225733e729dde",
+        12421800: "7cb7c78833c5ef60a5599d35c22964e87b75f980c3165e139d7c28fc8a1bd34b",
+        12421802: "9bc79c8e55c2a2c9793a90070de1f76c35a46ebd98c2c79176b2fcc02ae8adc4",
+        12424802: "effdc8bf4ca63c0371f209afbd388d0c682793bc2efaf258675e871bcae21ad2",
+        12424803: "a487e349f0a416298a26fb93c87c0c57fd7211e7da3da8938d37b6e909130966",
+        12424804: "9324596b40c1d5a8ec57a11c71eab66105a1550a81cdcacd4432a86ec366ea74",
+        12424870: "4fac0ea46041effd27d59b41752ef9758ba1c6021647ef9831f87de11e5564ba",
+        12424871: "50091165e085e178edd4641859d7af08032e2dc4c1be99e7d3631ecbaa07abbc",
+        12424980: "cebf5265578c05b598b8c2f9d2c524c852a32e48facb4856db1426185f098cb1",
+        12424990: "0b8bf3929d610e3938673ca58072126cbde658e3aa75911c958a1b7e7f43a700",
+    },
+)
+
 BSB_PACKAGE = CombatPackage(
     key="blood-starved-beast",
     event_file=boss_canary.DONOR_EVENT_FILE + ".js",
@@ -599,10 +650,9 @@ AMYGDALA_PACKAGE = CombatPackage(
     expected=dict(AMYGDALA_ARENA.expected),
 )
 
-# This package is deliberately not in PACKAGES/COMPATIBILITY yet: its
-# 7001/7000 immortality entry needs a reviewed arena recipe.  The combat graph
-# and virtual bullet-owner binding are fully declared here so that recipe does
-# not need to invent source dependencies later.
+# Ebrietas' bullet owner is a concrete MSB actor, not an EMEVD-only helper.
+# Its reviewed Paarl adapter consequently remains builder-gated on a native,
+# source-pinned actor addition before the event overlay is emitted.
 EBRIETAS_PACKAGE = CombatPackage(
     key="ebrietas",
     event_file="m24_02_00_00.emevd.dcx.js",
@@ -641,7 +691,13 @@ EBRIETAS_PACKAGE = CombatPackage(
     ),
     # Native source evidence identifies 2420801 as MSB enemy c9010_0003
     # (c9010 / NPC 251001), so EMEVD may not stand in for its actor addition.
-    virtual_entities=(VirtualEntityBinding(2420801, "CreateBulletOwner", requires_actor_addition=True),),
+    virtual_entities=(VirtualEntityBinding(
+        2420801, "CreateBulletOwner", requires_actor_addition=True,
+        source_part="c9010_0003", source_anchor_part="c2510_0000",
+        source_archetype=Archetype("c9010", 251001, 1, 0),
+        destination_part="ap_ebrietas_bullet_owner",
+        allocation_evidence="BB Ebrietas bullet-owner actor allocation v1; full corpus collision scan",
+    ),),
     entry_animation=None,
     lockcam_map=24,
     lockcam_subarea=2,
@@ -661,17 +717,25 @@ EBRIETAS_PACKAGE = CombatPackage(
 
 CLERIC_PACKAGES: tuple[CombatPackage, ...] = (BSB_PACKAGE, PAARL_PACKAGE)
 BSB_ARENA_PACKAGES: tuple[CombatPackage, ...] = (PAARL_PACKAGE, CLERIC_PACKAGE, AMELIA_PACKAGE)
-PAARL_ARENA_PACKAGES: tuple[CombatPackage, ...] = (BSB_PACKAGE, CLERIC_PACKAGE, AMELIA_PACKAGE, AMYGDALA_PACKAGE)
-AMELIA_ARENA_PACKAGES: tuple[CombatPackage, ...] = (CLERIC_PACKAGE,)
-AMYGDALA_ARENA_PACKAGES: tuple[CombatPackage, ...] = (AMELIA_PACKAGE,)
-ARENAS: tuple[ArenaContract, ...] = (CLERIC_ARENA, BSB_ARENA, PAARL_ARENA, AMELIA_ARENA, AMYGDALA_ARENA)
-PACKAGES: tuple[CombatPackage, ...] = (BSB_PACKAGE, PAARL_PACKAGE, CLERIC_PACKAGE, AMELIA_PACKAGE, AMYGDALA_PACKAGE)
+PAARL_ARENA_PACKAGES: tuple[CombatPackage, ...] = (
+    BSB_PACKAGE, CLERIC_PACKAGE, AMELIA_PACKAGE, AMYGDALA_PACKAGE, EBRIETAS_PACKAGE,
+)
+AMELIA_ARENA_PACKAGES: tuple[CombatPackage, ...] = (CLERIC_PACKAGE, AMYGDALA_PACKAGE)
+AMYGDALA_ARENA_PACKAGES: tuple[CombatPackage, ...] = (AMELIA_PACKAGE, CLERIC_PACKAGE)
+EBRIETAS_ARENA_PACKAGES: tuple[CombatPackage, ...] = (AMYGDALA_PACKAGE, CLERIC_PACKAGE, BSB_PACKAGE)
+ARENAS: tuple[ArenaContract, ...] = (
+    CLERIC_ARENA, BSB_ARENA, PAARL_ARENA, AMELIA_ARENA, AMYGDALA_ARENA, EBRIETAS_ARENA,
+)
+PACKAGES: tuple[CombatPackage, ...] = (
+    BSB_PACKAGE, PAARL_PACKAGE, CLERIC_PACKAGE, AMELIA_PACKAGE, AMYGDALA_PACKAGE, EBRIETAS_PACKAGE,
+)
 COMPATIBILITY: dict[str, tuple[str, ...]] = {
     CLERIC_ARENA.key: tuple(package.key for package in CLERIC_PACKAGES),
     BSB_ARENA.key: tuple(package.key for package in BSB_ARENA_PACKAGES),
     PAARL_ARENA.key: tuple(package.key for package in PAARL_ARENA_PACKAGES),
     AMELIA_ARENA.key: tuple(package.key for package in AMELIA_ARENA_PACKAGES),
     AMYGDALA_ARENA.key: tuple(package.key for package in AMYGDALA_ARENA_PACKAGES),
+    EBRIETAS_ARENA.key: tuple(package.key for package in EBRIETAS_ARENA_PACKAGES),
 }
 
 
@@ -740,6 +804,67 @@ def _virtual_entity_targets(arena: ArenaContract, donor: CombatPackage,
         if target in values:
             raise ValueError(f"declared virtual entity ID {target} collides with original arena literal")
     return targets
+
+
+def _map_state(map_name: str) -> str:
+    """The final map component pairs equivalent alternate MSB states."""
+    prefix, separator, state = map_name.rpartition("_")
+    if not prefix or not separator or not state.isdigit():
+        raise ValueError(f"unsupported map state name {map_name}")
+    return state
+
+
+def actor_addition_requirements(arena: ArenaContract, donor: CombatPackage, slots) -> list[dict]:
+    """Return native-pinnable requirements for donor helpers that need MSB Parts.
+
+    These are deliberately *not* writer-ready ``boss_actor_additions``: the
+    builder must obtain native source provenance and initialization pins for
+    each source-map state before it promotes a requirement to a mutation.
+    """
+    requirements: list[dict] = []
+    destinations = [slot for slot in slots if slot.entity_id == arena.actor
+                    and slot.map_name.startswith(arena.map_prefix)]
+    if len(destinations) != arena.destination_count:
+        raise ValueError(f"unsupported boss placement provenance for {arena.key}")
+    by_destination_state = {_map_state(slot.map_name): slot for slot in destinations}
+    if len(by_destination_state) != len(destinations):
+        raise ValueError(f"ambiguous destination map state for {arena.key}")
+    for index, binding in enumerate(donor.virtual_entities):
+        if not binding.requires_actor_addition:
+            continue
+        if (binding.source_part is None or binding.source_anchor_part is None
+                or binding.source_archetype is None or binding.destination_part is None
+                or binding.allocation_evidence is None):
+            raise ValueError(f"{donor.key} materialized helper lacks typed actor provenance")
+        helpers = [slot for slot in slots if slot.entity_id == binding.source_entity
+                   and slot.map_name.startswith(donor.map_prefix)]
+        anchors = [slot for slot in slots if slot.entity_id == donor.actor
+                   and slot.map_name.startswith(donor.map_prefix)]
+        helper_states = {_map_state(slot.map_name): slot for slot in helpers}
+        anchor_states = {_map_state(slot.map_name): slot for slot in anchors}
+        if len(helper_states) != len(helpers) or len(anchor_states) != len(anchors):
+            raise ValueError(f"ambiguous source helper map state for {donor.key}")
+        if set(helper_states) != set(by_destination_state) or set(anchor_states) != set(by_destination_state):
+            raise ValueError(f"{donor.key} helper lacks every destination map state")
+        for state in sorted(by_destination_state):
+            helper, anchor, destination = helper_states[state], anchor_states[state], by_destination_state[state]
+            if (helper.part_name != binding.source_part or anchor.part_name != binding.source_anchor_part
+                    or helper.archetype != binding.source_archetype):
+                raise ValueError(f"{donor.key} helper source provenance drift in map state {state}")
+            requirements.append({
+                "source_map": helper.map_name,
+                "source_part": binding.source_part,
+                "source_anchor_part": binding.source_anchor_part,
+                "source_entity_id": binding.source_entity,
+                "source_archetype": asdict(binding.source_archetype),
+                "source_part_kind": "enemy",
+                "destination_map": destination.map_name,
+                "destination_anchor_part": destination.part_name,
+                "destination_part": binding.destination_part,
+                "destination_entity_id": arena.virtual_entity_ids[index],
+                "allocation_evidence": binding.allocation_evidence,
+            })
+    return requirements
 
 
 def _initializer_line(slot: int, event_id: int, arguments: tuple[str, ...]) -> str:
@@ -991,6 +1116,56 @@ def _bsb_patch(arena: ArenaContract, donor: CombatPackage,
     return result
 
 
+def _bsb_at_ebrietas_patch(arena: ArenaContract, donor: CombatPackage,
+                            destination: str, donor_source: str) -> str:
+    """Use Ebrietas's local fog/camera while replacing her combat-only graph.
+
+    The two declared Ebrietas phase slots are both zero-argument Event(0)
+    calls.  They therefore accept BSB's two source phases without adding
+    event identities or inventing constructor bindings.  BSB emits messages
+    10 and 20, which the retained Ebrietas camera already consumes.
+    """
+    original, donor_blocks = event_blocks(destination), event_blocks(donor_source)
+    _verify_pins("arena", original, arena.expected)
+    _verify_pins("donor", donor_blocks, donor.expected)
+    if arena is not EBRIETAS_ARENA or donor is not BSB_PACKAGE:
+        raise ValueError(f"no typed BSB adapter for {arena.key} <- {donor.key}")
+    edits = {
+        arena.activation_event: _ebrietas_arena_activation(
+            arena, donor, original[arena.activation_event]),
+        arena.health_bar_event: _replace_once(
+            original[arena.health_bar_event],
+            f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {arena.health_bar_label})",
+            f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {donor.health_bar_label})",
+            "BSB health-bar label"),
+        # BSB's source music moves to its second (message-20) phase.  Keep the
+        # destination map's two sound IDs and all fog/client predicates local.
+        arena.music_event: _replace_once(
+            original[arena.music_event],
+            f"CharacterHasEventMessage({arena.actor}, 100)",
+            f"CharacterHasEventMessage({arena.actor}, 20)",
+            "BSB phase-two music trigger"),
+        arena.part_routine_event: _end_event(original[arena.part_routine_event]),
+        arena.cloth_routine_event: _end_event(original[arena.cloth_routine_event]),
+    }
+    for source_event, destination_event in zip(donor.phase_events, arena.phase_slots):
+        edits[destination_event] = _remap_declared_literals(
+            donor_blocks[source_event], actor=(donor.actor, arena.actor),
+            completion=(donor.completion_event, arena.completion_event),
+            event=(source_event, destination_event),
+            flags=((12304807, arena.phase_slots[0]),))
+    result = _replace_event(destination, edits)
+    output = event_blocks(result)
+    if original.keys() != output.keys():
+        raise ValueError("BSB/Ebrietas contract changed arena event identity set")
+    for event_id in original:
+        if event_id not in edits and output[event_id] != original[event_id]:
+            raise ValueError(f"BSB/Ebrietas contract touched unrelated arena event {event_id}")
+    if output[arena.completion_event] != original[arena.completion_event]:
+        raise ValueError("BSB/Ebrietas contract changed Ebrietas completion/progression")
+    return result
+
+
 def _amygdala_at_paarl_activation(arena: ArenaContract, original: str) -> str:
     """Apply Amygdala's pinned 7003/7006/7002 entry sequence at Paarl."""
     for instruction in (
@@ -1020,6 +1195,102 @@ def _amygdala_at_paarl_activation(arena: ArenaContract, original: str) -> str:
     return _replace_once(original, old, new, "Amygdala post-entry sequence")
 
 
+def _ebrietas_at_paarl_activation(arena: ArenaContract, original: str) -> str:
+    """Use Ebrietas's immortality/sp-effect wake-up behind Paarl's trigger."""
+    for instruction in (
+        f"    SetCharacterInvincibility({arena.actor}, Enabled);\n",
+        f"    ForceAnimationPlayback({arena.actor}, 7000, true, false, false);\n",
+    ):
+        original = _replace_once(original, instruction, "", "Paarl-only activation instruction")
+    original = _replace_once(
+        original, "    WaitFor(\n",
+        f"    ForceAnimationPlayback({arena.actor}, 7001, true, false, false);\n"
+        f"    SetCharacterImmortality({arena.actor}, Enabled);\n"
+        f"    SetSpEffect({arena.actor}, 5647, false);\n"
+        "    WaitFor(\n", "Ebrietas pre-entry sequence")
+    old = (f"    ForceAnimationPlayback({arena.actor}, 7001, false, false, false);\n"
+           "    WaitFixedTimeFrames(70);\n"
+           f"    SetCharacterInvincibility({arena.actor}, Disabled);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    new = (f"    ForceAnimationPlayback({arena.actor}, 7000, false, true, false);\n"
+           f"    SetCharacterImmortality({arena.actor}, Disabled);\n"
+           f"    ClearSpEffect({arena.actor}, 5647);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    return _replace_once(original, old, new, "Ebrietas post-entry sequence")
+
+
+def _amygdala_at_ebrietas_activation(arena: ArenaContract, original: str) -> str:
+    """Keep Ebrietas's damage trigger and transplant Amygdala's wake-up body."""
+    for instruction in (
+        f"    ForceAnimationPlayback({arena.actor}, 7001, true, false, false);\n",
+        f"    SetCharacterImmortality({arena.actor}, Enabled);\n",
+        f"    SetSpEffect({arena.actor}, 5647, false);\n",
+    ):
+        original = _replace_once(original, instruction, "", "Ebrietas-only pre-entry instruction")
+    original = _replace_once(
+        original, "    WaitFor(\n",
+        f"    SetCharacterMaphits({arena.actor}, true);\n"
+        f"    SetCharacterGravity({arena.actor}, Disabled);\n"
+        f"    SetCharacterInvincibility({arena.actor}, Enabled);\n"
+        f"    ForceAnimationPlayback({arena.actor}, 7003, true, false, false);\n"
+        "    WaitFor(\n", "Amygdala pre-entry sequence")
+    old = (f"    ForceAnimationPlayback({arena.actor}, 7000, false, true, false);\n"
+           f"    SetCharacterImmortality({arena.actor}, Disabled);\n"
+           f"    ClearSpEffect({arena.actor}, 5647);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    new = (f"    SetEventFlag({arena.start_flag}, ON);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7006, false, false, false);\n"
+           "    WaitFixedTimeFrames(30);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7002, false, false, false);\n"
+           "    WaitFixedTimeFrames(160);\n"
+           f"    SetCharacterGravity({arena.actor}, Enabled);\n"
+           f"    SetCharacterInvincibility({arena.actor}, Disabled);\n"
+           f"    SetCharacterMaphits({arena.actor}, false);\n")
+    return _replace_once(original, old, new, "Amygdala post-entry sequence")
+
+
+def _amygdala_at_amelia_activation(arena: ArenaContract, original: str) -> str:
+    """Keep Amelia's cutscene and substitute Amygdala's witnessed wake-up."""
+    original = _replace_once(
+        original, "    SetObjectInvulnerability(2400801, Enabled);\n    WaitFor(\n",
+        "    SetObjectInvulnerability(2400801, Enabled);\n"
+        f"    SetCharacterMaphits({arena.actor}, true);\n"
+        f"    SetCharacterGravity({arena.actor}, Disabled);\n"
+        f"    SetCharacterInvincibility({arena.actor}, Enabled);\n"
+        f"    ForceAnimationPlayback({arena.actor}, 7003, true, false, false);\n"
+        "    WaitFor(\n", "Amygdala pre-cutscene wake-up sequence")
+    old = (f"    ForceAnimationPlayback({arena.actor}, 7000, false, false, false);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7001, false, false, false);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    new = (f"    SetEventFlag({arena.start_flag}, ON);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7006, false, false, false);\n"
+           "    WaitFixedTimeFrames(30);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7002, false, false, false);\n"
+           "    WaitFixedTimeFrames(160);\n"
+           f"    SetCharacterGravity({arena.actor}, Enabled);\n"
+           f"    SetCharacterInvincibility({arena.actor}, Disabled);\n"
+           f"    SetCharacterMaphits({arena.actor}, false);\n")
+    return _replace_once(original, old, new, "Amygdala post-cutscene wake-up sequence")
+
+
+def _ebrietas_arena_activation(arena: ArenaContract, donor: CombatPackage,
+                               original: str) -> str:
+    """Retain Ebrietas's damage trigger and replace only her entry state."""
+    for instruction in (
+        f"    ForceAnimationPlayback({arena.actor}, 7001, true, false, false);\n",
+        f"    SetCharacterImmortality({arena.actor}, Enabled);\n",
+        f"    SetSpEffect({arena.actor}, 5647, false);\n",
+    ):
+        original = _replace_once(original, instruction, "", "Ebrietas-only pre-entry instruction")
+    old = (f"    ForceAnimationPlayback({arena.actor}, 7000, false, true, false);\n"
+           f"    SetCharacterImmortality({arena.actor}, Disabled);\n"
+           f"    ClearSpEffect({arena.actor}, 5647);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    new = (f"    ForceAnimationPlayback({arena.actor}, {donor.entry_animation}, false, false, false);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    return _replace_once(original, old, new, "Ebrietas-only post-entry sequence")
+
+
 def _amygdala_arena_activation(arena: ArenaContract, donor: CombatPackage,
                                original: str) -> str:
     """Keep Amygdala's arena trigger while removing its model-specific entry."""
@@ -1047,13 +1318,25 @@ def _attached_single_actor_activation(arena: ArenaContract, donor: CombatPackage
                                       original: str) -> str:
     """Retain reviewed arena entry geometry and use the donor's pinned wake-up."""
     if donor.key == "amygdala":
+        if arena.key == PAARL_ARENA.key:
+            return _amygdala_at_paarl_activation(arena, original)
+        if arena.key == EBRIETAS_ARENA.key:
+            return _amygdala_at_ebrietas_activation(arena, original)
+        if arena.key == AMELIA_ARENA.key:
+            return _amygdala_at_amelia_activation(arena, original)
+        raise ValueError(f"no Amygdala entry adapter for {arena.key}")
+    if donor.key == "ebrietas":
         if arena.key != PAARL_ARENA.key:
-            raise ValueError(f"no Amygdala entry adapter for {arena.key}")
-        return _amygdala_at_paarl_activation(arena, original)
+            raise ValueError(f"no Ebrietas entry adapter for {arena.key}")
+        return _ebrietas_at_paarl_activation(arena, original)
     if arena.key == AMYGDALA_ARENA.key:
         if donor.entry_animation is None:
             raise ValueError(f"{donor.key} package lacks an entry-animation witness")
         return _amygdala_arena_activation(arena, donor, original)
+    if arena.key == EBRIETAS_ARENA.key:
+        if donor.entry_animation is None:
+            raise ValueError(f"{donor.key} package lacks an entry-animation witness")
+        return _ebrietas_arena_activation(arena, donor, original)
     if arena.key == PAARL_ARENA.key:
         for instruction in (
             f"    SetCharacterInvincibility({arena.actor}, Enabled);\n",
@@ -1062,7 +1345,7 @@ def _attached_single_actor_activation(arena: ArenaContract, donor: CombatPackage
             f"    SetCharacterInvincibility({arena.actor}, Disabled);\n",
         ):
             original = _replace_once(original, instruction, "", "Paarl-only activation instruction")
-    if arena.key not in (BSB_ARENA.key, PAARL_ARENA.key, AMELIA_ARENA.key, AMYGDALA_ARENA.key):
+    if arena.key not in (BSB_ARENA.key, PAARL_ARENA.key, AMELIA_ARENA.key, AMYGDALA_ARENA.key, EBRIETAS_ARENA.key):
         raise ValueError(f"no single-actor activation contract for arena {arena.key}")
     if donor.entry_animation is None:
         raise ValueError(f"{donor.key} package lacks an entry-animation witness")
@@ -1073,7 +1356,8 @@ def _attached_single_actor_activation(arena: ArenaContract, donor: CombatPackage
 
 
 def _attached_single_actor_patch(arena: ArenaContract, donor: CombatPackage,
-                                 destination: str, donor_source: str) -> str:
+                                 destination: str, donor_source: str, *,
+                                 allow_materialized_actor_additions: bool) -> str:
     """Attach a pinned single-actor combat package into an m23 arena.
 
     The destination's fog, start flag, co-op entry and completion/reward body
@@ -1083,11 +1367,13 @@ def _attached_single_actor_patch(arena: ArenaContract, donor: CombatPackage,
     original, donor_blocks = event_blocks(destination), event_blocks(donor_source)
     _verify_pins("arena", original, arena.expected)
     _verify_pins("donor", donor_blocks, donor.expected)
-    if arena.key not in (BSB_ARENA.key, PAARL_ARENA.key, AMELIA_ARENA.key, AMYGDALA_ARENA.key):
+    if arena.key not in (BSB_ARENA.key, PAARL_ARENA.key, AMELIA_ARENA.key,
+                         AMYGDALA_ARENA.key, EBRIETAS_ARENA.key):
         raise ValueError(f"no attachment adapter for {arena.key} <- {donor.key}")
     if not donor.attachments or donor.lockcam_event is None or donor.phase_music_message is None:
         raise ValueError(f"{donor.key} is not a complete single-actor attachment package")
-    if any(binding.requires_actor_addition for binding in donor.virtual_entities):
+    if (any(binding.requires_actor_addition for binding in donor.virtual_entities)
+            and not allow_materialized_actor_additions):
         raise ValueError(f"{donor.key} requires a materialized actor addition")
     targets = _attachment_targets(arena, donor, destination)
     virtual_targets = _virtual_entity_targets(arena, donor, destination)
@@ -1140,7 +1426,8 @@ def _attached_single_actor_patch(arena: ArenaContract, donor: CombatPackage,
 
 
 def patch_contract_swap(arena: ArenaContract, donor: CombatPackage,
-                        destination: str, donor_source: str) -> str:
+                        destination: str, donor_source: str, *,
+                        allow_materialized_actor_additions: bool = False) -> str:
     """Build one checked arena overlay from one independently declared donor."""
     if donor.legacy_canary and arena is CLERIC_ARENA:
         _verify_pins("arena", event_blocks(destination), arena.expected)
@@ -1150,8 +1437,12 @@ def patch_contract_swap(arena: ArenaContract, donor: CombatPackage,
         return _paarl_patch(arena, donor, destination, donor_source)
     if arena is PAARL_ARENA and donor is BSB_PACKAGE:
         return _bsb_patch(arena, donor, destination, donor_source)
+    if arena is EBRIETAS_ARENA and donor is BSB_PACKAGE:
+        return _bsb_at_ebrietas_patch(arena, donor, destination, donor_source)
     if donor.attachments:
-        return _attached_single_actor_patch(arena, donor, destination, donor_source)
+        return _attached_single_actor_patch(
+            arena, donor, destination, donor_source,
+            allow_materialized_actor_additions=allow_materialized_actor_additions)
     raise ValueError(f"no typed adapter implementation for {arena.key} <- {donor.key}")
 
 
@@ -1248,7 +1539,8 @@ def plan_contract_swap(arena: ArenaContract, donor: CombatPackage, slots, npcs, 
     changes, skips = plan_scaling([swap], destinations, npcs, effects)
     if len(changes) > 1 or (changes and skips):
         raise ValueError(f"boss contract {arena.key} <- {donor.key} has an ambiguous normalization plan")
-    return {
+    requirements = actor_addition_requirements(arena, donor, slots)
+    plan = {
         "format": "bb-enemizer-plan-v2",
         "dry_run": True,
         "seed": seed,
@@ -1260,3 +1552,6 @@ def plan_contract_swap(arena: ArenaContract, donor: CombatPackage, slots, npcs, 
                     "change_count": len(changes), "changes": [change.json() for change in changes],
                     "skip_count": len(skips), "skips": skips},
     }
+    if requirements:
+        plan["boss_actor_addition_requirements"] = requirements
+    return plan

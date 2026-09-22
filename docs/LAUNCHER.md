@@ -333,8 +333,8 @@ experimental and default off:
 
 - **Allow tier mixing** removes the common/elite boundary. It keeps the default
   plan at 308 placements, but the pinned test seed changes 32 assignments and
-  makes 14 cross-tier swaps (seven in each direction). Enemy scaling is not
-  normalized yet, so mixed enemies keep their authored HP and damage.
+  makes 14 cross-tier swaps (seven in each direction). Without the experimental
+  normalization option, mixed enemies keep their authored HP and damage.
 - **Preserve locomotion** requires the source and replacement to share a known
   locomotion class. Current annotations make this a real but incomplete guard:
   the pinned test seed falls from 308 to 305 placements, with three placements
@@ -343,6 +343,14 @@ experimental and default off:
 
 Each mode has an independent forward/reversed-inventory determinism fixture.
 Neither changes the default 308-plan regression pin.
+
+**Boss shuffle: reviewed encounters** adds the current nine-encounter boss pool
+to the ordinary enemy plan, with shared scaling and verified AP event
+composition. It defaults off and cannot be combined with the BSB-only canary.
+First use downloads the pinned [DarkScript3 release](https://github.com/AinTunez/DarkScript3/releases/tag/3.6.3);
+subsequent builds verify its local cached executable and resources. Full boss
+coverage and gameplay validation remain in progress; see
+[the boss shuffle implementation](ENEMIZER-BOSS-SHUFFLE.md).
 
 When the player chooses **Randomize & Launch**, the workflow:
 

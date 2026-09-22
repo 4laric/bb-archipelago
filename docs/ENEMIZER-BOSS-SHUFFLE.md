@@ -3,8 +3,8 @@
 The target is a seed-driven shuffle of all 22 AP boss encounters, including
 multi-actor fights. This branch is under development. A successful offline
 build is not evidence that entrance, combat, arena fit or AP completion works
-in a running game. The regular launcher boss option remains the original
-single-encounter canary until the wider path is integrated and validated.
+in a running game. The experimental reviewed-pool option is separate from the
+original single-encounter canary. The full 22-encounter goal remains unfinished.
 
 ## Ownership of encounter behavior
 
@@ -64,14 +64,19 @@ one derangement, so changing the seed cannot yet change its assignment. The
 matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
-`--pool reviewed` uses the closed roster in the arena/package registry. The
-four-boss Cleric/BSB/Paarl/Amelia milestone had two complete assignments selected
-by seed; the registry now also includes Amygdala. All donors are used once and
-no boss stays in its own arena. Cleric and
+`--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
+Ebrietas and Maria, plus the reciprocal Gehrman/Moon Presence pair. The regular
+seven-boss graph has two complete assignments selected by seed; the final pair
+is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
 composition also accepts disjoint appended initializer calls and rejects
 conflicting event/slot bindings.
+
+`--pool gascoigne-cleric` builds the reciprocal transformation test. The
+Gascoigne arena retains its original OR-death terminal and cutscene while its
+unused beast is disabled without being killed before victory. Both directions
+compose in the same m24 script, with source-pinned Talk IDs in all three states.
 
 The native writer also supports explicit additional actor placements and
 additional event IDs. Actor placement preserves the destination anchor's
@@ -88,6 +93,23 @@ roster still does not enable a combat package automatically.
 actor after its combat tuple has been transplanted. Gascoigne uses this to
 retain the human form's TalkID 241330 in the same map, where its source ESD
 already exists. This is not evidence for moving talk-bound actors across maps.
+
+Ebrietas's bullet-owner identity is a real MSB actor. Its native-pinned helper
+is materialized in every recipient map state. Maria's 3500801 event target is
+different: it is absent from all original MSB entity tables. The experimental
+adapter preserves that exact literal, verifies original and final destination
+absence, and verifies the source/final `SetCharacterEventTarget` instruction.
+Its receipt explicitly records inferred evidence and unobserved runtime behavior.
+
+`--ordinary-plan` combines ordinary-enemy and boss swaps before a single native
+map/AI/scaling pass. NPC clone IDs are allocated once across both sets. The
+launcher cache retains the complete native receipt and auxiliary plans, and
+verifies every generated map, event, AI binder and parameter file.
+
+The packaged builder uses a pinned upstream DarkScript3 download cached locally
+on first use. Both the release archive and extracted resources are checked;
+the package does not redistribute the upstream compiler. The frozen builder
+needs no separately installed Python interpreter.
 
 Example, using original effective maps/scripts/events and the built AP binder:
 
@@ -146,10 +168,29 @@ native output preserved the patched fingerprints of 12400760, 12401803,
 
 The five-boss pool including Amygdala built eight map files, ten primary
 placements, four event files and four complete AI binders, with twenty-one
-verified files overall. Separate Maria and final-boss contract modules record
-further source patches but are not yet registered/native-built coverage.
-Ebrietas requires its source c9010 support actor as well as the witnessed
-`CreateBulletOwner` call; that call alone is not a virtual-actor allocation.
+verified files overall. The subsequent nine-encounter pool built both seeded
+assignments with 31 verified files each. The reciprocal Maria/Cleric build
+verified 13 files, including source-pinned actor initialization and the opaque
+event-target witness. Ebrietas-to-Paarl built its real c9010 helper in both states.
+
+A combined build of 308 ordinary swaps and nine boss encounters verified 50
+files: 23 maps, 560 primary placements, 15 complete AI binders, and one scaling
+pass producing 239 NPC clones. A second build composed the existing AP Cathedral
+events into the same output. The frozen Windows builder also completed an
+original-data reciprocal BSB/Paarl build with nine verified files.
+
+Standalone Ludwig and Laurence donors each built ten verified files in Cleric's
+arena. Ludwig is the two-actor 3400800/3400801 encounter, distinct from Laurence
+3400850. Its adapter selects the normal three-limb configuration, replaces the
+source cutscene/warp with a destination actor-relative phase transition, and
+preserves destination progression through an explicit terminal bridge. These
+standalone donors are not yet members of the closed pool. Their runtime phase
+behavior and arena fit remain unobserved. Ludwig's primary form is normalized
+but its added second-form actor still retains the original NPC stats. The
+standalone Gascoigne beast has the same limitation. Helper normalization must
+be completed before either can enter the normalized reviewed pool. The
+reciprocal Gascoigne/Cleric native build verified ten files and both destination
+completion events, including all six primary actor initialization records.
 
 ## Remaining work before full support
 

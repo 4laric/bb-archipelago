@@ -5,6 +5,7 @@ from pathlib import Path
 
 from bb_launcher.core import BOSS_EVENT_PATH, SUPPRESSION_PATH, SeedCache, ValidationError, sha256_file
 from bb_launcher.workflow import EnemizerBuild, EnemizerOptions, LauncherWorkflow
+from test_launcher_core import write_boss_encounter_overlay
 import test_launcher_ui as fixtures
 
 
@@ -42,6 +43,51 @@ class ExperimentalToolchain(fixtures.FakeToolchain):
                  'completion_event': 12411700, 'output_event_sha256': sha256_file(event),
                  'files': [{'path': p.relative_to(root).as_posix(), 'sha256': sha256_file(p)} for p in files]})
         return EnemizerBuild(maps, plan, sha256_file(path), path, root)
+
+
+class ReviewedBossToolchain(fixtures.FakeToolchain):
+    """A native-builder boundary fixture: core still verifies its real receipt."""
+    def __init__(self, tools: Path):
+        super().__init__()
+        self.tools = tools
+        self.tools.mkdir()
+        (self.tools / 'BBBossEncounterBuilder.exe').write_bytes(b'boss-builder')
+        (self.tools / 'BBEnemizerWriter.exe').write_bytes(b'boss-writer')
+        (self.tools / 'BBEnemizerPlanner.exe').write_bytes(b'boss-planner')
+        (self.tools / 'BBEventWriter.exe').write_bytes(b'boss-event-writer')
+
+    @property
+    def boss_encounter_builder_executable(self):
+        return self.tools / 'BBBossEncounterBuilder.exe'
+
+    @property
+    def writer_executable(self):
+        return self.tools / 'BBEnemizerWriter.exe'
+
+    def boss_encounter_identity_inputs(self, inventory):
+        if inventory is None:
+            raise AssertionError('reviewed fixture expects its explicit inventory')
+        return {
+            'launcher-tools/boss-builder.exe': self.boss_encounter_builder_executable,
+            'launcher-tools/boss-writer.exe': self.writer_executable,
+            'launcher-tools/boss-planner.exe': self.tools / 'BBEnemizerPlanner.exe',
+            'launcher-tools/boss-event-writer.exe': self.tools / 'BBEventWriter.exe',
+            'launcher-input/enemy-inventory.tsv': inventory,
+            'launcher-tools/boss-inputs.db': Path(__file__).resolve().parents[1] / 'research/bb_inputs.db',
+        }
+
+    def build_boss_encounters(self, *, input_binder, **values):
+        self.calls.append(values)
+        overlay = write_boss_encounter_overlay(
+            values['output_root'], source_binder=input_binder, seed=values['seed'],
+            cathedral_input=b'verified-cathedral-overlay',
+        )
+        plan = json.loads((overlay / 'bb-enemizer-plan.json').read_text())
+        return EnemizerBuild(
+            overlay / 'dvdroot_ps4/map/MapStudio', plan,
+            sha256_file(overlay / 'bb-enemizer-plan.json'),
+            overlay / 'bb-enemizer-plan.json', overlay,
+        )
 
 
 class ExperimentalLauncherTests(unittest.TestCase):
@@ -86,6 +132,39 @@ class ExperimentalLauncherTests(unittest.TestCase):
         path.write_text(json.dumps(original))
         with self.assertRaisesRegex(ValidationError, 'normalization receipt mismatch'):
             SeedCache(result.build_path.parent).verify(result.build_path)
+
+    def test_reviewed_pool_uses_one_native_overlay_and_keeps_unaffected_ap_events(self):
+        compiler = self.fixture.root / 'DarkScript3.exe'
+        compiler.write_bytes(b'pinned compiler')
+        tools = ReviewedBossToolchain(self.fixture.root / 'reviewed-tools')
+        workflow = LauncherWorkflow(
+            self.fixture.repo, toolchain=tools,
+            process_launcher=lambda _: [fixtures.Process(10), fixtures.Process(11)],
+        )
+        from unittest.mock import patch
+        with patch('bb_launcher.boss_compiler.ensure_boss_compiler', return_value=compiler):
+            result = workflow.randomize_and_launch(
+                self.fixture.settings(), EnemizerOptions(boss_pool='reviewed'),
+                process_is_running=lambda: False,
+            )
+        identity = result.build_path.joinpath('seed-manifest.json').read_text()
+        self.assertIn('"boss_encounters": true', identity)
+        self.assertEqual('reviewed', json.loads(identity)['identity']['options']['boss_pool'])
+        self.assertEqual(b'cleric-event', (self.fixture.install.mods / BOSS_EVENT_PATH).read_bytes())
+        # The generic receipt binds the original AP Cathedral hash, and the
+        # active file is the native-composed replacement rather than a second
+        # launcher-side copy of that input.
+        from bb_launcher.core import CATHEDRAL_EVENT_PATH, COMMON_EVENT_PATH
+        self.assertEqual(b'native-composed-cathedral-plus-boss',
+                         (self.fixture.install.mods / CATHEDRAL_EVENT_PATH).read_bytes())
+        self.assertEqual(b'verified-common-overlay',
+                         (self.fixture.install.mods / COMMON_EVENT_PATH).read_bytes())
+        self.assertEqual(1, len(tools.calls))
+        self.assertEqual('reviewed', tools.calls[0]['options'].boss_pool)
+
+    def test_reviewed_pool_rejects_legacy_canary_mix(self):
+        with self.assertRaisesRegex(ValidationError, 'cannot be combined'):
+            self.launch(boss_canary=True, boss_pool='reviewed')
 
 
 if __name__ == '__main__':

@@ -16,6 +16,66 @@ from .bosses import parse_events
 from .scaling import NPC_CLONE_START, NPC_CLONE_END
 
 
+def _plan_swaps(plan: Mapping, label: str) -> list[dict]:
+    """Return independently-owned placements after checking their identity.
+
+    The native writer treats a logical placement and every physical state it
+    covers as one unit.  Do this validation before plans are combined: a
+    duplicate inside one input must not be hidden by a later set union.
+    """
+    swaps = plan.get('swaps')
+    if not isinstance(swaps, list):
+        raise ValueError(f'{label} has no swaps list')
+    logical, physical = set(), set()
+    output = []
+    for swap in swaps:
+        if not isinstance(swap, dict):
+            raise ValueError(f'{label} has a non-object swap')
+        key, destinations = swap.get('logical_key'), swap.get('destination_keys')
+        if (not isinstance(key, str) or not key
+                or not isinstance(destinations, list) or not destinations
+                or any(not isinstance(item, str) or not item for item in destinations)):
+            raise ValueError(f'{label} has an invalid swap identity')
+        if key in logical:
+            raise ValueError(f'{label} repeats a logical destination')
+        logical.add(key)
+        if len(set(destinations)) != len(destinations) or physical.intersection(destinations):
+            raise ValueError(f'{label} repeats a physical destination')
+        physical.update(destinations)
+        output.append(swap)
+    return output
+
+
+def _scaling_rows(plan: Mapping, swaps: Sequence[dict], label: str) -> tuple[list[dict], list[dict]]:
+    """Require every placement to have exactly one declared scaling outcome."""
+    scaling = plan.get('scaling')
+    if not isinstance(scaling, dict):
+        raise ValueError(f'{label} has no scaling section')
+    if scaling.get('mechanism') != 'inferred_static_npc_clone_sp_effect':
+        raise ValueError(f'{label} has an unsupported scaling mechanism')
+    changes, skips = scaling.get('changes'), scaling.get('skips')
+    if not isinstance(changes, list) or not isinstance(skips, list):
+        raise ValueError(f'{label} has invalid scaling rows')
+    if scaling.get('change_count') != len(changes) or scaling.get('skip_count') != len(skips):
+        raise ValueError(f'{label} scaling counts differ from rows')
+    expected = {swap['logical_key'] for swap in swaps}
+    accounted = set()
+    for kind, rows in (('change', changes), ('skip', skips)):
+        for row in rows:
+            key = row.get('logical_key') if isinstance(row, dict) else None
+            if not isinstance(key, str) or key not in expected or key in accounted:
+                raise ValueError(f'{label} scaling {kind} does not uniquely match a swap')
+            accounted.add(key)
+    if accounted != expected:
+        raise ValueError(f'{label} scaling does not account for every swap')
+    enabled = scaling.get('enabled')
+    if not isinstance(enabled, bool) or enabled != bool(changes):
+        raise ValueError(f'{label} scaling enabled flag disagrees with changes')
+    if not enabled and changes:
+        raise ValueError(f'{label} disabled scaling has changes')
+    return changes, skips
+
+
 def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     """Compose canonical pair plans with one shared scaling allocation."""
     if not plans:
@@ -24,19 +84,29 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     added_parts, added_entities = set(), set()
     generator_names, generator_events = set(), set()
     initializations, initialized_parts = [], set()
+    external_references, external_bindings = [], set()
     logical, physical = set(), set()
     for plan in plans:
         if plan.get('format') != 'bb-enemizer-plan-v2' or plan.get('seed') != seed or plan.get('dry_run') is not True:
             raise ValueError('boss pair plan identity differs')
-        for swap in plan['swaps']:
+        plan_swaps = _plan_swaps(plan, 'boss pair plan')
+        plan_changes, plan_skips = _scaling_rows(plan, plan_swaps, 'boss pair plan')
+        for swap in plan_swaps:
             if swap['logical_key'] in logical or physical.intersection(swap['destination_keys']):
                 raise ValueError('boss pair plans overlap a destination')
             logical.add(swap['logical_key'])
             physical.update(swap['destination_keys'])
             swaps.append(copy.deepcopy(swap))
-        changes.extend(copy.deepcopy(plan['scaling']['changes']))
-        skips.extend(copy.deepcopy(plan['scaling']['skips']))
+        changes.extend(copy.deepcopy(plan_changes))
+        skips.extend(copy.deepcopy(plan_skips))
         contracts.append(copy.deepcopy(plan['boss_contract']))
+        for reference in plan.get('boss_external_references', []):
+            binding = (reference['destination_event_file'], reference['destination_event_id'],
+                       reference['destination_actor'], reference['entity_id'])
+            if binding in external_bindings:
+                raise ValueError('boss pair plans overlap an external reference')
+            external_bindings.add(binding)
+            external_references.append(copy.deepcopy(reference))
         for addition in plan.get('boss_actor_additions', []):
             map_name = addition['destination_map'].removesuffix('.dcx').removesuffix('.msb')
             part = (map_name, addition['destination_part'])
@@ -91,6 +161,89 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     if initializations:
         result['boss_actor_initializations'] = sorted(initializations, key=lambda row: (
             row['destination_map'], row['destination_part']))
+    if external_references:
+        result['boss_external_references'] = sorted(external_references, key=lambda row: (
+            row['destination_event_file'], row['destination_event_id'], row['entity_id']))
+    return result
+
+
+def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence[dict]) -> dict:
+    """Make one native manifest from ordinary placements and reviewed bosses.
+
+    Both planners historically allocate from the same NpcParam clone range.
+    This is the only composition boundary for a player build: it rejects
+    overlapping placements, requires an explicit scaling outcome for every
+    combined swap, and rewrites clone IDs once over the complete change set.
+    The ordinary manifest owns its seed, diagnostics, and player-selected
+    options; boss pair plans add only reviewed encounter metadata.
+    """
+    if (ordinary_plan.get('format') != 'bb-enemizer-plan-v2'
+            or ordinary_plan.get('dry_run') is not True):
+        raise ValueError('ordinary plan is not a dry-run bb-enemizer-plan-v2 manifest')
+    seed = ordinary_plan.get('seed')
+    if not isinstance(seed, str) or not seed:
+        raise ValueError('ordinary plan has no seed')
+    options = ordinary_plan.get('options')
+    if not isinstance(options, Mapping):
+        raise ValueError('ordinary plan has invalid options')
+    forbidden = {
+        'boss_adapter', 'boss_contract', 'boss_encounters', 'boss_actor_additions',
+        'boss_actor_initializations', 'boss_generator_additions', 'boss_external_references',
+    }
+    present = forbidden.intersection(ordinary_plan)
+    if present:
+        raise ValueError('ordinary plan already carries boss metadata: ' + ', '.join(sorted(present)))
+
+    ordinary_swaps = _plan_swaps(ordinary_plan, 'ordinary plan')
+    if not ordinary_swaps:
+        raise ValueError('ordinary plan has no swaps')
+    ordinary_changes, ordinary_skips = _scaling_rows(
+        ordinary_plan, ordinary_swaps, 'ordinary plan')
+    bosses = combine_native_plans(seed, boss_plans)
+    boss_swaps = _plan_swaps(bosses, 'combined boss plan')
+    boss_changes, boss_skips = _scaling_rows(bosses, boss_swaps, 'combined boss plan')
+
+    ordinary_physical = {
+        destination for swap in ordinary_swaps for destination in swap['destination_keys']
+    }
+    boss_logical = {swap['logical_key'] for swap in boss_swaps}
+    if {swap['logical_key'] for swap in ordinary_swaps}.intersection(boss_logical):
+        raise ValueError('ordinary and boss plans overlap a logical destination')
+    if ordinary_physical.intersection(
+            destination for swap in boss_swaps for destination in swap['destination_keys']):
+        raise ValueError('ordinary and boss plans overlap a physical destination')
+
+    # Copy the whole ordinary document so inventory, rejection evidence and
+    # future ordinary-only fields survive verbatim.  The three fields below
+    # are the single shared native allocation ledger.
+    result = copy.deepcopy(dict(ordinary_plan))
+    swaps = [*ordinary_swaps, *boss_swaps]
+    changes = [*ordinary_changes, *boss_changes]
+    skips = [*ordinary_skips, *boss_skips]
+    changes.sort(key=lambda row: row['logical_key'])
+    skips.sort(key=lambda row: row['logical_key'])
+    for index, change in enumerate(changes):
+        clone = NPC_CLONE_START + index
+        if clone > NPC_CLONE_END:
+            raise ValueError('combined plan exhausts NpcParam clone range')
+        change = copy.deepcopy(change)
+        change['cloned_npc_param_id'] = clone
+        changes[index] = change
+    result['swap_count'] = len(swaps)
+    result['swaps'] = [copy.deepcopy(swap) for swap in sorted(swaps, key=lambda row: row['logical_key'])]
+    result['scaling'] = {
+        'enabled': bool(changes),
+        'mechanism': 'inferred_static_npc_clone_sp_effect',
+        'change_count': len(changes),
+        'changes': changes,
+        'skip_count': len(skips),
+        'skips': [copy.deepcopy(skip) for skip in skips],
+    }
+    result['boss_contract'] = copy.deepcopy(bosses['boss_contract'])
+    for field in ('boss_actor_additions', 'boss_generator_additions',
+                  'boss_actor_initializations', 'boss_external_references'):
+        if field in bosses:
+            result[field] = copy.deepcopy(bosses[field])
     return result
 
 

@@ -9,7 +9,8 @@ import hashlib, re
 from dataclasses import asdict, dataclass
 from typing import Mapping
 from .boss_contracts import CombatPackage, EventAttachment, PartBinding, event_blocks
-from .model import Archetype
+from .model import Archetype, Slot, Swap
+from .scaling import plan_scaling
 
 EVENT_FILE='m21_00_00_00.emevd.dcx.js'
 GEHRMAN=2100800
@@ -42,7 +43,7 @@ PINS={
 }
 GEHRMAN_PACKAGE=CombatPackage(
  key="gehrman", event_file=EVENT_FILE, map_prefix="m21_00_", actor=GEHRMAN,
- archetype=Archetype("c8050",805000,805000,210306), completion_event=12101800,
+ archetype=Archetype("c8050",805000,805000,0), completion_event=12101800,
  start_flag=12104800, activation_event=12101802, health_bar_event=12104802,
  health_bar_label=804000, phase_events=(12104807,12104808), co_op_entry_event=None,
  lockcam_event=12104804, phase_music_message=100, part_routine_event=None,
@@ -108,8 +109,13 @@ def _witness_initializer(event_zero: str, line: str, source_event: int) -> None:
         raise ValueError(f"Event(0) lacks unique initializer witness for {source_event}")
 
 
-def _end_event(event_id: int) -> str:
-    return f"$Event({event_id}, Default, function() {{\n    EndEvent();\n}});"
+def _end_event(event_id: int, original: str | None = None) -> str:
+    if original is None:
+        return f"$Event({event_id}, Default, function() {{\n    EndEvent();\n}});"
+    declaration = original.splitlines()[0]
+    declaration = re.sub(r'function\(([^)]*)\)', lambda match: 'function(' + ', '.join(
+        'unused_' + name.strip() for name in match[1].split(',') if name.strip()) + ')', declaration)
+    return declaration + '\n    EndEvent();\n});'
 
 
 def patch_gehrman_at_moon(source: str, ids: FinalAttachmentIds) -> str:
@@ -140,7 +146,7 @@ def patch_gehrman_at_moon(source: str, ids: FinalAttachmentIds) -> str:
         f"    $InitializeEvent(0, {ids.first});\n    $InitializeEvent(0, {ids.second});",
         "Moon append initializer anchor")
     edits = {0: init, 12104852: health, 12104853: music, 12104854: lockcam,
-             12104860: _end_event(12104860), 12104870: _end_event(12104870)}
+             12104860: _end_event(12104860, original[12104860]), 12104870: _end_event(12104870)}
     additions = (
         _renamed_event(original[12104807], 12104807, ids.first, {GEHRMAN: MOON, 12101800: 12101850}),
         _renamed_event(original[12104808], 12104808, ids.second, {GEHRMAN: MOON, 12101800: 12101850}),
@@ -197,3 +203,71 @@ def patch_moon_at_gehrman(source: str, ids: FinalAttachmentIds) -> str:
     if blocks[12101800] != original[12101800] or blocks[12101802] != original[12101802]:
         raise ValueError("Moon-at-Gehrman changed Gehrman terminal/cutscene")
     return output
+
+
+
+def _exact_slot(slots: list[Slot], arena: FinalArena, archetype: Archetype) -> Slot:
+    matches = [slot for slot in slots if slot.entity_id == arena.actor]
+    if len(matches) != 1:
+        raise ValueError(f"{arena.key} requires exactly one inventory entity {arena.actor}")
+    slot = matches[0]
+    if slot.archetype != archetype:
+        raise ValueError(f"{arena.key} entity {arena.actor} has unexpected inventory archetype")
+    if slot.talk_id != arena.source_talk_id:
+        raise ValueError(f"{arena.key} entity {arena.actor} has unexpected TalkID")
+    return slot
+
+
+def _directed(arena: FinalArena, donor: FinalArena) -> tuple[CombatPackage, CombatPackage, str]:
+    if arena is MOON_ARENA and donor is GEHRMAN_ARENA:
+        return MOON_PACKAGE, GEHRMAN_PACKAGE, "gehrman-at-moon"
+    if arena is GEHRMAN_ARENA and donor is MOON_ARENA:
+        return GEHRMAN_PACKAGE, MOON_PACKAGE, "moon-at-gehrman"
+    raise ValueError("final-boss contracts require reciprocal Gehrman/Moon arenas")
+
+
+def plan_final_boss_swap(slots: list[Slot], npcs: Mapping[int, dict], effects: Mapping[int, dict],
+                         *, arena: FinalArena, donor: FinalArena,
+                         attachment_ids: FinalAttachmentIds, seed: str) -> dict:
+    """Emit the standard v2 native/scaling plan plus a reviewed event contract.
+
+    Source initialization fingerprints are intentionally a binding request, not
+    a guessed MSB transform.  The native builder fills and validates their
+    exact fields using its original-MSB pin helper.
+    """
+    target_package, donor_package, patch_key = _directed(arena, donor)
+    target = _exact_slot(slots, arena, target_package.archetype)
+    source = _exact_slot(slots, donor, donor_package.archetype)
+    swap = Swap(target.logical_key, [target.key], {target.key: target.archetype},
+                target.archetype, source.archetype,
+                warnings=["experimental final-boss contract; runtime endgame transition requires validation"],
+                destinations={target.key: {"map_name": target.map_name, "entity_id": target.entity_id,
+                                            "x": target.x, "y": target.y, "z": target.z}})
+    changes, skips = plan_scaling([swap], [target], dict(npcs), dict(effects))
+    if len(changes) > 1 or (changes and skips):
+        raise ValueError("final-boss primary swap has ambiguous scaling")
+    added = (attachment_ids.first, attachment_ids.second)
+    contract = {
+        "format": "bb-final-boss-contract-v1", "arena": arena.key, "donor": donor.key,
+        "patch": patch_key, "event_file": EVENT_FILE,
+        "attachment_event_ids": list(added),
+        "preserved_destination_events": [arena.terminal, arena.entry],
+        "primary_init_source_bindings": [{
+            "source_map": source.map_name, "source_part": source.part_name,
+            "source_entity_id": source.entity_id, "source_archetype": asdict(source.archetype),
+            "source_talk_id": source.talk_id,
+            "destination_map": target.map_name, "destination_part": target.part_name,
+            "destination_entity_id": target.entity_id,
+            "required_native_fields": ["talk_id", "unk_t18", "init_anim_id", "damage_anim_id", "provenance"],
+        }],
+        "source_initialization": "native writer must populate exact original-MSB pin; no CharaInit-to-TalkID inference",
+    }
+    return {
+        "format": "bb-enemizer-plan-v2", "dry_run": True, "seed": seed, "swap_count": 1,
+        "swaps": [swap.json()],
+        "options": {"experimental_boss_contract": f"{arena.key}<-{donor.key}"},
+        "boss_contract": contract,
+        "scaling": {"enabled": bool(changes), "mechanism": "inferred_static_npc_clone_sp_effect",
+                    "change_count": len(changes), "changes": [change.json() for change in changes],
+                    "skip_count": len(skips), "skips": skips},
+    }

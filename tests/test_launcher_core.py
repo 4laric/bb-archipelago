@@ -168,6 +168,67 @@ def sample_plan(seed: str) -> dict:
     }
 
 
+def write_boss_encounter_overlay(
+    root: Path, *, source_binder: Path, seed: str, cathedral_input: bytes | None = None,
+) -> Path:
+    """A closed native-output fixture with two encounter events and audit files."""
+    overlay = root / "boss-encounter-output"
+    plan = sample_plan(seed)
+    if cathedral_input is not None:
+        plan["input_event_overrides"] = [{
+            "file": "m24_00_00_00.emevd.dcx",
+            "sha256": hashlib.sha256(cathedral_input).hexdigest(),
+        }]
+    outputs = {
+        core.SUPPRESSION_PATH: b"composed-ap-binder-plus-boss-scaling",
+        f"{core.MAP_PREFIX}m24_01_00_00.msb.dcx": b"cleric-map",
+        f"{core.MAP_PREFIX}m35_00_00_00.msb.dcx": b"maria-map",
+        f"{core.AI_PREFIX}m24_01_00_00.luabnd.dcx": b"cleric-ai",
+        f"{core.AI_PREFIX}m35_00_00_00.luabnd.dcx": b"maria-ai",
+        "dvdroot_ps4/event/m24_01_00_00.emevd.dcx": b"cleric-event",
+        "dvdroot_ps4/event/m35_00_00_00.emevd.dcx": b"maria-event",
+        core.ENEMIZER_PLAN_NAME: json.dumps(plan, sort_keys=True).encode("utf-8"),
+        "source-enemizer-plan.json": b'{"source":"combined-before-scaling"}',
+    }
+    if cathedral_input is not None:
+        outputs[core.CATHEDRAL_EVENT_PATH] = b"native-composed-cathedral-plus-boss"
+    for relative, content in outputs.items():
+        path = overlay.joinpath(*relative.split("/"))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    plan_hash = hashlib.sha256(outputs[core.ENEMIZER_PLAN_NAME]).hexdigest()
+    source_plan_hash = hashlib.sha256(outputs["source-enemizer-plan.json"]).hexdigest()
+    outputs["scaling-report.json"] = json.dumps({
+        "format": "bb-enemizer-scaling-v1", "applied": True,
+        "source_gameparam_sha256": sha256_file(source_binder),
+        "output_gameparam_sha256": hashlib.sha256(outputs[core.SUPPRESSION_PATH]).hexdigest(),
+        "source_plan_sha256": source_plan_hash, "output_plan_sha256": plan_hash,
+    }, sort_keys=True).encode("utf-8")
+    outputs["dvdroot_ps4/script.json"] = json.dumps({
+        "format": "bb-enemizer-ai-v1", "applied": True, "plan_sha256": plan_hash,
+        "maps": [
+            {"map": "m24_01_00_00.luabnd.dcx", "missing_goals_after": 0,
+             "output_sha256": hashlib.sha256(outputs[f"{core.AI_PREFIX}m24_01_00_00.luabnd.dcx"]).hexdigest()},
+            {"map": "m35_00_00_00.luabnd.dcx", "missing_goals_after": 0,
+             "output_sha256": hashlib.sha256(outputs[f"{core.AI_PREFIX}m35_00_00_00.luabnd.dcx"]).hexdigest()},
+        ],
+    }, sort_keys=True).encode("utf-8")
+    for relative in ("scaling-report.json", "dvdroot_ps4/script.json"):
+        path = overlay.joinpath(*relative.split("/"))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(outputs[relative])
+    files = [
+        {"path": relative, "size": len(content), "sha256": hashlib.sha256(content).hexdigest()}
+        for relative, content in sorted(outputs.items())
+    ]
+    (overlay / core.BOSS_ENCOUNTER_REPORT_NAME).write_text(json.dumps({
+        "format": "bb-boss-encounters-v1", "applied": True,
+        "encounters": [{"destination_event_file": "m24_01_00_00.emevd.dcx"}],
+        "external_references": [], "files": files,
+    }, sort_keys=True), encoding="utf-8")
+    return overlay
+
+
 def snapshot_tree(root: Path) -> dict[str, str]:
     return {
         path.relative_to(root).as_posix(): sha256_file(path)
@@ -208,6 +269,81 @@ class LauncherCoreTests(unittest.TestCase):
         empty.mkdir()
         with self.assertRaisesRegex(ValidationError, "missing base game directory"):
             GameInstall.from_root(empty)
+
+    def test_generic_boss_receipt_stages_only_game_files_and_retains_audit_evidence(self):
+        source_binder = self.root / "composed-ap-gameparam.parambnd.dcx"
+        source_binder.write_bytes(b"ap-parameter-edits")
+        seed = "boss-seed"
+        overlay = write_boss_encounter_overlay(self.root, source_binder=source_binder, seed=seed)
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(
+            identity(seed, b"source", enemizer_seed=seed,
+                     options={"enemy_randomizer": True, "boss_encounters": True}),
+            source_binder, boss_encounter_overlay=overlay,
+        )
+        self.assertEqual(
+            b"composed-ap-binder-plus-boss-scaling",
+            (build.path / core.SUPPRESSION_PATH).read_bytes(),
+        )
+        self.assertTrue((build.path / "dvdroot_ps4/event/m24_01_00_00.emevd.dcx").is_file())
+        self.assertTrue((build.path / "dvdroot_ps4/event/m35_00_00_00.emevd.dcx").is_file())
+        self.assertFalse((build.path / "dvdroot_ps4/script.json").exists())
+        audit = build.manifest["enemizer"]["boss_encounters"]
+        self.assertEqual("bb-boss-encounters-v1", audit["format"])
+        self.assertEqual(
+            core.BOSS_ENCOUNTER_AUDIT_PREFIX + "files/source-enemizer-plan.json",
+            next(row["retained_path"] for row in audit["auxiliary_files"]
+                 if row["path"] == "source-enemizer-plan.json"),
+        )
+        self.assertTrue((build.path / audit["receipt"]["path"]).is_file())
+        cache.verify(build.path)
+
+    def test_generic_boss_receipt_binds_ap_input_before_staging_composed_event(self):
+        binder = self.root / "binder.dcx"
+        binder.write_bytes(b"suppressed")
+        overlay = write_boss_encounter_overlay(
+            self.root, source_binder=binder, seed="seed:boss", cathedral_input=b"AP cathedral",
+        )
+        cathedral = self.root / "cathedral.emevd.dcx"
+        cathedral.write_bytes(b"AP cathedral")
+        seed = identity(
+            "seed", b"suppressed", enemizer_seed="seed:boss",
+            options={"enemy_randomizer": True, "boss_encounters": True},
+        )
+        cache = SeedCache(self.root / "cache")
+        result = cache.build(seed, binder, cathedral_event=cathedral,
+                             boss_encounter_overlay=overlay)
+        final = result.path.joinpath(*CATHEDRAL_EVENT_PATH.split("/"))
+        self.assertEqual(b"native-composed-cathedral-plus-boss", final.read_bytes())
+        witness = result.manifest["cathedral_event"]
+        self.assertEqual(hashlib.sha256(b"AP cathedral").hexdigest(), witness["input_sha256"])
+        cathedral.write_bytes(b"different AP cathedral")
+        with self.assertRaisesRegex(ValidationError, "does not match its retained plan"):
+            SeedCache(self.root / "cache-two").build(
+                seed, binder, cathedral_event=cathedral, boss_encounter_overlay=overlay,
+            )
+
+    def test_generic_boss_receipt_refuses_unlisted_output_and_retained_receipt_tampering(self):
+        source_binder = self.root / "composed-ap-gameparam.parambnd.dcx"
+        source_binder.write_bytes(b"ap-parameter-edits")
+        seed = "boss-seed"
+        overlay = write_boss_encounter_overlay(self.root, source_binder=source_binder, seed=seed)
+        (overlay / "not-in-native-receipt.txt").write_text("rogue", encoding="utf-8")
+        cache = SeedCache(self.root / "cache")
+        build_identity = identity(seed, b"source", enemizer_seed=seed,
+                                  options={"enemy_randomizer": True, "boss_encounters": True})
+        with self.assertRaisesRegex(ValidationError, "file set differs"):
+            cache.build(build_identity, source_binder, boss_encounter_overlay=overlay)
+        (overlay / "not-in-native-receipt.txt").unlink()
+        wrong_composed_binder = self.root / "different-composed-ap-gameparam.parambnd.dcx"
+        wrong_composed_binder.write_bytes(b"other-ap-parameter-edits")
+        with self.assertRaisesRegex(ValidationError, "composed AP binder"):
+            cache.build(build_identity, wrong_composed_binder, boss_encounter_overlay=overlay)
+        build = cache.build(build_identity, source_binder, boss_encounter_overlay=overlay)
+        receipt = build.manifest["enemizer"]["boss_encounters"]["receipt"]
+        (build.path / receipt["path"]).write_text("{}", encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "retained boss encounter receipt changed"):
+            cache.verify(build.path)
 
     def test_merged_dump_without_patch_directory_is_accepted(self):
         merged = self.root / "merged"

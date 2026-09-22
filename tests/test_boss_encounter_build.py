@@ -6,7 +6,14 @@ from pathlib import Path
 
 from tools.bb_inputs import read_prefix
 from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_contract_swap, event_blocks
-from tools.build_boss_encounters import event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations
+from tools.build_boss_encounters import (
+    ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
+    event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
+    is_gascoigne_donor_pair, is_gascoigne_arena_pair,
+)
+from tools.bb_enemizer.boss_pool import compose_event_patches
+from tools.bb_enemizer.gascoigne_contract import patch_gascoigne_at_cleric
+from tools.bb_enemizer.gascoigne_arena import patch_cleric_at_gascoigne
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -84,6 +91,30 @@ class EncounterBuildTests(unittest.TestCase):
                 event_record(original, self.before, corrupted, pins, [12411700, 12411800], (terminal,))
             with self.assertRaisesRegex(ValueError, 'non-predicate progression'):
                 compose_event_patches(self.before, [corrupted], [12411700, 12411800], (terminal,))
+
+    def test_reciprocal_gascoigne_variants_compose_with_both_m24_completions_protected(self):
+        gascoigne_donor = patch_gascoigne_at_cleric(self.before, GASCOIGNE_ALLOCATION)
+        gascoigne_arena = patch_cleric_at_gascoigne(
+            self.before, self.before, GASCOIGNE_ARENA_ATTACHMENTS)
+        donor_pair = (ARENAS['cleric-beast'], PACKAGES['father-gascoigne'])
+        arena_pair = (ARENAS['father-gascoigne'], PACKAGES['cleric-beast'])
+        self.assertTrue(is_gascoigne_donor_pair(*donor_pair))
+        self.assertTrue(is_gascoigne_arena_pair(*arena_pair))
+        self.assertFalse(is_gascoigne_donor_pair(*arena_pair))
+        terminal = ({'event_id': 12411700, 'original_actor': 2410800,
+                     'bridge_event_id': GASCOIGNE_ALLOCATION.terminal_bridge_event_id},)
+        combined = compose_event_patches(self.before, [gascoigne_donor, gascoigne_arena],
+                                         [12411700, 12411800], terminal)
+        original, output = event_blocks(self.before), event_blocks(combined)
+        self.assertEqual(original[12411800], output[12411800])
+        self.assertIn('WaitFor(EventFlag(12990004));', output[12411700])
+        self.assertIn('$InitializeEvent(0, 12990001);', output[0])
+        self.assertIn('$InitializeEvent(0, 12990400);', output[0])
+        self.assertSetEqual(
+            {12990001, 12990002, 12990003, 12990004,
+             *GASCOIGNE_ARENA_ATTACHMENTS.values()},
+            set(output).difference(original),
+        )
 
     def test_receipt_detects_mutation_and_unlisted_outputs(self):
         with tempfile.TemporaryDirectory() as temporary:

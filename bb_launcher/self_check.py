@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import sys
+import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,7 @@ BUNDLED_TOOLS = (
     "BBEventWriter.exe",
     "MSBBMiner.exe",
     "bb-ap-client.exe",
+    "BBBossEncounterBuilder/BBBossEncounterBuilder.exe",
 )
 
 
@@ -80,10 +82,28 @@ def run_self_check(report: Path | None, *, require_bundled_tools: bool | None = 
         name: (tools_dir / name).is_file() for name in BUNDLED_TOOLS
     }
     result["tools"]["BBEnemizerPlanner/BBEnemizerPlanner.exe"] = toolchain.planner_executable.is_file()
+    boss_inputs = resource_root() / "research" / "bb_inputs.db"
+    builder_inputs = (tools_dir / "BBBossEncounterBuilder" / "_internal" / "research"
+                      / "bb_inputs.db")
+    def bundle_record(path: Path) -> dict[str, Any]:
+        return {
+            "path": str(path),
+            "present": path.is_file(),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None,
+        }
+    result["boss_inputs"] = bundle_record(boss_inputs)
+    result["boss_builder_inputs"] = bundle_record(builder_inputs)
     if require_bundled_tools:
         for name, present in result["tools"].items():
             if not present:
                 result["problems"].append(f"bundled tool missing: {name}")
+        if not boss_inputs.is_file():
+            result["problems"].append(f"bundled boss input bundle missing: {boss_inputs}")
+        if not builder_inputs.is_file():
+            result["problems"].append(f"bundled boss builder input bundle missing: {builder_inputs}")
+        if (boss_inputs.is_file() and builder_inputs.is_file()
+                and result["boss_inputs"]["sha256"] != result["boss_builder_inputs"]["sha256"]):
+            result["problems"].append("bundled boss input bundles differ between launcher and builder")
 
     # The seed generator's half of the package: the launcher installs this file
     # into an Archipelago installation's custom_worlds on request, so a package
