@@ -39,16 +39,17 @@ class EncounterBuildTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'original native pin'):
                 verify_retained_helpers(None, plan)
 
-    def test_reviewed_pool_includes_ludwig_without_reusing_or_omitting_donors(self):
+    def test_reviewed_pool_includes_orphan_without_reusing_or_omitting_donors(self):
         graph = reviewed_compatibility()
-        self.assertEqual(11, len(graph))
+        self.assertEqual(12, len(graph))
         assignments = []
         for seed in ('seed-0', 'seed-2'):
             assignment = assign_donors(seed, graph)
             assignments.append(assignment)
             self.assertEqual(set(graph), set(assignment))
             self.assertEqual(set(graph), set(assignment.values()))
-            self.assertEqual('ludwig', assignment['cleric-beast'])
+            self.assertEqual('orphan-of-kos', assignment['cleric-beast'])
+            self.assertEqual('ludwig', assignment['orphan-of-kos'])
             self.assertEqual('laurence', assignment['ludwig'])
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)

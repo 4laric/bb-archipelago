@@ -48,6 +48,9 @@ from tools.bb_enemizer.bsb_maria_contract import patch_bsb_at_maria, native_plan
 from tools.bb_enemizer.bsb_orphan_contract import (
     patch_bsb_at_orphan, native_plan_bsb_at_orphan,
 )
+from tools.bb_enemizer.ludwig_orphan_contract import (
+    patch_ludwig_at_orphan, native_plan_ludwig_at_orphan,
+)
 from tools.bb_enemizer.logarius_contract import (
     patch_logarius_at_bsb, native_plan_logarius_at_bsb,
     helper_scaling_parents as logarius_helper_scaling_parents,
@@ -134,6 +137,11 @@ LUDWIG_COMPATIBILITY = {
     'ludwig': ('cleric-beast', 'laurence'),
 }
 
+ORPHAN_COMPATIBILITY = {
+    'cleric-beast': ('orphan-of-kos',),
+    'orphan-of-kos': ('blood-starved-beast', 'ludwig'),
+}
+
 
 def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
     """Closed roster assembled from explicitly reviewed directed adapters."""
@@ -143,6 +151,7 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
         MARIA_COMPATIBILITY,
         LAURENCE_COMPATIBILITY,
         LUDWIG_COMPATIBILITY,
+        ORPHAN_COMPATIBILITY,
         FINAL_COMPATIBILITY,
     ):
         for arena, donors in section.items():
@@ -162,6 +171,10 @@ def is_laurence_ludwig_pair(arena, package) -> bool:
 
 def is_bsb_orphan_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('orphan-of-kos', 'blood-starved-beast')
+
+
+def is_ludwig_orphan_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('orphan-of-kos', 'ludwig')
 
 
 def is_logarius_bsb_pair(arena, package) -> bool:
@@ -427,8 +440,12 @@ def build(args) -> dict:
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if orphan and getattr(args, 'arena', None) != 'cleric-beast':
         raise ValueError('Orphan requires the reviewed Cleric arena adapter')
-    if direct_orphan[0] == 'orphan-of-kos' and direct_orphan != ('orphan-of-kos', 'blood-starved-beast'):
-        raise ValueError('Orphan arena requires the reviewed BSB donor adapter')
+    reviewed_orphan_pairs = {
+        ('orphan-of-kos', 'blood-starved-beast'),
+        ('orphan-of-kos', 'ludwig'),
+    }
+    if direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in reviewed_orphan_pairs:
+        raise ValueError('Orphan arena requires a reviewed donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if direct_logarius[0] == 'martyr-logarius' and direct_logarius != ('martyr-logarius', 'blood-starved-beast'):
         raise ValueError('Logarius arena requires the reviewed BSB donor adapter')
@@ -450,8 +467,8 @@ def build(args) -> dict:
     if direct_gascoigne[0] == 'father-gascoigne' or direct_gascoigne[1] == 'father-gascoigne':
         if direct_gascoigne not in reviewed_gascoigne_pairs:
             raise ValueError('Father Gascoigne is available only in the reviewed Cleric reciprocal adapters')
-    if ludwig and (getattr(args, 'pool', None) or args.arena != 'cleric-beast'):
-        raise ValueError('Ludwig donor requires the reviewed Cleric arena adapter')
+    if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos'):
+        raise ValueError('Ludwig donor requires a reviewed Cleric or Orphan arena adapter')
     if laurence and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig')):
         raise ValueError('Laurence donor requires a reviewed Cleric or Ludwig arena adapter')
     if getattr(args, 'pool', None):
@@ -496,7 +513,8 @@ def build(args) -> dict:
             if (package is not None and arena.key not in FINAL_ARENAS
                     and not is_maria_pair(arena, package) and not is_gascoigne_pair(arena, package)
                     and not any(dlc_pair_flags(arena, package)) and package.key != 'orphan-of-kos'
-                    and not is_bsb_orphan_pair(arena, package) and not is_logarius_bsb_pair(arena, package)
+                    and not is_bsb_orphan_pair(arena, package) and not is_ludwig_orphan_pair(arena, package)
+                    and not is_logarius_bsb_pair(arena, package)
                     and not is_bsb_logarius_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
@@ -519,6 +537,10 @@ def build(args) -> dict:
                     'bridge_event_id': ORPHAN_ALLOCATION.terminal_bridge_event_id},)
             elif is_bsb_orphan_pair(arena, package):
                 patched = patch_bsb_at_orphan(
+                    texts[arena.event_file], texts[package.event_file]
+                )
+            elif is_ludwig_orphan_pair(arena, package):
+                patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
             elif is_bsb_logarius_pair(arena, package):
@@ -618,6 +640,11 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_bsb_orphan_pair(arena, package):
                 plan = native_plan_bsb_at_orphan(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(
+                    args, plan['primary_init_source_bindings']
+                )
+            elif is_ludwig_orphan_pair(arena, package):
+                plan = native_plan_ludwig_at_orphan(slots, npcs, effects, args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )

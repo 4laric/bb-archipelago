@@ -68,8 +68,8 @@ matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
-Ebrietas, Maria, Laurence and Ludwig, plus the reciprocal Gehrman/Moon Presence pair. The regular
-nine-boss graph has two complete assignments selected by seed; the final pair
+Ebrietas, Maria, Laurence, Ludwig and Orphan, plus the reciprocal Gehrman/Moon Presence pair. The regular
+ten-boss graph has two complete assignments selected by seed; the final pair
 is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
@@ -261,7 +261,7 @@ seed-dependent assignments.
 | Laurence | Constructed | Constructed | Yes |
 | Living Failures | Pending | Pending | Pending |
 | Lady Maria | Constructed | Constructed | Yes |
-| Orphan of Kos | Constructed | Constructed | Pending cross-links |
+| Orphan of Kos | Constructed | Constructed | Yes |
 
 Latest standalone construction evidence: reciprocal Ludwig/Cleric and
 Laurence/Cleric each verify 13 output files. Orphan-at-Cleric verifies ten,
@@ -293,3 +293,16 @@ their recorded original native actor pins are checked before construction.
 Imported BSB cameras at Cainhurst, Orphan, Laurence and Maria now exit on
 destination completion, preventing camera reactivation if an entry flag is
 retained on reload. This is a static lifecycle guard, not a runtime observation.
+
+The twelve-encounter pool verifies 37 files in each of two complete assignments
+(seeds `0` and `1`). Ludwig-at-Orphan uses the destination's two existing
+primary actors with original Ludwig source initialization; both normalize from
+tier 11 to tier 13. It preserves Orphan's original two-actor OR terminal and
+post-fight shadow, and maps both active/clear camera operations to m36.
+The full pool therefore has thirteen logical actor swaps for twelve encounters;
+those counts must not be conflated. The standalone direction verifies eight
+files. All of these observations are native construction evidence only.
+
+[Live acceptance preparation](ENEMIZER-BOSS-LIVE-ACCEPTANCE.md) records the
+session identity, positive control, predictions, labels, retry/reload checks,
+and shape/placement coverage required before runtime support is claimed.
