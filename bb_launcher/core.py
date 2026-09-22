@@ -13,6 +13,7 @@ user file that collides with one is excluded and reported, never merged.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import os
@@ -60,12 +61,20 @@ CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
 BOSS_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_01_00_00.emevd.dcx"
+BOSS_ENCOUNTER_REPORT_NAME = "boss-encounters-report.json"
+# Native encounter outputs include plans and diagnostic receipts alongside
+# loose game files.  They are retained under this cache-only path, never
+# copied into the live shadPS4 overlay.
+BOSS_ENCOUNTER_AUDIT_PREFIX = ".bb-boss-encounters/"
 MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 # The enemizer plan is retained beside the seed manifest, outside the overlay
 # file set, so a bad swap can be named after the fact (bb-archipelago#321).
 ENEMIZER_PLAN_NAME = "bb-enemizer-plan.json"
 AI_PREFIX = f"{DVDROOT_PREFIX}script/"
 AI_FILE_PATTERN = r"m\d{2}_\d{2}_\d{2}_00\.luabnd\.dcx"
+SFX_PREFIX = f"{DVDROOT_PREFIX}sfx/"
+SFX_FILE_PATTERN = r"frpg_sfxbnd_m\d{2}\.ffxbnd\.dcx"
+BOSS_EVENT_FILE_PATTERN = r"m\d{2}_\d{2}_\d{2}_\d{2}\.emevd\.dcx"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
 # The one operator escape hatch over suppression-binder hash skew
 # (bb-archipelago#183).  Modeled on the delivery tool's
@@ -250,13 +259,159 @@ def _safe_overlay_path(raw: str) -> str:
         and normalized.lower().endswith(".msb.dcx")
     )
     is_owned_event = normalized in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH, COMMON_EVENT_PATH, BOSS_EVENT_PATH}
+    is_boss_encounter_event = (
+        normalized.startswith(f"{DVDROOT_PREFIX}event/")
+        and re.fullmatch(BOSS_EVENT_FILE_PATTERN, normalized.removeprefix(f"{DVDROOT_PREFIX}event/")) is not None
+    )
     is_ai = normalized.startswith(AI_PREFIX) and re.fullmatch(
         AI_FILE_PATTERN, normalized[len(AI_PREFIX):]) is not None
-    if not is_suppression and not is_map and not is_owned_event and not is_ai and normalized not in ITEM_NAMES_PATHS:
+    is_sfx = normalized.startswith(SFX_PREFIX) and re.fullmatch(
+        SFX_FILE_PATTERN, normalized[len(SFX_PREFIX):]) is not None
+    if (not is_suppression and not is_map and not is_owned_event and not is_boss_encounter_event
+            and not is_ai and not is_sfx and normalized not in ITEM_NAMES_PATHS):
         raise ValidationError(
-            f"overlay path is outside the param/map/event/AI contract: {normalized}"
+            f"overlay path is outside the param/map/event/AI/SFX contract: {normalized}"
         )
     return normalized
+
+
+def _safe_boss_receipt_path(raw: object) -> str:
+    """Validate a native receipt-relative path without making it an overlay path."""
+    if not isinstance(raw, str) or not raw or "\\" in raw or ":" in raw:
+        raise ValidationError("boss encounter receipt has an invalid file path")
+    path = PurePosixPath(raw)
+    if path.is_absolute() or path.as_posix() != raw or any(part in ("", ".", "..") for part in path.parts):
+        raise ValidationError("boss encounter receipt has an unsafe file path")
+    return path.as_posix()
+
+
+def _is_boss_encounter_overlay_path(relative: str) -> bool:
+    if relative == SUPPRESSION_PATH:
+        return True
+    if relative.startswith(MAP_PREFIX):
+        return "/" not in relative[len(MAP_PREFIX):] and relative.endswith(".msb.dcx")
+    if relative.startswith(AI_PREFIX):
+        return re.fullmatch(AI_FILE_PATTERN, relative[len(AI_PREFIX):]) is not None
+    if relative.startswith(SFX_PREFIX):
+        return re.fullmatch(SFX_FILE_PATTERN, relative[len(SFX_PREFIX):]) is not None
+    event_prefix = f"{DVDROOT_PREFIX}event/"
+    return (relative.startswith(event_prefix)
+            and re.fullmatch(BOSS_EVENT_FILE_PATTERN, relative[len(event_prefix):]) is not None)
+
+
+@dataclass(frozen=True)
+class BossEncounterIngress:
+    """Receipt-verified generic encounter output before it enters a seed cache."""
+
+    root: Path
+    receipt: Mapping[str, Any]
+    entries: tuple[dict[str, Any], ...]
+    overlay_files: Mapping[str, Path]
+    auxiliary_files: Mapping[str, Path]
+    plan: Path
+    source_plan: Path
+    scaling: Mapping[str, Any]
+    ai: Mapping[str, Any]
+    input_event_overrides: Mapping[str, str]
+
+
+def _read_boss_encounter_ingress(overlay: Path | str, source_binder: Path) -> BossEncounterIngress:
+    """Validate native output as one closed file set before cache staging.
+
+    The native report is the authority for both game files and diagnostics.
+    Only the former may be activated; plans and reports remain cache-local
+    evidence beneath :data:`BOSS_ENCOUNTER_AUDIT_PREFIX`.
+    """
+    root = Path(overlay).expanduser().resolve()
+    if not root.is_dir() or root.is_symlink():
+        raise ValidationError("boss encounter overlay is not a regular directory")
+    report_path = root / BOSS_ENCOUNTER_REPORT_NAME
+    report = _read_json(report_path, "boss encounter receipt")
+    if report.get("format") != "bb-boss-encounters-v1" or report.get("applied") is not True:
+        raise ValidationError("boss encounter receipt is not an applied bb-boss-encounters-v1 report")
+    if not isinstance(report.get("encounters"), list) or not report["encounters"]:
+        raise ValidationError("boss encounter receipt carries no encounter records")
+    rows = report.get("files")
+    if not isinstance(rows, list) or not rows:
+        raise ValidationError("boss encounter receipt carries no files")
+    entries: list[dict[str, Any]] = []
+    overlay_files: dict[str, Path] = {}
+    auxiliary_files: dict[str, Path] = {}
+    receipt_paths: set[str] = set()
+    folded_paths: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValidationError("boss encounter receipt file record is not an object")
+        raw = _safe_boss_receipt_path(row.get("path"))
+        size = row.get("size")
+        if not isinstance(size, int) or size < 0:
+            raise ValidationError(f"boss encounter receipt has an invalid size for {raw}")
+        digest = _require_sha256(str(row.get("sha256", "")), f"boss encounter receipt {raw}")
+        if raw.casefold() in folded_paths:
+            raise ValidationError(f"boss encounter receipt repeats {raw}")
+        receipt_paths.add(raw)
+        folded_paths.add(raw.casefold())
+        path = root.joinpath(*PurePosixPath(raw).parts)
+        if (not path.is_file() or path.is_symlink() or not path.resolve().is_relative_to(root)
+                or path.stat().st_size != size or sha256_file(path) != digest):
+            raise ValidationError(f"boss encounter receipt does not match {raw}")
+        if _is_boss_encounter_overlay_path(raw):
+            normalized = _safe_overlay_path(raw)
+            if normalized != raw or normalized in overlay_files:
+                raise ValidationError(f"boss encounter receipt has a noncanonical overlay file {raw}")
+            overlay_files[normalized] = path
+        else:
+            auxiliary_files[raw] = path
+        entries.append({"path": raw, "size": size, "sha256": digest})
+    actual = _tree_files(root)
+    if set(actual) != receipt_paths | {BOSS_ENCOUNTER_REPORT_NAME}:
+        raise ValidationError("boss encounter output file set differs from its receipt")
+    required_auxiliary = {
+        ENEMIZER_PLAN_NAME, "source-enemizer-plan.json", "scaling-report.json",
+        f"{DVDROOT_PREFIX}script.json",
+    }
+    if not required_auxiliary.issubset(auxiliary_files):
+        raise ValidationError("boss encounter output is missing retained plan or diagnostic receipts")
+    if SUPPRESSION_PATH not in overlay_files:
+        raise ValidationError("boss encounter output is missing its gameparam binder")
+    if not any(path.startswith(MAP_PREFIX) for path in overlay_files):
+        raise ValidationError("boss encounter output is missing MapStudio files")
+    if not any(path.startswith(AI_PREFIX) for path in overlay_files):
+        raise ValidationError("boss encounter output is missing AI binders")
+    plan_document = _read_json(auxiliary_files[ENEMIZER_PLAN_NAME], "boss encounter adjusted plan")
+    override_rows = plan_document.get("input_event_overrides", [])
+    if not isinstance(override_rows, list):
+        raise ValidationError("boss encounter adjusted plan has invalid AP event overrides")
+    input_event_overrides: dict[str, str] = {}
+    for row in override_rows:
+        if not isinstance(row, dict) or set(row) != {"file", "sha256"}:
+            raise ValidationError("boss encounter adjusted plan has malformed AP event override")
+        filename = row["file"]
+        if not isinstance(filename, str) or re.fullmatch(BOSS_EVENT_FILE_PATTERN, filename) is None:
+            raise ValidationError("boss encounter adjusted plan has unsupported AP event override")
+        relative = f"{DVDROOT_PREFIX}event/{filename}"
+        digest = _require_sha256(str(row["sha256"]), f"boss AP event override {filename}")
+        if relative in input_event_overrides:
+            raise ValidationError("boss encounter adjusted plan repeats an AP event override")
+        input_event_overrides[relative] = digest
+    scaling = _read_json(auxiliary_files["scaling-report.json"], "boss encounter scaling report")
+    ai = _read_json(auxiliary_files[f"{DVDROOT_PREFIX}script.json"], "boss encounter AI report")
+    if scaling.get("format") != "bb-enemizer-scaling-v1":
+        raise ValidationError("boss encounter scaling report has an unsupported format")
+    if scaling.get("source_gameparam_sha256") != sha256_file(source_binder):
+        raise ValidationError("boss encounter scaling report does not start from the composed AP binder")
+    if scaling.get("output_gameparam_sha256") != sha256_file(overlay_files[SUPPRESSION_PATH]):
+        raise ValidationError("boss encounter scaling report does not match its output binder")
+    if (scaling.get("source_plan_sha256") != sha256_file(auxiliary_files["source-enemizer-plan.json"])
+            or scaling.get("output_plan_sha256") != sha256_file(auxiliary_files[ENEMIZER_PLAN_NAME])):
+        raise ValidationError("boss encounter scaling report does not match its retained plans")
+    if ai.get("format") != "bb-enemizer-ai-v1" or ai.get("plan_sha256") != sha256_file(auxiliary_files[ENEMIZER_PLAN_NAME]):
+        raise ValidationError("boss encounter AI report does not match its adjusted plan")
+    return BossEncounterIngress(
+        root, report, tuple(entries), overlay_files, auxiliary_files,
+        auxiliary_files[ENEMIZER_PLAN_NAME], auxiliary_files["source-enemizer-plan.json"], scaling, ai,
+        input_event_overrides,
+    )
 
 
 def canonical_overlay_case(value: str) -> str:
@@ -560,6 +715,7 @@ class SeedCache:
         boss_event: Path | str | None = None,
         boss_report: Mapping[str, Any] | None = None,
         scaling_report: Mapping[str, Any] | None = None,
+        boss_encounter_overlay: Path | str | None = None,
         item_names: Path | str | Mapping[str, Path | str] | None = None,
         item_names_path: str = ITEM_NAMES_PATH,
     ) -> BuildResult:
@@ -572,11 +728,57 @@ class SeedCache:
                 raise ValidationError(f"cache key collision or identity drift at {destination}")
             return BuildResult(destination, result.manifest, True)
 
-        binder = Path(suppression_binder).expanduser().resolve()
-        if not binder.is_file() or binder.is_symlink():
-            raise ValidationError(f"suppression binder is not a regular file: {binder}")
+        source_binder = Path(suppression_binder).expanduser().resolve()
+        if not source_binder.is_file() or source_binder.is_symlink():
+            raise ValidationError(f"suppression binder is not a regular file: {source_binder}")
+        encounter: BossEncounterIngress | None = None
+        binder = source_binder
+        if boss_encounter_overlay is not None:
+            if not bool(identity.options.get("boss_encounters")):
+                raise ValidationError("boss encounter overlay requires the boss_encounters cache option")
+            if any(value is not None for value in (
+                map_studio, enemizer_plan, enemy_scripts, enemy_ai_report, boss_event,
+                boss_report, scaling_report,
+            )):
+                raise ValidationError("boss encounter overlay cannot be mixed with individual enemizer outputs")
+            encounter = _read_boss_encounter_ingress(boss_encounter_overlay, source_binder)
+            binder = encounter.overlay_files[SUPPRESSION_PATH]
+            scaling_report = encounter.scaling
+            enemy_ai_report = encounter.ai
+        # An AP event that the generic native builder has composed cannot be
+        # copied a second time.  The retained adjusted plan pins the original
+        # AP input; replace it only after that hash check with the receipt-pinned
+        # final event, which is what the player will activate.
+        generic_event_inputs: dict[str, str] = {}
+        if encounter is not None:
+            def composed_event(relative: str, source: Path | str | None) -> Path | str | None:
+                if source is None:
+                    return None
+                expected = encounter.input_event_overrides.get(relative)
+                final = encounter.overlay_files.get(relative)
+                if expected is None or final is None:
+                    raise ValidationError(
+                        f"boss encounter receipt did not compose the supplied AP event {relative}"
+                    )
+                original = Path(source).expanduser().resolve()
+                if (not original.is_file() or original.is_symlink()
+                        or sha256_file(original) != expected):
+                    raise ValidationError(
+                        f"boss encounter AP event input does not match its retained plan: {relative}"
+                    )
+                generic_event_inputs[relative] = expected
+                return final
+            cathedral_event = composed_event(CATHEDRAL_EVENT_PATH, cathedral_event)
+            hemwick_event = composed_event(HEMWICK_EVENT_PATH, hemwick_event)
+            if set(generic_event_inputs) != set(encounter.input_event_overrides):
+                raise ValidationError("boss encounter retained plan has an unstaged AP event override")
         maps: list[Path] = []
-        if map_studio is not None:
+        if encounter is not None:
+            maps = sorted(
+                (path for relative, path in encounter.overlay_files.items() if relative.startswith(MAP_PREFIX)),
+                key=lambda path: path.name.lower(),
+            )
+        elif map_studio is not None:
             map_root = Path(map_studio).expanduser().resolve()
             if not map_root.is_dir() or map_root.is_symlink():
                 raise ValidationError(f"MapStudio input is not a directory: {map_root}")
@@ -601,9 +803,14 @@ class SeedCache:
             raise ValidationError("enemizer_seed is set but no MapStudio outputs were supplied")
         if maps and identity.enemizer_seed is None:
             raise ValidationError("MapStudio outputs require an enemizer_seed in the cache identity")
-        plan_source: Path | None = None
-        plan_document: dict[str, Any] | None = None
-        if enemizer_plan is not None:
+        plan_source: Path | None = encounter.plan if encounter is not None else None
+        plan_document: dict[str, Any] | None = (
+            _read_json(encounter.plan, "boss encounter adjusted plan") if encounter is not None else None
+        )
+        if encounter is not None:
+            if not isinstance(plan_document.get("swaps"), list):
+                raise ValidationError("boss encounter adjusted plan carries no swap list")
+        elif enemizer_plan is not None:
             if not maps:
                 raise ValidationError("an enemizer plan was supplied without MapStudio outputs")
             plan_source = Path(enemizer_plan).expanduser().resolve()
@@ -615,7 +822,12 @@ class SeedCache:
         elif maps:
             raise ValidationError("MapStudio outputs require the enemizer plan that produced them")
         scripts: list[Path] = []
-        if enemy_scripts is not None:
+        if encounter is not None:
+            scripts = sorted(
+                (path for relative, path in encounter.overlay_files.items() if relative.startswith(AI_PREFIX)),
+                key=lambda path: path.name.lower(),
+            )
+        elif enemy_scripts is not None:
             script_root = Path(enemy_scripts)
             if not script_root.is_dir() or script_root.is_symlink():
                 raise ValidationError("enemy AI scripts must be a regular directory")
@@ -635,6 +847,28 @@ class SeedCache:
         stage.mkdir()
         try:
             inputs = [(SUPPRESSION_PATH, binder, "suppression")]
+            if encounter is not None:
+                inputs.extend(
+                    (relative, path, "enemizer")
+                    for relative, path in encounter.overlay_files.items()
+                    if relative.startswith(MAP_PREFIX)
+                )
+                inputs.extend(
+                    (relative, path, "enemizer-ai")
+                    for relative, path in encounter.overlay_files.items()
+                    if relative.startswith(AI_PREFIX)
+                )
+                inputs.extend(
+                    (relative, path, "boss-encounter-sfx")
+                    for relative, path in encounter.overlay_files.items()
+                    if relative.startswith(SFX_PREFIX)
+                )
+                inputs.extend(
+                    (relative, path, "boss-encounter-event")
+                    for relative, path in encounter.overlay_files.items()
+                    if (relative.startswith(f"{DVDROOT_PREFIX}event/")
+                        and relative not in generic_event_inputs)
+                )
             if item_names is not None:
                 archives = item_names if isinstance(item_names, Mapping) else {item_names_path: item_names}
                 for relative, source in archives.items():
@@ -664,13 +898,18 @@ class SeedCache:
                 if not event.is_file() or event.is_symlink():
                     raise ValidationError(f"Hemwick event is not a regular file: {event}")
                 inputs.append((HEMWICK_EVENT_PATH, event, "hemwick-event"))
-            inputs.extend(
-                (f"{MAP_PREFIX}{path.name}", path, "enemizer") for path in maps
-            )
-            inputs.extend((f"{AI_PREFIX}{path.name}", path, "enemizer-ai") for path in scripts)
+            if encounter is None:
+                inputs.extend(
+                    (f"{MAP_PREFIX}{path.name}", path, "enemizer") for path in maps
+                )
+                inputs.extend((f"{AI_PREFIX}{path.name}", path, "enemizer-ai") for path in scripts)
             records: list[dict[str, Any]] = []
+            recorded_paths: set[str] = set()
             for relative, source, component in inputs:
                 relative = _safe_overlay_path(relative)
+                if relative in recorded_paths:
+                    raise ValidationError(f"seed inputs overlap at {relative}")
+                recorded_paths.add(relative)
                 output = stage.joinpath(*PurePosixPath(relative).parts)
                 output.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source, output)
@@ -702,6 +941,48 @@ class SeedCache:
                     "stress": plan_document.get("stress"),
                     "options": dict(enemizer_options or plan_document.get("options") or {}),
                 }
+            boss_encounter_record: dict[str, Any] | None = None
+            if encounter is not None:
+                audit_root = stage / BOSS_ENCOUNTER_AUDIT_PREFIX.rstrip("/")
+                retained_auxiliary = []
+                for row in encounter.entries:
+                    relative = row["path"]
+                    if relative == ENEMIZER_PLAN_NAME or relative in encounter.overlay_files:
+                        continue
+                    source = encounter.auxiliary_files[relative]
+                    retained_path = audit_root.joinpath("files", *PurePosixPath(relative).parts)
+                    retained_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(source, retained_path)
+                    if sha256_file(retained_path) != row["sha256"]:
+                        raise ValidationError(f"copy verification failed for boss encounter artifact {relative}")
+                    retained_auxiliary.append({
+                        **row,
+                        "retained_path": (BOSS_ENCOUNTER_AUDIT_PREFIX + "files/" + relative),
+                    })
+                retained_report = audit_root / BOSS_ENCOUNTER_REPORT_NAME
+                retained_report.parent.mkdir(parents=True, exist_ok=True)
+                source_report = encounter.root / BOSS_ENCOUNTER_REPORT_NAME
+                shutil.copyfile(source_report, retained_report)
+                report_hash = sha256_file(source_report)
+                if sha256_file(retained_report) != report_hash:
+                    raise ValidationError("copy verification failed for boss encounter receipt")
+                boss_encounter_record = {
+                    "format": "bb-boss-encounters-v1",
+                    "applied": True,
+                    "receipt": {
+                        "path": BOSS_ENCOUNTER_AUDIT_PREFIX + BOSS_ENCOUNTER_REPORT_NAME,
+                        "size": retained_report.stat().st_size,
+                        "sha256": report_hash,
+                    },
+                    "files": list(encounter.entries),
+                    "auxiliary_files": retained_auxiliary,
+                    "encounters": copy.deepcopy(encounter.receipt.get("encounters")),
+                    "external_references": copy.deepcopy(encounter.receipt.get("external_references", [])),
+                    "input_event_overrides": [
+                        {"path": relative, "sha256": digest}
+                        for relative, digest in sorted(generic_event_inputs.items())
+                    ],
+                }
             manifest = {
                 "format": SEED_MANIFEST_FORMAT,
                 "cache_key": key,
@@ -728,6 +1009,7 @@ class SeedCache:
                         "workshop_badge_goods": 4114,
                         "laurence_witness_flag": 12401898,
                         "suppressed_password_flag": 12401803,
+                        "input_sha256": generic_event_inputs.get(CATHEDRAL_EVENT_PATH),
                         "hemwick_gate": (None if hemwick_event is None else {
                             "event": 12409990, "access_flag": 12201898,
                             "object": 2401995, "sfx": 2403995,
@@ -751,6 +1033,7 @@ class SeedCache:
                         "access_flag": 12201898,
                         "object": 2201999,
                         "sfx": 2203999,
+                        "input_sha256": generic_event_inputs.get(HEMWICK_EVENT_PATH),
                     }
                 ),
                 "enemizer": {
@@ -761,6 +1044,7 @@ class SeedCache:
                     "ai_file_count": len(scripts),
                     "ai": enemy_ai_report,
                     "boss": boss_report,
+                    "boss_encounters": boss_encounter_record,
                     "scaling": scaling_report,
                 },
             }
@@ -814,7 +1098,11 @@ class SeedCache:
         wanted_names = set(names_paths) if identity.options.get("toast_placeholders") else set()
         if wanted_names != ITEM_NAMES_PATHS.intersection(expected):
             raise ValidationError("pickup-name plan and item names archive must be installed together")
-        actual = _tree_files(root, ignore=(SEED_MANIFEST_NAME, ENEMIZER_PLAN_NAME))
+        all_actual = _tree_files(root, ignore=(SEED_MANIFEST_NAME, ENEMIZER_PLAN_NAME))
+        actual = {
+            relative: file for relative, file in all_actual.items()
+            if not relative.startswith(BOSS_ENCOUNTER_AUDIT_PREFIX)
+        }
         if set(actual) != set(expected):
             raise ValidationError(
                 "seed build file set drift: "
@@ -911,11 +1199,22 @@ class SeedCache:
                     or hemwick.get("sfx") != 2203999):
                 raise ValidationError("Hemwick gate event witness is invalid")
         boss = manifest.get('enemizer', {}).get('boss')
+        boss_encounters = manifest.get('enemizer', {}).get('boss_encounters')
         boss_record = expected.get(BOSS_EVENT_PATH)
         boss_enabled = bool(identity.options.get('boss_canary'))
-        if boss_enabled != (boss_record is not None) or boss_enabled != (boss is not None):
+        boss_encounters_enabled = bool(identity.options.get('boss_encounters'))
+        if boss_enabled and boss_encounters_enabled:
+            raise ValidationError('legacy and generic boss encounter options cannot be combined')
+        if boss_encounters_enabled != (boss_encounters is not None):
+            raise ValidationError('boss encounter option and receipt must agree')
+        if boss_encounters_enabled and boss is not None:
+            raise ValidationError('generic boss encounter build cannot carry a legacy boss receipt')
+        if not boss_encounters_enabled and any(
+                relative.startswith(BOSS_ENCOUNTER_AUDIT_PREFIX) for relative in all_actual):
+            raise ValidationError('seed build carries boss encounter audit files without its receipt')
+        if not boss_encounters_enabled and (boss_enabled != (boss_record is not None) or boss_enabled != (boss is not None)):
             raise ValidationError('boss option, event and receipt must agree')
-        if boss_enabled:
+        if boss_enabled and not boss_encounters_enabled:
             if (not isinstance(boss, dict) or boss.get('adapter') != 'bsb-at-cleric-v1'
                     or boss.get('applied') is not True or boss.get('completion_event') != 12411700
                     or boss_record.get('component') != 'boss-event'
@@ -928,17 +1227,183 @@ class SeedCache:
                         raise ValidationError('boss receipt does not match composed overlay')
             if not plan_record or boss_files.get(ENEMIZER_PLAN_NAME) != plan_record.get('sha256'):
                 raise ValidationError('boss receipt does not match retained plan')
+        if boss_encounters_enabled:
+            if not isinstance(boss_encounters, dict):
+                raise ValidationError('boss encounter receipt is malformed')
+            if boss_encounters.get('format') != 'bb-boss-encounters-v1' or boss_encounters.get('applied') is not True:
+                raise ValidationError('boss encounter receipt has an unsupported format')
+            receipt = boss_encounters.get('receipt')
+            rows = boss_encounters.get('files')
+            retained_auxiliary = boss_encounters.get('auxiliary_files')
+            if (not isinstance(receipt, dict) or not isinstance(rows, list)
+                    or not isinstance(retained_auxiliary, list) or not plan_record):
+                raise ValidationError('boss encounter receipt has incomplete audit records')
+            receipt_relative = BOSS_ENCOUNTER_AUDIT_PREFIX + BOSS_ENCOUNTER_REPORT_NAME
+            if receipt.get('path') != receipt_relative:
+                raise ValidationError('boss encounter receipt is retained at an unexpected path')
+            receipt_path = root / receipt_relative
+            if (not receipt_path.is_file() or receipt_path.is_symlink()
+                    or receipt_path.stat().st_size != receipt.get('size')
+                    or sha256_file(receipt_path) != _require_sha256(str(receipt.get('sha256', '')), 'boss encounter receipt')):
+                raise ValidationError('retained boss encounter receipt changed')
+            receipt_document = _read_json(receipt_path, 'retained boss encounter receipt')
+            if (receipt_document.get('format') != 'bb-boss-encounters-v1'
+                    or receipt_document.get('applied') is not True):
+                raise ValidationError('retained boss encounter receipt is invalid')
+            normalized_rows = []
+            for row in rows:
+                if not isinstance(row, dict):
+                    raise ValidationError('boss encounter audit file record is malformed')
+                relative = _safe_boss_receipt_path(row.get('path'))
+                size = row.get('size')
+                if not isinstance(size, int) or size < 0:
+                    raise ValidationError('boss encounter audit file size is malformed')
+                normalized_rows.append({
+                    'path': relative, 'size': size,
+                    'sha256': _require_sha256(str(row.get('sha256', '')), f'boss encounter audit {relative}'),
+                })
+            if receipt_document.get('files') != normalized_rows:
+                raise ValidationError('retained boss encounter receipt file list changed')
+            if boss_encounters.get('encounters') != receipt_document.get('encounters'):
+                raise ValidationError('boss encounter summary differs from its retained receipt')
+            if boss_encounters.get('external_references') != receipt_document.get('external_references', []):
+                raise ValidationError('boss external-reference summary differs from its retained receipt')
+            by_path = {row['path']: row for row in normalized_rows}
+            if len(by_path) != len(normalized_rows):
+                raise ValidationError('boss encounter audit repeats a file path')
+            expected_overlay = {
+                relative: record for relative, record in expected.items()
+                if record.get('component') in {
+                    'suppression', 'enemizer', 'enemizer-ai', 'boss-encounter-event',
+                    'boss-encounter-sfx',
+                    'cathedral-event', 'hemwick-event',
+                }
+            }
+            receipt_overlay = {
+                relative: row for relative, row in by_path.items()
+                if _is_boss_encounter_overlay_path(relative)
+            }
+            if set(expected_overlay) != set(receipt_overlay):
+                raise ValidationError('boss encounter receipt and cached overlay file sets differ')
+            for relative, row in receipt_overlay.items():
+                record = expected_overlay[relative]
+                if record.get('size') != row['size'] or record.get('sha256') != row['sha256']:
+                    raise ValidationError(f'boss encounter receipt does not match cached {relative}')
+            overrides = boss_encounters.get('input_event_overrides')
+            if not isinstance(overrides, list):
+                raise ValidationError('boss encounter AP event override record is malformed')
+            normalized_overrides: dict[str, str] = {}
+            for row in overrides:
+                if not isinstance(row, dict) or set(row) != {'path', 'sha256'}:
+                    raise ValidationError('boss encounter AP event override record is malformed')
+                relative = _safe_overlay_path(str(row['path']))
+                if relative not in {CATHEDRAL_EVENT_PATH, HEMWICK_EVENT_PATH}:
+                    raise ValidationError('boss encounter AP event override path is unsupported')
+                if relative in normalized_overrides:
+                    raise ValidationError('boss encounter AP event override repeats a path')
+                normalized_overrides[relative] = _require_sha256(
+                    str(row['sha256']), f'boss encounter AP event override {relative}'
+                )
+            adjusted = _read_json(retained_plan, 'retained boss encounter adjusted plan')
+            plan_overrides: dict[str, str] = {}
+            raw_plan_overrides = adjusted.get('input_event_overrides', [])
+            if not isinstance(raw_plan_overrides, list):
+                raise ValidationError('retained boss encounter plan has invalid AP event overrides')
+            for row in raw_plan_overrides:
+                if not isinstance(row, dict) or set(row) != {'file', 'sha256'}:
+                    raise ValidationError('retained boss encounter plan has malformed AP event override')
+                filename = row['file']
+                if not isinstance(filename, str) or re.fullmatch(BOSS_EVENT_FILE_PATTERN, filename) is None:
+                    raise ValidationError('retained boss encounter plan has unsupported AP event override')
+                relative = f'{DVDROOT_PREFIX}event/{filename}'
+                if relative in plan_overrides:
+                    raise ValidationError('retained boss encounter plan repeats an AP event override')
+                plan_overrides[relative] = _require_sha256(
+                    str(row['sha256']), f'retained boss AP event override {filename}'
+                )
+            if normalized_overrides != plan_overrides:
+                raise ValidationError('boss encounter AP event override record differs from retained plan')
+            for relative, digest in normalized_overrides.items():
+                record = expected.get(relative)
+                witness = cathedral if relative == CATHEDRAL_EVENT_PATH else hemwick
+                component = 'cathedral-event' if relative == CATHEDRAL_EVENT_PATH else 'hemwick-event'
+                if (record is None or record.get('component') != component
+                        or not isinstance(witness, dict) or witness.get('input_sha256') != digest):
+                    raise ValidationError('boss encounter AP event override is not bound to its final event')
+            auxiliary_by_source = {}
+            for row in retained_auxiliary:
+                if not isinstance(row, dict):
+                    raise ValidationError('boss encounter auxiliary record is malformed')
+                source = _safe_boss_receipt_path(row.get('path'))
+                retained = row.get('retained_path')
+                expected_retained = BOSS_ENCOUNTER_AUDIT_PREFIX + 'files/' + source
+                if retained != expected_retained or source in auxiliary_by_source:
+                    raise ValidationError('boss encounter auxiliary path is malformed')
+                if source not in by_path or _is_boss_encounter_overlay_path(source) or source == ENEMIZER_PLAN_NAME:
+                    raise ValidationError('boss encounter auxiliary record names the wrong file')
+                if row.get('size') != by_path[source]['size'] or row.get('sha256') != by_path[source]['sha256']:
+                    raise ValidationError('boss encounter auxiliary record differs from its receipt')
+                retained_path = root / retained
+                if (not retained_path.is_file() or retained_path.is_symlink()
+                        or retained_path.stat().st_size != row['size'] or sha256_file(retained_path) != row['sha256']):
+                    raise ValidationError(f'boss encounter auxiliary file changed: {source}')
+                auxiliary_by_source[source] = row
+            expected_auxiliary = set(by_path) - set(receipt_overlay) - {ENEMIZER_PLAN_NAME}
+            if set(auxiliary_by_source) != expected_auxiliary:
+                raise ValidationError('boss encounter auxiliary file set differs from its receipt')
+            actual_audit = {
+                relative for relative in all_actual if relative.startswith(BOSS_ENCOUNTER_AUDIT_PREFIX)
+            }
+            expected_audit = {receipt_relative} | {
+                str(row['retained_path']) for row in retained_auxiliary
+            }
+            if actual_audit != expected_audit:
+                raise ValidationError('boss encounter retained audit file set drifted')
+            if (by_path.get(ENEMIZER_PLAN_NAME, {}).get('sha256') != plan_record.get('sha256')
+                    or by_path.get(ENEMIZER_PLAN_NAME, {}).get('size') != plan_record.get('size')):
+                raise ValidationError('boss encounter receipt does not match the retained adjusted plan')
+            scaling_path = root / auxiliary_by_source['scaling-report.json']['retained_path']
+            source_plan_path = root / auxiliary_by_source['source-enemizer-plan.json']['retained_path']
+            ai_path = root / auxiliary_by_source[f'{DVDROOT_PREFIX}script.json']['retained_path']
+            scaling = manifest.get('enemizer', {}).get('scaling')
+            ai = manifest.get('enemizer', {}).get('ai')
+            if (not isinstance(scaling, dict) or scaling != _read_json(scaling_path, 'retained boss scaling report')
+                    or scaling.get('source_plan_sha256') != sha256_file(source_plan_path)
+                    or scaling.get('output_plan_sha256') != plan_record.get('sha256')
+                    or scaling.get('output_gameparam_sha256') != expected[SUPPRESSION_PATH].get('sha256')):
+                raise ValidationError('boss encounter scaling receipt mismatch')
+            if (not isinstance(ai, dict) or ai != _read_json(ai_path, 'retained boss AI report')
+                    or ai.get('format') != 'bb-enemizer-ai-v1'
+                    or ai.get('plan_sha256') != plan_record.get('sha256')):
+                raise ValidationError('boss encounter AI receipt mismatch')
+            ai_maps = ai.get('maps')
+            if not isinstance(ai_maps, list) or not ai_maps:
+                raise ValidationError('boss encounter AI receipt carries no map records')
+            named_ai = {
+                AI_PREFIX + str(row.get('map', '')): row
+                for row in ai_maps if isinstance(row, dict)
+            }
+            expected_ai = {
+                relative: record for relative, record in expected.items()
+                if record.get('component') == 'enemizer-ai'
+            }
+            if len(named_ai) != len(ai_maps) or set(named_ai) != set(expected_ai):
+                raise ValidationError('boss encounter AI receipt file set mismatch')
+            for relative, record in expected_ai.items():
+                row = named_ai[relative]
+                if row.get('missing_goals_after') != 0 or row.get('output_sha256') != record.get('sha256'):
+                    raise ValidationError('boss encounter AI output mismatch or missing goals')
         scaling = manifest.get('enemizer', {}).get('scaling')
         scaling_enabled = bool(identity.options.get('normalize_scaling')) or boss_enabled
-        if scaling_enabled != (scaling is not None):
+        if not boss_encounters_enabled and scaling_enabled != (scaling is not None):
             raise ValidationError('normalization option and receipt must agree')
-        if scaling_enabled:
+        if scaling_enabled and not boss_encounters_enabled:
             if (not isinstance(scaling, dict) or scaling.get('applied') is not True or not plan_record
                     or scaling.get('output_plan_sha256') != plan_record.get('sha256')
                     or scaling.get('output_gameparam_sha256') != expected[SUPPRESSION_PATH].get('sha256')):
                 raise ValidationError('normalization receipt mismatch')
         ai_records = {p: r for p, r in expected.items() if p.startswith(AI_PREFIX)}
-        if scaling_enabled:
+        if scaling_enabled and not boss_encounters_enabled:
             ai = manifest.get('enemizer', {}).get('ai') or {}
             if ai.get('applied') is not True or ai.get('plan_sha256') != plan_record.get('sha256'):
                 raise ValidationError('experimental AI receipt does not match plan')

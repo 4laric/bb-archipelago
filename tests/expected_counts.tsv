@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		677
+total		1622
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	42
@@ -41,3 +41,67 @@ module	test_slice3_witnesses	9
 module	test_objact_params	4
 module	test_toast_placeholders	4
 module	test_toast_writer	3
+module	test_boss_shuffle	15
+module	test_boss_contracts	30
+module	test_boss_actor_rosters	6
+module	test_boss_encounter_build	13
+module	test_boss_pool	13
+module	test_boss_shuffle_build	2
+module	test_gascoigne_contract	5
+module	test_maria_contract	7
+module	test_final_boss_contracts	4
+module	test_boss_compiler	3
+module	test_gascoigne_arena	5
+module	test_ludwig_contract	5
+module	test_laurence_contract	3
+module	test_maria_amelia_contract	4
+module	test_launcher_experimental_enemies	6
+module	test_boss_actor_scaling	5
+module	test_laurence_arena	5
+module	test_ludwig_arena	4
+module	test_bsb_laurence_contract	5
+module	test_orphan_contract	6
+module	test_bsb_maria_contract	4
+module	test_laurence_ludwig_contract	5
+module	test_bsb_orphan_contract	6
+module	test_logarius_contract	5
+module	test_bsb_logarius_contract	7
+module	test_ludwig_orphan_contract	6
+module	test_paarl_logarius_contract	6
+module	test_bsb_wet_nurse_contract	6
+module	test_orphan_gascoigne_contract	5
+module	test_bsb_living_failures_contract	7
+module	test_rom_ebrietas_contract	7
+module	test_ebrietas_rom_contract	7
+module	test_living_failures_laurence_contract	6
+module	test_bsb_celestial_emissary_contract	7
+module	test_living_failures_maria_contract	6
+module	test_wet_nurse_bsb_contract	5
+module	test_logarius_wet_nurse_contract	4
+module	test_amygdala_celestial_emissary_contract	8
+module	test_amelia_witch_contract	5
+# Windows records three skipped test cases (plus three skipped subcases); Linux CI requires all 22.
+module	test_launcher_external	19
+module	test_launcher_external_cli	2
+module	test_launcher_external_workflow	19
+module	test_gehrman_micolash_contract	6
+module	test_witch_amygdala_contract	5
+module	test_micolash_moon_contract	6
+# Original-input DarkScript compilation is an additional local-only test.
+module	test_celestial_paarl_contract	9
+module	test_one_reborn_ebrietas_contract	7
+module	test_rom_one_reborn_contract	7
+module	test_ludwig_shadows_contract	5
+module	test_maria_living_failures_contract	6
+module	test_shadows_orphan_contract	6
+module	test_laurence_living_failures_contract	6
+module	test_micolash_gehrman_contract	5
+module	test_moon_micolash_contract	4
+module	test_gascoigne_witch_contract	5
+module	test_paarl_wet_nurse_contract	6
+module	test_wet_nurse_logarius_contract	5
+module	test_run_tests_gate	5
+module	test_celestial_rom_contract	5
+module	test_shadows_celestial_contract	6
+module	test_witch_one_reborn_contract	8
+module	test_one_reborn_shadows_contract	6

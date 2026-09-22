@@ -1,11 +1,26 @@
 # The Archipelago tier. Modules that skip themselves when AP is not importable
 # are correct locally and a silent hole in CI, so CI asserts they ran.
 #
-# When a PR adds an AP-dependent module, it adds its `module` row here.
+# When a PR adds an AP-dependent module, it adds its `no_skip_module` row here.
 
 max_skips	0
 
-module	test_bloodborne_client	16
+# These tests exercise reviewed local binaries or installed-game source that
+# the Linux AP runner deliberately does not carry.  Each allowance names one
+# exact test; any other skip remains a gate failure, and AP-required modules
+# below must still skip zero tests.
+allow_skip	test_celestial_paarl_contract.CelestialPaarlContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_laurence_living_failures_contract.LaurenceLivingFailuresContractTests.test_witnessed_installed_ludwig_always_update_variant_is_accepted
+allow_skip	test_laurence_living_failures_contract.LaurenceLivingFailuresContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_maria_living_failures_contract.MariaLivingFailuresContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_paarl_wet_nurse_contract.PaarlWetNurseContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_wet_nurse_logarius_contract.WetNurseLogariusContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_moon_micolash_contract.MoonMicolashContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+
+no_skip_module	test_bloodborne_client	16
 # #205's option wiring only exists when Archipelago is importable, so the AP
 # tier asserts this module ran all of it rather than skipping the option tests.
-module	test_bloodborne_model	45
+no_skip_module	test_bloodborne_model	45
+allow_skip	test_celestial_rom_contract.CelestialRomContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_shadows_celestial_contract.ShadowsCelestialTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_one_reborn_shadows_contract.OneRebornShadowsTests.test_patched_source_compiles_with_pinned_darkscript_when_available

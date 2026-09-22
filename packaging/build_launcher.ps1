@@ -118,6 +118,14 @@ if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }
     (Join-Path $repo "packaging\enemizer_planner_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller planner build failed." }
 
+& python @pyinstaller --console --onedir --name BBBossEncounterBuilder `
+    --distpath (Join-Path $work "boss-dist") `
+    --version-file (Join-Path $versionRoot "planner-version.txt") `
+    --add-data "$(Join-Path $repo 'research\bb_inputs.db');research" `
+    @worldData `
+    (Join-Path $repo "packaging\boss_encounter_entry.py")
+if ($LASTEXITCODE -ne 0) { throw "PyInstaller boss encounter builder failed." }
+
 $native = Join-Path $work "native"
 New-Item -ItemType Directory -Path $native -Force | Out-Null
 $projects = @(
@@ -154,6 +162,7 @@ $tools = Join-Path $package "tools"
 New-Item -ItemType Directory -Path $tools -Force | Out-Null
 $plannerPackage = Join-Path $tools "BBEnemizerPlanner"
 Copy-Item -LiteralPath (Join-Path $work "planner-dist\BBEnemizerPlanner") -Destination $plannerPackage -Recurse
+Copy-Item -LiteralPath (Join-Path $work "boss-dist\BBBossEncounterBuilder") -Destination (Join-Path $tools "BBBossEncounterBuilder") -Recurse
 foreach ($item in $projects) {
     $publish = Join-Path $native ([IO.Path]::GetFileNameWithoutExtension($item.Name))
     Copy-Item -LiteralPath (Join-Path $publish $item.Name) -Destination $tools
@@ -176,6 +185,7 @@ Copy-Item -LiteralPath (Join-Path $repo "docs\LAUNCHER.md") -Destination (Join-P
 Copy-Item -LiteralPath (Join-Path $repo "docs\PLAYTESTING.md") -Destination (Join-Path $package "docs\PLAYTESTING.md")
 Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-AI.md") -Destination (Join-Path $package "docs\ENEMIZER-AI.md")
 Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-BOSS-CANARY.md") -Destination (Join-Path $package "docs\ENEMIZER-BOSS-CANARY.md")
+Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-BOSS-SHUFFLE.md") -Destination (Join-Path $package "docs\ENEMIZER-BOSS-SHUFFLE.md")
 Copy-Item -LiteralPath (Join-Path $repo "SECURITY.md") -Destination (Join-Path $package "SECURITY.md")
 Copy-Item -LiteralPath (Join-Path $repo "packaging\PACKAGE-README.txt") -Destination (Join-Path $package "README.txt")
 Copy-Item -LiteralPath (Join-Path $repo "tables\Bloodborne-native-item-grant-auto-v2.CT") -Destination (Join-Path $package "tools")

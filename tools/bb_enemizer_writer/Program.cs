@@ -8,6 +8,20 @@ if (args.Length == 9 && args[0] == "--boss-native" && args[8] == "--apply")
     return BossCanary.Run(args[1], args[2], args[3], args[4], args[5], args[6], null, args[7]);
 if (args.Length == 2 && args[0] == "--boss-event-pins")
     return BossCanary.Inspect(args[1]);
+if (args.Length == 2 && args[0] == "--boss-encounter-pins")
+    return BossEncounter.Inspect(args[1]);
+if (args.Length == 2 && args[0] == "--boss-actor-pins")
+    return BossActorTransplant.Inspect(args[1]);
+if (args.Length == 2 && args[0] == "--boss-region-pins")
+    return BossRegionTransplant.Inspect(args[1]);
+if (args.Length == 2 && args[0] == "--boss-object-pins")
+    return BossObjectTransplant.Inspect(args[1]);
+if (args.Length == 2 && args[0] == "--boss-sfx-pins")
+    return BossSfxTransplant.Inspect(args[1]);
+if (args.Length == 12 && args[0] == "--boss-encounters" && args[9] == "--sfx" && args[11] == "--apply")
+    return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[10]);
+if (args.Length == 10 && args[0] == "--boss-encounters" && args[9] == "--apply")
+    return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
 if (args.Length == 10 && args[0] == "--boss-scaled" && args[9] == "--apply")
     return BossCanary.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
 if (args.Length == 8 && args[0] == "--scaled" && args[7] == "--apply")
@@ -32,6 +46,12 @@ if (args.Length != 4 || args[3] != "--apply")
         "Boss canary (experimental): BBEnemizerWriter --boss-scaled <plan> <built-gameparam> <paramdef> <maps> <scripts> <original-event> <compiled-event> <new-output-root> --apply");
     Console.Error.WriteLine(
         "Native boss canary: BBEnemizerWriter --boss-native <plan> <built-gameparam> <paramdef> <maps> <scripts> <original-event> <new-output-root> --apply");
+    Console.Error.WriteLine(
+        "Boss encounters: BBEnemizerWriter --boss-encounters <plan> <built-gameparam> <paramdef> <maps> <scripts> <event-input-dir> <compiled-event-dir> <new-output-root> [--sfx <original-sfx-dir>] --apply");
+    Console.Error.WriteLine("Actor evidence: BBEnemizerWriter --boss-actor-pins <original-map.msb.dcx>");
+    Console.Error.WriteLine("Region evidence: BBEnemizerWriter --boss-region-pins <original-map.msb.dcx>");
+    Console.Error.WriteLine("Object evidence: BBEnemizerWriter --boss-object-pins <original-map.msb.dcx>");
+    Console.Error.WriteLine("SFX evidence: BBEnemizerWriter --boss-sfx-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }
@@ -64,6 +84,28 @@ if (manifest.Format != "bb-enemizer-plan-v2" || !manifest.DryRun)
 using var planDocument = JsonDocument.Parse(File.ReadAllText(manifestPath));
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_adapter", out _))
     throw new InvalidDataException("boss plan requires --boss-scaled and its verified event adapter");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_encounters", out _))
+    throw new InvalidDataException("boss encounter plan requires --boss-encounters and reviewed event manifests");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_contract", out _))
+    throw new InvalidDataException("boss contract plan requires --boss-encounters and reviewed event manifests");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_additions", out _))
+    throw new InvalidDataException("boss actor additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_scaling", out _))
+    throw new InvalidDataException("boss actor scaling requires --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_initializations", out _))
+    throw new InvalidDataException("boss actor initializations require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_generator_additions", out _))
+    throw new InvalidDataException("boss generator additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_region_additions", out _))
+    throw new InvalidDataException("boss region additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_object_additions", out _))
+    throw new InvalidDataException("boss object additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_ffx_merges", out _))
+    throw new InvalidDataException("boss FFX merges require --boss-encounters and reviewed asset evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_sfx_additions", out _))
+    throw new InvalidDataException("boss SFX additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_external_references", out _))
+    throw new InvalidDataException("boss external references require --boss-encounters and reviewed event evidence");
 if (!scalingPrepared && planDocument.RootElement.TryGetProperty("scaling", out var scaling)
     && scaling.GetProperty("enabled").GetBoolean())
     throw new InvalidDataException("scaling requires --scaled; map-only mode cannot apply parameter clones");

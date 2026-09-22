@@ -18,6 +18,7 @@ from .core import (
     BuildResult,
     AI_PREFIX,
     AI_FILE_PATTERN,
+    DVDROOT_PREFIX,
     CATHEDRAL_EVENT_PATH,
     HEMWICK_EVENT_PATH,
     ITEM_NAMES_PATH,
@@ -341,6 +342,10 @@ class EnemizerOptions:
     preserve_locomotion: bool = False
     normalize_scaling: bool = False
     boss_canary: bool = False
+    # Reviewed encounter packages are an explicit experimental opt-in.  Keep
+    # this separate from the legacy single canary so their receipts cannot be
+    # confused in a seed cache.
+    boss_pool: str | None = None
 
 
 @dataclass(frozen=True)
@@ -628,6 +633,11 @@ class EnemizerToolchain:
     @property
     def miner_executable(self) -> Path:
         return self.app_root / "tools" / "MSBBMiner.exe"
+
+    @property
+    def boss_encounter_builder_executable(self) -> Path:
+        return (self.app_root / "tools" / "BBBossEncounterBuilder"
+                / "BBBossEncounterBuilder.exe")
 
     @property
     def is_bundled(self) -> bool:
@@ -968,6 +978,115 @@ class EnemizerToolchain:
                 or receipt.get('output_gameparam_sha256') != sha256_file(output / SUPPRESSION_PATH)):
             raise ValidationError('experimental scaling provenance mismatch')
         return EnemizerBuild(output / 'dvdroot_ps4/map/MapStudio', plan, sha256_file(adjusted), adjusted, output)
+
+    def build_boss_encounters(
+        self, *, options: EnemizerOptions, install: GameInstall, input_binder: Path,
+        darkscript: Path, event_overrides: Mapping[str, Path], **kwargs,
+    ) -> EnemizerBuild:
+        """Compose one ordinary normalized plan and the reviewed boss pool.
+
+        The Python builder is deliberately the only component that combines
+        ordinary and boss allocations.  It receives complete, effective game
+        inputs, including AP event rewrites, and publishes its own audited
+        overlay rather than allowing launcher-side file splicing.
+        """
+        if options.boss_pool != "reviewed":
+            raise ValidationError("unsupported reviewed boss pool")
+        if not darkscript.is_file():
+            raise ValidationError(f"reviewed boss encounters require DarkScript3: {darkscript}")
+        planned = self.build(**kwargs, normalize_scaling=True, plan_only=True)
+        root = kwargs["output_root"]
+        inputs = root / "boss-encounter-input"
+        maps = inputs / "MapStudio"
+        scripts = inputs / "script"
+        events = inputs / "event"
+        sfx = inputs / "sfx"
+        overrides = inputs / "event-overrides"
+        for directory in (maps, scripts, events, sfx, overrides):
+            directory.mkdir(parents=True)
+        for source in kwargs["map_studio_source"].iterdir():
+            if source.is_file() and source.name.lower().endswith((".msb", ".msb.dcx")):
+                target = maps / source.name
+                shutil.copyfile(source, target)
+                if sha256_file(source) != sha256_file(target):
+                    raise ValidationError(f"boss map input copy failed: {source.name}")
+        for relative, source in enemy_ai_sources(install).items():
+            target = scripts / Path(relative).name
+            shutil.copyfile(source, target)
+            if sha256_file(source) != sha256_file(target):
+                raise ValidationError(f"boss AI input copy failed: {relative}")
+        for relative, source in encounter_event_sources(install).items():
+            target = events / Path(relative).name
+            shutil.copyfile(source, target)
+            if sha256_file(source) != sha256_file(target):
+                raise ValidationError(f"boss event input copy failed: {relative}")
+        for relative, source in encounter_sfx_sources(install).items():
+            target = sfx / Path(relative).name
+            shutil.copyfile(source, target)
+            if sha256_file(source) != sha256_file(target):
+                raise ValidationError(f"boss SFX input copy failed: {relative}")
+        for relative, source in event_overrides.items():
+            if relative not in encounter_event_sources(install):
+                raise ValidationError(f"unsupported AP event override for reviewed boss pool: {relative}")
+            if not source.is_file() or source.is_symlink():
+                raise ValidationError(f"AP event override is not a regular file: {source}")
+            target = overrides / Path(relative).name
+            shutil.copyfile(source, target)
+            if sha256_file(source) != sha256_file(target):
+                raise ValidationError(f"boss AP event override copy failed: {relative}")
+        if not self.boss_encounter_builder_executable.is_file():
+            raise ValidationError(
+                "reviewed boss encounters require the packaged BBBossEncounterBuilder tool"
+            )
+        if not self.writer_executable.is_file():
+            raise ValidationError(
+                "reviewed boss encounters require the packaged BBEnemizerWriter tool"
+            )
+        staged_binder = inputs / "gameparam.parambnd.dcx"
+        shutil.copyfile(input_binder, staged_binder)
+        if sha256_file(staged_binder) != sha256_file(input_binder):
+            raise ValidationError("boss parameter input copy failed")
+        output = root / "boss-encounter-overlay"
+        command = [
+            str(self.boss_encounter_builder_executable),
+            "--darkscript", str(darkscript), "--writer", str(self.writer_executable),
+            "--gameparam", str(staged_binder),
+            "--paramdef", str(install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]),
+            "--maps", str(maps), "--scripts", str(scripts), "--events", str(events),
+            "--sfx", str(sfx),
+            "--event-overrides", str(overrides),
+            "--ordinary-plan", str(planned.plan_path), "--pool", "reviewed",
+            "--bundle", str(self.repo_root / "research" / "bb_inputs.db"),
+            "--seed", kwargs["seed"], "--output", str(output), "--apply",
+        ]
+        kwargs["progress"]("Building experimental reviewed boss encounters...")
+        self.runner(command, self.repo_root, kwargs["progress"])
+        receipt = _read_object(output / "boss-encounters-report.json", "boss encounter receipt")
+        adjusted = output / "bb-enemizer-plan.json"
+        if (receipt.get("format") != "bb-boss-encounters-v1" or receipt.get("applied") is not True
+                or not isinstance(receipt.get("files"), list) or not receipt["files"]
+                or not adjusted.is_file()):
+            raise ValidationError("reviewed boss builder produced an invalid receipt")
+        return EnemizerBuild(output / "dvdroot_ps4/map/MapStudio", _read_object(adjusted, "combined enemy plan"),
+                             sha256_file(adjusted), adjusted, output)
+
+    def boss_encounter_identity_inputs(self, inventory: Path | None) -> dict[str, Path]:
+        """Every executable and data input that can alter a reviewed build."""
+        paths = {
+            "launcher-tools/boss-inputs.db": self.repo_root / "research" / "bb_inputs.db",
+            "launcher-tools/boss-builder.exe": self.boss_encounter_builder_executable,
+            "launcher-tools/boss-writer.exe": self.writer_executable,
+            "launcher-tools/boss-planner.exe": self.planner_executable,
+            "launcher-tools/boss-event-writer.exe": self.event_writer_executable,
+        }
+        if inventory is None:
+            paths["launcher-tools/boss-miner.exe"] = self.miner_executable
+        else:
+            paths["launcher-input/enemy-inventory.tsv"] = inventory.expanduser().resolve()
+        for label, path in paths.items():
+            if not path.is_file() or path.is_symlink():
+                raise ValidationError(f"reviewed boss encounters require {path} ({label})")
+        return paths
 
 
 def _request_identity(
@@ -1435,6 +1554,32 @@ def enemy_map_sources(install: GameInstall, selected: Path | None) -> dict[str, 
     return maps
 
 
+def encounter_event_sources(install: GameInstall) -> dict[str, Path]:
+    """Resolve complete map/common EMEVD input set with update precedence."""
+    prefix = f"{DVDROOT_PREFIX}event/"
+    names = {
+        path.name for _name, layer in install.content_backends()
+        for path in (layer / "dvdroot_ps4" / "event").glob("*.emevd.dcx")
+        if path.name == "common.emevd.dcx" or re.fullmatch(r"m\d{2}_\d{2}_\d{2}_\d{2}\.emevd\.dcx", path.name)
+    }
+    if not names:
+        raise ValidationError("reviewed boss encounters require installed map EMEVD files")
+    return {prefix + name: install.resolve_file(prefix + name, include_mods=False)[1]
+            for name in sorted(names)}
+
+
+def encounter_sfx_sources(install: GameInstall) -> dict[str, Path]:
+    """Resolve original map effect banks per file, including base-only banks."""
+    prefix = f"{DVDROOT_PREFIX}sfx/"
+    names = {
+        path.name for _name, layer in install.content_backends()
+        for path in (layer / "dvdroot_ps4" / "sfx").glob("*.ffxbnd.dcx")
+        if re.fullmatch(r"frpg_sfxbnd_m\d{2}\.ffxbnd\.dcx", path.name)
+    }
+    return {prefix + name: install.resolve_file(prefix + name, include_mods=False)[1]
+            for name in sorted(names)}
+
+
 def _source_hashes(
     install: GameInstall, map_root: Path | None, *, cathedral: bool = False,
     hemwick: bool = False,
@@ -1739,6 +1884,12 @@ class LauncherWorkflow:
         request['category8_awards'] = effective_awards
         if migrated_awards:
             progress("Migrating legacy category-8 reward lots; token and acknowledgement identities are preserved.")
+        if options.boss_pool not in (None, "reviewed"):
+            raise ValidationError("the only available experimental boss pool is reviewed")
+        if options.boss_pool is not None and not options.enabled:
+            raise ValidationError("reviewed boss encounters require Randomize Enemies")
+        if options.boss_pool is not None and options.boss_canary:
+            raise ValidationError("reviewed boss encounters cannot be combined with the legacy boss canary")
         plan = load_process_plan(settings.process_plan)
         validate_processes(plan.processes)
         # Before the overlay is touched: a stale bare-game-ID plan (#177) would
@@ -1779,11 +1930,30 @@ class LauncherWorkflow:
             if not names_paths:
                 raise ValidationError("pickup names require an installed engus or enggb item.msgbnd.dcx")
             sources.update(install.source_hashes([*names_paths, PARAMDEF_PATH]))
+        boss_darkscript: Path | None = None
         if options.enabled:
             sources.update({relative: sha256_file(path) for relative, path in enemy_ai_sources(install).items()})
             sources.update(install.source_hashes([PARAMDEF_PATH]))
             if options.boss_canary:
                 sources.update(install.source_hashes([BOSS_EVENT_PATH]))
+            if options.boss_pool:
+                # DarkScript is downloaded from its official release only for
+                # this explicit experimental path; the helper pins both the
+                # archive and unpacked compiler before returning it.
+                from .boss_compiler import ensure_boss_compiler
+                boss_darkscript = ensure_boss_compiler(
+                    settings.state_root or default_state_root(), progress
+                )
+                sources.update({relative: sha256_file(path)
+                                for relative, path in encounter_event_sources(install).items()})
+                sources.update({relative: sha256_file(path)
+                                for relative, path in encounter_sfx_sources(install).items()})
+                identity_inputs = getattr(self.toolchain, "boss_encounter_identity_inputs", None)
+                if not callable(identity_inputs):
+                    raise ValidationError("reviewed boss toolchain cannot report its pinned build inputs")
+                sources.update({label: sha256_file(source)
+                                for label, source in identity_inputs(settings.enemy_inventory).items()})
+                sources["launcher-tools/DarkScript3.exe"] = sha256_file(boss_darkscript)
         identity = SeedIdentity(
             seed=request["seed"],
             slot=request["slot"],
@@ -1796,9 +1966,11 @@ class LauncherWorkflow:
                 "enemy_ai_version": 3 if options.enabled else None,
                 "allow_tier_mixing": options.allow_tier_mixing,
                 "preserve_locomotion": options.preserve_locomotion,
-                "normalize_scaling": bool(options.enabled and (options.normalize_scaling or options.boss_canary)),
+                "normalize_scaling": bool(options.enabled and (options.normalize_scaling or options.boss_canary or options.boss_pool)),
                 "boss_canary": bool(options.enabled and options.boss_canary),
-                "experimental_enemy_version": 1 if options.enabled and (options.normalize_scaling or options.boss_canary) else None,
+                "boss_pool": options.boss_pool if options.enabled else None,
+                "boss_encounters": bool(options.enabled and options.boss_pool),
+                "experimental_enemy_version": 1 if options.enabled and (options.normalize_scaling or options.boss_canary or options.boss_pool) else None,
                 "starting_weapons": request["starting_weapons"],
                 "weapon_requirement_families": request["weapon_requirement_families"],
                 "shop_gate_permutation": request["shop_gate_permutation"],
@@ -1847,6 +2019,7 @@ class LauncherWorkflow:
             boss_report = None
             scaling_report = None
             ai_report = None
+            boss_encounter_overlay = None
             completed = False
             try:
                 if (options.enabled or request["starting_weapons"] is not None
@@ -1966,7 +2139,28 @@ class LauncherWorkflow:
                         preserve_locomotion=options.preserve_locomotion,
                         progress=progress,
                     )
-                    if options.normalize_scaling or options.boss_canary:
+                    if options.boss_pool:
+                        assert boss_darkscript is not None
+                        overrides = {
+                            relative: event for relative, event in (
+                                (CATHEDRAL_EVENT_PATH, cathedral_output),
+                                (COMMON_EVENT_PATH, common_output),
+                                (HEMWICK_EVENT_PATH, hemwick_output),
+                            ) if event is not None
+                        }
+                        enemizer = self.toolchain.build_boss_encounters(
+                            options=options, install=install, input_binder=composed_binder,
+                            darkscript=boss_darkscript, event_overrides=overrides, **build_args,
+                        )
+                        overlay = enemizer.overlay
+                        if overlay is None:
+                            raise ValidationError("reviewed boss builder produced no overlay")
+                        boss_encounter_overlay = overlay
+                        # Keep the original AP event arguments.  SeedCache
+                        # checks their hashes against the retained generic
+                        # plan, then substitutes the receipt-pinned final
+                        # event, so the output is still staged exactly once.
+                    elif options.normalize_scaling or options.boss_canary:
                         enemizer = self.toolchain.build_experimental(options=options, install=install,
                             input_binder=composed_binder, **build_args)
                         overlay = enemizer.overlay
@@ -1985,13 +2179,14 @@ class LauncherWorkflow:
                             soulsformats_next=settings.soulsformats_next, progress=progress,
                         )
                         ai_report = _read_object(temporary / 'script.json', 'enemy AI report')
-                    map_output = enemizer.map_studio
+                    if boss_encounter_overlay is None:
+                        map_output = enemizer.map_studio
                 progress("Composing and verifying the seed cache...")
                 result = cache.build(
                     identity, composed_binder, map_output, cathedral_output, common_output,
                     hemwick_output,
-                    enemizer_plan=None if enemizer is None else enemizer.plan_path,
-                    enemizer_options=None if enemizer is None else {
+                    enemizer_plan=None if enemizer is None or boss_encounter_overlay is not None else enemizer.plan_path,
+                    enemizer_options=None if enemizer is None or boss_encounter_overlay is not None else {
                         "allow_tier_mixing": options.allow_tier_mixing,
                         "preserve_locomotion": options.preserve_locomotion,
                         "normalize_scaling": options.normalize_scaling or options.boss_canary,
@@ -1999,7 +2194,8 @@ class LauncherWorkflow:
                     },
                     enemy_scripts=script_output,
                     enemy_ai_report=ai_report, boss_event=boss_output, boss_report=boss_report,
-                    scaling_report=scaling_report, item_names=names_output)
+                    scaling_report=scaling_report, boss_encounter_overlay=boss_encounter_overlay,
+                    item_names=names_output)
                 build = result
                 reused = result.reused
                 completed = True

@@ -362,7 +362,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Run the AP-free tier
-        run: python tools/run_tests.py --expect-file tests/expected_counts.tsv
+        run: python tools/run_tests.py --expect-file tests/expected_counts.tsv --require test_launcher_external=22
 
   # A contract change here reds nothing until someone touches the clients repo,
   # whose Contract::assert_agrees_with_crate guard only runs in the clients CI.

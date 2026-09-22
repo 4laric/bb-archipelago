@@ -281,6 +281,7 @@ class LauncherApp:
         self.preserve_locomotion = tk.BooleanVar(value=False)
         self.normalize_scaling = tk.BooleanVar(value=False)
         self.boss_canary = tk.BooleanVar(value=False)
+        self.boss_pool = tk.BooleanVar(value=False)
         # Operator override (bb-archipelago#183).  Deliberately absent from
         # _save_settings and _load_settings_if_present: it is per-session by
         # construction, so it can never be left on and forgotten.
@@ -640,8 +641,11 @@ class LauncherApp:
         boss = ttk.Checkbutton(options, text="Boss playtest: BSB at Cleric Beast (other enemies unchanged; includes scaling)",
                                variable=self.boss_canary)
         boss.grid(row=4, column=0, columnspan=2, sticky="w", padx=(24, 8))
-        self._enemy_widgets.extend((scaling, boss))
-        self._enemy_advanced_widgets.extend((scaling, boss))
+        pool = ttk.Checkbutton(options, text="Boss shuffle: reviewed encounters (experimental, gameplay untested)",
+                               variable=self.boss_pool)
+        pool.grid(row=5, column=0, columnspan=2, sticky="w", padx=(24, 8))
+        self._enemy_widgets.extend((scaling, boss, pool))
+        self._enemy_advanced_widgets.extend((scaling, boss, pool))
 
         # Launch/build progress, not an enemizer concern: it lives outside the
         # notebook so no tab selection can hide it.
@@ -934,6 +938,7 @@ class LauncherApp:
                 "preserve_locomotion": self.preserve_locomotion.get(),
                 "normalize_scaling": self.normalize_scaling.get(),
                 "boss_canary": self.boss_canary.get(),
+                "boss_pool": self.boss_pool.get(),
             }
             self.settings_path.write_text(
                 json.dumps(value, indent=2, sort_keys=True) + "\n",
@@ -966,6 +971,7 @@ class LauncherApp:
             self.preserve_locomotion.set(bool(value.get("preserve_locomotion", False)))
             self.normalize_scaling.set(bool(value.get("normalize_scaling", False)))
             self.boss_canary.set(bool(value.get("boss_canary", False)))
+            self.boss_pool.set(bool(value.get("boss_pool", False)))
         except (OSError, UnicodeError, json.JSONDecodeError, LauncherError) as exc:
             self.messagebox.showwarning("Saved setup ignored", str(exc), parent=self.root)
 
@@ -1127,6 +1133,7 @@ class LauncherApp:
                 preserve_locomotion=self.preserve_locomotion.get(),
                 normalize_scaling=self.normalize_scaling.get(),
                 boss_canary=self.boss_canary.get(),
+                boss_pool="reviewed" if self.boss_pool.get() else None,
             )
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()
@@ -1467,6 +1474,7 @@ class LauncherApp:
                 preserve_locomotion=self.preserve_locomotion.get(),
                 normalize_scaling=self.normalize_scaling.get(),
                 boss_canary=self.boss_canary.get(),
+                boss_pool="reviewed" if self.boss_pool.get() else None,
             )
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()
