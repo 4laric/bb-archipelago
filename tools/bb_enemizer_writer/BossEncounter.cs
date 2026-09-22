@@ -14,13 +14,15 @@ internal static class BossEncounter
     };
 
     internal sealed record Manifest(string Format, List<Encounter> Encounters);
+    internal sealed record TerminalPredicate(long EventId, int OriginalActor, long BridgeEventId);
     internal sealed record Encounter(
         string DestinationEventFile,
         string OriginalEventSha256,
         List<long> ChangedEventIds,
         Dictionary<long, string> CompiledEventFingerprints,
         List<long> ProtectedCompletionEventIds,
-        List<long>? AddedEventIds = null);
+        List<long>? AddedEventIds = null,
+        List<TerminalPredicate>? TerminalPredicates = null);
 
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     static void Need(bool condition, string reason) { if (!condition) throw new InvalidDataException(reason); }
@@ -73,7 +75,14 @@ internal static class BossEncounter
              "added event IDs must be unique and disjoint from changed events");
         Need(protectedEvents.Count > 0 && protectedEvents.Distinct().Count() == protectedEvents.Count,
              "encounter requires unique protected completion events");
-        Need(!changed.Concat(added).Intersect(protectedEvents).Any(),
+        var terminals = encounter.TerminalPredicates ?? [];
+        Need(terminals.Select(t => t.EventId).Distinct().Count() == terminals.Count,
+            "duplicate terminal predicate event");
+        Need(terminals.All(t => t.OriginalActor > 0 && t.BridgeEventId > 0 && t.BridgeEventId <= uint.MaxValue
+             && protectedEvents.Contains(t.EventId) && changed.Contains(t.EventId) && added.Contains(t.BridgeEventId)),
+            "terminal predicate requires protected changed event and added bridge");
+        Need(!added.Intersect(protectedEvents).Any()
+             && changed.Intersect(protectedEvents).ToHashSet().SetEquals(terminals.Select(t => t.EventId)),
             "encounter changes a protected completion event");
         Need(fingerprints.Count == changed.Count + added.Count && fingerprints.Keys.ToHashSet().SetEquals(changed.Concat(added)),
              "compiled fingerprints must cover exactly the declared changed and added events");
@@ -81,6 +90,32 @@ internal static class BossEncounter
             Need(id >= 0, "invalid changed event ID");
             RequireHash(fingerprint, $"compiled event {id}");
         }
+    }
+
+    // BB EMEDF 4[0] (CharacterDead) and 3[0] (EventFlag), MAIN condition.
+    // Replace only the combat predicate. Every reward/progression instruction,
+    // condition index, branch offset, parameter and event property stays exact.
+    internal static void ValidateTerminal(EMEVD.Event original, EMEVD.Event replacement, TerminalPredicate terminal) {
+        Need(original.ID == terminal.EventId && replacement.ID == terminal.EventId,
+            "terminal event identity mismatch");
+        byte[] death = new byte[12];
+        BitConverter.GetBytes(terminal.OriginalActor).CopyTo(death, 4); death[8] = 1;
+        byte[] flag = new byte[8]; flag[1] = 1;
+        BitConverter.GetBytes((uint)terminal.BridgeEventId).CopyTo(flag, 4);
+        var matches = original.Instructions.Select((instruction, index) => (instruction, index))
+            .Where(pair => pair.instruction.Bank == 4 && pair.instruction.ID == 0
+                   && pair.instruction.ArgData.SequenceEqual(death)).ToList();
+        Need(matches.Count == 1 && original.Instructions.Count == replacement.Instructions.Count,
+            "terminal requires one exact MAIN character-death predicate");
+        int at = matches[0].index;
+        var changed = replacement.Instructions[at];
+        Need(changed.Bank == 3 && changed.ID == 0 && changed.ArgData.SequenceEqual(flag)
+             && changed.Layer == matches[0].instruction.Layer,
+            "terminal replacement must wait for its declared bridge flag");
+        var isolated = new EMEVD(EMEVD.Game.Bloodborne); isolated.Events.Add(replacement);
+        var restored = EMEVD.Read(isolated.Write()).Events.Single();
+        restored.Instructions[at] = matches[0].instruction;
+        Need(Fingerprint(restored) == Fingerprint(original), "terminal changed non-predicate progression");
     }
 
     internal static byte[] Merge(EMEVD original, EMEVD compiled, Encounter encounter) {
@@ -103,6 +138,8 @@ internal static class BossEncounter
             Need(Fingerprint(replacement) == encounter.CompiledEventFingerprints[id],
                 $"compiled event {id} does not match reviewed fingerprint");
         }
+        foreach (var terminal in encounter.TerminalPredicates ?? [])
+            ValidateTerminal(Event(original, terminal.EventId), Event(compiled, terminal.EventId), terminal);
         // DarkScript can normalize unrelated compiled event bodies.  They are
         // never copied: the merge starts from original and substitutes only
         // reviewed, fingerprint-pinned IDs, then proves every other output
@@ -125,8 +162,10 @@ internal static class BossEncounter
                 ? replacement : before[e.ID];
             Need(Fingerprint(e) == expected, $"persisted encounter event verification failed: {e.ID}");
         }
-        foreach (long id in encounter.ProtectedCompletionEventIds)
+        foreach (long id in encounter.ProtectedCompletionEventIds.Except((encounter.TerminalPredicates ?? []).Select(t => t.EventId)))
             Need(Fingerprint(Event(check, id)) == before[id], $"protected completion event changed: {id}");
+        foreach (var terminal in encounter.TerminalPredicates ?? [])
+            ValidateTerminal(Event(original, terminal.EventId), Event(check, terminal.EventId), terminal);
         return bytes;
     }
 
@@ -237,7 +276,7 @@ internal static class BossEncounter
         foreach (var encounter in encounterList!) Validate(encounter);
         Need(encounterList.Select(e => e.DestinationEventFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()
              == encounterList.Count, "duplicate boss encounter destination event file");
-        BossActorTransplant.Read(planPath, required: false);
+        BossActorTransplant.ValidatePlan(planPath, required: false);
 
         string output = Path.GetFullPath(outputPath), parent = Path.GetDirectoryName(output)!;
         Need(!Directory.Exists(output) && !File.Exists(output), "boss encounter output must not exist");
@@ -290,6 +329,7 @@ internal static class BossEncounter
                     changed_event_ids = item.Encounter.ChangedEventIds,
                     added_event_ids = item.Encounter.AddedEventIds ?? [],
                     protected_completion_event_ids = item.Encounter.ProtectedCompletionEventIds,
+                    terminal_predicates = item.Encounter.TerminalPredicates ?? [],
                     compiled_event_fingerprints = item.Encounter.CompiledEventFingerprints,
                 }), files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",

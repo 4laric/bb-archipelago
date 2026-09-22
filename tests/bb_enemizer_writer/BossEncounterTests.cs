@@ -36,6 +36,29 @@ internal static class BossEncounterTests
         Need(mergedAdded.Events.Select(e => e.ID).SequenceEqual(new[] {0L, 10L, 30L, 99L, 77L}));
         Need(BossEncounter.Fingerprint(mergedAdded.Events.Last()) == addedContract.CompiledEventFingerprints[77]);
 
+        var terminalOriginal = EMEVD.Read(original.Write());
+        byte[] deathArgs = new byte[12]; BitConverter.GetBytes(2410800).CopyTo(deathArgs, 4); deathArgs[8] = 1;
+        terminalOriginal.Events.Single(e => e.ID == 30).Instructions.Insert(0, new EMEVD.Instruction(4, 0, deathArgs));
+        var terminalCompiled = EMEVD.Read(terminalOriginal.Write());
+        terminalCompiled.Events.Add(addedEvent);
+        byte[] flagArgs = new byte[8]; flagArgs[1] = 1; BitConverter.GetBytes(77u).CopyTo(flagArgs, 4);
+        terminalCompiled.Events.Single(e => e.ID == 30).Instructions[0] = new EMEVD.Instruction(3, 0, flagArgs);
+        var terminalContract = encounter with { ChangedEventIds = [30], AddedEventIds = [77],
+            TerminalPredicates = [new(30, 2410800, 77)], CompiledEventFingerprints = new Dictionary<long, string> {
+                [30] = BossEncounter.Fingerprint(terminalCompiled.Events.Single(e => e.ID == 30)),
+                [77] = BossEncounter.Fingerprint(addedEvent) }};
+        var terminalResult = EMEVD.Read(BossEncounter.Merge(terminalOriginal, terminalCompiled, terminalContract));
+        Need(terminalResult.Events.Single(e => e.ID == 30).Instructions[0].Bank == 3);
+        Need(terminalResult.Events.Single(e => e.ID == 30).Instructions[1].ArgData.SequenceEqual(
+             terminalOriginal.Events.Single(e => e.ID == 30).Instructions[1].ArgData));
+        Refused(() => BossEncounter.Merge(terminalOriginal, terminalCompiled,
+            terminalContract with { TerminalPredicates = [new(30, 2410801, 77)] }));
+        Refused(() => BossEncounter.Merge(terminalOriginal, terminalCompiled,
+            terminalContract with { TerminalPredicates = [new(30, 2410800, 78)] }));
+        terminalCompiled.Events.Single(e => e.ID == 30).Instructions[1].ArgData[0] = 9;
+        terminalContract.CompiledEventFingerprints[30] = BossEncounter.Fingerprint(terminalCompiled.Events.Single(e => e.ID == 30));
+        Refused(() => BossEncounter.Merge(terminalOriginal, terminalCompiled, terminalContract));
+
         Refused(() => BossEncounter.Merge(original, compiled, encounter with {
             CompiledEventFingerprints = new Dictionary<long, string> { [10] = new string('b', 64) }}));
         Refused(() => BossEncounter.Merge(original, compiled, encounter with { ChangedEventIds = [0, 30],

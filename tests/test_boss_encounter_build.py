@@ -6,12 +6,28 @@ from pathlib import Path
 
 from tools.bb_inputs import read_prefix
 from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_contract_swap, event_blocks
-from tools.build_boss_encounters import event_record, verify_receipt
+from tools.build_boss_encounters import event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
+    def test_allocated_event_cannot_alias_original_actor_or_operand_in_another_map(self):
+        with self.assertRaisesRegex(ValueError, 'original corpus'):
+            validate_allocations(ROOT / 'research/bb_inputs.db', [], [{'added_event_ids': [2410810]}], {})
+        with self.assertRaisesRegex(ValueError, 'across output maps'):
+            validate_allocations(ROOT / 'research/bb_inputs.db', [],
+                                 [{'added_event_ids': [12990001]}, {'added_event_ids': [12990001]}], {})
+
+    def test_native_no_payload_initializer_requires_a_declared_no_argument_target(self):
+        source = '$Event(0, Default, function() {\n    InitializeEvent(0, 123);\n});\n' + \
+                 '$Event(123, Default, function() {\n    EndEvent();\n});\n'
+        result = lift_zero_argument_initializers(source)
+        self.assertEqual(source.replace('    InitializeEvent', '    $InitializeEvent'), result)
+        with self.assertRaisesRegex(ValueError, 'zero-parameter event'):
+            lift_zero_argument_initializers(source.replace('$Event(123, Default, function()',
+                                                           '$Event(123, Default, function(actor)'))
+
     @classmethod
     def setUpClass(cls):
         sources = {Path(name).name: blob.decode('utf-8-sig')
@@ -46,6 +62,28 @@ class EncounterBuildTests(unittest.TestCase):
         del incomplete[str(self.changed[0])]
         with self.assertRaisesRegex(ValueError, 'compiled event fingerprint'):
             event_record(Path('unused'), self.before, self.after, incomplete, [12411700])
+
+    def test_terminal_bridge_only_changes_combat_wait_preserving_rewards(self):
+        from tools.bb_enemizer.boss_pool import compose_event_patches
+        bridge = 98000123  # Synthetic test allocation; not a registered game ID.
+        terminal = {'event_id': 12411700, 'original_actor': 2410800, 'bridge_event_id': bridge}
+        after = self.after.replace('WaitFor(CharacterDead(2410800));', f'WaitFor(EventFlag({bridge}));')
+        after += f'\n$Event({bridge}, Default, function() {{\n    WaitFor(CharacterDead(999));\n}});\n'
+        pins = {**self.pins, '12411700': 'c' * 64, str(bridge): 'd' * 64}
+        with tempfile.TemporaryDirectory() as temporary:
+            original = Path(temporary) / 'original.emevd.dcx'
+            original.write_bytes(b'original')
+            record = event_record(original, self.before, after, pins, [12411700, 12411800], (terminal,))
+            self.assertEqual([terminal], record['terminal_predicates'])
+            self.assertIn(12411700, record['changed_event_ids'])
+            self.assertEqual([bridge], record['added_event_ids'])
+            composed = compose_event_patches(self.before, [after], [12411700, 12411800], (terminal,))
+            self.assertEqual(event_blocks(after), event_blocks(composed))
+            corrupted = after.replace('AwardAchievement(21);', 'AwardAchievement(14);')
+            with self.assertRaisesRegex(ValueError, 'non-predicate progression'):
+                event_record(original, self.before, corrupted, pins, [12411700, 12411800], (terminal,))
+            with self.assertRaisesRegex(ValueError, 'non-predicate progression'):
+                compose_event_patches(self.before, [corrupted], [12411700, 12411800], (terminal,))
 
     def test_receipt_detects_mutation_and_unlisted_outputs(self):
         with tempfile.TemporaryDirectory() as temporary:

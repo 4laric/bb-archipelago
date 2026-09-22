@@ -10,6 +10,8 @@ if (args.Length == 2 && args[0] == "--boss-event-pins")
     return BossCanary.Inspect(args[1]);
 if (args.Length == 2 && args[0] == "--boss-encounter-pins")
     return BossEncounter.Inspect(args[1]);
+if (args.Length == 2 && args[0] == "--boss-actor-pins")
+    return BossActorTransplant.Inspect(args[1]);
 if (args.Length == 10 && args[0] == "--boss-encounters" && args[9] == "--apply")
     return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8]);
 if (args.Length == 10 && args[0] == "--boss-scaled" && args[9] == "--apply")
@@ -38,6 +40,7 @@ if (args.Length != 4 || args[3] != "--apply")
         "Native boss canary: BBEnemizerWriter --boss-native <plan> <built-gameparam> <paramdef> <maps> <scripts> <original-event> <new-output-root> --apply");
     Console.Error.WriteLine(
         "Boss encounters: BBEnemizerWriter --boss-encounters <plan> <built-gameparam> <paramdef> <maps> <scripts> <event-input-dir> <compiled-event-dir> <new-output-root> --apply");
+    Console.Error.WriteLine("Actor evidence: BBEnemizerWriter --boss-actor-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }
@@ -76,6 +79,10 @@ if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_contract", ou
     throw new InvalidDataException("boss contract plan requires --boss-encounters and reviewed event manifests");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_additions", out _))
     throw new InvalidDataException("boss actor additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_initializations", out _))
+    throw new InvalidDataException("boss actor initializations require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_generator_additions", out _))
+    throw new InvalidDataException("boss generator additions require --boss-encounters and reviewed map evidence");
 if (!scalingPrepared && planDocument.RootElement.TryGetProperty("scaling", out var scaling)
     && scaling.GetProperty("enabled").GetBoolean())
     throw new InvalidDataException("scaling requires --scaled; map-only mode cannot apply parameter clones");

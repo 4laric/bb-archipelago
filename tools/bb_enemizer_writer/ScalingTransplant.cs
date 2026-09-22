@@ -75,6 +75,10 @@ internal static class ScalingTransplant
             "boss contract plan requires --boss-encounters and reviewed event manifests");
         Need(bossPrepared || !plan.ContainsKey("boss_actor_additions"),
             "boss actor additions require --boss-encounters and reviewed map evidence");
+        Need(bossPrepared || !plan.ContainsKey("boss_actor_initializations"),
+            "boss actor initializations require --boss-encounters and reviewed map evidence");
+        Need(bossPrepared || !plan.ContainsKey("boss_generator_additions"),
+            "boss generator additions require --boss-encounters and reviewed map evidence");
         var manifest = plan.Deserialize<Manifest>(Json)!;
         Need(manifest.Format == "bb-enemizer-plan-v2" && manifest.DryRun && manifest.Swaps.Count > 0, "expected non-empty dry-run enemizer plan");
         var scaling = plan["scaling"]?.Deserialize<Scaling>(Json)

@@ -1,4 +1,5 @@
 import unittest
+import copy
 import tempfile
 from pathlib import Path
 
@@ -22,6 +23,61 @@ $Event(30, Default, function() {
 
 
 class BossPoolTests(unittest.TestCase):
+    def test_auxiliary_actors_survive_pool_composition_and_collisions_fail(self):
+        def pair(key, entity, map_name='m23_00_00_00'):
+            return {
+                'format': 'bb-enemizer-plan-v2', 'seed': 'actors', 'dry_run': True,
+                'swaps': [{'logical_key': key, 'destination_keys': [key]}],
+                'scaling': {'changes': [], 'skips': [{'logical_key': key}]},
+                'boss_contract': {'arena': key},
+                'boss_actor_additions': [{
+                    'destination_map': map_name, 'destination_entity_id': entity,
+                    'destination_part': 'extra-' + key,
+                    'source_archetype': {'model_name': 'test-source'},
+                }],
+            }
+        first, second = pair('a', 100), pair('b', 200)
+        first['boss_actor_initializations'] = [{'destination_map': 'm23_00_00_00',
+            'destination_part': 'primary-a', 'source_initialization': {'talk_id': 123}}]
+        original = copy.deepcopy([first, second])
+        result = combine_native_plans('actors', [second, first])
+        self.assertEqual([100, 200], [row['destination_entity_id']
+                                    for row in result['boss_actor_additions']])
+        self.assertEqual(original, [first, second])
+        self.assertEqual(123, result['boss_actor_initializations'][0]['source_initialization']['talk_id'])
+        duplicate_init = pair('d', 300)
+        duplicate_init['boss_actor_initializations'] = copy.deepcopy(first['boss_actor_initializations'])
+        with self.assertRaisesRegex(ValueError, 'primary actor initialization'):
+            combine_native_plans('actors', [first, duplicate_init])
+        result['boss_actor_additions'][0]['source_archetype']['model_name'] = 'mutated'
+        self.assertEqual('test-source', first['boss_actor_additions'][0]['source_archetype']['model_name'])
+        duplicate = pair('c', 100, 'm23_00_00_00.msb.dcx')
+        with self.assertRaisesRegex(ValueError, 'overlap an added actor'):
+            combine_native_plans('actors', [first, duplicate])
+        second['boss_actor_additions'][0]['destination_part'] = 'extra-a'
+        with self.assertRaisesRegex(ValueError, 'overlap an added actor'):
+            combine_native_plans('actors', [first, second])
+
+    def test_generator_additions_survive_composition_and_share_entity_collision_checks(self):
+        generator = {'destination_map': 'm23_00_00_00', 'destination_event': 'ap-generator',
+                     'destination_event_id': 20, 'destination_entity_id': 200,
+                     'spawn_part_map': {'source': 'destination'}}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'g', 'dry_run': True,
+                'swaps': [], 'scaling': {'changes': [], 'skips': []}, 'boss_contract': {},
+                'boss_generator_additions': [generator]}
+        result = combine_native_plans('g', [plan])
+        self.assertEqual([generator], result['boss_generator_additions'])
+        result['boss_generator_additions'][0]['spawn_part_map']['source'] = 'changed'
+        self.assertEqual('destination', generator['spawn_part_map']['source'])
+        with self.assertRaisesRegex(ValueError, 'overlap an added generator'):
+            combine_native_plans('g', [plan, plan])
+        actor_plan = copy.deepcopy(plan)
+        del actor_plan['boss_generator_additions']
+        actor_plan['boss_actor_additions'] = [{'destination_map': 'm23_00_00_00.msb.dcx',
+            'destination_part': 'actor', 'destination_entity_id': 200}]
+        with self.assertRaisesRegex(ValueError, 'overlap an added'):
+            combine_native_plans('g', [plan, actor_plan])
+
     def test_seeded_matching_uses_each_boss_once_without_identity(self):
         graph = {key: ('a', 'b', 'c', 'd') for key in ('a', 'b', 'c', 'd')}
         first = assign_donors('one', graph)
@@ -44,6 +100,21 @@ class BossPoolTests(unittest.TestCase):
         self.assertIn('$InitializeEvent(0, 10, 300);', result)
         self.assertIn('$InitializeEvent(0, 20, 400);', result)
         self.assertIn('HandleBossDefeat(100);', result)
+
+    def test_appended_initializers_compose_but_conflicting_slots_do_not(self):
+        anchor = '    $InitializeEvent(0, 20, 200);'
+        first = SOURCE.replace(anchor, anchor + '\n    $InitializeEvent(0, 40, 400);')
+        second = SOURCE.replace(anchor, anchor + '\n    $InitializeEvent(0, 50, 500);')
+        result = compose_event_patches(SOURCE, [first, second], [30])
+        self.assertEqual(result, compose_event_patches(SOURCE, [second, first], [30]))
+        self.assertEqual(1, result.count('$InitializeEvent(0, 40, 400);'))
+        self.assertEqual(1, result.count('$InitializeEvent(0, 50, 500);'))
+        conflict = second.replace('0, 50, 500', '0, 40, 500')
+        with self.assertRaisesRegex(ValueError, 'initializer slot'):
+            compose_event_patches(SOURCE, [first, conflict], [30])
+        arbitrary = second.replace('$InitializeEvent(0, 50, 500);', 'SetEventFlag(500, ON);')
+        with self.assertRaisesRegex(ValueError, 'literal initializers'):
+            compose_event_patches(SOURCE, [first, arbitrary], [30])
 
     def test_conflicting_constructor_and_completion_changes_are_refused(self):
         first = SOURCE.replace('$InitializeEvent(0, 10, 100);', '$InitializeEvent(0, 10, 300);')
