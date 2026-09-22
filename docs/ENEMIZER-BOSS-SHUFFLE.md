@@ -68,8 +68,8 @@ matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
-Ebrietas, Maria, Laurence, Ludwig and Orphan, plus the reciprocal Gehrman/Moon Presence pair. The regular
-ten-boss graph has two complete assignments selected by seed; the final pair
+Ebrietas, Maria, Laurence, Ludwig, Orphan and Logarius, plus the reciprocal Gehrman/Moon Presence pair. The regular
+eleven-boss graph has two complete assignments selected by seed; the final pair
 is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
@@ -250,11 +250,11 @@ seed-dependent assignments.
 | Rom | Pending | Pending | Pending |
 | The One Reborn | Pending | Pending | Pending |
 | Amygdala | Constructed | Constructed | Yes |
-| Martyr Logarius | Constructed | Constructed | Pending cross-links |
+| Martyr Logarius | Constructed | Constructed | Yes |
 | Celestial Emissary | Pending | Pending | Pending |
 | Ebrietas | Constructed | Constructed | Yes |
 | Micolash | Pending | Pending | Pending |
-| Mergo's Wet Nurse | Pending | Pending | Pending |
+| Mergo's Wet Nurse | Pending | Constructed | Pending |
 | Gehrman | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Ludwig | Constructed | Constructed | Yes |
@@ -306,3 +306,21 @@ files. All of these observations are native construction evidence only.
 [Live acceptance preparation](ENEMIZER-BOSS-LIVE-ACCEPTANCE.md) records the
 session identity, positive control, predictions, labels, retry/reload checks,
 and shape/placement coverage required before runtime support is claimed.
+
+Paarl-at-Logarius brings the reviewed pool to thirteen encounters. Its five
+source limb bindings, phase controller and co-op activation accompany Paarl's
+health, music and camera, while Cainhurst retains entry cutscene, fog and
+progression. Two complete assignments (`seed-0`, `seed-2`) each verify forty
+files. The retained Logarius sword and projectile owner are pinned and kept
+inert until destination completion.
+
+Standalone BSB-at-Wet-Nurse verifies eight files. BSB keeps direct health and
+its own HP phase thresholds; its death then kills the original offstage health
+proxy. Original terminal `12601800` and camera `12604804` remain byte-identical,
+including opaque `2600803`. The adapter preserves original retry flag
+`12604732` and host authority for the retained proxy/support actors. Original
+combat controllers that could reactivate the support are ended. This does
+not establish the engine meaning of `2600803` or runtime validity of the bridge.
+The original map (`af32f7e1038cfd52dbf3b9f073ac1f25f47422230a4cfad3d35d62517d825919`)
+has no such ID in a pinned SoulsFormats scan of loaded MSBB tables; the source
+EMEVD contains only its terminal and camera uses. No fourth actor is invented.

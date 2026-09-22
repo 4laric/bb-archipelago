@@ -39,9 +39,9 @@ class EncounterBuildTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'original native pin'):
                 verify_retained_helpers(None, plan)
 
-    def test_reviewed_pool_includes_orphan_without_reusing_or_omitting_donors(self):
+    def test_reviewed_pool_includes_logarius_without_reusing_or_omitting_donors(self):
         graph = reviewed_compatibility()
-        self.assertEqual(12, len(graph))
+        self.assertEqual(13, len(graph))
         assignments = []
         for seed in ('seed-0', 'seed-2'):
             assignment = assign_donors(seed, graph)
@@ -50,6 +50,8 @@ class EncounterBuildTests(unittest.TestCase):
             self.assertEqual(set(graph), set(assignment.values()))
             self.assertEqual('orphan-of-kos', assignment['cleric-beast'])
             self.assertEqual('ludwig', assignment['orphan-of-kos'])
+            self.assertEqual('martyr-logarius', assignment['blood-starved-beast'])
+            self.assertEqual('darkbeast-paarl', assignment['martyr-logarius'])
             self.assertEqual('laurence', assignment['ludwig'])
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)

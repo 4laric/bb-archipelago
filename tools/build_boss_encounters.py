@@ -56,6 +56,8 @@ from tools.bb_enemizer.logarius_contract import (
     helper_scaling_parents as logarius_helper_scaling_parents,
 )
 from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, native_plan_bsb_at_logarius
+from tools.bb_enemizer.paarl_logarius_contract import patch_paarl_at_logarius, native_plan_paarl_at_logarius
+from tools.bb_enemizer.bsb_wet_nurse_contract import patch_bsb_at_wet_nurse, native_plan_bsb_at_wet_nurse
 from tools.bb_enemizer.orphan_contract import (
     OrphanIds, NativeActorPin as OrphanActorPin,
     patch_orphan_at_cleric, native_plan_orphan_at_cleric,
@@ -108,6 +110,7 @@ PACKAGES['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd
 ARENAS['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd.dcx.js')
 PACKAGES['martyr-logarius'] = SpecialEndpoint('martyr-logarius', 'm25_00_00_00.emevd.dcx.js')
 ARENAS['martyr-logarius'] = PACKAGES['martyr-logarius']
+ARENAS['mergos-wet-nurse'] = SpecialEndpoint('mergos-wet-nurse', 'm26_00_00_00.emevd.dcx.js')
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -142,6 +145,11 @@ ORPHAN_COMPATIBILITY = {
     'orphan-of-kos': ('blood-starved-beast', 'ludwig'),
 }
 
+LOGARIUS_COMPATIBILITY = {
+    'blood-starved-beast': ('martyr-logarius',),
+    'martyr-logarius': ('blood-starved-beast', 'darkbeast-paarl'),
+}
+
 
 def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
     """Closed roster assembled from explicitly reviewed directed adapters."""
@@ -152,6 +160,7 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
         LAURENCE_COMPATIBILITY,
         LUDWIG_COMPATIBILITY,
         ORPHAN_COMPATIBILITY,
+        LOGARIUS_COMPATIBILITY,
         FINAL_COMPATIBILITY,
     ):
         for arena, donors in section.items():
@@ -183,6 +192,14 @@ def is_logarius_bsb_pair(arena, package) -> bool:
 
 def is_bsb_logarius_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('martyr-logarius', 'blood-starved-beast')
+
+
+def is_paarl_logarius_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('martyr-logarius', 'darkbeast-paarl')
+
+
+def is_bsb_wet_nurse_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('mergos-wet-nurse', 'blood-starved-beast')
 
 
 def is_maria_pair(arena, package) -> bool:
@@ -438,6 +455,8 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] != 'blood-starved-beast':
+        raise ValueError('Wet Nurse arena requires the reviewed BSB donor adapter')
     if orphan and getattr(args, 'arena', None) != 'cleric-beast':
         raise ValueError('Orphan requires the reviewed Cleric arena adapter')
     reviewed_orphan_pairs = {
@@ -447,8 +466,8 @@ def build(args) -> dict:
     if direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in reviewed_orphan_pairs:
         raise ValueError('Orphan arena requires a reviewed donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
-    if direct_logarius[0] == 'martyr-logarius' and direct_logarius != ('martyr-logarius', 'blood-starved-beast'):
-        raise ValueError('Logarius arena requires the reviewed BSB donor adapter')
+    if direct_logarius[0] == 'martyr-logarius' and direct_logarius[1] not in LOGARIUS_COMPATIBILITY['martyr-logarius']:
+        raise ValueError('Logarius arena requires a reviewed BSB or Paarl donor adapter')
     if direct_logarius[1] == 'martyr-logarius' and direct_logarius != ('blood-starved-beast', 'martyr-logarius'):
         raise ValueError('Martyr Logarius is available only in the reviewed BSB arena adapter')
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
@@ -515,7 +534,8 @@ def build(args) -> dict:
                     and not any(dlc_pair_flags(arena, package)) and package.key != 'orphan-of-kos'
                     and not is_bsb_orphan_pair(arena, package) and not is_ludwig_orphan_pair(arena, package)
                     and not is_logarius_bsb_pair(arena, package)
-                    and not is_bsb_logarius_pair(arena, package)):
+                    and not is_bsb_logarius_pair(arena, package) and not is_paarl_logarius_pair(arena, package)
+                    and not is_bsb_wet_nurse_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -543,6 +563,10 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_bsb_wet_nurse_pair(arena, package):
+                patched = patch_bsb_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
+            elif is_paarl_logarius_pair(arena, package):
+                patched = patch_paarl_at_logarius(texts[arena.event_file], texts[package.event_file])
             elif is_bsb_logarius_pair(arena, package):
                 patched = patch_bsb_at_logarius(texts[arena.event_file], texts[package.event_file])
             elif is_logarius_bsb_pair(arena, package):
@@ -648,6 +672,12 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_bsb_wet_nurse_pair(arena, package):
+                plan = native_plan_bsb_at_wet_nurse(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_paarl_logarius_pair(arena, package):
+                plan = native_plan_paarl_at_logarius(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_bsb_logarius_pair(arena, package):
                 plan = native_plan_bsb_at_logarius(slots, npcs, effects, args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
