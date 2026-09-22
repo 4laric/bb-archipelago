@@ -1,5 +1,10 @@
 # BBLauncher integration
 
+For the proposed single-application player experience, see the
+[integrated launcher fork specification](SPEC-bblauncher-integrated-ap.md).
+That document is a design proposal; the implementation and acceptance status
+below describe the current companion.
+
 Status, 2026-09-22: **development candidate; unsupported for general play**.
 The adapter is implemented, but its live acceptance matrix is incomplete. It
 fails closed unless the operator explicitly enables the pinned live-acceptance
