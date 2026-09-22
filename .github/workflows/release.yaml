@@ -36,6 +36,10 @@ on:
         description: "Rescan an existing release without rebuilding it"
         type: boolean
         default: false
+      draft:
+        description: "Keep the release private to repository collaborators while it is tested"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -63,8 +67,10 @@ jobs:
           # else -- v0.1.0-beta.8, v0.1.0-signing-canary.2 -- stays a
           # prerelease. packaging/version_metadata.py accepts both.
           $prerelease = if ($tag -match '^v\d+\.\d+\.\d+\.\d+$') { "false" } else { "true" }
+          $draft = if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ inputs.draft }}" -eq "true") { "true" } else { "false" }
           "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "RELEASE_PRERELEASE=$prerelease" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "RELEASE_DRAFT=$draft" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - uses: actions/setup-python@v5
         with:
@@ -347,6 +353,7 @@ jobs:
           EXPECTED_SIGNER_SUBJECT: ${{ vars.ARTIFACT_SIGNING_EXPECTED_SUBJECT }}
 
       - name: Attest the release artifacts
+        if: env.RELEASE_DRAFT != 'true'
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: |
@@ -375,14 +382,22 @@ jobs:
           # found for -", so every flag here is a literal argument and nothing
           # is expanded into the argument list.
           $isPrerelease = $env:RELEASE_PRERELEASE -eq "true"
+          $isDraft = $env:RELEASE_DRAFT -eq "true"
           # A moved tag rebuilds the same release. Keep its existing downloads
           # until signing, smoke checks, attestation and hashing pass.
-          gh release view "$env:RELEASE_TAG" --repo ${{ github.repository }} *> $null
+          $releaseJson = gh release view "$env:RELEASE_TAG" --repo ${{ github.repository }} --json isDraft 2>$null
           if ($LASTEXITCODE -eq 0) {
+            $existingIsDraft = ($releaseJson | ConvertFrom-Json).isDraft
+            if ($isDraft -and -not $existingIsDraft) {
+              throw "Refusing to upload draft artifacts into the existing published release $env:RELEASE_TAG"
+            }
             gh release upload "$env:RELEASE_TAG" --repo ${{ github.repository }} `
               build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld --clobber
             if ($LASTEXITCODE -ne 0) { throw "Replacing release artifacts failed" }
-            if ($isPrerelease) {
+            if ($isDraft) {
+              gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+                --notes-file packaging/PACKAGE-README.txt --draft --latest=false
+            } elseif ($isPrerelease) {
               gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
                 --notes-file packaging/PACKAGE-README.txt --prerelease
             } else {
@@ -391,7 +406,13 @@ jobs:
             }
             if ($LASTEXITCODE -ne 0) { throw "Updating release hashes failed" }
           } else {
-            if ($isPrerelease) {
+            if ($isDraft) {
+              gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
+                --target "$env:GITHUB_SHA" `
+                --title "Bloodborne Archipelago $env:RELEASE_TAG" `
+                --notes-file packaging/PACKAGE-README.txt --draft --latest=false `
+                build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+            } elseif ($isPrerelease) {
               gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
                 --title "Bloodborne Archipelago $env:RELEASE_TAG" `
                 --notes-file packaging/PACKAGE-README.txt --prerelease `
@@ -410,7 +431,7 @@ jobs:
   virustotal:
     name: publish VirusTotal results
     needs: package
-    if: ${{ always() && (needs.package.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.scan_only)) }}
+    if: ${{ always() && !(github.event_name == 'workflow_dispatch' && inputs.draft) && (needs.package.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.scan_only)) }}
     runs-on: windows-latest
     continue-on-error: true
     env:

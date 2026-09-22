@@ -130,6 +130,11 @@ line is a thing that has already gone wrong once.
    full V.R.M.F policy.
 5. **Watch the run.** Do not announce the prerelease until the workflow has
    finished and the attached zip's manifest names the client SHA you expect.
+   For a bounded pre-publication test, dispatch the workflow with `draft`
+   enabled. The resulting release and its downloads are visible only while
+   signed in to GitHub with write access to this repository. Draft builds skip
+   public provenance attestation and VirusTotal upload; publish only after the
+   package has passed the intended tests.
 6. **Never move a published tag.** If a tag shipped something wrong, fix
    forward: land the fix and cut the next beta. Re-pointing a tag people have
    already downloaded makes the build unreproducible and the report unreadable.

@@ -623,12 +623,54 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn("id-token: write", workflow)
         self.assertIn("attestations: write", workflow)
         self.assertIn("uses: actions/attest-build-provenance@v2", workflow)
+        self.assertIn("if: env.RELEASE_DRAFT != 'true'", workflow)
         self.assertIn("build/BloodborneAPLauncher-win-x64.zip", workflow)
         self.assertIn("build/bloodborne.apworld", workflow)
         self.assertLess(
             workflow.index("uses: actions/attest-build-provenance@v2"),
             workflow.index('gh release create "$env:RELEASE_TAG"'),
         )
+
+    def test_manual_draft_release_stays_private_until_published(self):
+        workflow_path = Path.cwd() / ".github" / "workflows" / "release.yaml"
+        if not workflow_path.is_file():
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        publish = workflow[
+            workflow.index("- name: Publish the release with the package zip") :
+            workflow.index("  virustotal:")
+        ]
+        self.assertIn(
+            'draft:\n        description: "Keep the release private to repository '
+            'collaborators while it is tested"\n        type: boolean\n'
+            '        default: false',
+            workflow,
+        )
+        self.assertIn('"RELEASE_DRAFT=$draft"', workflow)
+        self.assertIn("--json isDraft", publish)
+        self.assertIn("$isDraft -and -not $existingIsDraft", publish)
+        self.assertIn("Refusing to upload draft artifacts", publish)
+        self.assertIn('--target "$env:GITHUB_SHA"', publish)
+        self.assertEqual(2, publish.count("--draft --latest=false"))
+        self.assertLess(
+            publish.index("$isDraft -and -not $existingIsDraft"),
+            publish.index("gh release upload"),
+        )
+
+    def test_draft_release_skips_public_attestation_and_virustotal(self):
+        workflow_path = Path.cwd() / ".github" / "workflows" / "release.yaml"
+        if not workflow_path.is_file():
+            self.assertEqual(Path.cwd().name, "_ap")
+            return
+        workflow = workflow_path.read_text(encoding="utf-8")
+        attestation = workflow[
+            workflow.index("- name: Attest the release artifacts") :
+            workflow.index("- name: Hash the release artifacts")
+        ]
+        scan = workflow[workflow.index("  virustotal:") :]
+        self.assertIn("if: env.RELEASE_DRAFT != 'true'", attestation)
+        self.assertIn("inputs.draft", scan.split("runs-on:", 1)[0])
 
     def test_release_notes_hash_both_artifacts_before_release_creation(self):
         candidates = (
