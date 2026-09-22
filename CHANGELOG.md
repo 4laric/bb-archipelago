@@ -6,6 +6,20 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Integrated BBLauncher fork: backend foundation (in development, not a
+  release).** The fork's machine-readable AP backend now exists behind
+  `python -m bb_launcher integrated-backend`: versioned Qt/backend
+  protocol (`capabilities`, `inspect_install`, `inspect_seed`,
+  `prepare_play`, `verify_and_arm`, `connect_and_start_client`,
+  `session_status`, `stop_client`, `cancel_operation`) with opaque play/arm
+  handles, copy-activation-only enforcement, per-install locking,
+  activation journaling with crash recovery, a persistent session
+  supervisor distinct from the GUI backend, reversible companion-state
+  import, and remembered sessions. Nothing here is player-usable yet: no
+  fork binary is built, no live game acceptance has run, and the update
+  channel, license audit and Qt service extraction remain unfinished (see
+  `bblauncher_fork/` and `docs/SPEC-bblauncher-integrated-ap.md`).
+
 - BBLauncher setup now detects the inactive mod library, explains invalid folders
   before a build, and offers a one-click correction. A guided prepare/activate/connect
   flow remembers the prepared mod automatically; recovery files live in Advanced

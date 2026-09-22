@@ -331,7 +331,7 @@ def _display(prepared: Mapping[str, Any]) -> dict[str, Any]:
 
 def _world_build() -> str:
     try:
-        from worlds.bloodborne import __version__ as value  # type: ignore
+        from worlds.bloodborne import WORLD_VERSION as value  # type: ignore
         return str(value)
     except Exception:
         return "unknown"
