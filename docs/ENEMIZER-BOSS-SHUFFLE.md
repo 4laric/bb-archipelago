@@ -68,8 +68,8 @@ matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
-Ebrietas and Maria, plus the reciprocal Gehrman/Moon Presence pair. The regular
-seven-boss graph has two complete assignments selected by seed; the final pair
+Ebrietas, Maria and Laurence, plus the reciprocal Gehrman/Moon Presence pair. The regular
+eight-boss graph has two complete assignments selected by seed; the final pair
 is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
@@ -187,7 +187,8 @@ arena. Ludwig is the two-actor 3400800/3400801 encounter, distinct from Laurence
 3400850. Its adapter selects the normal three-limb configuration, replaces the
 source cutscene/warp with a destination actor-relative phase transition, and
 preserves destination progression through an explicit terminal bridge. These
-standalone donors are not yet members of the closed pool. Their runtime phase
+Ludwig donor remains outside the closed pool; Laurence now joins it through
+the BSB-to-Laurence and BSB-to-Maria cross-links. Their runtime phase
 behavior and arena fit remain unobserved. Ludwig's second form and Gascoigne's
 beast now receive distinct NPC clones with the parent's inferred normalization
 effect. Physical map states share one helper clone per logical fight. Native
@@ -228,3 +229,43 @@ helper behavior, damage/health bar, arena containment, defeat/rewards/exit,
 exactly one destination AP check, no donor progression change, and save/reload.
 Follow [the live-probe contract](CONTRIBUTING-LIVE-PROBES.md). Do not promote
 the branch from experimental based on planner or serialization tests alone.
+
+## Full-roster coverage ledger
+
+This ledger describes at least one constructed directed adapter in each role,
+not arbitrary compatibility with every other boss. All gameplay validation is
+still outstanding. The full target remains all 22 encounters in complete
+seed-dependent assignments.
+
+| Encounter | Donor adapter | Destination adapter | Reviewed pool |
+|---|---|---|---|
+| Cleric Beast | Constructed | Constructed | Yes |
+| Father Gascoigne | Constructed | Constructed | Pending cross-links |
+| Blood-starved Beast | Constructed | Constructed | Yes |
+| Darkbeast Paarl | Constructed | Constructed | Yes |
+| Vicar Amelia | Constructed | Constructed | Yes |
+| Witch of Hemwick | Pending | Pending | Pending |
+| Shadows of Yharnam | Pending | Pending | Pending |
+| Rom | Pending | Pending | Pending |
+| The One Reborn | Pending | Pending | Pending |
+| Amygdala | Constructed | Constructed | Yes |
+| Martyr Logarius | In progress | Pending | Pending |
+| Celestial Emissary | Pending | Pending | Pending |
+| Ebrietas | Constructed | Constructed | Yes |
+| Micolash | Pending | Pending | Pending |
+| Mergo's Wet Nurse | Pending | Pending | Pending |
+| Gehrman | Constructed | Constructed | Yes, fixed reciprocal pair |
+| Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
+| Ludwig | Constructed | Constructed | Pending cross-links |
+| Laurence | Constructed | Constructed | Yes |
+| Living Failures | Pending | Pending | Pending |
+| Lady Maria | Constructed | Constructed | Yes |
+| Orphan of Kos | Constructed | In progress | Pending |
+
+Latest standalone construction evidence: reciprocal Ludwig/Cleric and
+Laurence/Cleric each verify 13 output files. Orphan-at-Cleric verifies ten,
+including separate normalized phase/support NPC clones shared across three
+map states, source-pinned player-effect and camera routines, an independent
+combat-ready flag and a destination-owned terminal bridge. Installed Orphan
+Event 0 and health variants are accepted by exact reviewed hashes; the
+installed health damage trigger and update frequency remain intact.

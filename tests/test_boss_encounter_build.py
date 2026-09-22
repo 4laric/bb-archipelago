@@ -9,9 +9,9 @@ from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_co
 from tools.build_boss_encounters import (
     ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
     event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
-    is_gascoigne_donor_pair, is_gascoigne_arena_pair,
+    is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility,
 )
-from tools.bb_enemizer.boss_pool import compose_event_patches
+from tools.bb_enemizer.boss_pool import compose_event_patches, assign_donors
 from tools.bb_enemizer.gascoigne_contract import patch_gascoigne_at_cleric
 from tools.bb_enemizer.gascoigne_arena import patch_cleric_at_gascoigne
 
@@ -19,6 +19,21 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
+    def test_reviewed_pool_includes_laurence_without_reusing_or_omitting_donors(self):
+        graph = reviewed_compatibility()
+        self.assertEqual(10, len(graph))
+        assignments = []
+        for seed in ('seed-0', 'seed-1'):
+            assignment = assign_donors(seed, graph)
+            assignments.append(assignment)
+            self.assertEqual(set(graph), set(assignment))
+            self.assertEqual(set(graph), set(assignment.values()))
+            self.assertEqual('laurence', assignment['cleric-beast'])
+            for arena, donor in assignment.items():
+                self.assertNotEqual(arena, donor)
+                self.assertIn(donor, graph[arena])
+        self.assertNotEqual(assignments[0], assignments[1])
+
     def test_allocated_event_cannot_alias_original_actor_or_operand_in_another_map(self):
         with self.assertRaisesRegex(ValueError, 'original corpus'):
             validate_allocations(ROOT / 'research/bb_inputs.db', [], [{'added_event_ids': [2410810]}], {})

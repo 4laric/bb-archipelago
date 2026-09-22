@@ -39,6 +39,13 @@ from tools.bb_enemizer.gascoigne_arena import (
 from tools.bb_enemizer.ludwig_contract import LudwigIds, patch_ludwig_at_cleric, native_plan_ludwig_at_cleric, EVENTS as LUDWIG_EVENTS
 from tools.bb_enemizer.laurence_contract import LaurenceIds, patch_laurence_at_cleric, native_plan_laurence_at_cleric
 from tools.bb_enemizer.laurence_arena import patch_cleric_at_laurence, native_plan_cleric_at_laurence
+from tools.bb_enemizer.ludwig_arena import patch_cleric_at_ludwig, native_plan_cleric_at_ludwig
+from tools.bb_enemizer.bsb_laurence_contract import patch_bsb_at_laurence, native_plan_bsb_at_laurence
+from tools.bb_enemizer.bsb_maria_contract import patch_bsb_at_maria, native_plan_bsb_at_maria
+from tools.bb_enemizer.orphan_contract import (
+    OrphanIds, NativeActorPin as OrphanActorPin,
+    patch_orphan_at_cleric, native_plan_orphan_at_cleric,
+)
 from tools.bb_enemizer.final_boss_contracts import (
     GEHRMAN_ARENA, MOON_ARENA, GEHRMAN_PACKAGE, MOON_PACKAGE, FinalAttachmentIds,
     patch_gehrman_at_moon, patch_moon_at_gehrman, plan_final_boss_swap,
@@ -79,6 +86,11 @@ ARENAS[GASCOIGNE_ENDPOINT.key] = GASCOIGNE_ENDPOINT
 PACKAGES[GASCOIGNE_ENDPOINT.key] = GASCOIGNE_ENDPOINT
 LAURENCE_ENDPOINT = SpecialEndpoint('laurence', 'm34_00_00_00.emevd.dcx.js')
 ARENAS[LAURENCE_ENDPOINT.key] = LAURENCE_ENDPOINT
+LUDWIG_ENDPOINT = SpecialEndpoint('ludwig', 'm34_00_00_00.emevd.dcx.js')
+ARENAS[LUDWIG_ENDPOINT.key] = LUDWIG_ENDPOINT
+PACKAGES[LUDWIG_ENDPOINT.key] = LUDWIG_ENDPOINT
+PACKAGES[LAURENCE_ENDPOINT.key] = LAURENCE_ENDPOINT
+PACKAGES['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd.dcx.js')
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -94,9 +106,29 @@ CLERIC_MARIA_ATTACHMENTS = ClericMariaAttachmentIds(12990012, 12990013, 12990014
 MARIA_AMELIA_ATTACHMENTS = MariaAmeliaAttachmentIds(12990016)
 MARIA_COMPATIBILITY = {
     'cleric-beast': ('lady-maria',),
-    'lady-maria': ('cleric-beast',),
+    'lady-maria': ('cleric-beast', 'blood-starved-beast'),
     'vicar-amelia': ('lady-maria',),
 }
+
+LAURENCE_COMPATIBILITY = {
+    'cleric-beast': ('laurence',),
+    'laurence': ('cleric-beast', 'blood-starved-beast'),
+}
+
+
+def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
+    """Closed roster assembled from explicitly reviewed directed adapters."""
+    graph = {}
+    for section in (COMPATIBILITY, MARIA_COMPATIBILITY, LAURENCE_COMPATIBILITY, FINAL_COMPATIBILITY):
+        for arena, donors in section.items():
+            graph[arena] = tuple(dict.fromkeys((*graph.get(arena, ()), *donors)))
+    return dict(sorted(graph.items()))
+
+
+def dlc_pair_flags(arena, package) -> tuple[bool, bool, bool, bool]:
+    """Directed dispatch is per encounter, including inside reciprocal pools."""
+    return (package.key == 'ludwig', package.key == 'laurence',
+            arena.key == 'ludwig', arena.key == 'laurence')
 
 
 def is_maria_pair(arena, package) -> bool:
@@ -137,6 +169,12 @@ def maria_external_reference(args, plan: dict, arena) -> dict:
 LUDWIG_ALLOCATION = LudwigIds(980002, 12990200,
     {event: 12990201 + index for index, event in enumerate(LUDWIG_EVENTS)},
     'ap_ludwig_phase_two', 'BB AP Ludwig phase-two allocation v1; full corpus collision scan')
+
+ORPHAN_ALLOCATION = OrphanIds(
+    980003, 980004, 12990600, 12990601, 12990602, 12990603, 12990604, 12990605,
+    'ap_orphan_phase_two', 'ap_orphan_support',
+    'BB AP Orphan allocation v1; original full-corpus collision scan',
+)
 
 GASCOIGNE_ALLOCATION = ProjectOwnedIds(
     beast_entity_id=980001,
@@ -223,6 +261,14 @@ def gascoigne_actor_pins(args, slots) -> tuple[dict[str, NativeActorPin], list[d
             'destination_map': name, 'destination_part': 'c5000_0000', 'destination_entity_id': 2410800,
         })
     return pins, initializations
+
+
+def orphan_actor_pins(args) -> dict[str, OrphanActorPin]:
+    parts = {part['name']: part for part in inspect_actor_map(args, 'm36_00_00_00')['parts']}
+    anchor = parts['c4540_0000']['fingerprint']
+    return {role: OrphanActorPin(part_sha256=parts[name]['fingerprint'],
+                                anchor_sha256=anchor, **parts[name]['source_initialization'])
+            for role, name in (('core', 'c4540_0000'), ('phase', 'c4541_0000'), ('support', 'c4543_0000'))}
 
 
 def digest(path: Path) -> str:
@@ -324,9 +370,15 @@ def build(args) -> dict:
     args._actor_pin_cache = {}
     ludwig = getattr(args, 'donor', None) == 'ludwig'
     laurence = getattr(args, 'donor', None) == 'laurence'
+    orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
+    if orphan and getattr(args, 'arena', None) != 'cleric-beast':
+        raise ValueError('Orphan requires the reviewed Cleric arena adapter')
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
-    if laurence_arena and getattr(args, 'donor', None) != 'cleric-beast':
-        raise ValueError('Laurence arena requires the reviewed Cleric donor adapter')
+    ludwig_arena = getattr(args, 'arena', None) == 'ludwig'
+    if ludwig_arena and getattr(args, 'donor', None) != 'cleric-beast':
+        raise ValueError('Ludwig arena requires the reviewed Cleric donor adapter')
+    if laurence_arena and getattr(args, 'donor', None) not in LAURENCE_COMPATIBILITY['laurence']:
+        raise ValueError('Laurence arena requires a reviewed donor adapter')
     laurence_ids = LaurenceIds(12990300, 12990301)
     direct_gascoigne = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     reviewed_gascoigne_pairs = {
@@ -347,19 +399,15 @@ def build(args) -> dict:
         } if args.pool == 'maria-cleric' else {
             'cleric-beast': ('father-gascoigne',),
             'father-gascoigne': ('cleric-beast',),
-        } if args.pool == 'gascoigne-cleric' else FINAL_COMPATIBILITY if args.pool == 'finals' else {
-            arena: tuple(donor for donor in donors if donor in ARENAS)
-            for arena, donors in {
-                **{
-                    key: tuple(dict.fromkeys((*COMPATIBILITY.get(key, ()), *MARIA_COMPATIBILITY.get(key, ()))))
-                    for key in set(COMPATIBILITY) | set(MARIA_COMPATIBILITY)
-                },
-                **FINAL_COMPATIBILITY,
-            }.items() if arena in ARENAS}
+        } if args.pool == 'gascoigne-cleric' else {
+            'cleric-beast': ('ludwig',), 'ludwig': ('cleric-beast',),
+        } if args.pool == 'ludwig-cleric' else {
+            'cleric-beast': ('laurence',), 'laurence': ('cleric-beast',),
+        } if args.pool == 'laurence-cleric' else FINAL_COMPATIBILITY if args.pool == 'finals' else reviewed_compatibility()
         mapping = assign_donors(args.seed, graph)
         pairs = [(ARENAS[key], PACKAGES[value]) for key, value in mapping.items()]
     else:
-        pairs = [(ARENAS[args.arena], None if (ludwig or laurence) else PACKAGES[args.donor])]
+        pairs = [(ARENAS[args.arena], PACKAGES[args.donor])]
     if digest(args.darkscript) != DARKSCRIPT_SHA256:
         raise ValueError('requires pinned DarkScript 3.6.3')
     check_output(args.output, (args.maps, args.scripts, args.events, args.gameparam,
@@ -381,14 +429,13 @@ def build(args) -> dict:
         for arena, package in pairs:
             if (package is not None and arena.key not in FINAL_ARENAS
                     and not is_maria_pair(arena, package) and not is_gascoigne_pair(arena, package)
-                    and not laurence_arena):
+                    and not any(dlc_pair_flags(arena, package)) and package.key != 'orphan-of-kos'):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
         originals, source, compiled = (scratch / name for name in ('original', 'source', 'compiled'))
         originals.mkdir()
         filenames = {item.event_file.removesuffix('.js') for pair in pairs for item in pair if item is not None}
-        if ludwig or laurence: filenames.add('m34_00_00_00.emevd.dcx')
         for name in filenames | {'common.emevd.dcx'}:
             shutil.copyfile(args.events / name, originals / name)
         compile_events(args.darkscript, 'decompile', originals, source, pairs[0][0].event_file)
@@ -397,8 +444,17 @@ def build(args) -> dict:
         variants = {}
         terminals = {}
         for arena, package in pairs:
-            if laurence_arena:
-                patched = patch_cleric_at_laurence(texts[arena.event_file], texts[package.event_file])
+            ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
+            if package.key == 'orphan-of-kos':
+                patched = patch_orphan_at_cleric(texts[arena.event_file], texts[package.event_file], ORPHAN_ALLOCATION)
+                terminals[arena.event_file] = ({'event_id': 12411700, 'original_actor': 2410800,
+                    'bridge_event_id': ORPHAN_ALLOCATION.terminal_bridge_event_id},)
+            elif ludwig_arena:
+                patched = patch_cleric_at_ludwig(texts[arena.event_file], texts[package.event_file])
+            elif laurence_arena:
+                patcher = (patch_bsb_at_laurence if package.key == 'blood-starved-beast'
+                           else patch_cleric_at_laurence)
+                patched = patcher(texts[arena.event_file], texts[package.event_file])
             elif laurence:
                 patched = patch_laurence_at_cleric(texts[arena.event_file], texts['m34_00_00_00.emevd.dcx.js'], laurence_ids)
             elif ludwig:
@@ -418,6 +474,8 @@ def build(args) -> dict:
                     patched = patch_maria_at_cleric(texts[arena.event_file], texts[package.event_file], MARIA_ATTACHMENTS)
                 elif (arena.key, package.key) == ('lady-maria', 'cleric-beast'):
                     patched = patch_cleric_at_maria(texts[arena.event_file], texts[package.event_file], CLERIC_MARIA_ATTACHMENTS)
+                elif (arena.key, package.key) == ('lady-maria', 'blood-starved-beast'):
+                    patched = patch_bsb_at_maria(texts[arena.event_file], texts[package.event_file])
                 elif (arena.key, package.key) == ('vicar-amelia', 'lady-maria'):
                     patched = patch_maria_at_amelia(texts[arena.event_file], texts[package.event_file], MARIA_AMELIA_ATTACHMENTS)
                 else:
@@ -467,53 +525,64 @@ def build(args) -> dict:
                                         (source / filename).read_text(encoding='utf-8'),
                                         json.loads(pins_run.stdout), protected_by_file[filename],
                                         terminals.get(filename, ())))
-        if laurence_arena:
-            plans = [native_plan_cleric_at_laurence(slots, npcs, effects, args.seed)]
-            plans[0]['boss_actor_initializations'] = pin_actor_requirements(args, plans[0]['primary_init_source_bindings'])
-        elif laurence:
-            plans = [native_plan_laurence_at_cleric(slots, npcs, effects, laurence_ids, args.seed)]
-            plans[0]['boss_actor_initializations'] = pin_actor_requirements(args, plans[0]['primary_init_source_bindings'])
-        elif ludwig:
-            plans = [native_plan_ludwig_at_cleric(slots, npcs, effects, LUDWIG_ALLOCATION, args.seed)]
-            plans[0]['boss_actor_additions'] = pin_actor_requirements(args, plans[0]['boss_actor_additions'])
-            plans[0]['boss_actor_initializations'] = pin_actor_requirements(args, plans[0]['primary_init_source_bindings'])
-        else:
-            plans = []
-            for arena, package in pairs:
-                if is_gascoigne_donor_pair(arena, package):
-                    actor_pins, initializations = gascoigne_actor_pins(args, slots)
-                    plan = native_plan_gascoigne_at_cleric(slots, npcs, effects, GASCOIGNE_ALLOCATION,
-                                                           actor_pins, args.seed)
-                    # The donor primary is the original Gascoigne human and
-                    # therefore carries its native Talk 241330 pin.
-                    plan['boss_actor_initializations'] = initializations
-                elif is_gascoigne_arena_pair(arena, package):
-                    plan = native_plan_cleric_at_gascoigne(slots, npcs, effects,
-                                                           GASCOIGNE_ARENA_ATTACHMENTS, args.seed)
-                    # The source primary is Cleric Beast and must retain the
-                    # original Talk 0 initialization in every m24 state.
-                    plan['boss_actor_initializations'] = pin_actor_requirements(
-                        args, plan['primary_init_source_bindings'])
-                elif is_maria_pair(arena, package):
-                    if arena.key == 'cleric-beast':
-                        plan = native_plan_maria_at_cleric(slots, npcs, effects, MARIA_ATTACHMENTS, args.seed)
-                    elif arena.key == 'vicar-amelia':
-                        plan = native_plan_maria_at_amelia(slots, npcs, effects, MARIA_AMELIA_ATTACHMENTS, args.seed)
-                    else:
-                        plan = native_plan_cleric_at_maria(slots, npcs, effects, CLERIC_MARIA_ATTACHMENTS, args.seed)
-                    plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
-                    if package.key == 'lady-maria':
-                        plan['boss_external_references'] = [maria_external_reference(args, plan, arena)]
-                elif arena.key in FINAL_ARENAS:
-                    plan = plan_final_boss_swap(slots, npcs, effects, arena=FINAL_ARENAS[arena.key],
-                        donor=FINAL_ARENAS[package.key], attachment_ids=FINAL_ATTACHMENTS[arena.key], seed=args.seed)
-                    plan['boss_actor_initializations'] = pin_actor_requirements(
-                        args, plan['boss_contract']['primary_init_source_bindings'])
+        plans = []
+        for arena, package in pairs:
+            ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
+            if package.key == 'orphan-of-kos':
+                plan = native_plan_orphan_at_cleric(slots, npcs, effects, ORPHAN_ALLOCATION,
+                                                    orphan_actor_pins(args), args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif ludwig_arena:
+                plan = native_plan_cleric_at_ludwig(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif laurence_arena:
+                planner = (native_plan_bsb_at_laurence if package.key == 'blood-starved-beast'
+                           else native_plan_cleric_at_laurence)
+                plan = planner(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif laurence:
+                plan = native_plan_laurence_at_cleric(slots, npcs, effects, laurence_ids, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif ludwig:
+                plan = native_plan_ludwig_at_cleric(slots, npcs, effects, LUDWIG_ALLOCATION, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_gascoigne_donor_pair(arena, package):
+                actor_pins, initializations = gascoigne_actor_pins(args, slots)
+                plan = native_plan_gascoigne_at_cleric(slots, npcs, effects, GASCOIGNE_ALLOCATION,
+                                                       actor_pins, args.seed)
+                # The donor primary is the original Gascoigne human and
+                # therefore carries its native Talk 241330 pin.
+                plan['boss_actor_initializations'] = initializations
+            elif is_gascoigne_arena_pair(arena, package):
+                plan = native_plan_cleric_at_gascoigne(slots, npcs, effects,
+                                                       GASCOIGNE_ARENA_ATTACHMENTS, args.seed)
+                # The source primary is Cleric Beast and must retain the
+                # original Talk 0 initialization in every m24 state.
+                plan['boss_actor_initializations'] = pin_actor_requirements(
+                    args, plan['primary_init_source_bindings'])
+            elif is_maria_pair(arena, package):
+                if arena.key == 'cleric-beast':
+                    plan = native_plan_maria_at_cleric(slots, npcs, effects, MARIA_ATTACHMENTS, args.seed)
+                elif arena.key == 'vicar-amelia':
+                    plan = native_plan_maria_at_amelia(slots, npcs, effects, MARIA_AMELIA_ATTACHMENTS, args.seed)
+                elif package.key == 'blood-starved-beast':
+                    plan = native_plan_bsb_at_maria(slots, npcs, effects, args.seed)
                 else:
-                    plan = plan_contract_swap(arena, package, slots, npcs, effects, args.seed)
-                    if arena.key in materializations:
-                        plan['boss_actor_additions'] = materializations[arena.key]
-                plans.append(plan)
+                    plan = native_plan_cleric_at_maria(slots, npcs, effects, CLERIC_MARIA_ATTACHMENTS, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+                if package.key == 'lady-maria':
+                    plan['boss_external_references'] = [maria_external_reference(args, plan, arena)]
+            elif arena.key in FINAL_ARENAS:
+                plan = plan_final_boss_swap(slots, npcs, effects, arena=FINAL_ARENAS[arena.key],
+                    donor=FINAL_ARENAS[package.key], attachment_ids=FINAL_ATTACHMENTS[arena.key], seed=args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(
+                    args, plan['boss_contract']['primary_init_source_bindings'])
+            else:
+                plan = plan_contract_swap(arena, package, slots, npcs, effects, args.seed)
+                if arena.key in materializations:
+                    plan['boss_actor_additions'] = materializations[arena.key]
+            plans.append(plan)
         ordinary_plan_path = getattr(args, 'ordinary_plan', None)
         if ordinary_plan_path is not None:
             ordinary_plan = json.loads(ordinary_plan_path.read_text(encoding='utf-8-sig'))
@@ -527,7 +596,7 @@ def build(args) -> dict:
         phase_parents = {}
         for pair_plan in plans:
             for addition in pair_plan.get('boss_actor_additions', []):
-                if addition['source_archetype']['npc_param_id'] not in (272000, 451001):
+                if addition['source_archetype']['npc_param_id'] not in (272000, 451001, 454100, 454300):
                     continue
                 anchor = f"{addition['destination_map']}:{addition['destination_anchor_part']}"
                 parents = [swap['logical_key'] for swap in pair_plan['swaps']
@@ -568,8 +637,8 @@ def main(argv=None) -> int:
     parser.add_argument('--bundle', type=Path, default=ROOT / 'research/bb_inputs.db')
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument('--arena', choices=sorted(ARENAS))
-    selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'finals', 'reviewed'))
-    parser.add_argument('--donor', choices=sorted((*PACKAGES, 'ludwig', 'laurence')))
+    selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'ludwig-cleric', 'laurence-cleric', 'finals', 'reviewed'))
+    parser.add_argument('--donor', choices=sorted(PACKAGES))
     parser.add_argument('--seed', required=True)
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args(argv)

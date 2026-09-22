@@ -12,7 +12,7 @@ On Enemy randomization, enable Randomize Enemies and Advanced enemy options.
 "Boss playtest: BSB at Cleric Beast" instead changes only that encounter,
 including its AI, scaling and phase scripts; other enemies remain vanilla.
 These options default off. "Boss shuffle: reviewed encounters" combines normal
-enemy swaps with an experimental nine-encounter boss pool. Full boss coverage
+enemy swaps with an experimental ten-encounter boss pool. Full boss coverage
 is still under development. First use downloads the pinned upstream DarkScript3
 compiler; later builds use its verified local cache.
 Use a backed-up character with Cleric undefeated and report idle enemies,

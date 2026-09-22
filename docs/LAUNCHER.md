@@ -344,7 +344,7 @@ experimental and default off:
 Each mode has an independent forward/reversed-inventory determinism fixture.
 Neither changes the default 308-plan regression pin.
 
-**Boss shuffle: reviewed encounters** adds the current nine-encounter boss pool
+**Boss shuffle: reviewed encounters** adds the current ten-encounter boss pool
 to the ordinary enemy plan, with shared scaling and verified AP event
 composition. It defaults off and cannot be combined with the BSB-only canary.
 First use downloads the pinned [DarkScript3 release](https://github.com/AinTunez/DarkScript3/releases/tag/3.6.3);
