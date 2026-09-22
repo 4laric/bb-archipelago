@@ -52,33 +52,32 @@ GRANT_WATCHDOG_MS = 240_000
 
 
 FIELD_DEFINITIONS = (
-    ("ap_request", "AP seed file (.zip or .bbseed.json)", "file"),
-    ("game_root", "shadPS4 game folder", "directory"),
+    ("ap_request", "Seed file", "file"),
+    ("game_root", "Game folder", "directory"),
     ("suppression_binder", "Suppressed gameparam", "file"),
     ("suppression_manifest", "Suppression manifest", "file"),
     ("map_studio_source", "Source MapStudio", "directory"),
     ("enemy_inventory", "Enemy inventory", "file"),
     ("soulsformats_next", "SoulsFormatsNEXT", "directory"),
     ("process_plan", "Launch plan", "file"),
-    ("shad_executable", "shadPS4.exe", "file"),
+    ("shad_executable", "shadPS4", "file"),
     ("cache_root", "Seed cache", "directory"),
-    ("state_root", "Launcher state (optional)", "directory"),
-    ("shad_log", "shadPS4 log (optional)", "file"),
+    ("state_root", "Launcher state", "directory"),
+    ("shad_log", "shadPS4 log", "file"),
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
+# The empty-state line under the seed row names both shapes the field accepts.
+SEED_PROMPT = "Choose a seed (.zip or .bbseed.json) to see its player and build."
 PRIMARY_FIELDS = {"ap_request", "game_root", "shad_executable"}
 ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 
-# Bloodborne palette: hunter's-dream night blues, bone parchment text,
-# blood-red accents, lamp-light gold headers.
-THEME_BACKGROUND = "#0d1117"
-THEME_PANEL = "#161b24"
-THEME_BORDER = "#2a3140"
-THEME_FOREGROUND = "#d6d0bd"
-THEME_MUTED = "#8590a0"
-THEME_BLOOD = "#8f1d24"
-THEME_BLOOD_ACTIVE = "#b3242c"
-THEME_GOLD = "#c2a14d"
+# The palette and every ttk style live in ``theme``; this module only lays
+# widgets out.
+from .theme import (  # noqa: E402
+    Sidebar, apply_theme, autohide, field, option, page_header, scroll_page, section,
+    text_well,
+)
+from .version import launcher_version  # noqa: E402
 
 
 def default_field_values(
@@ -275,7 +274,7 @@ class LauncherApp:
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
         self.player_name = tk.StringVar()
-        self.seed_summary = tk.StringVar(value="Choose a seed to see its player and build.")
+        self.seed_summary = tk.StringVar(value=SEED_PROMPT)
         self.launch_hint = tk.StringVar(value="Choose a seed and shadPS4 to continue.")
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
@@ -294,15 +293,16 @@ class LauncherApp:
         # Diagnostic probes are an explicit, per-session playtest aid.
         self.research_captures = tk.BooleanVar(value=False)
         self.show_session_details = tk.BooleanVar(value=False)
-        self.status = tk.StringVar(value="Choose the AP seed and setup paths.")
+        self.status = tk.StringVar(value="")
         self.client_health = tk.StringVar(value="Client: not running (no live status)")
         self._health_monitoring = False
         self._enemy_widgets: list[Any] = []
         self._enemy_advanced_widgets: list[Any] = []
         self._busy = False
 
-        root.title("Bloodborne AP Launcher")
-        root.minsize(820, 620)
+        root.title("Bloodborne Archipelago")
+        root.minsize(960, 680)
+        root.geometry("1080x760")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         self._apply_theme()
@@ -322,98 +322,9 @@ class LauncherApp:
         self.root.after(0, self._refresh_status)
 
     def _apply_theme(self) -> None:
-        ttk = self.ttk
-        style = ttk.Style(self.root)
-        try:
-            style.theme_use("clam")
-        except self.tk.TclError:
-            pass
-        self.root.configure(bg=THEME_BACKGROUND)
-        style.configure(
-            ".",
-            background=THEME_BACKGROUND,
-            foreground=THEME_FOREGROUND,
-            fieldbackground=THEME_PANEL,
-            bordercolor=THEME_BORDER,
-            darkcolor=THEME_BACKGROUND,
-            lightcolor=THEME_BACKGROUND,
-        )
-        style.configure("TFrame", background=THEME_BACKGROUND)
-        style.configure("TLabel", background=THEME_BACKGROUND, foreground=THEME_FOREGROUND)
-        style.configure(
-            "Title.TLabel", background=THEME_BACKGROUND, foreground=THEME_GOLD
-        )
-        style.configure(
-            "Muted.TLabel", background=THEME_BACKGROUND, foreground=THEME_MUTED
-        )
-        style.configure(
-            "TLabelframe", background=THEME_BACKGROUND, foreground=THEME_GOLD,
-            bordercolor=THEME_BORDER,
-        )
-        style.configure(
-            "TLabelframe.Label", background=THEME_BACKGROUND, foreground=THEME_GOLD
-        )
-        style.configure(
-            "TEntry", fieldbackground=THEME_PANEL, foreground=THEME_FOREGROUND,
-            insertcolor=THEME_FOREGROUND, bordercolor=THEME_BORDER,
-        )
-        style.configure(
-            "TButton", background=THEME_PANEL, foreground=THEME_FOREGROUND,
-            bordercolor=THEME_BORDER, padding=(10, 4),
-        )
-        style.map(
-            "TButton",
-            background=[("active", "#1f2733"), ("disabled", THEME_BACKGROUND)],
-            foreground=[("disabled", THEME_MUTED)],
-        )
-        style.configure("Accent.TButton", background=THEME_BLOOD, foreground="#f5f0e1")
-        style.map(
-            "Accent.TButton",
-            background=[("active", THEME_BLOOD_ACTIVE), ("disabled", THEME_BACKGROUND)],
-            foreground=[("disabled", THEME_MUTED)],
-        )
-        style.configure("TCheckbutton", background=THEME_BACKGROUND, foreground=THEME_FOREGROUND)
-        style.map("TCheckbutton", background=[("active", THEME_BACKGROUND)])
-        style.configure(
-            "Horizontal.TProgressbar", background=THEME_BLOOD,
-            troughcolor=THEME_PANEL, bordercolor=THEME_PANEL,
-        )
-        # The notebook arrived with #190/#191 but no theme entry, so clam's
-        # stock light tabs rendered as a dashed empty box on the dark panel.
-        style.configure(
-            "TNotebook", background=THEME_BACKGROUND, bordercolor=THEME_BORDER,
-            tabmargins=(4, 4, 4, 0),
-        )
-        style.configure(
-            "TNotebook.Tab", background=THEME_PANEL, foreground=THEME_MUTED,
-            bordercolor=THEME_BORDER, padding=(14, 6), focuscolor=THEME_BACKGROUND,
-        )
-        style.map(
-            "TNotebook.Tab",
-            background=[("selected", THEME_BACKGROUND), ("active", "#1f2733")],
-            foreground=[("selected", THEME_GOLD), ("active", THEME_FOREGROUND)],
-            expand=[("selected", (0, 0, 0, 0))],
-        )
-        # clam draws the focus ring as a dashed rectangle inside the tab; the
-        # layout has no other job, so dropping the focus element is the plain-ttk
-        # way to kill it without a new dependency.
-        try:
-            style.layout(
-                "TNotebook.Tab",
-                [(
-                    "Notebook.tab", {
-                        "sticky": "nswe",
-                        "children": [(
-                            "Notebook.padding", {
-                                "side": "top", "sticky": "nswe",
-                                "children": [("Notebook.label", {"side": "top", "sticky": ""})],
-                            },
-                        )],
-                    },
-                )],
-            )
-        except self.tk.TclError:
-            pass
+        """Every colour, font and ttk style comes from ``theme``; nothing is
+        configured ad hoc here, so the pages cannot drift from the palette."""
+        apply_theme(self.root, self.ttk)
 
     def _apply_default_fields(self) -> None:
         """Fill derived fields and repair suppression paths from old packages."""
@@ -433,115 +344,193 @@ class LauncherApp:
                 self.fields[name].set(value)
 
     def _build(self) -> None:
-        ttk = self.ttk
-        outer = ttk.Frame(self.root, padding=16)
-        outer.grid(row=0, column=0, sticky="nsew")
+        tk, ttk = self.tk, self.ttk
+        shell = ttk.Frame(self.root)
+        shell.grid(row=0, column=0, sticky="nsew")
+        shell.columnconfigure(1, weight=1)
+        shell.rowconfigure(0, weight=1)
+
+        # The content column. The pages stretch and carry a floor
+        # (bb-archipelago#190): a short display must never crush the page to
+        # zero height. The details drawer (rows 1-2) only takes weight while it
+        # is shown, so a collapsed drawer costs the pages nothing.
+        outer = ttk.Frame(shell)
+        outer.grid(row=0, column=1, sticky="nsew")
         outer.columnconfigure(0, weight=1)
-        # The notebook and the log both stretch, and both carry a floor
-        # (bb-archipelago#190): the old single column stacked every panel in
-        # one grid, so on a short display Tk crushed the only weighted row --
-        # the enemy-randomization panel, toggle and progress log included --
-        # to zero height and it vanished with no diagnostic at all.
-        outer.rowconfigure(2, weight=1, minsize=240)
-        outer.rowconfigure(3, weight=2, minsize=140)
+        outer.rowconfigure(0, weight=1, minsize=240)
+        outer.rowconfigure(1, weight=0, minsize=0)
 
-        title = ttk.Label(
-            outer, text="Bloodborne Archipelago",
-            font=("Segoe UI", 18, "bold"), style="Title.TLabel",
-        )
-        title.grid(row=0, column=0, sticky="w")
-        ttk.Label(
-            outer,
-            text="Choose a seed, create a local game, or reconnect to your running game.",
-        ).grid(row=1, column=0, sticky="w", pady=(2, 12))
-
-        notebook = ttk.Notebook(outer)
-        notebook.grid(row=2, column=0, sticky="nsew")
+        notebook = ttk.Notebook(outer, style="Pages.TNotebook")
+        notebook.grid(row=0, column=0, sticky="nsew")
         self.notebook = notebook
 
-        setup = ttk.Frame(notebook, padding=10)
-        setup.columnconfigure(1, weight=1)
+        # --- Play ---------------------------------------------------------
+        setup = ttk.Frame(notebook)
         notebook.add(setup, text="Play")
         self.play_tab = setup
+        play = scroll_page(tk, ttk, setup)
+        play_row = page_header(ttk, play, "Play", "Choose your seed and your shadPS4 install, then launch.")
+        play_row = section(ttk, play, play_row, "Seed", first=True)
+        seed_row, play_row = play_row, play_row + 1
+        name_row, play_row = play_row, play_row + 1
+        server_row, play_row = play_row, play_row + 1
+        summary_row, play_row = play_row, play_row + 1
+        play_row = section(ttk, play, play_row, "Game")
+        game_rows = {"game_root": play_row, "shad_executable": play_row + 1}
+        primary_rows = {"ap_request": seed_row, **game_rows}
 
-        options = ttk.Frame(notebook, padding=10)
-        options.columnconfigure(1, weight=1)
-        notebook.add(options, text="Enemy randomization")
+        # --- Enemies ------------------------------------------------------
+        options_host = ttk.Frame(notebook)
+        notebook.add(options_host, text="Enemies")
+        options = scroll_page(tk, ttk, options_host)
+        enemy_row = page_header(
+            ttk, options, "Enemies", "Applied on the next build. Changing these rebuilds the seed.",
+        )
+        randomize, _randomize_row = option(
+            ttk, options, enemy_row, "Randomize enemies", self.randomize_enemies,
+            caption="Every enemy is redrawn from the seed. Off keeps vanilla placement.",
+            command=self._toggle_enemy_fields,
+        )
+        enemy_row += 1
+        advanced_toggle, _advanced_toggle_row = option(
+            ttk, options, enemy_row, "Advanced enemy options", self.show_enemy_advanced,
+            command=self._toggle_enemy_advanced,
+        )
+        enemy_row += 1
+        # One frame holds everything the toggle discloses, so a caption can
+        # never be left behind by its control.
+        advanced = ttk.Frame(options)
+        advanced.grid(row=enemy_row, column=0, columnspan=3, sticky="ew")
+        advanced.columnconfigure(1, weight=1)
+        self._enemy_advanced_widgets = [advanced]
+        advanced_row = section(ttk, advanced, 0, "Seed")
+        seed_label, seed_entry, _ = field(
+            ttk, advanced, advanced_row, "Enemy seed", self.enemy_seed,
+            trailing="from the AP seed when blank",
+        )
+        advanced_row = section(ttk, advanced, advanced_row + 1, "Experimental")
+        tier, _tier_row = option(
+            ttk, advanced, advanced_row, "Allow tier mixing", self.allow_tier_mixing,
+            caption="Replacements may come from a different difficulty tier.",
+        )
+        locomotion, _locomotion_row = option(
+            ttk, advanced, advanced_row + 1, "Preserve locomotion", self.preserve_locomotion,
+            caption="Keep each slot's movement class. Tags are incomplete.",
+        )
+        scaling, _scaling_row = option(
+            ttk, advanced, advanced_row + 2, "Normalize enemy stats", self.normalize_scaling,
+            caption="Scale replacements to the slot they fill. Playtest only.",
+        )
+        boss, _boss_row = option(
+            ttk, advanced, advanced_row + 3, "Boss playtest: BSB at Cleric Beast", self.boss_canary,
+            caption="Only that swap, with scaling. Other enemies unchanged.",
+        )
+        pool, _pool_row = option(
+            ttk, advanced, advanced_row + 4, "Boss shuffle (reviewed encounters)", self.boss_pool,
+            caption="Gameplay untested.",
+        )
+        advanced_row = section(ttk, advanced, advanced_row + 5, "Build inputs")
+        enemy_inputs = ttk.Frame(advanced)
+        enemy_inputs.grid(row=advanced_row, column=0, columnspan=3, sticky="ew")
+        enemy_inputs.columnconfigure(1, weight=1)
 
+        # --- Create & host (inserts itself at index 1) --------------------
         from .local_session_ui import LocalSessionPanel
         self.local_session_panel = LocalSessionPanel(self, notebook)
+
+        # --- Advanced -----------------------------------------------------
+        advanced_host = ttk.Frame(notebook)
+        notebook.add(advanced_host, text="Advanced")
+        troubleshooting = scroll_page(tk, ttk, advanced_host)
+        troubleshooting_row = page_header(
+            ttk, troubleshooting, "Advanced",
+            "Recovery tools, BBLauncher mode and operator paths. A normal launch needs none of this.",
+        )
+        troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Recovery", first=True)
+        actions = ttk.Frame(troubleshooting)
+        actions.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
+        troubleshooting_row += 1
+        self.doctor_button = ttk.Button(actions, text="Check Setup", command=self._start_doctor)
+        self.vanilla_button = ttk.Button(actions, text="Launch Vanilla", command=self._start_vanilla)
+        self.restore_button = ttk.Button(actions, text="Undo Last Build", command=self._start_restore)
+        self.rebuild_button = ttk.Button(actions, text="Rebuild", command=self._start_rebuild)
+        self.diagnostics_button = ttk.Button(
+            actions, text="Open Diagnostics", command=self._open_diagnostics
+        )
+        self.report_button = ttk.Button(
+            actions, text="Report a Bad Enemy", command=self._start_enemy_report
+        )
+        for index, button in enumerate((
+            self.doctor_button, self.vanilla_button, self.restore_button,
+            self.rebuild_button, self.diagnostics_button, self.report_button,
+        )):
+            button.grid(row=index // 3, column=index % 3, sticky="ew",
+                        padx=(0 if index % 3 == 0 else 8, 0), pady=(0, 8))
+        for column in range(3):
+            actions.columnconfigure(column, weight=1, uniform="recovery")
+        ttk.Label(
+            troubleshooting,
+            text="Report a Bad Enemy writes a paste-ready list of every swap in the area "
+                 "you were in, for a stuck, invisible or endlessly dying enemy.",
+            style="Dim.TLabel", wraplength=640,
+        ).grid(row=troubleshooting_row, column=0, columnspan=3, sticky="w")
+        troubleshooting_row += 1
+
+        troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "BBLauncher mode")
+        bblauncher = ttk.Frame(troubleshooting)
+        bblauncher.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
+        troubleshooting_row += 1
         from .external_ui import BBLauncherPanel
-        self.bblauncher_panel = BBLauncherPanel(self, notebook)
+        self.bblauncher_panel = BBLauncherPanel(self, bblauncher)
 
-        # Troubleshooting carries every operator path plus the recovery
-        # actions, which is taller than the notebook on a short display, so
-        # its body lives on a canvas that scrolls instead of being clipped.
-        troubleshooting_host = ttk.Frame(notebook)
-        troubleshooting_host.columnconfigure(0, weight=1)
-        troubleshooting_host.rowconfigure(0, weight=1)
-        notebook.add(troubleshooting_host, text="Troubleshooting")
-        troubleshooting_canvas = self.tk.Canvas(
-            troubleshooting_host, highlightthickness=0, borderwidth=0,
-            background=THEME_BACKGROUND,
+        troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Session overrides")
+        ttk.Label(
+            troubleshooting, text="Operators only. Never saved: every override resets when the launcher closes.",
+            style="Dim.TLabel",
+        ).grid(row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(0, 4))
+        troubleshooting_row += 1
+        # Outside the enemy-randomization widget group on purpose: it stays
+        # usable with Randomize Enemies off, and it is never saved.
+        option(
+            ttk, troubleshooting, troubleshooting_row, "Allow suppression binder mismatch",
+            self.allow_suppression_mismatch,
         )
-        troubleshooting_canvas.grid(row=0, column=0, sticky="nsew")
-        troubleshooting_scroll = ttk.Scrollbar(
-            troubleshooting_host, orient="vertical", command=troubleshooting_canvas.yview
+        option(
+            ttk, troubleshooting, troubleshooting_row + 1, "Enable research captures",
+            self.research_captures, caption="Playtest diagnostics.",
         )
-        troubleshooting_scroll.grid(row=0, column=1, sticky="ns")
-        troubleshooting_canvas.configure(yscrollcommand=troubleshooting_scroll.set)
-        troubleshooting = ttk.Frame(troubleshooting_canvas, padding=10)
-        troubleshooting.columnconfigure(1, weight=1)
-        troubleshooting_window = troubleshooting_canvas.create_window(
-            (0, 0), window=troubleshooting, anchor="nw"
+        option(
+            ttk, troubleshooting, troubleshooting_row + 2, "Allow AP seed/slot mismatch",
+            self.allow_seed_mismatch,
+            caption="The warning names the expected and connected identity.",
         )
-        troubleshooting.bind(
-            "<Configure>",
-            lambda _event: troubleshooting_canvas.configure(
-                scrollregion=troubleshooting_canvas.bbox("all")
-            ),
-        )
-        troubleshooting_canvas.bind(
-            "<Configure>",
-            lambda event: troubleshooting_canvas.itemconfigure(
-                troubleshooting_window, width=event.width
-            ),
-        )
+        troubleshooting_row += 3
 
-        def _troubleshooting_wheel(event, canvas=troubleshooting_canvas):
-            canvas.yview_scroll(-int(event.delta / 120), "units")
+        troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Paths")
+        paths = ttk.Frame(troubleshooting)
+        paths.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
+        paths.columnconfigure(1, weight=1)
 
-        troubleshooting_canvas.bind(
-            "<Enter>",
-            lambda _event: troubleshooting_canvas.bind_all("<MouseWheel>", _troubleshooting_wheel),
-        )
-        troubleshooting_canvas.bind(
-            "<Leave>", lambda _event: troubleshooting_canvas.unbind_all("<MouseWheel>")
-        )
-
-        # Player choices stay on Setup, enemizer inputs live with their toggle,
-        # and launcher-owned/operator paths remain available under
-        # Troubleshooting. Same variables and browse commands; only their
-        # presentation changes.
-        setup_row = 0
-        enemy_row = 4
-        troubleshooting_row = 0
+        # Player choices stay on Play, enemizer inputs live with their toggle,
+        # and launcher-owned/operator paths sit under Advanced. Same variables
+        # and browse commands; only their presentation changes.
+        enemy_input_row = 0
+        path_row = 0
         for name, label, kind in FIELD_DEFINITIONS:
             if self.packaged_toolchain and name in DEVELOPMENT_FIELDS:
                 continue
             if name in ENEMY_FIELDS:
-                parent, row = options, enemy_row
-                enemy_row += 1
+                parent, row = enemy_inputs, enemy_input_row
+                enemy_input_row += 1
             elif name in PRIMARY_FIELDS:
-                parent, row = setup, setup_row
-                setup_row += 1
+                parent, row = play, primary_rows[name]
             else:
-                parent, row = troubleshooting, troubleshooting_row
-                troubleshooting_row += 1
-            field_label = ttk.Label(parent, text=label)
-            field_label.grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
-            entry = ttk.Entry(parent, textvariable=self.fields[name])
-            entry.grid(row=row, column=1, sticky="ew", pady=3)
+                parent, row = paths, path_row
+                path_row += 1
+            field_label, entry, button = field(
+                ttk, parent, row, label, self.fields[name],
+                browse=lambda key=name, selector=kind: self._browse(key, selector),
+            )
             if name in PRIMARY_FIELDS:
                 entry.bind(
                     "<FocusOut>",
@@ -551,201 +540,99 @@ class LauncherApp:
                     "<Return>",
                     lambda _event, key=name: self._path_field_changed(key, force=True),
                 )
-            button = ttk.Button(
-                parent,
-                text="Browse...",
-                command=lambda key=name, selector=kind: self._browse(key, selector),
-            )
-            button.grid(row=row, column=2, padx=(8, 0), pady=3)
             if name in ENEMY_FIELDS:
                 self._enemy_widgets.extend((entry, button))
-                self._enemy_advanced_widgets.extend((field_label, entry, button))
-        server_row = setup_row
-        ttk.Label(setup, text="Archipelago server").grid(
-            row=server_row, column=0, sticky="w", padx=(0, 8), pady=3
+
+        _server_label, server_entry, _ = field(
+            ttk, play, server_row, "Server", self.ap_server, trailing=f"default {DEFAULT_SERVER}",
         )
-        server_entry = ttk.Entry(setup, textvariable=self.ap_server)
-        server_entry.grid(row=server_row, column=1, sticky="ew", pady=3)
         server_entry.bind("<FocusOut>", self._setup_changed)
         server_entry.bind("<Return>", self._setup_changed)
-        ttk.Label(setup, text=f"default {DEFAULT_SERVER}").grid(
-            row=server_row, column=2, sticky="w", padx=(8, 0), pady=3
-        )
-        name_row = server_row + 1
-        self.player_label = ttk.Label(setup, text="Your AP player name")
-        self.player_label.grid(
-            row=name_row, column=0, sticky="w", padx=(0, 8), pady=3
-        )
+        self.player_label = ttk.Label(play, text="Player", style="Field.TLabel")
+        self.player_label.grid(row=name_row, column=0, sticky="w", padx=(0, 14), pady=4)
         self.player_combo = ttk.Combobox(
-            setup, textvariable=self.player_name, state="readonly", values=()
+            play, textvariable=self.player_name, state="readonly", values=()
         )
-        self.player_combo.grid(row=name_row, column=1, sticky="ew", pady=3)
+        self.player_combo.grid(row=name_row, column=1, sticky="ew", pady=4)
         self.player_combo.bind("<<ComboboxSelected>>", self._player_selected)
-        self.player_help = ttk.Label(setup, text="read from the selected seed")
-        self.player_help.grid(
-            row=name_row, column=2, sticky="w", padx=(8, 0), pady=3
-        )
-        ttk.Label(setup, textvariable=self.seed_summary, style="Muted.TLabel").grid(
-            row=name_row + 1, column=0, columnspan=3, sticky="w", pady=(8, 0)
-        )
-        # Outside the enemy-randomization widget group on purpose: it stays
-        # usable with Randomize Enemies off, and it is never saved.
-        ttk.Checkbutton(
-            troubleshooting,
-            text="Allow suppression binder mismatch (operators only, not saved)",
-            variable=self.allow_suppression_mismatch,
-        ).grid(
-            row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
-        )
-        troubleshooting_row += 1
-        ttk.Checkbutton(
-            troubleshooting,
-            text="Enable research captures (playtest diagnostics, not saved)",
-            variable=self.research_captures,
-        ).grid(
-            row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
-        )
-        troubleshooting_row += 1
-        ttk.Checkbutton(
-            troubleshooting,
-            text=(
-                "Allow AP seed/slot mismatch (operators only, not saved -- see "
-                "the warning naming expected vs connected identity)"
-            ),
-            variable=self.allow_seed_mismatch,
-        ).grid(
-            row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(8, 0)
+        self.player_help = ttk.Label(play, text="from the seed", style="Dim.TLabel")
+        self.player_help.grid(row=name_row, column=2, sticky="w", padx=(10, 0))
+        ttk.Label(play, textvariable=self.seed_summary, style="Muted.TLabel").grid(
+            row=summary_row, column=0, columnspan=3, sticky="w", pady=(6, 0)
         )
 
-        ttk.Checkbutton(
-            options,
-            text="Randomize Enemies",
-            variable=self.randomize_enemies,
-            command=self._toggle_enemy_fields,
-        ).grid(row=0, column=0, sticky="w")
-        ttk.Checkbutton(
-            options,
-            text="Advanced enemy options",
-            variable=self.show_enemy_advanced,
-            command=self._toggle_enemy_advanced,
-        ).grid(row=0, column=1, sticky="e")
-        seed_label = ttk.Label(options, text="Enemy seed")
-        seed_label.grid(row=1, column=0, sticky="w", padx=(24, 8), pady=4)
-        seed_entry = ttk.Entry(options, textvariable=self.enemy_seed)
-        seed_entry.grid(row=1, column=1, sticky="ew", pady=4)
-        tier = ttk.Checkbutton(
-            options,
-            text="Allow tier mixing (experimental)",
-            variable=self.allow_tier_mixing,
-        )
-        tier.grid(row=2, column=0, sticky="w", padx=(24, 8))
-        locomotion = ttk.Checkbutton(
-            options,
-            text="Preserve locomotion (experimental: incomplete tags)",
-            variable=self.preserve_locomotion,
-        )
-        locomotion.grid(row=2, column=1, sticky="w")
         self._enemy_widgets.extend((seed_entry, tier, locomotion))
-        self._enemy_advanced_widgets.extend((seed_label, seed_entry, tier, locomotion))
-        scaling = ttk.Checkbutton(options, text="Normalize enemy stats (experimental playtest)",
-                                  variable=self.normalize_scaling)
-        scaling.grid(row=3, column=0, columnspan=2, sticky="w", padx=(24, 8))
-        boss = ttk.Checkbutton(options, text="Boss playtest: BSB at Cleric Beast (other enemies unchanged; includes scaling)",
-                               variable=self.boss_canary)
-        boss.grid(row=4, column=0, columnspan=2, sticky="w", padx=(24, 8))
-        pool = ttk.Checkbutton(options, text="Boss shuffle: reviewed encounters (experimental, gameplay untested)",
-                               variable=self.boss_pool)
-        pool.grid(row=5, column=0, columnspan=2, sticky="w", padx=(24, 8))
         self._enemy_widgets.extend((scaling, boss, pool))
-        self._enemy_advanced_widgets.extend((scaling, boss, pool))
 
-        # Launch/build progress, not an enemizer concern: it lives outside the
-        # notebook so no tab selection can hide it.
-        log_frame = ttk.LabelFrame(outer, text="Progress", padding=10)
+        # --- Details drawer: launch progress and session status ------------
+        # Outside the notebook so no page can hide it (bb-archipelago#190).
+        log_frame = ttk.Frame(outer, padding=(28, 8, 28, 0))
         self.log_frame = log_frame
-        log_frame.grid(row=3, column=0, sticky="nsew", pady=(12, 0))
+        log_frame.grid(row=1, column=0, sticky="nsew")
         log_frame.columnconfigure(0, weight=1)
-        log_frame.rowconfigure(0, weight=1)
-        self.log = self.tk.Text(
-            log_frame, height=8, wrap="word", state="disabled",
-            bg=THEME_PANEL, fg=THEME_FOREGROUND, insertbackground=THEME_FOREGROUND,
-            relief="flat",
+        log_frame.rowconfigure(1, weight=1)
+        ttk.Label(log_frame, text="Progress", style="Section.TLabel").grid(
+            row=0, column=0, sticky="w", pady=(0, 4)
         )
-        self.log.grid(row=0, column=0, sticky="nsew")
+        self.log = text_well(tk, log_frame, height=5)
+        self.log.grid(row=1, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        self.log.configure(yscrollcommand=scrollbar.set)
+        scrollbar.grid(row=1, column=1, sticky="ns")
+        self.log.configure(yscrollcommand=autohide(scrollbar))
 
-        status_frame = ttk.LabelFrame(outer, text="Session status", padding=10)
+        status_frame = ttk.Frame(outer, padding=(28, 10, 28, 0))
         self.status_frame = status_frame
-        status_frame.grid(row=4, column=0, sticky="ew", pady=(12, 0))
+        status_frame.grid(row=2, column=0, sticky="ew")
         status_frame.columnconfigure(0, weight=1)
-        self.status_text = self.tk.Text(
-            status_frame, height=6, wrap="word", state="disabled",
-            bg=THEME_PANEL, fg=THEME_FOREGROUND, insertbackground=THEME_FOREGROUND,
-            relief="flat",
+        ttk.Label(status_frame, text="Session status", style="Section.TLabel").grid(
+            row=0, column=0, sticky="w", pady=(0, 4)
         )
-        self.status_text.grid(row=0, column=0, sticky="ew")
+        refresh_button = ttk.Button(
+            status_frame, text="Refresh", command=self._refresh_status, style="Link.TButton"
+        )
+        refresh_button.grid(row=0, column=1, columnspan=2, sticky="e")
+        self.status_text = text_well(tk, status_frame, height=4)
+        self.status_text.grid(row=1, column=0, columnspan=2, sticky="ew")
         status_scroll = ttk.Scrollbar(status_frame, orient="vertical", command=self.status_text.yview)
-        status_scroll.grid(row=0, column=1, sticky="ns")
-        self.status_text.configure(yscrollcommand=status_scroll.set)
-        refresh_button = ttk.Button(status_frame, text="Refresh", command=self._refresh_status)
-        refresh_button.grid(row=0, column=2, sticky="ne", padx=(8, 0))
+        status_scroll.grid(row=1, column=2, sticky="ns")
+        self.status_text.configure(yscrollcommand=autohide(status_scroll))
 
-        controls = ttk.Frame(outer)
-        controls.grid(row=5, column=0, sticky="ew", pady=(12, 0))
+        # --- Action bar -----------------------------------------------------
+        controls = ttk.Frame(outer, padding=(28, 0, 28, 18))
+        controls.grid(row=3, column=0, sticky="ew")
         controls.columnconfigure(0, weight=1)
+        ttk.Frame(controls, height=1, style="Panel.TFrame").grid(
+            row=0, column=0, columnspan=4, sticky="ew"
+        )
         self.progress = ttk.Progressbar(controls, mode="indeterminate")
-        self.progress.grid(row=0, column=0, sticky="ew", padx=(0, 12))
+        self.progress.grid(row=1, column=0, columnspan=4, sticky="ew")
+        self.progress.grid_remove()
+        self.details_button = ttk.Button(
+            controls, text="Show Details", command=self._toggle_session_details, style="Link.TButton"
+        )
+        self.details_button.grid(row=2, column=1, sticky="e", padx=(12, 12), pady=(14, 0))
+        self.connect_button = ttk.Button(
+            controls, text="Connect to running game", command=self._start_connect, style="Ghost.TButton",
+        )
+        self.connect_button.grid(row=2, column=2, sticky="e", padx=(0, 10), pady=(14, 0))
         self.launch_button = ttk.Button(
             controls,
             text="Randomize & Launch",
             command=self._start,
             style="Accent.TButton",
         )
-        self.launch_button.grid(row=0, column=1, sticky="e")
-        self.connect_button = ttk.Button(
-            controls, text="Connect to running game", command=self._start_connect,
-        )
-        self.connect_button.grid(row=1, column=1, sticky="e", pady=(6, 0))
-        ttk.Label(controls, textvariable=self.launch_hint, style="Muted.TLabel").grid(
-            row=2, column=0, columnspan=2, sticky="e", pady=(6, 0)
-        )
+        self.launch_button.grid(row=2, column=3, sticky="e", pady=(14, 0))
+        # What the primary button is waiting for, then the last progress line
+        # so a collapsed drawer still says what happened.
+        hint = ttk.Label(controls, textvariable=self.launch_hint, style="Muted.TLabel", wraplength=600)
+        hint.grid(row=3, column=0, columnspan=4, sticky="w", pady=(10, 0))
+        status_line = ttk.Label(controls, textvariable=self.status, style="Dim.TLabel", wraplength=600)
+        status_line.grid(row=4, column=0, columnspan=4, sticky="w", pady=(2, 0))
 
-        actions = ttk.LabelFrame(troubleshooting, text="Recovery actions", padding=10)
-        actions.grid(
-            row=troubleshooting_row + 1, column=0, columnspan=3,
-            sticky="ew", pady=(12, 0),
-        )
-        self.vanilla_button = ttk.Button(actions, text="Launch Vanilla", command=self._start_vanilla)
-        self.vanilla_button.grid(row=0, column=0, padx=(0, 8))
-        self.restore_button = ttk.Button(
-            actions, text="Undo Last Build", command=self._start_restore
-        )
-        self.restore_button.grid(row=0, column=1, padx=(0, 8))
-        self.rebuild_button = ttk.Button(actions, text="Rebuild", command=self._start_rebuild)
-        self.rebuild_button.grid(row=0, column=2, padx=(0, 8))
-        self.diagnostics_button = ttk.Button(
-            actions, text="Open Logs & Diagnostics", command=self._open_diagnostics
-        )
-        self.diagnostics_button.grid(row=0, column=3)
-        self.doctor_button = ttk.Button(actions, text="Check Setup", command=self._start_doctor)
-        self.doctor_button.grid(row=0, column=4, padx=(8, 0))
-        self.details_button = ttk.Button(
-            actions, text="Show Details", command=self._toggle_session_details
-        )
-        self.details_button.grid(row=0, column=5, padx=(8, 0))
-        self.report_button = ttk.Button(
-            actions, text="Report a Bad Enemy", command=self._start_enemy_report
-        )
-        self.report_button.grid(row=1, column=0, columnspan=2, sticky="w", pady=(8, 0))
-        ttk.Label(
-            actions,
-            text="Met a stuck, invisible, or endlessly dying enemy? This writes a report "
-                 "naming every swap in that area and copies it for you to paste.",
-            style="Muted.TLabel",
-            wraplength=520,
-        ).grid(row=1, column=2, columnspan=4, sticky="w", pady=(8, 0))
+        def _fit_action_bar(event) -> None:
+            for label in (hint, status_line):
+                label.configure(wraplength=max(300, event.width - 56))
+        controls.bind("<Configure>", _fit_action_bar, add="+")
         self._action_buttons = (
             self.connect_button,
             self.vanilla_button,
@@ -755,22 +642,22 @@ class LauncherApp:
             self.doctor_button,
             self.report_button,
         )
-        live = ttk.Frame(outer)
-        live.grid(row=6, column=0, sticky="ew", pady=(8, 0))
-        live.columnconfigure(0, weight=1)
-        ttk.Label(live, textvariable=self.client_health).grid(row=0, column=0, sticky="w")
-        ttk.Button(live, text="Open Diagnostics", command=self._open_diagnostics).grid(
-            row=0, column=1, sticky="e"
+
+        # --- Sidebar --------------------------------------------------------
+        self.sidebar = Sidebar(
+            tk, ttk, shell, notebook, brand="Bloodborne", product="Archipelago",
+            version=launcher_version(),
         )
-        ttk.Label(outer, textvariable=self.status, style="Muted.TLabel").grid(
-            row=7, column=0, sticky="w", pady=(8, 0)
+        self.sidebar.populate()
+        self.client_health.trace_add(
+            "write", lambda *_args: self.sidebar.set_health(self.client_health.get())
         )
+        self.sidebar.set_health(self.client_health.get())
         self._set_session_details_visible(False)
 
     def _set_session_details_visible(self, visible: bool) -> None:
         """Keep routine launches compact; retain full evidence one click away."""
         self.show_session_details.set(visible)
-        self.log_frame.master.rowconfigure(3, weight=2 if visible else 0, minsize=140 if visible else 0)
         if visible:
             self.log_frame.grid()
             self.status_frame.grid()
@@ -779,6 +666,7 @@ class LauncherApp:
             self.log_frame.grid_remove()
             self.status_frame.grid_remove()
             self.details_button.configure(text="Show Details")
+        self.log_frame.master.rowconfigure(1, weight=2 if visible else 0, minsize=120 if visible else 0)
 
     def _toggle_session_details(self) -> None:
         self._set_session_details_visible(not self.show_session_details.get())
@@ -884,7 +772,7 @@ class LauncherApp:
                 self._show_player_choice(False)
                 self.player_name.set("")
                 self.enemy_seed.set("")
-                self.seed_summary.set("Choose a seed to see its player and build.")
+                self.seed_summary.set(SEED_PROMPT)
             # _accept_ap_request can return early for an unreadable archive.
             # Passive focus changes still have to disable launch immediately.
             self._refresh_launch_gate()
@@ -1157,9 +1045,11 @@ class LauncherApp:
         for button in self._action_buttons:
             button.configure(state="disabled" if busy else "normal")
         if busy:
+            self.progress.grid()
             self.progress.start(12)
         else:
             self.progress.stop()
+            self.progress.grid_remove()
             self._refresh_launch_gate()
 
     def _start(self) -> None:

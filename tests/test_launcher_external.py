@@ -24,6 +24,7 @@ from bb_launcher.core import (
 )
 from bb_launcher.external import (
     ACTIVE_MODS_DIR_NAME,
+    ExternalPackageExists,
     BBLauncherBuildPin,
     EXTERNAL_RECEIPT_FORMAT,
     ExternalNamespace,
@@ -185,6 +186,61 @@ class ExternalArtifactTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "already exists"):
             self.export()
         self.assertEqual(self.tree_bytes(exported.package_path), before)
+
+    def test_export_collision_is_typed_so_the_ui_can_offer_replacement(self):
+        exported = self.export()
+        with self.assertRaises(ExternalPackageExists) as caught:
+            self.export()
+        self.assertEqual(caught.exception.path, exported.package_path)
+        self.assertIn("already exists", str(caught.exception))
+
+    def test_replace_existing_swaps_the_inactive_package_and_writes_a_new_receipt(self):
+        first = self.export()
+        (first.package_path / "stale-marker").write_bytes(b"old")
+        replaced = export_external_package(
+            self.build, self.selected_identity, mods_root=self.mods_root,
+            state_root=self.state_root, install=self.install, bblauncher=self.pin,
+            client_version="client-test",
+            namespace=ExternalNamespace.for_identity(self.selected_identity),
+            created_at=datetime(2026, 9, 22, 12, 30, tzinfo=timezone.utc),
+            allow_live_acceptance_candidate=True, replace_existing=True,
+        )
+        self.assertEqual(replaced.package_path, first.package_path)
+        self.assertFalse((replaced.package_path / "stale-marker").exists())
+        self.assertNotEqual(replaced.receipt_path, first.receipt_path)
+        self.assertTrue(first.receipt_path.is_file(), "the earlier receipt is immutable history")
+        self.assertEqual(
+            self.tree_bytes(replaced.package_path),
+            {path: digest for path, digest in self.tree_bytes(first.package_path).items()},
+        )
+
+    def test_replace_existing_never_touches_an_activated_or_foreign_entry(self):
+        package_name = f"Archipelago-Hunter-One-{self.build.cache_key[:12]}"
+        active_root = self.mods_root.with_name(ACTIVE_MODS_DIR_NAME)
+        active_root.mkdir()
+        activated = active_root / package_name
+        activated.mkdir()
+        (activated / "keep").write_bytes(b"live")
+        with self.assertRaisesRegex(ValidationError, "active Mods directory"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", allow_live_acceptance_candidate=True,
+                replace_existing=True,
+            )
+        self.assertEqual((activated / "keep").read_bytes(), b"live")
+        shutil.rmtree(active_root)
+        # A plain file squatting on the name is not a companion package.
+        squatter = self.mods_root / package_name
+        squatter.write_bytes(b"not a package")
+        with self.assertRaisesRegex(ValidationError, "not a replaceable companion package"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", allow_live_acceptance_candidate=True,
+                replace_existing=True,
+            )
+        self.assertEqual(squatter.read_bytes(), b"not a package")
 
     def test_export_refuses_case_variant_inactive_and_active_targets(self):
         package_name = f"Archipelago-Hunter-One-{self.build.cache_key[:12]}"

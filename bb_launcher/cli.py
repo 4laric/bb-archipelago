@@ -196,6 +196,8 @@ def build_parser() -> argparse.ArgumentParser:
                               help="development only: exercise the pinned build before live acceptance is complete")
         if command == "bblauncher-export":
             external.add_argument("--no-enemizer", action="store_true")
+            external.add_argument("--replace-existing", action="store_true",
+                                  help="replace this companion's earlier inactive export of the same seed")
 
     return parser
 
@@ -219,7 +221,8 @@ def main(argv: list[str] | None = None) -> int:
                         seed=raw.get("enemy_seed"), allow_tier_mixing=bool(raw.get("allow_tier_mixing")),
                         preserve_locomotion=bool(raw.get("preserve_locomotion")),
                         normalize_scaling=bool(raw.get("normalize_scaling")), boss_canary=bool(raw.get("boss_canary"))),
-                    player_name=args.player_name, progress=print, **kwargs)
+                    player_name=args.player_name, progress=print,
+                    replace_existing=args.replace_existing, **kwargs)
                 _print({"package": str(result.package_path), "receipt": str(result.receipt_path)})
             elif args.command == "bblauncher-verify":
                 result = verify_before_boot(

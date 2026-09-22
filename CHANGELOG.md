@@ -6,6 +6,21 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **The launcher has a new look.** A Bloodborne-styled sidebar replaces the
+  five tab strip: **Play**, **Create & host**, **Enemies** and **Advanced**
+  (recovery tools, BBLauncher mode, session overrides and operator paths).
+  Pages are flat and scroll on short displays, labels are shorter, the
+  progress bar only appears while something runs, and the live client status
+  sits in the sidebar with a colour dot. Progress and session status stay one
+  click away under **Show Details**.
+
+- BBLauncher mode names its mandatory step **Verify activated mod**, the same
+  name the workflow's refusals use (the button said "Check activated mod").
+  Building a seed that was already exported now asks whether to replace the
+  earlier inactive package instead of stopping with an "already exists"
+  error; an activated copy is never replaced. The CLI gained
+  `bblauncher-export --replace-existing`.
+
 - BBLauncher setup now detects the inactive mod library, explains invalid folders
   before a build, and offers a one-click correction. A guided prepare/activate/connect
   flow remembers the prepared mod automatically; recovery files live in Advanced

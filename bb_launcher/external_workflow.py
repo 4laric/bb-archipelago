@@ -71,7 +71,8 @@ def _pin(settings, *, candidate):
 
 
 def build_and_export(workflow: LauncherWorkflow, settings: LauncherSettings, options: EnemizerOptions,
-                     *, player_name="", progress=lambda _: None, allow_live_acceptance_candidate=False):
+                     *, player_name="", progress=lambda _: None, allow_live_acceptance_candidate=False,
+                     replace_existing=False):
     from .external import export_external_package, ExternalNamespace
     install = _paths(settings)
     pin = _pin(settings, candidate=allow_live_acceptance_candidate)
@@ -87,6 +88,7 @@ def build_and_export(workflow: LauncherWorkflow, settings: LauncherSettings, opt
         suppression_manifest_sha256=sha256_file(settings.suppression_manifest),
         namespace=ExternalNamespace(prepared.build.cache_key, session_key(prepared.identity.seed, prepared.identity.slot)),
         allow_live_acceptance_candidate=allow_live_acceptance_candidate,
+        replace_existing=replace_existing,
     )
     progress(f"Exported {result.package_path}. Seed {prepared.identity.seed}; slot {prepared.identity.slot}. Activate with BBLauncher while the game is stopped, then verify before booting.")
     return result
