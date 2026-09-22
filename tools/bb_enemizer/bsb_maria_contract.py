@@ -141,6 +141,12 @@ def _phase_event(
 
 def _camera_event(block: str) -> str:
     """Map BSB's declared entry flags and lockcam map to Maria's arena facts."""
+    block = _replace_once(
+        block,
+        "    SetNetworkSyncState(Disabled);",
+        "    SetNetworkSyncState(Disabled);\n    EndIf(EventFlag(13501800));",
+        "completed arena camera guard",
+    )
     camera = _replace_once(
         block,
         "$Event(12304804,",

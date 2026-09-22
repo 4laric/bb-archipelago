@@ -38,6 +38,7 @@ class BsbLaurenceTests(unittest.TestCase):
         )
         self.assertIn("EventFlag(12990800)", x[DEFAULT_IDS.phase_two])
         self.assertIn("SetLockcamSlotNumber(34, 0, 1)", x[DEFAULT_IDS.camera])
+        self.assertIn('EndIf(EventFlag(13401850));', x[DEFAULT_IDS.camera])
         self.assertEqual(1, x[0].count("12990800"))
         self.assertEqual(1, x[0].count("12990801"))
         self.assertEqual(1, x[0].count("12990802"))

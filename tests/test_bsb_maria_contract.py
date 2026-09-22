@@ -59,6 +59,7 @@ class BsbMariaContractTests(unittest.TestCase):
             f"EventFlag({DEFAULT_IDS.phase_one})", after[DEFAULT_IDS.phase_two]
         )
         self.assertIn("SetLockcamSlotNumber(35, 0, 1)", after[13504804])
+        self.assertIn('EndIf(EventFlag(13501800));', after[13504804])
         self.assertEqual(1, after[0].count(str(DEFAULT_IDS.phase_one)))
         self.assertEqual(1, after[0].count(str(DEFAULT_IDS.phase_two)))
         self.assertEqual(

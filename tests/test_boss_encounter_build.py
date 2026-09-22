@@ -2,6 +2,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from tools.bb_inputs import read_prefix
@@ -9,7 +10,7 @@ from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_co
 from tools.build_boss_encounters import (
     ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
     event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
-    is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility,
+    is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers,
 )
 from tools.bb_enemizer.boss_pool import compose_event_patches, assign_donors
 from tools.bb_enemizer.gascoigne_contract import patch_gascoigne_at_cleric
@@ -19,6 +20,25 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
+    def test_retired_helper_controller_requires_the_original_native_actor(self):
+        helper = {'map': 'm25_00_00_00', 'part': 'c9010_0002', 'entity_id': 2500802,
+                  'archetype': {'model_name': 'c9010', 'npc_param_id': 232000,
+                                'think_param_id': 232000, 'chara_init_id': 0},
+                  'source_provenance': {'part_sha256': 'a' * 64},
+                  'source_initialization': {'talk_id': 0, 'unk_t18': -1,
+                                            'init_anim_id': -1, 'damage_anim_id': -1}}
+        part = {'name': helper['part'], 'entity_id': helper['entity_id'],
+                'source_archetype': helper['archetype'], 'fingerprint': 'a' * 64,
+                'source_initialization': helper['source_initialization']}
+        plan = {'boss_contract': {'retained_destination_helpers': [helper]}}
+        with patch('tools.build_boss_encounters.inspect_actor_map', return_value={'parts': [part]}):
+            verify_retained_helpers(None, plan)
+            # Same NPC identity is insufficient: the helper's native actor may
+            # have moved or changed initialization while the inventory stayed.
+            part['fingerprint'] = 'b' * 64
+            with self.assertRaisesRegex(ValueError, 'original native pin'):
+                verify_retained_helpers(None, plan)
+
     def test_reviewed_pool_includes_ludwig_without_reusing_or_omitting_donors(self):
         graph = reviewed_compatibility()
         self.assertEqual(11, len(graph))

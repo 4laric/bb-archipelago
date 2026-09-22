@@ -74,6 +74,7 @@ class BsbOrphanContractTests(unittest.TestCase):
         self.assertIn("HPRatio(3600800) < 0.33 && EventFlag(12991100)", after[12991101])
         self.assertIn("flagArea2 &= EventFlag(12991101);", after[13604803])
         self.assertIn("SetLockcamSlotNumber(36, 0, 1)", after[13604804])
+        self.assertIn('EndIf(EventFlag(13601800));', after[13604804])
         self.assertEqual(1, after[0].count("$InitializeEvent(0, 13604804);"))
         cleanup = after[12991102]
         self.assertIn("WaitFor(EventFlag(13601800));", cleanup)

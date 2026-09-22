@@ -250,7 +250,7 @@ seed-dependent assignments.
 | Rom | Pending | Pending | Pending |
 | The One Reborn | Pending | Pending | Pending |
 | Amygdala | Constructed | Constructed | Yes |
-| Martyr Logarius | Constructed | In progress | Pending |
+| Martyr Logarius | Constructed | Constructed | Pending cross-links |
 | Celestial Emissary | Pending | Pending | Pending |
 | Ebrietas | Constructed | Constructed | Yes |
 | Micolash | Pending | Pending | Pending |
@@ -286,3 +286,10 @@ actor as its own helper is rejected by both planner and native verification.
 Logarius-at-BSB verifies nine output files, with separate sword and c9010
 actors in both destination map states. Each helper shares its normalized clone
 across states, and the original BSB completion event remains unchanged.
+The reciprocal `--pool logarius-bsb` build verifies twelve files. Cainhurst
+retains its cutscene, reward, fog and completion while BSB supplies combat.
+The retired sword and projectile owner stay hidden and alive until completion;
+their recorded original native actor pins are checked before construction.
+Imported BSB cameras at Cainhurst, Orphan, Laurence and Maria now exit on
+destination completion, preventing camera reactivation if an entry flag is
+retained on reload. This is a static lifecycle guard, not a runtime observation.

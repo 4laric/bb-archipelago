@@ -52,6 +52,7 @@ from tools.bb_enemizer.logarius_contract import (
     patch_logarius_at_bsb, native_plan_logarius_at_bsb,
     helper_scaling_parents as logarius_helper_scaling_parents,
 )
+from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, native_plan_bsb_at_logarius
 from tools.bb_enemizer.orphan_contract import (
     OrphanIds, NativeActorPin as OrphanActorPin,
     patch_orphan_at_cleric, native_plan_orphan_at_cleric,
@@ -103,6 +104,7 @@ PACKAGES[LAURENCE_ENDPOINT.key] = LAURENCE_ENDPOINT
 PACKAGES['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd.dcx.js')
 ARENAS['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd.dcx.js')
 PACKAGES['martyr-logarius'] = SpecialEndpoint('martyr-logarius', 'm25_00_00_00.emevd.dcx.js')
+ARENAS['martyr-logarius'] = PACKAGES['martyr-logarius']
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -164,6 +166,10 @@ def is_bsb_orphan_pair(arena, package) -> bool:
 
 def is_logarius_bsb_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('blood-starved-beast', 'martyr-logarius')
+
+
+def is_bsb_logarius_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('martyr-logarius', 'blood-starved-beast')
 
 
 def is_maria_pair(arena, package) -> bool:
@@ -278,6 +284,18 @@ def pin_actor_requirements(args, requirements: list[dict]) -> list[dict]:
             pinned['source_part_kind'] = donor['kind']
         output.append(pinned)
     return output
+
+
+def verify_retained_helpers(args, plan) -> None:
+    """A retired controller still depends on the original helper identity."""
+    for helper in plan.get('boss_contract', {}).get('retained_destination_helpers', ()):
+        parts = {part['name']: part for part in inspect_actor_map(args, helper['map'])['parts']}
+        part = parts.get(helper['part'])
+        if (part is None or part['entity_id'] != helper['entity_id']
+                or part['source_archetype'] != helper['archetype']
+                or part['fingerprint'] != helper['source_provenance']['part_sha256']
+                or part['source_initialization'] != helper['source_initialization']):
+            raise ValueError('retained destination helper differs from its original native pin')
 
 
 def gascoigne_actor_pins(args, slots) -> tuple[dict[str, NativeActorPin], list[dict]]:
@@ -412,6 +430,8 @@ def build(args) -> dict:
     if direct_orphan[0] == 'orphan-of-kos' and direct_orphan != ('orphan-of-kos', 'blood-starved-beast'):
         raise ValueError('Orphan arena requires the reviewed BSB donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_logarius[0] == 'martyr-logarius' and direct_logarius != ('martyr-logarius', 'blood-starved-beast'):
+        raise ValueError('Logarius arena requires the reviewed BSB donor adapter')
     if direct_logarius[1] == 'martyr-logarius' and direct_logarius != ('blood-starved-beast', 'martyr-logarius'):
         raise ValueError('Martyr Logarius is available only in the reviewed BSB arena adapter')
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
@@ -444,6 +464,8 @@ def build(args) -> dict:
             'cleric-beast': ('father-gascoigne',),
             'father-gascoigne': ('cleric-beast',),
         } if args.pool == 'gascoigne-cleric' else {
+            'blood-starved-beast': ('martyr-logarius',), 'martyr-logarius': ('blood-starved-beast',),
+        } if args.pool == 'logarius-bsb' else {
             'cleric-beast': ('ludwig',), 'ludwig': ('cleric-beast',),
         } if args.pool == 'ludwig-cleric' else {
             'cleric-beast': ('laurence',), 'laurence': ('cleric-beast',),
@@ -474,7 +496,8 @@ def build(args) -> dict:
             if (package is not None and arena.key not in FINAL_ARENAS
                     and not is_maria_pair(arena, package) and not is_gascoigne_pair(arena, package)
                     and not any(dlc_pair_flags(arena, package)) and package.key != 'orphan-of-kos'
-                    and not is_bsb_orphan_pair(arena, package) and not is_logarius_bsb_pair(arena, package)):
+                    and not is_bsb_orphan_pair(arena, package) and not is_logarius_bsb_pair(arena, package)
+                    and not is_bsb_logarius_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -498,6 +521,8 @@ def build(args) -> dict:
                 patched = patch_bsb_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_bsb_logarius_pair(arena, package):
+                patched = patch_bsb_at_logarius(texts[arena.event_file], texts[package.event_file])
             elif is_logarius_bsb_pair(arena, package):
                 patched = patch_logarius_at_bsb(
                     texts[arena.event_file], texts[package.event_file]
@@ -596,6 +621,9 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_bsb_logarius_pair(arena, package):
+                plan = native_plan_bsb_at_logarius(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_logarius_bsb_pair(arena, package):
                 plan = native_plan_logarius_at_bsb(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(
@@ -659,6 +687,7 @@ def build(args) -> dict:
                 plan = plan_contract_swap(arena, package, slots, npcs, effects, args.seed)
                 if arena.key in materializations:
                     plan['boss_actor_additions'] = materializations[arena.key]
+            verify_retained_helpers(args, plan)
             plans.append(plan)
         ordinary_plan_path = getattr(args, 'ordinary_plan', None)
         if ordinary_plan_path is not None:
@@ -722,7 +751,7 @@ def main(argv=None) -> int:
     parser.add_argument('--bundle', type=Path, default=ROOT / 'research/bb_inputs.db')
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument('--arena', choices=sorted(ARENAS))
-    selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'ludwig-cleric', 'laurence-cleric', 'finals', 'reviewed'))
+    selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'logarius-bsb', 'ludwig-cleric', 'laurence-cleric', 'finals', 'reviewed'))
     parser.add_argument('--donor', choices=sorted(PACKAGES))
     parser.add_argument('--seed', required=True)
     parser.add_argument('--apply', action='store_true')

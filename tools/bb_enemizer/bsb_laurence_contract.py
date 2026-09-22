@@ -190,6 +190,12 @@ def patch_bsb_at_laurence(destination, donor_source, ids=DEFAULT_IDS):
         "BSB camera map binding",
     )
     # 13404820--25 drive Ludwig's two-body encounter in this shared m34 script.
+    cam = _once(
+        cam,
+        "    SetNetworkSyncState(Disabled);",
+        "    SetNetworkSyncState(Disabled);\n    EndIf(EventFlag(13401850));",
+        "completed arena camera guard",
+    )
     # Leave those bodies untouched: only Laurence's own phase/part routines use
     # actor 3400850 and may be retired for this single-actor overlay.
     edits = {

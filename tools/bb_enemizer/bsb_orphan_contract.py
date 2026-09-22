@@ -205,6 +205,12 @@ def patch_bsb_at_orphan(
     camera = _remap(donor[12304804], remap)
     camera = _once(
         camera,
+        "    SetNetworkSyncState(Disabled);",
+        "    SetNetworkSyncState(Disabled);\n    EndIf(EventFlag(13601800));",
+        "completed arena camera guard",
+    )
+    camera = _once(
+        camera,
         "SetLockcamSlotNumber(23, 0, 1)",
         "SetLockcamSlotNumber(36, 0, 1)",
         "BSB camera map binding",
