@@ -66,6 +66,8 @@ FIELD_DEFINITIONS = (
     ("shad_log", "shadPS4 log", "file"),
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
+# The empty-state line under the seed row names both shapes the field accepts.
+SEED_PROMPT = "Choose a seed (.zip or .bbseed.json) to see its player and build."
 PRIMARY_FIELDS = {"ap_request", "game_root", "shad_executable"}
 ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 
@@ -272,7 +274,7 @@ class LauncherApp:
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
         self.player_name = tk.StringVar()
-        self.seed_summary = tk.StringVar(value="Choose a seed to see its player and build.")
+        self.seed_summary = tk.StringVar(value=SEED_PROMPT)
         self.launch_hint = tk.StringVar(value="Choose a seed and shadPS4 to continue.")
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
@@ -770,7 +772,7 @@ class LauncherApp:
                 self._show_player_choice(False)
                 self.player_name.set("")
                 self.enemy_seed.set("")
-                self.seed_summary.set("Choose a seed to see its player and build.")
+                self.seed_summary.set(SEED_PROMPT)
             # _accept_ap_request can return early for an unreadable archive.
             # Passive focus changes still have to disable launch immediately.
             self._refresh_launch_gate()
