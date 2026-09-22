@@ -6,7 +6,7 @@ import os
 import tempfile
 import unittest
 from dataclasses import replace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from pathlib import Path
 
 from bb_launcher.core import (
@@ -1439,6 +1439,111 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn('self.launch_hint.set("Needed: "', gate)
         self.assertIn('self.launch_button.configure(state="disabled")', gate)
 
+    def test_pasted_play_paths_refresh_setup_on_focus_or_return(self):
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        field_build = source.split("for name, label, kind in FIELD_DEFINITIONS:", 1)[1].split(
+            "server_row = setup_row", 1
+        )[0]
+        self.assertIn("if name in PRIMARY_FIELDS:", field_build)
+        self.assertIn('entry.bind(\n                    "<FocusOut>"', field_build)
+        self.assertIn('entry.bind(\n                    "<Return>"', field_build)
+        self.assertIn("self._path_field_changed(key)", field_build)
+        self.assertIn("self._path_field_changed(key, force=True)", field_build)
+
+    def test_typed_seed_and_shad_paths_apply_their_derived_setup(self):
+        class Variable:
+            def __init__(self, value=""):
+                self.value = value
+
+            def get(self):
+                return self.value
+
+            def set(self, value):
+                self.value = value
+
+        app = LauncherApp.__new__(LauncherApp)
+        app.fields = {
+            "ap_request": Variable(" seed.zip "),
+            "shad_executable": Variable("C:/shad/shadPS4.exe"),
+            "game_root": Variable(),
+        }
+        app.player_name = Variable("Hunter")
+        app.enemy_seed = Variable("old-seed")
+        app.seed_summary = Variable("old summary")
+        app.player_combo = Mock()
+        app._show_player_choice = Mock()
+        app._accept_ap_request = Mock()
+        app._cascade_map_studio = Mock()
+        app._refresh_status = Mock()
+        app._refresh_launch_gate = Mock()
+
+        app._path_field_changed("ap_request")
+        app._accept_ap_request.assert_called_once_with("seed.zip", show_error=False)
+        app._refresh_status.assert_called_once_with()
+        app._refresh_launch_gate.assert_called_once_with()
+
+        derived = Path("C:/shad/games/CUSA03173")
+        with patch("bb_launcher.ui.derive_game_root_for_shad", return_value=derived):
+            app._path_field_changed("shad_executable")
+        self.assertEqual(str(derived), app.fields["game_root"].get())
+        app._cascade_map_studio.assert_called_once_with()
+        self.assertEqual(2, app._refresh_launch_gate.call_count)
+
+    def test_clearing_typed_seed_removes_stale_identity_without_a_popup(self):
+        class Variable:
+            def __init__(self, value=""):
+                self.value = value
+
+            def get(self):
+                return self.value
+
+            def set(self, value):
+                self.value = value
+
+        app = LauncherApp.__new__(LauncherApp)
+        app.fields = {"ap_request": Variable("")}
+        app.player_name = Variable("Hunter")
+        app.enemy_seed = Variable("old-seed")
+        app.seed_summary = Variable("Player 1 · seed old")
+        app.player_combo = Mock()
+        app._show_player_choice = Mock()
+        app._accept_ap_request = Mock()
+        app._refresh_status = Mock()
+        app._refresh_launch_gate = Mock()
+
+        app._path_field_changed("ap_request")
+
+        app._accept_ap_request.assert_not_called()
+        app.player_combo.configure.assert_called_once_with(values=())
+        app._show_player_choice.assert_called_once_with(False)
+        self.assertEqual("", app.player_name.get())
+        self.assertEqual("", app.enemy_seed.get())
+        self.assertEqual("Choose a seed to see its player and build.", app.seed_summary.get())
+        app._refresh_launch_gate.assert_called_once_with()
+        app._refresh_status.assert_called_once_with()
+
+    def test_invalid_typed_seed_is_passive_and_still_refreshes_launch_gate(self):
+        class Variable:
+            def get(self):
+                return "broken.zip"
+
+        app = LauncherApp.__new__(LauncherApp)
+        app.fields = {"ap_request": Variable()}
+        app._accept_ap_request = Mock()
+        app._refresh_status = Mock()
+        app._refresh_launch_gate = Mock()
+
+        app._path_field_changed("ap_request")
+
+        app._accept_ap_request.assert_called_once_with("broken.zip", show_error=False)
+        app._refresh_launch_gate.assert_called_once_with()
+        app._refresh_status.assert_called_once_with()
+
+        app._path_field_changed("ap_request")
+        app._accept_ap_request.assert_called_once_with("broken.zip", show_error=False)
+        self.assertEqual(2, app._refresh_launch_gate.call_count)
+        self.assertEqual(2, app._refresh_status.call_count)
+
     def test_ui_contract_wires_the_secondary_actions(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         for label in (
@@ -2076,3 +2181,15 @@ class LauncherUiEarlyExitTests(unittest.TestCase):
         )
         self.assertIn("Client log: client.log", app.log)
         self.assertIn("shadPS4 log: shadps4.log", app.log)
+
+
+class HiddenDetailsLayoutTests(unittest.TestCase):
+    def test_hidden_details_release_reserved_space(self):
+        from unittest.mock import Mock
+        app = Mock()
+        LauncherApp._set_session_details_visible(app, False)
+        app.log_frame.master.rowconfigure.assert_called_once_with(3, weight=0, minsize=0)
+        app.log_frame.grid_remove.assert_called_once()
+        LauncherApp._set_session_details_visible(app, True)
+        app.log_frame.master.rowconfigure.assert_called_with(3, weight=2, minsize=140)
+        app.log_frame.grid.assert_called_once()

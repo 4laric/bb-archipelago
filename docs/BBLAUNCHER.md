@@ -14,38 +14,32 @@ launcher transaction adopt BBLauncher's overlay.
 
 Use the **BBLauncher** tab in the desktop launcher:
 
-1. Select **BBLauncher mode**, the BBLauncher executable, its inactive `Mods`
-   directory, the game installation, AP seed/player, and the usual suppression
-   and process inputs.
-2. During development acceptance only, enable **Test the pinned BBLauncher
-   build (live acceptance pending)**. A normal invocation refuses the candidate.
-3. Select **Build and export mod**. The companion creates an immutable package:
-
-   ```text
-   Mods/
-     Archipelago-<safe-slot>-<short-cache-key>/
-       dvdroot_ps4/
-         ...generated seed files...
-   ```
-
-   The full seed/slot identity remains in a receipt under the companion state
-   root. The short folder suffix is only a display label.
-4. Stop shadPS4. In BBLauncher, deactivate any previous Archipelago package,
-   then activate the exported package. Keep only one AP package active. If
-   BBLauncher reports a conflict at an AP-owned path, cancel and deactivate the
+1. Select **Use BBLauncher to manage and start Bloodborne** and choose the
+   **BBLauncher app**. The companion detects its inactive `BBLauncher/Mods`
+   library. Choose your game installation, AP seed and player in **Play**.
+2. During development acceptance only, select **Enable experimental BBLauncher
+   integration for this session**. A normal invocation refuses the candidate.
+3. Select **Build mod for BBLauncher**. The companion remembers the prepared
+   mod and shows its name; no receipt file selection is needed.
+4. With shadPS4 stopped, open Mod Manager in BBLauncher. Deactivate any previous
+   Archipelago mod, then activate the named prepared mod. Keep only one AP mod
+   active. If BBLauncher reports a file conflict, cancel and deactivate the
    conflicting mod; do not accept an override or use Mod Merger.
-5. With shadPS4 still stopped, select **Verify activated mod** in the companion.
-   This arms a fresh-boot observation for the exact package and installed bytes.
-6. Start Bloodborne from BBLauncher. Select **Connect to running game** in the
-   companion. It requires the verified files and a shadPS4 process created after
-   the observation, writes runtime state, and starts only the AP client.
+5. With shadPS4 still stopped, select **Check activated mod** in the companion.
+6. Start Bloodborne from BBLauncher, then select **Connect to game** here.
+
+The game's `install/CUSA03173-mods` folder is the activated overlay, not the
+export destination. An incorrect saved folder gets an inline explanation and
+**Use detected mod folder** correction. Custom library paths are available
+under **Advanced settings**, along with recovery of an earlier export from
+its saved JSON record if the remembered selection is lost.
 
 For the next session, start the game in BBLauncher and connect again. A server
 failure does not require rebuilding the package. If activation or any AP-owned
 file changes, stop the game, verify again, and perform a fresh boot.
 
 To play without AP, stop the AP client and shadPS4, deactivate the AP package in
-BBLauncher, and start the game there. **Launch without Archipelago** explains
+BBLauncher, and start the game there. **How to play without Archipelago** explains
 this sequence; it does not deactivate other BBLauncher mods.
 
 The same development flow is available from the CLI:

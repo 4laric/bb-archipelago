@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- BBLauncher setup now detects the inactive mod library, explains invalid folders
+  before a build, and offers a one-click correction. A guided prepare/activate/connect
+  flow remembers the prepared mod automatically; recovery files live in Advanced
+  settings. Controls reflect missing setup and work in progress, and failed actions
+  clear stale connection status. Pasted setup paths now refresh launch guidance;
+  hiding diagnostics frees the space for setup. The panel scrolls on smaller displays.
+
 - Added a development-only BBLauncher companion mode: export a generated AP mod,
   activate and launch it in BBLauncher, then verify and connect the AP client.
   It keeps BBLauncher in control of its mods and preserves AP delivery history.
