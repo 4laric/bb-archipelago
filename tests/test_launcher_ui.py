@@ -789,6 +789,43 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIsNone(toolchain.calls[0]["inventory"])
         self.assertIsNone(toolchain.calls[0]["soulsformats_next"])
 
+    def test_installed_patch_maps_include_base_fallbacks_and_invalidate_cache(self):
+        base = self.install.base / "dvdroot_ps4/map/MapStudio"
+        update = self.install.patch / "dvdroot_ps4/map/MapStudio"
+        base.mkdir(parents=True, exist_ok=True)
+        update.mkdir(parents=True, exist_ok=True)
+        (base / "m24_01_00_00.msb.dcx").write_bytes(b"base-central")
+        (base / "m35_00_00_00.msb.dcx").write_bytes(b"base-dlc")
+        (update / "m35_00_00_00.msb.dcx").write_bytes(b"updated-dlc")
+        toolchain = FakeToolchain()
+        toolchain.is_bundled = True
+        original_build = toolchain.build
+        observed = []
+
+        def build(**kwargs):
+            observed.append({p.name: p.read_bytes()
+                             for p in kwargs["map_studio_source"].iterdir()})
+            return original_build(**kwargs)
+
+        toolchain.build = build
+        workflow = LauncherWorkflow(
+            self.repo, toolchain=toolchain,
+            process_launcher=lambda _processes: [Process(5), Process(6)],
+        )
+        settings = replace(self.settings(enemy_inputs=False), map_studio_source=update)
+        first = workflow.randomize_and_launch(
+            settings, EnemizerOptions(enabled=True), process_is_running=lambda: False)
+        self.assertEqual(observed[0], {
+            "m24_01_00_00.msb.dcx": b"base-central",
+            "m35_00_00_00.msb.dcx": b"updated-dlc",
+        })
+        (base / "m24_01_00_00.msb.dcx").write_bytes(b"changed-central")
+        second = workflow.randomize_and_launch(
+            settings, EnemizerOptions(enabled=True), process_is_running=lambda: False)
+        self.assertNotEqual(first.cache_key, second.cache_key)
+        self.assertFalse(second.reused)
+        self.assertEqual(observed[1]["m24_01_00_00.msb.dcx"], b"changed-central")
+
     def test_the_client_log_sits_beside_the_ledger_and_is_reported(self):
         launched: list = []
 

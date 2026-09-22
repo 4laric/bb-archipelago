@@ -1357,6 +1357,32 @@ def enemy_ai_sources(install: GameInstall) -> dict[str, Path]:
             for name in sorted(names)}
 
 
+def enemy_map_sources(install: GameInstall, selected: Path | None) -> dict[str, Path]:
+    """Resolve installed maps per file, with update overrides and base fallbacks.
+
+    Saved UI settings may point at either installed layer. Neither layer alone
+    represents the complete game. Explicit external map folders stay standalone.
+    """
+    installed = [root / "dvdroot_ps4" / "map" / "MapStudio"
+                 for _, root in install.content_backends()]
+    roots = installed
+    if selected is not None:
+        selected = selected.expanduser().resolve()
+        if not selected.is_dir():
+            raise ValidationError(f"source MapStudio directory does not exist: {selected}")
+        if selected not in [root.resolve() for root in installed]:
+            roots = [selected]
+    maps: dict[str, Path] = {}
+    for root in roots:
+        if root.is_dir():
+            for path in sorted(root.iterdir()):
+                if path.is_file() and path.name.lower().endswith((".msb", ".msb.dcx")):
+                    maps.setdefault(path.name.lower(), path)
+    if not maps:
+        raise ValidationError("source MapStudio directory contains no .msb/.msb.dcx files")
+    return maps
+
+
 def _source_hashes(
     install: GameInstall, map_root: Path | None, *, cathedral: bool = False,
     hemwick: bool = False,
@@ -1691,26 +1717,14 @@ class LauncherWorkflow:
         )
 
         enemy_seed = options.seed.strip() if options.seed else request["enemizer_seed"]
-        map_root = settings.map_studio_source if options.enabled else None
-        if options.enabled and map_root is None:
-            relative_maps = Path("dvdroot_ps4") / "map" / "MapStudio"
-            candidates = [
-                candidate
-                for _name, layer in install.content_backends()
-                if (candidate := layer / relative_maps).is_dir()
-            ]
-            if candidates:
-                def map_count(candidate: Path) -> int:
-                    return sum(
-                        path.is_file() and path.name.lower().endswith((".msb", ".msb.dcx"))
-                        for path in candidate.iterdir()
-                    )
-
-                map_root = max(candidates, key=map_count)
+        map_sources = enemy_map_sources(install, settings.map_studio_source) if options.enabled else {}
+        map_root = next(iter(map_sources.values())).parent if map_sources else None
         sources = _source_hashes(
-            install, map_root, cathedral=True,
+            install, None, cathedral=True,
             hemwick=request["hemwick_gate"] is not None,
         )
+        sources.update({f"dvdroot_ps4/map/MapStudio/{name}": sha256_file(path)
+                        for name, path in map_sources.items()})
         names_paths: list[str] = []
         if request["toast_placeholders"] is not None:
             names_paths = ([f"dvdroot_ps4/msg/{pickup_name_language}/item.msgbnd.dcx"]
@@ -1888,7 +1902,15 @@ class LauncherWorkflow:
                             if path is None:
                                 raise ValidationError(f"Randomize Enemies requires {label}")
                     assert temporary is not None
-                    progress("Planning deterministic enemy swaps...")
+                    if len({path.parent for path in map_sources.values()}) > 1:
+                        map_root = temporary / "map-input"
+                        map_root.mkdir()
+                        for name, source in map_sources.items():
+                            destination = map_root / name
+                            shutil.copyfile(source, destination)
+                            if sha256_file(destination) != sources[f"dvdroot_ps4/map/MapStudio/{name}"]:
+                                raise ValidationError(f"enemy map source copy failed: {name}")
+                    progress(f"Planning deterministic enemy swaps from {len(map_sources)} maps...")
                     build_args = dict(
                         seed=enemy_seed,
                         inventory=settings.enemy_inventory,
