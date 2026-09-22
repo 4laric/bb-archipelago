@@ -594,6 +594,7 @@ try:
     )
     from Options import Choice, DefaultOnToggle, PerGameCommonOptions, Range, Toggle
     from worlds.AutoWorld import WebWorld, World
+    from worlds.Files import APPlayerContainer
 except ImportError:
     __all__ = ["MODEL"]
 else:
@@ -928,6 +929,30 @@ else:
             ),
         ]
 
+    class BloodborneContainer(APPlayerContainer):
+        """Wraps the bb-seed-request-v1 JSON as a real AP player container.
+
+        Without this, generate_output's plain .bbseed.json write is invisible to
+        WebHostLib.is_ap_player_container (worlds/Files.py) -- it checks for a
+        zip with an archipelago.json manifest naming game+player, not a bare
+        file on disk -- so the room page always said "No file to download for
+        this game" regardless of which server hosted the room.
+        """
+        game: str = GAME
+        patch_file_ending = ".bbseed.zip"
+
+        def __init__(self, request: dict[str, Any], out_base: str, output_directory: str,
+                     player: int, player_name: str) -> None:
+            self.request = request
+            container_path = str(Path(output_directory) / f"{out_base}.bbseed.zip")
+            super().__init__(container_path, player, player_name)
+
+        def write_contents(self, opened_zipfile) -> None:
+            opened_zipfile.writestr(
+                "seed.bbseed.json", json.dumps(self.request, indent=2) + "\n",
+            )
+            super().write_contents(opened_zipfile)
+
     class BloodborneWorld(World):
         game = GAME
         options_dataclass = BloodborneOptions
@@ -1234,8 +1259,13 @@ else:
             # to exist.
             request = {"format": "bb-seed-request-v1", **self.fill_slot_data(), "player": self.player,
                        "player_name": self.player_name}
-            path = Path(output_directory) / f"{self.multiworld.get_out_file_name_base(self.player)}.bbseed.json"
+            out_base = self.multiworld.get_out_file_name_base(self.player)
+            path = Path(output_directory) / f"{out_base}.bbseed.json"
             path.write_text(json.dumps(request, indent=2) + "\n", encoding="utf-8")
+            container = BloodborneContainer(
+                request, out_base, output_directory, self.player, self.player_name,
+            )
+            container.write()
 
     __all__ = ["MODEL", "BloodborneWorld"]
 
