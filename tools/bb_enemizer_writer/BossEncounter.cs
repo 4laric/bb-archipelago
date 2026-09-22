@@ -256,7 +256,7 @@ internal static class BossEncounter
     }
 
     public static int Run(string planPath, string gamePath, string defsPath, string mapsPath, string scriptsPath,
-        string eventInputDirectory, string compiledEventDirectory, string outputPath)
+        string eventInputDirectory, string compiledEventDirectory, string outputPath, string? sfxPath = null)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(planPath));
         var root = document.RootElement;
@@ -278,12 +278,16 @@ internal static class BossEncounter
              == encounterList.Count, "duplicate boss encounter destination event file");
         BossActorTransplant.ValidatePlan(planPath, required: false);
         BossRegionTransplant.ValidatePlan(planPath, required: false);
+        BossSfxTransplant.ValidatePlan(planPath, required: false);
+        var ffxMerges = FfxBundleTransplant.Read(planPath);
+        Need(ffxMerges.Count == 0 || sfxPath is not null, "boss FFX merges require original --sfx inputs");
         var externalReferences = BossExternalReference.Read(planPath, required: false);
         BossExternalReference.ValidateEncounterBindings(externalReferences, encounterList);
 
         string output = Path.GetFullPath(outputPath), parent = Path.GetDirectoryName(output)!;
         Need(!Directory.Exists(output) && !File.Exists(output), "boss encounter output must not exist");
-        foreach (string input in new[] {planPath, gamePath, defsPath, mapsPath, scriptsPath, eventInputDirectory, compiledEventDirectory}) {
+        foreach (string input in new[] {planPath, gamePath, defsPath, mapsPath, scriptsPath, eventInputDirectory, compiledEventDirectory}
+            .Concat(sfxPath is null ? Array.Empty<string>() : new[] {sfxPath})) {
             string directory = Directory.Exists(input) ? Path.GetFullPath(input) : Path.GetDirectoryName(Path.GetFullPath(input))!;
             string relative = Path.GetRelativePath(directory, output);
             Need(relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || Path.IsPathRooted(relative),
@@ -316,9 +320,13 @@ internal static class BossEncounter
             BossActorTransplant.ApplyActorsAndPrimary(planPath, mapsPath, mapsPath, overlayMaps, required: false);
             var regionAdditions = BossRegionTransplant.Apply(planPath, mapsPath, mapsPath, overlayMaps, required: false);
             var objectAdditions = BossObjectTransplant.Apply(planPath, mapsPath, mapsPath, overlayMaps, required: false);
+            var sfxAdditions = BossSfxTransplant.Apply(planPath, mapsPath, mapsPath, overlayMaps, required: false);
             BossActorTransplant.ApplyGeneratorsOnly(planPath, mapsPath, mapsPath, overlayMaps);
             BossRegionTransplant.VerifyFinal(regionAdditions, mapsPath, overlayMaps);
             BossObjectTransplant.VerifyFinal(objectAdditions, mapsPath, overlayMaps);
+            BossSfxTransplant.VerifyFinal(sfxAdditions, mapsPath, overlayMaps);
+            FfxBundleTransplant.VerifyCoverage(planPath, sfxAdditions);
+            var ffxAdditions = FfxBundleTransplant.Apply(planPath, sfxPath, Path.Combine(overlay, "dvdroot_ps4", "sfx"));
             foreach (var (encounter, events) in prepared) {
                 string eventPath = Path.Combine(overlay, "dvdroot_ps4", "event", encounter.DestinationEventFile);
                 Directory.CreateDirectory(Path.GetDirectoryName(eventPath)!);
@@ -344,7 +352,7 @@ internal static class BossEncounter
                     protected_completion_event_ids = item.Encounter.ProtectedCompletionEventIds,
                     terminal_predicates = item.Encounter.TerminalPredicates ?? [],
                     compiled_event_fingerprints = item.Encounter.CompiledEventFingerprints,
-                }), external_references = externalReferences, region_additions = regionAdditions, object_additions = objectAdditions, files,
+                }), external_references = externalReferences, region_additions = regionAdditions, object_additions = objectAdditions, sfx_additions = sfxAdditions, ffx_merges = ffxAdditions, files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",
             }, Json));
             Directory.Move(overlay, output);

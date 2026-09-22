@@ -424,12 +424,19 @@ internal static class BossActorTransplant
         Need(actual.Values.All(value => !string.IsNullOrWhiteSpace(value) && target(value)), $"generator {role} map references a missing destination entry");
         Need(actual.Values.Distinct(StringComparer.Ordinal).Count() == actual.Count, $"generator {role} map aliases destination entries");
     }
+    // The parser represents absent generator references as null. The property
+    // setter accepts the mapped arrays but normalizes null entries to empty
+    // strings, so restore null in-place before capturing the strict output pin.
     static void SetGeneratorNames(MSBB.Event.Generator generator, string[] parts, string[] points) {
         var type = typeof(MSBB.Event.Generator);
         var partSetter = type.GetProperty(nameof(MSBB.Event.Generator.SpawnPartNames))?.GetSetMethod(true);
         var pointSetter = type.GetProperty(nameof(MSBB.Event.Generator.SpawnPointNames))?.GetSetMethod(true);
         Need(partSetter is not null && pointSetter is not null, "SoulsFormats generator references are not writable");
         partSetter!.Invoke(generator, [parts]); pointSetter!.Invoke(generator, [points]);
+        for (int index = 0; index < generator.SpawnPartNames.Length; index++)
+            if (string.IsNullOrEmpty(generator.SpawnPartNames[index])) generator.SpawnPartNames[index] = null!;
+        for (int index = 0; index < generator.SpawnPointNames.Length; index++)
+            if (string.IsNullOrEmpty(generator.SpawnPointNames[index])) generator.SpawnPointNames[index] = null!;
     }
     static void ApplyGenerators(List<GeneratorAddition> additions, string sourceMaps, string destinationMaps, string outputMaps) {
         if (additions.Count == 0) return;
@@ -466,10 +473,10 @@ internal static class BossActorTransplant
             if (sourceRegion is not null) Need(target.Map.Regions.Regions.Any(r => r.Name == add.DestinationRegionName), "generator destination event Region is missing");
             var clone = (MSBB.Event.Generator)source.DeepCopy();
             clone.Name = add.DestinationEvent; clone.EventID = add.DestinationEventId; clone.EntityID = add.DestinationEntityId;
-            clone.PartName = add.DestinationPartName ?? ""; clone.RegionName = add.DestinationRegionName ?? "";
+            clone.PartName = add.DestinationPartName ?? null!; clone.RegionName = add.DestinationRegionName ?? null!;
             SetGeneratorNames(clone,
-                clone.SpawnPartNames.Select(name => string.IsNullOrEmpty(name) ? name : add.SpawnPartMap[name]).ToArray(),
-                clone.SpawnPointNames.Select(name => string.IsNullOrEmpty(name) ? name : add.SpawnPointMap[name]).ToArray());
+                clone.SpawnPartNames.Select(name => string.IsNullOrEmpty(name) ? null! : add.SpawnPartMap[name]).ToArray(),
+                clone.SpawnPointNames.Select(name => string.IsNullOrEmpty(name) ? null! : add.SpawnPointMap[name]).ToArray());
             target.Map.Events.Generators.Add(clone);
             expected[(Bare(add.DestinationMap), add.DestinationEvent)] = GeneratorFingerprint(Bare(add.DestinationMap), clone);
         }

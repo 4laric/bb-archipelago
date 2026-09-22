@@ -99,7 +99,7 @@ class EncounterBuildTests(unittest.TestCase):
 
     def test_reviewed_pool_includes_gascoigne_without_reusing_or_omitting_donors(self):
         graph = reviewed_compatibility()
-        self.assertEqual(14, len(graph))
+        self.assertEqual(15, len(graph))
         assignments = []
         for seed in ('seed-0', 'seed-2'):
             assignment = assign_donors(seed, graph)
@@ -111,6 +111,8 @@ class EncounterBuildTests(unittest.TestCase):
             self.assertEqual('ludwig', assignment['orphan-of-kos'])
             self.assertEqual('martyr-logarius', assignment['blood-starved-beast'])
             self.assertEqual('darkbeast-paarl', assignment['martyr-logarius'])
+            self.assertEqual('ebrietas', assignment['rom'])
+            self.assertEqual('rom', assignment['ebrietas'])
             self.assertEqual('laurence', assignment['ludwig'])
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)

@@ -948,8 +948,9 @@ class EnemizerToolchain:
         maps = inputs / "MapStudio"
         scripts = inputs / "script"
         events = inputs / "event"
+        sfx = inputs / "sfx"
         overrides = inputs / "event-overrides"
-        for directory in (maps, scripts, events, overrides):
+        for directory in (maps, scripts, events, sfx, overrides):
             directory.mkdir(parents=True)
         for source in kwargs["map_studio_source"].iterdir():
             if source.is_file() and source.name.lower().endswith((".msb", ".msb.dcx")):
@@ -967,6 +968,11 @@ class EnemizerToolchain:
             shutil.copyfile(source, target)
             if sha256_file(source) != sha256_file(target):
                 raise ValidationError(f"boss event input copy failed: {relative}")
+        for relative, source in encounter_sfx_sources(install).items():
+            target = sfx / Path(relative).name
+            shutil.copyfile(source, target)
+            if sha256_file(source) != sha256_file(target):
+                raise ValidationError(f"boss SFX input copy failed: {relative}")
         for relative, source in event_overrides.items():
             if relative not in encounter_event_sources(install):
                 raise ValidationError(f"unsupported AP event override for reviewed boss pool: {relative}")
@@ -995,6 +1001,7 @@ class EnemizerToolchain:
             "--gameparam", str(staged_binder),
             "--paramdef", str(install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]),
             "--maps", str(maps), "--scripts", str(scripts), "--events", str(events),
+            "--sfx", str(sfx),
             "--event-overrides", str(overrides),
             "--ordinary-plan", str(planned.plan_path), "--pool", "reviewed",
             "--bundle", str(self.repo_root / "research" / "bb_inputs.db"),
@@ -1509,6 +1516,18 @@ def encounter_event_sources(install: GameInstall) -> dict[str, Path]:
             for name in sorted(names)}
 
 
+def encounter_sfx_sources(install: GameInstall) -> dict[str, Path]:
+    """Resolve original map effect banks per file, including base-only banks."""
+    prefix = f"{DVDROOT_PREFIX}sfx/"
+    names = {
+        path.name for _name, layer in install.content_backends()
+        for path in (layer / "dvdroot_ps4" / "sfx").glob("*.ffxbnd.dcx")
+        if re.fullmatch(r"frpg_sfxbnd_m\d{2}\.ffxbnd\.dcx", path.name)
+    }
+    return {prefix + name: install.resolve_file(prefix + name, include_mods=False)[1]
+            for name in sorted(names)}
+
+
 def _source_hashes(
     install: GameInstall, map_root: Path | None, *, cathedral: bool = False,
     hemwick: bool = False,
@@ -1882,6 +1901,8 @@ class LauncherWorkflow:
                 )
                 sources.update({relative: sha256_file(path)
                                 for relative, path in encounter_event_sources(install).items()})
+                sources.update({relative: sha256_file(path)
+                                for relative, path in encounter_sfx_sources(install).items()})
                 identity_inputs = getattr(self.toolchain, "boss_encounter_identity_inputs", None)
                 if not callable(identity_inputs):
                     raise ValidationError("reviewed boss toolchain cannot report its pinned build inputs")

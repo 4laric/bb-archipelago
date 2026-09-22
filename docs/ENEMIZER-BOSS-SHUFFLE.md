@@ -256,11 +256,11 @@ seed-dependent assignments.
 | Vicar Amelia | Constructed | Constructed | Yes |
 | Witch of Hemwick | Pending | Pending | Pending |
 | Shadows of Yharnam | Pending | Pending | Pending |
-| Rom | Constructed | Pending | Pending |
+| Rom | Constructed | Constructed | Yes |
 | The One Reborn | Pending | Pending | Pending |
 | Amygdala | Constructed | Constructed | Yes |
 | Martyr Logarius | Constructed | Constructed | Yes |
-| Celestial Emissary | Pending | Pending | Pending |
+| Celestial Emissary | Pending | Constructed | Pending |
 | Ebrietas | Constructed | Constructed | Yes |
 | Micolash | Pending | Pending | Pending |
 | Mergo's Wet Nurse | Pending | Constructed | Pending |
@@ -268,7 +268,7 @@ seed-dependent assignments.
 | Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Ludwig | Constructed | Constructed | Yes |
 | Laurence | Constructed | Constructed | Yes |
-| Living Failures | Pending | Constructed | Pending |
+| Living Failures | Constructed | Constructed | Pending; additional assignment needed |
 | Lady Maria | Constructed | Constructed | Yes |
 | Orphan of Kos | Constructed | Constructed | Yes |
 
@@ -357,7 +357,7 @@ progression remain unchanged. Original wave/generator/support controllers are
 retired; five retained helpers have native provenance checks, and the camera
 cannot reactivate after completion. Seven focused tests cover this adapter;
 31 focused contract/composition/build/test-quality tests pass. Gameplay remains
-unobserved. Living Failures donor construction is still pending.
+unobserved. Living Failures donor construction is described below.
 
 Standalone Rom-at-Ebrietas verifies nine files against original native inputs.
 The package includes the core and all thirty spiders in both map states,
@@ -367,7 +367,7 @@ cleanup remain unchanged; the original Ebrietas owner stays inert until cleanup.
 The installed original's richer spider activation event is separately pinned
 and retained. Two foreign source replan calls are explicitly removed because
 their absent m32 entity would otherwise become the active Ebrietas core.
-Rom is not yet in the complete reviewed pool: its destination adapter is pending.
+Rom now joins the reviewed pool through the reciprocal Ebrietas-at-Rom adapter.
 
 Native Object additions now preserve pinned source model/model-point data,
 all persisted Object fields and original destination records/order, while
@@ -377,3 +377,45 @@ not yet a completed Wet Nurse donor. Thirteen native Object assertions pass.
 Actor requirement binding also rejects a declared hash or initialization that
 differs from the installed original, rather than replacing authored evidence.
 The fourteen-boss native build passes this stricter binding check.
+
+
+Ebrietas-at-Rom preserves Rom's completion, post-fight Blood Moon sequence,
+co-op/fog and fall handling. It carries Ebrietas body-part controllers and a
+separately normalized bullet owner into both original map states, while retiring
+Rom spider controllers and cleaning their retained bodies after completion.
+The standalone native build verifies nine files. The fifteen-encounter pool
+verifies 44 files for each of two distinct assignments (seeds `0` and
+`seed-0`), with all required AI goals present. Gameplay is
+still unobserved.
+
+MapSFX additions now carry source and anchor pins, explicit Part/Region
+bindings, collision checks and full record-order readback. Effect-bank
+composition verifies original BND4 hashes and unions the complete donor bank,
+retaining destination entries and rejecting differing bytes at an existing
+asset name. It verifies the FXR/FLVER/TPF output and requires exact agreement
+between declared effect IDs and added MapSFX records. Same-map encounters may
+reuse a bank only with identical source/destination pins; no imported entries
+are needed. The launcher resolves banks with per-file update precedence,
+includes their hashes in seed identity, and stages receipt-listed map banks as
+active game files. Tests cover activation and removal on switching modes.
+
+
+Standalone Living-Failures-at-Laurence now verifies nine native output files.
+It retains Laurence progression, adds the proxy/three other bodies/support,
+four generators, five regions and five MapSFX records, and preserves the source
+9000-to-9060 entry sequence. A separate completed-load cleanup disables/kills
+the proxy and additional bodies; Laurence's unchanged terminal owns the
+primary. The m35-to-m34 effect-bank union retains 642 destination entries and
+imports 360 donor entries, with two identical shared entries reused. A native
+generator regression preserves null references during clone construction
+without changing the original fingerprint schema. Living Failures is not yet
+in the seeded pool: its current edges force one assignment, so another
+compatible destination is required before enabling it there.
+
+
+BSB-at-Celestial-Emissary verifies eight native files. BSB occupies the visible
+small emissary; a death bridge kills the retained giant only after BSB dies,
+leaving the giant-based destination terminal unchanged. Wave generators and
+phase controllers are retired, retained bodies are pinned and cleaned after
+completion, and shared-map Ebrietas progression remains unchanged. This is a
+standalone destination adapter; Celestial donor construction is still pending.

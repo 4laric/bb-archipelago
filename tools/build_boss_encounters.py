@@ -58,7 +58,13 @@ from tools.bb_enemizer.logarius_contract import (
 from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, native_plan_bsb_at_logarius
 from tools.bb_enemizer.paarl_logarius_contract import patch_paarl_at_logarius, native_plan_paarl_at_logarius
 from tools.bb_enemizer.bsb_wet_nurse_contract import patch_bsb_at_wet_nurse, native_plan_bsb_at_wet_nurse
+from tools.bb_enemizer.bsb_celestial_emissary_contract import (
+    patch_bsb_at_celestial_emissary, native_plan_bsb_at_celestial_emissary)
 from tools.bb_enemizer.bsb_living_failures_contract import patch_bsb_at_living_failures, native_plan_bsb_at_living_failures
+from tools.bb_enemizer.living_failures_laurence_contract import (
+    patch_living_failures_at_laurence, native_plan_living_failures_at_laurence)
+from tools.bb_enemizer.ebrietas_rom_contract import (
+    patch_ebrietas_at_rom, native_plan_ebrietas_at_rom, ebrietas_rom_helper_scaling_parents)
 from tools.bb_enemizer.rom_ebrietas_contract import (patch_rom_at_ebrietas, native_plan_rom_at_ebrietas,
     helper_scaling_parents as rom_helper_scaling_parents)
 from tools.bb_enemizer.orphan_gascoigne_contract import patch_orphan_at_gascoigne, native_plan_orphan_at_gascoigne
@@ -114,8 +120,11 @@ ARENAS['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd.d
 PACKAGES['martyr-logarius'] = SpecialEndpoint('martyr-logarius', 'm25_00_00_00.emevd.dcx.js')
 ARENAS['martyr-logarius'] = PACKAGES['martyr-logarius']
 ARENAS['mergos-wet-nurse'] = SpecialEndpoint('mergos-wet-nurse', 'm26_00_00_00.emevd.dcx.js')
+ARENAS['celestial-emissary'] = SpecialEndpoint('celestial-emissary', 'm24_02_00_00.emevd.dcx.js')
 ARENAS['living-failures'] = SpecialEndpoint('living-failures', 'm35_00_00_00.emevd.dcx.js')
+PACKAGES['living-failures'] = ARENAS['living-failures']
 PACKAGES['rom'] = SpecialEndpoint('rom', 'm32_00_00_00.emevd.dcx.js')
+ARENAS['rom'] = PACKAGES['rom']
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -161,6 +170,9 @@ GASCOIGNE_COMPATIBILITY = {
 }
 
 
+ROM_COMPATIBILITY = {'ebrietas': ('rom',), 'rom': ('ebrietas',)}
+
+
 def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
     """Closed roster assembled from explicitly reviewed directed adapters."""
     graph = {}
@@ -172,6 +184,7 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
         ORPHAN_COMPATIBILITY,
         LOGARIUS_COMPATIBILITY,
         GASCOIGNE_COMPATIBILITY,
+        ROM_COMPATIBILITY,
         FINAL_COMPATIBILITY,
     ):
         for arena, donors in section.items():
@@ -207,6 +220,18 @@ def is_bsb_logarius_pair(arena, package) -> bool:
 
 def is_paarl_logarius_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('martyr-logarius', 'darkbeast-paarl')
+
+
+def is_bsb_celestial_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('celestial-emissary', 'blood-starved-beast')
+
+
+def is_living_failures_laurence_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('laurence', 'living-failures')
+
+
+def is_ebrietas_rom_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('rom', 'ebrietas')
 
 
 def is_rom_ebrietas_pair(arena, package) -> bool:
@@ -391,6 +416,28 @@ def pin_object_requirements(args, requirements: list[dict]) -> list[dict]:
     return _pin_anchored_requirements(args, requirements, 'object')
 
 
+def verify_sfx_requirements(args, requirements: list[dict]) -> None:
+    cache = {}
+    for row in requirements:
+        name = row['source_map']
+        inspect_actor_map(args, name)
+        if name not in cache:
+            path = next(args.maps / (name + suffix) for suffix in ('.msb.dcx', '.msb')
+                        if (args.maps / (name + suffix)).is_file())
+            run = subprocess.run(command_for(args) + ['--boss-sfx-pins', str(path)],
+                                 check=True, capture_output=True, text=True)
+            report = json.loads(run.stdout)
+            if report.get('format') != 'bb-boss-sfx-pins-v1' or report.get('map') != name:
+                raise ValueError('invalid native SFX pin report')
+            cache[name] = report
+        matches = [entry for entry in cache[name]['sfx'] if entry['name'] == row['source_event']]
+        if (len(matches) != 1 or matches[0]['event_id'] != row['source_event_id']
+                or matches[0]['entity_id'] != row['source_entity_id']
+                or row['source_provenance'] != {
+                    'format': 'bb-boss-sfx-pin-v1', 'event_sha256': matches[0]['fingerprint']}):
+            raise ValueError('SFX requirement differs from original native source')
+
+
 def verify_retained_helpers(args, plan) -> None:
     """A retired controller still depends on the original helper identity."""
     for helper in plan.get('boss_contract', {}).get('retained_destination_helpers', ()):
@@ -473,7 +520,10 @@ def validate_allocations(bundle: Path, slots, records: list[dict], plan: dict) -
     objects = {row['destination_entity_id'] for row in plan.get('boss_object_additions', [])}
     if objects & (set(events) | actors | regions | generators):
         raise ValueError('added object identifiers collide with another encounter resource')
-    allocated = set(events) | actors | regions | generators | objects
+    sfx = {row['destination_entity_id'] for row in plan.get('boss_sfx_additions', [])}
+    if sfx & (set(events) | actors | regions | generators | objects):
+        raise ValueError('added SFX identifiers collide with another encounter resource')
+    allocated = set(events) | actors | regions | generators | objects | sfx
     if any(not isinstance(value, int) or value <= 0 for value in allocated) or allocated & used:
         raise ValueError('project-owned identifier collides with an original corpus operand or actor')
 
@@ -540,6 +590,12 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] != 'blood-starved-beast':
+        raise ValueError('Celestial Emissary arena requires the reviewed BSB donor adapter')
+    if direct_orphan[1] == 'living-failures' and direct_orphan[0] != 'laurence':
+        raise ValueError('Living Failures donor requires the reviewed Laurence arena adapter')
+    if direct_orphan[0] == 'rom' and direct_orphan[1] != 'ebrietas':
+        raise ValueError('Rom arena requires the reviewed Ebrietas donor adapter')
     if direct_orphan[1] == 'rom' and direct_orphan[0] != 'ebrietas':
         raise ValueError('Rom donor requires the reviewed Ebrietas arena adapter')
     if direct_orphan[0] == 'living-failures' and direct_orphan[1] != 'blood-starved-beast':
@@ -564,7 +620,7 @@ def build(args) -> dict:
     reviewed_ludwig_donors = LUDWIG_COMPATIBILITY['ludwig']
     if ludwig_arena and getattr(args, 'donor', None) not in reviewed_ludwig_donors:
         raise ValueError('Ludwig arena requires a reviewed donor adapter')
-    if laurence_arena and getattr(args, 'donor', None) not in LAURENCE_COMPATIBILITY['laurence']:
+    if laurence_arena and getattr(args, 'donor', None) not in (*LAURENCE_COMPATIBILITY['laurence'], 'living-failures'):
         raise ValueError('Laurence arena requires a reviewed donor adapter')
     laurence_ids = LaurenceIds(12990300, 12990301)
     direct_gascoigne = (getattr(args, 'arena', None), getattr(args, 'donor', None))
@@ -604,6 +660,8 @@ def build(args) -> dict:
         raise ValueError('requires pinned DarkScript 3.6.3')
     check_output(args.output, (args.maps, args.scripts, args.events, args.gameparam,
                               args.paramdef, args.bundle, args.writer, args.darkscript))
+    if getattr(args, 'sfx', None):
+        check_output(args.output, (args.sfx,))
     event_overrides = getattr(args, 'event_overrides', None)
     if event_overrides is not None:
         if not event_overrides.is_dir():
@@ -627,7 +685,10 @@ def build(args) -> dict:
                     and not is_bsb_logarius_pair(arena, package) and not is_paarl_logarius_pair(arena, package)
                     and not is_bsb_wet_nurse_pair(arena, package)
                     and not is_bsb_living_failures_pair(arena, package)
-                    and not is_rom_ebrietas_pair(arena, package)):
+                    and not is_rom_ebrietas_pair(arena, package)
+                    and not is_ebrietas_rom_pair(arena, package)
+                    and not is_living_failures_laurence_pair(arena, package)
+                    and not is_bsb_celestial_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -657,6 +718,12 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_bsb_celestial_pair(arena, package):
+                patched = patch_bsb_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
+            elif is_living_failures_laurence_pair(arena, package):
+                patched = patch_living_failures_at_laurence(texts[arena.event_file], texts[package.event_file])
+            elif is_ebrietas_rom_pair(arena, package):
+                patched = patch_ebrietas_at_rom(texts[arena.event_file], texts[package.event_file])
             elif is_rom_ebrietas_pair(arena, package):
                 patched = patch_rom_at_ebrietas(texts[arena.event_file], texts[package.event_file])
             elif is_bsb_living_failures_pair(arena, package):
@@ -774,6 +841,17 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_bsb_celestial_pair(arena, package):
+                plan = native_plan_bsb_at_celestial_emissary(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_living_failures_laurence_pair(arena, package):
+                plan = native_plan_living_failures_at_laurence(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_ebrietas_rom_pair(arena, package):
+                plan = native_plan_ebrietas_at_rom(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_rom_ebrietas_pair(arena, package):
                 plan = native_plan_rom_at_ebrietas(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
@@ -857,6 +935,7 @@ def build(args) -> dict:
                 plan['boss_region_additions'] = pin_region_requirements(args, plan['boss_region_additions'])
             if plan.get('boss_object_additions'):
                 plan['boss_object_additions'] = pin_object_requirements(args, plan['boss_object_additions'])
+            verify_sfx_requirements(args, plan.get('boss_sfx_additions', []))
             verify_retained_helpers(args, plan)
             plans.append(plan)
         ordinary_plan_path = getattr(args, 'ordinary_plan', None)
@@ -884,7 +963,8 @@ def build(args) -> dict:
                     raise ValueError('combat helper has multiple parent declarations')
                 helper_parents[helper] = parents[0]
             declared_parents = [*logarius_helper_scaling_parents(pair_plan).items(),
-                                *rom_helper_scaling_parents(pair_plan).items()]
+                                *rom_helper_scaling_parents(pair_plan).items(),
+                                *ebrietas_rom_helper_scaling_parents(pair_plan).items()]
             for helper, parent in declared_parents:
                 existing = helper_parents.get(helper)
                 if existing is not None and existing != parent:
@@ -900,10 +980,11 @@ def build(args) -> dict:
         plan_path.parent.mkdir()
         plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + '\n', encoding='utf-8')
         output = scratch / 'overlay'
+        sfx_args = ['--sfx', str(args.sfx)] if getattr(args, 'sfx', None) else []
         subprocess.run(command_for(args) + [
             '--boss-encounters', str(plan_path), str(args.gameparam), str(args.paramdef),
-            str(args.maps), str(args.scripts), str(originals), str(compiled), str(output), '--apply',
-        ], check=True)
+            str(args.maps), str(args.scripts), str(originals), str(compiled), str(output),
+        ] + sfx_args + ['--apply'], check=True)
         receipt = verify_receipt(output)
         if args.output.exists():
             raise ValueError('output appeared during build; refusing to replace it')
@@ -916,6 +997,7 @@ def main(argv=None) -> int:
     for name in ('darkscript', 'writer', 'gameparam', 'paramdef', 'maps', 'scripts', 'events', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--dotnet', type=Path)
+    parser.add_argument('--sfx', type=Path, help='original effective SFX binder directory for encounter asset closure')
     parser.add_argument('--ordinary-plan', type=Path,
                         help='compose an ordinary enemy plan before one shared scaling/map/AI pass')
     parser.add_argument('--event-overrides', type=Path,

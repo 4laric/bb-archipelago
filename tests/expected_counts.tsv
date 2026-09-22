@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		1386
+total		1409
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	42
@@ -45,7 +45,7 @@ module	test_boss_shuffle	15
 module	test_boss_contracts	30
 module	test_boss_actor_rosters	6
 module	test_boss_encounter_build	13
-module	test_boss_pool	12
+module	test_boss_pool	13
 module	test_boss_shuffle_build	2
 module	test_gascoigne_contract	5
 module	test_maria_contract	7
@@ -55,7 +55,7 @@ module	test_gascoigne_arena	5
 module	test_ludwig_contract	5
 module	test_laurence_contract	3
 module	test_maria_amelia_contract	4
-module	test_launcher_experimental_enemies	4
+module	test_launcher_experimental_enemies	6
 module	test_boss_actor_scaling	5
 module	test_laurence_arena	5
 module	test_ludwig_arena	4
@@ -72,3 +72,6 @@ module	test_bsb_wet_nurse_contract	6
 module	test_orphan_gascoigne_contract	5
 module	test_bsb_living_failures_contract	7
 module	test_rom_ebrietas_contract	7
+module	test_ebrietas_rom_contract	7
+module	test_living_failures_laurence_contract	6
+module	test_bsb_celestial_emissary_contract	7

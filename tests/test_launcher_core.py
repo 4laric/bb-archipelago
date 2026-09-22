@@ -187,6 +187,7 @@ def write_boss_encounter_overlay(
         f"{core.AI_PREFIX}m35_00_00_00.luabnd.dcx": b"maria-ai",
         "dvdroot_ps4/event/m24_01_00_00.emevd.dcx": b"cleric-event",
         "dvdroot_ps4/event/m35_00_00_00.emevd.dcx": b"maria-event",
+        "dvdroot_ps4/sfx/frpg_sfxbnd_m34.ffxbnd.dcx": b"merged-map-effects",
         core.ENEMIZER_PLAN_NAME: json.dumps(plan, sort_keys=True).encode("utf-8"),
         "source-enemizer-plan.json": b'{"source":"combined-before-scaling"}',
     }
@@ -287,6 +288,8 @@ class LauncherCoreTests(unittest.TestCase):
         )
         self.assertTrue((build.path / "dvdroot_ps4/event/m24_01_00_00.emevd.dcx").is_file())
         self.assertTrue((build.path / "dvdroot_ps4/event/m35_00_00_00.emevd.dcx").is_file())
+        self.assertEqual(b"merged-map-effects",
+                         (build.path / "dvdroot_ps4/sfx/frpg_sfxbnd_m34.ffxbnd.dcx").read_bytes())
         self.assertFalse((build.path / "dvdroot_ps4/script.json").exists())
         audit = build.manifest["enemizer"]["boss_encounters"]
         self.assertEqual("bb-boss-encounters-v1", audit["format"])

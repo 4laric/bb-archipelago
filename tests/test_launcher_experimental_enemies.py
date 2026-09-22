@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from bb_launcher.core import BOSS_EVENT_PATH, SUPPRESSION_PATH, SeedCache, ValidationError, sha256_file
-from bb_launcher.workflow import EnemizerBuild, EnemizerOptions, LauncherWorkflow
+from bb_launcher.workflow import EnemizerBuild, EnemizerOptions, LauncherWorkflow, encounter_sfx_sources
 from test_launcher_core import write_boss_encounter_overlay
 import test_launcher_ui as fixtures
 
@@ -161,10 +161,55 @@ class ExperimentalLauncherTests(unittest.TestCase):
                          (self.fixture.install.mods / COMMON_EVENT_PATH).read_bytes())
         self.assertEqual(1, len(tools.calls))
         self.assertEqual('reviewed', tools.calls[0]['options'].boss_pool)
+        effects = self.fixture.install.mods / 'dvdroot_ps4/sfx/frpg_sfxbnd_m34.ffxbnd.dcx'
+        self.assertEqual(b'merged-map-effects', effects.read_bytes())
+        workflow.randomize_and_launch(self.fixture.settings(), EnemizerOptions(),
+                                     process_is_running=lambda: False)
+        self.assertFalse(effects.exists())
 
     def test_reviewed_pool_rejects_legacy_canary_mix(self):
         with self.assertRaisesRegex(ValidationError, 'cannot be combined'):
             self.launch(boss_canary=True, boss_pool='reviewed')
+
+    def test_effect_banks_resolve_per_file_without_active_mod_inputs(self):
+        install = self.fixture.install
+        names = ['frpg_sfxbnd_m34.ffxbnd.dcx', 'frpg_sfxbnd_m35.ffxbnd.dcx']
+        for root, files in ((install.base, names), (install.patch, names[:1]), (install.mods, names)):
+            directory = root / 'dvdroot_ps4/sfx'
+            directory.mkdir(parents=True, exist_ok=True)
+            for name in files:
+                (directory / name).write_bytes(str(root).encode())
+            (directory / 'frpg_sfxbnd_common.ffxbnd.dcx').write_bytes(b'unrelated')
+        self.assertEqual({
+            'dvdroot_ps4/sfx/' + names[0]: install.patch / 'dvdroot_ps4/sfx' / names[0],
+            'dvdroot_ps4/sfx/' + names[1]: install.base / 'dvdroot_ps4/sfx' / names[1],
+        }, encounter_sfx_sources(install))
+
+    def test_reviewed_cache_changes_when_original_effect_bank_changes(self):
+        compiler = self.fixture.root / 'DarkScript3.exe'
+        compiler.write_bytes(b'pinned compiler')
+        bank = self.fixture.install.base / 'dvdroot_ps4/sfx/frpg_sfxbnd_m35.ffxbnd.dcx'
+        bank.parent.mkdir(parents=True)
+        bank.write_bytes(b'original effects')
+        tools = ReviewedBossToolchain(self.fixture.root / 'reviewed-tools')
+        workflow = LauncherWorkflow(self.fixture.repo, toolchain=tools,
+            process_launcher=lambda _: [fixtures.Process(10), fixtures.Process(11)])
+        from unittest.mock import patch
+        with patch('bb_launcher.boss_compiler.ensure_boss_compiler', return_value=compiler):
+            def launch():
+                return workflow.randomize_and_launch(self.fixture.settings(),
+                    EnemizerOptions(boss_pool='reviewed'), process_is_running=lambda: False)
+            original = launch()
+            reused = launch()
+            self.assertEqual(original.cache_key, reused.cache_key)
+            self.assertTrue(reused.reused)
+            bank.write_bytes(b'updated original effects')
+            changed = launch()
+        self.assertNotEqual(original.cache_key, changed.cache_key)
+        self.assertFalse(changed.reused)
+        manifest = json.loads((changed.build_path / 'seed-manifest.json').read_text())
+        self.assertEqual(sha256_file(bank), manifest['identity']['source_hashes'][
+            'dvdroot_ps4/sfx/frpg_sfxbnd_m35.ffxbnd.dcx'])
 
 
 if __name__ == '__main__':

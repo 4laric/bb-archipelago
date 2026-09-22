@@ -127,6 +127,8 @@ try
     BossActorTests.Run();
     BossRegionTests.Run();
     BossObjectTests.Run();
+    BossSfxTests.Run();
+    FfxBundleTests.Run();
     BossExternalReferenceTests.Run();
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
     // A destination may contain the donor bytes but omit their registrations.

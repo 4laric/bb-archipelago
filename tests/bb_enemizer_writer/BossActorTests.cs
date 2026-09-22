@@ -52,7 +52,7 @@ internal static class BossActorTests
             var readDonor = sourceRead.Parts.Enemies.Single(part => part.Name == "donor");
             var readAnchor = sourceRead.Parts.Enemies.Single(part => part.Name == "anchor");
             var readDummy = sourceRead.Parts.DummyEnemies.Single(part => part.Name == "dummy_donor");
-            var readGenerator = sourceRead.Events.Generators.Single();
+            var readGenerator = sourceRead.Events.Generators.Single(item => item.Name == "source_gen");
             var primary = new {
                 source_map = "m23_00_00_00", source_part = "donor", source_entity_id = 101,
                 source_archetype = new { model_name = "c9000", npc_param_id = 90, think_param_id = 91, chara_init_id = 92 },
@@ -164,6 +164,37 @@ internal static class BossActorTests
             Need(generated.SpawnPartNames[0] == "spawned" && generated.SpawnPointNames[0] == "target_spawn" && generated.MaxNum == 4 && generated.GenType == 2);
             Need(BossActorTransplant.GeneratorFingerprint("m24_01_00_00", written.Events.Generators.Single(e => e.Name == "existing_gen"))
                 == BossActorTransplant.GeneratorFingerprint("m24_01_00_00", existing));
+
+            // MSBB writes absent event/slot references as null. The clone path
+            // must restore that representation before strict fingerprinting,
+            // while retaining every one of the 32/8 reference slots.
+            var blankGenerator = new MSBB.Event.Generator {
+                Name = "source_gen_without_region", EventID = 402, EntityID = 403,
+                PartName = "", RegionName = "", MaxNum = 1, GenType = 2,
+            };
+            SetGeneratorNames(
+                blankGenerator,
+                ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
+                ["", "", "", "", "", "", "", ""]);
+            donorMap.Events.Generators.Add(blankGenerator);
+            donorMap.Write(Path.Combine(source, "m23_00_00_00.msb"));
+            var blankSource = MSBB.Read(Path.Combine(source, "m23_00_00_00.msb"))
+                .Events.Generators.Single(item => item.Name == "source_gen_without_region");
+            var blankGeneratorAddition = new {
+                source_map = "m23_00_00_00", source_event = "source_gen_without_region", source_event_id = 402, source_entity_id = 403,
+                source_fingerprint = BossActorTransplant.GeneratorFingerprint("m23_00_00_00", blankSource),
+                destination_map = "m24_01_00_00", destination_event = "spawned_gen_without_region", destination_event_id = 502, destination_entity_id = 503,
+                destination_part_name = (string?)null, destination_region_name = (string?)null,
+                spawn_part_map = new Dictionary<string, string>(),
+                spawn_point_map = new Dictionary<string, string>(),
+            };
+            string blankOutput = Path.Combine(root, "blank-generator-output");
+            WritePlan(addition, [blankGeneratorAddition]);
+            Need(BossActorTransplant.Apply(planPath, source, destination, blankOutput, false) == 2);
+            var blankWritten = MSBB.Read(Path.Combine(blankOutput, "m24_01_00_00.msb"))
+                .Events.Generators.Single(item => item.Name == "spawned_gen_without_region");
+            Need(string.IsNullOrEmpty(blankWritten.PartName) && string.IsNullOrEmpty(blankWritten.RegionName)
+                && blankWritten.SpawnPartNames.Length == 32 && blankWritten.SpawnPointNames.Length == 8);
 
             var helperScale = new {
                 parent_logical_key = "m24_01_00_00:target_anchor",

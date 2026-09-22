@@ -72,6 +72,8 @@ MAP_PREFIX = f"{DVDROOT_PREFIX}map/MapStudio/"
 ENEMIZER_PLAN_NAME = "bb-enemizer-plan.json"
 AI_PREFIX = f"{DVDROOT_PREFIX}script/"
 AI_FILE_PATTERN = r"m\d{2}_\d{2}_\d{2}_00\.luabnd\.dcx"
+SFX_PREFIX = f"{DVDROOT_PREFIX}sfx/"
+SFX_FILE_PATTERN = r"frpg_sfxbnd_m\d{2}\.ffxbnd\.dcx"
 BOSS_EVENT_FILE_PATTERN = r"m\d{2}_\d{2}_\d{2}_\d{2}\.emevd\.dcx"
 USER_MERGE_FORMAT = "bb-launcher-user-merge-v1"
 # The one operator escape hatch over suppression-binder hash skew
@@ -263,10 +265,12 @@ def _safe_overlay_path(raw: str) -> str:
     )
     is_ai = normalized.startswith(AI_PREFIX) and re.fullmatch(
         AI_FILE_PATTERN, normalized[len(AI_PREFIX):]) is not None
+    is_sfx = normalized.startswith(SFX_PREFIX) and re.fullmatch(
+        SFX_FILE_PATTERN, normalized[len(SFX_PREFIX):]) is not None
     if (not is_suppression and not is_map and not is_owned_event and not is_boss_encounter_event
-            and not is_ai and normalized not in ITEM_NAMES_PATHS):
+            and not is_ai and not is_sfx and normalized not in ITEM_NAMES_PATHS):
         raise ValidationError(
-            f"overlay path is outside the param/map/event/AI contract: {normalized}"
+            f"overlay path is outside the param/map/event/AI/SFX contract: {normalized}"
         )
     return normalized
 
@@ -288,6 +292,8 @@ def _is_boss_encounter_overlay_path(relative: str) -> bool:
         return "/" not in relative[len(MAP_PREFIX):] and relative.endswith(".msb.dcx")
     if relative.startswith(AI_PREFIX):
         return re.fullmatch(AI_FILE_PATTERN, relative[len(AI_PREFIX):]) is not None
+    if relative.startswith(SFX_PREFIX):
+        return re.fullmatch(SFX_FILE_PATTERN, relative[len(SFX_PREFIX):]) is not None
     event_prefix = f"{DVDROOT_PREFIX}event/"
     return (relative.startswith(event_prefix)
             and re.fullmatch(BOSS_EVENT_FILE_PATTERN, relative[len(event_prefix):]) is not None)
@@ -853,6 +859,11 @@ class SeedCache:
                     if relative.startswith(AI_PREFIX)
                 )
                 inputs.extend(
+                    (relative, path, "boss-encounter-sfx")
+                    for relative, path in encounter.overlay_files.items()
+                    if relative.startswith(SFX_PREFIX)
+                )
+                inputs.extend(
                     (relative, path, "boss-encounter-event")
                     for relative, path in encounter.overlay_files.items()
                     if (relative.startswith(f"{DVDROOT_PREFIX}event/")
@@ -1264,6 +1275,7 @@ class SeedCache:
                 relative: record for relative, record in expected.items()
                 if record.get('component') in {
                     'suppression', 'enemizer', 'enemizer-ai', 'boss-encounter-event',
+                    'boss-encounter-sfx',
                     'cathedral-event', 'hemwick-event',
                 }
             }

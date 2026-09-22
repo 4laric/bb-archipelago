@@ -28,6 +28,42 @@ $Event(30, Default, function() {
 
 
 class BossPoolTests(unittest.TestCase):
+    def test_effect_composition_unions_pinned_banks_and_rejects_native_collisions(self):
+        effect = {'destination_map': 'm34_00_00_00', 'destination_event': 'meteor',
+                  'destination_event_id': 980032, 'destination_entity_id': 980027}
+        merge = {'source_file': 'frpg_sfxbnd_m35.ffxbnd.dcx',
+                 'destination_file': 'frpg_sfxbnd_m34.ffxbnd.dcx',
+                 'source_sha256': 'a' * 64, 'destination_sha256': 'b' * 64,
+                 'policy': 'preserve_destination_union_source_v1', 'required_effect_ids': [640320]}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'effects', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_sfx_additions': [effect], 'boss_ffx_merges': [merge]}
+        second = copy.deepcopy(plan)
+        second['boss_sfx_additions'][0].update(destination_event='meteor2',
+            destination_event_id=980033, destination_entity_id=980028)
+        second['boss_ffx_merges'][0]['required_effect_ids'] = [640321, 640320]
+        combined = combine_native_plans('effects', [plan, second])
+        self.assertEqual([dict(merge, required_effect_ids=[640320, 640321])], combined['boss_ffx_merges'])
+        self.assertEqual([effect, second['boss_sfx_additions'][0]], combined['boss_sfx_additions'])
+        self.assertEqual([640320], merge['required_effect_ids'])
+        second['boss_ffx_merges'][0]['source_sha256'] = 'c' * 64
+        with self.assertRaisesRegex(ValueError, 'FFX binder provenance'):
+            combine_native_plans('effects', [plan, second])
+        for field in ('destination_event', 'destination_event_id', 'destination_entity_id'):
+            other = copy.deepcopy(second)
+            other.pop('boss_ffx_merges')
+            other['boss_sfx_additions'][0][field] = effect[field]
+            with self.assertRaisesRegex(ValueError, 'overlap an added SFX'):
+                combine_native_plans('effects', [plan, other])
+        other = copy.deepcopy(plan)
+        other.pop('boss_sfx_additions')
+        other['boss_generator_additions'] = [dict(effect, destination_map='m34_00_00_00.msb.dcx')]
+        for plans in ([plan, other], [other, plan]):
+            with self.assertRaisesRegex(ValueError, 'overlap an added'):
+                combine_native_plans('effects', plans)
+
     def test_auxiliary_actors_survive_pool_composition_and_collisions_fail(self):
         def pair(key, entity, map_name='m23_00_00_00'):
             return {
