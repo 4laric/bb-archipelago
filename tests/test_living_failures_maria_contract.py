@@ -56,7 +56,7 @@ class LivingFailuresMariaContractTests(unittest.TestCase):
         cleanup = after[DEFAULT_IDS.lifecycle_cleanup]
         self.assertIn("WaitFor(EventFlag(13501800));", cleanup)
         self.assertEqual(
-            {980400, 980401, 980402, 980403},
+            {980400, 980401, 980402, 980403, 980404},
             {
                 int(actor)
                 for actor in re.findall(
@@ -64,7 +64,46 @@ class LivingFailuresMariaContractTests(unittest.TestCase):
                 )
             },
         )
-        self.assertNotIn("980404", cleanup)
+        for flag in (
+            DEFAULT_IDS.generator_enable_flag,
+            DEFAULT_IDS.generator_phase_flag,
+            DEFAULT_IDS.scheduler_active_flag,
+            DEFAULT_IDS.phase_music_flag,
+        ):
+            self.assertIn(f"SetEventFlag({flag}, OFF);", cleanup)
+        self.assertIn(
+            f"BatchSetEventFlags({DEFAULT_IDS.wave_flags_start}, {DEFAULT_IDS.wave_flags_end}, OFF);",
+            cleanup,
+        )
+        for generator in (980405, 980406, 980407, 980408):
+            self.assertIn(f"DeactivateGenerator({generator}, Disabled);", cleanup)
+        self.assertNotRegex(cleanup, r"DeactivateGenerator\(98001[3-6], Disabled\);")
+
+        generator = after[DEFAULT_IDS.generator_controller]
+        self.assertIn(
+            f"EventFlag({DEFAULT_IDS.generator_phase_flag}) || EventFlag(13501800)",
+            generator,
+        )
+        self.assertEqual(
+            4,
+            len(
+                re.findall(
+                    r"EndIf\(EventFlag\(13501800\)\);\n\s*DeactivateGenerator\(98040[5-8], Enabled\);",
+                    generator,
+                )
+            ),
+        )
+        support = after[DEFAULT_IDS.support_controller]
+        self.assertIn("EventFlag(12992421) || EventFlag(13501800)", support)
+        self.assertEqual(
+            7,
+            len(
+                re.findall(
+                    r"EndIf\(EventFlag\(13501800\)\);\n\s*RequestCharacterAI(?:Command|Replan)",
+                    support,
+                )
+            ),
+        )
 
     def test_controller_initializers_music_camera_generators_and_support_are_closed(
         self,

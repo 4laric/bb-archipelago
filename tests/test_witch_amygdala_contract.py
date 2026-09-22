@@ -75,6 +75,34 @@ class WitchAmygdalaContractTests(unittest.TestCase):
         copied = "\n".join(after[event] for event in DEFAULT_IDS.events())
         self.assertNotRegex(copied, r"(?<!\d)(?:122|220)\d+(?!\d)")
 
+    def test_live_completion_cancels_pending_minion_reactivation(self):
+        after = event_blocks(patch_witch_at_amygdala(self.arena, self.witch))
+        guard = f"EndIf(EventFlag({DEFAULT_IDS.shutdown_flag}));"
+        guarded = 0
+        for event in DEFAULT_IDS.events():
+            body = after[event]
+            lines = body.splitlines()
+            for index, line in enumerate(lines):
+                if any(
+                    operand in line
+                    for operand in (
+                        *(f"ChangeCharacterEnableState({DEFAULT_IDS.minion_first_entity + offset}, Enabled);" for offset in range(3)),
+                        *(f"DeactivateGenerator({DEFAULT_IDS.generator_entity_first + offset}, Enabled);" for offset in range(3)),
+                    )
+                ):
+                    self.assertEqual(guard, lines[index - 1].strip())
+                    guarded += 1
+        self.assertEqual(9, guarded)
+        cleanup = after[DEFAULT_IDS.completion_cleanup]
+        self.assertLess(
+            cleanup.index(f"SetEventFlag({DEFAULT_IDS.shutdown_flag}, ON);"),
+            cleanup.index(f"ForceCharacterDeath({DEFAULT_IDS.minion_first_entity}, false);"),
+        )
+        for offset in range(3):
+            entity = DEFAULT_IDS.minion_first_entity + offset
+            self.assertIn(f"SetCharacterImmortality({entity}, Disabled);", cleanup)
+            self.assertIn(f"ForceCharacterDeath({entity}, false);", cleanup)
+
     def test_native_plan_requires_full_actor_region_and_generator_closure(self):
         plan = native_plan_witch_at_amygdala(
             self.slots, self.npcs, self.effects, "witch-amygdala"
@@ -136,6 +164,12 @@ class WitchAmygdalaContractTests(unittest.TestCase):
                     DEFAULT_IDS,
                     insight_flag=DEFAULT_IDS.minion_count_flag + 1,
                 ),
+            )
+        with self.assertRaisesRegex(ValueError, "129930xx"):
+            patch_witch_at_amygdala(
+                self.arena,
+                self.witch,
+                replace(DEFAULT_IDS, shutdown_flag=DEFAULT_IDS.insight_flag),
             )
         with self.assertRaisesRegex(ValueError, "helper IDs"):
             patch_witch_at_amygdala(

@@ -126,17 +126,20 @@ def _verify(text: str, expected: Mapping[int, str], label: str, *, source_altern
     return blocks
 
 
-def _native_pin(pin: NativeActorPin) -> dict:
+def _native_pin(pin: NativeActorPin, *, anchored: bool) -> dict:
     values = (pin.part_sha256, pin.anchor_sha256)
     if any(len(value) != 64 or any(ch not in "0123456789abcdef" for ch in value) for value in values):
         raise ValueError("Orphan native actor pin requires lowercase SHA256 values")
-    return {
-        "source_part_kind": "enemy",
-        "source_provenance": {"format": "bb-boss-actor-pin-v1", "part_sha256": pin.part_sha256,
-                              "anchor_sha256": pin.anchor_sha256},
+    provenance = {"format": "bb-boss-actor-pin-v1", "part_sha256": pin.part_sha256}
+    result = {
+        "source_provenance": provenance,
         "source_initialization": {"talk_id": pin.talk_id, "unk_t18": pin.unk_t18,
                                   "init_anim_id": pin.init_anim_id, "damage_anim_id": pin.damage_anim_id},
     }
+    if anchored:
+        provenance["anchor_sha256"] = pin.anchor_sha256
+        result["source_part_kind"] = "enemy"
+    return result
 
 
 def _globally_used_numbers() -> tuple[set[int], set[int]]:
@@ -192,7 +195,9 @@ def construction_request(slots: Sequence[Slot], ids: OrphanIds,
         raise ValueError("Orphan contract requires exact core, phase and support source pins")
     core_pin, phase_pin, support_pin = (native_pins[name] for name in ("core", "phase", "support"))
     # This validates all hashes before a builder can carry them forward.
-    core_native, phase_native, support_native = (_native_pin(pin) for pin in (core_pin, phase_pin, support_pin))
+    core_native = _native_pin(core_pin, anchored=False)
+    phase_native = _native_pin(phase_pin, anchored=True)
+    support_native = _native_pin(support_pin, anchored=True)
     remap = {
         ORPHAN_CORE: CLERIC, ORPHAN_PHASE: ids.phase_entity_id, ORPHAN_SUPPORT: ids.support_entity_id,
         13601800: 12411700, 13604802: 12414702, 13604803: 12414703, 13604804: 12414704,

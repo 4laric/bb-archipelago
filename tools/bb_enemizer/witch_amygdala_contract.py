@@ -228,6 +228,7 @@ class WitchAmygdalaIds:
     summon_permission_first: int = 12993058
     source_second_started_flag: int = 12993060
     insight_flag: int = 12993061
+    shutdown_flag: int = 12993062
 
     def events(self) -> tuple[int, ...]:
         return (
@@ -263,6 +264,7 @@ class WitchAmygdalaIds:
             *(self.summon_permission_first + offset for offset in range(2)),
             self.source_second_started_flag,
             self.insight_flag,
+            self.shutdown_flag,
         )
 
     def helper_ids(self) -> tuple[int, ...]:
@@ -358,6 +360,36 @@ def _validate_ids(ids: WitchAmygdalaIds, destination: str) -> None:
         raise ValueError(
             "Witch/Amygdala helper IDs must be collision-free reserved 980800-range values"
         )
+
+
+def _guard_minion_reactivation(
+    body: str,
+    stop_flag: int,
+    minions: Sequence[int],
+    generators: Sequence[int],
+) -> str:
+    """Cancel already-running source controllers before they can reactivate adds."""
+    pattern = re.compile(
+        rf"(?m)^(\s*)((?:ChangeCharacterEnableState\((?:{'|'.join(map(str, minions))}), Enabled\)|DeactivateGenerator\((?:{'|'.join(map(str, generators))}), Enabled\));)$"
+    )
+    return pattern.sub(
+        lambda match: (
+            f"{match[1]}EndIf(EventFlag({stop_flag}));\n"
+            f"{match[1]}{match[2]}"
+        ),
+        body,
+    )
+
+
+def _irreversible_actor_cleanup(actors: Sequence[int]) -> str:
+    return "\n".join(
+        f"    SetCharacterImmortality({entity}, Disabled);\n"
+        f"    SetCharacterAIState({entity}, Disabled);\n"
+        f"    SetCharacterHPBarDisplay({entity}, Disabled);\n"
+        f"    ForceCharacterDeath({entity}, false);\n"
+        f"    ChangeCharacterEnableState({entity}, Disabled);"
+        for entity in actors
+    )
 
 
 def _mapping(ids: WitchAmygdalaIds) -> dict[int, int]:
@@ -491,11 +523,8 @@ def patch_witch_at_amygdala(
     initializers.append(f"    $InitializeEvent(0, {ids.completion_cleanup});")
     cleanup = f"""$Event({ids.completion_cleanup}, Default, function() {{
     WaitFor(EventFlag(13301800));
-    ChangeCharacterEnableState({ids.second_entity}, Disabled);
-    ForceCharacterDeath({ids.second_entity}, false);
-    ChangeCharacterEnableState({ids.minion_first_entity}, Disabled);
-    ChangeCharacterEnableState({ids.minion_first_entity + 1}, Disabled);
-    ChangeCharacterEnableState({ids.minion_first_entity + 2}, Disabled);
+    SetEventFlag({ids.shutdown_flag}, ON);
+{_irreversible_actor_cleanup((ids.second_entity, *(ids.minion_first_entity + offset for offset in range(3))))}
     DeactivateGenerator({ids.generator_entity_first}, Disabled);
     DeactivateGenerator({ids.generator_entity_first + 1}, Disabled);
     DeactivateGenerator({ids.generator_entity_first + 2}, Disabled);
@@ -524,6 +553,14 @@ def patch_witch_at_amygdala(
         destination_event: _remap(donor[source_event], mapping)
         for source_event, destination_event, _ in copied_events
     }
+    minions = tuple(ids.minion_first_entity + offset for offset in range(3))
+    generators = tuple(ids.generator_entity_first + offset for offset in range(3))
+    imported = {
+        event: _guard_minion_reactivation(body, ids.shutdown_flag, minions, generators)
+        for event, body in imported.items()
+    }
+    if sum(body.count(f"EndIf(EventFlag({ids.shutdown_flag}));") for body in imported.values()) != 9:
+        raise ValueError("Witch/Amygdala minion reactivation guard drift")
     result = (
         _replace_events(destination, edits).rstrip()
         + "\n\n"

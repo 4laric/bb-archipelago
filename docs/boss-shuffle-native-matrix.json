@@ -1,0 +1,868 @@
+{
+  "format": "bb-boss-shuffle-native-matrix-v1",
+  "graph_source": "tools.build_boss_encounters.reviewed_compatibility()",
+  "graph_canonicalization": "arena keys and each donor list sorted lexically; compact JSON separators; UTF-8",
+  "graph_sha256": "3d6570a31def26f88c7c55168e762c34727fdaa4b68f11e1e59320ec7805ea61",
+  "roster_count": 22,
+  "declared_edge_count": 67,
+  "complete_assignment_count": 560,
+  "feasible_edge_count": 63,
+  "feasible_edges": [
+    {
+      "arena": "amygdala",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "amygdala",
+      "donor": "vicar-amelia"
+    },
+    {
+      "arena": "amygdala",
+      "donor": "witch-of-hemwick"
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "darkbeast-paarl"
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "martyr-logarius"
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "mergos-wet-nurse"
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "vicar-amelia"
+    },
+    {
+      "arena": "celestial-emissary",
+      "donor": "amygdala"
+    },
+    {
+      "arena": "celestial-emissary",
+      "donor": "shadows-of-yharnam"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "darkbeast-paarl"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "father-gascoigne"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "lady-maria"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "laurence"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "ludwig"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "orphan-of-kos"
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "celestial-emissary"
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "ebrietas"
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "amygdala"
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "rom"
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "the-one-reborn"
+    },
+    {
+      "arena": "father-gascoigne",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "father-gascoigne",
+      "donor": "orphan-of-kos"
+    },
+    {
+      "arena": "gehrman",
+      "donor": "micolash"
+    },
+    {
+      "arena": "gehrman",
+      "donor": "moon-presence"
+    },
+    {
+      "arena": "lady-maria",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "lady-maria",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "lady-maria",
+      "donor": "living-failures"
+    },
+    {
+      "arena": "laurence",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "laurence",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "laurence",
+      "donor": "living-failures"
+    },
+    {
+      "arena": "living-failures",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "living-failures",
+      "donor": "lady-maria"
+    },
+    {
+      "arena": "living-failures",
+      "donor": "laurence"
+    },
+    {
+      "arena": "ludwig",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "ludwig",
+      "donor": "laurence"
+    },
+    {
+      "arena": "martyr-logarius",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "martyr-logarius",
+      "donor": "darkbeast-paarl"
+    },
+    {
+      "arena": "martyr-logarius",
+      "donor": "mergos-wet-nurse"
+    },
+    {
+      "arena": "mergos-wet-nurse",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "mergos-wet-nurse",
+      "donor": "darkbeast-paarl"
+    },
+    {
+      "arena": "mergos-wet-nurse",
+      "donor": "martyr-logarius"
+    },
+    {
+      "arena": "micolash",
+      "donor": "gehrman"
+    },
+    {
+      "arena": "micolash",
+      "donor": "moon-presence"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "gehrman"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "micolash"
+    },
+    {
+      "arena": "orphan-of-kos",
+      "donor": "blood-starved-beast"
+    },
+    {
+      "arena": "orphan-of-kos",
+      "donor": "ludwig"
+    },
+    {
+      "arena": "orphan-of-kos",
+      "donor": "shadows-of-yharnam"
+    },
+    {
+      "arena": "rom",
+      "donor": "celestial-emissary"
+    },
+    {
+      "arena": "rom",
+      "donor": "ebrietas"
+    },
+    {
+      "arena": "shadows-of-yharnam",
+      "donor": "ludwig"
+    },
+    {
+      "arena": "shadows-of-yharnam",
+      "donor": "the-one-reborn"
+    },
+    {
+      "arena": "the-one-reborn",
+      "donor": "rom"
+    },
+    {
+      "arena": "the-one-reborn",
+      "donor": "witch-of-hemwick"
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "amygdala"
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "cleric-beast"
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "lady-maria"
+    },
+    {
+      "arena": "witch-of-hemwick",
+      "donor": "father-gascoigne"
+    },
+    {
+      "arena": "witch-of-hemwick",
+      "donor": "vicar-amelia"
+    }
+  ],
+  "feasible_donors_by_arena": {
+    "amygdala": [
+      "cleric-beast",
+      "vicar-amelia",
+      "witch-of-hemwick"
+    ],
+    "blood-starved-beast": [
+      "cleric-beast",
+      "darkbeast-paarl",
+      "martyr-logarius",
+      "mergos-wet-nurse",
+      "vicar-amelia"
+    ],
+    "celestial-emissary": [
+      "amygdala",
+      "shadows-of-yharnam"
+    ],
+    "cleric-beast": [
+      "blood-starved-beast",
+      "darkbeast-paarl",
+      "father-gascoigne",
+      "lady-maria",
+      "laurence",
+      "ludwig",
+      "orphan-of-kos"
+    ],
+    "darkbeast-paarl": [
+      "celestial-emissary",
+      "ebrietas"
+    ],
+    "ebrietas": [
+      "amygdala",
+      "blood-starved-beast",
+      "cleric-beast",
+      "rom",
+      "the-one-reborn"
+    ],
+    "father-gascoigne": [
+      "cleric-beast",
+      "orphan-of-kos"
+    ],
+    "gehrman": [
+      "micolash",
+      "moon-presence"
+    ],
+    "lady-maria": [
+      "blood-starved-beast",
+      "cleric-beast",
+      "living-failures"
+    ],
+    "laurence": [
+      "blood-starved-beast",
+      "cleric-beast",
+      "living-failures"
+    ],
+    "living-failures": [
+      "blood-starved-beast",
+      "lady-maria",
+      "laurence"
+    ],
+    "ludwig": [
+      "cleric-beast",
+      "laurence"
+    ],
+    "martyr-logarius": [
+      "blood-starved-beast",
+      "darkbeast-paarl",
+      "mergos-wet-nurse"
+    ],
+    "mergos-wet-nurse": [
+      "blood-starved-beast",
+      "darkbeast-paarl",
+      "martyr-logarius"
+    ],
+    "micolash": [
+      "gehrman",
+      "moon-presence"
+    ],
+    "moon-presence": [
+      "gehrman",
+      "micolash"
+    ],
+    "orphan-of-kos": [
+      "blood-starved-beast",
+      "ludwig",
+      "shadows-of-yharnam"
+    ],
+    "rom": [
+      "celestial-emissary",
+      "ebrietas"
+    ],
+    "shadows-of-yharnam": [
+      "ludwig",
+      "the-one-reborn"
+    ],
+    "the-one-reborn": [
+      "rom",
+      "witch-of-hemwick"
+    ],
+    "vicar-amelia": [
+      "amygdala",
+      "cleric-beast",
+      "lady-maria"
+    ],
+    "witch-of-hemwick": [
+      "father-gascoigne",
+      "vicar-amelia"
+    ]
+  },
+  "feasible_destinations_by_donor": {
+    "amygdala": [
+      "celestial-emissary",
+      "ebrietas",
+      "vicar-amelia"
+    ],
+    "blood-starved-beast": [
+      "cleric-beast",
+      "ebrietas",
+      "lady-maria",
+      "laurence",
+      "living-failures",
+      "martyr-logarius",
+      "mergos-wet-nurse",
+      "orphan-of-kos"
+    ],
+    "celestial-emissary": [
+      "darkbeast-paarl",
+      "rom"
+    ],
+    "cleric-beast": [
+      "amygdala",
+      "blood-starved-beast",
+      "ebrietas",
+      "father-gascoigne",
+      "lady-maria",
+      "laurence",
+      "ludwig",
+      "vicar-amelia"
+    ],
+    "darkbeast-paarl": [
+      "blood-starved-beast",
+      "cleric-beast",
+      "martyr-logarius",
+      "mergos-wet-nurse"
+    ],
+    "ebrietas": [
+      "darkbeast-paarl",
+      "rom"
+    ],
+    "father-gascoigne": [
+      "cleric-beast",
+      "witch-of-hemwick"
+    ],
+    "gehrman": [
+      "micolash",
+      "moon-presence"
+    ],
+    "lady-maria": [
+      "cleric-beast",
+      "living-failures",
+      "vicar-amelia"
+    ],
+    "laurence": [
+      "cleric-beast",
+      "living-failures",
+      "ludwig"
+    ],
+    "living-failures": [
+      "lady-maria",
+      "laurence"
+    ],
+    "ludwig": [
+      "cleric-beast",
+      "orphan-of-kos",
+      "shadows-of-yharnam"
+    ],
+    "martyr-logarius": [
+      "blood-starved-beast",
+      "mergos-wet-nurse"
+    ],
+    "mergos-wet-nurse": [
+      "blood-starved-beast",
+      "martyr-logarius"
+    ],
+    "micolash": [
+      "gehrman",
+      "moon-presence"
+    ],
+    "moon-presence": [
+      "gehrman",
+      "micolash"
+    ],
+    "orphan-of-kos": [
+      "cleric-beast",
+      "father-gascoigne"
+    ],
+    "rom": [
+      "ebrietas",
+      "the-one-reborn"
+    ],
+    "shadows-of-yharnam": [
+      "celestial-emissary",
+      "orphan-of-kos"
+    ],
+    "the-one-reborn": [
+      "ebrietas",
+      "shadows-of-yharnam"
+    ],
+    "vicar-amelia": [
+      "amygdala",
+      "blood-starved-beast",
+      "witch-of-hemwick"
+    ],
+    "witch-of-hemwick": [
+      "amygdala",
+      "the-one-reborn"
+    ]
+  },
+  "degree_summary": {
+    "every_arena_has_at_least_two_feasible_donors": true,
+    "every_donor_has_at_least_two_feasible_destinations": true,
+    "minimum_arena_feasible_donor_count": 2,
+    "minimum_donor_feasible_destination_count": 2
+  },
+  "seed_matrix": {
+    "selection": "deterministic irredundant set cover; compact but not claimed minimum",
+    "seed_count": 13,
+    "seeds": [
+      "163",
+      "202",
+      "252",
+      "343",
+      "551",
+      "1821",
+      "3429",
+      "3741",
+      "4638",
+      "5877",
+      "7168",
+      "19932",
+      "32468"
+    ],
+    "edge_union_count": 63,
+    "covers_exact_feasible_edge_union": true,
+    "rows": [
+      {
+        "seed": "163",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "martyr-logarius",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "orphan-of-kos",
+          "darkbeast-paarl": "celestial-emissary",
+          "ebrietas": "rom",
+          "father-gascoigne": "cleric-beast",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "blood-starved-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "darkbeast-paarl",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "ebrietas",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "202",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "mergos-wet-nurse",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "darkbeast-paarl",
+          "darkbeast-paarl": "celestial-emissary",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "cleric-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "blood-starved-beast",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "ebrietas",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "252",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "martyr-logarius",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "laurence",
+          "darkbeast-paarl": "celestial-emissary",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "blood-starved-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "cleric-beast",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "darkbeast-paarl",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "ebrietas",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "343",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "mergos-wet-nurse",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "lady-maria",
+          "darkbeast-paarl": "ebrietas",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "cleric-beast",
+          "laurence": "living-failures",
+          "living-failures": "blood-starved-beast",
+          "ludwig": "laurence",
+          "martyr-logarius": "darkbeast-paarl",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "celestial-emissary",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "551",
+        "mapping": {
+          "amygdala": "witch-of-hemwick",
+          "blood-starved-beast": "darkbeast-paarl",
+          "celestial-emissary": "amygdala",
+          "cleric-beast": "father-gascoigne",
+          "darkbeast-paarl": "ebrietas",
+          "ebrietas": "the-one-reborn",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "moon-presence",
+          "lady-maria": "blood-starved-beast",
+          "laurence": "living-failures",
+          "living-failures": "laurence",
+          "ludwig": "cleric-beast",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "gehrman",
+          "moon-presence": "micolash",
+          "orphan-of-kos": "shadows-of-yharnam",
+          "rom": "celestial-emissary",
+          "shadows-of-yharnam": "ludwig",
+          "the-one-reborn": "rom",
+          "vicar-amelia": "lady-maria",
+          "witch-of-hemwick": "vicar-amelia"
+        }
+      },
+      {
+        "seed": "1821",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "martyr-logarius",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "ludwig",
+          "darkbeast-paarl": "ebrietas",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "cleric-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "darkbeast-paarl",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "blood-starved-beast",
+          "rom": "celestial-emissary",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "3429",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "martyr-logarius",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "darkbeast-paarl",
+          "darkbeast-paarl": "celestial-emissary",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "cleric-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "blood-starved-beast",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "ebrietas",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "3741",
+        "mapping": {
+          "amygdala": "cleric-beast",
+          "blood-starved-beast": "vicar-amelia",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "darkbeast-paarl",
+          "darkbeast-paarl": "ebrietas",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "moon-presence",
+          "lady-maria": "living-failures",
+          "laurence": "blood-starved-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "gehrman",
+          "moon-presence": "micolash",
+          "orphan-of-kos": "ludwig",
+          "rom": "celestial-emissary",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "4638",
+        "mapping": {
+          "amygdala": "witch-of-hemwick",
+          "blood-starved-beast": "vicar-amelia",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "darkbeast-paarl",
+          "darkbeast-paarl": "ebrietas",
+          "ebrietas": "amygdala",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "blood-starved-beast",
+          "laurence": "living-failures",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "celestial-emissary",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "rom",
+          "vicar-amelia": "cleric-beast",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "5877",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "cleric-beast",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "darkbeast-paarl",
+          "darkbeast-paarl": "celestial-emissary",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "blood-starved-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "ebrietas",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "7168",
+        "mapping": {
+          "amygdala": "witch-of-hemwick",
+          "blood-starved-beast": "mergos-wet-nurse",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "father-gascoigne",
+          "darkbeast-paarl": "ebrietas",
+          "ebrietas": "blood-starved-beast",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "cleric-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "darkbeast-paarl",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "celestial-emissary",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "rom",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "vicar-amelia"
+        }
+      },
+      {
+        "seed": "19932",
+        "mapping": {
+          "amygdala": "vicar-amelia",
+          "blood-starved-beast": "darkbeast-paarl",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "blood-starved-beast",
+          "darkbeast-paarl": "ebrietas",
+          "ebrietas": "rom",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "cleric-beast",
+          "laurence": "living-failures",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "martyr-logarius",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "celestial-emissary",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "witch-of-hemwick",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "father-gascoigne"
+        }
+      },
+      {
+        "seed": "32468",
+        "mapping": {
+          "amygdala": "witch-of-hemwick",
+          "blood-starved-beast": "martyr-logarius",
+          "celestial-emissary": "shadows-of-yharnam",
+          "cleric-beast": "father-gascoigne",
+          "darkbeast-paarl": "celestial-emissary",
+          "ebrietas": "cleric-beast",
+          "father-gascoigne": "orphan-of-kos",
+          "gehrman": "micolash",
+          "lady-maria": "living-failures",
+          "laurence": "blood-starved-beast",
+          "living-failures": "lady-maria",
+          "ludwig": "laurence",
+          "martyr-logarius": "mergos-wet-nurse",
+          "mergos-wet-nurse": "darkbeast-paarl",
+          "micolash": "moon-presence",
+          "moon-presence": "gehrman",
+          "orphan-of-kos": "ludwig",
+          "rom": "ebrietas",
+          "shadows-of-yharnam": "the-one-reborn",
+          "the-one-reborn": "rom",
+          "vicar-amelia": "amygdala",
+          "witch-of-hemwick": "vicar-amelia"
+        }
+      }
+    ]
+  },
+  "validation_status": {
+    "mapping_replay": "passed with tools.bb_enemizer.boss_pool.assign_donors",
+    "native_matrix": "results recorded separately in PR #427",
+    "runtime_gameplay": "unvalidated",
+    "statement": "This durable schedule does not encode mutable native-run results and makes no native-build or runtime-gameplay claim. Native verification results are recorded separately in PR #427."
+  }
+}

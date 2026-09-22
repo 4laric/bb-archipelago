@@ -106,22 +106,17 @@ class EncounterBuildTests(unittest.TestCase):
             assignments.append(assignment)
             self.assertEqual(set(graph), set(assignment))
             self.assertEqual(set(graph), set(assignment.values()))
-            self.assertEqual('orphan-of-kos', assignment['father-gascoigne'])
-            self.assertEqual('shadows-of-yharnam', assignment['orphan-of-kos'])
-            self.assertEqual('ludwig', assignment['shadows-of-yharnam'])
-            self.assertEqual('celestial-emissary', assignment['darkbeast-paarl'])
-            self.assertEqual('amygdala', assignment['celestial-emissary'])
-            self.assertEqual('ebrietas', assignment['rom'])
-            self.assertEqual('the-one-reborn', assignment['ebrietas'])
-            self.assertEqual('rom', assignment['the-one-reborn'])
             self.assertIn(assignment['ludwig'], ('cleric-beast', 'laurence'))
-            self.assertEqual('witch-of-hemwick', assignment['amygdala'])
             self.assertIn(assignment['living-failures'], ('blood-starved-beast', 'lady-maria', 'laurence'))
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)
                 self.assertIn(donor, graph[arena])
-        self.assertGreaterEqual(len({tuple(sorted(assignment.items())) for assignment in assignments}), 18)
-        for arena, donor in (('martyr-logarius', 'mergos-wet-nurse'), ('mergos-wet-nurse', 'darkbeast-paarl')):
+        self.assertGreaterEqual(len({tuple(sorted(assignment.items())) for assignment in assignments}), 48)
+        for arena in graph:
+            self.assertGreaterEqual(len({a[arena] for a in assignments}), 2, arena)
+        for donor in graph:
+            self.assertGreaterEqual(len({arena for a in assignments for arena, value in a.items() if value == donor}), 2, donor)
+        for arena, donor in (('martyr-logarius', 'mergos-wet-nurse'), ('mergos-wet-nurse', 'darkbeast-paarl'), ('rom', 'celestial-emissary')):
             self.assertTrue(any(assignment[arena] == donor for assignment in assignments))
 
     def test_allocated_event_cannot_alias_original_actor_or_operand_in_another_map(self):

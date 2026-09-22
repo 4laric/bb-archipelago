@@ -66,6 +66,14 @@ class OrphanContractTests(unittest.TestCase):
         self.assertEqual({13604820, 13604830, 13604840, 13604850},
                          {row["source_event_id"] for row in request.added_events if row["source_event_id"] is not None})
         self.assertEqual({ORPHAN_CORE}, {row["source_entity_id"] for row in request.primary_initialization})
+        primary_provenance = request.primary_initialization[0]["source_provenance"]
+        self.assertEqual(
+            {"format": "bb-boss-actor-pin-v1", "part_sha256": "a" * 64},
+            primary_provenance,
+        )
+        for addition in request.actor_additions:
+            self.assertEqual("b" * 64, addition["source_provenance"]["anchor_sha256"])
+            self.assertEqual("enemy", addition["source_part_kind"])
 
     def test_patch_preserves_destination_terminal_except_for_reviewed_bridge_wait(self):
         before = event_blocks(self.cleric)

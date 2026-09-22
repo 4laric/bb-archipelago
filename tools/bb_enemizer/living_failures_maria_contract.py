@@ -44,6 +44,8 @@ from .living_failures_laurence_contract import (
     _replace_events,
     _replace_once,
     _verify,
+    _lifecycle_cleanup,
+    _terminal_safe_controllers,
 )
 from .maria_contract import MARIA_PACKAGE, MARIA_PATCH_EXPECTED
 from .model import Slot, Swap
@@ -298,17 +300,23 @@ def patch_living_failures_at_maria(
         ids.support_controller: 13505680,
         ids.wave_reset: 13504890,
     }
-    cleanup = f"""$Event({ids.lifecycle_cleanup}, Default, function() {{
-    WaitFor(EventFlag({COMPLETION}));
-    ChangeCharacterEnableState({ids.proxy_entity}, Disabled);
-    ForceCharacterDeath({ids.proxy_entity}, false);
-    ChangeCharacterEnableState({ids.body_two_entity}, Disabled);
-    ForceCharacterDeath({ids.body_two_entity}, false);
-    ChangeCharacterEnableState({ids.body_three_entity}, Disabled);
-    ForceCharacterDeath({ids.body_three_entity}, false);
-    ChangeCharacterEnableState({ids.body_four_entity}, Disabled);
-    ForceCharacterDeath({ids.body_four_entity}, false);
-}});"""
+    translated = {
+        target: _remap(donor[source], mapping)
+        for target, source in donor_events.items()
+    }
+    (
+        translated[ids.generator_controller],
+        translated[ids.support_controller],
+    ) = _terminal_safe_controllers(
+        translated[ids.generator_controller],
+        translated[ids.support_controller],
+        completion=COMPLETION,
+        enable_flag=ids.generator_enable_flag,
+        phase_flag=ids.generator_phase_flag,
+    )
+    cleanup = _lifecycle_cleanup(
+        ids.lifecycle_cleanup, COMPLETION, ids, GENERATOR_ENTITY_IDS
+    )
     edits = {
         0: _constructor(arena[0], donor[0], ids),
         13501801: entry,
@@ -316,10 +324,7 @@ def patch_living_failures_at_maria(
         13504803: _music(donor[13504853], ids),
         13504804: _remap(donor[13504854], mapping),
         13504822: _end_event(arena[13504822]),
-        **{
-            target: _remap(donor[source], mapping)
-            for target, source in donor_events.items()
-        },
+        **translated,
         ids.lifecycle_cleanup: cleanup,
     }
     result = _replace_events(

@@ -81,8 +81,11 @@ refuses an incomplete matching instead of dropping encounters.
 Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius, Gascoigne, Rom, Living Failures,
 Wet Nurse, Witch of Hemwick, Celestial Emissary, Micolash, The One Reborn, Shadows,
 Gehrman and Moon Presence.
-The twenty-two-boss graph has six complete assignments selected by seed; most
-routes remain forced by compatibility. All donors are used once and no boss stays in its own arena. Cleric and
+The current twenty-two-boss graph has 560 complete one-to-one assignments and
+63 feasible directed arena/donor edges. Every arena has at least two feasible
+donors, and every donor can reach at least two feasible destinations. The graph
+remains deliberately restricted rather than all-to-all. All donors are used
+once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
 composition also accepts disjoint appended initializer calls and rejects
@@ -420,7 +423,8 @@ small emissary; a death bridge kills the retained giant only after BSB dies,
 leaving the giant-based destination terminal unchanged. Wave generators and
 phase controllers are retired, retained bodies are pinned and cleaned after
 completion, and shared-map Ebrietas progression remains unchanged. This is a
-standalone destination adapter; Celestial donor construction is still pending.
+standalone destination adapter. At this historical checkpoint, Celestial donor
+construction had not yet been added.
 
 
 The reviewed pool now covers seventeen encounters. Seeds `0` and `seed-0`
@@ -447,8 +451,8 @@ opaque 2600803 handling, carries both sword and bullet-owner helpers, and
 preserves destination sound slots with Logarius's phase trigger. Standalone
 native construction verifies eight files. Amygdala-at-Celestial-Emissary also
 verifies eight files, including complete body-part/phase controllers and the
-original giant-based destination terminal; Celestial donor construction is
-still in progress.
+original giant-based destination terminal. Celestial donor construction now
+exists through its reviewed Paarl and Rom destination routes described below.
 
 Standalone Amelia at Witch of Hemwick also verifies eight native files. The
 full Amelia phase, cloth, limb, mask and healing routines are attached; Witch
@@ -588,9 +592,9 @@ controllers are retired, and the original two-body terminal is released only
 after Gascoigne's actual human-or-beast death. Source pins cover exactly the
 Gascoigne combat bodies consumed by this adapter.
 
-These five additional directed adapters expand the complete assignment graph
-from six to 48. This is still restricted compatibility, not unrestricted
-all-to-all replacement. Full-roster seed `8`, containing all three new final/Hemwick routes together,
+At that checkpoint, these five additional directed adapters expanded the
+complete assignment graph from six to 48. This was still restricted
+compatibility, not unrestricted all-to-all replacement. Full-roster seed `8`, containing all three new final/Hemwick routes together,
 also verifies 59 files. The focused expansion suite passes 69 tests. Runtime
 entrance, geometry, phase behavior and completion remain unobserved.
 
@@ -598,3 +602,29 @@ The Archipelago test gate permits only individually named local compiler or
 installed-source checks to skip. An unlisted skip or stale allowance fails.
 AP-dependent modules explicitly require zero skips; baseline module rows retain
 their executed-test floors. Five gate regressions cover these distinctions.
+
+The current reviewed graph extends that checkpoint to 560 complete assignments.
+Of its 67 declared directed edges, 63 occur in at least one complete assignment.
+Each of the 22 arenas has multiple feasible donors, and each donor has multiple
+feasible destinations, so no encounter is forced to one counterpart across all
+seeds. [The tracked native matrix](boss-shuffle-native-matrix.json) records the
+canonical graph hash, every feasible choice, the exact 63-edge union, and 13
+deterministic full-roster mappings that cover that union. Those mappings form
+a durable native-build schedule; mutable verification results are recorded
+separately in the PR #427 verification record. The matrix itself makes no
+native-build claim. Gameplay, arena fit, phases, retry behavior and completion
+remain unvalidated at runtime.
+
+The final four directed adapters are Celestial Emissary at Rom, Shadows at
+Celestial Emissary, Witch at One Reborn, and One Reborn at Shadows. They carry
+their complete source-backed multi-body and generator closures while retaining
+the destination terminal/progression contract. Rom's Celestial entry and music
+use the original Rom arena region; both physical states pin every retired spider.
+
+Completion guards prevent copied Witch and Living Failures controllers from
+reactivating minions, generators or support AI after victory. Cleanup disables
+the complete owned helper set, including Living Failures support, with each
+arena's own generator IDs. Native matrix construction also exposed and fixed
+Orphan-at-Cleric primary provenance containing an inapplicable anchor field;
+anchored additions retain their anchor evidence and original fingerprints.
+These are construction and lifecycle fixes, not observations of game behavior.

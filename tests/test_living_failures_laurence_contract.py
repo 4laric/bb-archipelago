@@ -53,7 +53,7 @@ class LivingFailuresLaurenceContractTests(unittest.TestCase):
         lifecycle = after[DEFAULT_IDS.lifecycle_cleanup]
         self.assertIn("WaitFor(EventFlag(13401850));", lifecycle)
         self.assertEqual(
-            {980008, 980009, 980010, 980011},
+            {980008, 980009, 980010, 980011, 980012},
             {
                 int(entity)
                 for entity in re.findall(
@@ -61,7 +61,41 @@ class LivingFailuresLaurenceContractTests(unittest.TestCase):
                 )
             },
         )
-        self.assertEqual(4, lifecycle.count("ForceCharacterDeath("))
+        self.assertEqual(5, lifecycle.count("ForceCharacterDeath("))
+        for flag in (
+            DEFAULT_IDS.generator_enable_flag,
+            DEFAULT_IDS.generator_phase_flag,
+            DEFAULT_IDS.scheduler_active_flag,
+            DEFAULT_IDS.phase_music_flag,
+        ):
+            self.assertIn(f"SetEventFlag({flag}, OFF);", lifecycle)
+        for generator in (980013, 980014, 980015, 980016):
+            self.assertIn(f"DeactivateGenerator({generator}, Disabled);", lifecycle)
+        generator = after[DEFAULT_IDS.generator_controller]
+        self.assertIn(
+            f"EventFlag({DEFAULT_IDS.generator_phase_flag}) || EventFlag(13401850)",
+            generator,
+        )
+        self.assertEqual(
+            4,
+            len(
+                re.findall(
+                    r"EndIf\(EventFlag\(13401850\)\);\n\s*DeactivateGenerator\(98001[3-6], Enabled\);",
+                    generator,
+                )
+            ),
+        )
+        support = after[DEFAULT_IDS.support_controller]
+        self.assertIn("EventFlag(12992021) || EventFlag(13401850)", support)
+        self.assertEqual(
+            7,
+            len(
+                re.findall(
+                    r"EndIf\(EventFlag\(13401850\)\);\n\s*RequestCharacterAI(?:Command|Replan)",
+                    support,
+                )
+            ),
+        )
         self.assertEqual(
             1,
             after[0].count(f"$InitializeEvent(0, {DEFAULT_IDS.lifecycle_cleanup});"),

@@ -21,3 +21,6 @@ no_skip_module	test_bloodborne_client	16
 # #205's option wiring only exists when Archipelago is importable, so the AP
 # tier asserts this module ran all of it rather than skipping the option tests.
 no_skip_module	test_bloodborne_model	45
+allow_skip	test_celestial_rom_contract.CelestialRomContractTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_shadows_celestial_contract.ShadowsCelestialTests.test_patched_source_compiles_with_pinned_darkscript_when_available
+allow_skip	test_one_reborn_shadows_contract.OneRebornShadowsTests.test_patched_source_compiles_with_pinned_darkscript_when_available

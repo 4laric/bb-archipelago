@@ -102,16 +102,18 @@ neither is implied by solo success.
 
 Maintain one result row per selected arena/donor/build combination. For all
 22 encounters, cover destination progression and donor combat behavior, then
-exercise both complete seed assignments used by the release build matrix.
-Increase this matrix when new compatibility edges create new behavior; two
-seeds are not proof of every possible placement.
+exercise the complete seed assignments selected by the release build matrix.
+Select that matrix from the current compatibility graph to cover each feasible
+arena/donor edge; earlier two-seed checkpoints do not cover later additions.
+Record the untested edges explicitly rather than inferring their acceptance.
 
 Include explicit witnesses for single-actor phases, transformations with two
 bodies, simultaneous enemies, shared-health proxies, generators/respawns,
 projectile owners, special entry/progression, and shared-map composition.
 Examples already needing distinct sessions include Logarius's sword and c9010
 owner, Ludwig's two-body handoff, Orphan's support and post-fight shadow, and
-the fixed final-boss reciprocal pair. Wet Nurse's opaque `2600803` reference
+the final-boss permutations, including Micolash direct combat and Moon
+Presence's player-immortality mechanic. Wet Nurse's opaque `2600803` reference
 remains an additional runtime question; static absence of a placement does
 not resolve its engine semantics.
 

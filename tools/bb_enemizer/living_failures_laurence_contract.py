@@ -476,6 +476,108 @@ def _camera(source: str, ids: LivingFailuresLaurenceIds) -> str:
     return result
 
 
+def _terminal_safe_controllers(
+    generator_controller: str,
+    support_controller: str,
+    *,
+    completion: int,
+    enable_flag: int,
+    phase_flag: int,
+) -> tuple[str, str]:
+    """Keep copied LF loops from crossing a destination completion boundary."""
+    guard = f"    EndIf(EventFlag({completion}));\n"
+    phase_wait = f"    WaitFor(EventFlag({phase_flag}));"
+    if generator_controller.count(phase_wait) != 1:
+        raise ValueError("Living Failures generator-controller phase witness drift")
+    generator_controller = generator_controller.replace(
+        phase_wait,
+        f"    WaitFor(EventFlag({phase_flag}) || EventFlag({completion}));\n" + guard,
+        1,
+    )
+    enabled = re.findall(
+        r"(?m)^\s*DeactivateGenerator\([^)]*, Enabled\);$", generator_controller
+    )
+    if len(enabled) != 4:
+        raise ValueError("Living Failures generator-controller enable witness drift")
+    generator_controller = re.sub(
+        r"(?m)^(\s*DeactivateGenerator\([^)]*, Enabled\);)$",
+        guard + r"\1",
+        generator_controller,
+    )
+    if generator_controller.count("    WaitFixedTimeSeconds(3);") != 1:
+        raise ValueError("Living Failures generator-controller delay witness drift")
+    generator_controller = generator_controller.replace(
+        "    WaitFixedTimeSeconds(3);",
+        "    WaitFixedTimeSeconds(3);\n" + guard,
+        1,
+    )
+
+    support_wait = f"    WaitFor(CharacterType(10000, TargetType.Alive) && EventFlag({enable_flag}));"
+    if support_controller.count(support_wait) != 1:
+        raise ValueError("Living Failures support-controller entry witness drift")
+    support_controller = support_controller.replace(
+        support_wait,
+        f"    WaitFor(\n        CharacterType(10000, TargetType.Alive)\n"
+        f"            && (EventFlag({enable_flag}) || EventFlag({completion})));\n"
+        + guard,
+        1,
+    )
+    ai_boundaries = re.findall(
+        r"(?m)^\s*RequestCharacterAI(?:Command|Replan)\([^;]+;$", support_controller
+    )
+    if len(ai_boundaries) != 7:
+        raise ValueError("Living Failures support-controller AI witness drift")
+    support_controller = re.sub(
+        r"(?m)^(\s*)(RequestCharacterAI(?:Command|Replan)\([^;]+;)$",
+        lambda match: (
+            f"{match.group(1)}EndIf(EventFlag({completion}));\n"
+            f"{match.group(1)}{match.group(2)}"
+        ),
+        support_controller,
+    )
+    return generator_controller, support_controller
+
+
+def _lifecycle_cleanup(
+    event_id: int, completion: int, ids, generators: tuple[int, ...]
+) -> str:
+    """Completion-side ownership cleanup for every added actor and generator."""
+    flags = "".join(
+        f"    SetEventFlag({flag}, OFF);\n"
+        for flag in (
+            ids.generator_enable_flag,
+            ids.generator_phase_flag,
+            ids.scheduler_active_flag,
+            ids.phase_music_flag,
+        )
+    )
+    waves = (
+        f"    BatchSetEventFlags({ids.wave_flags_start}, {ids.wave_flags_end}, OFF);\n"
+    )
+    counts = (
+        f"    ClearEventValue({ids.combat_count_value}, 3);\n"
+        f"    ClearEventValue({ids.support_count_value}, 3);\n"
+    )
+    generators = "".join(
+        f"    DeactivateGenerator({entity}, Disabled);\n" for entity in generators
+    )
+    actors = "".join(
+        f"    SetCharacterAIState({entity}, Disabled);\n"
+        f"    ChangeCharacterEnableState({entity}, Disabled);\n"
+        f"    ForceCharacterDeath({entity}, false);\n"
+        for entity in (
+            ids.proxy_entity,
+            ids.body_two_entity,
+            ids.body_three_entity,
+            ids.body_four_entity,
+            ids.support_entity,
+        )
+    )
+    return f"""$Event({event_id}, Default, function() {{
+    WaitFor(EventFlag({completion}));
+{flags}{waves}{counts}{generators}{actors}}});"""
+
+
 def patch_living_failures_at_laurence(
     destination: str,
     donor_source: str,
@@ -512,17 +614,23 @@ def patch_living_failures_at_laurence(
         ids.support_controller: 13505680,
         ids.wave_reset: 13504890,
     }
-    lifecycle_cleanup = f"""$Event({ids.lifecycle_cleanup}, Default, function() {{
-    WaitFor(EventFlag({COMPLETION}));
-    ChangeCharacterEnableState({ids.proxy_entity}, Disabled);
-    ForceCharacterDeath({ids.proxy_entity}, false);
-    ChangeCharacterEnableState({ids.body_two_entity}, Disabled);
-    ForceCharacterDeath({ids.body_two_entity}, false);
-    ChangeCharacterEnableState({ids.body_three_entity}, Disabled);
-    ForceCharacterDeath({ids.body_three_entity}, false);
-    ChangeCharacterEnableState({ids.body_four_entity}, Disabled);
-    ForceCharacterDeath({ids.body_four_entity}, false);
-}});"""
+    translated = {
+        target: _remap(donor[source], mapping)
+        for target, source in donor_events.items()
+    }
+    (
+        translated[ids.generator_controller],
+        translated[ids.support_controller],
+    ) = _terminal_safe_controllers(
+        translated[ids.generator_controller],
+        translated[ids.support_controller],
+        completion=COMPLETION,
+        enable_flag=ids.generator_enable_flag,
+        phase_flag=ids.generator_phase_flag,
+    )
+    lifecycle_cleanup = _lifecycle_cleanup(
+        ids.lifecycle_cleanup, COMPLETION, ids, GENERATOR_ENTITY_IDS
+    )
     edits = {
         0: _constructor(arena[0], donor[0], ids),
         13401851: entry,
@@ -532,10 +640,7 @@ def patch_living_failures_at_laurence(
         13404854: _camera(donor[13504854], ids),
         13404870: _end_event(arena[13404870]),
         13404875: _end_event(arena[13404875]),
-        **{
-            target: _remap(donor[source], mapping)
-            for target, source in donor_events.items()
-        },
+        **translated,
         ids.lifecycle_cleanup: lifecycle_cleanup,
     }
     result = _replace_events(
