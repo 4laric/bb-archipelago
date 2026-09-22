@@ -24,9 +24,9 @@ internal static class BossActorTests
             string source = Path.Combine(root, "source"), destination = Path.Combine(root, "destination");
             Directory.CreateDirectory(source); Directory.CreateDirectory(destination);
             var donorMap = new MSBB(); donorMap.Models.Enemies.Add(new MSBB.Model.Enemy { Name = "c9000", SibPath = "" });
-            donorMap.Parts.Enemies.Add(new MSBB.Part.Enemy { Name = "anchor", EntityID = 100, Position = new Vector3(10, 0, 10), Rotation = new Vector3(0, 0, 0) });
+            donorMap.Parts.Enemies.Add(new MSBB.Part.Enemy { Name = "anchor", EntityID = 100, Position = new Vector3(10, 0, 10), Rotation = new Vector3(0, 15, 0) });
             var donor = new MSBB.Part.Enemy { Name = "donor", EntityID = 101, ModelName = "c9000", NPCParamID = 90, ThinkParamID = 91, CharaInitID = 92,
-                TalkID = 93, UnkT18 = 94, InitAnimID = 95, DamageAnimID = 96, Position = new Vector3(12, 0, 13), Rotation = new Vector3(0, .5f, 0) };
+                TalkID = 93, UnkT18 = 94, InitAnimID = 95, DamageAnimID = 96, Position = new Vector3(12, 0, 13), Rotation = new Vector3(0, 30, 0) };
             donorMap.Parts.Enemies.Add(donor);
             donorMap.Parts.DummyEnemies.Add(new MSBB.Part.DummyEnemy { Name = "dummy_donor", EntityID = 102, ModelName = "c9000", NPCParamID = 90, ThinkParamID = 91, CharaInitID = 92,
                 TalkID = 193, UnkT18 = 194, InitAnimID = 195, DamageAnimID = 196, Position = new Vector3(11, 0, 10), Rotation = new Vector3(0, .2f, 0) });
@@ -40,7 +40,7 @@ internal static class BossActorTests
 
             var targetMap = new MSBB(); targetMap.Models.Enemies.Add(new MSBB.Model.Enemy { Name = "c1000", SibPath = "" });
             targetMap.Parts.Collisions.Add(new MSBB.Part.Collision { Name = "h0000" });
-            var anchor = new MSBB.Part.Enemy { Name = "target_anchor", EntityID = 200, ModelName = "c1000", Position = new Vector3(50, 0, 40), Rotation = new Vector3(0, MathF.PI / 2, 0),
+            var anchor = new MSBB.Part.Enemy { Name = "target_anchor", EntityID = 200, ModelName = "c1000", Position = new Vector3(50, 0, 40), Rotation = new Vector3(0, 105, 0),
                 CollisionName = "h0000", TalkID = 1, UnkT18 = 2, InitAnimID = 3, DamageAnimID = 4 };
             anchor.DrawGroups[0] = 7; anchor.DispGroups[0] = 8; anchor.BackreadGroups[0] = 9; targetMap.Parts.Enemies.Add(anchor);
             targetMap.Regions.Regions.Add(new MSBB.Region { Name = "target_spawn", EntityID = 210, Position = new Vector3(55, 0, 40) });
@@ -156,7 +156,7 @@ internal static class BossActorTests
             var written = MSBB.Read(Path.Combine(output, "m24_01_00_00.msb")); var spawned = written.Parts.Enemies.Single(e => e.Name == "spawned");
             Need(spawned.EntityID == 300 && spawned.ModelName == "c9000" && spawned.NPCParamID == 90 && spawned.ThinkParamID == 91 && spawned.CharaInitID == 92);
             Need(spawned.TalkID == 93 && spawned.UnkT18 == 94 && spawned.InitAnimID == 95 && spawned.DamageAnimID == 96);
-            Need(Vector3.Distance(spawned.Position, new Vector3(53, 0, 38)) < .001f && MathF.Abs(spawned.Rotation.Y - (.5f + MathF.PI / 2)) < .001f);
+            Need(Vector3.Distance(spawned.Position, new Vector3(53, 0, 38)) < .001f && MathF.Abs(spawned.Rotation.Y - 120) < .001f);
             Need(spawned.CollisionName == "h0000" && spawned.DrawGroups[0] == 7 && spawned.DispGroups[0] == 8 && spawned.BackreadGroups[0] == 9);
             Need(written.Parts.Enemies.Single(e => e.Name == "target_anchor").EntityID == 200);
             var generated = written.Events.Generators.Single(e => e.Name == "spawned_gen");
@@ -220,6 +220,16 @@ internal static class BossActorTests
                 addition.destination_map, addition.destination_anchor_part, addition.destination_part, addition.destination_entity_id };
             WritePlan(wrongInit);
             Refused(() => BossActorTransplant.Apply(planPath, source, destination, Path.Combine(root, "bad-init"), false), "initialization drift");
+            var actorRegionCollision = new { addition.source_map, addition.source_part, addition.source_anchor_part, addition.source_entity_id,
+                addition.source_part_kind, addition.source_archetype, addition.source_provenance, addition.source_initialization,
+                addition.destination_map, addition.destination_anchor_part, destination_part = "actor_region_collision", destination_entity_id = 210 };
+            WritePlan(actorRegionCollision);
+            Refused(() => BossActorTransplant.Apply(planPath, source, destination, Path.Combine(root, "actor-region-collision"), false), "actor destination entity ID already exists");
+            var actorEventCollision = new { addition.source_map, addition.source_part, addition.source_anchor_part, addition.source_entity_id,
+                addition.source_part_kind, addition.source_archetype, addition.source_provenance, addition.source_initialization,
+                addition.destination_map, addition.destination_anchor_part, destination_part = "actor_event_collision", destination_entity_id = 301 };
+            WritePlan(actorEventCollision);
+            Refused(() => BossActorTransplant.Apply(planPath, source, destination, Path.Combine(root, "actor-event-collision"), false), "actor destination entity ID already exists");
             var generatorCollision = new {
                 generatorAddition.source_map, generatorAddition.source_event, generatorAddition.source_event_id, generatorAddition.source_entity_id, generatorAddition.source_fingerprint,
                 generatorAddition.destination_map, generatorAddition.destination_event, generatorAddition.destination_event_id, destination_entity_id = 200,
@@ -227,6 +237,13 @@ internal static class BossActorTests
             };
             WritePlan(addition, [generatorCollision]);
             Refused(() => BossActorTransplant.Apply(planPath, source, destination, Path.Combine(root, "generator-collision"), false), "generator destination identity already exists");
+            var generatorRegionCollision = new {
+                generatorAddition.source_map, generatorAddition.source_event, generatorAddition.source_event_id, generatorAddition.source_entity_id, generatorAddition.source_fingerprint,
+                generatorAddition.destination_map, generatorAddition.destination_event, generatorAddition.destination_event_id, destination_entity_id = 210,
+                generatorAddition.destination_part_name, generatorAddition.destination_region_name, generatorAddition.spawn_part_map, generatorAddition.spawn_point_map,
+            };
+            WritePlan(addition, [generatorRegionCollision]);
+            Refused(() => BossActorTransplant.Apply(planPath, source, destination, Path.Combine(root, "generator-region-collision"), false), "generator destination identity already exists");
 
             var dummy = new {
                 source_map = "m23_00_00_00", source_part = "dummy_donor", source_anchor_part = "anchor", source_entity_id = 102,

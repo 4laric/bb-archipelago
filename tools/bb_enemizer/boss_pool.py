@@ -80,7 +80,8 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     """Compose canonical pair plans with one shared scaling allocation."""
     if not plans:
         raise ValueError('boss pool has no pair plans')
-    swaps, changes, skips, contracts, additions, generators = [], [], [], [], [], []
+    swaps, changes, skips, contracts, additions, generators, regions = [], [], [], [], [], [], []
+    region_names = set()
     added_parts, added_entities = set(), set()
     generator_names, generator_events = set(), set()
     initializations, initialized_parts = [], set()
@@ -127,6 +128,16 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
             generator_events.add(event)
             added_entities.add(entity)
             generators.append(copy.deepcopy(generator))
+        for region in plan.get('boss_region_additions', []):
+            map_name = region['destination_map'].removesuffix('.dcx').removesuffix('.msb')
+            name = (map_name, region['destination_region'])
+            entity = (map_name, region['destination_entity_id'])
+            if name in region_names or (entity[1] >= 0 and entity in added_entities):
+                raise ValueError('boss pair plans overlap an added region')
+            region_names.add(name)
+            if entity[1] >= 0:
+                added_entities.add(entity)
+            regions.append(copy.deepcopy(region))
         for initialization in plan.get('boss_actor_initializations', []):
             map_name = initialization['destination_map'].removesuffix('.dcx').removesuffix('.msb')
             part = (map_name, initialization['destination_part'])
@@ -158,6 +169,9 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     if generators:
         result['boss_generator_additions'] = sorted(generators, key=lambda row: (
             row['destination_map'], row['destination_event_id']))
+    if regions:
+        result['boss_region_additions'] = sorted(regions, key=lambda row: (
+            row['destination_map'], row['destination_region']))
     if initializations:
         result['boss_actor_initializations'] = sorted(initializations, key=lambda row: (
             row['destination_map'], row['destination_part']))
@@ -188,7 +202,7 @@ def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence
         raise ValueError('ordinary plan has invalid options')
     forbidden = {
         'boss_adapter', 'boss_contract', 'boss_encounters', 'boss_actor_additions',
-        'boss_actor_initializations', 'boss_generator_additions', 'boss_external_references',
+        'boss_actor_initializations', 'boss_generator_additions', 'boss_region_additions', 'boss_external_references',
     }
     present = forbidden.intersection(ordinary_plan)
     if present:
@@ -240,7 +254,7 @@ def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence
         'skips': [copy.deepcopy(skip) for skip in skips],
     }
     result['boss_contract'] = copy.deepcopy(bosses['boss_contract'])
-    for field in ('boss_actor_additions', 'boss_generator_additions',
+    for field in ('boss_actor_additions', 'boss_generator_additions', 'boss_region_additions',
                   'boss_actor_initializations', 'boss_external_references'):
         if field in bosses:
             result[field] = copy.deepcopy(bosses[field])

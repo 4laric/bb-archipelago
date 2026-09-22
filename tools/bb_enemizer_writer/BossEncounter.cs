@@ -277,6 +277,7 @@ internal static class BossEncounter
         Need(encounterList.Select(e => e.DestinationEventFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()
              == encounterList.Count, "duplicate boss encounter destination event file");
         BossActorTransplant.ValidatePlan(planPath, required: false);
+        BossRegionTransplant.ValidatePlan(planPath, required: false);
         var externalReferences = BossExternalReference.Read(planPath, required: false);
         BossExternalReference.ValidateEncounterBindings(externalReferences, encounterList);
 
@@ -311,8 +312,11 @@ internal static class BossEncounter
                 ScalingTransplant.Run(planPath, gamePath, defsPath, mapsPath, scriptsPath, overlay, bossPrepared: true);
             else
                 RunUnscaled(planPath, planNode, gamePath, defsPath, mapsPath, scriptsPath, overlay);
-            BossActorTransplant.Apply(planPath, mapsPath, mapsPath,
-                Path.Combine(overlay, "dvdroot_ps4", "map", "MapStudio"), required: false);
+            string overlayMaps = Path.Combine(overlay, "dvdroot_ps4", "map", "MapStudio");
+            BossActorTransplant.ApplyActorsAndPrimary(planPath, mapsPath, mapsPath, overlayMaps, required: false);
+            var regionAdditions = BossRegionTransplant.Apply(planPath, mapsPath, mapsPath, overlayMaps, required: false);
+            BossActorTransplant.ApplyGeneratorsOnly(planPath, mapsPath, mapsPath, overlayMaps);
+            BossRegionTransplant.VerifyFinal(regionAdditions, mapsPath, overlayMaps);
             foreach (var (encounter, events) in prepared) {
                 string eventPath = Path.Combine(overlay, "dvdroot_ps4", "event", encounter.DestinationEventFile);
                 Directory.CreateDirectory(Path.GetDirectoryName(eventPath)!);
@@ -338,7 +342,7 @@ internal static class BossEncounter
                     protected_completion_event_ids = item.Encounter.ProtectedCompletionEventIds,
                     terminal_predicates = item.Encounter.TerminalPredicates ?? [],
                     compiled_event_fingerprints = item.Encounter.CompiledEventFingerprints,
-                }), external_references = externalReferences, files,
+                }), external_references = externalReferences, region_additions = regionAdditions, files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",
             }, Json));
             Directory.Move(overlay, output);

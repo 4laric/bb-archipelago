@@ -1,6 +1,7 @@
 import hashlib
 import json
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from pathlib import Path
@@ -10,7 +11,7 @@ from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_co
 from tools.build_boss_encounters import (
     ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
     event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
-    is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers,
+    is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers, pin_region_requirements,
 )
 from tools.bb_enemizer.boss_pool import compose_event_patches, assign_donors
 from tools.bb_enemizer.gascoigne_contract import patch_gascoigne_at_cleric
@@ -20,6 +21,29 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
+    def test_region_geometry_and_both_original_anchors_must_match_reviewed_pins(self):
+        requirement = {'source_map': 'm32_00_00_00', 'source_region': 'warp',
+                       'source_entity_id': 3202800,
+                       'source_provenance': {'format': 'bb-boss-region-pin-v1', 'region_sha256': 'a' * 64},
+                       'source_anchor_part': 'core', 'destination_map': 'm24_02_00_00',
+                       'destination_anchor_part': 'core',
+                       'source_anchor_provenance': {'format': 'bb-boss-actor-pin-v1', 'part_sha256': 'b' * 64},
+                       'destination_anchor_provenance': {'format': 'bb-boss-actor-pin-v1', 'part_sha256': 'b' * 64}}
+        region = {'name': 'warp', 'entity_id': 3202800, 'fingerprint': 'a' * 64}
+        args = SimpleNamespace(_region_pin_cache={'m32_00_00_00': {'regions': [region]}})
+        actor_report = {'parts': [{'name': 'core', 'fingerprint': 'b' * 64}]}
+        with patch('tools.build_boss_encounters.inspect_actor_map', return_value=actor_report):
+            self.assertEqual([requirement], pin_region_requirements(args, [requirement]))
+            region['fingerprint'] = 'c' * 64
+            with self.assertRaisesRegex(ValueError, 'region requirement'):
+                pin_region_requirements(args, [requirement])
+            region['fingerprint'] = 'a' * 64
+            for role in ('source', 'destination'):
+                requirement[role + '_anchor_provenance']['part_sha256'] = 'c' * 64
+                with self.assertRaisesRegex(ValueError, role + ' region anchor'):
+                    pin_region_requirements(args, [requirement])
+                requirement[role + '_anchor_provenance']['part_sha256'] = 'b' * 64
+
     def test_retired_helper_controller_requires_the_original_native_actor(self):
         helper = {'map': 'm25_00_00_00', 'part': 'c9010_0002', 'entity_id': 2500802,
                   'archetype': {'model_name': 'c9010', 'npc_param_id': 232000,

@@ -58,6 +58,7 @@ from tools.bb_enemizer.logarius_contract import (
 from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, native_plan_bsb_at_logarius
 from tools.bb_enemizer.paarl_logarius_contract import patch_paarl_at_logarius, native_plan_paarl_at_logarius
 from tools.bb_enemizer.bsb_wet_nurse_contract import patch_bsb_at_wet_nurse, native_plan_bsb_at_wet_nurse
+from tools.bb_enemizer.bsb_living_failures_contract import patch_bsb_at_living_failures, native_plan_bsb_at_living_failures
 from tools.bb_enemizer.orphan_gascoigne_contract import patch_orphan_at_gascoigne, native_plan_orphan_at_gascoigne
 from tools.bb_enemizer.orphan_contract import (
     OrphanIds, NativeActorPin as OrphanActorPin,
@@ -97,8 +98,7 @@ class SpecialEndpoint:
 
 
 GASCOIGNE_ENDPOINT = SpecialEndpoint('father-gascoigne', 'm24_01_00_00.emevd.dcx.js')
-# This endpoint is intentionally excluded from the generic reviewed graph.  It
-# is available only as the two directed members of the explicit direct pool.
+# Special endpoints dispatch through their explicit combat/arena adapters.
 ARENAS[GASCOIGNE_ENDPOINT.key] = GASCOIGNE_ENDPOINT
 PACKAGES[GASCOIGNE_ENDPOINT.key] = GASCOIGNE_ENDPOINT
 LAURENCE_ENDPOINT = SpecialEndpoint('laurence', 'm34_00_00_00.emevd.dcx.js')
@@ -112,6 +112,7 @@ ARENAS['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd.d
 PACKAGES['martyr-logarius'] = SpecialEndpoint('martyr-logarius', 'm25_00_00_00.emevd.dcx.js')
 ARENAS['martyr-logarius'] = PACKAGES['martyr-logarius']
 ARENAS['mergos-wet-nurse'] = SpecialEndpoint('mergos-wet-nurse', 'm26_00_00_00.emevd.dcx.js')
+ARENAS['living-failures'] = SpecialEndpoint('living-failures', 'm35_00_00_00.emevd.dcx.js')
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -203,6 +204,10 @@ def is_bsb_logarius_pair(arena, package) -> bool:
 
 def is_paarl_logarius_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('martyr-logarius', 'darkbeast-paarl')
+
+
+def is_bsb_living_failures_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('living-failures', 'blood-starved-beast')
 
 
 def is_bsb_wet_nurse_pair(arena, package) -> bool:
@@ -327,6 +332,43 @@ def pin_actor_requirements(args, requirements: list[dict]) -> list[dict]:
     return output
 
 
+def pin_region_requirements(args, requirements: list[dict]) -> list[dict]:
+    """Verify reviewed region geometry and both original anchor witnesses."""
+    cache = getattr(args, '_region_pin_cache', None)
+    if cache is None:
+        args._region_pin_cache = cache = {}
+    output = []
+    for requirement in requirements:
+        name = requirement['source_map']
+        # Actor inspection validates the map identity and locates original inputs.
+        source_actors = inspect_actor_map(args, name)
+        destination_actors = inspect_actor_map(args, requirement['destination_map'])
+        if name not in cache:
+            path = next(args.maps / (name + suffix) for suffix in ('.msb.dcx', '.msb')
+                        if (args.maps / (name + suffix)).is_file())
+            run = subprocess.run(command_for(args) + ['--boss-region-pins', str(path)],
+                                 check=True, capture_output=True, text=True)
+            report = json.loads(run.stdout)
+            if (report.get('format') != 'bb-boss-region-pins-v1' or report.get('map') != name
+                    or len({row['name'] for row in report['regions']}) != len(report['regions'])):
+                raise ValueError('invalid native region pin report')
+            cache[name] = report
+        region = next((row for row in cache[name]['regions']
+                       if row['name'] == requirement['source_region']), None)
+        if (region is None or region['entity_id'] != requirement['source_entity_id']
+                or requirement['source_provenance'] != {
+                    'format': 'bb-boss-region-pin-v1', 'region_sha256': region['fingerprint']}):
+            raise ValueError('region requirement differs from original native source')
+        for role, report in (('source', source_actors), ('destination', destination_actors)):
+            actor = next((row for row in report['parts']
+                          if row['name'] == requirement[role + '_anchor_part']), None)
+            if actor is None or requirement[role + '_anchor_provenance'] != {
+                    'format': 'bb-boss-actor-pin-v1', 'part_sha256': actor['fingerprint']}:
+                raise ValueError(role + ' region anchor differs from original native source')
+        output.append(dict(requirement))
+    return output
+
+
 def verify_retained_helpers(args, plan) -> None:
     """A retired controller still depends on the original helper identity."""
     for helper in plan.get('boss_contract', {}).get('retained_destination_helpers', ()):
@@ -399,7 +441,14 @@ def validate_allocations(bundle: Path, slots, records: list[dict], plan: dict) -
     actors = {row['destination_entity_id'] for row in plan.get('boss_actor_additions', [])}
     if set(events) & actors:
         raise ValueError('added event and actor identifiers collide')
-    allocated = set(events) | actors
+    regions = {row['destination_entity_id'] for row in plan.get('boss_region_additions', [])
+               if row['destination_entity_id'] >= 0}
+    generators = {row['destination_entity_id'] for row in plan.get('boss_generator_additions', [])
+                  if row['destination_entity_id'] >= 0}
+    if (regions & (set(events) | actors | generators)
+            or generators & (set(events) | actors)):
+        raise ValueError('added event, actor, region or generator identifiers collide')
+    allocated = set(events) | actors | regions | generators
     if any(not isinstance(value, int) or value <= 0 for value in allocated) or allocated & used:
         raise ValueError('project-owned identifier collides with an original corpus operand or actor')
 
@@ -466,6 +515,8 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[0] == 'living-failures' and direct_orphan[1] != 'blood-starved-beast':
+        raise ValueError('Living Failures arena requires the reviewed BSB donor adapter')
     if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] != 'blood-starved-beast':
         raise ValueError('Wet Nurse arena requires the reviewed BSB donor adapter')
     if orphan and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne'):
@@ -547,7 +598,8 @@ def build(args) -> dict:
                     and not is_bsb_orphan_pair(arena, package) and not is_ludwig_orphan_pair(arena, package)
                     and not is_logarius_bsb_pair(arena, package)
                     and not is_bsb_logarius_pair(arena, package) and not is_paarl_logarius_pair(arena, package)
-                    and not is_bsb_wet_nurse_pair(arena, package)):
+                    and not is_bsb_wet_nurse_pair(arena, package)
+                    and not is_bsb_living_failures_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -577,6 +629,8 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_bsb_living_failures_pair(arena, package):
+                patched = patch_bsb_at_living_failures(texts[arena.event_file], texts[package.event_file])
             elif is_bsb_wet_nurse_pair(arena, package):
                 patched = patch_bsb_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
             elif is_paarl_logarius_pair(arena, package):
@@ -690,6 +744,9 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_bsb_living_failures_pair(arena, package):
+                plan = native_plan_bsb_at_living_failures(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_bsb_wet_nurse_pair(arena, package):
                 plan = native_plan_bsb_at_wet_nurse(slots, npcs, effects, args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
@@ -762,6 +819,8 @@ def build(args) -> dict:
                 plan = plan_contract_swap(arena, package, slots, npcs, effects, args.seed)
                 if arena.key in materializations:
                     plan['boss_actor_additions'] = materializations[arena.key]
+            if plan.get('boss_region_additions'):
+                plan['boss_region_additions'] = pin_region_requirements(args, plan['boss_region_additions'])
             verify_retained_helpers(args, plan)
             plans.append(plan)
         ordinary_plan_path = getattr(args, 'ordinary_plan', None)

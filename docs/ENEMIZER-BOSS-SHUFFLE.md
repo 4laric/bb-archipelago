@@ -35,6 +35,15 @@ placeable actor.
 
 ## Native construction
 
+Reviewed donor regions carry exact geometry fingerprints and fingerprints for
+both original placement anchors. The native writer clones their shapes and
+transforms their positions with the same anchor-relative yaw as actors. MSBB
+angles are degrees; only the matrix calculation converts to radians. It
+preserves original regions and order, rejects bound-ID/name collisions, and
+verifies the additions again after generators have been written. Generators
+may reference added regions only after those regions exist in the staged map.
+
+
 `tools/build_boss_encounters.py` decompiles the player's originals with pinned
 DarkScript 3.6.3, applies the reviewed contract, compiles it, and records native
 fingerprints for the exact replacement events. `BBEnemizerWriter
@@ -259,7 +268,7 @@ seed-dependent assignments.
 | Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Ludwig | Constructed | Constructed | Yes |
 | Laurence | Constructed | Constructed | Yes |
-| Living Failures | Pending | Pending | Pending |
+| Living Failures | Pending | Constructed | Pending |
 | Lady Maria | Constructed | Constructed | Yes |
 | Orphan of Kos | Constructed | Constructed | Yes |
 
@@ -334,3 +343,18 @@ sixteen logical primary swaps, twenty-one source initialization records,
 twelve auxiliary actor placements, twenty total NPC clones and thirteen
 normalization effects. These counts include other encounters in the pool and
 are not evidence of live phase behavior or arena fit.
+
+Region construction and corrected degree-based actor transforms pass the native
+suite, including 32 actor and 13 region assertions. Both fourteen-encounter
+assignments were rebuilt with corrected transforms and each verifies forty
+files (`work/boss-fourteen-degrees-seed-0` and `seed-2`). Earlier receipt success
+alone did not detect the degrees/radians geometry defect.
+
+Standalone BSB-at-Living-Failures verifies eight files. It places BSB on visible
+body 3500851, preserves the offstage aggregate proxy 3500850, and forces that
+proxy's death only after BSB dies. The original terminal 13501850 and all Maria
+progression remain unchanged. Original wave/generator/support controllers are
+retired; five retained helpers have native provenance checks, and the camera
+cannot reactivate after completion. Seven focused tests cover this adapter;
+31 focused contract/composition/build/test-quality tests pass. Gameplay remains
+unobserved. Living Failures donor construction is still pending.

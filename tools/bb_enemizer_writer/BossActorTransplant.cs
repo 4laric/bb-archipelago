@@ -120,7 +120,10 @@ internal static class BossActorTransplant
         Need(additions.Select(a => (Bare(a.DestinationMap), a.DestinationEventId)).Distinct().Count() == additions.Count(), "duplicate generator destination event ID");
         Need(additions.Select(a => (Bare(a.DestinationMap), a.DestinationEntityId)).Distinct().Count() == additions.Count(), "duplicate generator destination entity ID");
     }
-    static Vector3 Rotate(Vector3 offset, float yaw) => Vector3.TransformNormal(offset, Matrix4x4.CreateRotationY(yaw));
+    // MSBB stores rotations in degrees (SoulsFormats MSBB PartsParam), while
+    // System.Numerics rotation constructors take radians.
+    internal static Vector3 RotateOffset(Vector3 offset, float yawDegrees) =>
+        Vector3.TransformNormal(offset, Matrix4x4.CreateRotationY(yawDegrees * MathF.PI / 180f));
 
     internal static List<Addition> Read(string planPath, bool required) {
         using var doc = JsonDocument.Parse(File.ReadAllText(planPath));
@@ -262,14 +265,17 @@ internal static class BossActorTransplant
             var destinationAnchor = Part(target.Map, add.DestinationAnchorPart, "destination anchor") as MSBB.Part.Enemy;
             Need(destinationAnchor != null, "destination actor anchor must be an ordinary Enemy");
             Need(!Parts(target.Map).Any(p => p.Name == add.DestinationPart), "actor destination Part already exists");
-            Need(!Parts(target.Map).Any(p => p.EntityID == add.DestinationEntityId), "actor destination entity ID already exists");
+            Need(!Parts(target.Map).Any(p => p.EntityID == add.DestinationEntityId)
+                && !target.Map.Regions.Regions.Any(region => region.EntityID == add.DestinationEntityId)
+                && !target.Map.Events.GetEntries().Any(item => item.EntityID == add.DestinationEntityId),
+                "actor destination entity ID already exists");
             // Clone the destination anchor so its collision, groups, move points,
             // and local loading state stay destination-owned. The plan supplies
             // each imported donor field; it never imports ambient map settings.
             var spawned = (MSBB.Part.Enemy)destinationAnchor!.DeepCopy();
             float yaw = destinationAnchor.Rotation.Y - donorAnchor.Rotation.Y;
             spawned.Name = add.DestinationPart; spawned.EntityID = add.DestinationEntityId;
-            spawned.Position = destinationAnchor.Position + Rotate(donor!.Position - donorAnchor.Position, yaw);
+            spawned.Position = destinationAnchor.Position + RotateOffset(donor!.Position - donorAnchor.Position, yaw);
             spawned.Rotation = donor.Rotation + new Vector3(0, yaw, 0);
             helpers.TryGetValue((Bare(add.DestinationMap), add.DestinationPart), out var helper);
             if (helper is not null) RequireReviewedHelperClone(planPath, outputMaps, helper);
@@ -447,7 +453,8 @@ internal static class BossActorTransplant
             Need(add.SourceFingerprint == GeneratorFingerprint(add.SourceMap, source), $"{add.SourceMap}:{add.SourceEvent}: generator provenance pin drift");
             var target = Target(add.DestinationMap);
             Need(!target.Map.Events.GetEntries().Any(e => e.Name == add.DestinationEvent || e.EventID == add.DestinationEventId || e.EntityID == add.DestinationEntityId)
-                && !Parts(target.Map).Any(part => part.EntityID == add.DestinationEntityId),
+                && !Parts(target.Map).Any(part => part.EntityID == add.DestinationEntityId)
+                && !target.Map.Regions.Regions.Any(region => region.EntityID == add.DestinationEntityId),
                 "generator destination identity already exists");
             RequireMap(add.SpawnPartMap, Named(source.SpawnPartNames), name => Parts(target.Map).Any(p => p.Name == name), "spawn Part");
             RequireMap(add.SpawnPointMap, Named(source.SpawnPointNames), name => target.Map.Regions.Regions.Any(r => r.Name == name), "spawn point");
@@ -483,14 +490,23 @@ internal static class BossActorTransplant
 
     // sourceMaps always remains original. destinationMaps is the original map
     // corpus, while outputMaps can already contain MapTransplant's primary edits.
-    internal static int Apply(string planPath, string sourceMaps, string destinationMaps, string outputMaps, bool required) {
-        var actors = Read(planPath, required); var primary = ReadPrimaryInitializations(planPath, false); var generators = ReadGenerators(planPath, false);
+    // Region additions must run after these map writes but before generators,
+    // whose SpawnPointNames may name those regions.
+    internal static int ApplyActorsAndPrimary(string planPath, string sourceMaps, string destinationMaps, string outputMaps, bool required) {
+        var actors = Read(planPath, required); var primary = ReadPrimaryInitializations(planPath, false);
         var helpers = ReadHelperScales(planPath, actors);
         ApplyActors(actors, helpers, planPath, sourceMaps, destinationMaps, outputMaps);
         ApplyPrimaryInitializations(primary, planPath, sourceMaps, destinationMaps, outputMaps);
-        ApplyGenerators(generators, sourceMaps, destinationMaps, outputMaps);
-        return actors.Count + primary.Count + generators.Count;
+        return actors.Count + primary.Count;
     }
+    internal static int ApplyGeneratorsOnly(string planPath, string sourceMaps, string destinationMaps, string outputMaps) {
+        var generators = ReadGenerators(planPath, false);
+        ApplyGenerators(generators, sourceMaps, destinationMaps, outputMaps);
+        return generators.Count;
+    }
+    internal static int Apply(string planPath, string sourceMaps, string destinationMaps, string outputMaps, bool required) =>
+        ApplyActorsAndPrimary(planPath, sourceMaps, destinationMaps, outputMaps, required)
+        + ApplyGeneratorsOnly(planPath, sourceMaps, destinationMaps, outputMaps);
 
     internal static int Inspect(string path) {
         var map = MSBB.Read(path); string name = Bare(Path.GetFileName(path));
@@ -506,6 +522,7 @@ internal static class BossActorTransplant
             }),
             generators = map.Events.Generators.OrderBy(item => item.Name, StringComparer.Ordinal).Select(item => new {
                 name = item.Name, event_id = item.EventID, entity_id = item.EntityID, fingerprint = GeneratorFingerprint(name, item),
+                part_name = item.PartName, region_name = item.RegionName,
                 spawn_part_names = item.SpawnPartNames, spawn_point_names = item.SpawnPointNames,
             }),
         }, Json));

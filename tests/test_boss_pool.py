@@ -90,6 +90,36 @@ class BossPoolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'overlap an added'):
             combine_native_plans('g', [plan, actor_plan])
 
+    def test_region_composition_preserves_geometry_and_rejects_cross_kind_collisions(self):
+        region = {'destination_map': 'm23_00_00_00', 'destination_region': 'warp',
+                  'destination_entity_id': 980100, 'source_provenance': {'region_sha256': 'a' * 64}}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'r', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_region_additions': [region]}
+        result = combine_native_plans('r', [plan])
+        self.assertEqual([region], result['boss_region_additions'])
+        result['boss_region_additions'][0]['source_provenance']['region_sha256'] = 'b' * 64
+        self.assertEqual('a' * 64, region['source_provenance']['region_sha256'])
+        with self.assertRaisesRegex(ValueError, 'overlap an added region'):
+            combine_native_plans('r', [plan, plan])
+        for field, row in (
+                ('boss_actor_additions', {'destination_part': 'helper'}),
+                ('boss_generator_additions', {'destination_event': 'spawn', 'destination_event_id': 8})):
+            other = copy.deepcopy(plan)
+            del other['boss_region_additions']
+            other[field] = [dict(row, destination_map='m23_00_00_00.msb.dcx',
+                                destination_entity_id=980100)]
+            for pair in ([plan, other], [other, plan]):
+                with self.assertRaisesRegex(ValueError, 'overlap an added'):
+                    combine_native_plans('r', pair)
+        # Unbound native point regions may share -1, but never their names.
+        second = copy.deepcopy(plan)
+        region['destination_entity_id'] = -1
+        second['boss_region_additions'][0].update(destination_entity_id=-1, destination_region='other')
+        self.assertEqual(2, len(combine_native_plans('r', [plan, second])['boss_region_additions']))
+
     def test_seeded_matching_uses_each_boss_once_without_identity(self):
         graph = {key: ('a', 'b', 'c', 'd') for key in ('a', 'b', 'c', 'd')}
         first = assign_donors('one', graph)
