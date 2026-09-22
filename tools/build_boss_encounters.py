@@ -82,6 +82,8 @@ from tools.bb_enemizer.orphan_contract import (
     OrphanIds, NativeActorPin as OrphanActorPin,
     patch_orphan_at_cleric, native_plan_orphan_at_cleric,
 )
+from tools.bb_enemizer.gehrman_micolash_contract import (
+    patch_gehrman_at_micolash, native_plan_gehrman_at_micolash)
 from tools.bb_enemizer.final_boss_contracts import (
     GEHRMAN_ARENA, MOON_ARENA, GEHRMAN_PACKAGE, MOON_PACKAGE, FinalAttachmentIds,
     patch_gehrman_at_moon, patch_moon_at_gehrman, plan_final_boss_swap,
@@ -137,6 +139,7 @@ PACKAGES['living-failures'] = ARENAS['living-failures']
 PACKAGES['rom'] = SpecialEndpoint('rom', 'm32_00_00_00.emevd.dcx.js')
 ARENAS['rom'] = PACKAGES['rom']
 ARENAS['witch-of-hemwick'] = SpecialEndpoint('witch-of-hemwick', 'm22_00_00_00.emevd.dcx.js')
+ARENAS['micolash'] = SpecialEndpoint('micolash', 'm26_00_00_00.emevd.dcx.js')
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -251,6 +254,10 @@ def is_logarius_wet_nurse_pair(arena, package) -> bool:
 
 def is_wet_nurse_bsb_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('blood-starved-beast', 'mergos-wet-nurse')
+
+
+def is_gehrman_micolash_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('micolash', 'gehrman')
 
 
 def is_amelia_witch_pair(arena, package) -> bool:
@@ -633,6 +640,8 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[0] == 'micolash' and direct_orphan[1] != 'gehrman':
+        raise ValueError('Micolash arena requires the reviewed Gehrman donor adapter')
     if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] != 'vicar-amelia':
         raise ValueError('Witch arena requires the reviewed Amelia donor adapter')
     if direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan[0] != 'blood-starved-beast':
@@ -740,7 +749,8 @@ def build(args) -> dict:
                     and not is_living_failures_maria_pair(arena, package)
                     and not is_amygdala_celestial_pair(arena, package)
                     and not is_logarius_wet_nurse_pair(arena, package)
-                    and not is_amelia_witch_pair(arena, package)):
+                    and not is_amelia_witch_pair(arena, package)
+                    and not is_gehrman_micolash_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -770,6 +780,8 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_gehrman_micolash_pair(arena, package):
+                patched = patch_gehrman_at_micolash(texts[arena.event_file], texts[package.event_file])
             elif is_amelia_witch_pair(arena, package):
                 patched = patch_amelia_at_witch(texts[arena.event_file], texts[package.event_file])
             elif is_logarius_wet_nurse_pair(arena, package):
@@ -903,6 +915,10 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_gehrman_micolash_pair(arena, package):
+                plan = native_plan_gehrman_at_micolash(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_amelia_witch_pair(arena, package):
                 plan = native_plan_amelia_at_witch(slots, npcs, effects, args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])

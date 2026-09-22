@@ -254,7 +254,7 @@ seed-dependent assignments.
 | Blood-starved Beast | Constructed | Constructed | Yes |
 | Darkbeast Paarl | Constructed | Constructed | Yes |
 | Vicar Amelia | Constructed | Constructed | Yes |
-| Witch of Hemwick | Pending | Pending | Pending |
+| Witch of Hemwick | Pending | Constructed (Amelia) | Pending |
 | Shadows of Yharnam | Pending | Pending | Pending |
 | Rom | Constructed | Constructed | Yes |
 | The One Reborn | Pending | Pending | Pending |
@@ -262,7 +262,7 @@ seed-dependent assignments.
 | Martyr Logarius | Constructed | Constructed | Yes |
 | Celestial Emissary | Pending | Constructed | Pending |
 | Ebrietas | Constructed | Constructed | Yes |
-| Micolash | Pending | Pending | Pending |
+| Micolash | Pending | Constructed (Gehrman) | Pending |
 | Mergo's Wet Nurse | Constructed | Constructed | Yes |
 | Gehrman | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
@@ -459,3 +459,14 @@ with `destination_talk_id_override: 0`. Other override values are rejected;
 the exact original source initialization and fingerprint still must match.
 This supports replacement combat without importing unrelated dialogue, while
 requiring each adapter to provide any terminal handshake its destination needs.
+
+Standalone Gehrman at Micolash verifies eight native files. Gehrman's event
+owner, health, camera and combat phases accompany the replacement, while the
+original Micolash entry, fog, terminal and post-boss progression remain intact.
+Chase controllers wait without completing their event flags; this preserves
+the original post-boss controller's branches. A death bridge sets 72600301 only
+after the replacement dies, replacing the retired dialogue handshake.
+The owner's original m26 talk binder is pinned by SHA-256
+`4734174288b8572bac33e9ad4ad7102e7b724427763d8f34c154dbe6d63b0816`;
+ESDLang v0.5.1 shows `t260311_x3` self-death leading to `x5`, dialogue 2100300,
+then setting 72600301 after dialogue ends. Dialogue assets are not transplanted.
