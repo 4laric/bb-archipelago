@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		1432
+total		1437
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	42
@@ -79,3 +79,4 @@ module	test_living_failures_maria_contract	6
 module	test_wet_nurse_bsb_contract	5
 module	test_logarius_wet_nurse_contract	4
 module	test_amygdala_celestial_emissary_contract	8
+module	test_amelia_witch_contract	5

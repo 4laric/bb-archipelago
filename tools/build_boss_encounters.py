@@ -25,6 +25,8 @@ from tools.bb_enemizer.boss_contracts import (
     ARENAS as ARENA_CONTRACTS, PACKAGES as COMBAT_PACKAGES, COMPATIBILITY, event_blocks, patch_contract_swap,
     plan_contract_swap, actor_addition_requirements,
 )
+from tools.bb_enemizer.amelia_witch_contract import (
+    patch_amelia_at_witch, native_plan_amelia_at_witch)
 from tools.bb_enemizer.boss_pool import (
     assign_donors, combine_native_plans, compose_event_patches, validate_terminal_predicates,
     combine_ordinary_and_boss_plans,
@@ -134,6 +136,7 @@ ARENAS['living-failures'] = SpecialEndpoint('living-failures', 'm35_00_00_00.eme
 PACKAGES['living-failures'] = ARENAS['living-failures']
 PACKAGES['rom'] = SpecialEndpoint('rom', 'm32_00_00_00.emevd.dcx.js')
 ARENAS['rom'] = PACKAGES['rom']
+ARENAS['witch-of-hemwick'] = SpecialEndpoint('witch-of-hemwick', 'm22_00_00_00.emevd.dcx.js')
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -248,6 +251,10 @@ def is_logarius_wet_nurse_pair(arena, package) -> bool:
 
 def is_wet_nurse_bsb_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('blood-starved-beast', 'mergos-wet-nurse')
+
+
+def is_amelia_witch_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('witch-of-hemwick', 'vicar-amelia')
 
 
 def is_amygdala_celestial_pair(arena, package) -> bool:
@@ -626,6 +633,8 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] != 'vicar-amelia':
+        raise ValueError('Witch arena requires the reviewed Amelia donor adapter')
     if direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan[0] != 'blood-starved-beast':
         raise ValueError('Wet Nurse donor requires the reviewed BSB arena adapter')
     if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] not in ('blood-starved-beast', 'amygdala'):
@@ -730,7 +739,8 @@ def build(args) -> dict:
                     and not is_wet_nurse_bsb_pair(arena, package)
                     and not is_living_failures_maria_pair(arena, package)
                     and not is_amygdala_celestial_pair(arena, package)
-                    and not is_logarius_wet_nurse_pair(arena, package)):
+                    and not is_logarius_wet_nurse_pair(arena, package)
+                    and not is_amelia_witch_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -760,6 +770,8 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_amelia_witch_pair(arena, package):
+                patched = patch_amelia_at_witch(texts[arena.event_file], texts[package.event_file])
             elif is_logarius_wet_nurse_pair(arena, package):
                 patched = patch_logarius_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
             elif is_wet_nurse_bsb_pair(arena, package):
@@ -891,6 +903,9 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_amelia_witch_pair(arena, package):
+                plan = native_plan_amelia_at_witch(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_logarius_wet_nurse_pair(arena, package):
                 plan = native_plan_logarius_at_wet_nurse(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])

@@ -72,6 +72,19 @@ internal static class BossActorTests
             var initialized = MSBB.Read(Path.Combine(primaryOutput, "m24_01_00_00.msb")).Parts.Enemies.Single(part => part.Name == "target_anchor");
             Need(initialized.TalkID == 93 && initialized.UnkT18 == 94 && initialized.InitAnimID == 95 && initialized.DamageAnimID == 96);
             Need(initialized.CollisionName == "h0000" && initialized.DrawGroups[0] == 7 && initialized.DispGroups[0] == 8 && initialized.BackreadGroups[0] == 9);
+            var primaryTalkOverride = new { primary.source_map, primary.source_part, primary.source_entity_id, primary.source_archetype,
+                primary.source_provenance, primary.source_initialization, primary.destination_map, primary.destination_part,
+                primary.destination_entity_id, destination_talk_id_override = 0 };
+            File.WriteAllText(planPath, JsonSerializer.Serialize(new { boss_actor_initializations = new[] { primaryTalkOverride } }));
+            Need(BossActorTransplant.Apply(planPath, source, destination, primaryOutput, false) == 1);
+            var overridden = MSBB.Read(Path.Combine(primaryOutput, "m24_01_00_00.msb")).Parts.Enemies.Single(part => part.Name == "target_anchor");
+            Need(overridden.TalkID == 0 && overridden.UnkT18 == 94 && overridden.InitAnimID == 95 && overridden.DamageAnimID == 96);
+            Need(overridden.CollisionName == "h0000" && overridden.DrawGroups[0] == 7 && overridden.DispGroups[0] == 8 && overridden.BackreadGroups[0] == 9);
+            var primaryNonzeroTalkOverride = new { primary.source_map, primary.source_part, primary.source_entity_id, primary.source_archetype,
+                primary.source_provenance, primary.source_initialization, primary.destination_map, primary.destination_part,
+                primary.destination_entity_id, destination_talk_id_override = 1 };
+            File.WriteAllText(planPath, JsonSerializer.Serialize(new { boss_actor_initializations = new[] { primaryNonzeroTalkOverride } }));
+            Refused(() => BossActorTransplant.Apply(planPath, source, destination, primaryOutput, false), "TalkID override must be 0");
             var primaryWrongInit = new { primary.source_map, primary.source_part, primary.source_entity_id, primary.source_archetype, primary.source_provenance,
                 source_initialization = new { talk_id = 999, unk_t18 = 94, init_anim_id = 95, damage_anim_id = 96 },
                 primary.destination_map, primary.destination_part, primary.destination_entity_id };

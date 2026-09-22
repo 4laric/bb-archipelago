@@ -25,7 +25,8 @@ internal static class BossActorTransplant
     internal sealed record PrimaryInitialization(
         string SourceMap, string SourcePart, int SourceEntityId, Archetype SourceArchetype,
         PrimaryProvenance SourceProvenance, SourceInitialization SourceInitialization,
-        string DestinationMap, string DestinationPart, int DestinationEntityId);
+        string DestinationMap, string DestinationPart, int DestinationEntityId,
+        int? DestinationTalkIdOverride = null);
     sealed record PrimarySwap(string LogicalKey, List<string> DestinationKeys, Archetype Target, Archetype? UnscaledTarget);
     sealed record PrimaryPlan(string Format, bool DryRun, List<PrimarySwap> Swaps, PrimaryScaling Scaling);
     sealed record PrimaryScaling(bool Enabled, string Mechanism, int ChangeCount, bool Applied, List<PrimaryScale> Changes);
@@ -313,6 +314,8 @@ internal static class BossActorTransplant
                 item.SourceArchetype, item.DestinationMap, "", item.DestinationPart, item.DestinationEntityId));
             var provenance = item.SourceProvenance ?? throw new InvalidDataException("primary actor initialization requires source provenance pin");
             var initialization = item.SourceInitialization ?? throw new InvalidDataException("primary actor initialization requires source initialization tuple");
+            Need(item.DestinationTalkIdOverride is null or 0,
+                "primary actor initialization destination TalkID override must be 0");
             Need(provenance.Format == "bb-boss-actor-pin-v1", "unsupported primary actor provenance format");
             RequireHash(provenance.PartSha256, "primary actor donor provenance");
             Need(provenance.PartSha256 == Fingerprint(item.SourceMap, sourceEnemy),
@@ -338,15 +341,16 @@ internal static class BossActorTransplant
                 RequireReviewedNormalizedClone(planPath, outputMaps, item, targetArchetype.NpcParamId);
             }
             var before = PartInvariant.Capture(targetEnemy);
-            targetEnemy.TalkID = sourceEnemy.TalkID; targetEnemy.UnkT18 = sourceEnemy.UnkT18;
+            int destinationTalkId = item.DestinationTalkIdOverride ?? sourceEnemy.TalkID;
+            targetEnemy.TalkID = destinationTalkId; targetEnemy.UnkT18 = sourceEnemy.UnkT18;
             targetEnemy.InitAnimID = sourceEnemy.InitAnimID; targetEnemy.DamageAnimID = sourceEnemy.DamageAnimID;
             map.Write(output);
             var check = MSBB.Read(output);
             var persisted = Part(check, item.DestinationPart, "persisted primary initialization destination") as MSBB.Part.EnemyBase;
-            Need(persisted is not null && persisted.TalkID == initialization.TalkId && persisted.UnkT18 == initialization.UnkT18
+            Need(persisted is not null && persisted.TalkID == destinationTalkId && persisted.UnkT18 == initialization.UnkT18
                 && persisted.InitAnimID == initialization.InitAnimId && persisted.DamageAnimID == initialization.DamageAnimId,
-                "primary actor initialization round-trip differs from reviewed donor tuple");
-            (before with { TalkId = initialization.TalkId, UnkT18 = initialization.UnkT18,
+                "primary actor initialization round-trip differs from reviewed tuple and override");
+            (before with { TalkId = destinationTalkId, UnkT18 = initialization.UnkT18,
                 InitAnimId = initialization.InitAnimId, DamageAnimId = initialization.DamageAnimId })
                 .RequireSame(Path.GetFileName(output), persisted!);
         }

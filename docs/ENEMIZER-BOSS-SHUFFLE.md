@@ -77,9 +77,9 @@ matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
-Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius and Gascoigne, plus the reciprocal Gehrman/Moon Presence pair. The regular
-twelve-boss graph has two complete assignments selected by seed; the final pair
-is fixed. All donors are used once and no boss stays in its own arena. Cleric and
+Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius, Gascoigne, Rom, Living Failures
+and Wet Nurse, plus the reciprocal Gehrman/Moon Presence pair. The seventeen-boss
+graph has two complete assignments selected by seed; the final pair is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
 composition also accepts disjoint appended initializer calls and rejects
@@ -446,3 +446,16 @@ native construction verifies eight files. Amygdala-at-Celestial-Emissary also
 verifies eight files, including complete body-part/phase controllers and the
 original giant-based destination terminal; Celestial donor construction is
 still in progress.
+
+Standalone Amelia at Witch of Hemwick also verifies eight native files. The
+full Amelia phase, cloth, limb, mask and healing routines are attached; Witch
+revival, warps, minions and generators are retired. The retained second Witch
+is disabled until the donor death bridge satisfies the original two-actor
+terminal. Amelia's original entry animations run independently of Insight.
+The original terminal, rewards and AP progression remain unchanged.
+
+Primary actor initialization can explicitly retire a donor's map-local TalkID
+with `destination_talk_id_override: 0`. Other override values are rejected;
+the exact original source initialization and fingerprint still must match.
+This supports replacement combat without importing unrelated dialogue, while
+requiring each adapter to provide any terminal handshake its destination needs.
