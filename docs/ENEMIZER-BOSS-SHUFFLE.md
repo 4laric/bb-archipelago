@@ -263,12 +263,12 @@ seed-dependent assignments.
 | Celestial Emissary | Pending | Constructed | Pending |
 | Ebrietas | Constructed | Constructed | Yes |
 | Micolash | Pending | Pending | Pending |
-| Mergo's Wet Nurse | Pending | Constructed | Pending |
+| Mergo's Wet Nurse | Constructed | Constructed | Yes |
 | Gehrman | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
 | Ludwig | Constructed | Constructed | Yes |
 | Laurence | Constructed | Constructed | Yes |
-| Living Failures | Constructed | Constructed | Pending; additional assignment needed |
+| Living Failures | Constructed | Constructed | Yes |
 | Lady Maria | Constructed | Constructed | Yes |
 | Orphan of Kos | Constructed | Constructed | Yes |
 
@@ -408,9 +408,8 @@ the proxy and additional bodies; Laurence's unchanged terminal owns the
 primary. The m35-to-m34 effect-bank union retains 642 destination entries and
 imports 360 donor entries, with two identical shared entries reused. A native
 generator regression preserves null references during clone construction
-without changing the original fingerprint schema. Living Failures is not yet
-in the seeded pool: its current edges force one assignment, so another
-compatible destination is required before enabling it there.
+without changing the original fingerprint schema. Living Failures now joins the seeded pool through its additional Maria
+destination, preserving two distinct complete assignments.
 
 
 BSB-at-Celestial-Emissary verifies eight native files. BSB occupies the visible
@@ -419,3 +418,31 @@ leaving the giant-based destination terminal unchanged. Wave generators and
 phase controllers are retired, retained bodies are pinned and cleaned after
 completion, and shared-map Ebrietas progression remains unchanged. This is a
 standalone destination adapter; Celestial donor construction is still pending.
+
+
+The reviewed pool now covers seventeen encounters. Seeds `0` and `seed-0`
+each verify 48 native files and assign every admitted donor exactly once.
+Living Failures occupies either Maria or Laurence, while BSB occupies its
+original Research Hall encounter. The Maria route clones the same complete
+helper/generator/region/SFX graph around Maria's original anchor and uses the
+source-witnessed `h000060` collision. Its effect bank stays within m35 and
+imports zero new entries while preserving the pinned original bank.
+
+Wet Nurse occupies BSB's arena and Logarius occupies Wet Nurse's arena.
+Wet Nurse's support and offstage health proxy are normalized in both BSB map
+states. Six authored warp regions and the moving Object marker preserve the
+original model-point warp controllers. Entry and co-op use Wet Nurse visibility
+semantics, destination completion follows proxy HP reaching zero, player effect
+5630 is cleared, and completed-load helper cleanup always runs. Destination
+music and environmental audio remain destination-owned: original environmental
+loop 12604815 references `a260000003`, witnessed only in `sprj_m26.fev`, and is
+explicitly excluded from the donor's combat controller set. The plan records
+that source event hash and policy rather than emitting an unloaded sound call.
+
+Logarius-at-Wet-Nurse retains the destination's original proxy terminal and
+opaque 2600803 handling, carries both sword and bullet-owner helpers, and
+preserves destination sound slots with Logarius's phase trigger. Standalone
+native construction verifies eight files. Amygdala-at-Celestial-Emissary also
+verifies eight files, including complete body-part/phase controllers and the
+original giant-based destination terminal; Celestial donor construction is
+still in progress.

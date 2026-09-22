@@ -57,10 +57,18 @@ from tools.bb_enemizer.logarius_contract import (
 )
 from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, native_plan_bsb_at_logarius
 from tools.bb_enemizer.paarl_logarius_contract import patch_paarl_at_logarius, native_plan_paarl_at_logarius
+from tools.bb_enemizer.logarius_wet_nurse_contract import (
+    patch_logarius_at_wet_nurse, native_plan_logarius_at_wet_nurse)
+from tools.bb_enemizer.wet_nurse_bsb_contract import (
+    patch_wet_nurse_at_bsb, native_plan_wet_nurse_at_bsb)
 from tools.bb_enemizer.bsb_wet_nurse_contract import patch_bsb_at_wet_nurse, native_plan_bsb_at_wet_nurse
+from tools.bb_enemizer.amygdala_celestial_emissary_contract import (
+    patch_amygdala_at_celestial_emissary, native_plan_amygdala_at_celestial_emissary)
 from tools.bb_enemizer.bsb_celestial_emissary_contract import (
     patch_bsb_at_celestial_emissary, native_plan_bsb_at_celestial_emissary)
 from tools.bb_enemizer.bsb_living_failures_contract import patch_bsb_at_living_failures, native_plan_bsb_at_living_failures
+from tools.bb_enemizer.living_failures_maria_contract import (
+    patch_living_failures_at_maria, native_plan_living_failures_at_maria)
 from tools.bb_enemizer.living_failures_laurence_contract import (
     patch_living_failures_at_laurence, native_plan_living_failures_at_laurence)
 from tools.bb_enemizer.ebrietas_rom_contract import (
@@ -120,6 +128,7 @@ ARENAS['orphan-of-kos'] = SpecialEndpoint('orphan-of-kos', 'm36_00_00_00.emevd.d
 PACKAGES['martyr-logarius'] = SpecialEndpoint('martyr-logarius', 'm25_00_00_00.emevd.dcx.js')
 ARENAS['martyr-logarius'] = PACKAGES['martyr-logarius']
 ARENAS['mergos-wet-nurse'] = SpecialEndpoint('mergos-wet-nurse', 'm26_00_00_00.emevd.dcx.js')
+PACKAGES['mergos-wet-nurse'] = ARENAS['mergos-wet-nurse']
 ARENAS['celestial-emissary'] = SpecialEndpoint('celestial-emissary', 'm24_02_00_00.emevd.dcx.js')
 ARENAS['living-failures'] = SpecialEndpoint('living-failures', 'm35_00_00_00.emevd.dcx.js')
 PACKAGES['living-failures'] = ARENAS['living-failures']
@@ -140,13 +149,13 @@ CLERIC_MARIA_ATTACHMENTS = ClericMariaAttachmentIds(12990012, 12990013, 12990014
 MARIA_AMELIA_ATTACHMENTS = MariaAmeliaAttachmentIds(12990016)
 MARIA_COMPATIBILITY = {
     'cleric-beast': ('lady-maria',),
-    'lady-maria': ('cleric-beast', 'blood-starved-beast'),
+    'lady-maria': ('cleric-beast', 'blood-starved-beast', 'living-failures'),
     'vicar-amelia': ('lady-maria',),
 }
 
 LAURENCE_COMPATIBILITY = {
     'cleric-beast': ('laurence',),
-    'laurence': ('cleric-beast', 'blood-starved-beast'),
+    'laurence': ('cleric-beast', 'blood-starved-beast', 'living-failures'),
 }
 
 LUDWIG_COMPATIBILITY = {
@@ -170,6 +179,15 @@ GASCOIGNE_COMPATIBILITY = {
 }
 
 
+WET_NURSE_COMPATIBILITY = {
+    'blood-starved-beast': ('mergos-wet-nurse',),
+    'mergos-wet-nurse': ('blood-starved-beast', 'martyr-logarius'),
+}
+
+
+LIVING_FAILURES_COMPATIBILITY = {'living-failures': ('blood-starved-beast',)}
+
+
 ROM_COMPATIBILITY = {'ebrietas': ('rom',), 'rom': ('ebrietas',)}
 
 
@@ -185,6 +203,8 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
         LOGARIUS_COMPATIBILITY,
         GASCOIGNE_COMPATIBILITY,
         ROM_COMPATIBILITY,
+        LIVING_FAILURES_COMPATIBILITY,
+        WET_NURSE_COMPATIBILITY,
         FINAL_COMPATIBILITY,
     ):
         for arena, donors in section.items():
@@ -222,8 +242,24 @@ def is_paarl_logarius_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('martyr-logarius', 'darkbeast-paarl')
 
 
+def is_logarius_wet_nurse_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('mergos-wet-nurse', 'martyr-logarius')
+
+
+def is_wet_nurse_bsb_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('blood-starved-beast', 'mergos-wet-nurse')
+
+
+def is_amygdala_celestial_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('celestial-emissary', 'amygdala')
+
+
 def is_bsb_celestial_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('celestial-emissary', 'blood-starved-beast')
+
+
+def is_living_failures_maria_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('lady-maria', 'living-failures')
 
 
 def is_living_failures_laurence_pair(arena, package) -> bool:
@@ -590,18 +626,20 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
-    if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] != 'blood-starved-beast':
-        raise ValueError('Celestial Emissary arena requires the reviewed BSB donor adapter')
-    if direct_orphan[1] == 'living-failures' and direct_orphan[0] != 'laurence':
-        raise ValueError('Living Failures donor requires the reviewed Laurence arena adapter')
+    if direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan[0] != 'blood-starved-beast':
+        raise ValueError('Wet Nurse donor requires the reviewed BSB arena adapter')
+    if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] not in ('blood-starved-beast', 'amygdala'):
+        raise ValueError('Celestial Emissary arena requires a reviewed BSB or Amygdala donor adapter')
+    if direct_orphan[1] == 'living-failures' and direct_orphan[0] not in ('laurence', 'lady-maria'):
+        raise ValueError('Living Failures donor requires a reviewed Laurence or Maria arena adapter')
     if direct_orphan[0] == 'rom' and direct_orphan[1] != 'ebrietas':
         raise ValueError('Rom arena requires the reviewed Ebrietas donor adapter')
     if direct_orphan[1] == 'rom' and direct_orphan[0] != 'ebrietas':
         raise ValueError('Rom donor requires the reviewed Ebrietas arena adapter')
     if direct_orphan[0] == 'living-failures' and direct_orphan[1] != 'blood-starved-beast':
         raise ValueError('Living Failures arena requires the reviewed BSB donor adapter')
-    if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] != 'blood-starved-beast':
-        raise ValueError('Wet Nurse arena requires the reviewed BSB donor adapter')
+    if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] not in ('blood-starved-beast', 'martyr-logarius'):
+        raise ValueError('Wet Nurse arena requires a reviewed BSB or Logarius donor adapter')
     if orphan and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne'):
         raise ValueError('Orphan requires a reviewed Cleric or Gascoigne arena adapter')
     reviewed_orphan_pairs = {
@@ -613,8 +651,8 @@ def build(args) -> dict:
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if direct_logarius[0] == 'martyr-logarius' and direct_logarius[1] not in LOGARIUS_COMPATIBILITY['martyr-logarius']:
         raise ValueError('Logarius arena requires a reviewed BSB or Paarl donor adapter')
-    if direct_logarius[1] == 'martyr-logarius' and direct_logarius != ('blood-starved-beast', 'martyr-logarius'):
-        raise ValueError('Martyr Logarius is available only in the reviewed BSB arena adapter')
+    if direct_logarius[1] == 'martyr-logarius' and direct_logarius[0] not in ('blood-starved-beast', 'mergos-wet-nurse'):
+        raise ValueError('Martyr Logarius requires a reviewed BSB or Wet Nurse arena adapter')
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
     ludwig_arena = getattr(args, 'arena', None) == 'ludwig'
     reviewed_ludwig_donors = LUDWIG_COMPATIBILITY['ludwig']
@@ -688,7 +726,11 @@ def build(args) -> dict:
                     and not is_rom_ebrietas_pair(arena, package)
                     and not is_ebrietas_rom_pair(arena, package)
                     and not is_living_failures_laurence_pair(arena, package)
-                    and not is_bsb_celestial_pair(arena, package)):
+                    and not is_bsb_celestial_pair(arena, package)
+                    and not is_wet_nurse_bsb_pair(arena, package)
+                    and not is_living_failures_maria_pair(arena, package)
+                    and not is_amygdala_celestial_pair(arena, package)
+                    and not is_logarius_wet_nurse_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -718,8 +760,16 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_logarius_wet_nurse_pair(arena, package):
+                patched = patch_logarius_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
+            elif is_wet_nurse_bsb_pair(arena, package):
+                patched = patch_wet_nurse_at_bsb(texts[arena.event_file], texts[package.event_file])
+            elif is_amygdala_celestial_pair(arena, package):
+                patched = patch_amygdala_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
             elif is_bsb_celestial_pair(arena, package):
                 patched = patch_bsb_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
+            elif is_living_failures_maria_pair(arena, package):
+                patched = patch_living_failures_at_maria(texts[arena.event_file], texts[package.event_file])
             elif is_living_failures_laurence_pair(arena, package):
                 patched = patch_living_failures_at_laurence(texts[arena.event_file], texts[package.event_file])
             elif is_ebrietas_rom_pair(arena, package):
@@ -841,8 +891,23 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_logarius_wet_nurse_pair(arena, package):
+                plan = native_plan_logarius_at_wet_nurse(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_wet_nurse_bsb_pair(arena, package):
+                plan = native_plan_wet_nurse_at_bsb(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_amygdala_celestial_pair(arena, package):
+                plan = native_plan_amygdala_at_celestial_emissary(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_bsb_celestial_pair(arena, package):
                 plan = native_plan_bsb_at_celestial_emissary(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_living_failures_maria_pair(arena, package):
+                plan = native_plan_living_failures_at_maria(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_living_failures_laurence_pair(arena, package):
                 plan = native_plan_living_failures_at_laurence(slots, npcs, effects, args.seed)

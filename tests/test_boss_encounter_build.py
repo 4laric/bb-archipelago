@@ -99,7 +99,7 @@ class EncounterBuildTests(unittest.TestCase):
 
     def test_reviewed_pool_includes_gascoigne_without_reusing_or_omitting_donors(self):
         graph = reviewed_compatibility()
-        self.assertEqual(15, len(graph))
+        self.assertEqual(17, len(graph))
         assignments = []
         for seed in ('seed-0', 'seed-2'):
             assignment = assign_donors(seed, graph)
@@ -109,11 +109,15 @@ class EncounterBuildTests(unittest.TestCase):
             self.assertEqual('father-gascoigne', assignment['cleric-beast'])
             self.assertEqual('orphan-of-kos', assignment['father-gascoigne'])
             self.assertEqual('ludwig', assignment['orphan-of-kos'])
-            self.assertEqual('martyr-logarius', assignment['blood-starved-beast'])
+            self.assertEqual('mergos-wet-nurse', assignment['blood-starved-beast'])
+            self.assertEqual('martyr-logarius', assignment['mergos-wet-nurse'])
             self.assertEqual('darkbeast-paarl', assignment['martyr-logarius'])
             self.assertEqual('ebrietas', assignment['rom'])
             self.assertEqual('rom', assignment['ebrietas'])
             self.assertEqual('laurence', assignment['ludwig'])
+            self.assertEqual('blood-starved-beast', assignment['living-failures'])
+            self.assertEqual({'cleric-beast', 'living-failures'},
+                             {assignment['lady-maria'], assignment['laurence']})
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)
                 self.assertIn(donor, graph[arena])
