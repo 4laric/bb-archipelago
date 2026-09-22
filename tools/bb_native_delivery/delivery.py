@@ -275,7 +275,7 @@ class GrantSession:
                     "read_unavailable",
                     "Command retained; a guest read failed its retry budget",
                 )
-            return self._set("awaiting_inventory", "Command retained; use one bullet once")
+            return self._set("awaiting_inventory", "Command retained; waiting for automatic inventory initialization")
         stack = self.runtime.find_stack(command.normalized_id)
         if stack is None:
             if self._read_unavailable():
