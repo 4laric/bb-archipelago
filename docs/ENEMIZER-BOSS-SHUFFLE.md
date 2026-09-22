@@ -77,8 +77,8 @@ matching implementation supports larger explicit compatibility graphs and
 refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
-Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius, Gascoigne, Rom, Living Failures
-and Wet Nurse, plus the reciprocal Gehrman/Moon Presence pair. The seventeen-boss
+Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius, Gascoigne, Rom, Living Failures,
+Wet Nurse and Witch of Hemwick, plus the reciprocal Gehrman/Moon Presence pair. The eighteen-boss
 graph has two complete assignments selected by seed; the final pair is fixed. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
@@ -254,7 +254,7 @@ seed-dependent assignments.
 | Blood-starved Beast | Constructed | Constructed | Yes |
 | Darkbeast Paarl | Constructed | Constructed | Yes |
 | Vicar Amelia | Constructed | Constructed | Yes |
-| Witch of Hemwick | Pending | Constructed (Amelia) | Pending |
+| Witch of Hemwick | Constructed | Constructed (Amelia) | Yes |
 | Shadows of Yharnam | Pending | Pending | Pending |
 | Rom | Constructed | Constructed | Yes |
 | The One Reborn | Pending | Pending | Pending |
@@ -470,3 +470,19 @@ The owner's original m26 talk binder is pinned by SHA-256
 `4734174288b8572bac33e9ad4ad7102e7b724427763d8f34c154dbe6d63b0816`;
 ESDLang v0.5.1 shows `t260311_x3` self-death leading to `x5`, dialogue 2100300,
 then setting 72600301 after dialogue ends. Dialogue assets are not transplanted.
+
+The eighteen-encounter pool includes Witch of Hemwick through
+Amygdala <- Witch <- Amelia. Witch combat includes its second body, three
+minions, eight warp regions, twelve generator spawn regions and all three
+original generators. Source pair revival/death logic controls the primary's
+true death, preserving Amygdala's original terminal. Source generator records
+are fingerprint-pinned; destination collision h002301 is checked by name and
+its pinned actor anchor, without a separate full collision-record fingerprint.
+All twenty regions preserve the original relative placements; arena fit still
+requires gameplay validation.
+
+Seeds `0` and `2` select distinct complete assignments, each verifying 51 native
+files across nineteen physical maps. The seed-variation test
+now checks eight seeds rather than assuming two specific seeds must differ
+when the roster changes. All admitted donors still appear exactly once, and
+no boss remains in its own arena.

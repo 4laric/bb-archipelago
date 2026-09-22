@@ -99,9 +99,9 @@ class EncounterBuildTests(unittest.TestCase):
 
     def test_reviewed_pool_includes_gascoigne_without_reusing_or_omitting_donors(self):
         graph = reviewed_compatibility()
-        self.assertEqual(17, len(graph))
+        self.assertEqual(18, len(graph))
         assignments = []
-        for seed in ('seed-0', 'seed-2'):
+        for seed in (f'seed-{index}' for index in range(8)):
             assignment = assign_donors(seed, graph)
             assignments.append(assignment)
             self.assertEqual(set(graph), set(assignment))
@@ -115,13 +115,15 @@ class EncounterBuildTests(unittest.TestCase):
             self.assertEqual('ebrietas', assignment['rom'])
             self.assertEqual('rom', assignment['ebrietas'])
             self.assertEqual('laurence', assignment['ludwig'])
+            self.assertEqual('witch-of-hemwick', assignment['amygdala'])
+            self.assertEqual('vicar-amelia', assignment['witch-of-hemwick'])
             self.assertEqual('blood-starved-beast', assignment['living-failures'])
             self.assertEqual({'cleric-beast', 'living-failures'},
                              {assignment['lady-maria'], assignment['laurence']})
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)
                 self.assertIn(donor, graph[arena])
-        self.assertNotEqual(assignments[0], assignments[1])
+        self.assertGreater(len({tuple(sorted(assignment.items())) for assignment in assignments}), 1)
 
     def test_allocated_event_cannot_alias_original_actor_or_operand_in_another_map(self):
         with self.assertRaisesRegex(ValueError, 'original corpus'):

@@ -25,6 +25,8 @@ from tools.bb_enemizer.boss_contracts import (
     ARENAS as ARENA_CONTRACTS, PACKAGES as COMBAT_PACKAGES, COMPATIBILITY, event_blocks, patch_contract_swap,
     plan_contract_swap, actor_addition_requirements,
 )
+from tools.bb_enemizer.witch_amygdala_contract import (
+    patch_witch_at_amygdala, native_plan_witch_at_amygdala)
 from tools.bb_enemizer.amelia_witch_contract import (
     patch_amelia_at_witch, native_plan_amelia_at_witch)
 from tools.bb_enemizer.boss_pool import (
@@ -139,6 +141,7 @@ PACKAGES['living-failures'] = ARENAS['living-failures']
 PACKAGES['rom'] = SpecialEndpoint('rom', 'm32_00_00_00.emevd.dcx.js')
 ARENAS['rom'] = PACKAGES['rom']
 ARENAS['witch-of-hemwick'] = SpecialEndpoint('witch-of-hemwick', 'm22_00_00_00.emevd.dcx.js')
+PACKAGES['witch-of-hemwick'] = ARENAS['witch-of-hemwick']
 ARENAS['micolash'] = SpecialEndpoint('micolash', 'm26_00_00_00.emevd.dcx.js')
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
@@ -191,6 +194,10 @@ WET_NURSE_COMPATIBILITY = {
 }
 
 
+WITCH_COMPATIBILITY = {'amygdala': ('witch-of-hemwick',),
+                       'witch-of-hemwick': ('vicar-amelia',)}
+
+
 LIVING_FAILURES_COMPATIBILITY = {'living-failures': ('blood-starved-beast',)}
 
 
@@ -211,6 +218,7 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
         ROM_COMPATIBILITY,
         LIVING_FAILURES_COMPATIBILITY,
         WET_NURSE_COMPATIBILITY,
+        WITCH_COMPATIBILITY,
         FINAL_COMPATIBILITY,
     ):
         for arena, donors in section.items():
@@ -254,6 +262,10 @@ def is_logarius_wet_nurse_pair(arena, package) -> bool:
 
 def is_wet_nurse_bsb_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('blood-starved-beast', 'mergos-wet-nurse')
+
+
+def is_witch_amygdala_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('amygdala', 'witch-of-hemwick')
 
 
 def is_gehrman_micolash_pair(arena, package) -> bool:
@@ -640,6 +652,8 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[1] == 'witch-of-hemwick' and direct_orphan[0] != 'amygdala':
+        raise ValueError('Witch donor requires the reviewed Amygdala arena adapter')
     if direct_orphan[0] == 'micolash' and direct_orphan[1] != 'gehrman':
         raise ValueError('Micolash arena requires the reviewed Gehrman donor adapter')
     if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] != 'vicar-amelia':
@@ -750,7 +764,8 @@ def build(args) -> dict:
                     and not is_amygdala_celestial_pair(arena, package)
                     and not is_logarius_wet_nurse_pair(arena, package)
                     and not is_amelia_witch_pair(arena, package)
-                    and not is_gehrman_micolash_pair(arena, package)):
+                    and not is_gehrman_micolash_pair(arena, package)
+                    and not is_witch_amygdala_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -780,6 +795,8 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_witch_amygdala_pair(arena, package):
+                patched = patch_witch_at_amygdala(texts[arena.event_file], texts[package.event_file])
             elif is_gehrman_micolash_pair(arena, package):
                 patched = patch_gehrman_at_micolash(texts[arena.event_file], texts[package.event_file])
             elif is_amelia_witch_pair(arena, package):
@@ -915,6 +932,10 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_witch_amygdala_pair(arena, package):
+                plan = native_plan_witch_at_amygdala(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_gehrman_micolash_pair(arena, package):
                 plan = native_plan_gehrman_at_micolash(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
