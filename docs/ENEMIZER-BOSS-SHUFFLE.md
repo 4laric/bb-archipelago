@@ -563,8 +563,38 @@ no overlay was activated and no gameplay result is asserted.
 
 The full Python run passes 1,559 collected tests with 55 expected skips. The
 subsequently added installed-source regression passes in focused testing; the
-committed collection floor is 1,560. The final six-assignment graph is also
+committed collection floor is 1,560. That six-assignment checkpoint was also
 checked independently across 64 seeds. Native suites pass, including 53 AI
 assertions and actor, encounter, region, Object, SFX, FFX, scaling and event
 verification. Original-input compiler tests remain optional where those local
 fixtures are unavailable; their portable contract tests are required in CI.
+
+
+## Compatibility expansion after full-roster construction
+
+Wet Nurse at Logarius and Paarl at Wet Nurse each independently verify eight
+native files. The former carries the complete proxy, support, six warp regions
+and original model-point Object; it retires the Logarius sword-dependent camera
+controller. The latter retains Wet Nurse's terminal proxy and releases it only
+after Paarl actually dies, carrying Paarl's five limb slots and wake-up sequence.
+Their full-roster seed `9` build verifies 59 files, including shared Mensis events.
+
+Micolash at Gehrman and Moon Presence at Micolash each independently verify eight
+files. They add a second permutation of the three final encounters. The shared
+Micolash direct-combat extraction produces byte-identical Moon Presence-arena
+events and an identical native plan to the preceding implementation. Gascoigne
+at Hemwick also verifies eight files: both forms retain source state, Witch
+controllers are retired, and the original two-body terminal is released only
+after Gascoigne's actual human-or-beast death. Source pins cover exactly the
+Gascoigne combat bodies consumed by this adapter.
+
+These five additional directed adapters expand the complete assignment graph
+from six to 48. This is still restricted compatibility, not unrestricted
+all-to-all replacement. Full-roster seed `8`, containing all three new final/Hemwick routes together,
+also verifies 59 files. The focused expansion suite passes 69 tests. Runtime
+entrance, geometry, phase behavior and completion remain unobserved.
+
+The Archipelago test gate permits only individually named local compiler or
+installed-source checks to skip. An unlisted skip or stale allowance fails.
+AP-dependent modules explicitly require zero skips; baseline module rows retain
+their executed-test floors. Five gate regressions cover these distinctions.

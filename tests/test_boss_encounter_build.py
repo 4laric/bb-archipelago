@@ -101,35 +101,28 @@ class EncounterBuildTests(unittest.TestCase):
         graph = reviewed_compatibility()
         self.assertEqual(22, len(graph))
         assignments = []
-        for seed in (f'seed-{index}' for index in range(64)):
+        for seed in (f'seed-{index}' for index in range(256)):
             assignment = assign_donors(seed, graph)
             assignments.append(assignment)
             self.assertEqual(set(graph), set(assignment))
             self.assertEqual(set(graph), set(assignment.values()))
-            self.assertEqual('father-gascoigne', assignment['cleric-beast'])
             self.assertEqual('orphan-of-kos', assignment['father-gascoigne'])
             self.assertEqual('shadows-of-yharnam', assignment['orphan-of-kos'])
             self.assertEqual('ludwig', assignment['shadows-of-yharnam'])
-            self.assertEqual('mergos-wet-nurse', assignment['blood-starved-beast'])
-            self.assertEqual('martyr-logarius', assignment['mergos-wet-nurse'])
-            self.assertEqual('darkbeast-paarl', assignment['martyr-logarius'])
             self.assertEqual('celestial-emissary', assignment['darkbeast-paarl'])
             self.assertEqual('amygdala', assignment['celestial-emissary'])
-            self.assertEqual('micolash', assignment['moon-presence'])
-            self.assertEqual('gehrman', assignment['micolash'])
             self.assertEqual('ebrietas', assignment['rom'])
             self.assertEqual('the-one-reborn', assignment['ebrietas'])
             self.assertEqual('rom', assignment['the-one-reborn'])
             self.assertIn(assignment['ludwig'], ('cleric-beast', 'laurence'))
             self.assertEqual('witch-of-hemwick', assignment['amygdala'])
-            self.assertEqual('vicar-amelia', assignment['witch-of-hemwick'])
             self.assertIn(assignment['living-failures'], ('blood-starved-beast', 'lady-maria', 'laurence'))
-            self.assertEqual({'cleric-beast', 'living-failures', 'lady-maria', 'blood-starved-beast', 'laurence'},
-                             {assignment[key] for key in ('lady-maria', 'laurence', 'vicar-amelia', 'living-failures', 'ludwig')})
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)
                 self.assertIn(donor, graph[arena])
-        self.assertGreaterEqual(len({tuple(sorted(assignment.items())) for assignment in assignments}), 6)
+        self.assertGreaterEqual(len({tuple(sorted(assignment.items())) for assignment in assignments}), 18)
+        for arena, donor in (('martyr-logarius', 'mergos-wet-nurse'), ('mergos-wet-nurse', 'darkbeast-paarl')):
+            self.assertTrue(any(assignment[arena] == donor for assignment in assignments))
 
     def test_allocated_event_cannot_alias_original_actor_or_operand_in_another_map(self):
         with self.assertRaisesRegex(ValueError, 'original corpus'):

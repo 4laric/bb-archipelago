@@ -151,35 +151,39 @@ def _validate(ids: MicolashMoonIds, destination: str) -> None:
         raise ValueError("Micolash/Moon allocation collides with original inputs")
 
 
-def patch_micolash_at_moon(
-    destination: str,
-    donor_source: str,
-    ids: MicolashMoonIds = DEFAULT_IDS,
+def direct_combat_health(
+    source: str,
+    *,
+    actor: int,
+    completion: int,
+    start_flag: int,
+    coop_flag: int,
+    health_event: int,
+    time_event: int,
+    playlog: int,
+    measurement: int,
 ) -> str:
-    arena, donor = event_blocks(destination), event_blocks(donor_source)
-    _verify(arena, ARENA_HASHES, "Moon Presence arena")
-    _verify(donor, DONOR_HASHES, "Micolash donor")
-    _validate(ids, destination)
+    """Adapt pinned Micolash health setup without importing chase or dialogue."""
     mapping = {
-        MICOLASH: MOON,
-        12601850: COMPLETION,
-        12604850: 12104850,
-        12604851: 12104851,
-        12604852: 12104852,
-        2601010: 2100011,
+        MICOLASH: actor,
+        12601850: completion,
+        12604850: start_flag,
+        12604851: coop_flag,
+        12604852: health_event,
+        2601010: time_event,
     }
-    health = _remap(donor[12604852], mapping)
+    health = _remap(source, mapping)
     health = _replace_once(
         health,
         "        if (!HasMultiplayerState(MultiplayerState.Client)) {\n"
         "            if (!EventFlag(12604731)) {\n"
         "                IssueBossRoomEntryNotification(0);\n"
         "            }\n"
-        "            SetNetworkUpdateAuthority(2100810, AuthorityLevel.Forced);\n"
+        f"            SetNetworkUpdateAuthority({actor}, AuthorityLevel.Forced);\n"
         "        }",
         "        if (!HasMultiplayerState(MultiplayerState.Client)) {\n"
         "            IssueBossRoomEntryNotification(0);\n"
-        "            SetNetworkUpdateAuthority(2100810, AuthorityLevel.Forced);\n"
+        f"            SetNetworkUpdateAuthority({actor}, AuthorityLevel.Forced);\n"
         "        }",
         "destination boss-room notification",
     )
@@ -191,25 +195,51 @@ def patch_micolash_at_moon(
     )
     health = _replace_once(
         health,
-        "    SetDistanceLimitForConversationStateProcessing(2100810, 100);\n",
+        f"    SetDistanceLimitForConversationStateProcessing({actor}, 100);\n",
         "",
         "donor dialogue processing",
     )
     health = _replace_once(
         health,
-        "    RequestCharacterAICommand(2100810, 10, 0);",
-        "    RequestCharacterAICommand(2100810, -1, 0);\n"
-        "    RequestCharacterAIReplan(2100810);",
+        f"    RequestCharacterAICommand({actor}, 10, 0);",
+        f"    RequestCharacterAICommand({actor}, -1, 0);\n"
+        f"    RequestCharacterAIReplan({actor});",
         "source chase command release",
     )
     health = _replace_once(
-        health, "CreatePlaylog(88);", "CreatePlaylog(128);", "destination playlog"
+        health,
+        "CreatePlaylog(88);",
+        f"CreatePlaylog({playlog});",
+        "destination playlog",
     )
     health = _replace_once(
         health,
-        "StartTimeMeasurement(2100011, 232, Enabled);",
-        "StartTimeMeasurement(2100011, 146, Enabled);",
+        f"StartTimeMeasurement({time_event}, 232, Enabled);",
+        f"StartTimeMeasurement({time_event}, {measurement}, Enabled);",
         "destination time measurement",
+    )
+    return health
+
+
+def patch_micolash_at_moon(
+    destination: str,
+    donor_source: str,
+    ids: MicolashMoonIds = DEFAULT_IDS,
+) -> str:
+    arena, donor = event_blocks(destination), event_blocks(donor_source)
+    _verify(arena, ARENA_HASHES, "Moon Presence arena")
+    _verify(donor, DONOR_HASHES, "Micolash donor")
+    _validate(ids, destination)
+    health = direct_combat_health(
+        donor[12604852],
+        actor=MOON,
+        completion=COMPLETION,
+        start_flag=12104850,
+        coop_flag=12104851,
+        health_event=12104852,
+        time_event=2100011,
+        playlog=128,
+        measurement=146,
     )
     music = _replace_once(
         arena[12104853],
@@ -280,20 +310,9 @@ def _require(
     return found[0]
 
 
-def native_plan_micolash_at_moon(
-    slots: Sequence[Slot],
-    npcs: Mapping[int, dict],
-    effects: Mapping[int, dict],
-    seed: str,
-    ids: MicolashMoonIds = DEFAULT_IDS,
-) -> dict:
-    arena = read_blob(BUNDLE, ARENA_SOURCE).decode("utf-8-sig")
-    donor = read_blob(BUNDLE, DONOR_SOURCE).decode("utf-8-sig")
-    _verify(event_blocks(arena), ARENA_HASHES, "Moon Presence arena")
-    _verify(event_blocks(donor), DONOR_HASHES, "Micolash donor")
-    _validate(ids, arena)
+def primary_native_plan(slots, npcs, effects, seed, target, contract) -> dict:
+    """Build source-pinned Micolash primary state for a reviewed arena contract."""
     source = _require(slots, MICOLASH, MICOLASH_ARCHETYPE, 260311)
-    target = _require(slots, MOON, MOON_ARCHETYPE, 0)
     swap = Swap(
         target.logical_key,
         [target.key],
@@ -355,7 +374,38 @@ def native_plan_micolash_at_moon(
         "swap_count": 1,
         "swaps": [swap.json()],
         "primary_init_source_bindings": [binding],
-        "boss_contract": {
+        "boss_contract": contract,
+        "scaling": {
+            "enabled": bool(changes),
+            "mechanism": "inferred_static_npc_clone_sp_effect",
+            "change_count": len(changes),
+            "changes": [change.json() for change in changes],
+            "skip_count": len(skips),
+            "skips": skips,
+        },
+    }
+
+
+def native_plan_micolash_at_moon(
+    slots: Sequence[Slot],
+    npcs: Mapping[int, dict],
+    effects: Mapping[int, dict],
+    seed: str,
+    ids: MicolashMoonIds = DEFAULT_IDS,
+) -> dict:
+    arena = read_blob(BUNDLE, ARENA_SOURCE).decode("utf-8-sig")
+    donor = read_blob(BUNDLE, DONOR_SOURCE).decode("utf-8-sig")
+    _verify(event_blocks(arena), ARENA_HASHES, "Moon Presence arena")
+    _verify(event_blocks(donor), DONOR_HASHES, "Micolash donor")
+    _validate(ids, arena)
+    target = _require(slots, MOON, MOON_ARCHETYPE, 0)
+    return primary_native_plan(
+        slots,
+        npcs,
+        effects,
+        seed,
+        target,
+        {
             "format": "bb-micolash-moon-contract-v1",
             "arena": "moon-presence",
             "donor": "micolash",
@@ -403,12 +453,4 @@ def native_plan_micolash_at_moon(
             "source_hash_pins": dict(DONOR_HASHES),
             "arena_hash_pins": dict(ARENA_HASHES),
         },
-        "scaling": {
-            "enabled": bool(changes),
-            "mechanism": "inferred_static_npc_clone_sp_effect",
-            "change_count": len(changes),
-            "changes": [change.json() for change in changes],
-            "skip_count": len(skips),
-            "skips": skips,
-        },
-    }
+    )

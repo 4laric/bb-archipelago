@@ -31,6 +31,8 @@ from tools.bb_enemizer.amelia_witch_contract import (
     patch_amelia_at_witch, native_plan_amelia_at_witch)
 from tools.bb_enemizer.micolash_moon_contract import (
     patch_micolash_at_moon, native_plan_micolash_at_moon)
+from tools.bb_enemizer.micolash_gehrman_contract import (
+    patch_micolash_at_gehrman, native_plan_micolash_at_gehrman)
 from tools.bb_enemizer.one_reborn_ebrietas_contract import (
     patch_one_reborn_at_ebrietas, native_plan_one_reborn_at_ebrietas)
 from tools.bb_enemizer.rom_one_reborn_contract import (
@@ -80,6 +82,10 @@ from tools.bb_enemizer.bsb_logarius_contract import patch_bsb_at_logarius, nativ
 from tools.bb_enemizer.paarl_logarius_contract import patch_paarl_at_logarius, native_plan_paarl_at_logarius
 from tools.bb_enemizer.logarius_wet_nurse_contract import (
     patch_logarius_at_wet_nurse, native_plan_logarius_at_wet_nurse)
+from tools.bb_enemizer.moon_micolash_contract import patch_moon_at_micolash, native_plan_moon_at_micolash
+from tools.bb_enemizer.gascoigne_witch_contract import patch_gascoigne_at_witch, native_plan_gascoigne_at_witch
+from tools.bb_enemizer.wet_nurse_logarius_contract import patch_wet_nurse_at_logarius, native_plan_wet_nurse_at_logarius
+from tools.bb_enemizer.paarl_wet_nurse_contract import patch_paarl_at_wet_nurse, native_plan_paarl_at_wet_nurse
 from tools.bb_enemizer.wet_nurse_bsb_contract import (
     patch_wet_nurse_at_bsb, native_plan_wet_nurse_at_bsb)
 from tools.bb_enemizer.bsb_wet_nurse_contract import patch_bsb_at_wet_nurse, native_plan_bsb_at_wet_nurse
@@ -202,7 +208,7 @@ ORPHAN_COMPATIBILITY = {
 
 LOGARIUS_COMPATIBILITY = {
     'blood-starved-beast': ('martyr-logarius',),
-    'martyr-logarius': ('blood-starved-beast', 'darkbeast-paarl'),
+    'martyr-logarius': ('blood-starved-beast', 'darkbeast-paarl', 'mergos-wet-nurse'),
 }
 
 GASCOIGNE_COMPATIBILITY = {
@@ -213,12 +219,12 @@ GASCOIGNE_COMPATIBILITY = {
 
 WET_NURSE_COMPATIBILITY = {
     'blood-starved-beast': ('mergos-wet-nurse',),
-    'mergos-wet-nurse': ('blood-starved-beast', 'martyr-logarius'),
+    'mergos-wet-nurse': ('blood-starved-beast', 'martyr-logarius', 'darkbeast-paarl'),
 }
 
 
 WITCH_COMPATIBILITY = {'amygdala': ('witch-of-hemwick',),
-                       'witch-of-hemwick': ('vicar-amelia',)}
+                       'witch-of-hemwick': ('vicar-amelia', 'father-gascoigne')}
 
 
 LIVING_FAILURES_COMPATIBILITY = {'living-failures': ('blood-starved-beast', 'lady-maria', 'laurence')}
@@ -229,7 +235,8 @@ ROM_COMPATIBILITY = {'ebrietas': ('rom',), 'rom': ('ebrietas',)}
 CELESTIAL_COMPATIBILITY = {'darkbeast-paarl': ('celestial-emissary',),
                            'celestial-emissary': ('amygdala',)}
 MICOLASH_COMPATIBILITY = {'moon-presence': ('micolash',),
-                          'micolash': ('gehrman',)}
+                          'micolash': ('gehrman', 'moon-presence'),
+                          'gehrman': ('micolash',)}
 ONE_REBORN_COMPATIBILITY = {'ebrietas': ('the-one-reborn',),
                             'the-one-reborn': ('rom',)}
 SHADOWS_COMPATIBILITY = {'orphan-of-kos': ('shadows-of-yharnam',),
@@ -288,6 +295,22 @@ def is_bsb_logarius_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('martyr-logarius', 'blood-starved-beast')
 
 
+def is_moon_micolash_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('micolash', 'moon-presence')
+
+
+def is_gascoigne_witch_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('witch-of-hemwick', 'father-gascoigne')
+
+
+def is_wet_nurse_logarius_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('martyr-logarius', 'mergos-wet-nurse')
+
+
+def is_paarl_wet_nurse_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('mergos-wet-nurse', 'darkbeast-paarl')
+
+
 def is_paarl_logarius_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('martyr-logarius', 'darkbeast-paarl')
 
@@ -302,6 +325,10 @@ def is_wet_nurse_bsb_pair(arena, package) -> bool:
 
 def is_micolash_moon_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('moon-presence', 'micolash')
+
+
+def is_micolash_gehrman_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('gehrman', 'micolash')
 
 
 def is_one_reborn_ebrietas_pair(arena, package) -> bool:
@@ -732,16 +759,16 @@ def build(args) -> dict:
         raise ValueError('One Reborn donor requires the reviewed Ebrietas arena adapter')
     if direct_orphan[1] == 'celestial-emissary' and direct_orphan[0] != 'darkbeast-paarl':
         raise ValueError('Celestial donor requires the reviewed Paarl arena adapter')
-    if direct_orphan[1] == 'micolash' and direct_orphan[0] != 'moon-presence':
-        raise ValueError('Micolash donor requires the reviewed Moon Presence arena adapter')
+    if direct_orphan[1] == 'micolash' and direct_orphan[0] not in ('moon-presence', 'gehrman'):
+        raise ValueError('Micolash donor requires a reviewed Moon Presence or Gehrman arena adapter')
     if direct_orphan[1] == 'witch-of-hemwick' and direct_orphan[0] != 'amygdala':
         raise ValueError('Witch donor requires the reviewed Amygdala arena adapter')
-    if direct_orphan[0] == 'micolash' and direct_orphan[1] != 'gehrman':
-        raise ValueError('Micolash arena requires the reviewed Gehrman donor adapter')
-    if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] != 'vicar-amelia':
-        raise ValueError('Witch arena requires the reviewed Amelia donor adapter')
-    if direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan[0] != 'blood-starved-beast':
-        raise ValueError('Wet Nurse donor requires the reviewed BSB arena adapter')
+    if direct_orphan[0] == 'micolash' and direct_orphan[1] not in ('gehrman', 'moon-presence'):
+        raise ValueError('Micolash arena requires a reviewed Gehrman or Moon Presence donor adapter')
+    if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] not in ('vicar-amelia', 'father-gascoigne'):
+        raise ValueError('Witch arena requires a reviewed Amelia or Gascoigne donor adapter')
+    if direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan[0] not in ('blood-starved-beast', 'martyr-logarius'):
+        raise ValueError('Wet Nurse donor requires a reviewed BSB or Logarius arena adapter')
     if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] not in ('blood-starved-beast', 'amygdala'):
         raise ValueError('Celestial Emissary arena requires a reviewed BSB or Amygdala donor adapter')
     if direct_orphan[1] == 'living-failures' and direct_orphan[0] not in ('laurence', 'lady-maria'):
@@ -752,8 +779,8 @@ def build(args) -> dict:
         raise ValueError('Rom donor requires a reviewed Ebrietas or One Reborn arena adapter')
     if direct_orphan[0] == 'living-failures' and direct_orphan[1] not in ('blood-starved-beast', 'lady-maria', 'laurence'):
         raise ValueError('Living Failures arena requires a reviewed BSB, Maria or Laurence donor adapter')
-    if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] not in ('blood-starved-beast', 'martyr-logarius'):
-        raise ValueError('Wet Nurse arena requires a reviewed BSB or Logarius donor adapter')
+    if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] not in ('blood-starved-beast', 'martyr-logarius', 'darkbeast-paarl'):
+        raise ValueError('Wet Nurse arena requires a reviewed BSB, Logarius or Paarl donor adapter')
     if orphan and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne'):
         raise ValueError('Orphan requires a reviewed Cleric or Gascoigne arena adapter')
     reviewed_orphan_pairs = {
@@ -764,8 +791,8 @@ def build(args) -> dict:
     if direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in reviewed_orphan_pairs:
         raise ValueError('Orphan arena requires a reviewed donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
-    if direct_logarius[0] == 'martyr-logarius' and direct_logarius[1] not in LOGARIUS_COMPATIBILITY['martyr-logarius']:
-        raise ValueError('Logarius arena requires a reviewed BSB or Paarl donor adapter')
+    if direct_logarius[0] == 'martyr-logarius' and direct_logarius[1] not in (*LOGARIUS_COMPATIBILITY['martyr-logarius'], 'mergos-wet-nurse'):
+        raise ValueError('Logarius arena requires a reviewed BSB, Paarl or Wet Nurse donor adapter')
     if direct_logarius[1] == 'martyr-logarius' and direct_logarius[0] not in ('blood-starved-beast', 'mergos-wet-nurse'):
         raise ValueError('Martyr Logarius requires a reviewed BSB or Wet Nurse arena adapter')
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
@@ -778,6 +805,7 @@ def build(args) -> dict:
     laurence_ids = LaurenceIds(12990300, 12990301)
     direct_gascoigne = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     reviewed_gascoigne_pairs = {
+        ('witch-of-hemwick', 'father-gascoigne'),
         ('cleric-beast', 'father-gascoigne'),
         ('father-gascoigne', 'cleric-beast'),
         ('father-gascoigne', 'orphan-of-kos'),
@@ -843,12 +871,17 @@ def build(args) -> dict:
                     and not is_living_failures_laurence_pair(arena, package)
                     and not is_bsb_celestial_pair(arena, package)
                     and not is_wet_nurse_bsb_pair(arena, package)
+                    and not is_moon_micolash_pair(arena, package)
+                    and not is_gascoigne_witch_pair(arena, package)
+                    and not is_wet_nurse_logarius_pair(arena, package)
+                    and not is_paarl_wet_nurse_pair(arena, package)
                     and not is_living_failures_maria_pair(arena, package)
                     and not is_amygdala_celestial_pair(arena, package)
                     and not is_logarius_wet_nurse_pair(arena, package)
                     and not is_amelia_witch_pair(arena, package)
                     and not is_gehrman_micolash_pair(arena, package)
                     and not is_micolash_moon_pair(arena, package)
+                    and not is_micolash_gehrman_pair(arena, package)
                     and not is_one_reborn_ebrietas_pair(arena, package)
                     and not is_rom_one_reborn_pair(arena, package)
                     and not is_ludwig_shadows_pair(arena, package)
@@ -888,6 +921,8 @@ def build(args) -> dict:
                 )
             elif is_micolash_moon_pair(arena, package):
                 patched = patch_micolash_at_moon(texts[arena.event_file], texts[package.event_file])
+            elif is_micolash_gehrman_pair(arena, package):
+                patched = patch_micolash_at_gehrman(texts[arena.event_file], texts[package.event_file])
             elif is_one_reborn_ebrietas_pair(arena, package):
                 patched = patch_one_reborn_at_ebrietas(texts[arena.event_file], texts[package.event_file])
             elif is_rom_one_reborn_pair(arena, package):
@@ -910,6 +945,14 @@ def build(args) -> dict:
                 patched = patch_amelia_at_witch(texts[arena.event_file], texts[package.event_file])
             elif is_logarius_wet_nurse_pair(arena, package):
                 patched = patch_logarius_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
+            elif is_gascoigne_witch_pair(arena, package):
+                patched = patch_gascoigne_at_witch(texts[arena.event_file], texts[package.event_file])
+            elif is_moon_micolash_pair(arena, package):
+                patched = patch_moon_at_micolash(texts[arena.event_file], texts[package.event_file])
+            elif is_wet_nurse_logarius_pair(arena, package):
+                patched = patch_wet_nurse_at_logarius(texts[arena.event_file], texts[package.event_file])
+            elif is_paarl_wet_nurse_pair(arena, package):
+                patched = patch_paarl_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
             elif is_wet_nurse_bsb_pair(arena, package):
                 patched = patch_wet_nurse_at_bsb(texts[arena.event_file], texts[package.event_file])
             elif is_amygdala_celestial_pair(arena, package):
@@ -1042,6 +1085,9 @@ def build(args) -> dict:
             elif is_micolash_moon_pair(arena, package):
                 plan = native_plan_micolash_at_moon(slots, npcs, effects, args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_micolash_gehrman_pair(arena, package):
+                plan = native_plan_micolash_at_gehrman(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_one_reborn_ebrietas_pair(arena, package):
                 plan = native_plan_one_reborn_at_ebrietas(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
@@ -1083,6 +1129,20 @@ def build(args) -> dict:
             elif is_logarius_wet_nurse_pair(arena, package):
                 plan = native_plan_logarius_at_wet_nurse(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_gascoigne_witch_pair(arena, package):
+                plan = native_plan_gascoigne_at_witch(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_moon_micolash_pair(arena, package):
+                plan = native_plan_moon_at_micolash(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_wet_nurse_logarius_pair(arena, package):
+                plan = native_plan_wet_nurse_at_logarius(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_paarl_wet_nurse_pair(arena, package):
+                plan = native_plan_paarl_at_wet_nurse(slots, npcs, effects, args.seed)
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_wet_nurse_bsb_pair(arena, package):
                 plan = native_plan_wet_nurse_at_bsb(slots, npcs, effects, args.seed)
