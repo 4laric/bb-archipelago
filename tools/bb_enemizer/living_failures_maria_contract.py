@@ -85,7 +85,7 @@ class LivingFailuresMariaIds:
     wave_flags_end: int = 12992428
     scheduler_active_flag: int = 12992429
     combat_count_value: int = 12992430
-    support_count_value: int = 12992431
+    support_count_value: int = 12992433
     proxy_entity: int = 980400
     body_two_entity: int = 980401
     body_three_entity: int = 980402
@@ -141,10 +141,20 @@ def _verify_maria(blocks: Mapping[int, str]) -> None:
 def _validate_ids(ids: LivingFailuresMariaIds, destination: str = "") -> None:
     local = set(map(int, re.findall(r"(?<![\w])-?\d+(?![\w])", destination)))
     events = ids.event_values()
-    values = (*events, *ids.added_entities())
+    project_values = (
+        *events,
+        ids.phase_music_flag,
+        ids.generator_enable_flag,
+        ids.generator_phase_flag,
+        *range(ids.wave_flags_start, ids.wave_flags_end + 1),
+        ids.scheduler_active_flag,
+        *range(ids.combat_count_value, ids.combat_count_value + 3),
+        *range(ids.support_count_value, ids.support_count_value + 3),
+    )
+    values = (*project_values, *ids.added_entities())
     if (
         len(set(values)) != len(values)
-        or any(not EVENT_MIN <= value <= EVENT_MAX for value in events)
+        or any(not EVENT_MIN <= value <= EVENT_MAX for value in project_values)
         or any(value <= 0 for value in ids.added_entities())
         or set(values).intersection(local | _original_literals())
         or not ids.evidence.strip()

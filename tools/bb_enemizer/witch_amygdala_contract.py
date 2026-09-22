@@ -222,7 +222,7 @@ class WitchAmygdalaIds:
     generator_entity_first: int = 980843
     visibility_flag_first: int = 12993040
     warp_flag_first: int = 12993042
-    minion_count_flag: int = 12993052
+    minion_count_flag: int = 12993080
     minion_status_first: int = 12993053
     generator_state_first: int = 12993056
     summon_permission_first: int = 12993058
@@ -256,7 +256,7 @@ class WitchAmygdalaIds:
             self.visibility_flag_first,
             self.visibility_flag_first + 1,
             *(self.warp_flag_first + offset for offset in range(10)),
-            self.minion_count_flag,
+            *(self.minion_count_flag + offset for offset in range(10)),
             *(self.minion_status_first + offset for offset in range(3)),
             self.generator_state_first,
             self.generator_state_first + 1,

@@ -204,7 +204,7 @@ class LivingFailuresLaurenceIds:
     wave_flags_end: int = 12992028
     scheduler_active_flag: int = 12992029
     combat_count_value: int = 12992030
-    support_count_value: int = 12992031
+    support_count_value: int = 12992033
     proxy_entity: int = 980008
     body_two_entity: int = 980009
     body_three_entity: int = 980010
@@ -313,24 +313,23 @@ def _original_literals() -> set[int]:
 
 
 def _validate_ids(ids: LivingFailuresLaurenceIds, destination: str = "") -> None:
-    event_values = (
+    project_values = (
         *ids.event_values(),
         ids.phase_music_flag,
         ids.generator_enable_flag,
         ids.generator_phase_flag,
-        ids.wave_flags_start,
-        ids.wave_flags_end,
+        *range(ids.wave_flags_start, ids.wave_flags_end + 1),
         ids.scheduler_active_flag,
-        ids.combat_count_value,
-        ids.support_count_value,
+        *range(ids.combat_count_value, ids.combat_count_value + 3),
+        *range(ids.support_count_value, ids.support_count_value + 3),
     )
-    all_values = (*event_values, *ids.added_entities())
+    all_values = (*project_values, *ids.added_entities())
     local = set(
         int(value) for value in re.findall(r"(?<![\w])-?\d+(?![\w])", destination)
     )
     if (
         len(set(all_values)) != len(all_values)
-        or any(value < EVENT_MIN or value > EVENT_MAX for value in event_values)
+        or any(value < EVENT_MIN or value > EVENT_MAX for value in project_values)
         or any(value <= 0 for value in ids.added_entities())
         or set(all_values).intersection(local | _original_literals())
         or not ids.evidence.strip()

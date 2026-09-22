@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using SoulsFormats;
 
 // Synthetic, executable integration tests. No game bytes or external test packages.
@@ -122,6 +123,106 @@ try
             "receipt records actual goal IDs rather than assuming Think ID");
         Require(requirements.GetProperty("goals").GetArrayLength() == 2, "receipt preserves same-number logic and battle");
     }
+
+    JsonObject BossThinkZeroPlan()
+    {
+        object Archetype(string model, int npc, int thinkId) => new {
+            model_name = model, npc_param_id = npc, think_param_id = thinkId, chara_init_id = 0,
+        };
+        object Provenance(char part, char? anchor = null) => anchor is null
+            ? new {format = "bb-boss-actor-pin-v1", part_sha256 = new string(part, 64)}
+            : new {format = "bb-boss-actor-pin-v1", part_sha256 = new string(part, 64),
+                anchor_sha256 = new string(anchor.Value, 64)};
+        object Initialization() => new {talk_id = 0, unk_t18 = -1, init_anim_id = -1, damage_anim_id = -1};
+        object Primary(string sourceMap, string destinationMap, int destinationEntity, char pin) => new {
+            source_map = sourceMap, source_part = "c5070_0000", source_entity_id = 5070800,
+            source_archetype = Archetype("c5070", 507000, 0), source_provenance = Provenance(pin),
+            source_initialization = Initialization(), destination_map = destinationMap,
+            destination_part = "c1000_0000", destination_entity_id = destinationEntity,
+        };
+        object Addition(string sourcePart, int sourceEntity, string model, int npc, int thinkId,
+            string destinationPart, int destinationEntity, char pin, char anchor) => new {
+            source_map = "m98_00_00_00", source_part = sourcePart, source_entity_id = sourceEntity,
+            source_anchor_part = "c5070_0000", source_archetype = Archetype(model, npc, thinkId),
+            source_provenance = Provenance(pin, anchor), source_initialization = Initialization(),
+            destination_map = "m99_00_00_00", destination_anchor_part = "c1000_0000",
+            destination_part = destinationPart, destination_entity_id = destinationEntity,
+        };
+        string json = JsonSerializer.Serialize(new {
+            format = "bb-enemizer-plan-v2", dry_run = true, swaps = new[] {new {
+                logical_key = "m99_00_00_00:c1000_0000",
+                destination_keys = new[] {"m99_00_00_00.msb:c1000_0000", "m99_00_00_01.msb:c1000_0000"},
+                // Scaling rewrites target.npc_param_id. The source-pinned unscaled
+                // archetype remains the authority for the no-AI classification.
+                target = new {model_name = "c5070", npc_param_id = 6000000, think_param_id = 0, chara_init_id = 0},
+                unscaled_target = Archetype("c5070", 507000, 0),
+            }},
+            boss_actor_initializations = new[] {
+                Primary("m98_00_00_00", "m99_00_00_00", 9900800, 'a'),
+                Primary("m98_00_00_01", "m99_00_00_01", 9900800, 'b'),
+            },
+            boss_actor_additions = new[] {
+                Addition("c5071_0000", 5071800, "c5071", 507100, 0, "c5071_body", 9900801, 'c', 'd'),
+                Addition("c5071_0001", 5071801, "c5071", 507100, 0, "c5071_proxy", 9900802, 'e', 'f'),
+                Addition("c5072_0000", 5072800, "c5072", 507200, 42, "c5072_controller", 9900803, '1', '2'),
+            },
+        });
+        return JsonNode.Parse(json)!.AsObject();
+    }
+    void Save(JsonObject value) => File.WriteAllText(plan, value.ToJsonString());
+
+    Plan(0);
+    string ordinaryZero = Path.Combine(root, "ordinary-zero");
+    Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, ordinaryZero, true),
+        "missing NpcThinkParam 0");
+    Require(!Directory.Exists(ordinaryZero), "ordinary swaps cannot exempt a missing ThinkParam 0");
+    Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, ordinaryZero, true, bossPrepared: true),
+        "source-pinned boss_actor_initializations");
+
+    var noAiPlan = BossThinkZeroPlan();
+    noAiPlan["boss_actor_initializations"]!.AsArray().RemoveAt(1); Save(noAiPlan);
+    Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, ordinaryZero, true, bossPrepared: true),
+        "every physical destination");
+    noAiPlan = BossThinkZeroPlan();
+    noAiPlan["boss_actor_initializations"]![0]!["source_archetype"]!["npc_param_id"] = 507001; Save(noAiPlan);
+    Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, ordinaryZero, true, bossPrepared: true),
+        "source archetype does not match logical swap");
+    noAiPlan = BossThinkZeroPlan();
+    noAiPlan["boss_actor_additions"]![0]!.AsObject().Remove("source_initialization"); Save(noAiPlan);
+    Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, ordinaryZero, true, bossPrepared: true),
+        "requires source_initialization");
+    noAiPlan = BossThinkZeroPlan();
+    noAiPlan["boss_actor_additions"]![0]!["source_provenance"]!["anchor_sha256"] = new string('A', 64); Save(noAiPlan);
+    Refused(() => AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, ordinaryZero, true, bossPrepared: true),
+        "lowercase SHA256 anchor_sha256");
+
+    noAiPlan = BossThinkZeroPlan(); Save(noAiPlan);
+    string bossAiOutput = Path.Combine(root, "boss-no-ai");
+    AiTransplant.Run(plan, gamePath, defsPath, scriptRoot, bossAiOutput, true, bossPrepared: true);
+    var bossAi = BND4.Read(Path.Combine(bossAiOutput, "m99_00_00_00.luabnd.dcx"));
+    Require(bossAi.Files.Any(f => f.Name.EndsWith("900000_battle.lua")), "nonzero controller imports battle goal");
+    Require(bossAi.Files.Any(f => f.Name.EndsWith("900000_logic.lua")), "nonzero controller imports logic goal");
+    Require(bossAi.Files.Any(f => f.Name.EndsWith("helper.lua")), "nonzero controller preserves helper closure");
+    Require(bossAi.Files.Any(f => f.Name.EndsWith("900001_battle.lua")), "nonzero controller preserves subgoal closure");
+    using (var receipt = JsonDocument.Parse(File.ReadAllText(bossAiOutput + ".json"))) {
+        var thinkParameters = receipt.RootElement.GetProperty("think_parameters");
+        Require(thinkParameters.GetArrayLength() == 1
+            && thinkParameters[0].GetProperty("think_param_id").GetInt32() == 42,
+            "receipt retains nonzero controller ThinkParam closure");
+        var exemptions = receipt.RootElement.GetProperty("no_ai_exemptions");
+        Require(exemptions.GetArrayLength() == 4, "receipt records every source-pinned no-AI physical actor");
+        Require(exemptions.EnumerateArray().Count(e => e.GetProperty("role").GetString() == "primary") == 2,
+            "receipt records both primary physical states");
+        Require(exemptions.EnumerateArray().Count(e => e.GetProperty("role").GetString() == "helper") == 2,
+            "receipt records body and offstage proxy exemptions");
+        Require(exemptions.EnumerateArray().All(e => e.GetProperty("think_param_id").GetInt32() == 0
+            && e.GetProperty("part_sha256").GetString()!.Length == 64),
+            "receipt identifies pinned ThinkParam 0 actors without fabricated row 0");
+        Require(exemptions.EnumerateArray().Where(e => e.GetProperty("role").GetString() == "helper")
+            .All(e => e.GetProperty("anchor_sha256").GetString()!.Length == 64),
+            "receipt retains helper anchor provenance");
+    }
+    Plan();
     BossTests.Run();
     BossEncounterTests.Run();
     BossActorTests.Run();

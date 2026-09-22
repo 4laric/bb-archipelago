@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		1504
+total		1560
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	42
@@ -86,3 +86,12 @@ module	test_launcher_external_cli	2
 module	test_launcher_external_workflow	19
 module	test_gehrman_micolash_contract	6
 module	test_witch_amygdala_contract	4
+module	test_micolash_moon_contract	6
+# Original-input DarkScript compilation is an additional local-only test.
+module	test_celestial_paarl_contract	9
+module	test_one_reborn_ebrietas_contract	7
+module	test_rom_one_reborn_contract	7
+module	test_ludwig_shadows_contract	5
+module	test_maria_living_failures_contract	6
+module	test_shadows_orphan_contract	6
+module	test_laurence_living_failures_contract	6

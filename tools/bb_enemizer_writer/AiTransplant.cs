@@ -48,8 +48,154 @@ internal static class AiTransplant
     }
 
     sealed record Requirement(int Id, bool Logic);
+    sealed record NoAiExemption(string Role, string SourceMap, string SourcePart, int SourceEntityId,
+        string DestinationMap, string DestinationPart, int DestinationEntityId,
+        int ThinkParamId, string PartSha256, string? AnchorSha256);
     sealed record Prepared(Archive Archive, Dictionary<string, byte[]> Originals, List<Script> Added,
         List<Requirement> Required, int MissingBefore, int GlobalsAdded, int GoalsAdded);
+
+    static void Need(bool value, string message)
+    {
+        if (!value) throw new InvalidDataException(message);
+    }
+
+    static string BareMap(string value)
+    {
+        string map = value;
+        if (map.EndsWith(".msb.dcx", StringComparison.OrdinalIgnoreCase)) map = map[..^8];
+        else if (map.EndsWith(".msb", StringComparison.OrdinalIgnoreCase)) map = map[..^4];
+        return map;
+    }
+
+    static string Text(JsonElement value, string property, string context)
+    {
+        if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty(property, out var item)
+            || item.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(item.GetString()))
+            throw new InvalidDataException($"{context} requires {property}");
+        return item.GetString()!;
+    }
+
+    static int Integer(JsonElement value, string property, string context)
+    {
+        if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty(property, out var item)
+            || item.ValueKind != JsonValueKind.Number || !item.TryGetInt32(out int result))
+            throw new InvalidDataException($"{context} requires integer {property}");
+        return result;
+    }
+
+    static JsonElement Object(JsonElement value, string property, string context)
+    {
+        if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty(property, out var item)
+            || item.ValueKind != JsonValueKind.Object)
+            throw new InvalidDataException($"{context} requires {property}");
+        return item;
+    }
+
+    static string Pin(JsonElement provenance, string property, string context)
+    {
+        string hash = Text(provenance, property, context);
+        Need(hash.Length == 64 && hash.All(c => c is >= '0' and <= '9' or >= 'a' and <= 'f'),
+            $"{context} requires lowercase SHA256 {property}");
+        return hash;
+    }
+
+    static void RequireInitialization(JsonElement row, string context)
+    {
+        var initialization = Object(row, "source_initialization", context);
+        foreach (string field in new[] { "talk_id", "unk_t18", "init_anim_id", "damage_anim_id" })
+            _ = Integer(initialization, field, context + " source initialization");
+    }
+
+    static void RequireArchetype(JsonElement archetype, Archetype expected, string context)
+    {
+        Need(Text(archetype, "model_name", context) == expected.ModelName
+            && Integer(archetype, "npc_param_id", context) == expected.NpcParamId
+            && Integer(archetype, "think_param_id", context) == expected.ThinkParamId
+            && Integer(archetype, "chara_init_id", context) == expected.CharaInitId,
+            $"{context} source archetype does not match logical swap");
+    }
+
+    static Archetype ArchetypeFrom(JsonElement value, string context) => new(
+        Text(value, "model_name", context), Integer(value, "npc_param_id", context),
+        Integer(value, "think_param_id", context), Integer(value, "chara_init_id", context));
+
+    static (string Map, string Part) PhysicalDestination(string key)
+    {
+        int split = key.IndexOf(':');
+        Need(split > 0 && split < key.Length - 1, $"invalid destination key {key}");
+        string map = BareMap(key[..split]), part = key[(split + 1)..];
+        Need(Regex.IsMatch(map, @"^m\d{2}_\d{2}_\d{2}_\d{2}$") && !string.IsNullOrWhiteSpace(part),
+            $"invalid destination key {key}");
+        return (map, part);
+    }
+
+    static List<NoAiExemption> RequirePrimaryNoAiEvidence(
+        JsonElement root, Swap swap, JsonElement swapJson)
+    {
+        Need(root.TryGetProperty("boss_actor_initializations", out var node)
+            && node.ValueKind == JsonValueKind.Array,
+            "boss ThinkParam 0 primary requires source-pinned boss_actor_initializations");
+        JsonElement sourceArchetype = swapJson.TryGetProperty("unscaled_target", out var unscaled)
+            && unscaled.ValueKind == JsonValueKind.Object ? unscaled : swapJson.GetProperty("target");
+        Archetype expected = ArchetypeFrom(sourceArchetype, "boss ThinkParam 0 logical source");
+        Need(expected.ThinkParamId == 0, "boss ThinkParam 0 logical source changed during preparation");
+        var result = new List<NoAiExemption>();
+        foreach (string destinationKey in swap.DestinationKeys)
+        {
+            var destination = PhysicalDestination(destinationKey);
+            var matches = node.EnumerateArray().Where(row =>
+                BareMap(Text(row, "destination_map", "boss primary initialization")) == destination.Map
+                && Text(row, "destination_part", "boss primary initialization") == destination.Part).ToList();
+            Need(matches.Count == 1,
+                "boss ThinkParam 0 primary requires one source-pinned boss_actor_initialization for every physical destination");
+            JsonElement row = matches[0];
+            string context = $"boss ThinkParam 0 primary {destination.Map}:{destination.Part}";
+            RequireArchetype(Object(row, "source_archetype", context), expected, context);
+            RequireInitialization(row, context);
+            var provenance = Object(row, "source_provenance", context);
+            Need(Text(provenance, "format", context) == "bb-boss-actor-pin-v1",
+                $"{context} has unsupported provenance format");
+            string partPin = Pin(provenance, "part_sha256", context);
+            string sourceMap = BareMap(Text(row, "source_map", context));
+            Need(Regex.IsMatch(sourceMap, @"^m\d{2}_\d{2}_\d{2}_\d{2}$"), $"{context} has invalid source map");
+            int sourceEntity = Integer(row, "source_entity_id", context);
+            int destinationEntity = Integer(row, "destination_entity_id", context);
+            Need(sourceEntity > 0 && destinationEntity > 0, $"{context} has invalid actor identity");
+            result.Add(new("primary", sourceMap, Text(row, "source_part", context), sourceEntity,
+                destination.Map, destination.Part, destinationEntity, 0, partPin, null));
+        }
+        return result;
+    }
+
+    static NoAiExemption RequireHelperNoAiEvidence(JsonElement addition)
+    {
+        string context = "boss ThinkParam 0 helper";
+        var archetype = Object(addition, "source_archetype", context);
+        Need(Integer(archetype, "think_param_id", context) == 0
+            && !string.IsNullOrWhiteSpace(Text(archetype, "model_name", context))
+            && Integer(archetype, "npc_param_id", context) > 0
+            && Integer(archetype, "chara_init_id", context) >= 0,
+            $"{context} requires a complete source archetype pin");
+        RequireInitialization(addition, context);
+        var provenance = Object(addition, "source_provenance", context);
+        Need(Text(provenance, "format", context) == "bb-boss-actor-pin-v1",
+            $"{context} has unsupported provenance format");
+        string partPin = Pin(provenance, "part_sha256", context);
+        string anchorPin = Pin(provenance, "anchor_sha256", context);
+        string sourceMap = BareMap(Text(addition, "source_map", context));
+        string destinationMap = BareMap(Text(addition, "destination_map", context));
+        Need(Regex.IsMatch(sourceMap, @"^m\d{2}_\d{2}_\d{2}_\d{2}$")
+            && Regex.IsMatch(destinationMap, @"^m\d{2}_\d{2}_\d{2}_\d{2}$"),
+            $"{context} has invalid map identity");
+        int sourceEntity = Integer(addition, "source_entity_id", context);
+        int destinationEntity = Integer(addition, "destination_entity_id", context);
+        Need(sourceEntity > 0 && destinationEntity > 0, $"{context} has invalid actor identity");
+        _ = Text(addition, "source_anchor_part", context);
+        _ = Text(addition, "destination_anchor_part", context);
+        return new("helper", sourceMap, Text(addition, "source_part", context), sourceEntity,
+            destinationMap, Text(addition, "destination_part", context), destinationEntity,
+            0, partPin, anchorPin);
+    }
 
     public static int Run(string planPath, string gamePath, string defsPath,
         string scriptRoot, string output, bool apply, bool bossPrepared = false)
@@ -58,8 +204,9 @@ internal static class AiTransplant
             ?? throw new InvalidDataException("empty enemizer plan");
         if (manifest.Format != "bb-enemizer-plan-v2" || !manifest.DryRun || manifest.Swaps.Count == 0)
             throw new InvalidDataException("expected a non-empty bb-enemizer-plan-v2 manifest");
-        using (var guard = JsonDocument.Parse(File.ReadAllText(planPath)))
-        if (!bossPrepared && guard.RootElement.TryGetProperty("boss_actor_scaling", out _))
+        using var planDocument = JsonDocument.Parse(File.ReadAllText(planPath));
+        JsonElement planRoot = planDocument.RootElement;
+        if (!bossPrepared && planRoot.TryGetProperty("boss_actor_scaling", out _))
             throw new InvalidDataException("boss actor scaling requires --boss-encounters and reviewed map evidence");
         string inputRoot = Path.GetFullPath(scriptRoot);
         string outputPath = Path.GetFullPath(output);
@@ -91,8 +238,19 @@ internal static class AiTransplant
         var thinkRows = think.Rows.GroupBy(r => r.ID).ToDictionary(g => g.Key, g => g.ToList());
         var requirements = new SortedDictionary<string, HashSet<Requirement>>(StringComparer.Ordinal);
         var thinkRequirements = new SortedDictionary<int, List<Requirement>>();
+        var noAiExemptions = new List<NoAiExemption>();
+        var swapJsonByKey = planRoot.GetProperty("swaps").EnumerateArray()
+            .ToDictionary(row => Text(row, "logical_key", "logical swap"), StringComparer.Ordinal);
         foreach (var swap in manifest.Swaps)
         {
+            if (swap.Target.ThinkParamId == 0)
+            {
+                if (!bossPrepared) throw new InvalidDataException("missing NpcThinkParam 0");
+                Need(swapJsonByKey.TryGetValue(swap.LogicalKey, out var swapJson),
+                    $"missing logical swap evidence {swap.LogicalKey}");
+                noAiExemptions.AddRange(RequirePrimaryNoAiEvidence(planRoot, swap, swapJson));
+                continue;
+            }
             if (!thinkRows.TryGetValue(swap.Target.ThinkParamId, out var rows))
                 throw new InvalidDataException($"missing NpcThinkParam {swap.Target.ThinkParamId}");
             var row = rows[0];
@@ -121,14 +279,19 @@ internal static class AiTransplant
         }
         // Multi-actor encounter additions are not logical swaps. They still
         // need their donor ThinkParam goals in the destination area's binder.
-        using (var planDocument = JsonDocument.Parse(File.ReadAllText(planPath)))
-        if (planDocument.RootElement.TryGetProperty("boss_actor_additions", out var additions))
+        if (planRoot.TryGetProperty("boss_actor_additions", out var additions))
         {
             if (additions.ValueKind != JsonValueKind.Array) throw new InvalidDataException("invalid boss_actor_additions");
             foreach (var addition in additions.EnumerateArray())
             {
                 int thinkId = addition.GetProperty("source_archetype").GetProperty("think_param_id").GetInt32();
                 string map = addition.GetProperty("destination_map").GetString() ?? throw new InvalidDataException("actor addition has no destination map");
+                if (thinkId == 0)
+                {
+                    if (!bossPrepared) throw new InvalidDataException("missing NpcThinkParam 0");
+                    noAiExemptions.Add(RequireHelperNoAiEvidence(addition));
+                    continue;
+                }
                 if (!thinkRows.TryGetValue(thinkId, out var rows)) throw new InvalidDataException($"missing NpcThinkParam {thinkId}");
                 var goals = new List<Requirement>();
                 foreach (string field in new[] { "logicId", "battleGoalID", "goalID_ToCaution", "goalID_ToFind", "goalID_ToInterest" })
@@ -138,6 +301,7 @@ internal static class AiTransplant
                     if (ids[0] > 0) goals.Add(new Requirement(ids[0], field == "logicId"));
                 }
                 if (goals.Count == 0) throw new InvalidDataException($"NpcThinkParam {thinkId} has no AI goals");
+                thinkRequirements[thinkId] = goals.Distinct().OrderBy(g => g.Id).ThenBy(g => g.Logic).ToList();
                 string bare = map.Split('.')[0];
                 if (!Regex.IsMatch(bare, @"^m\d{2}_\d{2}_\d{2}_\d{2}$")) throw new InvalidDataException($"invalid actor destination map {map}");
                 string binder = bare[..^2] + "00.luabnd.dcx";
@@ -314,6 +478,9 @@ internal static class AiTransplant
             gameparam_sha256 = Hash(File.ReadAllBytes(gamePath)),
             paramdef_sha256 = Hash(File.ReadAllBytes(defsPath)),
             think_parameters = thinkRequirements.Select(pair => new {think_param_id = pair.Key, goals = pair.Value}),
+            no_ai_exemptions = noAiExemptions.OrderBy(row => row.Role, StringComparer.Ordinal)
+                .ThenBy(row => row.DestinationMap, StringComparer.Ordinal)
+                .ThenBy(row => row.DestinationPart, StringComparer.Ordinal),
             sources = archives.Keys.Order().ToDictionary(n => n, n => Hash(File.ReadAllBytes(Path.Combine(inputRoot, n)))),
             maps = prepared.Select(p => new {
                 map = p.Archive.Name, missing_goals_before = p.MissingBefore, missing_goals_after = 0,

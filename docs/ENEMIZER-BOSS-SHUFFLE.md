@@ -4,7 +4,8 @@ The target is a seed-driven shuffle of all 22 AP boss encounters, including
 multi-actor fights. This branch is under development. A successful offline
 build is not evidence that entrance, combat, arena fit or AP completion works
 in a running game. The experimental reviewed-pool option is separate from the
-original single-encounter canary. The full 22-encounter goal remains unfinished.
+original single-encounter canary. All 22 encounters now have constructed donor
+and destination adapters; full gameplay acceptance remains unfinished.
 
 ## Ownership of encounter behavior
 
@@ -78,8 +79,10 @@ refuses an incomplete matching instead of dropping encounters.
 
 `--pool reviewed` currently includes Cleric, BSB, Paarl, Amelia, Amygdala,
 Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius, Gascoigne, Rom, Living Failures,
-Wet Nurse and Witch of Hemwick, plus the reciprocal Gehrman/Moon Presence pair. The eighteen-boss
-graph has two complete assignments selected by seed; the final pair is fixed. All donors are used once and no boss stays in its own arena. Cleric and
+Wet Nurse, Witch of Hemwick, Celestial Emissary, Micolash, The One Reborn, Shadows,
+Gehrman and Moon Presence.
+The twenty-two-boss graph has six complete assignments selected by seed; most
+routes remain forced by compatibility. All donors are used once and no boss stays in its own arena. Cleric and
 Amelia attach explicitly allocated, pinned combat routines rather than relying
 on a destination having the same number of native phase events. Constructor
 composition also accepts disjoint appended initializer calls and rejects
@@ -255,17 +258,17 @@ seed-dependent assignments.
 | Darkbeast Paarl | Constructed | Constructed | Yes |
 | Vicar Amelia | Constructed | Constructed | Yes |
 | Witch of Hemwick | Constructed | Constructed (Amelia) | Yes |
-| Shadows of Yharnam | Pending | Pending | Pending |
+| Shadows of Yharnam | Constructed (Orphan) | Constructed (Ludwig) | Yes |
 | Rom | Constructed | Constructed | Yes |
-| The One Reborn | Pending | Pending | Pending |
+| The One Reborn | Constructed (Ebrietas) | Constructed (Rom) | Yes |
 | Amygdala | Constructed | Constructed | Yes |
 | Martyr Logarius | Constructed | Constructed | Yes |
-| Celestial Emissary | Pending | Constructed | Pending |
+| Celestial Emissary | Constructed (Paarl) | Constructed | Yes |
 | Ebrietas | Constructed | Constructed | Yes |
-| Micolash | Pending | Constructed (Gehrman) | Pending |
+| Micolash | Constructed (Moon Presence) | Constructed (Gehrman) | Yes |
 | Mergo's Wet Nurse | Constructed | Constructed | Yes |
-| Gehrman | Constructed | Constructed | Yes, fixed reciprocal pair |
-| Moon Presence | Constructed | Constructed | Yes, fixed reciprocal pair |
+| Gehrman | Constructed | Constructed | Yes |
+| Moon Presence | Constructed | Constructed | Yes |
 | Ludwig | Constructed | Constructed | Yes |
 | Laurence | Constructed | Constructed | Yes |
 | Living Failures | Constructed | Constructed | Yes |
@@ -486,3 +489,82 @@ files across nineteen physical maps. The seed-variation test
 now checks eight seeds rather than assuming two specific seeds must differ
 when the roster changes. All admitted donors still appear exactly once, and
 no boss remains in its own arena.
+
+The next roster extension adds Celestial Emissary at Paarl, Micolash at Moon
+Presence, One Reborn at Ebrietas, and Rom at One Reborn. Their standalone native
+builds verify nine, eight, nine and nine files respectively. Celestial includes
+its giant, seven wave bodies, two supports, eleven regions and seven generators
+in both physical destination maps. Its giant death releases the retained Paarl
+terminal. Micolash uses the original direct-combat AI commands with its local
+dialogue retired; a project flag drives phase music without advancing Mensis.
+
+One Reborn carries its body, controller, damage proxy and six casters. The native
+AI writer accepts ThinkParam 0 only for boss-prepared actors with complete
+source initialization and provenance evidence. Every physical primary needs a
+matching binding; helpers need part and anchor pins. Original binary actor
+verification still runs before the atomic output is published. No row 0 or AI
+goal is invented. The AI receipt lists the exempt actors and retains exact goal
+requirements for the controller and casters. Ordinary missing-AI swaps fail.
+The caster counter reserves all four flag bits; entry notification uses a
+separate flag. Collision tests reject aliases into any occupied counter bit.
+The casters retain their original elevated relative placements; their fit and
+accessibility in Ebrietas's arena are unresolved gameplay questions.
+
+Rom at One Reborn includes all thirty spiders and two phase-warp regions in
+both physical maps. Original One Reborn body, proxy and caster controllers are
+retired. Only donor death releases the original destination terminal. The
+unrelated destination entry/cutscene and progression remain in place.
+
+Ludwig at Shadows independently verifies nine files. Both Ludwig forms retain
+their phase routines, and all three destination snake generators and c5033/c2121
+helpers are retired. Its bridge satisfies the original three-body terminal
+after donor death. An explicitly pinned installed-source variant changes only
+the unrelated quest initializer 12700907 to 12700910; it is preserved verbatim.
+
+The earlier twenty-one-boss construction checkpoint verified 55 files per
+assignment, including 122 physical helpers, 63 regions and 21 generators.
+Those artifacts predate the counter-allocation correction and are superseded
+by the full-roster validation below.
+
+Shadows at Orphan independently verifies eight files. Three active Shadow
+bodies, three snake bodies, four attachments, twelve regions and three
+generators use one pinned placement transform anchored on the original second
+Shadow. The original Orphan primary becomes an inert, hidden terminal proxy;
+all three active bodies must die before the bridge kills that proxy. Original
+terminal 13601800, including its OR-death branch, rewards and AP progression,
+remains byte-identical. The copied source phase-music flag has no EMEVD setter;
+its actor/TAE behavior remains a runtime question.
+
+Maria and Laurence at Living Failures each independently verify eight files.
+Maria's direct combat
+health and phase routines replace the wave fight, while Maria's death releases
+the original aggregate-proxy terminal. All generators, unused bodies and
+support are retired. Laurence retains its original limbs and phase hitmask.
+Together these routes expand the prior two complete assignments to six;
+compatibility is still a restricted graph, not every possible boss/arena pair.
+
+A source-wide counter audit found and corrected overlapping flag allocations
+in Witch at Amygdala and both Living Failures donor routes. Witch reserves all
+ten minion-counter bits; the two three-bit Living Failures counters have
+disjoint ranges. The validators check every occupied bit and regressions
+attempt aliases into those ranges. Celestial and Shadows source closures do
+not use event-value counters. Earlier outputs with overlapping allocations
+must be rebuilt; native file verification alone cannot detect that semantic
+mistake.
+
+Full-roster native validation passes all six distinct assignments, selected by
+seeds `0`, `2`, `4`, `5`, `6` and `11`. Each verifies 59 output files across 23
+physical maps, with 134 added actors, 75 regions and 24 generators. The receipts
+contain the corrected Witch, One Reborn and Living Failures counter allocations.
+A combined build also verifies 59 files with 308 ordinary enemy swaps plus all
+22 boss encounters (331 physical/logical swap records), confirming joint map,
+parameter, AI and event construction. These outputs remain offline artifacts;
+no overlay was activated and no gameplay result is asserted.
+
+The full Python run passes 1,559 collected tests with 55 expected skips. The
+subsequently added installed-source regression passes in focused testing; the
+committed collection floor is 1,560. The final six-assignment graph is also
+checked independently across 64 seeds. Native suites pass, including 53 AI
+assertions and actor, encounter, region, Object, SFX, FFX, scaling and event
+verification. Original-input compiler tests remain optional where those local
+fixtures are unavailable; their portable contract tests are required in CI.

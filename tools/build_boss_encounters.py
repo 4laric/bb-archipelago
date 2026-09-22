@@ -29,6 +29,23 @@ from tools.bb_enemizer.witch_amygdala_contract import (
     patch_witch_at_amygdala, native_plan_witch_at_amygdala)
 from tools.bb_enemizer.amelia_witch_contract import (
     patch_amelia_at_witch, native_plan_amelia_at_witch)
+from tools.bb_enemizer.micolash_moon_contract import (
+    patch_micolash_at_moon, native_plan_micolash_at_moon)
+from tools.bb_enemizer.one_reborn_ebrietas_contract import (
+    patch_one_reborn_at_ebrietas, native_plan_one_reborn_at_ebrietas)
+from tools.bb_enemizer.rom_one_reborn_contract import (
+    patch_rom_at_one_reborn, native_plan_rom_at_one_reborn)
+from tools.bb_enemizer.celestial_paarl_contract import (
+    patch_celestial_emissary_at_paarl, native_plan_celestial_at_paarl)
+from tools.bb_enemizer.ludwig_shadows_contract import (
+    patch_ludwig_at_shadows, native_plan_ludwig_at_shadows)
+from tools.bb_enemizer.maria_living_failures_contract import (
+    patch_maria_at_living_failures, native_plan_maria_at_living_failures,
+    maria_living_failures_external_reference_requirement)
+from tools.bb_enemizer.shadows_orphan_contract import (
+    patch_shadows_at_orphan, native_plan_shadows_at_orphan)
+from tools.bb_enemizer.laurence_living_failures_contract import (
+    patch_laurence_at_living_failures, native_plan_laurence_at_living_failures)
 from tools.bb_enemizer.boss_pool import (
     assign_donors, combine_native_plans, compose_event_patches, validate_terminal_predicates,
     combine_ordinary_and_boss_plans,
@@ -136,6 +153,7 @@ ARENAS['martyr-logarius'] = PACKAGES['martyr-logarius']
 ARENAS['mergos-wet-nurse'] = SpecialEndpoint('mergos-wet-nurse', 'm26_00_00_00.emevd.dcx.js')
 PACKAGES['mergos-wet-nurse'] = ARENAS['mergos-wet-nurse']
 ARENAS['celestial-emissary'] = SpecialEndpoint('celestial-emissary', 'm24_02_00_00.emevd.dcx.js')
+PACKAGES['celestial-emissary'] = ARENAS['celestial-emissary']
 ARENAS['living-failures'] = SpecialEndpoint('living-failures', 'm35_00_00_00.emevd.dcx.js')
 PACKAGES['living-failures'] = ARENAS['living-failures']
 PACKAGES['rom'] = SpecialEndpoint('rom', 'm32_00_00_00.emevd.dcx.js')
@@ -143,6 +161,11 @@ ARENAS['rom'] = PACKAGES['rom']
 ARENAS['witch-of-hemwick'] = SpecialEndpoint('witch-of-hemwick', 'm22_00_00_00.emevd.dcx.js')
 PACKAGES['witch-of-hemwick'] = ARENAS['witch-of-hemwick']
 ARENAS['micolash'] = SpecialEndpoint('micolash', 'm26_00_00_00.emevd.dcx.js')
+PACKAGES['micolash'] = ARENAS['micolash']
+ARENAS['the-one-reborn'] = SpecialEndpoint('the-one-reborn', 'm28_00_00_00.emevd.dcx.js')
+PACKAGES['the-one-reborn'] = ARENAS['the-one-reborn']
+ARENAS['shadows-of-yharnam'] = SpecialEndpoint('shadows-of-yharnam', 'm27_00_00_00.emevd.dcx.js')
+PACKAGES['shadows-of-yharnam'] = ARENAS['shadows-of-yharnam']
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -198,10 +221,19 @@ WITCH_COMPATIBILITY = {'amygdala': ('witch-of-hemwick',),
                        'witch-of-hemwick': ('vicar-amelia',)}
 
 
-LIVING_FAILURES_COMPATIBILITY = {'living-failures': ('blood-starved-beast',)}
+LIVING_FAILURES_COMPATIBILITY = {'living-failures': ('blood-starved-beast', 'lady-maria', 'laurence')}
 
 
 ROM_COMPATIBILITY = {'ebrietas': ('rom',), 'rom': ('ebrietas',)}
+
+CELESTIAL_COMPATIBILITY = {'darkbeast-paarl': ('celestial-emissary',),
+                           'celestial-emissary': ('amygdala',)}
+MICOLASH_COMPATIBILITY = {'moon-presence': ('micolash',),
+                          'micolash': ('gehrman',)}
+ONE_REBORN_COMPATIBILITY = {'ebrietas': ('the-one-reborn',),
+                            'the-one-reborn': ('rom',)}
+SHADOWS_COMPATIBILITY = {'orphan-of-kos': ('shadows-of-yharnam',),
+                         'shadows-of-yharnam': ('ludwig',)}
 
 
 def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
@@ -219,6 +251,10 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
         LIVING_FAILURES_COMPATIBILITY,
         WET_NURSE_COMPATIBILITY,
         WITCH_COMPATIBILITY,
+        CELESTIAL_COMPATIBILITY,
+        MICOLASH_COMPATIBILITY,
+        ONE_REBORN_COMPATIBILITY,
+        SHADOWS_COMPATIBILITY,
         FINAL_COMPATIBILITY,
     ):
         for arena, donors in section.items():
@@ -262,6 +298,38 @@ def is_logarius_wet_nurse_pair(arena, package) -> bool:
 
 def is_wet_nurse_bsb_pair(arena, package) -> bool:
     return package is not None and (arena.key, package.key) == ('blood-starved-beast', 'mergos-wet-nurse')
+
+
+def is_micolash_moon_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('moon-presence', 'micolash')
+
+
+def is_one_reborn_ebrietas_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('ebrietas', 'the-one-reborn')
+
+
+def is_rom_one_reborn_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('the-one-reborn', 'rom')
+
+
+def is_ludwig_shadows_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('shadows-of-yharnam', 'ludwig')
+
+
+def is_shadows_orphan_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('orphan-of-kos', 'shadows-of-yharnam')
+
+
+def is_maria_living_failures_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('living-failures', 'lady-maria')
+
+
+def is_laurence_living_failures_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('living-failures', 'laurence')
+
+
+def is_celestial_paarl_pair(arena, package) -> bool:
+    return package is not None and (arena.key, package.key) == ('darkbeast-paarl', 'celestial-emissary')
 
 
 def is_witch_amygdala_pair(arena, package) -> bool:
@@ -319,7 +387,9 @@ def is_maria_pair(arena, package) -> bool:
 def maria_external_reference(args, plan: dict, arena) -> dict:
     """Bind Maria's unplaced operand to original map/event evidence."""
     requirement = (maria_at_amelia_external_reference_requirement()
-                   if arena.key == 'vicar-amelia' else {
+                   if arena.key == 'vicar-amelia' else
+                   maria_living_failures_external_reference_requirement()
+                   if arena.key == 'living-failures' else {
                        'entity_id': 3500801, 'source_map': 'm35_00_00_00',
                        'source_event_file': 'm35_00_00_00.emevd.dcx', 'source_event_id': 13504802,
                        'source_actor': 3500800, 'destination_event_file': arena.event_file.removesuffix('.js'),
@@ -652,6 +722,18 @@ def build(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
+    if direct_orphan[0] == 'shadows-of-yharnam' and direct_orphan[1] != 'ludwig':
+        raise ValueError('Shadows arena requires the reviewed Ludwig donor adapter')
+    if direct_orphan[1] == 'shadows-of-yharnam' and direct_orphan[0] != 'orphan-of-kos':
+        raise ValueError('Shadows donor requires the reviewed Orphan arena adapter')
+    if direct_orphan[0] == 'the-one-reborn' and direct_orphan[1] != 'rom':
+        raise ValueError('One Reborn arena requires the reviewed Rom donor adapter')
+    if direct_orphan[1] == 'the-one-reborn' and direct_orphan[0] != 'ebrietas':
+        raise ValueError('One Reborn donor requires the reviewed Ebrietas arena adapter')
+    if direct_orphan[1] == 'celestial-emissary' and direct_orphan[0] != 'darkbeast-paarl':
+        raise ValueError('Celestial donor requires the reviewed Paarl arena adapter')
+    if direct_orphan[1] == 'micolash' and direct_orphan[0] != 'moon-presence':
+        raise ValueError('Micolash donor requires the reviewed Moon Presence arena adapter')
     if direct_orphan[1] == 'witch-of-hemwick' and direct_orphan[0] != 'amygdala':
         raise ValueError('Witch donor requires the reviewed Amygdala arena adapter')
     if direct_orphan[0] == 'micolash' and direct_orphan[1] != 'gehrman':
@@ -666,15 +748,16 @@ def build(args) -> dict:
         raise ValueError('Living Failures donor requires a reviewed Laurence or Maria arena adapter')
     if direct_orphan[0] == 'rom' and direct_orphan[1] != 'ebrietas':
         raise ValueError('Rom arena requires the reviewed Ebrietas donor adapter')
-    if direct_orphan[1] == 'rom' and direct_orphan[0] != 'ebrietas':
-        raise ValueError('Rom donor requires the reviewed Ebrietas arena adapter')
-    if direct_orphan[0] == 'living-failures' and direct_orphan[1] != 'blood-starved-beast':
-        raise ValueError('Living Failures arena requires the reviewed BSB donor adapter')
+    if direct_orphan[1] == 'rom' and direct_orphan[0] not in ('ebrietas', 'the-one-reborn'):
+        raise ValueError('Rom donor requires a reviewed Ebrietas or One Reborn arena adapter')
+    if direct_orphan[0] == 'living-failures' and direct_orphan[1] not in ('blood-starved-beast', 'lady-maria', 'laurence'):
+        raise ValueError('Living Failures arena requires a reviewed BSB, Maria or Laurence donor adapter')
     if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] not in ('blood-starved-beast', 'martyr-logarius'):
         raise ValueError('Wet Nurse arena requires a reviewed BSB or Logarius donor adapter')
     if orphan and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne'):
         raise ValueError('Orphan requires a reviewed Cleric or Gascoigne arena adapter')
     reviewed_orphan_pairs = {
+        ('orphan-of-kos', 'shadows-of-yharnam'),
         ('orphan-of-kos', 'blood-starved-beast'),
         ('orphan-of-kos', 'ludwig'),
     }
@@ -702,10 +785,10 @@ def build(args) -> dict:
     if direct_gascoigne[0] == 'father-gascoigne' or direct_gascoigne[1] == 'father-gascoigne':
         if direct_gascoigne not in reviewed_gascoigne_pairs:
             raise ValueError('Father Gascoigne is available only in the reviewed Cleric reciprocal adapters')
-    if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos'):
-        raise ValueError('Ludwig donor requires a reviewed Cleric or Orphan arena adapter')
-    if laurence and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig')):
-        raise ValueError('Laurence donor requires a reviewed Cleric or Ludwig arena adapter')
+    if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam'):
+        raise ValueError('Ludwig donor requires a reviewed Cleric, Orphan or Shadows arena adapter')
+    if laurence and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig', 'living-failures')):
+        raise ValueError('Laurence donor requires a reviewed Cleric, Ludwig or Living Failures arena adapter')
     if getattr(args, 'pool', None):
         graph = {
             'blood-starved-beast': ('darkbeast-paarl',),
@@ -765,6 +848,14 @@ def build(args) -> dict:
                     and not is_logarius_wet_nurse_pair(arena, package)
                     and not is_amelia_witch_pair(arena, package)
                     and not is_gehrman_micolash_pair(arena, package)
+                    and not is_micolash_moon_pair(arena, package)
+                    and not is_one_reborn_ebrietas_pair(arena, package)
+                    and not is_rom_one_reborn_pair(arena, package)
+                    and not is_ludwig_shadows_pair(arena, package)
+                    and not is_shadows_orphan_pair(arena, package)
+                    and not is_maria_living_failures_pair(arena, package)
+                    and not is_laurence_living_failures_pair(arena, package)
+                    and not is_celestial_paarl_pair(arena, package)
                     and not is_witch_amygdala_pair(arena, package)):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
@@ -795,6 +886,22 @@ def build(args) -> dict:
                 patched = patch_ludwig_at_orphan(
                     texts[arena.event_file], texts[package.event_file]
                 )
+            elif is_micolash_moon_pair(arena, package):
+                patched = patch_micolash_at_moon(texts[arena.event_file], texts[package.event_file])
+            elif is_one_reborn_ebrietas_pair(arena, package):
+                patched = patch_one_reborn_at_ebrietas(texts[arena.event_file], texts[package.event_file])
+            elif is_rom_one_reborn_pair(arena, package):
+                patched = patch_rom_at_one_reborn(texts[arena.event_file], texts[package.event_file])
+            elif is_ludwig_shadows_pair(arena, package):
+                patched = patch_ludwig_at_shadows(texts[arena.event_file], texts[package.event_file])
+            elif is_shadows_orphan_pair(arena, package):
+                patched = patch_shadows_at_orphan(texts[arena.event_file], texts[package.event_file])
+            elif is_maria_living_failures_pair(arena, package):
+                patched = patch_maria_at_living_failures(texts[arena.event_file], texts[package.event_file])
+            elif is_laurence_living_failures_pair(arena, package):
+                patched = patch_laurence_at_living_failures(texts[arena.event_file], texts[package.event_file])
+            elif is_celestial_paarl_pair(arena, package):
+                patched = patch_celestial_emissary_at_paarl(texts[arena.event_file], texts[package.event_file])
             elif is_witch_amygdala_pair(arena, package):
                 patched = patch_witch_at_amygdala(texts[arena.event_file], texts[package.event_file])
             elif is_gehrman_micolash_pair(arena, package):
@@ -932,6 +1039,36 @@ def build(args) -> dict:
                 plan['boss_actor_initializations'] = pin_actor_requirements(
                     args, plan['primary_init_source_bindings']
                 )
+            elif is_micolash_moon_pair(arena, package):
+                plan = native_plan_micolash_at_moon(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_one_reborn_ebrietas_pair(arena, package):
+                plan = native_plan_one_reborn_at_ebrietas(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_rom_one_reborn_pair(arena, package):
+                plan = native_plan_rom_at_one_reborn(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_ludwig_shadows_pair(arena, package):
+                plan = native_plan_ludwig_at_shadows(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_shadows_orphan_pair(arena, package):
+                plan = native_plan_shadows_at_orphan(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_maria_living_failures_pair(arena, package):
+                plan = native_plan_maria_at_living_failures(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+                plan['boss_external_references'] = [maria_external_reference(args, plan, arena)]
+            elif is_laurence_living_failures_pair(arena, package):
+                plan = native_plan_laurence_at_living_failures(slots, npcs, effects, args.seed)
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
+            elif is_celestial_paarl_pair(arena, package):
+                plan = native_plan_celestial_at_paarl(slots, npcs, effects, args.seed)
+                plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
+                plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])
             elif is_witch_amygdala_pair(arena, package):
                 plan = native_plan_witch_at_amygdala(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])

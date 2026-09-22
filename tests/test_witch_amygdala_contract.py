@@ -128,6 +128,15 @@ class WitchAmygdalaContractTests(unittest.TestCase):
                 self.witch,
                 replace(DEFAULT_IDS, insight_flag=DEFAULT_IDS.phase),
             )
+        with self.assertRaisesRegex(ValueError, "129930xx"):
+            patch_witch_at_amygdala(
+                self.arena,
+                self.witch,
+                replace(
+                    DEFAULT_IDS,
+                    insight_flag=DEFAULT_IDS.minion_count_flag + 1,
+                ),
+            )
         with self.assertRaisesRegex(ValueError, "helper IDs"):
             patch_witch_at_amygdala(
                 self.arena,

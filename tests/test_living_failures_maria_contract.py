@@ -178,6 +178,15 @@ class LivingFailuresMariaContractTests(unittest.TestCase):
                 self.source,
                 replace(DEFAULT_IDS, player_effect=DEFAULT_IDS.wave_selection),
             )
+        with self.assertRaisesRegex(ValueError, "allocation collides"):
+            patch_living_failures_at_maria(
+                self.source,
+                self.source,
+                replace(
+                    DEFAULT_IDS,
+                    support_count_value=DEFAULT_IDS.combat_count_value + 1,
+                ),
+            )
         with self.assertRaisesRegex(ValueError, "Living Failures donor"):
             patch_living_failures_at_maria(
                 self.source,
