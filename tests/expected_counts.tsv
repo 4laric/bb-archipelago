@@ -41,3 +41,9 @@ module	test_slice3_witnesses	9
 module	test_objact_params	4
 module	test_toast_placeholders	4
 module	test_toast_writer	3
+module	test_boss_shuffle	15
+module	test_boss_contracts	8
+module	test_boss_actor_rosters	6
+module	test_boss_encounter_build	4
+module	test_boss_pool	5
+module	test_boss_shuffle_build	2

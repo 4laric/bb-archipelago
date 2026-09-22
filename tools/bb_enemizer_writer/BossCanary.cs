@@ -74,6 +74,8 @@ internal static class BossCanary
     {
         using var document = JsonDocument.Parse(File.ReadAllText(planPath));
         var root = document.RootElement;
+        Need(!root.TryGetProperty("boss_encounters", out _) && !root.TryGetProperty("boss_contract", out _),
+            "legacy boss canary cannot apply generalized boss encounters");
         Need(root.GetProperty("boss_adapter").GetString() == Adapter, "unsupported boss adapter");
         var plan = root.Deserialize<Manifest>(Json)!;
         Need(plan.Swaps.Count == 1, "boss canary requires exactly one logical placement");

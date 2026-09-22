@@ -116,6 +116,32 @@ internal static class AiTransplant
                 set.UnionWith(goals);
             }
         }
+        // Multi-actor encounter additions are not logical swaps. They still
+        // need their donor ThinkParam goals in the destination area's binder.
+        using (var planDocument = JsonDocument.Parse(File.ReadAllText(planPath)))
+        if (planDocument.RootElement.TryGetProperty("boss_actor_additions", out var additions))
+        {
+            if (additions.ValueKind != JsonValueKind.Array) throw new InvalidDataException("invalid boss_actor_additions");
+            foreach (var addition in additions.EnumerateArray())
+            {
+                int thinkId = addition.GetProperty("source_archetype").GetProperty("think_param_id").GetInt32();
+                string map = addition.GetProperty("destination_map").GetString() ?? throw new InvalidDataException("actor addition has no destination map");
+                if (!thinkRows.TryGetValue(thinkId, out var rows)) throw new InvalidDataException($"missing NpcThinkParam {thinkId}");
+                var goals = new List<Requirement>();
+                foreach (string field in new[] { "logicId", "battleGoalID", "goalID_ToCaution", "goalID_ToFind", "goalID_ToInterest" })
+                {
+                    var ids = rows.Select(r => Convert.ToInt32(r.Cells.Single(c => c.Def.InternalName == field).Value)).Distinct().ToList();
+                    if (ids.Count != 1) throw new InvalidDataException($"ambiguous NpcThinkParam {thinkId} field {field}");
+                    if (ids[0] > 0) goals.Add(new Requirement(ids[0], field == "logicId"));
+                }
+                if (goals.Count == 0) throw new InvalidDataException($"NpcThinkParam {thinkId} has no AI goals");
+                string bare = map.Split('.')[0];
+                if (!Regex.IsMatch(bare, @"^m\d{2}_\d{2}_\d{2}_\d{2}$")) throw new InvalidDataException($"invalid actor destination map {map}");
+                string binder = bare[..^2] + "00.luabnd.dcx";
+                if (!requirements.TryGetValue(binder, out var set)) requirements[binder] = set = [];
+                set.UnionWith(goals);
+            }
+        }
         var prepared = new List<Prepared>();
         foreach (var (name, needed) in requirements)
         {

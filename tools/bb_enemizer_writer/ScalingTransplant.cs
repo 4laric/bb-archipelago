@@ -67,7 +67,14 @@ internal static class ScalingTransplant
                 "scaled output must be outside every input directory");
         }
         var plan = JsonNode.Parse(File.ReadAllText(planPath))!.AsObject();
-        Need(bossPrepared || !plan.ContainsKey("boss_adapter"), "boss plan requires --boss-scaled and its verified event adapter");
+        Need(bossPrepared || !plan.ContainsKey("boss_adapter"),
+            "boss plan requires --boss-scaled and its verified event adapter");
+        Need(bossPrepared || !plan.ContainsKey("boss_encounters"),
+            "boss encounter plan requires --boss-encounters and reviewed event manifests");
+        Need(bossPrepared || !plan.ContainsKey("boss_contract"),
+            "boss contract plan requires --boss-encounters and reviewed event manifests");
+        Need(bossPrepared || !plan.ContainsKey("boss_actor_additions"),
+            "boss actor additions require --boss-encounters and reviewed map evidence");
         var manifest = plan.Deserialize<Manifest>(Json)!;
         Need(manifest.Format == "bb-enemizer-plan-v2" && manifest.DryRun && manifest.Swaps.Count > 0, "expected non-empty dry-run enemizer plan");
         var scaling = plan["scaling"]?.Deserialize<Scaling>(Json)

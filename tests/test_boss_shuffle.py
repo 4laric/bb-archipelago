@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from tools.bb_inputs import read_blob, read_prefix
@@ -11,6 +12,8 @@ from tools.bb_enemizer.boss_shuffle import (
     plan_boss_shuffle,
     plan_template_swap,
     profile_catalog,
+    validate_registry,
+    validate_template,
     verify_swap_invariants,
 )
 from tools.bb_enemizer.boss_canary import CHANGED_EVENTS, COMPLETION_EVENT
@@ -71,6 +74,16 @@ class BossShuffleRegressionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported original"):
             patch_template_swap(self.template, self.destination.replace("3028", "3029"), self.donor)
 
+    def test_wrapper_enforces_pins_when_a_future_callback_does_not(self):
+        unguarded = replace(self.template, patch=lambda destination, donor: destination)
+        with self.assertRaisesRegex(ValueError, "unsupported original donor"):
+            patch_template_swap(unguarded, self.destination, self.donor.replace("7010", "7012"))
+
+    def test_template_cannot_claim_a_changed_event_without_a_destination_pin(self):
+        unhashed = replace(self.template, destination_expected={})
+        with self.assertRaisesRegex(ValueError, "no destination event hash pins"):
+            validate_template(unhashed)
+
     def test_template_swap_reproduces_canary_provenance_plan(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "slots.tsv"
@@ -98,8 +111,8 @@ class BossShuffleCatalogCoverageTests(unittest.TestCase):
         self.assertEqual(22, len(covered) + len(unsupported))
         covered_keys = {record["key"] for record in covered}
         self.assertIn("m24_01_00_00:12411700", covered_keys)  # Cleric Beast (destination)
-        self.assertIn("m23_00_00_00:12301800", covered_keys)  # Blood-Starved Beast (donor)
-        self.assertEqual(20, len(unsupported))
+        self.assertNotIn("m23_00_00_00:12301800", covered_keys)  # donor is not its own destination
+        self.assertEqual(21, len(unsupported))
         for record in unsupported:
             self.assertTrue(record["reason"])
             self.assertNotEqual("", record["reason"].strip())
@@ -118,6 +131,11 @@ class BossShuffleCatalogCoverageTests(unittest.TestCase):
         self.assertEqual("single_actor", rom["actor_shape"])
         self.assertIn("no hand-verified SwapTemplate registered", rom["reason"])
 
+    def test_registered_donor_remains_explicitly_unsupported_as_a_destination(self):
+        _, unsupported = profile_catalog(self.catalog)
+        by_key = {record["key"]: record for record in unsupported}
+        self.assertIn("registered only as a donor", by_key["m23_00_00_00:12301800"]["reason"])
+
     def test_unsupported_reasons_are_not_silently_generic(self):
         _, unsupported = profile_catalog(self.catalog)
         reasons = {record["reason"] for record in unsupported}
@@ -128,7 +146,7 @@ class BossShuffleCatalogCoverageTests(unittest.TestCase):
 
 
 class BossShuffleCliPlanTests(unittest.TestCase):
-    def test_full_shuffle_plan_applies_registry_and_reports_unsupported(self):
+    def test_full_shuffle_plan_is_planned_not_written_and_reports_unsupported(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "slots.tsv"
             path.write_bytes(read_blob(BUNDLE, "mined/msb_enemies.tsv"))
@@ -137,11 +155,38 @@ class BossShuffleCliPlanTests(unittest.TestCase):
         catalog = build_catalog(BUNDLE)
         plan = plan_boss_shuffle("999", slots, npcs, effects, catalog)
         self.assertEqual("bb-enemizer-boss-shuffle-plan-v1", plan["format"])
+        self.assertEqual("planned", plan["status"])
+        self.assertEqual("not_written", plan["writer_status"])
+        self.assertEqual("partial", plan["coverage_status"])
         self.assertEqual(1, plan["swap_count"])
-        self.assertEqual(["bsb-at-cleric-v1"], plan["templates_applied"])
-        self.assertEqual([], plan["template_failures"])
-        self.assertEqual(20, plan["unsupported_count"])
+        self.assertEqual(["bsb-at-cleric-v1"], plan["templates_planned"])
+        self.assertFalse(plan["template_failures"])
+        self.assertEqual(21, plan["unsupported_count"])
         self.assertEqual(json.loads(json.dumps(plan)), plan)  # fully JSON-serializable
+
+    def test_failed_template_is_not_reported_as_planned(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "slots.tsv"
+            path.write_bytes(read_blob(BUNDLE, "mined/msb_enemies.tsv"))
+            slots = [slot for slot in load_slots(path) if slot.map_name != "m24_01_00_01"]
+        npcs, effects = load_params(BUNDLE)
+        plan = plan_boss_shuffle("999", slots, npcs, effects, build_catalog(BUNDLE))
+        self.assertEqual("failed", plan["status"])
+        self.assertEqual("not_written", plan["writer_status"])
+        self.assertEqual(0, plan["swap_count"])
+        self.assertFalse(plan["templates_planned"])
+        self.assertEqual("bsb-at-cleric-v1", plan["template_failures"][0]["template"])
+        self.assertIn("provenance", plan["template_failures"][0]["reason"])
+
+    def test_registry_rejects_two_templates_that_would_write_one_event_file(self):
+        duplicate = replace(REGISTRY[0], name="other-bsb-at-cleric")
+        with self.assertRaisesRegex(ValueError, "colliding destination event file"):
+            validate_registry((REGISTRY[0], duplicate))
+
+    def test_cli_rejects_combining_the_two_boss_modes(self):
+        from tools.bb_enemizer.cli import parser
+        with self.assertRaises(SystemExit):
+            parser().parse_args(["--seed", "999", "--output", "plan.json", "--boss-canary", "--boss-shuffle"])
 
 
 if __name__ == "__main__":

@@ -41,8 +41,9 @@ def parser() -> argparse.ArgumentParser:
         help="emit inferred static-scaling clones (experimental; off by default)",
     )
     result.add_argument("--bundle", default="research/bb_inputs.db")
-    result.add_argument("--boss-canary", action="store_true", help="experimental BSB at Cleric; other enemies unchanged")
-    result.add_argument("--boss-shuffle", action="store_true",
+    boss_mode = result.add_mutually_exclusive_group()
+    boss_mode.add_argument("--boss-canary", action="store_true", help="experimental BSB at Cleric; other enemies unchanged")
+    boss_mode.add_argument("--boss-shuffle", action="store_true",
                         help="experimental generalized boss-for-boss swap plan across every "
                              "hand-verified SwapTemplate; unsupported bosses are listed with reasons")
     return result
@@ -105,14 +106,17 @@ def main(argv: list[str] | None = None) -> int:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(
-            f"experimental boss shuffle: {payload['swap_count']} swap(s) applied "
-            f"({', '.join(payload['templates_applied']) or 'none'}), "
+            f"experimental boss shuffle: {payload['swap_count']} swap(s) planned "
+            f"({', '.join(payload['templates_planned']) or 'none'}), "
             f"{payload['covered_boss_count']} boss(es) covered, "
-            f"{payload['unsupported_count']} boss(es) unsupported, output={output}"
+            f"{payload['unsupported_count']} boss(es) unsupported, "
+            f"writer={payload['writer_status']}, output={output}"
         )
+        for failure in payload["template_failures"]:
+            print(f"  planning failed: {failure['template']}: {failure['reason']}")
         for item in payload["unsupported_bosses"]:
             print(f"  unsupported: {item['key']} ({', '.join(item['ap_locations']) or 'no AP binding'}): {item['reason']}")
-        return 0
+        return 2 if payload["status"] == "failed" else 0
     facts = load_facts(args.facts if Path(args.facts).is_file() else None)
     tags_path = args.tags if Path(args.tags).is_file() else None
     policy_path = args.slot_policy if Path(args.slot_policy).is_file() else None

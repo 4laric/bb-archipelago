@@ -123,6 +123,8 @@ try
         Require(requirements.GetProperty("goals").GetArrayLength() == 2, "receipt preserves same-number logic and battle");
     }
     BossTests.Run();
+    BossEncounterTests.Run();
+    BossActorTests.Run();
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
     // A destination may contain the donor bytes but omit their registrations.
     // Reusing that chunk must still import metadata and the helper/subgoal closure.

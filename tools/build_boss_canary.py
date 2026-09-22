@@ -24,9 +24,9 @@ def compile_events(executable: Path, mode: str, source: Path, output: Path, expe
     output.mkdir(parents=True, exist_ok=True)
     result = subprocess.run([str(executable), '/cmd', '-' + mode, '-game', 'bb',
                              '-indir', str(source), '-outdir', str(output), '-force', '-silent'],
-                            capture_output=True, check=True)
+                            capture_output=True)
     # DarkScript can return success after a per-file compilation exception.
-    if not (output / expected).is_file():
+    if result.returncode != 0 or not (output / expected).is_file():
         detail = (result.stdout + result.stderr).decode('utf-8', errors='replace')
         raise ValueError(f'DarkScript did not produce {expected}: {detail}')
 

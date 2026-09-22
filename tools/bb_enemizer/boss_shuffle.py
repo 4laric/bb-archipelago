@@ -43,6 +43,7 @@ patch function) to `REGISTRY` -- the engine below does not change.
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass
 from typing import Callable
 
@@ -73,7 +74,8 @@ class SwapTemplate:
     donor_entity: int
     destination_archetype: Archetype
     donor_archetype: Archetype
-    expected: dict[int, str]
+    destination_expected: dict[int, str]
+    donor_expected: dict[int, str]
     changed_events: tuple[int, ...]
     patch: Callable[[str, str], str]
     warning: str
@@ -95,7 +97,10 @@ BSB_AT_CLERIC = SwapTemplate(
     donor_entity=boss_canary.DONOR_ENTITY,
     destination_archetype=Archetype("c5000", 500241, 500241, 0),
     donor_archetype=Archetype("c2090", 209000, 209000, 0),
-    expected=boss_canary.EXPECTED,
+    destination_expected={key: value for key, value in boss_canary.EXPECTED.items()
+                          if key >= 12400000},
+    donor_expected={key: value for key, value in boss_canary.EXPECTED.items()
+                    if key < 12400000},
     changed_events=tuple(boss_canary.CHANGED_EVENTS),
     patch=_bsb_at_cleric_patch,
     warning="experimental boss adapter; entrance, phases and AP completion require live validation",
@@ -104,6 +109,71 @@ BSB_AT_CLERIC = SwapTemplate(
 # Registration point for future hand-verified pairs. See module docstring
 # for why this is not auto-populated from the boss catalog.
 REGISTRY: tuple[SwapTemplate, ...] = (BSB_AT_CLERIC,)
+
+
+def _validate_pins(template: SwapTemplate, role: str, pins: dict[int, str]) -> None:
+    if not pins:
+        raise ValueError(f"boss adapter {template.name} has no {role} event hash pins")
+    for event_id, digest in pins.items():
+        if not isinstance(event_id, int) or event_id <= 0:
+            raise ValueError(f"boss adapter {template.name} has an invalid {role} event ID")
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            raise ValueError(f"boss adapter {template.name} has an invalid {role} hash pin for {event_id}")
+
+
+def validate_template(template: SwapTemplate) -> None:
+    """Reject an adapter that omits the static evidence required to patch it.
+
+    Pins are separated by source role.  A single mixed mapping made it too
+    easy for a future callback to skip checking one input while appearing to
+    carry the canary's provenance metadata.
+    """
+    if not template.name or not template.destination_event_file or not template.donor_event_file:
+        raise ValueError("boss adapter has an incomplete identity")
+    if template.destination_event_file == template.donor_event_file:
+        raise ValueError(f"boss adapter {template.name} uses one file as both destination and donor")
+    if not template.destination_map_prefix or not template.donor_map_prefix or template.destination_count < 1:
+        raise ValueError(f"boss adapter {template.name} has invalid placement provenance")
+    if template.completion_event in template.changed_events:
+        raise ValueError(f"boss adapter {template.name} changes its destination completion event")
+    if not template.changed_events or len(set(template.changed_events)) != len(template.changed_events):
+        raise ValueError(f"boss adapter {template.name} has invalid changed-event declarations")
+    _validate_pins(template, "destination", template.destination_expected)
+    _validate_pins(template, "donor", template.donor_expected)
+    if not set(template.changed_events).issubset(template.destination_expected):
+        raise ValueError(f"boss adapter {template.name} leaves a changed event unhashed")
+
+
+def validate_registry(registry: tuple[SwapTemplate, ...]) -> None:
+    """Fail before planning if two adapters would write the same encounter.
+
+    Planning each template independently cannot safely compose EMEVD edits to
+    one destination file.  The native writer also needs one unambiguous owner
+    for every destination actor, so reject both forms of collision here.
+    """
+    names: set[str] = set()
+    destination_files: set[str] = set()
+    destination_actors: set[tuple[str, int]] = set()
+    for template in registry:
+        validate_template(template)
+        if template.name in names:
+            raise ValueError(f"boss template registry repeats adapter name {template.name}")
+        if template.destination_event_file in destination_files:
+            raise ValueError(f"boss template registry has colliding destination event file {template.destination_event_file}")
+        actor = (template.destination_map_prefix, template.destination_entity)
+        if actor in destination_actors:
+            raise ValueError(f"boss template registry has colliding destination actor {template.destination_entity}")
+        names.add(template.name)
+        destination_files.add(template.destination_event_file)
+        destination_actors.add(actor)
+
+
+def _verify_pinned_events(template: SwapTemplate, role: str, blocks: EventBlocks,
+                          pins: dict[int, str]) -> None:
+    for event_id, expected in pins.items():
+        block = blocks.get(event_id)
+        if block is None or hashlib.sha256(block.encode("utf-8")).hexdigest() != expected:
+            raise ValueError(f"unsupported original {role} boss event {event_id} for {template.name}")
 
 
 def verify_swap_invariants(original: EventBlocks, output: EventBlocks, template: SwapTemplate) -> None:
@@ -123,20 +193,18 @@ def verify_swap_invariants(original: EventBlocks, output: EventBlocks, template:
 
 
 def patch_template_swap(template: SwapTemplate, destination: str, donor: str) -> str:
-    """Hash-verify inputs (delegated to the template's own patch, which pins
-    its own EXPECTED hashes), apply the edit, then re-verify the same three
-    structural invariants generically -- redundant for the current registry
-    entry (whose patch already self-checks) but required so a future
-    template cannot skip verification by omission.
-    """
+    """Verify both hash-pinned inputs before invoking the template callback."""
+    validate_template(template)
     original = event_blocks(destination)
+    _verify_pinned_events(template, "destination", original, template.destination_expected)
+    _verify_pinned_events(template, "donor", event_blocks(donor), template.donor_expected)
     result = template.patch(destination, donor)
     output = event_blocks(result)
     verify_swap_invariants(original, output, template)
     return result
 
 
-def plan_template_swap(template: SwapTemplate, slots, npcs, effects) -> dict:
+def _plan_template_swap(template: SwapTemplate, slots) -> tuple[Swap, list]:
     """Generalized form of boss_canary.plan_canary: fingerprint the actual
     actor placements for one (destination, donor) template before planning
     a swap, and refuse loudly if they don't match the template's expected
@@ -162,15 +230,26 @@ def plan_template_swap(template: SwapTemplate, slots, npcs, effects) -> dict:
         destinations={s.key: {"map_name": s.map_name, "entity_id": s.entity_id,
                               "x": s.x, "y": s.y, "z": s.z} for s in destinations},
     )
-    changes, skips = plan_scaling([swap], destinations, npcs, effects)
-    if len(changes) != 1 or skips:
-        raise ValueError(f"boss adapter {template.name} requires an applicable normalization clone")
+    return swap, destinations
+
+
+def _template_plan(template: SwapTemplate, swap: Swap, change) -> dict:
     return {
         "template": template.name,
         "swap": swap.json(),
         "required_event_overlay": "dvdroot_ps4/event/" + template.destination_event_file,
-        "scaling_change": changes[0].json(),
+        "scaling_change": change.json(),
     }
+
+
+def plan_template_swap(template: SwapTemplate, slots, npcs, effects) -> dict:
+    """Plan and normalize one template without sharing clone IDs with others."""
+    validate_template(template)
+    swap, destinations = _plan_template_swap(template, slots)
+    changes, skips = plan_scaling([swap], destinations, npcs, effects)
+    if len(changes) != 1 or skips:
+        raise ValueError(f"boss adapter {template.name} requires an applicable normalization clone")
+    return _template_plan(template, swap, changes[0])
 
 
 UNSUPPORTED_REASON_MULTI = (
@@ -183,6 +262,10 @@ UNSUPPORTED_REASON_NO_TEMPLATE = (
     "events (entry choreography, quest flags, phase transitions) whose safety cannot be "
     "derived from the structural catalog alone -- see boss_shuffle.py module docstring"
 )
+UNSUPPORTED_REASON_DONOR_ONLY = (
+    "registered only as a donor for a different destination; no SwapTemplate writes this "
+    "encounter, so its own AP boss check remains unsupported"
+)
 UNSUPPORTED_REASON_EXTRA_GAPS = (
     "boss_catalog.json flags additional gaps beyond the baseline two: {gaps}"
 )
@@ -191,27 +274,33 @@ UNSUPPORTED_REASON_EXTRA_GAPS = (
 def profile_catalog(catalog: dict, registry: tuple[SwapTemplate, ...] = REGISTRY) -> tuple[list[dict], list[dict]]:
     """Split every boss in the mined boss catalog into (covered, unsupported).
 
-    `covered` lists the catalog encounters that a registered SwapTemplate
-    actually uses (as destination or donor). `unsupported` lists every
-    other encounter with a specific, catalog-derived reason -- never a
-    silent drop.
+    `covered` lists only destination encounters that a registered template
+    actually rewrites.  A donor is source material, not coverage for its own
+    AP check, and is reported as unsupported until it becomes a destination.
     """
-    covered_entities = set()
+    destination_entities = set()
+    donor_entities = set()
     for template in registry:
-        covered_entities.add((template.destination_map_prefix, template.destination_entity))
-        covered_entities.add((template.donor_map_prefix, template.donor_entity))
+        destination_entities.add((template.destination_map_prefix, template.destination_entity))
+        donor_entities.add((template.donor_map_prefix, template.donor_entity))
     baseline_gaps = {"runtime encounter behavior unvalidated", "callee and flag dependency traversal incomplete"}
     covered, unsupported = [], []
     for record in catalog["encounters"]:
         entity = record["defeat_entities"][0] if len(record["defeat_entities"]) == 1 else None
         is_covered = entity is not None and any(
             record["map"].startswith(prefix) and entity == covered_entity
-            for prefix, covered_entity in covered_entities
+            for prefix, covered_entity in destination_entities
         )
         if is_covered:
             covered.append(record)
             continue
-        if record["actor_shape"] != "single_actor":
+        is_donor = entity is not None and any(
+            record["map"].startswith(prefix) and entity == donor_entity
+            for prefix, donor_entity in donor_entities
+        )
+        if is_donor:
+            reason = UNSUPPORTED_REASON_DONOR_ONLY
+        elif record["actor_shape"] != "single_actor":
             actors = len(record["actors"])
             reason = UNSUPPORTED_REASON_MULTI.format(n=actors)
         else:
@@ -245,22 +334,42 @@ def plan_boss_shuffle(seed: str, slots, npcs, effects, catalog: dict,
     tie-breaking hook (`sorted(registry, key=...)` below) without changing
     callers.
     """
+    validate_registry(registry)
     covered, unsupported = profile_catalog(catalog, registry)
-    applied, failures = [], []
+    candidates, failures = [], []
     for template in sorted(registry, key=lambda t: t.name):
         try:
-            applied.append(plan_template_swap(template, slots, npcs, effects))
+            swap, _ = _plan_template_swap(template, slots)
+            candidates.append((template, swap))
         except ValueError as exc:
             failures.append({"template": template.name, "reason": str(exc)})
+    planned = []
+    if candidates and not failures:
+        logical_keys = [swap.logical_key for _, swap in candidates]
+        if len(set(logical_keys)) != len(logical_keys):
+            failures.append({"template": "registry", "reason": "planned templates collide on a destination logical slot"})
+        else:
+            try:
+                changes, skips = plan_scaling([swap for _, swap in candidates], slots, npcs, effects)
+                by_key = {change.logical_key: change for change in changes}
+                if skips or len(by_key) != len(candidates):
+                    raise ValueError("one or more planned templates lack an applicable normalization clone")
+                planned = [_template_plan(template, swap, by_key[swap.logical_key])
+                           for template, swap in candidates]
+            except ValueError as exc:
+                failures.append({"template": "registry", "reason": str(exc)})
     return {
         "format": "bb-enemizer-boss-shuffle-plan-v1",
         "dry_run": True,
         "seed": seed,
         "registry_size": len(registry),
-        "templates_applied": [item["template"] for item in applied],
+        "status": "failed" if failures else "planned",
+        "writer_status": "not_written",
+        "coverage_status": "complete" if not unsupported else "partial",
+        "templates_planned": [item["template"] for item in planned],
         "template_failures": failures,
-        "swap_count": len(applied),
-        "swaps": applied,
+        "swap_count": len(planned),
+        "swaps": planned,
         "covered_boss_count": len(covered),
         "covered_bosses": sorted(r["key"] for r in covered),
         "unsupported_count": len(unsupported),
