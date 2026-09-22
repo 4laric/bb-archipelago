@@ -243,7 +243,7 @@ def plan_final_boss_swap(slots: list[Slot], npcs: Mapping[int, dict], effects: M
                 warnings=["experimental final-boss contract; runtime endgame transition requires validation"],
                 destinations={target.key: {"map_name": target.map_name, "entity_id": target.entity_id,
                                             "x": target.x, "y": target.y, "z": target.z}})
-    changes, skips = plan_scaling([swap], [target], dict(npcs), dict(effects))
+    changes, skips = plan_scaling([swap], [target], dict(npcs), dict(effects), boss_tiers=True)
     if len(changes) > 1 or (changes and skips):
         raise ValueError("final-boss primary swap has ambiguous scaling")
     added = (attachment_ids.first, attachment_ids.second)

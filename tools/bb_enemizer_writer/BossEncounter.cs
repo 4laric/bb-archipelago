@@ -245,7 +245,7 @@ internal static class BossEncounter
         Need(Hash(File.ReadAllBytes(sourcePlan)) == Hash(File.ReadAllBytes(outputPlan)),
             "unscaled plan copy verification failed");
         MapTransplant.Run(outputPlan, mapsPath, Path.Combine(root, "map", "MapStudio"), bossPrepared: true);
-        AiTransplant.Run(outputPlan, gamePath, defsPath, scriptsPath, Path.Combine(root, "script"), true);
+        AiTransplant.Run(outputPlan, gamePath, defsPath, scriptsPath, Path.Combine(root, "script"), true, bossPrepared: true);
         File.WriteAllText(Path.Combine(overlay, "scaling-report.json"), JsonSerializer.Serialize(new {
             format = "bb-enemizer-scaling-v1", applied = false, live_validated = false,
             source_plan_sha256 = Hash(File.ReadAllBytes(planPath)), source_gameparam_sha256 = Hash(File.ReadAllBytes(gamePath)),

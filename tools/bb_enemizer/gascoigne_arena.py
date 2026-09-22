@@ -254,7 +254,7 @@ def native_plan_cleric_at_gascoigne(slots: Sequence[Slot], npcs: Mapping[int, di
                     "map_name": slot.map_name, "entity_id": slot.entity_id,
                     "x": slot.x, "y": slot.y, "z": slot.z,
                 } for slot in human})
-    changes, skips = plan_scaling([swap], human, dict(npcs), dict(effects))
+    changes, skips = plan_scaling([swap], human, dict(npcs), dict(effects), boss_tiers=True)
     return {
         "format": "bb-enemizer-plan-v2", "dry_run": True, "seed": seed,
         "swap_count": 1, "swaps": [swap.json()],

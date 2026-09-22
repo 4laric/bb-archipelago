@@ -40,6 +40,20 @@ internal static class ScalingTests
         donor["itemLotId_1"].Value = 123; donor["hp"].Value = 400;
         donor["spEffectID0"].Value = 999; // existing authored effect must survive
         npcs.Rows.Add(donor);
+        var helperDonor = new PARAM.Row(donor) {ID = 12, Name = "combat helper"};
+        helperDonor["spEffectID0"].Value = -1;
+        npcs.Rows.Add(helperDonor);
+        var wrongTierHelper = new PARAM.Row(helperDonor) {ID = 13, Name = "wrong-tier helper"};
+        wrongTierHelper["GameClearSpEffectID"].Value = 7401;
+        npcs.Rows.Add(wrongTierHelper);
+        var bossTierHelper = new PARAM.Row(helperDonor) {ID = 14, Name = "boss tier-one helper"};
+        bossTierHelper["GameClearSpEffectID"].Value = 7421;
+        npcs.Rows.Add(bossTierHelper);
+        Check(ScalingTransplant.NativeLevel(bossTierHelper, bossTiers: true) == 1
+            && ScalingTransplant.NativeLevel(bossTierHelper) == 0, "named boss tier is boss-route only");
+        Check(ScalingTransplant.DestinationLevel("m24_02_00_00", bossPrepared: true) == 11
+            && ScalingTransplant.DestinationLevel("m24_02_00_00", bossPrepared: false) == 0,
+            "Upper Cathedral boss tier remains unavailable to ordinary scaling");
         npcs.Rows.Add(new PARAM.Row(donor) {ID = 9000000, Name = "original higher ID"});
         for (int level = 1; level <= 2; level++) {
             var effect = new PARAM.Row(7400 + level, "synthetic ladder", effectDef);
@@ -73,6 +87,20 @@ internal static class ScalingTests
                 logical_key = "m24_01_00_00:c1000_0000", destination_keys = destinations,
                 destination_sources = destinations.ToDictionary(d => d, _ => source), source,
                 target = new {model_name = "c9000", npc_param_id = 11, think_param_id = 42, chara_init_id = 0},
+            }}, boss_actor_additions = new[] {new {
+                source_map = "m24_01_00_00", source_part = "c1000_0001", source_anchor_part = "c1000_0000", source_entity_id = 101,
+                source_archetype = new {model_name = "c9000", npc_param_id = 12, think_param_id = 42, chara_init_id = 0},
+                source_provenance = new {format = "bb-boss-actor-pin-v1", part_sha256 = new string('a', 64), anchor_sha256 = new string('b', 64)},
+                source_initialization = new {talk_id = 0, unk_t18 = -1, init_anim_id = -1, damage_anim_id = -1},
+                destination_map = "m24_01_00_00", destination_anchor_part = "c1000_0000", destination_part = "combat_helper", destination_entity_id = 102,
+            }}, boss_actor_scaling = new[] {new {
+                parent_logical_key = "m24_01_00_00:c1000_0000",
+                source_map = "m24_01_00_00", source_part = "c1000_0001", source_entity_id = 101,
+                source_archetype = new {model_name = "c9000", npc_param_id = 12, think_param_id = 42, chara_init_id = 0},
+                source_provenance = new {format = "bb-boss-actor-pin-v1", part_sha256 = new string('a', 64), anchor_sha256 = new string('b', 64)},
+                source_initialization = new {talk_id = 0, unk_t18 = -1, init_anim_id = -1, damage_anim_id = -1},
+                destination_map = "m24_01_00_00", destination_part = "combat_helper", destination_entity_id = 102,
+                cloned_npc_param_id = 6000001, sp_effect_slot = "spEffectID2",
             }}, scaling = new {enabled = true, mechanism = "inferred_static_npc_clone_sp_effect", change_count = 1,
                 changes = new[] {new {logical_key = "m24_01_00_00:c1000_0000", source_npc_param_id = 11,
                     cloned_npc_param_id = 6000000, sp_effect_slot = "spEffectID1", minted_sp_effect_id = 60013,
@@ -83,13 +111,16 @@ internal static class ScalingTests
         void Save() => File.WriteAllText(planPath, plan.ToJsonString());
         Save();
         string output = Path.Combine(root, "scaled-output");
-        ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, output);
+        ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, output, bossPrepared: true);
         var written = BND4.Read(Path.Combine(output, "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx"));
         PARAM Read(string name, PARAMDEF def) { var p = PARAM.Read(written.Files.Single(f => f.Name == name).Bytes); p.ApplyParamdef(def); return p; }
         var cloned = Read("NpcParam.param", npcDef).Rows.Single(r => r.ID == 6000000);
-        Check(Read("NpcParam.param", npcDef).Rows.Select(r => r.ID).SequenceEqual(new[] {11,6000000,9000000}), "ordered NPC table stays ordered");
+        Check(Read("NpcParam.param", npcDef).Rows.Select(r => r.ID).SequenceEqual(new[] {11,12,13,14,6000000,6000001,9000000}), "ordered NPC table stays ordered");
         foreach (var c in donor.Cells) Check(Equals(cloned[c.Def.InternalName].Value,
             c.Def.InternalName == "spEffectID1" ? 60013 : c.Value), "clone preserves donor " + c.Def.InternalName);
+        var helperClone = Read("NpcParam.param", npcDef).Rows.Single(r => r.ID == 6000001);
+        foreach (var c in helperDonor.Cells) Check(Equals(helperClone[c.Def.InternalName].Value,
+            c.Def.InternalName == "spEffectID2" ? 60013 : c.Value), "helper clone preserves donor " + c.Def.InternalName);
         var minted = Read("SpEffectParam.param", effectDef).Rows.Single(r => r.ID == 60013);
         Check((float)minted["haveSoulRate"].Value == 1f, "reward neutral");
         Check((float)minted["staminaAttackRate"].Value == 1f, "stamina neutral");
@@ -104,8 +135,14 @@ internal static class ScalingTests
         }
         Check(File.Exists(Path.Combine(output, "dvdroot_ps4/script/m24_01_00_00.luabnd.dcx")), "AI included");
         Check(File.Exists(Path.Combine(output, "scaling-report.json")), "receipt included");
+        using (var helperReceipt = JsonDocument.Parse(File.ReadAllText(Path.Combine(output, "scaling-report.json")))) {
+            var row = helperReceipt.RootElement.GetProperty("helper_changes").EnumerateArray().Single();
+            Check(row.GetProperty("source_npc_param_id").GetInt32() == 12
+                && row.GetProperty("cloned_npc_param_id").GetInt32() == 6000001
+                && row.GetProperty("minted_sp_effect_id").GetInt32() == 60013, "helper receipt attests reused parent effect");
+        }
         string repeated = Path.Combine(root, "scaled-repeat");
-        ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, repeated);
+        ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, repeated, bossPrepared: true);
         foreach (string file in Directory.GetFiles(output, "*", SearchOption.AllDirectories)) {
             string relative = Path.GetRelativePath(output, file);
             Check(File.ReadAllBytes(file).SequenceEqual(File.ReadAllBytes(Path.Combine(repeated, relative))), "deterministic " + relative);
@@ -118,7 +155,20 @@ internal static class ScalingTests
             Check(!Directory.Exists(failure), "failure published no output");
             Check(!Directory.GetDirectories(root, ".bb-scaled-*").Any(), "staging cleaned");
         }
-        Refused(() => MapTransplant.Run(planPath, maps, failure), "requires --scaled");
+        Refused(() => MapTransplant.Run(planPath, maps, failure), "actor additions require");
+        plan["boss_actor_additions"]![0]!["destination_anchor_part"] = "c1000_0001"; Save();
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "parent does not own");
+        plan["boss_actor_additions"]![0]!["destination_anchor_part"] = "c1000_0000";
+        plan["boss_actor_scaling"]![0]!["source_archetype"]!["npc_param_id"] = 11;
+        plan["boss_actor_additions"]![0]!["source_archetype"]!["npc_param_id"] = 11; Save();
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "own source NPC");
+        plan["boss_actor_scaling"]![0]!["source_archetype"]!["npc_param_id"] = 12;
+        plan["boss_actor_additions"]![0]!["source_archetype"]!["npc_param_id"] = 12;
+        plan["boss_actor_scaling"]![0]!["source_archetype"]!["npc_param_id"] = 13; Save();
+        plan["boss_actor_additions"]![0]!["source_archetype"]!["npc_param_id"] = 13; Save();
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "source tier");
+        plan["boss_actor_scaling"]![0]!["source_archetype"]!["npc_param_id"] = 12;
+        plan["boss_actor_additions"]![0]!["source_archetype"]!["npc_param_id"] = 12; Save();
         plan["boss_adapter"] = BossCanary.Adapter;
         Save();
         Refused(() => MapTransplant.Run(planPath, maps, failure), "requires --boss-scaled");
@@ -131,34 +181,34 @@ internal static class ScalingTests
         }) {
             var c = plan["scaling"]!["changes"]![0]!; var original = c[field]!.DeepClone();
             c[field] = field.EndsWith("_id") || field.EndsWith("_level") ? JsonValue.Create((int)value) : JsonValue.Create(value);
-            Save(); Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure), message);
+            Save(); Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), message);
             c[field] = original;
         }
         plan["scaling"]!["changes"]![0]!["sp_effect_slot"] = "spEffectID0"; Save();
-        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure), "occupied");
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "occupied");
         plan["scaling"]!["changes"]![0]!["sp_effect_slot"] = "spEffectID1"; Save();
         foreach (int id in new[] {60000, 6000000}) {
             var table = id == 60000 ? effects : npcs;
             table.Rows.Add(new PARAM.Row(table.Rows[0]) {ID = id});
             game.Files.Single(f => f.Name == (id == 60000 ? "SpEffectParam.param" : "NpcParam.param")).Bytes = table.Write();
             game.Write(gamePath);
-            Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure), "collision");
+            Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "collision");
             table.Rows.RemoveAt(table.Rows.Count - 1);
             game.Files.Single(f => f.Name == (id == 60000 ? "SpEffectParam.param" : "NpcParam.param")).Bytes = table.Write();
         }
         game.Write(gamePath);
         effects.Rows[0]["soulRate"].Value = 2f;
         game.Files.Single(f => f.Name == "SpEffectParam.param").Bytes = effects.Write(); game.Write(gamePath);
-        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure), "unsafe scaling template");
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "unsafe scaling template");
         effects.Rows[0]["soulRate"].Value = 1f;
         game.Files.Single(f => f.Name == "SpEffectParam.param").Bytes = effects.Write(); game.Write(gamePath);
         plan["scaling"]!["changes"]!.AsArray().Add(plan["scaling"]!["changes"]![0]!.DeepClone());
         plan["scaling"]!["change_count"] = 2; Save();
-        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure), "duplicate scaling");
+        Refused(() => ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true), "duplicate scaling");
         plan["scaling"]!["changes"]!.AsArray().RemoveAt(1); plan["scaling"]!["change_count"] = 1; Save();
         // Late failure after parameter serialization must not publish a partial overlay.
         File.Delete(Path.Combine(scripts, "m24_01_00_00.luabnd.dcx"));
-        try { ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure); throw new Exception("missing AI accepted"); }
+        try { ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, failure, bossPrepared: true); throw new Exception("missing AI accepted"); }
         catch (Exception ex) when (ex is InvalidDataException or FileNotFoundException) { Check(true, "late AI failure"); }
         Check(!Directory.Exists(failure) && !Directory.GetDirectories(root, ".bb-scaled-*").Any(), "late failure atomicity");
         Console.WriteLine($"PASS: {assertions} scaling integration assertions");

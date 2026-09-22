@@ -167,8 +167,10 @@ class BossPoolTests(unittest.TestCase):
                  for arena, donor in ((BSB_ARENA, PAARL_PACKAGE), (PAARL_ARENA, BSB_PACKAGE))]
         plan = combine_native_plans('reciprocal', plans)
         self.assertEqual(2, plan['swap_count'])
-        self.assertEqual(1, plan['scaling']['change_count'])
-        self.assertEqual(1, plan['scaling']['skip_count'])
+        self.assertEqual(2, plan['scaling']['change_count'])
+        self.assertEqual(0, plan['scaling']['skip_count'])
+        self.assertEqual({6000000, 6000001},
+                         {row['cloned_npc_param_id'] for row in plan['scaling']['changes']})
         self.assertEqual({209000, 508000}, {swap['target']['npc_param_id'] for swap in plan['swaps']})
         with self.assertRaisesRegex(ValueError, 'overlap a destination'):
             combine_native_plans('reciprocal', [plans[0], plans[0]])

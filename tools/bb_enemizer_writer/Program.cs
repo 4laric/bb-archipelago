@@ -79,6 +79,8 @@ if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_contract", ou
     throw new InvalidDataException("boss contract plan requires --boss-encounters and reviewed event manifests");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_additions", out _))
     throw new InvalidDataException("boss actor additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_scaling", out _))
+    throw new InvalidDataException("boss actor scaling requires --boss-encounters and reviewed map evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_actor_initializations", out _))
     throw new InvalidDataException("boss actor initializations require --boss-encounters and reviewed map evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_generator_additions", out _))

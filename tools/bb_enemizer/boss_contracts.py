@@ -1536,7 +1536,7 @@ def plan_contract_swap(arena: ArenaContract, donor: CombatPackage, slots, npcs, 
         destinations={slot.key: {"map_name": slot.map_name, "entity_id": slot.entity_id,
                                  "x": slot.x, "y": slot.y, "z": slot.z} for slot in destinations},
     )
-    changes, skips = plan_scaling([swap], destinations, npcs, effects)
+    changes, skips = plan_scaling([swap], destinations, npcs, effects, boss_tiers=True)
     if len(changes) > 1 or (changes and skips):
         raise ValueError(f"boss contract {arena.key} <- {donor.key} has an ambiguous normalization plan")
     requirements = actor_addition_requirements(arena, donor, slots)

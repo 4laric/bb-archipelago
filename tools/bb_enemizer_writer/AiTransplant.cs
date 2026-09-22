@@ -52,12 +52,15 @@ internal static class AiTransplant
         List<Requirement> Required, int MissingBefore, int GlobalsAdded, int GoalsAdded);
 
     public static int Run(string planPath, string gamePath, string defsPath,
-        string scriptRoot, string output, bool apply)
+        string scriptRoot, string output, bool apply, bool bossPrepared = false)
     {
         var manifest = JsonSerializer.Deserialize<Manifest>(File.ReadAllText(planPath), Json)
             ?? throw new InvalidDataException("empty enemizer plan");
         if (manifest.Format != "bb-enemizer-plan-v2" || !manifest.DryRun || manifest.Swaps.Count == 0)
             throw new InvalidDataException("expected a non-empty bb-enemizer-plan-v2 manifest");
+        using (var guard = JsonDocument.Parse(File.ReadAllText(planPath)))
+        if (!bossPrepared && guard.RootElement.TryGetProperty("boss_actor_scaling", out _))
+            throw new InvalidDataException("boss actor scaling requires --boss-encounters and reviewed map evidence");
         string inputRoot = Path.GetFullPath(scriptRoot);
         string outputPath = Path.GetFullPath(output);
         // Outputs are a new standalone directory, never any part of the input tree.

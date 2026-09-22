@@ -115,10 +115,17 @@ def derive_ladder(effects: dict[int, dict[str, str]]) -> dict[int, LadderRung]:
     return result
 
 
-def npc_native_level(row: dict[str, str]) -> int | None:
+def npc_native_level(row: dict[str, str], *, boss_tiers: bool = False) -> int | None:
     effect = int(row["GameClearSpEffectID"])
     if 7401 <= effect <= 7413:
         return effect - 7400
+    # Original SpEffectParam names explicitly assign these boss-specific NG+
+    # rows to the same area tiers. Their individual NG+ multipliers differ:
+    # this is the existing inferred tier normalization, not inversion of those
+    # boss-specific multipliers. See ENEMIZER-BOSS-SHUFFLE.md.
+    if boss_tiers and 7420 <= effect <= 7429:
+        return {7420: 1, 7421: 1, 7422: 6, 7423: 11, 7424: 12,
+                7425: 13, 7426: 3, 7427: 3, 7428: 5, 7429: 7}[effect]
     if 7490 <= effect <= 7497:
         return {7490: 11, 7491: 11, 7492: 12, 7493: 12,
                 7494: 12, 7495: 13, 7496: 13, 7497: 12}[effect]
@@ -139,7 +146,7 @@ def _clamp(value: float) -> float:
 
 def plan_scaling(
     swaps: list[Swap], slots: list[Slot], npcs: dict[int, dict[str, str]],
-    effects: dict[int, dict[str, str]],
+    effects: dict[int, dict[str, str]], *, boss_tiers: bool = False,
 ) -> tuple[list[ScalingChange], list[dict]]:
     ladder = derive_ladder(effects)
     existing_npcs = set(npcs)
@@ -155,8 +162,12 @@ def plan_scaling(
     for swap in sorted(swaps, key=lambda item: item.logical_key):
         destination = by_key[swap.destination_keys[0]]
         destination_level = MAP_LEVELS.get(destination.logical_key.split(":", 1)[0])
+        if boss_tiers and destination.logical_key.startswith('m24_02_00_00:'):
+            # Ebrietas's original 7423 row names Cathedral C, late/hidden,
+            # level 11. This boss arena was absent from the ordinary oracle.
+            destination_level = 11
         target_row = npcs.get(swap.target.npc_param_id)
-        source_level = npc_native_level(target_row) if target_row else None
+        source_level = npc_native_level(target_row, boss_tiers=boss_tiers) if target_row else None
         if source_level is None or destination_level is None:
             skipped.append({"logical_key": swap.logical_key, "reason": "unknown source or destination tier"})
             continue

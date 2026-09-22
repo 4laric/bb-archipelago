@@ -327,7 +327,7 @@ def native_plan_gascoigne_at_cleric(slots: Sequence[Slot], npcs: Mapping[int, di
         destinations={slot.key: {"map_name": slot.map_name, "entity_id": slot.entity_id,
                                  "x": slot.x, "y": slot.y, "z": slot.z} for slot in destinations},
     )
-    changes, skips = plan_scaling([swap], list(destinations), dict(npcs), dict(effects))
+    changes, skips = plan_scaling([swap], list(destinations), dict(npcs), dict(effects), boss_tiers=True)
     if len(changes) > 1 or (changes and skips):
         raise ValueError("Gascoigne primary swap has an ambiguous normalization plan")
     return {

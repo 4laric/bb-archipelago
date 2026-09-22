@@ -189,7 +189,7 @@ def native_plan_maria_at_amelia(slots: list[Slot], npcs: Mapping[int, dict],
                     "map_name": slot.map_name, "entity_id": slot.entity_id,
                     "x": slot.x, "y": slot.y, "z": slot.z,
                 } for slot in amelia})
-    changes, skips = plan_scaling([swap], amelia, dict(npcs), dict(effects))
+    changes, skips = plan_scaling([swap], amelia, dict(npcs), dict(effects), boss_tiers=True)
     return {
         "format": "bb-enemizer-plan-v2", "dry_run": True, "seed": seed,
         "swap_count": 1, "swaps": [swap.json()],

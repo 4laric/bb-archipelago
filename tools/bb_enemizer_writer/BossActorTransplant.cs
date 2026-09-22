@@ -33,7 +33,15 @@ internal static class BossActorTransplant
         string SpEffectSlot, int MintedSpEffectId, double HaveSoulRate, int SourceLevel,
         int DestinationLevel, double HpMultiplier, double AttackMultiplier, double DefenseMultiplier);
     sealed record ScalingReport(string Format, bool Applied, string SourcePlanSha256,
-        string OutputPlanSha256, string OutputGameparamSha256, List<PrimaryScale> Changes);
+        string OutputPlanSha256, string OutputGameparamSha256, List<PrimaryScale> Changes,
+        List<HelperReport>? HelperChanges = null);
+    internal sealed record HelperScale(string ParentLogicalKey,
+        string SourceMap, string SourcePart, int SourceEntityId, Archetype SourceArchetype,
+        SourceProvenance SourceProvenance, SourceInitialization SourceInitialization,
+        string DestinationMap, string DestinationPart, int DestinationEntityId,
+        int ClonedNpcParamId, string SpEffectSlot);
+    sealed record HelperReport(string ParentLogicalKey, int SourceNpcParamId, int ClonedNpcParamId,
+        int SourceLevel, int DestinationLevel, string SpEffectSlot, int MintedSpEffectId);
     internal sealed record GeneratorAddition(
         string SourceMap, string SourceEvent, int SourceEventId, int SourceEntityId, string SourceFingerprint,
         string DestinationMap, string DestinationEvent, int DestinationEventId, int DestinationEntityId,
@@ -43,6 +51,7 @@ internal static class BossActorTransplant
     static void Need(bool value, string why) { if (!value) throw new InvalidDataException(why); }
     static string Bare(string map) => map.EndsWith(".msb.dcx", StringComparison.OrdinalIgnoreCase) ? map[..^8]
         : map.EndsWith(".msb", StringComparison.OrdinalIgnoreCase) ? map[..^4] : map;
+    static string Leaf(string path) => path.Replace('\\', '/').Split('/')[^1];
     static string Resolve(string root, string map) {
         Need(Path.GetFileName(map) == map && Bare(map).StartsWith("m", StringComparison.Ordinal), "invalid actor map name");
         string bare = Bare(map);
@@ -143,6 +152,24 @@ internal static class BossActorTransplant
             "duplicate primary actor initialization destination entity ID");
         return initializations;
     }
+    static Dictionary<(string Map, string Part), HelperScale> ReadHelperScales(string planPath, List<Addition> additions) {
+        using var doc = JsonDocument.Parse(File.ReadAllText(planPath));
+        if (!doc.RootElement.TryGetProperty("boss_actor_scaling", out var node)) return [];
+        var helpers = node.Deserialize<List<HelperScale>>(Json) ?? throw new InvalidDataException("invalid boss_actor_scaling");
+        Need(helpers.Count > 0, "boss_actor_scaling must not be empty");
+        var output = new Dictionary<(string, string), HelperScale>();
+        foreach (var helper in helpers) {
+            var key = (Bare(helper.DestinationMap), helper.DestinationPart);
+            Need(output.TryAdd(key, helper), "duplicate helper scaling destination Part");
+            var addition = additions.SingleOrDefault(add => Bare(add.DestinationMap) == key.Item1
+                && add.DestinationPart == helper.DestinationPart && add.DestinationEntityId == helper.DestinationEntityId);
+            Need(addition is not null && addition.SourceMap == helper.SourceMap && addition.SourcePart == helper.SourcePart
+                && addition.SourceEntityId == helper.SourceEntityId && addition.SourceArchetype == helper.SourceArchetype
+                && addition.SourceProvenance == helper.SourceProvenance && addition.SourceInitialization == helper.SourceInitialization,
+                "helper scaling does not match reviewed actor addition");
+        }
+        return output;
+    }
     internal static void ValidatePlan(string planPath, bool required) {
         _ = Read(planPath, required); _ = ReadPrimaryInitializations(planPath, false); _ = ReadGenerators(planPath, false);
     }
@@ -169,7 +196,41 @@ internal static class BossActorTransplant
         spawned.TalkID = donor.TalkID; spawned.UnkT18 = donor.UnkT18;
         spawned.InitAnimID = donor.InitAnimID; spawned.DamageAnimID = donor.DamageAnimID;
     }
-    static void ApplyActors(List<Addition> additions, string sourceMaps, string destinationMaps, string outputMaps) {
+    static void RequireReviewedHelperClone(string planPath, string outputMaps, HelperScale helper) {
+        string root = OverlayRoot(outputMaps);
+        string sourcePlan = Path.Combine(root, "source-enemizer-plan.json");
+        string adjustedPlan = Path.Combine(root, "bb-enemizer-plan.json");
+        string receiptPath = Path.Combine(root, "scaling-report.json");
+        string outputGame = Path.Combine(root, "dvdroot_ps4", "param", "gameparam", "gameparam.parambnd.dcx");
+        Need(File.Exists(sourcePlan) && File.Exists(adjustedPlan) && File.Exists(receiptPath) && File.Exists(outputGame)
+            && File.ReadAllBytes(sourcePlan).SequenceEqual(File.ReadAllBytes(planPath)),
+            "helper scaling requires native scaling evidence");
+        var adjusted = JsonSerializer.Deserialize<PrimaryPlan>(File.ReadAllText(adjustedPlan), Json)
+            ?? throw new InvalidDataException("invalid adjusted helper scaling plan");
+        var sourceHelpers = JsonDocument.Parse(File.ReadAllText(planPath)).RootElement
+            .GetProperty("boss_actor_scaling").Deserialize<List<HelperScale>>(Json) ?? [];
+        var adjustedHelpers = JsonDocument.Parse(File.ReadAllText(adjustedPlan)).RootElement
+            .GetProperty("boss_actor_scaling").Deserialize<List<HelperScale>>(Json) ?? [];
+        Need(sourceHelpers.SequenceEqual(adjustedHelpers), "adjusted plan changed helper scaling evidence");
+        var receipt = JsonSerializer.Deserialize<ScalingReport>(File.ReadAllText(receiptPath), Json)
+            ?? throw new InvalidDataException("invalid helper scaling receipt");
+        Need(receipt.Format == "bb-enemizer-scaling-v1" && receipt.Applied
+            && receipt.SourcePlanSha256 == HashFile(planPath) && receipt.OutputPlanSha256 == HashFile(adjustedPlan)
+            && receipt.OutputGameparamSha256 == HashFile(outputGame), "helper scaling receipt does not attest native output");
+        var parent = adjusted.Scaling.Changes.SingleOrDefault(change => change.LogicalKey == helper.ParentLogicalKey);
+        var helperReceipt = receipt.HelperChanges?.SingleOrDefault(change => change.ParentLogicalKey == helper.ParentLogicalKey
+            && change.SourceNpcParamId == helper.SourceArchetype.NpcParamId && change.ClonedNpcParamId == helper.ClonedNpcParamId
+            && change.SpEffectSlot == helper.SpEffectSlot);
+        Need(parent is not null && helperReceipt is not null && helperReceipt.MintedSpEffectId == parent.MintedSpEffectId
+            && helperReceipt.SourceLevel == parent.SourceLevel && helperReceipt.DestinationLevel == parent.DestinationLevel,
+            "helper clone lacks matching native scaling change");
+        var game = BND4.Read(outputGame);
+        var npc = PARAM.Read(game.Files.Single(file => Leaf(file.Name) == "NpcParam.param").Bytes);
+        Need(npc.Rows.Count(row => row.ID == helper.ClonedNpcParamId) == 1,
+            "helper scaling output lacks the attested NPC clone");
+    }
+    static void ApplyActors(List<Addition> additions, Dictionary<(string Map, string Part), HelperScale> helpers,
+        string planPath, string sourceMaps, string destinationMaps, string outputMaps) {
         if (additions.Count == 0) return;
         var sources = new Dictionary<string, MSBB>(StringComparer.Ordinal);
         var targets = new Dictionary<string, (MSBB Map, string Output, HashSet<string> OriginalNames, HashSet<int> OriginalIds, Dictionary<string, PartState> OriginalEnemies)>(StringComparer.Ordinal);
@@ -210,7 +271,9 @@ internal static class BossActorTransplant
             spawned.Name = add.DestinationPart; spawned.EntityID = add.DestinationEntityId;
             spawned.Position = destinationAnchor.Position + Rotate(donor!.Position - donorAnchor.Position, yaw);
             spawned.Rotation = donor.Rotation + new Vector3(0, yaw, 0);
-            spawned.ModelName = donor.ModelName; spawned.NPCParamID = donor.NPCParamID;
+            helpers.TryGetValue((Bare(add.DestinationMap), add.DestinationPart), out var helper);
+            if (helper is not null) RequireReviewedHelperClone(planPath, outputMaps, helper);
+            spawned.ModelName = donor.ModelName; spawned.NPCParamID = helper?.ClonedNpcParamId ?? donor.NPCParamID;
             spawned.ThinkParamID = donor.ThinkParamID; spawned.CharaInitID = donor.CharaInitID;
             ApplyInitialization(add, donor, spawned);
             if (!target.Map.Models.Enemies.Any(model => model.Name == donor.ModelName)) target.Map.Models.Enemies.Add(new MSBB.Model.Enemy { Name = donor.ModelName, SibPath = "" });
@@ -422,7 +485,8 @@ internal static class BossActorTransplant
     // corpus, while outputMaps can already contain MapTransplant's primary edits.
     internal static int Apply(string planPath, string sourceMaps, string destinationMaps, string outputMaps, bool required) {
         var actors = Read(planPath, required); var primary = ReadPrimaryInitializations(planPath, false); var generators = ReadGenerators(planPath, false);
-        ApplyActors(actors, sourceMaps, destinationMaps, outputMaps);
+        var helpers = ReadHelperScales(planPath, actors);
+        ApplyActors(actors, helpers, planPath, sourceMaps, destinationMaps, outputMaps);
         ApplyPrimaryInitializations(primary, planPath, sourceMaps, destinationMaps, outputMaps);
         ApplyGenerators(generators, sourceMaps, destinationMaps, outputMaps);
         return actors.Count + primary.Count + generators.Count;

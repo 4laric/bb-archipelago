@@ -313,7 +313,7 @@ def native_plan_maria_at_cleric(slots: list[Slot], npcs: Mapping[int, dict], eff
         raise ValueError("Maria plan requires all three exact original Cleric states and one Maria part")
     target,source=cleric[0],maria[0]
     swap=Swap(target.logical_key,[slot.key for slot in cleric],{slot.key:slot.archetype for slot in cleric},target.archetype,source.archetype,destinations={slot.key:{"map_name":slot.map_name,"entity_id":slot.entity_id,"x":slot.x,"y":slot.y,"z":slot.z} for slot in cleric})
-    changes,skips=plan_scaling([swap],cleric,dict(npcs),dict(effects))
+    changes,skips=plan_scaling([swap],cleric,dict(npcs),dict(effects), boss_tiers=True)
     return {"format":"bb-enemizer-plan-v2","dry_run":True,"seed":seed,"swap_count":1,"swaps":[swap.json()],"boss_contract":maria_at_cleric_plan(ids),"primary_init_source_bindings":[{"source_map":source.map_name,"source_part":source.part_name,"source_entity_id":source.entity_id,"source_archetype":asdict(source.archetype),"source_talk_id":source.talk_id,"destination_map":slot.map_name,"destination_part":slot.part_name,"destination_entity_id":slot.entity_id,"required_native_fields":["talk_id","unk_t18","init_anim_id","damage_anim_id","provenance"]} for slot in cleric],"scaling":{"enabled":bool(changes),"mechanism":"inferred_static_npc_clone_sp_effect","change_count":len(changes),"changes":[x.json() for x in changes],"skip_count":len(skips),"skips":skips}}
 
 
@@ -329,7 +329,7 @@ def native_plan_cleric_at_maria(slots: list[Slot], npcs: Mapping[int, dict], eff
     swap = Swap(target.logical_key, [target.key], {target.key: target.archetype}, target.archetype,
                 source.archetype, destinations={target.key: {"map_name": target.map_name,
                 "entity_id": target.entity_id, "x": target.x, "y": target.y, "z": target.z}})
-    changes, skips = plan_scaling([swap], [target], dict(npcs), dict(effects))
+    changes, skips = plan_scaling([swap], [target], dict(npcs), dict(effects), boss_tiers=True)
     return {"format": "bb-enemizer-plan-v2", "dry_run": True, "seed": seed, "swap_count": 1,
             "swaps": [swap.json()],
             "boss_contract": {"format": "bb-maria-contract-v1", "arena": "lady-maria",

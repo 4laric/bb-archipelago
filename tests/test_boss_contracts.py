@@ -505,10 +505,14 @@ class ContractPlanningTests(unittest.TestCase):
         self.assertEqual("bb-enemizer-plan-v2", plan["format"])
         self.assertEqual(1, plan["swap_count"])
         self.assertEqual("c5080", plan["swaps"][0]["target"]["model_name"])
-        self.assertFalse(plan["scaling"]["enabled"])
-        self.assertEqual(1, plan["scaling"]["skip_count"])
-        self.assertIn("unknown source or destination tier", plan["scaling"]["skips"][0]["reason"])
+        self.assertTrue(plan["scaling"]["enabled"])
+        self.assertEqual(0, plan["scaling"]["skip_count"])
+        self.assertEqual(6, plan["scaling"]["changes"][0]["source_level"])
+        self.assertEqual(1, plan["scaling"]["changes"][0]["destination_level"])
         self.assertEqual("darkbeast-paarl", plan["boss_contract"]["donor"])
+        hidden = plan_contract_swap(EBRIETAS_ARENA, BSB_PACKAGE, slots, npcs, effects, "archipelago")
+        self.assertEqual(1, hidden['scaling']['change_count'])
+        self.assertEqual(11, hidden['scaling']['changes'][0]['destination_level'])
 
 
 if __name__ == "__main__":

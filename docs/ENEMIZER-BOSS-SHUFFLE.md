@@ -18,9 +18,12 @@ Cleric adapter still reproduces the original canary source exactly.
 Paarl adds a second combat package with five body-part initializers and their
 parameterized routine, phase changes, activation animation/invincibility and
 client entry synchronization. Copying just its NPC parameters or its HP phase
-event would omit these dependencies. Its ordinary normalization tier is
-unknown; the experimental builder records that skip and retains its original
-stats. It does not fabricate a scaling result.
+event would omit these dependencies. Boss-specific GameClear effects
+7420–7429 carry explicit tier numbers in the original SpEffectParam names.
+The planner and native verifier use those names' tier mapping, alongside the
+existing ordinary and DLC mappings. This is inferred area-tier normalization
+using the standard 7401–7413 ladder; it does not invert the distinct individual
+boss NG+ multipliers and remains unvalidated for gameplay balance.
 
 `tools/bb_enemizer/boss_actor_rosters.py` records the combat bodies, proxies and
 helpers needed by the ten multi-actor encounters, with source and placement
@@ -185,12 +188,29 @@ arena. Ludwig is the two-actor 3400800/3400801 encounter, distinct from Laurence
 source cutscene/warp with a destination actor-relative phase transition, and
 preserves destination progression through an explicit terminal bridge. These
 standalone donors are not yet members of the closed pool. Their runtime phase
-behavior and arena fit remain unobserved. Ludwig's primary form is normalized
-but its added second-form actor still retains the original NPC stats. The
-standalone Gascoigne beast has the same limitation. Helper normalization must
-be completed before either can enter the normalized reviewed pool. The
+behavior and arena fit remain unobserved. Ludwig's second form and Gascoigne's
+beast now receive distinct NPC clones with the parent's inferred normalization
+effect. Physical map states share one helper clone per logical fight. Native
+verification binds each helper to its original actor fingerprint, initialization,
+parent-owned destination anchor, source tier, output parameter row and receipt.
+Noncombat additions such as Ebrietas's projectile owner remain separate. The
 reciprocal Gascoigne/Cleric native build verified ten files and both destination
 completion events, including all six primary actor initialization records.
+
+Cleric-at-Laurence also builds through the encounter builder (eight verified
+files). It preserves both original m34 completion events and all Ludwig phase
+routines, retaining Laurence's entry item/cutscene while substituting Cleric's
+entry animation, combat attachments and camera. Its new phase events use
+collision-scanned project IDs rather than Ludwig's existing event IDs.
+
+Boss-only normalization now also covers the previously missing m24_02 arena
+at tier 11, witnessed by original Ebrietas NPC251000's named 7423 effect.
+The ordinary enemy tier oracle and its pinned fixture remain unchanged.
+The updated original-data reviewed build verifies 31 files and nine normalized
+boss placements. The combined ordinary/AP build verifies 50 files, 317 logical
+placements, 244 primary NPC clones and 67 normalization effects. Ludwig and
+reciprocal Gascoigne/Cleric builds each verify ten files with explicit helper
+clone receipts; all three Gascoigne map states share one helper clone.
 
 ## Remaining work before full support
 

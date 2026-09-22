@@ -173,7 +173,7 @@ def native_plan_ludwig_at_cleric(slots: Sequence[Slot], npcs: Mapping[int, dict]
                 {slot.key: slot.archetype for slot in cleric}, cleric[0].archetype, P1,
                 destinations={slot.key: {'map_name': slot.map_name, 'entity_id': slot.entity_id,
                               'x': slot.x, 'y': slot.y, 'z': slot.z} for slot in cleric})
-    changes, skips = plan_scaling([swap], cleric, dict(npcs), dict(effects))
+    changes, skips = plan_scaling([swap], cleric, dict(npcs), dict(effects), boss_tiers=True)
     additions = [{
         'source_map': helper.map_name, 'source_part': helper.part_name,
         'source_anchor_part': source.part_name, 'source_entity_id': LUDWIG_TWO,
@@ -195,7 +195,7 @@ def native_plan_ludwig_at_cleric(slots: Sequence[Slot], npcs: Mapping[int, dict]
         'boss_contract': {
             'format': 'bb-ludwig-contract-v1', 'arena': 'cleric-beast', 'donor': 'ludwig',
             'runtime_status': 'unobserved', 'source_variant': 'normal-two-phase',
-            'helper_scaling_status': 'pending; phase-two NPC stats remain original',
+            'helper_scaling_status': 'requires boss_actor_scaling allocation in combined build',
             'phase_transition': 'destination actor floor; original source cutscene and warp omitted',
             'terminal_predicates': [{'event_id': 12411700, 'original_actor': CLERIC,
                                     'bridge_event_id': ids.bridge_event}],

@@ -22,6 +22,8 @@ internal static class ScalingTransplant
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     static string HashFile(string path) => Hash(File.ReadAllBytes(path));
     static string Leaf(string path) => path.Replace('\\', '/').Split('/')[^1];
+    static string Bare(string map) => map.EndsWith(".msb.dcx", StringComparison.OrdinalIgnoreCase) ? map[..^8]
+        : map.EndsWith(".msb", StringComparison.OrdinalIgnoreCase) ? map[..^4] : map;
     static void Need(bool condition, string reason) { if (!condition) throw new InvalidDataException(reason); }
     static PARAM.Cell Cell(PARAM.Row row, string field) => row[field]
         ?? throw new InvalidDataException($"row {row.ID}: missing {field}");
@@ -44,16 +46,44 @@ internal static class ScalingTransplant
         int index = table.Rows.FindIndex(existing => existing.ID > row.ID);
         if (index < 0) table.Rows.Add(row); else table.Rows.Insert(index, row);
     }
-    static int NativeLevel(PARAM.Row row) {
+    internal static int NativeLevel(PARAM.Row row, bool bossTiers = false) {
         int id = (int)Number(row, "GameClearSpEffectID");
         if (id is >= 7401 and <= 7413) return id - 7400;
-        return id switch {7490 or 7491 => 11, 7492 or 7493 or 7494 or 7497 => 12, 7495 or 7496 => 13, _ => 0};
+        if (bossTiers) return id switch {
+            7420 or 7421 => 1, 7422 => 6, 7423 => 11, 7424 => 12, 7425 => 13,
+            7426 or 7427 => 3, 7428 => 5, 7429 => 7,
+            7490 or 7491 => 11, 7492 or 7493 or 7494 or 7497 => 12, 7495 or 7496 => 13,
+            _ => 0,
+        };
+        return id switch {
+            7490 or 7491 => 11, 7492 or 7493 or 7494 or 7497 => 12, 7495 or 7496 => 13,
+            _ => 0,
+        };
+    }
+    // The Upper Cathedral Ward boss arena has no ordinary-area entry because it
+    // is reached through an alternate map state.  Its reviewed boss contract
+    // pins the original destination NPC's named 7423 tier to level 11.
+    // Keep this out of MapLevels: ordinary enemizer plans must retain their
+    // existing area-level table.
+    internal static int DestinationLevel(string map, bool bossPrepared) {
+        string bare = map.Length >= 6 ? map[..6] : map;
+        if (bossPrepared && bare == "m24_02") return 11;
+        return MapLevels.GetValueOrDefault(bare);
     }
 
     internal sealed record Scaling(bool Enabled, string Mechanism, int ChangeCount, List<Scale> Changes);
     internal sealed record Scale(string LogicalKey, int SourceNpcParamId, int ClonedNpcParamId,
         string SpEffectSlot, int MintedSpEffectId, double HaveSoulRate, int SourceLevel,
         int DestinationLevel, double HpMultiplier, double AttackMultiplier, double DefenseMultiplier);
+    // A multi-actor encounter has no second logical placement to normalize.  It
+    // names the primary placement whose already-reviewed native ladder effect
+    // it may reuse; the helper's original tier must prove that reuse is valid.
+    internal sealed record HelperScale(string ParentLogicalKey,
+        string SourceMap, string SourcePart, int SourceEntityId, Archetype SourceArchetype,
+        BossActorTransplant.SourceProvenance SourceProvenance,
+        BossActorTransplant.SourceInitialization SourceInitialization,
+        string DestinationMap, string DestinationPart, int DestinationEntityId,
+        int ClonedNpcParamId, string SpEffectSlot);
 
     public static int Run(string planPath, string gamePath, string defsPath,
         string mapsPath, string scriptsPath, string outputPath, bool bossPrepared = false)
@@ -75,6 +105,8 @@ internal static class ScalingTransplant
             "boss contract plan requires --boss-encounters and reviewed event manifests");
         Need(bossPrepared || !plan.ContainsKey("boss_actor_additions"),
             "boss actor additions require --boss-encounters and reviewed map evidence");
+        Need(bossPrepared || !plan.ContainsKey("boss_actor_scaling"),
+            "boss actor scaling requires --boss-encounters and reviewed map evidence");
         Need(bossPrepared || !plan.ContainsKey("boss_actor_initializations"),
             "boss actor initializations require --boss-encounters and reviewed map evidence");
         Need(bossPrepared || !plan.ContainsKey("boss_generator_additions"),
@@ -90,6 +122,26 @@ internal static class ScalingTransplant
         Need(manifest.Swaps.Select(s => s.LogicalKey).Distinct().Count() == manifest.Swaps.Count, "duplicate logical swap");
         Need(scaling.Changes.Select(s => s.LogicalKey).Distinct().Count() == scaling.Changes.Count, "duplicate scaling placement");
         Need(scaling.Changes.Select(s => s.ClonedNpcParamId).Distinct().Count() == scaling.Changes.Count, "duplicate clone ID");
+        var actorAdditions = BossActorTransplant.Read(planPath, required: false);
+        var helperScales = plan["boss_actor_scaling"]?.Deserialize<List<HelperScale>>(Json) ?? [];
+        if (plan.ContainsKey("boss_actor_scaling")) Need(helperScales.Count > 0, "boss_actor_scaling must not be empty");
+        Need(helperScales.Select(h => (Bare(h.DestinationMap), h.DestinationPart)).Distinct().Count() == helperScales.Count,
+            "duplicate helper scaling destination Part");
+        Need(helperScales.Select(h => (Bare(h.DestinationMap), h.DestinationEntityId)).Distinct().Count() == helperScales.Count,
+            "duplicate helper scaling destination entity ID");
+        foreach (var helper in helperScales) {
+            var addition = actorAdditions.SingleOrDefault(add => Bare(add.DestinationMap) == Bare(helper.DestinationMap)
+                && add.DestinationPart == helper.DestinationPart && add.DestinationEntityId == helper.DestinationEntityId);
+            Need(addition is not null && addition.SourceMap == helper.SourceMap && addition.SourcePart == helper.SourcePart
+                && addition.SourceEntityId == helper.SourceEntityId && addition.SourceArchetype == helper.SourceArchetype
+                && addition.SourceProvenance == helper.SourceProvenance && addition.SourceInitialization == helper.SourceInitialization,
+                "helper scaling does not match reviewed actor addition");
+            Need(addition!.SourceProvenance is not null && addition.SourceInitialization is not null,
+                "normalized helper requires source provenance and initialization pins");
+        }
+        Need(helperScales.GroupBy(helper => (helper.SourceMap, helper.SourcePart, helper.SourceEntityId))
+            .All(group => group.Select(helper => helper.ParentLogicalKey).Distinct().Count() == 1),
+            "same source helper cannot use multiple parent scaling changes");
 
         var binder = BND4.Read(gamePath);
         var defs = BND4.Read(defsPath).Files.Select(f => PARAMDEF.Read(f.Bytes)).ToList();
@@ -127,9 +179,9 @@ internal static class ScalingTransplant
             Need(change.MintedSpEffectId == 60000 + (change.SourceLevel - 1) * 13 + change.DestinationLevel - 1, "effect ID does not match tier pair");
             Need(change.HaveSoulRate == 1, "scaling must be echo-neutral");
             var donor = Unique(npcs, change.SourceNpcParamId);
-            Need(NativeLevel(donor) == change.SourceLevel, "source tier drift");
+            Need(NativeLevel(donor, bossPrepared) == change.SourceLevel, "source tier drift");
             string map = change.LogicalKey.Split(':')[0];
-            Need(map.Length >= 6 && MapLevels.GetValueOrDefault(map[..6]) == change.DestinationLevel, "destination tier drift");
+            Need(map.Length >= 6 && DestinationLevel(map, bossPrepared) == change.DestinationLevel, "destination tier drift");
             Need(Enumerable.Range(0, 8).Select(i => $"spEffectID{i}").Contains(change.SpEffectSlot), "invalid effect slot");
             Need(Number(donor, change.SpEffectSlot) < 0, "scaling effect slot is occupied");
             var source = Unique(effects, 7400 + change.SourceLevel);
@@ -165,6 +217,42 @@ internal static class ScalingTransplant
             node["unscaled_target"] = node["target"]!.DeepClone();
             node["target"]!["npc_param_id"] = clone.ID;
         }
+        var helperReports = new List<object>();
+        var primaryCloneIds = scaling.Changes.Select(change => change.ClonedNpcParamId).ToHashSet();
+        foreach (var group in helperScales.GroupBy(helper => helper.ClonedNpcParamId).OrderBy(group => group.Key)) {
+            var helper = group.First();
+            Need(helper.ClonedNpcParamId is >= 6000000 and <= 6099999 && !primaryCloneIds.Contains(helper.ClonedNpcParamId),
+                "helper clone ID must be a distinct shared clone allocation");
+            Need(group.All(item => item.ParentLogicalKey == helper.ParentLogicalKey
+                && item.SourceArchetype == helper.SourceArchetype && item.SpEffectSlot == helper.SpEffectSlot),
+                "shared helper clone has non-identical source or parent evidence");
+            var parentChange = scaling.Changes.SingleOrDefault(change => change.LogicalKey == helper.ParentLogicalKey)
+                ?? throw new InvalidDataException("helper scaling parent has no reviewed primary change");
+            var parentSwap = swaps[helper.ParentLogicalKey];
+            var anchor = actorAdditions.Single(add => Bare(add.DestinationMap) == Bare(helper.DestinationMap)
+                && add.DestinationPart == helper.DestinationPart && add.DestinationEntityId == helper.DestinationEntityId).DestinationAnchorPart;
+            Need(parentSwap.DestinationKeys.Any(key => {
+                int split = key.IndexOf(':'); return split > 0 && Bare(key[..split]) == Bare(helper.DestinationMap)
+                    && key[(split + 1)..] == anchor;
+            }), "helper parent does not own the destination anchor");
+            Need(helper.SourceArchetype.NpcParamId != parentChange.SourceNpcParamId,
+                "helper must have its own source NPC identity");
+            Need(Enumerable.Range(0, 8).Select(i => $"spEffectID{i}").Contains(helper.SpEffectSlot), "invalid helper scaling effect slot");
+            var donor = Unique(npcs, helper.SourceArchetype.NpcParamId);
+            Need(donor.ID == helper.SourceArchetype.NpcParamId && NativeLevel(donor, bossTiers: true) == parentChange.SourceLevel,
+                "helper source tier does not support parent normalization ratio");
+            Need(Number(donor, helper.SpEffectSlot) < 0, "helper scaling effect slot is occupied");
+            Need(minted.ContainsKey(parentChange.MintedSpEffectId), "helper parent effect was not minted");
+            var clone = new PARAM.Row(donor) { ID = helper.ClonedNpcParamId, Name = $"AP normalized helper {donor.ID}" };
+            Set(clone, helper.SpEffectSlot, parentChange.MintedSpEffectId);
+            InsertRow(npcs, clone);
+            helperReports.Add(new {
+                parent_logical_key = helper.ParentLogicalKey, source_npc_param_id = donor.ID,
+                cloned_npc_param_id = clone.ID, source_level = parentChange.SourceLevel,
+                destination_level = parentChange.DestinationLevel, sp_effect_slot = helper.SpEffectSlot,
+                minted_sp_effect_id = parentChange.MintedSpEffectId,
+            });
+        }
         plan["scaling"]!["applied"] = true;
         npcFile.Bytes = npcs.Write();
         effectFile.Bytes = effects.Write();
@@ -196,13 +284,13 @@ internal static class ScalingTransplant
             File.Copy(planPath, Path.Combine(staging, "source-enemizer-plan.json"));
             File.WriteAllText(adjustedPlan, plan.ToJsonString(Json));
             MapTransplant.Run(adjustedPlan, mapsPath, Path.Combine(staging, "dvdroot_ps4", "map", "MapStudio"), scalingPrepared: true, bossPrepared: bossPrepared);
-            AiTransplant.Run(adjustedPlan, gamePath, defsPath, scriptsPath, Path.Combine(staging, "dvdroot_ps4", "script"), true);
+            AiTransplant.Run(adjustedPlan, gamePath, defsPath, scriptsPath, Path.Combine(staging, "dvdroot_ps4", "script"), true, bossPrepared);
             var report = new {
                 format = "bb-enemizer-scaling-v1", applied = true, live_validated = false,
                 source_plan_sha256 = HashFile(planPath), source_gameparam_sha256 = HashFile(gamePath),
                 paramdef_sha256 = HashFile(defsPath), output_gameparam_sha256 = HashFile(paramPath),
-                output_plan_sha256 = HashFile(adjustedPlan), npc_clones = scaling.Changes.Count,
-                minted_effects = minted.Count, changes = scaling.Changes,
+                output_plan_sha256 = HashFile(adjustedPlan), npc_clones = scaling.Changes.Count + helperReports.Count,
+                minted_effects = minted.Count, changes = scaling.Changes, helper_changes = helperReports,
             };
             File.WriteAllText(Path.Combine(staging, "scaling-report.json"), JsonSerializer.Serialize(report, Json));
             Directory.Move(staging, output);

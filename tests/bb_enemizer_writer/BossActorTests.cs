@@ -165,6 +165,51 @@ internal static class BossActorTests
             Need(BossActorTransplant.GeneratorFingerprint("m24_01_00_00", written.Events.Generators.Single(e => e.Name == "existing_gen"))
                 == BossActorTransplant.GeneratorFingerprint("m24_01_00_00", existing));
 
+            var helperScale = new {
+                parent_logical_key = "m24_01_00_00:target_anchor",
+                addition.source_map, addition.source_part, addition.source_entity_id, addition.source_archetype,
+                addition.source_provenance, addition.source_initialization,
+                addition.destination_map, addition.destination_part, addition.destination_entity_id,
+                cloned_npc_param_id = 6000001, sp_effect_slot = "spEffectID1",
+            };
+            string helperOverlay = Path.Combine(root, "helper-overlay");
+            string helperMaps = Path.Combine(helperOverlay, "dvdroot_ps4", "map", "MapStudio");
+            string helperPlan = Path.Combine(root, "helper-plan.json");
+            void HelperBinder(string path, bool includeClone) {
+                var def = new PARAMDEF {ParamType = "NPC_PARAM_ST", DataVersion = 1, Unicode = true};
+                var table = new PARAM {ParamType = def.ParamType, ParamdefDataVersion = 1, Rows = []}; table.ApplyParamdef(def);
+                if (includeClone) table.Rows.Add(new PARAM.Row(6000001, "attested helper clone", def));
+                var binder = new BND4 {Compression = DCX.Type.DCX_EDGE};
+                binder.Files.Add(new BinderFile(Binder.FileFlags.Flag1, 1, "NpcParam.param", table.Write())); binder.Write(path);
+            }
+            void HelperEvidence(bool includeClone) {
+                var change = new { logical_key = "m24_01_00_00:target_anchor", source_npc_param_id = 90,
+                    cloned_npc_param_id = 6000000, sp_effect_slot = "spEffectID0", minted_sp_effect_id = 60000,
+                    have_soul_rate = 1.0, source_level = 1, destination_level = 1,
+                    hp_multiplier = 1.0, attack_multiplier = 1.0, defense_multiplier = 1.0 };
+                var sourcePlan = new { format = "bb-enemizer-plan-v2", dry_run = true, swaps = Array.Empty<object>(),
+                    boss_actor_additions = new[] { addition }, boss_actor_scaling = new[] { helperScale },
+                    scaling = new { enabled = true, mechanism = "inferred_static_npc_clone_sp_effect", change_count = 1, changes = new[] { change } } };
+                File.WriteAllText(helperPlan, JsonSerializer.Serialize(sourcePlan));
+                Directory.CreateDirectory(helperOverlay); File.Copy(helperPlan, Path.Combine(helperOverlay, "source-enemizer-plan.json"), true);
+                var adjusted = new { format = "bb-enemizer-plan-v2", dry_run = true, swaps = Array.Empty<object>(),
+                    boss_actor_additions = new[] { addition }, boss_actor_scaling = new[] { helperScale },
+                    scaling = new { enabled = true, mechanism = "inferred_static_npc_clone_sp_effect", change_count = 1, applied = true, changes = new[] { change } } };
+                string adjustedPath = Path.Combine(helperOverlay, "bb-enemizer-plan.json"); File.WriteAllText(adjustedPath, JsonSerializer.Serialize(adjusted));
+                string game = Path.Combine(helperOverlay, "dvdroot_ps4", "param", "gameparam", "gameparam.parambnd.dcx"); Directory.CreateDirectory(Path.GetDirectoryName(game)!); HelperBinder(game, includeClone);
+                File.WriteAllText(Path.Combine(helperOverlay, "scaling-report.json"), JsonSerializer.Serialize(new { format = "bb-enemizer-scaling-v1", applied = true,
+                    source_plan_sha256 = HashFile(helperPlan), output_plan_sha256 = HashFile(adjustedPath), output_gameparam_sha256 = HashFile(game), changes = new[] { change },
+                    helper_changes = new[] { new { parent_logical_key = helperScale.parent_logical_key, source_npc_param_id = 90, cloned_npc_param_id = 6000001,
+                        source_level = 1, destination_level = 1, sp_effect_slot = "spEffectID1", minted_sp_effect_id = 60000 } } }));
+            }
+            Directory.CreateDirectory(helperMaps); File.Copy(Path.Combine(destination, "m24_01_00_00.msb"), Path.Combine(helperMaps, "m24_01_00_00.msb"));
+            HelperEvidence(true);
+            Need(BossActorTransplant.Apply(helperPlan, source, destination, helperMaps, false) == 1);
+            Need(MSBB.Read(Path.Combine(helperMaps, "m24_01_00_00.msb")).Parts.Enemies.Single(e => e.Name == "spawned").NPCParamID == 6000001);
+            Directory.Delete(helperMaps, true); Directory.CreateDirectory(helperMaps); File.Copy(Path.Combine(destination, "m24_01_00_00.msb"), Path.Combine(helperMaps, "m24_01_00_00.msb"));
+            HelperEvidence(false);
+            Refused(() => BossActorTransplant.Apply(helperPlan, source, destination, helperMaps, false), "lacks the attested NPC clone");
+
             var stalePin = new { addition.source_map, addition.source_part, addition.source_anchor_part, addition.source_entity_id, addition.source_part_kind,
                 addition.source_archetype, source_provenance = new { format = "bb-boss-actor-pin-v1", part_sha256 = new string('0', 64), addition.source_provenance.anchor_sha256 },
                 addition.source_initialization, addition.destination_map, addition.destination_anchor_part, addition.destination_part, addition.destination_entity_id };

@@ -38,6 +38,7 @@ from tools.bb_enemizer.gascoigne_arena import (
 )
 from tools.bb_enemizer.ludwig_contract import LudwigIds, patch_ludwig_at_cleric, native_plan_ludwig_at_cleric, EVENTS as LUDWIG_EVENTS
 from tools.bb_enemizer.laurence_contract import LaurenceIds, patch_laurence_at_cleric, native_plan_laurence_at_cleric
+from tools.bb_enemizer.laurence_arena import patch_cleric_at_laurence, native_plan_cleric_at_laurence
 from tools.bb_enemizer.final_boss_contracts import (
     GEHRMAN_ARENA, MOON_ARENA, GEHRMAN_PACKAGE, MOON_PACKAGE, FinalAttachmentIds,
     patch_gehrman_at_moon, patch_moon_at_gehrman, plan_final_boss_swap,
@@ -52,6 +53,7 @@ from tools.bb_enemizer.maria_amelia_contract import (
     native_plan_maria_at_amelia, patch_maria_at_amelia,
 )
 from tools.bb_enemizer.scaling import load_params
+from tools.bb_enemizer.boss_actor_scaling import allocate_actor_scaling
 from tools.bb_inputs import read_blob, read_prefix
 from tools.build_boss_canary import compile_events
 from tools.build_boss_catalog import build as build_catalog
@@ -75,6 +77,8 @@ GASCOIGNE_ENDPOINT = SpecialEndpoint('father-gascoigne', 'm24_01_00_00.emevd.dcx
 # is available only as the two directed members of the explicit direct pool.
 ARENAS[GASCOIGNE_ENDPOINT.key] = GASCOIGNE_ENDPOINT
 PACKAGES[GASCOIGNE_ENDPOINT.key] = GASCOIGNE_ENDPOINT
+LAURENCE_ENDPOINT = SpecialEndpoint('laurence', 'm34_00_00_00.emevd.dcx.js')
+ARENAS[LAURENCE_ENDPOINT.key] = LAURENCE_ENDPOINT
 FINAL_ARENAS = {arena.key: arena for arena in (GEHRMAN_ARENA, MOON_ARENA)}
 FINAL_COMPATIBILITY = {'gehrman': ('moon-presence',), 'moon-presence': ('gehrman',)}
 FINAL_ATTACHMENTS = {'gehrman': FinalAttachmentIds(12104917, 12104918),
@@ -320,6 +324,9 @@ def build(args) -> dict:
     args._actor_pin_cache = {}
     ludwig = getattr(args, 'donor', None) == 'ludwig'
     laurence = getattr(args, 'donor', None) == 'laurence'
+    laurence_arena = getattr(args, 'arena', None) == 'laurence'
+    if laurence_arena and getattr(args, 'donor', None) != 'cleric-beast':
+        raise ValueError('Laurence arena requires the reviewed Cleric donor adapter')
     laurence_ids = LaurenceIds(12990300, 12990301)
     direct_gascoigne = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     reviewed_gascoigne_pairs = {
@@ -373,7 +380,8 @@ def build(args) -> dict:
         materializations = {}
         for arena, package in pairs:
             if (package is not None and arena.key not in FINAL_ARENAS
-                    and not is_maria_pair(arena, package) and not is_gascoigne_pair(arena, package)):
+                    and not is_maria_pair(arena, package) and not is_gascoigne_pair(arena, package)
+                    and not laurence_arena):
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
@@ -389,7 +397,9 @@ def build(args) -> dict:
         variants = {}
         terminals = {}
         for arena, package in pairs:
-            if laurence:
+            if laurence_arena:
+                patched = patch_cleric_at_laurence(texts[arena.event_file], texts[package.event_file])
+            elif laurence:
                 patched = patch_laurence_at_cleric(texts[arena.event_file], texts['m34_00_00_00.emevd.dcx.js'], laurence_ids)
             elif ludwig:
                 patched = patch_ludwig_at_cleric(texts[arena.event_file], texts['m34_00_00_00.emevd.dcx.js'], LUDWIG_ALLOCATION)
@@ -457,7 +467,10 @@ def build(args) -> dict:
                                         (source / filename).read_text(encoding='utf-8'),
                                         json.loads(pins_run.stdout), protected_by_file[filename],
                                         terminals.get(filename, ())))
-        if laurence:
+        if laurence_arena:
+            plans = [native_plan_cleric_at_laurence(slots, npcs, effects, args.seed)]
+            plans[0]['boss_actor_initializations'] = pin_actor_requirements(args, plans[0]['primary_init_source_bindings'])
+        elif laurence:
             plans = [native_plan_laurence_at_cleric(slots, npcs, effects, laurence_ids, args.seed)]
             plans[0]['boss_actor_initializations'] = pin_actor_requirements(args, plans[0]['primary_init_source_bindings'])
         elif ludwig:
@@ -509,6 +522,21 @@ def build(args) -> dict:
             plan = combine_ordinary_and_boss_plans(ordinary_plan, plans)
         else:
             plan = plans[0] if len(plans) == 1 else combine_native_plans(args.seed, plans)
+        # Phase bodies are combat participants; projectile-owner dummies are
+        # separate reviewed additions and do not inherit combat normalization.
+        phase_parents = {}
+        for pair_plan in plans:
+            for addition in pair_plan.get('boss_actor_additions', []):
+                if addition['source_archetype']['npc_param_id'] not in (272000, 451001):
+                    continue
+                anchor = f"{addition['destination_map']}:{addition['destination_anchor_part']}"
+                parents = [swap['logical_key'] for swap in pair_plan['swaps']
+                           if anchor in swap['destination_keys']]
+                if len(parents) != 1:
+                    raise ValueError('combat phase helper has no unique primary placement')
+                phase_parents[addition['destination_map'], addition['destination_part']] = parents[0]
+        if phase_parents:
+            plan['boss_actor_scaling'] = allocate_actor_scaling(plan, npcs, phase_parents)
         validate_allocations(args.bundle, slots, records, plan)
         plan['boss_encounters'] = {'format': 'bb-boss-encounters-v1', 'encounters': records}
         if override_inputs:
