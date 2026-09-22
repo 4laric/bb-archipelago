@@ -20,32 +20,150 @@ class BBLauncherPanel:
         self.receipt = app.tk.StringVar()
         self.connected_receipt_id: str | None = None
         self.connected_fingerprint: str | None = None
-        frame = app.ttk.Frame(notebook, padding=10)
+        self.prepared = app.tk.StringVar(value="No mod prepared yet. Choose your seed in Play, then build it here.")
+        self.guidance = app.tk.StringVar()
+        host = app.ttk.Frame(notebook)
+        host.columnconfigure(0, weight=1)
+        host.rowconfigure(0, weight=1)
+        self.tab = host
+        notebook.add(host, text="BBLauncher")
+        canvas = app.tk.Canvas(host, highlightthickness=0, background="#0c1017")
+        canvas.grid(row=0, column=0, sticky="nsew")
+        scroll = app.ttk.Scrollbar(host, orient="vertical", command=canvas.yview)
+        scroll.grid(row=0, column=1, sticky="ns")
+        canvas.configure(yscrollcommand=scroll.set)
+        frame = app.ttk.Frame(canvas, padding=12)
         frame.columnconfigure(1, weight=1)
-        notebook.add(frame, text="BBLauncher")
-        app.ttk.Checkbutton(frame, text="BBLauncher mode", variable=self.enabled,
+        content = canvas.create_window((0, 0), window=frame, anchor="nw")
+        frame.bind("<Configure>", lambda _: canvas.configure(scrollregion=canvas.bbox("all")))
+        self._wrapping_labels = []
+        def resize(event):
+            canvas.itemconfigure(content, width=event.width)
+            for label in self._wrapping_labels:
+                label.configure(wraplength=max(260, event.width - 40))
+        canvas.bind("<Configure>", resize)
+        def label(text=None, variable=None, row=0, style="TLabel"):
+            widget = app.ttk.Label(frame, text=text, textvariable=variable, style=style, wraplength=680)
+            widget.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(3, 7))
+            self._wrapping_labels.append(widget)
+            return widget
+        app.ttk.Checkbutton(frame, text="Use BBLauncher to manage and start Bloodborne", variable=self.enabled,
                             command=app._refresh_launch_gate).grid(row=0, column=0, columnspan=3, sticky="w")
-        app.ttk.Label(frame, text="Build here; activate and start the game in BBLauncher; connect here.",
-                      wraplength=680).grid(row=1, column=0, columnspan=3, sticky="w", pady=6)
-        for row, (label, variable, directory) in enumerate((
-            ("BBLauncher executable", self.executable, False),
-            ("BBLauncher Mods directory", self.mods, True),
-            ("Export receipt", self.receipt, False),
-        ), 2):
-            app.ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w")
-            app.ttk.Entry(frame, textvariable=variable).grid(row=row, column=1, sticky="ew", pady=3)
-            app.ttk.Button(frame, text="Browse...", command=lambda v=variable, d=directory: self.browse(v, d)).grid(row=row, column=2)
-        app.ttk.Checkbutton(frame, text="Test the pinned BBLauncher build (live acceptance pending)",
-                            variable=self.candidate).grid(row=5, column=0, columnspan=3, sticky="w", pady=5)
-        buttons = app.ttk.Frame(frame)
-        buttons.grid(row=6, column=0, columnspan=3, sticky="w", pady=8)
-        for label, action in (("Build and export mod", "export"),
-                              ("Verify activated mod", "verify"),
-                              ("Connect to running game", "connect")):
-            app.ttk.Button(buttons, text=label, command=lambda a=action: self.start(a)).pack(side="left", padx=3)
-        app.ttk.Button(frame, text="Launch without Archipelago", command=self.without_ap).grid(row=7, column=0, columnspan=3, sticky="w")
-        app.ttk.Label(frame, text="Deactivate the previous AP mod before activating another. Resolve AP file conflicts; do not accept an override or use Mod Merger. After activation, verify with the game stopped, then start it in BBLauncher.",
-                      wraplength=700).grid(row=8, column=0, columnspan=3, sticky="w", pady=6)
+        label("1. Set up BBLauncher", row=1, style="Title.TLabel")
+        app.ttk.Label(frame, text="BBLauncher app").grid(row=2, column=0, sticky="w", padx=(0, 10))
+        app.ttk.Entry(frame, textvariable=self.executable).grid(row=2, column=1, sticky="ew")
+        app.ttk.Button(frame, text="Choose app...", command=self.choose_executable).grid(row=2, column=2, padx=(8, 0))
+        label("The mod folder is filled in from your launcher location. Custom installations can change it in Advanced settings.", row=3, style="Muted.TLabel")
+        app.ttk.Checkbutton(frame, text="Enable experimental BBLauncher integration for this session", variable=self.candidate).grid(row=4, column=0, columnspan=3, sticky="w")
+        label("Requires the supported test build (2026-08-09-f092023). Gameplay testing is still in progress.", row=5, style="Muted.TLabel")
+        label(variable=self.guidance, row=6)
+        app.ttk.Button(frame, text="Advanced settings...", command=self.advanced).grid(row=7, column=0, sticky="w")
+        self.fix_folder = app.ttk.Button(frame, text="Use detected mod folder", command=self.use_detected_folder)
+        self.fix_folder.grid(row=7, column=1, sticky="w")
+        label("2. Prepare your mod", row=8, style="Title.TLabel")
+        label(variable=self.prepared, row=9)
+        actions = app.ttk.Frame(frame)
+        actions.grid(row=10, column=0, columnspan=3, sticky="w", pady=(0, 8))
+        app.ttk.Button(actions, text="Choose seed / player", command=lambda: notebook.select(app.play_tab)).pack(side="left", padx=(0, 8))
+        self.buttons = {}
+        self.buttons["export"] = app.ttk.Button(actions, text="Build mod for BBLauncher", style="Accent.TButton", command=lambda: self.start("export"))
+        self.buttons["export"].pack(side="left")
+        label("3. Activate, then connect", row=11, style="Title.TLabel")
+        label("In BBLauncher, open Mod Manager and activate the prepared mod with the game stopped. Deactivate any previous Archipelago mod first. If files conflict, stop and resolve the conflict without Mod Merger.", row=12)
+        actions = app.ttk.Frame(frame)
+        actions.grid(row=13, column=0, columnspan=3, sticky="w")
+        for title, action in (("Check activated mod", "verify"), ("Connect to game", "connect")):
+            self.buttons[action] = app.ttk.Button(actions, text=title, command=lambda a=action: self.start(a))
+            self.buttons[action].pack(side="left", padx=(0, 8))
+        label("Check the mod first, then start Bloodborne in BBLauncher and connect here.", row=14, style="Muted.TLabel")
+        app.ttk.Button(frame, text="How to play without Archipelago", command=self.without_ap).grid(row=15, column=0, columnspan=3, sticky="w")
+        def wheel(event):
+            canvas.yview_scroll(-int(event.delta / 120), "units")
+            return "break"
+        def bind_wheel(widget):
+            widget.bind("<MouseWheel>", wheel)
+            for child in widget.winfo_children():
+                bind_wheel(child)
+        bind_wheel(frame)
+        canvas.bind("<MouseWheel>", wheel)
+        self._suggested_mods = ""
+        for variable in (self.executable, self.mods, self.receipt, self.candidate):
+            variable.trace_add("write", self.update_setup)
+        self.executable.trace_add("write", self._suggest_folder)
+        for key in ("ap_request", "game_root", "shad_executable"):
+            app.fields[key].trace_add("write", self.update_setup)
+        self.update_setup()
+
+    def _suggest_folder(self, *_):
+        from .external_setup import suggest_mods_directory
+        current = self.mods.get().strip()
+        raw = self.executable.get().strip()
+        if raw and (not current or current == self._suggested_mods):
+            self._suggested_mods = str(suggest_mods_directory(Path(raw)))
+            self.mods.set(self._suggested_mods)
+
+    def use_detected_folder(self):
+        from .external_setup import suggest_mods_directory
+        if self.executable.get().strip():
+            self._suggested_mods = str(suggest_mods_directory(Path(self.executable.get().strip())))
+            self.mods.set(self._suggested_mods)
+
+    def choose_executable(self):
+        value = self.app.filedialog.askopenfilename(parent=self.app.root, title="Choose BBLauncher",
+            filetypes=[("BBLauncher app", "*.exe"), ("All files", "*.*")])
+        if value:
+            self.executable.set(value)
+
+    def advanced(self):
+        app = self.app
+        window = app.tk.Toplevel(app.root)
+        window.title("BBLauncher advanced settings")
+        window.transient(app.root)
+        window.columnconfigure(1, weight=1)
+        app.ttk.Label(window, text="Mod library folder (inactive mods)").grid(row=0, column=0, sticky="w", padx=10, pady=10)
+        app.ttk.Entry(window, textvariable=self.mods, width=60).grid(row=0, column=1, sticky="ew")
+        app.ttk.Button(window, text="Choose folder...", command=lambda: self.browse(self.mods, True)).grid(row=0, column=2, padx=10)
+        app.ttk.Button(window, text="Use launcher's default folder", command=self.use_detected_folder).grid(row=1, column=1, sticky="w")
+        app.ttk.Label(window, textvariable=self.guidance, wraplength=680).grid(row=2, column=0, columnspan=3, sticky="ew", padx=10, pady=10)
+        app.ttk.Label(window, text="Prepared mod details are saved automatically. To recover an earlier export, choose its saved JSON record.", wraplength=680).grid(row=3, column=0, columnspan=3, sticky="w", padx=10, pady=10)
+        app.ttk.Button(window, text="Recover a previous export...", command=lambda: self.browse(self.receipt, False)).grid(row=4, column=1, sticky="w")
+        app.ttk.Button(window, text="Done", command=window.destroy).grid(row=5, column=2, padx=10, pady=10)
+
+    def update_setup(self, *_):
+        from .external_setup import setup_problem
+        raw_exe = self.executable.get().strip()
+        raw_mods = self.mods.get().strip()
+        raw_game = self.app.fields["game_root"].get().strip()
+        problem = setup_problem(Path(raw_exe) if raw_exe else None, Path(raw_mods) if raw_mods else None,
+                                Path(raw_game) if raw_game else None)
+        if not problem and not self.candidate.get():
+            problem = "Enable experimental integration above to use this test build."
+        missing = [title for key, title in (("ap_request", "a seed"), ("game_root", "your game folder"), ("shad_executable", "shadPS4")) if not self.app.fields[key].get().strip()]
+        if not problem and missing:
+            problem = "In Play, choose " + ", ".join(missing) + ". Then return here to build your mod."
+        self.guidance.set(problem or f"Mod library: {raw_mods}")
+        from .external_setup import suggest_mods_directory
+        if hasattr(self, "fix_folder"):
+            if raw_exe and raw_mods != str(suggest_mods_directory(Path(raw_exe))):
+                self.fix_folder.grid()
+            else:
+                self.fix_folder.grid_remove()
+        record = self.receipt.get().strip()
+        available = False
+        if record:
+            try:
+                from .external import load_external_receipt
+                saved = load_external_receipt(Path(record), allow_live_acceptance_candidate=True)
+                available = True
+                self.prepared.set(f"Prepared mod: {saved.package_name}")
+            except (LauncherError, OSError, ValueError):
+                self.prepared.set("Saved mod details are missing or unreadable. Build your mod again.")
+        else:
+            self.prepared.set("No mod prepared yet. Choose your seed in Play, then build it here.")
+        busy = getattr(self.app, "_busy", False)
+        for action, button in self.buttons.items():
+            ready = not problem and (action == "export" or available)
+            button.configure(state="normal" if ready and not busy else "disabled")
 
     def refresh_status(self, settings):
         import time
@@ -54,7 +172,8 @@ class BBLauncherPanel:
         from .readiness import _client_health_status
         try:
             if settings.bblauncher_receipt is None:
-                self.app._set_status_text("BBLauncher: build and export a seed, then select its receipt.")
+                self.app.client_health.set("BBLauncher: no prepared mod selected.")
+                self.app._set_status_text("BBLauncher: choose a seed in Play, then build your mod in the BBLauncher tab.")
                 return
             receipt = load_external_receipt(settings.bblauncher_receipt,
                                             allow_live_acceptance_candidate=self.candidate.get())
@@ -94,6 +213,7 @@ class BBLauncherPanel:
             self.app.client_health.set(status)
             self.app._set_status_text(identity + "\n" + status + ("\n" + "\n".join(notes) if notes else ""))
         except (LauncherError, OSError) as exc:
+            self.app.client_health.set("BBLauncher: saved mod details could not be verified.")
             self.app._set_status_text(f"BBLauncher: {exc}")
 
     def browse(self, variable, directory):
@@ -121,8 +241,6 @@ class BBLauncherPanel:
         app = self.app
         if app._busy:
             return
-        self.connected_receipt_id = None
-        self.connected_fingerprint = None
         self.enabled.set(True)
         app._refresh_launch_gate()
         if action != "verify" and not app._generate_plan():
@@ -138,6 +256,9 @@ class BBLauncherPanel:
         except LauncherError as exc:
             app.messagebox.showerror("Setup incomplete", str(exc), parent=app.root)
             return
+        self.connected_receipt_id = None
+        self.connected_fingerprint = None
+        app.client_health.set("BBLauncher: " + {"export": "building mod", "verify": "checking activated mod", "connect": "connecting"}[action] + "...")
         app._save_settings()
         app._set_busy(True)
         def run():
@@ -167,12 +288,19 @@ class BBLauncherPanel:
                     )
                     connection = (selected.receipt_id, contract["activation_fingerprint"])
             except Exception as exc:
-                app.root.after(0, app._action_failed, "BBLauncher " + action, exc)
+                app.root.after(0, self.failed, action, exc)
             else:
                 app.root.after(
                     0, lambda r=result, c=connection: self.finished(action, r, c)
                 )
         threading.Thread(target=run, name="bblauncher-companion", daemon=True).start()
+
+    def failed(self, action, exc):
+        self.connected_receipt_id = None
+        self.connected_fingerprint = None
+        self.app.client_health.set("Not connected: the last BBLauncher action did not complete.")
+        self.app._set_status_text(f"BBLauncher: {exc}")
+        self.app._action_failed("BBLauncher " + action, exc)
 
     def finished(self, action, result, connection=None):
         app = self.app
@@ -187,8 +315,9 @@ class BBLauncherPanel:
         if action == "export":
             self.receipt.set(str(result.receipt_path))
             app._save_settings()
-            message = f"Exported {result.package_path}. Activate it in BBLauncher with the game stopped, then select Verify activated mod."
+            message = f"Prepared {result.package_path.name}. In BBLauncher, activate this mod with the game stopped, then return here and select Check activated mod."
         else:
-            message = "Ready for a fresh boot. Start Bloodborne from BBLauncher, then select Connect to running game."
+            message = "Ready for a fresh boot. Start Bloodborne from BBLauncher, then select Connect to game."
         app._append_log(message)
         app._set_status_text(message)
+        self.update_setup()

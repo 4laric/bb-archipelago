@@ -313,6 +313,9 @@ class LauncherApp:
         remembered_seed = self.fields["ap_request"].get().strip()
         if remembered_seed:
             self._accept_ap_request(remembered_seed, show_error=False)
+        self._last_path_field_values = {
+            name: self.fields[name].get().strip() for name in PRIMARY_FIELDS
+        }
         self._toggle_enemy_fields()
         self._toggle_enemy_advanced()
         self._refresh_launch_gate()
@@ -539,6 +542,15 @@ class LauncherApp:
             field_label.grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
             entry = ttk.Entry(parent, textvariable=self.fields[name])
             entry.grid(row=row, column=1, sticky="ew", pady=3)
+            if name in PRIMARY_FIELDS:
+                entry.bind(
+                    "<FocusOut>",
+                    lambda _event, key=name: self._path_field_changed(key),
+                )
+                entry.bind(
+                    "<Return>",
+                    lambda _event, key=name: self._path_field_changed(key, force=True),
+                )
             button = ttk.Button(
                 parent,
                 text="Browse...",
@@ -758,6 +770,7 @@ class LauncherApp:
     def _set_session_details_visible(self, visible: bool) -> None:
         """Keep routine launches compact; retain full evidence one click away."""
         self.show_session_details.set(visible)
+        self.log_frame.master.rowconfigure(3, weight=2 if visible else 0, minsize=140 if visible else 0)
         if visible:
             self.log_frame.grid()
             self.status_frame.grid()
@@ -780,6 +793,7 @@ class LauncherApp:
         if not selected:
             return
         self.fields[name].set(selected)
+        self._last_path_field_values[name] = selected.strip()
         if name == "shad_executable" and not self.fields["game_root"].get().strip():
             derived = derive_game_root_for_shad(selected)
             if derived is not None:
@@ -849,6 +863,40 @@ class LauncherApp:
         self._refresh_launch_gate()
 
     def _setup_changed(self, _event: Any = None) -> None:
+        self._refresh_status()
+        self._refresh_launch_gate()
+
+    def _path_field_changed(self, name: str, *, force: bool = False) -> None:
+        """Apply the same derived setup updates after a path is pasted or typed."""
+        selected = self.fields[name].get().strip()
+        remembered = getattr(self, "_last_path_field_values", {})
+        if not force and remembered.get(name) == selected:
+            self._refresh_status()
+            self._refresh_launch_gate()
+            return
+        remembered[name] = selected
+        self._last_path_field_values = remembered
+        if name == "ap_request":
+            if selected:
+                self._accept_ap_request(selected, show_error=False)
+            else:
+                self.player_combo.configure(values=())
+                self._show_player_choice(False)
+                self.player_name.set("")
+                self.enemy_seed.set("")
+                self.seed_summary.set("Choose a seed to see its player and build.")
+            # _accept_ap_request can return early for an unreadable archive.
+            # Passive focus changes still have to disable launch immediately.
+            self._refresh_launch_gate()
+            self._refresh_status()
+            return
+        if name == "shad_executable" and not self.fields["game_root"].get().strip():
+            if selected:
+                derived = derive_game_root_for_shad(selected)
+                if derived is not None:
+                    self.fields["game_root"].set(str(derived))
+        if name in {"shad_executable", "game_root"}:
+            self._cascade_map_studio()
         self._refresh_status()
         self._refresh_launch_gate()
 
@@ -1102,6 +1150,9 @@ class LauncherApp:
 
     def _set_busy(self, busy: bool) -> None:
         self._busy = busy
+        panel = getattr(self, "bblauncher_panel", None)
+        if panel is not None:
+            panel.update_setup()
         self.launch_button.configure(state="disabled" if busy else "normal")
         for button in self._action_buttons:
             button.configure(state="disabled" if busy else "normal")
