@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Added a development-only BBLauncher companion mode: export a generated AP mod,
+  activate and launch it in BBLauncher, then verify and connect the AP client.
+  It keeps BBLauncher in control of its mods and preserves AP delivery history.
+  Both Windows activation routes still require full live acceptance before
+  this mode is supported for general play.
+
 - The launcher pins the current shared client source for v0.1.0.4. Changes
   since the previous pin concern Elden Ring; Bloodborne delivery and the
   `bb-0.1.0-r10` runtime contract are unchanged.

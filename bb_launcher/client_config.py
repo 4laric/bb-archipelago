@@ -149,6 +149,20 @@ def write_client_runtime_config(
         raise ValidationError(
             f"active overlay binder {installed} does not match its ownership manifest"
         )
+    return _write_runtime_config(
+        state_root, seed=seed, slot=slot, installed=installed,
+        suppression_manifest=suppression_manifest, shad_log=shad_log,
+        auto_upgrade=auto_upgrade, auto_equip=auto_equip, research_captures=research_captures,
+    )
+
+
+def _write_runtime_config(
+    state_root: Path | str, *, seed: str, slot: str, installed: Path,
+    suppression_manifest: Path | None, shad_log: Path | None,
+    auto_upgrade: bool = False, auto_equip: bool = False,
+    research_captures: bool = False, external_activation: Mapping[str, Any] | None = None,
+) -> ClientRuntimePaths:
+    """Serialize common runtime fields after the mode-specific verifier succeeds."""
     manifest_path = None
     if suppression_manifest is not None:
         manifest_path = Path(suppression_manifest).expanduser().resolve()
@@ -186,6 +200,8 @@ def write_client_runtime_config(
         "mock_set_flags": [],
         "goal_location": None,
     }
+    if external_activation is not None:
+        config["external_activation"] = dict(external_activation)
     # BOM-free UTF-8, atomically published: the native client rejects a BOM.
     _write_json_atomic(paths.config, config)
     # The ledger file itself is intentionally not created: the client treats a

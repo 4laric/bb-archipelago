@@ -14,8 +14,10 @@ package time; live overlay canaries remain a follow-up slice.
 same seed and server as usual, then connect while shadPS4 is already running.
 The launcher checks the running executable/game path and the previously
 activated, launcher-owned overlay. It does not rebuild files, replace mods, or
-start another emulator. An arbitrary BBLauncher-managed overlay is not yet
-supported by this action (external activation is tracked in #192).
+start another emulator. BBLauncher-managed activation uses a separate,
+fail-closed development-candidate workflow; see
+[BBLauncher integration](BBLAUNCHER.md) for its responsibility split, exact
+steps, limitations, and incomplete live-acceptance matrix.
 
 **Create & host** uses an existing Archipelago installation. Select that
 installation, enter a solo player name and DLC choice, then choose **Create
@@ -136,14 +138,17 @@ refuses, and tells you to run **Randomize & Launch** again to rebuild.
 
 ## Player mods: `CUSA03173-mods-user`
 
-### Players coming from BB_Launcher
+### Players using standalone mode after BB_Launcher
 
 BB_Launcher (rainmakerv3) uses its own managed `dvdroot_ps4/MODS` layout and
 may write activated files into `CUSA03173-mods`. Archipelago owns that latter
-directory transactionally, so do not leave BB_Launcher mod activation enabled
-for an AP session. The Doctor recognizes the managed `MODS` signature and names
-BB_Launcher directly instead of presenting the resulting files as an unknown
-ownership failure.
+directory transactionally in **standalone mode**, so do not leave BBLauncher
+mod activation enabled when using **Randomize & Launch**. The Doctor recognizes
+the managed `MODS` signature and names BBLauncher directly instead of presenting
+the resulting files as an unknown ownership failure. The separate external
+adapter deliberately leaves ownership with BBLauncher; use
+[BBLauncher integration](BBLAUNCHER.md) instead of this migration when testing
+that development candidate.
 
 Deactivate the mods in BB_Launcher, then copy each mod you want to keep into
 `CUSA03173-mods-user` with `dvdroot_ps4` at the top. Archipelago reads that
