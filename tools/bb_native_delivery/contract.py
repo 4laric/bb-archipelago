@@ -92,9 +92,9 @@ def build_contract() -> dict:
                 "return_rva": payload.HEARTBEAT_RETURN_RVA,
                 "provenance": "validated",
                 "note": (
-                    "runs every frame; drives a zero-delta update on the Bullet stack so the "
-                    "consume hook fires without player input. Its patch window is the "
-                    "atomicity hazard."
+                    "runs every frame; calls quantity_delta with slot FFFFFFFF and zero delta, "
+                    "which takes the pre-record bounds exit into the consume hook without "
+                    "requiring an item stack. Its patch window is the atomicity hazard."
                 ),
             },
             {
@@ -170,13 +170,17 @@ def build_contract() -> dict:
                 {"name": "result", "rva": payload.RESULT_RVA, "width": 4, "note": "native slot, or 0xFFFFFFFF"},
                 {"name": "done", "rva": payload.DONE_RVA, "width": 4},
                 {"name": "inventory", "rva": payload.INVENTORY_RVA, "width": 8,
-                 "note": "cached by the consume hook from r13; zero until one consumable is used"},
+                 "note": (
+                     "refreshed every idle heartbeat from "
+                     "read64(read64(eboot+0x553B130)+8)+0x328 or cached "
+                     "from R13 by the consume hook; storage and invalid geometry are rejected"
+                 )},
                 {"name": "overflow", "rva": payload.OVERFLOW_RVA, "width": 4},
                 {"name": "slot_index", "rva": payload.SLOT_INDEX_RVA, "width": 4},
                 {"name": "item_quantity_pointer", "rva": payload.ITEM_QUANTITY_POINTER_RVA, "width": 8,
                  "note": "quantity pointer for request 2; resolved backing-object pointer for diagnostic request 3"},
                 {"name": "heartbeat_descriptor", "rva": payload.HEARTBEAT_DESCRIPTOR_RVA, "width": 12,
-                 "note": "Bullets: raw B0000384, normalized 40000384, delta arg at +0xC"},
+                 "note": "legacy seeded Bullet descriptor; the sentinel-slot heartbeat no longer reads it"},
                 {"name": "manual_trigger", "rva": payload.MANUAL_TRIGGER_RVA, "width": 4},
                 {"name": "descriptor", "rva": payload.DESCRIPTOR_RVA, "width": STAGED_SIZE},
                 {"name": "player_status", "rva": payload.PLAYER_STATUS_RVA, "width": 8,
@@ -190,14 +194,42 @@ def build_contract() -> dict:
             "record_stride": 0x10, "record_id": 0x04, "record_quantity": 0x08,
             "provenance": "observed",
         },
+        "inventory_bootstrap": {
+            "strategy": "idle-heartbeat root refresh",
+            "root_rva": payload.INVENTORY_ROOT_RVA,
+            "pointer_chain": ["read64(root_rva)", "read64(root + 8)", "player + 0x328"],
+            "validators": [
+                "root and player are non-null",
+                "inventory mode byte at +0x8C is zero (held, not storage)",
+                "last slot at +0x88 is below 4096",
+                "both inventory banks at +0x58 and +0x48 are non-null",
+            ],
+            "static_reference_rva": payload.INVENTORY_ROOT_REFERENCE_RVA,
+            "static_reference_bytes": payload.INVENTORY_ROOT_REFERENCE.hex(" ").upper(),
+            "offset_reference_rva": payload.INVENTORY_OFFSET_REFERENCE_RVA,
+            "offset_reference_bytes": payload.INVENTORY_OFFSET_REFERENCE.hex(" ").upper(),
+            "provenance": "validated",
+            "note": (
+                "validated live 2026-09-22 in a fresh no-consume session: the chain resolved "
+                "held inventory, automatically reacquired a deliberately cleared cache, drove "
+                "a zero-delta Bullet heartbeat with no count change, and completed an "
+                "absent-stack Pebble grant. After a full emulator restart at a different eboot "
+                "base, the item persisted and an existing-stack Pebble grant completed "
+                "without consumption. Death and character-switch validation remain pending"
+            ),
+        },
         "asserts": [
             {"name": name, "rva": rva, "bytes": " ".join(text.split()), "provenance":
              ("published" if name == "hp_hook" else
-              "validated" if name.endswith("hook") else
+              "validated" if name.endswith("hook") or name in {
+                  "inventory_root_reference", "inventory_offset_reference"
+              } else
               "inferred" if name == "hp_cave" else "observed"),
              "note": (
                  "instruction observed by the validated HP capture table; install fails closed until it matches the live image"
                  if name == "hp_hook" else
+                 "static instruction witness for the inventory-root pointer chain"
+                 if name in {"inventory_root_reference", "inventory_offset_reference"} else
                  "spare gap between the heartbeat cave and state region; a mismatch refuses the native install"
                  if name == "hp_cave" else
                  "hook originals are validated; zeroed cave regions are an unused-space claim"
@@ -207,7 +239,10 @@ def build_contract() -> dict:
         "payload": {
             "assembled_at_base": 0,
             "source": "tools/bb_native_delivery/payload.py",
-            "source_of_truth": "tables/Bloodborne-native-item-grant-auto-v2.CT autoAssemble template",
+            "source_of_truth": (
+                "historical Cheat Engine autoAssemble template plus native-only "
+                "inventory-root heartbeat extension"
+            ),
             "provenance": "validated",
             "note": (
                 "VALIDATED 2026-08-24 against a live shadPS4 process. The CE table was "
@@ -215,13 +250,17 @@ def build_contract() -> dict:
                 "and the only differences were MR-form vs RM-form encodings of three "
                 "reg-to-reg movs (mov rdi,r13 x2; mov rsi,rsp; mov esi,eax) -- semantically "
                 "identical instructions. The assembler was switched to CE's RM-form encoding, "
-                "so the shipped blob is now byte-identical to what CE emits. Owner checklist "
-                "item 1 is complete."
+                "so the historical grant core remains byte-identical to what CE emits. The "
+                "heartbeat now adds a hash-guarded static root refresh and sentinel-slot call. "
+                "Its exact SELF path and assembled guards pass Unicorn; on 2026-09-22 the exact "
+                "190-byte heartbeat reacquired inventory without consumption, completed a "
+                "no-change Bullet heartbeat, and delivered one absent-stack Pebble."
             ),
             "blobs": [
                 _blob_entry(payload.state_region(), "validated", "initial request/state block"),
                 _blob_entry(payload.consume_cave(), "validated", "consume-return detour cave"),
-                _blob_entry(payload.heartbeat_cave(), "validated", "idle-heartbeat detour cave"),
+                _blob_entry(payload.heartbeat_cave(), "validated",
+                            "idle root refresh and sentinel-slot heartbeat cave"),
                 _blob_entry(payload.hp_cave(), "inferred",
                             "capture RDI, replay mov edx,[rdi+F8], return; pointer cell is at cave+0x30"),
                 _blob_entry(payload.consume_detour(), "validated", "E9 rel32 + NOP pad over the original"),
