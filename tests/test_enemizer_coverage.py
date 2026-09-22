@@ -2,7 +2,7 @@
 coverage delta it would unlock. These tests reproduce the analysis from the
 committed census plus the bundled inventory, so they need no game dump.
 
-They also pin the opt-in wider mode's own determinism (336 swaps), kept
+They also pin the opt-in wider mode's own determinism (327 swaps), kept
 separate from the default determinism pin (308) in research/enemizer/audit.json.
 """
 import csv
@@ -56,8 +56,8 @@ class CensusDecompositionTests(unittest.TestCase):
     def test_slots_without_a_character_operation(self):
         rows = _census_rows()
         no_char = [r for r in rows if not has_character_operation(r["usage_classes"])]
-        self.assertEqual(145, len(no_char))
-        self.assertEqual(2254, len(rows) - len(no_char))
+        self.assertEqual(67, len(no_char))
+        self.assertEqual(2332, len(rows) - len(no_char))
 
     def test_item_lot_collisions_without_a_character_operation(self):
         rows = _census_rows()
@@ -66,7 +66,7 @@ class CensusDecompositionTests(unittest.TestCase):
             if r["collides_item_lot_id"] == "True"
             and not has_character_operation(r["usage_classes"])
         ]
-        self.assertEqual(20, len(item_lot_only))
+        self.assertEqual(10, len(item_lot_only))
 
     def test_logical_keys_fully_free_of_character_operations(self):
         grouped = _by_logical(_census_rows())
@@ -74,8 +74,8 @@ class CensusDecompositionTests(unittest.TestCase):
             key for key, rows in grouped.items()
             if not any(has_character_operation(r["usage_classes"]) for r in rows)
         ]
-        # 86 logical placements have no character operation on any copy.
-        self.assertEqual(86, len(relaxable))
+        # 39 logical placements have no character operation on any copy.
+        self.assertEqual(39, len(relaxable))
 
 
 class CoverageDeltaTests(unittest.TestCase):
@@ -124,9 +124,9 @@ class CoverageDeltaTests(unittest.TestCase):
     def test_default_swap_set_is_the_pinned_308(self):
         self.assertEqual(308, len(self._count(self.overrides)))
 
-    def test_relaxed_predicate_adds_twenty_eight_swaps(self):
+    def test_relaxed_predicate_adds_nineteen_swaps(self):
         relaxed = self._relaxed_overrides()
-        self.assertEqual(336, len(self._count(relaxed)))
+        self.assertEqual(327, len(self._count(relaxed)))
 
     def test_relaxed_new_swaps_are_all_low_tier(self):
         base = {s.logical_key for s in self._count(self.overrides)}
@@ -136,12 +136,12 @@ class CoverageDeltaTests(unittest.TestCase):
             for s in self.slots
         }
         added = [s for s in self._count(relaxed) if s.logical_key not in base]
-        self.assertEqual(28, len(added))
+        self.assertEqual(19, len(added))
         from collections import Counter
         tiers = Counter(policies[s.destination_keys[0]].tier for s in added)
         # Every newly freed slot is common/elite - no boss tier is relaxed.
         self.assertEqual(0, tiers.get("boss", 0))
-        self.assertEqual(28, tiers.get("common", 0) + tiers.get("elite", 0))
+        self.assertEqual(19, tiers.get("common", 0) + tiers.get("elite", 0))
 
     def test_opt_in_mode_has_its_own_determinism_pin(self):
         relaxed = self._relaxed_overrides()
@@ -156,7 +156,7 @@ class CoverageDeltaTests(unittest.TestCase):
                                     EnemizerConfig(f"wide-{index}"))
             self.assertEqual([s.json() for s in forward], [s.json() for s in reverse])
             counts.add(len(forward))
-        self.assertEqual({336}, counts)
+        self.assertEqual({327}, counts)
 
     def test_tier_mixing_has_its_own_determinism_and_effect_pin(self):
         counts = set()
