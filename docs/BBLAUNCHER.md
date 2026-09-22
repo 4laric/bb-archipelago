@@ -12,7 +12,7 @@ launcher transaction adopt BBLauncher's overlay.
 
 ## Player workflow
 
-Use the **BBLauncher** tab in the desktop launcher:
+Use the **BBLauncher mode** section of the **Advanced** page in the desktop launcher:
 
 1. Select **Use BBLauncher to manage and start Bloodborne** and choose the
    **BBLauncher app**. The companion detects its inactive `BBLauncher/Mods`
@@ -20,12 +20,17 @@ Use the **BBLauncher** tab in the desktop launcher:
 2. During development acceptance only, select **Enable experimental BBLauncher
    integration for this session**. A normal invocation refuses the candidate.
 3. Select **Build mod for BBLauncher**. The companion remembers the prepared
-   mod and shows its name; no receipt file selection is needed.
+   mod and shows its name; no receipt file selection is needed. Building the
+   same seed again finds the earlier inactive export and asks whether to
+   replace it (or pass `--replace-existing` on the CLI); an activated copy is
+   never replaced.
 4. With shadPS4 stopped, open Mod Manager in BBLauncher. Deactivate any previous
    Archipelago mod, then activate the named prepared mod. Keep only one AP mod
    active. If BBLauncher reports a file conflict, cancel and deactivate the
    conflicting mod; do not accept an override or use Mod Merger.
-5. With shadPS4 still stopped, select **Check activated mod** in the companion.
+5. With shadPS4 still stopped, select **Verify activated mod** in the companion.
+   This step is mandatory: connecting refuses until the activated files match
+   the receipt.
 6. Start Bloodborne from BBLauncher, then select **Connect to game** here.
 
 The game's `install/CUSA03173-mods` folder is the activated overlay, not the

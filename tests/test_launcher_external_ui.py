@@ -93,6 +93,52 @@ class CompanionPresentationTests(unittest.TestCase):
         self.assertEqual(self.panel.buttons["verify"].state, "disabled")
         self.assertIn("Build your mod again", self.panel.prepared.get())
 
+    def test_existing_export_offers_replacement_instead_of_a_dead_end(self):
+        from bb_launcher.external import ExternalPackageExists
+        app = self.panel.app
+        app.messagebox = SimpleNamespace(askyesno=lambda *a, **k: True)
+        app.root = None
+        app.client_health = Value()
+        logged, shown, busy = [], [], []
+        app._append_log = logged.append
+        app._set_status_text = shown.append
+        app._set_busy = busy.append
+        app._action_failed = lambda *a: self.fail("a replaceable export must not be reported as a failure")
+        started = []
+        self.panel.start = lambda action, **kw: started.append((action, kw))
+        self.panel.failed("export", ExternalPackageExists(Path("Mods/Archipelago-Alice-abc")))
+        self.assertEqual(busy, [False])
+        self.assertEqual(started, [("export", {"replace_existing": True})])
+        self.assertIn("already exists", logged[0])
+
+    def test_declining_replacement_keeps_the_existing_export(self):
+        from bb_launcher.external import ExternalPackageExists
+        app = self.panel.app
+        app.messagebox = SimpleNamespace(askyesno=lambda *a, **k: False)
+        app.root = None
+        app.client_health = Value()
+        shown, busy = [], []
+        app._append_log = lambda _m: None
+        app._set_status_text = shown.append
+        app._set_busy = busy.append
+        self.panel.start = lambda *a, **k: self.fail("declining must not rebuild")
+        self.panel.failed("export", ExternalPackageExists(Path("Mods/Archipelago-Alice-abc")))
+        self.assertIn("Kept the existing", shown[0])
+        self.assertIn("kept", app.client_health.get())
+
+    def test_verify_step_is_named_consistently_everywhere(self):
+        """The workflow's refusals tell the player which button to press; the
+        button must exist under that exact name (it was 'Check activated mod')."""
+        root = Path(__file__).resolve().parents[1]
+        ui = (root / "bb_launcher" / "external_ui.py").read_text(encoding="utf-8")
+        workflow = (root / "bb_launcher" / "external_workflow.py").read_text(encoding="utf-8")
+        doc = (root / "docs" / "BBLAUNCHER.md").read_text(encoding="utf-8")
+        self.assertIn('"Verify activated mod"', ui)
+        self.assertIn("Verify activated mod", workflow)
+        self.assertIn("**Verify activated mod**", doc)
+        for text in (ui, workflow, doc):
+            self.assertNotIn("Check activated mod", text)
+
     def test_no_record_clears_stale_ready_label(self):
         self.panel.app.client_health = Value("Ready")
         self.panel.app._set_status_text = lambda message: None
