@@ -211,6 +211,13 @@ kept separate enough:
   build, not just against `pytest`; see `docs/DESIGN.md`-equivalent guidance
   in this file about evidence boundaries -- a passing unit test for UI code
   is not evidence the packaged app launches a seed.
+- For the record: "looks done" was also not the same as "looks good."
+  Getting the launch path working became the overriding priority partway
+  through the pass, and rightly so, but that did not retroactively make the
+  visual/UX state of the launcher acceptable. After the pass, the launcher
+  was still genuinely ugly and a bad user experience. Fixing the launch
+  blocker does not close out the polish work it interrupted; the polish work
+  is still owed, not satisfied by having shipped something that runs.
 - The fix that actually unblocked play (`py`-launcher interpreter discovery,
   see `bb_launcher/local_session.py`) was implemented and sitting uncommitted
   for a stretch while cosmetic iteration continued elsewhere. When a change
