@@ -7,17 +7,15 @@ successful verification: every verified file's ``installation`` entry must
 be ``copy``.  Mixed/symlink activation is refused before arming or
 connection, with the offending paths named for diagnostics.
 
-Executable provenance is equally strict: the existing exact-build pins
-are never loosened to accept arbitrary forks.  A fork build connects only
-when its (commit, executable sha256) pair is an explicit member of the
-fork compatibility set.
+Fork provenance is reported to the player as a warning until an exact build
+has passed live acceptance.  Provenance reporting does not replace the
+receipt, activation fingerprint, or installed-byte integrity checks.
 """
 
 from __future__ import annotations
 
 from typing import Iterable
 
-from ..core import ValidationError
 from .fork_identity import is_supported_fork_build
 from .protocol import ProtocolError
 
@@ -46,16 +44,10 @@ def require_copy_activation(files: Iterable[object], *, stage: str) -> None:
         )
 
 
-def require_fork_provenance(commit: str, executable_sha256: str) -> None:
+def fork_build_warning(commit: str, executable_sha256: str) -> str | None:
     if not is_supported_fork_build(commit, executable_sha256):
-        raise ProtocolError(
-            "unsupported-build",
-            "this fork build is not in the explicitly accepted compatibility set; "
-            "arbitrary forks are never accepted by loosening executable pins",
-            retryable=False,
-            recovery=("select-supported-build",),
-        )
-
-
-def as_validation_error(error: ProtocolError) -> ValidationError:
-    return ValidationError(f"{error.code}: {error.detail}")
+        if not commit or not executable_sha256:
+            return "Fork build provenance is unavailable; this build has not been validated."
+        return (f"Fork build {commit} (SHA-256 {executable_sha256}) has not been "
+                "validated by a live acceptance run.")
+    return None

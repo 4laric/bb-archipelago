@@ -45,9 +45,9 @@ EXTERNAL_RECEIPT_FORMAT = "bb-launcher-external-export-v1"
 ACTIVE_MODS_DIR_NAME = "Mods-Active (DO NOT DELETE)"
 PACKAGE_PREFIX = "Archipelago-"
 
-# Support remains deliberately empty until a complete Windows live-acceptance
-# run has passed.  The source-reviewed local binary below may be used only when
-# both the pin and the call explicitly mark it as a live-acceptance candidate.
+# Exact support pins are populated after live acceptance. Unknown, valid pins
+# remain usable but carry an informational compatibility status; live
+# acceptance must not be confused with receipt/file integrity validation.
 SUPPORTED_BBLAUNCHER_BUILDS: frozenset[tuple[str, str]] = frozenset()
 LIVE_ACCEPTANCE_CANDIDATES = MappingProxyType({
     "f092023f6cdf36a83ce735f7124b7835e9cf03b0": frozenset({
@@ -282,10 +282,7 @@ def _compatibility(pin: BBLauncherBuildPin, *, allow_live_acceptance_candidate: 
     if (allow_live_acceptance_candidate and normalized.live_acceptance_candidate
             and normalized.executable_sha256 in candidate_hashes):
         return "live-acceptance-candidate"
-    raise ValidationError(
-        "BBLauncher build is not supported; a source-reviewed development build must be "
-        "explicitly marked and allowed as a live-acceptance candidate"
-    )
+    return "unvalidated"
 
 
 def _safe_slot(slot: str) -> str:

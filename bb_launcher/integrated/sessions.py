@@ -74,6 +74,7 @@ class PlayRecord:
     cache_key: str
     ledger_key: str
     package_name: str
+    launch_config: Mapping[str, Any]
     created_at: float
 
     def as_dict(self) -> dict[str, Any]:
@@ -87,6 +88,7 @@ class PlayRecord:
             "cache_key": self.cache_key,
             "ledger_key": self.ledger_key,
             "package_name": self.package_name,
+            "launch_config": dict(self.launch_config),
             "created_at": self.created_at,
         }
 
@@ -123,7 +125,8 @@ def _read_record(path: Path, label: str) -> dict[str, Any]:
 
 
 def mint_play(state_root: Path | str, *, receipt_id: str, receipt_digest: str,
-              seed: str, slot: str, cache_key: str, package_name: str) -> PlayRecord:
+              seed: str, slot: str, cache_key: str, package_name: str,
+              launch_config: Mapping[str, Any] | None = None) -> PlayRecord:
     if not seed.strip() or not slot.strip():
         raise ValidationError("play record requires a non-empty seed and slot")
     _require_sha256(cache_key.lower(), "play cache_key")
@@ -136,6 +139,7 @@ def mint_play(state_root: Path | str, *, receipt_id: str, receipt_digest: str,
         cache_key=cache_key.lower(),
         ledger_key=session_key(seed, slot),
         package_name=package_name,
+        launch_config=dict(launch_config or {}),
         created_at=time.time(),
     )
     directory = plays_dir(state_root)
@@ -156,10 +160,29 @@ def load_play(state_root: Path | str, play_id: str) -> PlayRecord:
             play_id=raw["play_id"], receipt_id=raw["receipt_id"],
             receipt_digest=raw["receipt_digest"], seed=raw["seed"], slot=raw["slot"],
             cache_key=raw["cache_key"], ledger_key=raw["ledger_key"],
-            package_name=raw["package_name"], created_at=float(raw["created_at"]),
+            package_name=raw["package_name"],
+            launch_config=(raw.get("launch_config")
+                           if isinstance(raw.get("launch_config", {}), dict) else {}),
+            created_at=float(raw["created_at"]),
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise ValidationError(f"play record is malformed: {path}") from exc
+
+
+def update_play_launch_config(state_root: Path | str, play_id: str,
+                              launch_config: Mapping[str, Any]) -> PlayRecord:
+    """Refresh machine-specific launch settings for an existing receipt handle."""
+
+    record = load_play(state_root, play_id)
+    updated = PlayRecord(
+        play_id=record.play_id, receipt_id=record.receipt_id,
+        receipt_digest=record.receipt_digest, seed=record.seed, slot=record.slot,
+        cache_key=record.cache_key, ledger_key=record.ledger_key,
+        package_name=record.package_name, launch_config=dict(launch_config),
+        created_at=record.created_at,
+    )
+    _write_json_atomic(plays_dir(state_root) / f"{play_id}.json", updated.as_dict())
+    return updated
 
 
 def find_play_by_receipt(state_root: Path | str, receipt_id: str) -> PlayRecord | None:

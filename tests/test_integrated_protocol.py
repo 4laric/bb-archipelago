@@ -17,6 +17,7 @@ from bb_launcher.integrated.protocol import (
     ok_response,
     redact_for_log,
 )
+from bb_launcher.integrated.sessions import load_play
 
 
 def digest(text: str) -> str:
@@ -144,6 +145,30 @@ class OpaqueHandleTests(unittest.TestCase):
             self.assertFalse(response["ok"])
             # Unknown handle maps to bad-request, never a receipt path leak.
             self.assertNotIn("receipts", json.dumps(response))
+
+    def test_package_name_is_returned_as_the_activation_handle(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            response = self._backend(state).handle(
+                request("prepare_play", {"game_root": state}))
+            self.assertEqual(response["result"]["package_name"],
+                             "Archipelago-Alaric-abc123")
+            self.assertTrue(response["result"]["reused"] is False)
+
+    def test_launch_settings_are_saved_by_opaque_handle_without_password(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            def prepare(params: dict, op_id: str) -> dict:
+                return {"receipt_id": digest("r"), "receipt_digest": digest("d"),
+                        "seed": "s", "slot": "p", "cache_key": digest("c"),
+                        "package_name": "pkg", "launch_config": {"process_plan": "p.json",
+                        "server": "host:1"}}
+            backend = Backend(Path(state), prepare_fn=prepare)
+            response = backend.handle(request("prepare_play", {
+                "game_root": state, "password": "secret"}))
+            play_id = response["result"]["play_id"]
+            record = load_play(state, play_id)
+            self.assertEqual(record.launch_config["process_plan"], "p.json")
+            self.assertNotIn("secret", json.dumps(record.as_dict()))
+            self.assertEqual(backend.launch_secrets[play_id]["password"], "secret")
 
 
 if __name__ == "__main__":

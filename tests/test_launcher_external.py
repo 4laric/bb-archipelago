@@ -164,20 +164,25 @@ class ExternalArtifactTests(unittest.TestCase):
             for path in self.install.root.rglob("*") if path.is_file()
         }
 
-    def test_build_policy_fails_closed_and_candidate_requires_two_explicit_marks(self):
-        unmarked = BBLauncherBuildPin("local", CANDIDATE_COMMIT, CANDIDATE_EXE)
-        with self.assertRaisesRegex(ValidationError, "not supported"):
-            export_external_package(
-                self.build, self.selected_identity, mods_root=self.mods_root,
-                state_root=self.state_root, install=self.install, bblauncher=unmarked,
-                client_version="client", allow_live_acceptance_candidate=True,
-            )
-        with self.assertRaisesRegex(ValidationError, "not supported"):
-            export_external_package(
-                self.build, self.selected_identity, mods_root=self.mods_root,
-                state_root=self.state_root, install=self.install, bblauncher=self.pin,
-                client_version="client",
-            )
+    def test_unvalidated_build_is_informational_and_receipt_integrity_remains_checked(self):
+        unvalidated = BBLauncherBuildPin("local", "0" * 40, "a" * 64)
+        exported = export_external_package(
+            self.build, self.selected_identity, mods_root=self.mods_root,
+            state_root=self.state_root, install=self.install, bblauncher=unvalidated,
+            client_version="client",
+        )
+        self.assertEqual(exported.receipt.compatibility, "unvalidated")
+        loaded = load_external_receipt(exported.receipt_path)
+        self.assertEqual(loaded, exported.receipt)
+        self.exported = exported
+        self.activate_copy(exported)
+        verified = verify_external_activation(loaded, install=self.install, mods_root=self.mods_root)
+        self.assertTrue(verified.files)
+        raw = json.loads(exported.receipt_path.read_text(encoding="utf-8"))
+        raw["files"][0]["sha256"] = "e" * 64
+        exported.receipt_path.write_text(json.dumps(raw), encoding="utf-8")
+        with self.assertRaisesRegex(ValidationError, "identity digest"):
+            load_external_receipt(exported.receipt_path)
 
     def test_export_refuses_existing_target_and_does_not_mutate_it(self):
         exported = self.export()

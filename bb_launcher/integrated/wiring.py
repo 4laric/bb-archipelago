@@ -33,25 +33,24 @@ def production_process_check() -> dict[str, Any]:
         return {"game_running": False, "reason": "process-query-refused"}
     if not found:
         return {"game_running": False}
-    if len(found) > 1:
-        return {"game_running": True, "ambiguous": True,
+    records = []
+    for proc in found:
+        executable = str(proc.executable) if proc.executable is not None else ""
+        digest = ""
+        if proc.executable is not None:
+            try:
+                digest = sha256_file(proc.executable)
+            except (OSError, ValidationError):
+                digest = ""
+        records.append({
+            "pid": proc.pid, "executable": executable,
+            "executable_sha256": digest, "creation_time": proc.creation_time,
+            "alive": True,
+        })
+    if len(records) > 1:
+        return {"game_running": True, "ambiguous": True, "processes": records,
                 "pids": sorted(proc.pid for proc in found)}
-    proc = found[0]
-    executable = str(proc.executable) if proc.executable is not None else ""
-    digest = ""
-    if proc.executable is not None:
-        try:
-            digest = sha256_file(proc.executable)
-        except (OSError, ValidationError):
-            digest = ""
-    return {
-        "game_running": True,
-        "pid": proc.pid,
-        "executable": executable,
-        "executable_sha256": digest,
-        "creation_time": proc.creation_time,
-        "alive": True,
-    }
+    return {"game_running": True, **records[0]}
 
 
 def _suppression_file(params: Mapping[str, Any], state_root: Path, kind: str) -> Path:
@@ -132,15 +131,14 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
     from ..external import ExternalNamespace, export_external_package
     from ..resources import application_root
     from ..workflow import EnemizerOptions, LauncherSettings, LauncherWorkflow
-    from .policy import require_fork_provenance
-    from .sessions import integrated_root
+    from .policy import fork_build_warning
 
     game_root = Path(str(params["game_root"])).expanduser().resolve()
     state_root = Path(str(params.get("state_root", ""))).expanduser().resolve()
     mods_root = Path(str(params["mods_root"])).expanduser().resolve()
     seed_path = Path(str(params["seed_path"])).expanduser().resolve()
     fork = params.get("fork_build") or {}
-    require_fork_provenance(str(fork.get("commit", "")), str(fork.get("executable_sha256", "")))
+    plan_path = _process_plan(params, state_root)
 
     settings = LauncherSettings(
         game_root=game_root,
@@ -149,7 +147,7 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
         ap_request=seed_path,
         suppression_binder=_suppression_file(params, state_root, "binder"),
         suppression_manifest=_suppression_file(params, state_root, "manifest"),
-        process_plan=_process_plan(params, state_root),
+        process_plan=plan_path,
         state_root=state_root,
     )
     workflow = LauncherWorkflow(application_root())
@@ -193,6 +191,25 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
         "package_name": export.receipt.package_name,
         "server": str(params.get("server", "")),
         "title": f"{export.receipt.identity.seed} ({export.receipt.identity.slot})",
+        "build_warning": fork_build_warning(
+            str(fork.get("commit", "")), str(fork.get("executable_sha256", ""))),
+        # Persist non-secret settings alongside the opaque play handle so the
+        # connect request need only carry arm/process identity. Passwords stay
+        # in the backend's process memory and never enter this JSON record.
+        "launch_config": {
+            "game_root": str(game_root),
+            "state_root": str(state_root),
+            "mods_root": str(mods_root),
+            "process_plan": str(plan_path),
+            "seed_path": str(seed_path),
+            "server": str(params.get("server", "")),
+            "player_name": str(params.get("player_name", "")),
+            "shad_executable": str(params.get("shad_executable", "")),
+            "ap_client": str(params.get("ap_client", "")),
+            "cache_root": str(settings.cache_root),
+            "suppression_binder": str(settings.suppression_binder),
+            "suppression_manifest": str(settings.suppression_manifest),
+        },
     }
 
 
@@ -213,32 +230,118 @@ def production_verify(play: Any, params: Mapping[str, Any]) -> Any:
 
 
 def production_spawn(play: Any, arm: Any, params: Mapping[str, Any], verified: Any) -> Mapping[str, Any]:
-    from ..core import GameInstall, sha256_file, validate_processes
-    from ..workflow import load_process_plan, resolve_process_plan
-    from ..core import launch_processes
+    import os
+    import subprocess
+    import sys
+    from dataclasses import replace
+
+    from ..client_config import session_paths
+    from ..core import GameInstall, SeedCache, sha256_file, validate_processes
+    from ..external import load_external_receipt
+    from ..external_workflow import _write_seed_suppression_manifest
+    from ..workflow import (
+        ProcessPlan, _composes_seed_binder, _request_identity, load_process_plan,
+        resolve_process_plan,
+    )
+    from ..workflow import process_creation_time
 
     game_root = Path(str(params["game_root"])).expanduser().resolve()
     state_root = Path(str(params.get("state_root", ""))).expanduser().resolve()
     install = GameInstall.from_root(game_root)
-    manifest = install.mods / "build-manifest.json"
+    game = params.get("process_identity") or params.get("process") or {}
+    required_identity = ("pid", "creation_time", "executable", "executable_sha256")
+    if not isinstance(game, Mapping) or any(key not in game for key in required_identity):
+        raise ValidationError("the started emulator process identity is incomplete")
+    raw_pid = int(game["pid"])
+    if raw_pid <= 0:
+        raise ValidationError("the started emulator process identity has an invalid PID")
+    seed_path = Path(str(params["seed_path"])).expanduser().resolve()
+    request = _request_identity(
+        seed_path, player_name=str(params.get("player_name", "")), state_root=state_root)
+    cache = SeedCache(Path(str(params.get("cache_root", state_root / "cache"))))
+    build = cache.verify(cache.path_for(play.cache_key), expected_key=play.cache_key)
+    suppression_manifest = _suppression_file(params, state_root, "manifest")
+    if _composes_seed_binder(request) or request.get("toast_placeholders") is not None:
+        suppression_manifest = _write_seed_suppression_manifest(
+            suppression_manifest, state_root=state_root, cache_key=build.cache_key,
+            output_hash=build.manifest["suppression"]["sha256"],
+            weapon_edits={key: request.get(key) for key in (
+                "starting_weapons", "weapon_requirement_families", "shop_gate_permutation",
+                "enemy_drop_assignments", "insight_armor_suppression", "toast_placeholders",
+            )},
+        )
+    receipt = load_external_receipt(
+        state_root / "external" / "receipts" / f"{play.receipt_id}.json")
+    session = session_paths(state_root, seed=play.seed, slot=play.slot)
+    activation_contract = {
+        "format": "bb-external-activation-v1",
+        "pid": raw_pid,
+        "process_creation_time": int(game["creation_time"]),
+        "executable": {"path": str(game["executable"]),
+                       "sha256": str(game["executable_sha256"])},
+        "game_path": str(install.base),
+        "overlay_root": str(verified.overlay_root),
+        "active_root": str(verified.active_root),
+        "package_name": play.package_name,
+        "files": [{"path": item.path, "sha256": item.sha256} for item in receipt.files],
+        "activation_fingerprint": verified.activation_fingerprint,
+        "invalidation_marker": str(session.session / "external-invalidation.json"),
+    }
     paths = _write_runtime_config(
         state_root, seed=play.seed, slot=play.slot, installed=verified.installed_gameparam,
-        suppression_manifest=manifest if manifest.is_file() else None,
+        suppression_manifest=suppression_manifest,
         shad_log=default_shad_log(),
-        external_activation={"receipt_id": play.receipt_id,
-                             "fingerprint": verified.activation_fingerprint},
+        external_activation=activation_contract,
     )
-    plan = resolve_process_plan(
-        load_process_plan(_process_plan(params, state_root)), paths, game_path=install.base,
-    )
+    source_plan = load_process_plan(_process_plan(params, state_root))
+    validate_processes(source_plan.processes)
+    client = next((spec for spec in source_plan.processes
+                   if spec.name.casefold() == "ap client"), None)
+    if client is None:
+        raise ValidationError("process plan has no AP client")
+    client = replace(client, arguments=(*client.arguments,
+                     "--require-external-activation-v1", "--require-external-activation-v1"))
+    client_plan = ProcessPlan(source_plan.shad_build, source_plan.runtime_build, (client,))
+    plan = resolve_process_plan(client_plan, paths, game_path=install.base)
     validate_processes(plan.processes)
-    pids = launch_processes(plan.processes)
-    shad = next((spec for spec in plan.processes if "shad" in spec.name.casefold()),
-                plan.processes[0])
+    client = plan.processes[0]
+    # Qt's EmulatorService has already started shadPS4 after arming. Starting
+    # the full plan here would open a second game; this boundary starts only
+    # the AP client. Keep its output off backend stdout, which is JSON-lines.
+    flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if os.name == "nt" else 0
+    environment = os.environ.copy()
+    password = params.get("password")
+    if password:
+        # The native client consumes this private environment handoff. Never
+        # put credentials in a process argument or backend log.
+        environment["BB_AP_PASSWORD"] = str(password)
+    child = subprocess.Popen(
+        [str(client.executable), *client.arguments],
+        cwd=str(client.working_directory) if client.working_directory else None,
+        stdin=subprocess.DEVNULL, stdout=sys.stderr, stderr=subprocess.STDOUT,
+        creationflags=flags, env=environment,
+    )
+    game_executable = str(game.get("executable", ""))
+    if not game_executable:
+        child.terminate()
+        raise ValidationError("the started emulator executable path is unavailable")
+    try:
+        client_birth = process_creation_time(int(child.pid)) if os.name == "nt" else None
+    except Exception:
+        child.terminate()
+        try:
+            child.wait(timeout=5)
+        except Exception:
+            child.kill()
+        raise
     return {
-        "executable": str(shad.executable),
-        "executable_sha256": sha256_file(shad.executable),
-        "pid": int(pids[0]) if pids and pids[0] is not None else 0,
-        "creation_time": None,
-        "client_pid": int(pids[-1]) if pids and pids[-1] is not None else None,
+        "executable": game_executable,
+        "executable_sha256": str(game.get("executable_sha256", "")),
+        "pid": int(game["pid"]),
+        "creation_time": int(game["creation_time"]) if game.get("creation_time") is not None else None,
+        "client_pid": int(child.pid),
+        "client_creation_time": client_birth,
+        "client_executable": str(client.executable),
+        "client_executable_sha256": sha256_file(client.executable),
+        "_process": child,
     }

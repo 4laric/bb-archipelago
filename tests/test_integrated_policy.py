@@ -17,8 +17,8 @@ from bb_launcher.integrated.journal import (
     read_journal,
 )
 from bb_launcher.integrated.policy import (
+    fork_build_warning,
     require_copy_activation,
-    require_fork_provenance,
 )
 from bb_launcher.integrated.protocol import ProtocolError
 from bb_launcher.integrated.sessions import (
@@ -66,19 +66,17 @@ class CopyPolicyTests(unittest.TestCase):
 
 
 class ForkProvenanceTests(unittest.TestCase):
-    def test_arbitrary_fork_is_never_accepted(self) -> None:
-        with self.assertRaises(ProtocolError) as caught:
-            require_fork_provenance("0" * 40, hashlib.sha256(b"x").hexdigest())
-        self.assertEqual(caught.exception.code, "unsupported-build")
+    def test_unvalidated_fork_is_reported_without_blocking(self) -> None:
+        warning = fork_build_warning("0" * 40, hashlib.sha256(b"x").hexdigest())
+        self.assertIn("has not been validated", warning or "")
 
     def test_listed_build_is_accepted(self) -> None:
         commit, exe = "a" * 40, hashlib.sha256(b"fork-build").hexdigest()
         with patch.object(fork_identity, "SUPPORTED_FORK_BUILDS", frozenset({(commit, exe)})):
-            require_fork_provenance(commit, exe)  # must not raise
+            self.assertIsNone(fork_build_warning(commit, exe))
 
     def test_malformed_pin_is_refused_not_loosened(self) -> None:
-        with self.assertRaises(ProtocolError):
-            require_fork_provenance("not-a-commit", "not-a-digest")
+        self.assertIn("not been validated", fork_build_warning("not-a-commit", "not-a-digest") or "")
 
 
 class JournalRecoveryTests(unittest.TestCase):
