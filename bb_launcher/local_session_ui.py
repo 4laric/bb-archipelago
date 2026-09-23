@@ -51,7 +51,6 @@ class LocalSessionPanel:
         self.config_path = app.settings_path.parent / "local-session-settings.json"
         self.ap_root = tk.StringVar(value=str(Path.home() / "Archipelago"))
         self.python = tk.StringVar()
-        self.name = tk.StringVar(value="Hunter")
         self.players = tk.StringVar()
         self.use_folder = tk.BooleanVar(value=False)
         self.include_dlc = tk.BooleanVar(value=False)
@@ -78,15 +77,17 @@ class LocalSessionPanel:
         frame = scroll_page(tk, ttk, host_frame)
         row = page_header(ttk, frame, "Create & host", "Generate a seed on this PC and host it for yourself.")
         row = section(ttk, frame, row, "Your game", first=True)
-        field(ttk, frame, row, "Player name", self.name)
-        option(ttk, frame, row + 1, "Include The Old Hunters DLC", self.include_dlc)
+        # Player name lives on Play now: it's the same concept whether it
+        # authors a new solo seed here or picks your slot in a seed you got
+        # some other way, so it isn't siloed to this page.
+        option(ttk, frame, row, "Include The Old Hunters DLC", self.include_dlc)
         wizard_row = ttk.Frame(frame)
-        wizard_row.grid(row=row + 2, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+        wizard_row.grid(row=row + 1, column=0, columnspan=3, sticky="ew", pady=(6, 0))
         ttk.Label(
             wizard_row,
             text="Want to choose your goal, item pool, deathlink, and everything else the "
-                 "apworld exposes? Build a custom yaml in your browser instead of the name "
-                 "and DLC above.",
+                 "apworld exposes? Build a custom yaml in your browser instead of just the "
+                 "DLC choice above.",
             style="Dim.TLabel", wraplength=520,
         ).grid(row=0, column=0, sticky="w")
         ttk.Button(
@@ -94,7 +95,7 @@ class LocalSessionPanel:
             command=self._open_wizard,
         ).grid(row=0, column=1, sticky="e", padx=(12, 0))
         wizard_row.columnconfigure(0, weight=1)
-        row = section(ttk, frame, row + 3, "Multiworld")
+        row = section(ttk, frame, row + 2, "Multiworld")
         option(ttk, frame, row, "Use existing player YAML files", self.use_folder,
                caption="Bring your own player files, including one from the yaml builder above.")
         field(ttk, frame, row + 1, "YAML folder", self.players, browse=self._browse_players)
@@ -155,14 +156,16 @@ class LocalSessionPanel:
             values = json.loads(self.config_path.read_text(encoding="utf-8"))
             if not isinstance(values, dict):
                 return
-            for key in ("ap_root", "python", "name", "players", "port"):
+            for key in ("ap_root", "python", "players", "port"):
                 if isinstance(values.get(key), str):
                     getattr(self, key).set(values[key])
         except (OSError, ValueError, TypeError):
             pass
 
     def _save(self):
-        values = {key: getattr(self, key).get() for key in ("ap_root", "python", "name", "players", "port")}
+        # "name" moved to Play's player_name, which is already part of the
+        # main saved settings; nothing left here needs to persist it too.
+        values = {key: getattr(self, key).get() for key in ("ap_root", "python", "players", "port")}
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
         self.config_path.write_text(json.dumps(values, indent=2), encoding="utf-8")
 
@@ -204,7 +207,7 @@ class LocalSessionPanel:
                     raise ValidationError("Choose the folder containing your player YAML files.")
                 players = Path(self.players.get().strip())
             else:
-                players = write_solo_player(state, self.name.get(), self.include_dlc.get())
+                players = write_solo_player(state, self.app.player_name.get(), self.include_dlc.get())
             self._save()
             auto_host = self.auto_host.get()
         except Exception as exc:

@@ -173,6 +173,13 @@ def build_parser() -> argparse.ArgumentParser:
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
 
+    integrated = commands.add_parser(
+        "integrated-backend",
+        help="run the fork's machine-readable AP backend (JSON-lines on stdin/stdout)",
+    )
+    integrated.add_argument("--state-root", required=True,
+                            help="launcher state root for plays, arms, journal and supervisor")
+
     canary = commands.add_parser("pickup-name-canary", help="test one randomized pickup name on a throwaway save")
     canary.add_argument("--settings", required=True, help="launcher settings JSON")
     canary.add_argument("--player-name", default="")
@@ -349,6 +356,23 @@ def main(argv: list[str] | None = None) -> int:
                 except ConflictError as exc:
                     status_value["overlay"] = {"conflict": str(exc)}
             _print(status_value)
+        elif args.command == "integrated-backend":
+            from .integrated.backend import Backend, serve
+            from .integrated.wiring import (
+                production_prepare,
+                production_process_check,
+                production_spawn,
+                production_verify,
+            )
+
+            backend = Backend(
+                Path(args.state_root).expanduser().resolve(),
+                prepare_fn=production_prepare,
+                verify_fn=production_verify,
+                spawn_fn=production_spawn,
+                process_check_fn=production_process_check,
+            )
+            return serve(backend)
         elif args.command == "run":
             install = _install(args.game_root)
             process_plan = load_process_plan(args.process_plan)
