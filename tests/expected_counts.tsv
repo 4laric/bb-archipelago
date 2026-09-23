@@ -48,11 +48,11 @@ module	test_boss_coverage	5
 module	test_encounter_recipes	4
 module	test_maria_donor	10
 module	test_logarius_donor	8
-module	test_ludwig_donor	8
-module	test_gascoigne_donor	8
+module	test_ludwig_donor	7
+module	test_gascoigne_donor	7
 module	test_logarius_arena_contract	6
 module	test_orphan_donor	7
-module	test_orphan_arena_contract	7
+module	test_orphan_arena_contract	6
 module	test_laurence_arena_contract	8
 module	test_gascoigne_arena_contract	6
 module	test_maria_arena_contract	9
@@ -119,5 +119,7 @@ module	test_celestial_rom_contract	5
 module	test_shadows_celestial_contract	6
 module	test_witch_one_reborn_contract	8
 module	test_one_reborn_shadows_contract	6
-module	test_ludwig_arena_contract	7
-module	test_final_boss_donors	8
+# Execution floors exclude each module's one local-only original-input
+# compiler test; those tests still count toward the collected total above.
+module	test_ludwig_arena_contract	6
+module	test_final_boss_donors	7
