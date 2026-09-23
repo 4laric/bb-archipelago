@@ -37,6 +37,12 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--allow-tier-mixing", action="store_true")
     result.add_argument("--preserve-locomotion", action="store_true")
     result.add_argument(
+        "--release-file", action="append", default=[],
+        help="bb-enemizer-release-v1 record emitted by build_enemizer_catalog.py "
+             "--release-contracts/--release-script-spawns/--release-chara-bound "
+             "(repeatable; tranches compose by union; default: conservative policy)",
+    )
+    result.add_argument(
         "--normalize-scaling", action="store_true",
         help="emit inferred static-scaling clones (experimental; off by default)",
     )
@@ -63,6 +69,28 @@ def _stress_matched(stress: StressProfile, swap) -> bool:
     if stress.kind == "echoes":
         return swap.target_facts.get("echoes", 0) > swap.source_facts.get("echoes", 0)
     return False
+
+
+RELEASE_FORMAT = "bb-enemizer-release-v1"
+RELEASE_TRANCHES = ("contracts", "spawns", "chara")
+
+
+def load_release_files(paths: list[str]) -> dict[str, set[str]]:
+    """Merge bb-enemizer-release-v1 records into logical-key -> tranches."""
+    merged: dict[str, set[str]] = {}
+    for raw_path in paths:
+        record = json.loads(Path(raw_path).read_text(encoding="utf-8"))
+        if record.get("format") != RELEASE_FORMAT:
+            raise SystemExit(f"invalid release record format: {raw_path}")
+        tranche = record.get("tranche")
+        if tranche not in RELEASE_TRANCHES:
+            raise SystemExit(f"unknown release tranche in {raw_path}: {tranche!r}")
+        releases = record.get("releases")
+        if not isinstance(releases, dict) or not releases:
+            raise SystemExit(f"release record has no releases: {raw_path}")
+        for logical_key in releases:
+            merged.setdefault(logical_key, set()).add(tranche)
+    return merged
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -122,9 +150,10 @@ def main(argv: list[str] | None = None) -> int:
     policy_path = args.slot_policy if Path(args.slot_policy).is_file() else None
     tags = load_tags(tags_path)
     overrides = load_slot_overrides(policy_path)
+    release = load_release_files(args.release_file)
     policies = {
         slot.key: apply_archetype_tag(
-            classify_slot(slot, overrides), tags.get(slot.archetype.key)
+            classify_slot(slot, overrides, release), tags.get(slot.archetype.key)
         )
         for slot in slots
     }
@@ -146,6 +175,8 @@ def main(argv: list[str] | None = None) -> int:
         "options": {
             "allow_tier_mixing": bool(args.allow_tier_mixing),
             "preserve_locomotion": bool(args.preserve_locomotion),
+            "release_tranches": sorted({tranche for tranches in release.values()
+                                        for tranche in tranches}),
         },
         "stress": None if stress is None else {
             **stress.json(),

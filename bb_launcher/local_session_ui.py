@@ -170,7 +170,13 @@ class LocalSessionPanel:
         self.config_path.write_text(json.dumps(values, indent=2), encoding="utf-8")
 
     def _tools(self):
-        return discover_ap_tools(Path(self.ap_root.get().strip()), self.python.get().strip() or None)
+        tools = discover_ap_tools(Path(self.ap_root.get().strip()), self.python.get().strip() or None)
+        # The command is ("py", "-3.12", ...script) only for the Windows py
+        # launcher, discovered automatically or typed by hand -- say so,
+        # since nothing else here would show which Python actually ran.
+        if tools.generate_command[:1] == ("py",):
+            self.app._progress_message(f"Using {' '.join(tools.generate_command[:2])}.")
+        return tools
 
     def _generate(self):
         if self.app._busy:

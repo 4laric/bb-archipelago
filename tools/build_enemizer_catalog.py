@@ -62,6 +62,108 @@ def event_numbers(event_root: Path) -> tuple[dict[str, set[int]], set[str]]:
     return by_area, covered
 
 
+def _write_release_records(args, slots, tags, slot_policy) -> None:
+    """Emit per-tranche bb-enemizer-release-v1 records (opt-in, default policy untouched).
+
+    Each record lists logical placements whose blanket exclusion is replaced
+    by working compatibility handling (see tools/bb_enemizer/script_contracts.py
+    and docs/ENEMIZER-EXPANSION.md). Tranches compose by union at plan time via
+    the planner's --release-file. The Cathedral Ward Snatcher progression row
+    is excluded from every tranche.
+    """
+    from collections import defaultdict as _defaultdict
+    grouped = _defaultdict(list)
+    for slot in slots:
+        grouped[slot.logical_key].append(slot)
+
+    census_by_logical: dict[str, list] = _defaultdict(list)
+    if args.release_contracts:
+        import tempfile as _tempfile
+        from build_emevd_entity_usage import build_rows as _build_rows
+        with _tempfile.NamedTemporaryFile("w", suffix=".json", delete=False,
+                                          encoding="utf-8") as handle:
+            json.dump(slot_policy, handle)
+            policy_snapshot = Path(handle.name)
+        try:
+            census = _build_rows(args.inventory, policy_snapshot, args.events, args.lot_items)
+        finally:
+            policy_snapshot.unlink()
+        for row in census:
+            census_by_logical[row["logical_key"]].append(row)
+
+    from bb_enemizer.script_contracts import classify_ops, placement_operations
+
+    releases: dict[str, dict[str, dict]] = {"contracts": {}, "spawns": {}, "chara": {}}
+    carrier_path = Path(__file__).resolve().parents[1] / "research" / "enemizer" / "quest_drop_carriers.json"
+    carriers: set[str] = set()
+    if carrier_path.is_file():
+        carriers = set(json.loads(carrier_path.read_text(encoding="utf-8")).get("carriers", {}))
+    for logical_key in sorted(grouped):
+        if logical_key == "m24_00_00_00:c2020_0000":
+            continue  # Hypogean Gaol progression contract; never released.
+        if logical_key in carriers:
+            continue  # Quest-drop carrier: its exact NpcParam row owns a
+            # flagged or quest-goods lot the drop rewriter leaves vanilla.
+        copies = grouped[logical_key]
+        tag = tags.get(copies[0].archetype.key)
+        if tag is None or not tag["target"]:
+            continue  # Non-enemy or unapproved archetype: correctly out of scope.
+        dummy = any(slot.dummy for slot in copies)
+        talk = any(slot.talk_id > 0 for slot in copies)
+        chara = any(slot.archetype.chara_init_id > 0 for slot in copies)
+        broken_model = (
+            not copies[0].archetype.model_name.startswith("c")
+            or copies[0].archetype.npc_param_id <= 0
+            or copies[0].archetype.think_param_id <= 0
+        )
+        ops: set[str] = set()
+        for row in census_by_logical.get(logical_key, []):
+            ops |= placement_operations(row["operations"])
+        contract, hard, unreviewed = classify_ops(ops)
+        detail = {
+            "entity_ids": sorted({slot.entity_id for slot in copies}),
+            "physical_copies": len(copies),
+            "operations": sorted(ops),
+            "contract_class": contract,
+            "hard_operations": sorted(hard),
+            "unreviewed_operations": sorted(unreviewed),
+            "other_gates": sorted(
+                name for name, present in
+                (("dummy", dummy), ("talk", talk), ("chara_init", chara),
+                 ("broken_model", broken_model))
+                if present
+            ),
+        }
+        override = slot_policy.get(logical_key, {})
+        emevd_protected = EVENT_REASON in override.get("reason", "")
+        if args.release_contracts and emevd_protected and contract == "supported":
+            detail["reason"] = ("EMEVD-protected placement whose script contracts "
+                                "are all supported operations")
+            releases["contracts"][logical_key] = detail
+        if args.release_script_spawns and dummy and not talk and not chara and not broken_model:
+            detail["reason"] = ("hostile script-spawn placement; entity ID, part name "
+                                "and spawn triggers preserved; size gate bounds overflow")
+            releases["spawns"][logical_key] = detail
+        if args.release_chara_bound and chara and not talk and not broken_model:
+            detail["reason"] = ("hostile CharaInit-bound placement; donor's own "
+                                "CharaInit travels with the archetype tuple")
+            releases["chara"][logical_key] = detail
+
+    names = {"contracts": args.release_contracts, "spawns": args.release_script_spawns,
+             "chara": args.release_chara_bound}
+    for tranche, wanted in names.items():
+        if not wanted:
+            continue
+        record = {
+            "format": "bb-enemizer-release-v1",
+            "tranche": tranche,
+            "releases": releases[tranche],
+        }
+        (args.output / f"release_{tranche}.json").write_text(
+            json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+        print(f"release tranche {tranche}: {len(releases[tranche])} logical placements")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--inventory", type=Path, default=Path("research/mined/msb_enemies.tsv"))
@@ -83,6 +185,25 @@ def main() -> int:
             "relaxed only when the reproducible census proves no character "
             "operation touches it, and only if it then still fails no other "
             "conservative gate. The default swap set is unchanged."))
+    parser.add_argument(
+        "--release-contracts", action="store_true",
+        help=("Emit research/enemizer/release_contracts.json: EMEVD-protected "
+              "placements whose script contracts are all supported operations "
+              "(see tools/bb_enemizer/script_contracts.py). Consumed via the "
+              "planner's --release-file; default policy unchanged."))
+    parser.add_argument(
+        "--release-script-spawns", action="store_true",
+        help=("Emit research/enemizer/release_spawns.json: hostile "
+              "script-spawn (dummy) placements with no talk binding. Entity "
+              "ID, part name and spawn triggers are preserved by the writer; "
+              "the size gate bounds spawn-closet overflow. Consumed via "
+              "--release-file; default policy unchanged."))
+    parser.add_argument(
+        "--release-chara-bound", action="store_true",
+        help=("Emit research/enemizer/release_chara.json: hostile "
+              "CharaInit-bound placements with no talk binding. The donor's "
+              "own CharaInit travels with the archetype tuple. Consumed via "
+              "--release-file; default policy unchanged."))
     parser.add_argument("--output", type=Path, default=Path("research/enemizer"))
     args = parser.parse_args()
 
@@ -181,6 +302,8 @@ def main() -> int:
                 relaxed_non_character += 1
 
     args.output.mkdir(parents=True, exist_ok=True)
+    if args.release_contracts or args.release_script_spawns or args.release_chara_bound:
+        _write_release_records(args, slots, tags, slot_policy)
     (args.output / "enemy_tags.json").write_text(
         json.dumps(tags, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     (args.output / "slot_policy.json").write_text(

@@ -140,11 +140,25 @@ def namespace_values(lot_items: Path) -> tuple[set[int], set[int]]:
 def build_rows(inventory: Path, policy_path: Path, event_root: Path, lot_items: Path) -> list[dict]:
     slots = load_slots(inventory)
     policy = json.loads(policy_path.read_text(encoding="utf-8"))
-    protected = [slot for slot in slots if policy.get(slot.logical_key, {}).get("reason") == EVENT_REASON]
+    # Substring match: the Cathedral Ward Snatcher row carries a progression
+    # contract prefixed to the EMEVD reason. Strict equality silently dropped
+    # it from the census (2399 -> 2397) after the Gaol commit changed the
+    # reason text without regenerating the table.
+    protected = [slot for slot in slots if EVENT_REASON in policy.get(slot.logical_key, {}).get("reason", "")]
     lots, flags = namespace_values(lot_items)
 
     scripts_by_area: dict[str, list[tuple[str, list[str], dict]]] = defaultdict(list)
     global_definitions: dict[int, list[tuple[str, list[str], list[str]]]] = defaultdict(list)
+    # Shared/common events are never a slot's own area script, but area
+    # scripts pass entity ids into them via $InitializeEvent. Resolving only
+    # same-area definitions silently drops those callee bodies and mislabels
+    # the slot as having no character operation (audit: common event 9220
+    # applies SetCharacterAIState/ForceAnimationPlayback/CharacterDead to its
+    # chrEntityId parameter). Parse common definitions for callee resolution.
+    for common_path in sorted(event_root.glob("common.emevd.dcx.js")):
+        common_lines = common_path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+        for event_id, (parameters, body) in event_definitions(common_lines).items():
+            global_definitions[event_id].append((common_path.name, parameters, body))
     for path in sorted(event_root.glob("m*.emevd.dcx.js")):
         area = path.name.split("_", 1)[0]
         lines = path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
@@ -158,6 +172,7 @@ def build_rows(inventory: Path, policy_path: Path, event_root: Path, lot_items: 
         area = slot.map_name.split("_", 1)[0]
         operations, sources = Counter(), []
         code_lines = comment_lines = lexical_without_operation = 0
+        unresolved_init_arguments = 0
         for file_name, lines, definitions in scripts_by_area.get(area, ()):
             for line_number, line in enumerate(lines, 1):
                 found, code_match, comment_match = line_uses(line, slot.entity_id)
@@ -182,6 +197,12 @@ def build_rows(inventory: Path, policy_path: Path, event_root: Path, lot_items: 
                             _, parameters, body = global_definitions[event_id][0]
                             target = (parameters, body)
                         if target is None:
+                            # Unresolved callee: the entity id is passed into an
+                            # event whose body cannot be examined (missing
+                            # definition or ambiguous multi-file definitions).
+                            # That is UNKNOWN, not evidence of safety: record it
+                            # explicitly instead of silently dropping it.
+                            unresolved_init_arguments += 1
                             continue
                         parameters, body = target
                         for argument_index, value in enumerate(arguments[2:]):
@@ -195,6 +216,8 @@ def build_rows(inventory: Path, policy_path: Path, event_root: Path, lot_items: 
             families["code_without_parsed_operation"] += lexical_without_operation
         if comment_lines:
             families["comment_text"] += comment_lines
+        if unresolved_init_arguments:
+            families["unresolved_event_reference"] += unresolved_init_arguments
         result.append({
             "map_name": slot.map_name,
             "part_name": slot.part_name,
@@ -285,6 +308,14 @@ def main(argv: list[str] | None = None) -> int:
         "slots_with_only_event_id_collisions": sum(
             row["usage_classes"].split(":", 1)[0] == "event_id_collision"
             and ";" not in row["usage_classes"] for row in result
+        ),
+        "slots_with_unresolved_event_references": sum(
+            "unresolved_event_reference:" in row["usage_classes"] for row in result
+        ),
+        "slots_without_character_operations_and_fully_resolved": sum(
+            "character_operation:" not in row["usage_classes"]
+            and "unresolved_event_reference:" not in row["usage_classes"]
+            for row in result
         ),
         "operation_occurrences": dict(operations.most_common()),
     }

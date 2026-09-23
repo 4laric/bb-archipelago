@@ -119,6 +119,95 @@ class LocalSessionTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValidationError, "not a real interpreter"):
                     discover_ap_tools(root, python)
 
+    def test_source_checkout_accepts_a_py_launcher_command_typed_by_hand(self):
+        """A player who already runs their own Python as "py -3.12" typed
+        exactly that into the field and got told it "does not exist" as a
+        literal filename -- the field must understand this shape too, not
+        only a file path."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("Generate.py", "MultiServer.py"):
+                (root / name).touch()
+
+            def run(command, **_kwargs):
+                self.assertEqual(("py", "-3.12", "-c"), tuple(command[:3]))
+                return subprocess.CompletedProcess(command, 0, stdout="3.12.4\n", stderr="")
+
+            with patch("bb_launcher.local_session.subprocess.run", side_effect=run):
+                for typed in ("py -3.12", "PY.EXE -3.12", "  py   -3.12  "):
+                    tools = discover_ap_tools(root, typed)
+                    self.assertEqual(("py", "-3.12", str(root / "Generate.py")), tools.generate_command)
+
+    def test_source_checkout_falls_back_to_the_py_launcher_when_running_python_is_unsupported(self):
+        """The Python this launcher itself is running on is not always the
+        only, or the best, Python already on the machine: a default
+        python.org install commonly leaves a supported version reachable
+        only through the py launcher, not on PATH and nowhere a player could
+        browse to."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("Generate.py", "MultiServer.py"):
+                (root / name).touch()
+
+            def run(command, **_kwargs):
+                if command[0] == "C:\\FakePython314\\python.exe":
+                    return subprocess.CompletedProcess(command, 0, stdout="3.14.0\n", stderr="")
+                if command == ["py", "-0p"]:
+                    return subprocess.CompletedProcess(
+                        command, 0,
+                        stdout=" -V:3.13 *        C:\\Py313\\python.exe\n"
+                               " -V:3.12          C:\\Py312\\python.exe\n",
+                        stderr="",
+                    )
+                if command[:2] == ["py", "-3.13"]:
+                    return subprocess.CompletedProcess(command, 0, stdout="3.13.2\n", stderr="")
+                raise AssertionError(f"unexpected command: {command}")
+
+            with (
+                patch("bb_launcher.local_session.subprocess.run", side_effect=run),
+                patch("bb_launcher.local_session.sys.executable", "C:\\FakePython314\\python.exe"),
+                patch("bb_launcher.local_session.sys.frozen", False, create=True),
+                patch("bb_launcher.local_session.sys.platform", "win32"),
+            ):
+                tools = discover_ap_tools(root)
+            self.assertEqual(("py", "-3.13", str(root / "Generate.py")), tools.generate_command)
+
+    def test_source_checkout_still_names_the_unsupported_running_python_when_py_has_nothing_supported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("Generate.py", "MultiServer.py"):
+                (root / name).touch()
+
+            def run(command, **_kwargs):
+                if command[0] == "C:\\FakePython314\\python.exe":
+                    return subprocess.CompletedProcess(command, 0, stdout="3.14.0\n", stderr="")
+                if command == ["py", "-0p"]:
+                    return subprocess.CompletedProcess(
+                        command, 0, stdout=" -V:3.9 *        C:\\Py39\\python.exe\n", stderr="",
+                    )
+                if command[:2] == ["py", "-3.9"]:
+                    return subprocess.CompletedProcess(command, 0, stdout="3.9.0\n", stderr="")
+                raise AssertionError(f"unexpected command: {command}")
+
+            with (
+                patch("bb_launcher.local_session.subprocess.run", side_effect=run),
+                patch("bb_launcher.local_session.sys.executable", "C:\\FakePython314\\python.exe"),
+                patch("bb_launcher.local_session.sys.frozen", False, create=True),
+            ):
+                with self.assertRaisesRegex(ValidationError, "3.14.0.*not supported"):
+                    discover_ap_tools(root)
+
+    def test_py_launcher_discovery_is_a_noop_off_windows_or_without_py(self):
+        from bb_launcher.local_session import _discover_py_launcher_python
+
+        with patch("bb_launcher.local_session.sys.platform", "linux"):
+            self.assertIsNone(_discover_py_launcher_python())
+        with (
+            patch("bb_launcher.local_session.sys.platform", "win32"),
+            patch("bb_launcher.local_session.subprocess.run", side_effect=FileNotFoundError()),
+        ):
+            self.assertIsNone(_discover_py_launcher_python())
+
     def test_world_manifest_must_match(self):
         expected = {"game": "Bloodborne", "world_version": "0.1.0", "minimum_ap_version": "0.6.7"}
         with tempfile.TemporaryDirectory() as tmp:

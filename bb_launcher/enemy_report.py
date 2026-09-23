@@ -385,7 +385,8 @@ def format_report(
         f"- Seed file: {context.request_path}",
         f"- Enemy seed: {plan.get('seed', enemizer.get('seed', '?'))}",
         f"- Enemy options: tier mixing {'on' if options.get('allow_tier_mixing') else 'off'}, "
-        f"locomotion preserved {'on' if options.get('preserve_locomotion') else 'off'}",
+        f"locomotion preserved {'on' if options.get('preserve_locomotion') else 'off'}, "
+        f"release tranches: {', '.join(options.get('release_tranches', [])) or 'none'}",
     ]
     if stress:
         lines.append(

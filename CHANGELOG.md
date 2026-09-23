@@ -13,6 +13,13 @@ under `Unreleased` and move into a dated version section when released.
   provenance is now a warning rather than a blanket refusal to play. Added a
   local fork bundle builder; these changes still need gameplay validation.
 
+- The launcher offers three experimental enemy-randomization tranches
+  (all off by default): supported script contracts, script-spawn ambushes,
+  and Chara-bound hunters. Together they raise coverage from 308 to up to
+  1,546 logical placements (Central Yharnam 49 to 177 of 277), with quest
+  carriers, NPCs, talk-bound actors, boss wiring and model-specific
+  encounters still vanilla. Every tranche is statically tested;
+  in-game validation is still owed before any of it becomes default.
 - **Integrated BBLauncher fork: real Qt implementation (still not a
   release, no live acceptance).** The fork branch now builds: generic
   `ModService`/`EmulatorService` extraction with the Mod Manager

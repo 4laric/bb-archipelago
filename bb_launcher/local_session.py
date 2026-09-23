@@ -105,31 +105,103 @@ def _source_ap_tools(root: Path) -> tuple[Path, Path] | None:
 _MIN_SUPPORTED_PYTHON = (3, 11, 9)
 _MAX_SUPPORTED_PYTHON_MINOR = (3, 13)
 
+# A "python command": one or more leading argv tokens that invoke an
+# interpreter, e.g. ("C:\...\python.exe",) for a chosen executable, or
+# ("py", "-3.12") for the Windows launcher naming a version instead of a
+# path. Everything downstream (version probing, and the actual generate/
+# server commands APTools carries) just prepends the real script path to
+# this prefix, so a version-tag invocation works exactly like a path one.
+PythonCommand = tuple[str, ...]
 
-def _require_supported_python(python: str) -> None:
+
+def _python_command_version(command: PythonCommand) -> tuple[int, int, int]:
+    label = " ".join(command)
     try:
         completed = subprocess.run(
-            [python, "-c", "import sys; print('.'.join(map(str, sys.version_info[:3])))"],
+            [*command, "-c", "import sys; print('.'.join(map(str, sys.version_info[:3])))"],
             capture_output=True, text=True, timeout=15,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise ValidationError(f"could not run the selected Python ({python}): {exc}") from exc
+        raise ValidationError(f"could not run the selected Python ({label}): {exc}") from exc
     if completed.returncode != 0 or not completed.stdout.strip():
         detail = completed.stderr.strip() or f"exit code {completed.returncode}"
-        raise ValidationError(f"could not read the version of the selected Python ({python}): {detail}")
+        raise ValidationError(f"could not read the version of the selected Python ({label}): {detail}")
     raw = completed.stdout.strip()
     try:
-        version = tuple(int(part) for part in raw.split("."))
+        return tuple(int(part) for part in raw.split("."))
     except ValueError:
-        raise ValidationError(f"could not parse the version reported by {python}: {raw!r}") from None
-    if version < _MIN_SUPPORTED_PYTHON or version[:2] > _MAX_SUPPORTED_PYTHON_MINOR:
+        raise ValidationError(f"could not parse the version reported by {label}: {raw!r}") from None
+
+
+def _is_supported_python_version(version: tuple[int, int, int]) -> bool:
+    return version >= _MIN_SUPPORTED_PYTHON and version[:2] <= _MAX_SUPPORTED_PYTHON_MINOR
+
+
+def _require_supported_python(command: PythonCommand) -> None:
+    version = _python_command_version(command)
+    if not _is_supported_python_version(version):
         raise ValidationError(
-            f"Python {raw} at {python} is not supported by Archipelago "
-            f"(needs {'.'.join(map(str, _MIN_SUPPORTED_PYTHON))} through "
+            f"Python {'.'.join(map(str, version))} at {' '.join(command)} is not supported by "
+            f"Archipelago (needs {'.'.join(map(str, _MIN_SUPPORTED_PYTHON))} through "
             f"{_MAX_SUPPORTED_PYTHON_MINOR[0]}.{_MAX_SUPPORTED_PYTHON_MINOR[1]}.x). "
             "Install a supported Python and select it under Python (source checkout only), "
             "or use a packaged Archipelago release instead of a source checkout."
         )
+
+
+def _discover_py_launcher_python() -> PythonCommand | None:
+    """A supported Python already known to the Windows ``py`` launcher.
+
+    The official python.org installer's default options put a new Python on
+    the ``py`` launcher without necessarily adding it, or its own
+    python.exe, to PATH or anywhere a player could browse to -- ``py -3.12``
+    being how someone actually runs a given version is the ordinary outcome
+    of a default install, not an edge case. This only runs as a fallback,
+    after the interpreter actually running this launcher was checked and
+    found unsupported.
+    """
+    if sys.platform != "win32":
+        return None
+    try:
+        completed = subprocess.run(["py", "-0p"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if completed.returncode != 0:
+        return None
+    # Lines look like " -V:3.12 *        C:\...\python.exe" (exact spacing
+    # and tagging vary by py.exe version); only the version tag is used --
+    # the reported version is re-verified by actually invoking it, the same
+    # way an explicitly selected path is, rather than trusted from the list.
+    tags: list[str] = []
+    for line in completed.stdout.splitlines():
+        match = re.match(r"\s*-(?:V:)?(\d+\.\d+)(?:-\d+)?\b", line)
+        if match and match.group(1) not in tags:
+            tags.append(match.group(1))
+    for tag in tags:
+        command = ("py", f"-{tag}")
+        try:
+            version = _python_command_version(command)
+        except ValidationError:
+            continue
+        if _is_supported_python_version(version):
+            return command
+    return None
+
+
+def _parse_python_field(raw: str) -> PythonCommand:
+    """A typed Python field: a file path, or ``py -3.12`` for the Windows
+    launcher naming a version instead of a path -- what a player who already
+    runs their Python that way would naturally type here, and previously
+    got refused as a nonexistent file named literally ``py -3.12``.
+    """
+    text = raw.strip()
+    match = re.fullmatch(r"py(?:\.exe)?\s+(-(?:V:)?\d+\.\d+(?:-\d+)?)", text, re.IGNORECASE)
+    if match:
+        return ("py", match.group(1))
+    python = Path(text).expanduser().resolve()
+    if not python.is_file():
+        raise ValidationError(f"the selected Python executable does not exist: {python}")
+    return (str(python),)
 
 
 def is_archipelago_root(ap_root: Path | str) -> bool:
@@ -159,14 +231,24 @@ def discover_ap_tools(ap_root: Path | str, python_executable: Path | str | None 
     generate_py = root / "Generate.py"
     server_py = root / "MultiServer.py"
     if source is not None and python_executable is not None:
-        python = Path(python_executable).expanduser().resolve()
-        if not python.is_file():
-            raise ValidationError(f"the selected Python executable does not exist: {python}")
-        _require_supported_python(str(python))
-        return APTools(root, (str(python), str(generate_py)), (str(python), str(server_py)))
+        command = _parse_python_field(str(python_executable))
+        _require_supported_python(command)
+        return APTools(root, (*command, str(generate_py)), (*command, str(server_py)))
     if source is not None and not getattr(sys, "frozen", False):
-        _require_supported_python(sys.executable)
-        return APTools(root, (sys.executable, str(generate_py)), (sys.executable, str(server_py)))
+        command = (sys.executable,)
+        try:
+            _require_supported_python(command)
+        except ValidationError:
+            # The Python running this launcher itself is unsupported: before
+            # giving up, ask the Windows py launcher for one that already is
+            # -- a default python.org install commonly leaves a supported
+            # Python reachable only as "py -3.12", nowhere a player could
+            # browse to and nothing this launcher happens to be running on.
+            discovered = _discover_py_launcher_python()
+            if discovered is None:
+                raise
+            command = discovered
+        return APTools(root, (*command, str(generate_py)), (*command, str(server_py)))
 
     detail = " Select a Python executable for this source checkout." if generate_py.is_file() else ""
     raise ValidationError(

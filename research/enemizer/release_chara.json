@@ -1,0 +1,5639 @@
+{
+  "format": "bb-enemizer-release-v1",
+  "releases": {
+    "m22_00_00_00:c1140_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200261
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "SetCharacterAIState",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c1140_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200335
+      ],
+      "hard_operations": [],
+      "operations": [
+        "InArea",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c1140_0004": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200330
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c1140_0005": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200331
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c1140_0006": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200332
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c1140_0007": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200333
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c1140_0008": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200334
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c1140_0009": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200460
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200810
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "SetCharacterAnimationState",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200811
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "SetCharacterAnimationState",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200812
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "SetCharacterAnimationState",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200500
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0005": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200502
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200503
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0007": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200504
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200505
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0009": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200506
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2050_0010": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200507
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0003": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200140
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "SetCharacterAIId"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0006": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200130
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterHome"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200260
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "SetCharacterAIState",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0012": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200273
+      ],
+      "hard_operations": [],
+      "operations": [
+        "InArea",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0014": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200100
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDead",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0018": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200212
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDamagedBy",
+        "CharacterDead",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0019": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200300
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDead",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2610_0030": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2200303
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDead",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m22_00_00_00:c2630_0004": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2200411
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterHasEventMessage",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1000_0000": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300200
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1000_0001": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300201
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDamagedBy",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1000_0002": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300202
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDamagedBy",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300301
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300302
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0003": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300303
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterHasSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "SetCharacterAIId",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0004": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300304
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterHasSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "SetCharacterAIId",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0005": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300305
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDead",
+        "HasDamageType"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300308
+      ],
+      "hard_operations": [],
+      "operations": [
+        "HasDamageType"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0009": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300309
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetSpEffect",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0010": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300310
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetSpEffect",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0011": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300311
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0013": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300313
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0019": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300319
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0020": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300320
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0021": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300321
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0022": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300322
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0023": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300323
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0024": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300324
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0025": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300325
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetSpEffect",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0026": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300326
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetSpEffect",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0027": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300327
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetSpEffect",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0030": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300330
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0031": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300331
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0032": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300332
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0033": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300333
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0034": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300334
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0035": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300335
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0038": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0041": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300401
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "CharacterDamagedBy",
+        "CharacterDead",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0042": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300402
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterHasSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "SetCharacterAIId",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0048": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300408
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0049": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300409
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0050": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300410
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand",
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterBackreadStatus",
+        "CharacterDead",
+        "CharacterHasEventMessage",
+        "CharacterHasSpEffect",
+        "ClearSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAICommand",
+        "SetCharacterAIId",
+        "SetCharacterHome",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0053": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300413
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterHasSpEffect",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "SetCharacterAIId",
+        "ShootBullet"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0058": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0059": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1090_0065": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1290_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300603
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterHasEventMessage",
+        "EntityInRadiusOfEntity"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1290_0004": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2300604
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterHasEventMessage",
+        "EntityInRadiusOfEntity"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m23_00_00_00:c1290_0005": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2300605
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterHasEventMessage",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c1060_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400322
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c1240_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400120
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c1240_0009": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400121
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2620_0004": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400400
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2630_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400401
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2700_0000": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2400116
+      ],
+      "hard_operations": [
+        "ChangeCharacterDispmask"
+      ],
+      "operations": [
+        "ChangeCharacterDispmask",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2700_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400211
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2700_0007": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400136
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2700_0009": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2400127
+      ],
+      "hard_operations": [
+        "ChangeCharacterDispmask"
+      ],
+      "operations": [
+        "ChangeCharacterDispmask",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2700_0017": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400137
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_00_00_00:c2700_0033": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2400210
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1000_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410200
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1000_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410201
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0007": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0024": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0025": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0026": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0027": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0028": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0029": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1120_0030": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1240_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c1240_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2000_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2050_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410230
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2050_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410232
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2110_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410300
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2600_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2630_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410015
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2630_0059": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2630_0060": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2630_0061": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2630_0065": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410193
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2640_0004": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2640_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2410260
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2640_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_01_00_00:c2640_0009": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 3,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_02_00_00:c1060_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2420268
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDead"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m24_02_00_00:c1060_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2420264
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterBackreadStatus",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m25_00_00_00:c2130_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2500190
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m25_00_00_00:c2130_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2500191
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m25_00_00_00:c2330_0010": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2050_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2050_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2050_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2050_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2250_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2600106
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterAIState",
+        "ClearSpEffect",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetSpEffect",
+        "WarpObjectToCharacter"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2250_0006": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2600109
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterHome"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2250_0007": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2600110
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterHome"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2250_0011": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2600195
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ClearSpEffect",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2250_0012": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2600196
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ClearSpEffect",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2250_0013": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2600197
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ClearSpEffect",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m26_00_00_00:c2250_0021": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2600198
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterHome"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1240_0001": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700301
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterHPValue",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "InArea",
+        "IssueShortWarpRequest",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterGravity",
+        "SetCharacterHome",
+        "SetCharacterInvincibility",
+        "SetCharacterMaphits",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1240_0002": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700302
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "CharacterHPValue",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "InArea",
+        "IssueShortWarpRequest",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterGravity",
+        "SetCharacterHome",
+        "SetCharacterInvincibility",
+        "SetCharacterMaphits",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1240_0004": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700308
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "CharacterAIState",
+        "CharacterHPValue",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "InArea",
+        "IssueShortWarpRequest",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetCharacterGravity",
+        "SetCharacterHome",
+        "SetCharacterInvincibility",
+        "SetCharacterMaphits",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1240_0005": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700309
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "CharacterAIState",
+        "CharacterHPValue",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "InArea",
+        "IssueShortWarpRequest",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetCharacterGravity",
+        "SetCharacterHome",
+        "SetCharacterInvincibility",
+        "SetCharacterMaphits",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1240_0008": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700320
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1240_0009": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2700305
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1240_0010": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700321
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1250_0002": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700352
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "InArea",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1250_0005": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700700
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1260_0012": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2700412
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c1260_0014": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2700425
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2170_0000": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700500
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2170_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2700503
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2170_0013": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700513
+      ],
+      "hard_operations": [
+        "ChangeCharacterHitmask",
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "ChangeCharacterHitmask",
+        "CharacterDamagedBy",
+        "CharacterHasEventMessage",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2600_0001": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700652
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2600_0002": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700651
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2600_0005": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700655
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2600_0009": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700659
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0002": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700146
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0004": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700104
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0008": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700100
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0018": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2700145
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "CharacterDead",
+        "ForceAnimationPlayback",
+        "ForceCharacterDeath",
+        "HPRatio",
+        "InArea",
+        "RotateCharacter",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0036": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700137
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0037": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700138
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0053": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2700654
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2632_0054": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700660
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m27_00_00_00:c2730_0002": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2700752
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDamagedBy",
+        "EntityInRadiusOfEntity",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0110": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2800520
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDead",
+        "ForceCharacterDeath",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0111": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2800521
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0112": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2800522
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDead",
+        "ForceCharacterDeath",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0113": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2800523
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0114": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2800524
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDead",
+        "ForceCharacterDeath",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0115": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2800525
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDead",
+        "ForceCharacterDeath",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0116": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2800526
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0117": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2800527
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDead",
+        "ForceCharacterDeath",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0118": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2800528
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1050_0119": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        2800529
+      ],
+      "hard_operations": [
+        "RequestCharacterAICommand"
+      ],
+      "operations": [
+        "CharacterDead",
+        "ForceCharacterDeath",
+        "RequestCharacterAICommand",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1240_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2800183
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m28_00_00_00:c1240_0004": {
+      "contract_class": "supported",
+      "entity_ids": [
+        2800184
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200200
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200201
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200202
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0003": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200203
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0004": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200204
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0005": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200205
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200206
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0007": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200207
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200208
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0009": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200209
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0010": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200210
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0011": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200211
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0012": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200212
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0013": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200213
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0014": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200214
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0015": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200215
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0016": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200216
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0017": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200217
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0018": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200218
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0019": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200219
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0020": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200220
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0021": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200221
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0022": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200222
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0023": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200223
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0024": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200224
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0025": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200225
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0026": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200226
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0027": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200227
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0028": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200228
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0029": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3200229
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ForceCharacterDeath",
+        "RotateCharacter",
+        "SetCharacterAIState",
+        "SetCharacterEventTarget"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0030": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0031": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0032": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0033": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0034": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0035": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0036": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0037": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0038": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0039": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0040": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0041": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0042": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0043": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0044": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0045": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0046": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0047": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0048": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m32_00_00_00:c1400_0049": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 2,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c1050_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300700
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ClearSpEffect",
+        "ForceAnimationPlayback",
+        "HPRatio",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2050_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300600
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2180_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300101
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2180_0002": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        3300102
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2180_0003": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        3300103
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2180_0005": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300200
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2180_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300202
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2180_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300201
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2400_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300350
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2400_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300351
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2400_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300350
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2400_0005": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300302
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2400_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300303
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300400
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300401
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300402
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0011": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300411
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0012": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300412
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0013": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300413
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0015": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300417
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0016": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300418
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0020": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300414
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2540_0021": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300415
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2550_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300450
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2550_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300451
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2550_0007": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300457
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2550_0010": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300460
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2550_0015": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300474
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2560_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300500
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterBackreadStatus",
+        "EntityInRadiusOfEntity",
+        "HPRatio",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2560_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300501
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterBackreadStatus",
+        "HPRatio",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2560_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300502
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterBackreadStatus",
+        "EntityInRadiusOfEntity",
+        "HPRatio",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2561_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300520
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState",
+        "SetCharacterGravity",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2561_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300521
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState",
+        "SetCharacterGravity",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m33_00_00_00:c2561_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3300522
+      ],
+      "hard_operations": [],
+      "operations": [
+        "SetCharacterBackreadState",
+        "SetCharacterGravity",
+        "WarpCharacterAndSetFloor"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c2630_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c2630_0010": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400160
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c2630_0104": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c2630_0106": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400206
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "CharacterDead",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0010": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400508
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0011": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400309
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0013": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400310
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0014": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400409
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0017": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400311
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0028": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0030": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400405
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0035": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400510
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4000_0201": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400401
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4010_0000": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400550
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "ChangeCharacterPatrolBehavior",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4110_0002": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400280
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4110_0006": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        3400200
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "CharacterHasEventMessage",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4110_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400207
+      ],
+      "hard_operations": [],
+      "operations": [
+        "CharacterDead",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4110_0012": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400205
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "CharacterDead",
+        "RequestCharacterAIReplan",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4110_0013": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3400208
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4110_0015": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m34_00_00_00:c4130_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c2620_0000": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        3500760
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterTargetedBy",
+        "EntityInRadiusOfEntity",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "SetCharacterAIId",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c2700_0000": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        3500750
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterTargetedBy",
+        "EntityInRadiusOfEntity",
+        "ForceCharacterDeath",
+        "HasDamageType",
+        "SetCharacterAIId",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0004": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500304
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0005": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500305
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0006": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500306
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0007": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500307
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0008": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500308
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0009": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500309
+      ],
+      "hard_operations": [],
+      "operations": [
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0010": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500310
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "CharacterAIState",
+        "EntityInRadiusOfEntity",
+        "ForceAnimationPlayback",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0017": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0030": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500330
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0032": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500332
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0033": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500333
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0038": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0039": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500339
+      ],
+      "hard_operations": [],
+      "operations": [
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0041": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500341
+      ],
+      "hard_operations": [],
+      "operations": [
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterBackreadState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0065": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500365
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterPatrolBehavior",
+        "CharacterAIState",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0073": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0074": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0075": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0076": {
+      "contract_class": "supported",
+      "entity_ids": [
+        -1
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4020_0091": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500391
+      ],
+      "hard_operations": [],
+      "operations": [],
+      "other_gates": [
+        "chara_init",
+        "dummy"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4021_0001": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500601
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4021_0004": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500604
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4021_0007": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500607
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4021_0011": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500611
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4021_0013": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500613
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4021_0014": {
+      "contract_class": "supported",
+      "entity_ids": [
+        3500614
+      ],
+      "hard_operations": [],
+      "operations": [
+        "ChangeCharacterEnableState",
+        "EntityInRadiusOfEntity",
+        "HasDamageType",
+        "SetCharacterAIState"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    },
+    "m35_00_00_00:c4120_0001": {
+      "contract_class": "needs_adapter",
+      "entity_ids": [
+        3500451
+      ],
+      "hard_operations": [
+        "SetCharacterAIId"
+      ],
+      "operations": [
+        "CharacterAIState",
+        "ClearSpEffect",
+        "InArea",
+        "RequestCharacterAIReplan",
+        "SetCharacterAIId",
+        "SetCharacterAIState",
+        "SetCharacterDefaultBackreadState",
+        "SetCharacterEventTarget",
+        "SetCharacterMaphits",
+        "SetNetworkUpdateRate",
+        "SetSpEffect"
+      ],
+      "other_gates": [
+        "chara_init"
+      ],
+      "physical_copies": 1,
+      "reason": "hostile CharaInit-bound placement; donor's own CharaInit travels with the archetype tuple",
+      "unreviewed_operations": []
+    }
+  },
+  "tranche": "chara"
+}
