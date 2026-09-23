@@ -14,12 +14,34 @@ under `Unreleased` and move into a dated version section when released.
   compatibility with older clients.
 
 - **The launcher has a new look.** A Bloodborne-styled sidebar replaces the
-  five tab strip: **Play**, **Create & host**, **Enemies** and **Advanced**
-  (recovery tools, BBLauncher mode, session overrides and operator paths).
-  Pages are flat and scroll on short displays, labels are shorter, the
-  progress bar only appears while something runs, and the live client status
-  sits in the sidebar with a colour dot. Progress and session status stay one
-  click away under **Show Details**.
+  five tab strip: **Play**, **Enemies**, **Create & host** and **Advanced**
+  (recovery tools, BBLauncher mode, and operator paths). Pages are flat and
+  scroll on short displays, labels are shorter, the progress bar only appears
+  while something runs, and the live client status sits in the sidebar with a
+  colour dot. Progress and session status stay one click away under
+  **Show Details**. Error, warning and confirmation dialogs are themed to
+  match instead of popping up as a plain white OS window, and every window
+  (including dialogs) gets a dark title bar on Windows.
+
+- The **Enemies** page is down to two decisions: **Randomize enemies** and how
+  bosses are handled (unchanged, the BSB-at-Cleric-Beast playtest, or the full
+  reviewed shuffle), the last two now one choice instead of two independent
+  checkboxes that were already mutually exclusive underneath. Boss shuffle is
+  on by default alongside enemy randomization. Seed override, tier mixing,
+  locomotion preservation and stat normalization moved to **Advanced**, and
+  the page no longer gates them behind their own "Advanced enemy options"
+  disclosure -- that distinction never earned its keep.
+
+- The three **Session overrides** (suppression binder mismatch, research
+  captures, AP seed/slot mismatch) are retired from the Advanced page: they
+  were operator-only, never-saved escape hatches that had outlived their
+  usefulness as GUI controls. The CLI's `doctor` command keeps the real
+  escape hatch (`--allow-suppression-mismatch`, `--allow-seed-mismatch`).
+
+- **Create & host** links out to the [options builder](https://peliarch.ca/bb/wizard.html)
+  for players who want more than a name and a DLC checkbox -- goal, item
+  pool, deathlink, and everything else the apworld exposes -- instead of only
+  offering the bare solo form.
 
 - BBLauncher mode names its mandatory step **Verify activated mod**, the same
   name the workflow's refusals use (the button said "Check activated mod").
@@ -27,6 +49,12 @@ under `Unreleased` and move into a dated version section when released.
   earlier inactive package instead of stopping with an "already exists"
   error; an activated copy is never replaced. The CLI gained
   `bblauncher-export --replace-existing`.
+
+- **BBLauncher integration is supported, not experimental.** Release 16.10
+  (build 2026-08-09-f092023) completed live acceptance in-game; selecting it
+  no longer needs the "Enable experimental integration for this session"
+  checkbox, which is gone. Any other BBLauncher build still needs its own
+  live-acceptance run and the `--live-acceptance-candidate` CLI opt-in.
 
 - BBLauncher setup now detects the inactive mod library, explains invalid folders
   before a build, and offers a one-click correction. A guided prepare/activate/connect

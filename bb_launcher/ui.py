@@ -74,8 +74,8 @@ ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 # The palette and every ttk style live in ``theme``; this module only lays
 # widgets out.
 from .theme import (  # noqa: E402
-    Sidebar, apply_theme, autohide, field, option, page_header, scroll_page, section,
-    text_well,
+    Dialogs, Sidebar, apply_theme, autohide, enable_dark_titlebar, field, option,
+    page_header, scroll_page, section, text_well,
 )
 from .version import launcher_version  # noqa: E402
 
@@ -262,10 +262,10 @@ class LauncherApp:
         self.tk = tk
         self.ttk = ttk
         self.filedialog = filedialog
+        self.root = root
         # A themed drop-in for tkinter.messagebox: same call shape, no
         # white OS-chrome popup flashing against the dark body.
         self.messagebox = Dialogs(tk, ttk, self.root)
-        self.root = root
         self.repo_root = repo_root.resolve()
         self.settings_path = settings_path.expanduser().resolve()
         self.workflow = LauncherWorkflow(self.repo_root)
