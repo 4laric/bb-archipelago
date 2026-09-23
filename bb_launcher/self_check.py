@@ -69,6 +69,7 @@ def run_self_check(report: Path | None, *, require_bundled_tools: bool | None = 
             "runtime_items": len(slot_data["runtime_items"]),
             "runtime_locations": len(slot_data["runtime_locations"]),
             "sustain_item": slot_data.get("sustain_item") is not None,
+            "sustain_items": len(slot_data.get("sustain_items", [])),
         }
         for name, count in result["world"].items():
             if count in (0, False):
