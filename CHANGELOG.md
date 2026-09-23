@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Create & host names an unsupported Python before Generate.py ever runs.**
+  Selecting (or falling back to) a Python newer or older than Archipelago's
+  own supported range (3.11.9 through 3.13.x) used to fail deep inside a
+  `Generate.py` subprocess with a raw traceback in the progress log. The
+  launcher now checks the interpreter's version up front and names exactly
+  what's wrong and what to do about it.
+
 - **Named pickup placeholders now clean themselves up.** The common event
   overlay removes the seed-owned popup goods from held inventory, notices boxed
   copies for removal after withdrawal, and cleans leftovers acquired before the client connected. Each newly sent
