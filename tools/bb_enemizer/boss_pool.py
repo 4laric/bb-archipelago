@@ -409,7 +409,10 @@ def _merge_constructor(original: str, variants: list[str]) -> str:
                     raise ValueError('overlapping boss constructor edits')
             edits[key] = replacement
     for position, groups in insertions.items():
-        if any(first <= position < last for first, last in edits):
+        # An insertion immediately before a removed/replaced range is adjacent,
+        # not overlapping. Reverse application below edits the range first and
+        # then inserts at that boundary, independently of adapter order.
+        if any(first < position < last for first, last in edits):
             raise ValueError('overlapping boss constructor edits')
         if len(groups) == 1:
             edits[position, position] = next(iter(groups))

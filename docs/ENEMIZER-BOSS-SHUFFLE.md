@@ -765,10 +765,60 @@ effect operands, verifies the destination encounter owns the declared event,
 and checks the effect operand in the final compiled event. Binder merge
 coverage includes both map-linked and EMEVD-only effect requirements.
 
-The current [native matrix](boss-composition-native-matrix.json) records 18
+The preceding [native matrix](https://github.com/4laric/bb-archipelago/blob/197ebf4a8d5dad6196102ff4b35e885baff501b8/docs/boss-composition-native-matrix.json) records 18
 full-roster builds covering all 95 implemented pairs, with 60 verified output
 files per build. Python and native writer sources, writer binary and compiler
 stayed unchanged throughout. The combined `composition-26` source and frozen
 builds contain 308 ordinary enemy swaps, all 22 boss encounters and the actual
 Cathedral AP override; all 60 output hashes and their receipts match exactly.
 These results validate native construction and packaging, not gameplay.
+
+## Logarius combat, Laurence and Gascoigne arenas
+
+Reusable Logarius combat now reaches all six base arenas. The package retains
+his primary, sword and projectile owner as distinct source-pinned actors,
+including cooperative scaling, both sword initializers, aura and cleanup.
+His event-only sword effect is delivered through the source-pinned area bank;
+all m24 subareas use the m24 bank. Source `ShootBullet` behavior `223200590`
+references BulletParam `232250`, whose recorded fields do not add an effect
+bank dependency. Destination terminal, notification and telemetry remain
+arena-owned. The actual Cleric client restoration event `12411703` is pinned
+separately from the retired cloth controller.
+
+Laurence and Gascoigne now accept all six base combat packages. Their adapters
+retain donor startup protections, readiness ordering and combat controllers,
+while preserving destination entry, cooperation, progression and neighboring
+Ludwig/Cleric events. Ebrietas retains a materialized projectile owner through
+combat. Gascoigne's three original beast states remain hidden, invincible
+terminal witnesses until destination completion. Both Gascoigne-specific
+initializers for generic navigation controller `12415238` are removed; the
+generic event body and unrelated callers remain intact. Authored per-state
+primary and proxy fingerprints reject source drift before writing.
+
+The two-track music adaptations preserve reload recovery. Laurence uses the
+donor's first declared combat boundary; Gascoigne uses the final boundary,
+matching its original final transformation presentation. These are presentation
+choices, not changes to combat phases or evidence of compatibility limits.
+
+Maria also reaches Laurence's arena, retaining both source combat phase signals
+and cleanup. Message 100 drives Laurence's single music transition; message
+300 remains part of combat. Maria native bindings now carry the authored
+original primary fingerprint and initialization fields across every route.
+
+This checkpoint implements 110 of 462 directed pairings, all feasible within
+complete one-of-each assignments. The remaining 352 are implementation gaps.
+It does not establish unrestricted or gameplay-validated boss shuffle.
+
+The [native matrix](boss-composition-native-matrix.json) records 20 full-roster
+builds covering all 110 implemented pairs, with 60 verified files per build.
+The source and frozen combined build includes 308 ordinary swaps, 22 boss
+encounters and the actual Cathedral AP override; all 60 file hashes and the
+receipts match. Sources and tool binaries stayed unchanged throughout that
+matrix. Both full test passes ran 1,836 tests with 57 optional skips, and the
+generated-data and shipping checks passed.
+
+Composition permits a new constructor call at the boundary of an independently
+removed range while still rejecting insertions inside it. This preserves
+Orphan's Cleric completion bridge when Gascoigne's old navigation calls are
+removed from their shared event file; synthetic and real-source regressions
+cover the ordering.

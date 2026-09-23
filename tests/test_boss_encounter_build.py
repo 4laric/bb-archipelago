@@ -22,17 +22,28 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
-    def test_reusable_laurence_routes_reach_the_compiler_pin_gate(self):
+    def test_reusable_specialized_donor_routes_reach_the_compiler_pin_gate(self):
         from tools.bb_enemizer.laurence_donor import SUPPORTED_LAURENCE_ARENAS
+        from tools.bb_enemizer.logarius_donor import SUPPORTED_LOGARIUS_ARENAS
 
         self.assertEqual(7, len(SUPPORTED_LAURENCE_ARENAS))
+        self.assertEqual(6, len(SUPPORTED_LOGARIUS_ARENAS))
+        pairs = [(arena.key, donor)
+                 for donor, arenas in (('laurence', SUPPORTED_LAURENCE_ARENAS),
+                                       ('martyr-logarius', SUPPORTED_LOGARIUS_ARENAS))
+                 for arena in arenas]
+        pairs.extend((arena, donor) for arena in ('laurence', 'father-gascoigne') for donor in (
+            'cleric-beast', 'blood-starved-beast', 'darkbeast-paarl',
+            'vicar-amelia', 'amygdala', 'ebrietas'))
+        pairs.append(('laurence', 'lady-maria'))
+        self.assertEqual(26, len(pairs))
         with tempfile.TemporaryDirectory() as temporary:
             compiler = Path(temporary) / 'untrusted-compiler.exe'
             compiler.write_bytes(b'not the pinned compiler')
-            for arena in SUPPORTED_LAURENCE_ARENAS:
-                with self.subTest(arena=arena.key):
-                    args = SimpleNamespace(arena=arena.key, donor='laurence',
-                                           pool=None, seed='laurence-recipe', darkscript=compiler)
+            for arena, donor in pairs:
+                with self.subTest(arena=arena, donor=donor):
+                    args = SimpleNamespace(arena=arena, donor=donor,
+                                           pool=None, seed='donor-recipe', darkscript=compiler)
                     with self.assertRaisesRegex(ValueError, 'requires pinned DarkScript'):
                         build(args)
 

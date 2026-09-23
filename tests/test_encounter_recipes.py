@@ -14,6 +14,7 @@ from tools.bb_enemizer.boss_contracts import (
 )
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
 from tools.bb_enemizer.maria_arena_contract import MARIA_ARENA_CONTRACT
+from tools.bb_enemizer.laurence_arena_contract import LAURENCE_ARENA_CONTRACT
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.scaling import load_params
 
@@ -43,18 +44,26 @@ class EncounterRecipeTests(unittest.TestCase):
             for arena, donors in COMPATIBILITY.items()
             for donor in donors
         }
-        maria_keys = {(arena.key, "lady-maria") for arena in ARENAS}
+        maria_keys = {(arena.key, "lady-maria") for arena in (*ARENAS, LAURENCE_ARENA_CONTRACT)}
         laurence_keys = {(arena.key, "laurence") for arena in (*ARENAS, MARIA_ARENA_CONTRACT)}
         maria_arena_keys = {("lady-maria", donor.key) for donor in PACKAGES}
-        self.assertEqual(base_keys | maria_keys | laurence_keys | maria_arena_keys, set(self.recipes))
+        logarius_keys = {(arena.key, "martyr-logarius") for arena in ARENAS}
+        laurence_arena_keys = {("laurence", donor.key) for donor in PACKAGES}
+        gascoigne_arena_keys = {("father-gascoigne", donor.key) for donor in PACKAGES}
+        groups = (base_keys, maria_keys, laurence_keys, maria_arena_keys, logarius_keys,
+                  laurence_arena_keys, gascoigne_arena_keys)
+        self.assertEqual(set.union(*groups), set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)
         )
-        self.assertEqual(len(ARENAS), len(maria_keys))
+        self.assertEqual(7, len(maria_keys))
         self.assertEqual(7, len(laurence_keys))
         self.assertEqual(6, len(maria_arena_keys))
+        self.assertEqual(6, len(logarius_keys))
+        self.assertEqual(6, len(laurence_arena_keys))
+        self.assertEqual(6, len(gascoigne_arena_keys))
         self.assertEqual(
-            len(base_keys) + len(maria_keys) + len(laurence_keys) + len(maria_arena_keys),
+            sum(map(len, groups)),
             len(self.recipes),
         )
         self.assertFalse({key for key in self.recipes if key[0] == key[1]})
@@ -62,7 +71,7 @@ class EncounterRecipeTests(unittest.TestCase):
             len(self.recipes), len({id(recipe) for recipe in self.recipes.values()})
         )
 
-        arenas = {arena.key: arena for arena in (*ARENAS, MARIA_ARENA_CONTRACT)}
+        arenas = {arena.key: arena for arena in (*ARENAS, MARIA_ARENA_CONTRACT, LAURENCE_ARENA_CONTRACT)}
         packages = {package.key: package for package in PACKAGES}
         for key in base_keys:
             recipe = self.recipes[key]

@@ -25,6 +25,7 @@ from .boss_contracts import (
     PAARL_ARENA,
     ArenaContract,
 )
+from .laurence_arena_contract import LAURENCE_ARENA_CONTRACT
 from .maria_contract import (
     MARIA_ARENA,
     MARIA_EVENT_TARGET_REFERENCE,
@@ -49,8 +50,15 @@ SUPPORTED_MARIA_ARENAS = (
     AMELIA_ARENA,
     AMYGDALA_ARENA,
     EBRIETAS_ARENA,
+    LAURENCE_ARENA_CONTRACT,
 )
 BUNDLE = Path(__file__).resolve().parents[2] / "research" / "bb_inputs.db"
+# Original m35_00 MSBB actor-pin witness for c4520_0002 / entity 3500800.
+# It pins the fields the writer copies instead of deriving them from NPCParam.
+MARIA_PRIMARY_PIN = "4c8e1f5185a8026aca281a0402ee06fe1c60c361043609b31f178b0b974ef906"
+MARIA_PRIMARY_INITIALIZATION = {
+    "talk_id": 0, "unk_t18": -1, "init_anim_id": -1, "damage_anim_id": -1,
+}
 
 
 @dataclass(frozen=True)
@@ -153,7 +161,7 @@ def _mark_existing_entry_notification(block: str,
 def _activation_without_destination_animations(arena: ArenaContract, block: str) -> str:
     """Retain entry triggers/geometry and remove model-specific wake-up state."""
     pattern = re.compile(
-        rf"^    ForceAnimationPlayback\({arena.actor}, [^\n]+\);\n", re.MULTILINE
+        rf"^[ \t]*ForceAnimationPlayback\({arena.actor}, [^\n]+\);\n", re.MULTILINE
     )
     result, count = pattern.subn("", block)
     if count == 0:
@@ -219,6 +227,22 @@ def _append_cleanup_initializer(arena: ArenaContract, event_zero: str,
         for event_id in reversed(arena.phase_slots)
         if event_zero.count(f"    $InitializeEvent(0, {event_id});") == 1
     ]
+    if not anchors and arena.key == LAURENCE_ARENA_CONTRACT.key:
+        retired = (
+            "    $InitializeEvent(0, 13404875);",
+            *(f"    $InitializeEvent({slot}, 13404870, {3450 + slot}, {3450 + slot}, "
+              f"NPCPartType.Part{slot + 1}, {480 + slot}, {490 + slot}, "
+              f"{(60, 150, 150, 250, 250)[slot]}, {(8020, 8000, 8010, 8030, 8040)[slot]});"
+              for slot in range(5)),
+        )
+        result = event_zero
+        for instruction in retired:
+            result = _replace_once(result, instruction, "", "Laurence model initializer")
+        return _replace_once(
+            result, "\n});",
+            f"\n    $InitializeEvent(0, {allocation.phase_cleanup_event});\n}});",
+            "Laurence constructor close",
+        )
     if not anchors:
         raise ValueError(f"{arena.key} has no unique zero-argument phase initializer")
     anchor = anchors[0]
@@ -241,13 +265,16 @@ def maria_donor_contract(arena: ArenaContract,
     )
     retired = {
         *arena.phase_slots,
-        arena.part_routine_event,
+        *arena.retired_combat_events,
+        *(() if arena.part_routine_event is None else (arena.part_routine_event,)),
         *(() if arena.cloth_routine_event is None else (arena.cloth_routine_event,)),
         *(() if arena.attachment_anchor_event is None else (arena.attachment_anchor_event,)),
     }
     exact_preserved = [arena.completion_event]
     if arena.co_op_entry_event not in retired:
         exact_preserved.append(arena.co_op_entry_event)
+    health_flag = (13404860 if arena.key == LAURENCE_ARENA_CONTRACT.key
+                   else allocation.health_initialized_flag)
     return {
         "format": "bb-maria-donor-contract-v1",
         "status": "experimental",
@@ -289,6 +316,16 @@ def maria_donor_contract(arena: ArenaContract,
             "instructions": ["CreatePlaylog", "StartTimeMeasurement"],
             "reason": "destination completion owns the matching measurement lifecycle",
         },
+        "destination_owned_health_state": {
+            "flag": health_flag,
+            "reason": ("Laurence reuses its pinned room-entry notification state"
+                       if arena.key == LAURENCE_ARENA_CONTRACT.key
+                       else "allocation is a project-owned destination health-start witness"),
+        },
+        "music_policy": ("first Maria phase message 100 drives Laurence's only transition; "
+                         "message 300 remains source combat-only"
+                         if arena.key == LAURENCE_ARENA_CONTRACT.key
+                         else "destination phase transition follows Maria message 100"),
         "retired_destination_controllers": sorted(retired),
         "attachments": [{
             "source_event": MARIA_ARENA.phase_cleanup_event,
@@ -314,15 +351,17 @@ def patch_maria_donor(arena: ArenaContract, destination: str, donor_source: str,
     _verify(donor, MARIA_PACKAGE.expected, "Lady Maria donor")
     _require_allocation(allocation)
     validate_maria_allocation(allocation, (destination,))
-    if not arena.phase_slots:
+    if not arena.phase_slots and arena.key != LAURENCE_ARENA_CONTRACT.key:
         raise ValueError(f"{arena.key} has no phase initializer anchor")
 
+    health_flag = (13404860 if arena.key == LAURENCE_ARENA_CONTRACT.key
+                   else allocation.health_initialized_flag)
     health = _numbers(donor[MARIA_ARENA.health_event], {
         MARIA_ARENA.health_event: arena.health_bar_event,
         MARIA_PACKAGE.actor: arena.actor,
         MARIA_ARENA.completion_event: arena.completion_event,
         MARIA_ARENA.encounter_start_flag: arena.start_flag,
-        MARIA_ARENA.health_started_flag: allocation.health_initialized_flag,
+        MARIA_ARENA.health_started_flag: health_flag,
     })
     health = _destination_health_telemetry(
         health, original[arena.health_bar_event]
@@ -348,7 +387,8 @@ def patch_maria_donor(arena: ArenaContract, destination: str, donor_source: str,
 
     retired = {
         *arena.phase_slots,
-        arena.part_routine_event,
+        *arena.retired_combat_events,
+        *(() if arena.part_routine_event is None else (arena.part_routine_event,)),
         *(() if arena.cloth_routine_event is None else (arena.cloth_routine_event,)),
         *(() if arena.attachment_anchor_event is None else (arena.attachment_anchor_event,)),
     }
@@ -431,6 +471,10 @@ def native_plan_maria_donor(arena: ArenaContract, slots: list[Slot],
             "source_entity_id": source.entity_id,
             "source_archetype": asdict(source.archetype),
             "source_talk_id": source.talk_id,
+            "source_provenance": {
+                "format": "bb-boss-actor-pin-v1", "part_sha256": MARIA_PRIMARY_PIN,
+            },
+            "source_initialization": dict(MARIA_PRIMARY_INITIALIZATION),
             "destination_map": slot.map_name,
             "destination_part": slot.part_name,
             "destination_entity_id": slot.entity_id,

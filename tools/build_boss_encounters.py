@@ -818,14 +818,16 @@ def build(args) -> dict:
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if direct_logarius[0] == 'martyr-logarius' and direct_logarius[1] not in (*LOGARIUS_COMPATIBILITY['martyr-logarius'], 'mergos-wet-nurse'):
         raise ValueError('Logarius arena requires a reviewed BSB, Paarl or Wet Nurse donor adapter')
-    if direct_logarius[1] == 'martyr-logarius' and direct_logarius[0] not in ('blood-starved-beast', 'mergos-wet-nurse'):
-        raise ValueError('Martyr Logarius requires a reviewed BSB or Wet Nurse arena adapter')
+    if (direct_logarius[1] == 'martyr-logarius' and direct_logarius not in recipes
+            and direct_logarius[0] not in ('blood-starved-beast', 'mergos-wet-nurse')):
+        raise ValueError('Martyr Logarius requires an implemented arena adapter')
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
     ludwig_arena = getattr(args, 'arena', None) == 'ludwig'
     reviewed_ludwig_donors = LUDWIG_COMPATIBILITY['ludwig']
     if ludwig_arena and getattr(args, 'donor', None) not in reviewed_ludwig_donors:
         raise ValueError('Ludwig arena requires a reviewed donor adapter')
-    if laurence_arena and getattr(args, 'donor', None) not in (*LAURENCE_COMPATIBILITY['laurence'], 'living-failures'):
+    if (laurence_arena and direct_orphan not in recipes
+            and getattr(args, 'donor', None) not in (*LAURENCE_COMPATIBILITY['laurence'], 'living-failures')):
         raise ValueError('Laurence arena requires a reviewed donor adapter')
     laurence_ids = LaurenceIds(12990300, 12990301)
     direct_gascoigne = (getattr(args, 'arena', None), getattr(args, 'donor', None))
@@ -836,7 +838,7 @@ def build(args) -> dict:
         ('father-gascoigne', 'orphan-of-kos'),
     }
     if direct_gascoigne[0] == 'father-gascoigne' or direct_gascoigne[1] == 'father-gascoigne':
-        if direct_gascoigne not in reviewed_gascoigne_pairs:
+        if direct_gascoigne not in reviewed_gascoigne_pairs and direct_gascoigne not in recipes:
             raise ValueError('Father Gascoigne is available only in the reviewed Cleric reciprocal adapters')
     if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam'):
         raise ValueError('Ludwig donor requires a reviewed Cleric, Orphan or Shadows arena adapter')
@@ -1117,11 +1119,14 @@ def build(args) -> dict:
                 plan = recipe.native_plan(slots, npcs, effects, args.seed)
                 if arena.key in materializations:
                     plan['boss_actor_additions'] = materializations[arena.key]
+                elif plan.get('boss_actor_additions'):
+                    plan['boss_actor_additions'] = pin_actor_requirements(
+                        args, plan['boss_actor_additions'])
                 if plan.get('primary_init_source_bindings'):
                     plan['boss_actor_initializations'] = pin_actor_requirements(
                         args, plan['primary_init_source_bindings'])
                 if package.key == 'lady-maria':
-                    plan['boss_external_references'] = [maria_external_reference(args, plan, arena)]
+                    plan['boss_external_references'] = [maria_external_reference(args, plan, recipe.arena)]
             elif is_orphan_gascoigne_pair(arena, package):
                 plan = native_plan_orphan_at_gascoigne(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])

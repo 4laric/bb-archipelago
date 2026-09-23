@@ -248,6 +248,45 @@ class BossPoolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'protected completion event 30'):
             compose_event_patches(SOURCE, [SOURCE.replace('HandleBossDefeat(100)', 'HandleBossDefeat(200)')], [30])
 
+    def test_constructor_range_boundary_is_adjacent_but_its_interior_conflicts(self):
+        first = '    $InitializeEvent(0, 10, 100);'
+        second = '    $InitializeEvent(0, 20, 200);'
+        removed = SOURCE.replace(first + '\n' + second + '\n', '')
+        inserted = SOURCE.replace(first, '    $InitializeEvent(0, 40, 400);\n' + first)
+        expected = removed.replace('$Event(0, Default, function() {',
+                                   '$Event(0, Default, function() {\n    $InitializeEvent(0, 40, 400);')
+        for variants in ([removed, inserted], [inserted, removed]):
+            self.assertEqual(expected, compose_event_patches(SOURCE, variants, [30]))
+        interior = SOURCE.replace(second, '    $InitializeEvent(0, 50, 500);\n' + second)
+        for variants in ([removed, interior], [interior, removed]):
+            with self.assertRaisesRegex(ValueError, 'overlapping boss constructor'):
+                compose_event_patches(SOURCE, variants, [30])
+
+    def test_gascoigne_navigation_retirement_composes_with_adjacent_orphan_initializers(self):
+        from tools.bb_inputs import read_blob
+        from tools.bb_enemizer.boss_canary import event_blocks
+        from tools.bb_enemizer.boss_contracts import PAARL_PACKAGE
+        from tools.bb_enemizer.gascoigne_arena_contract import patch_portable_donor_at_gascoigne
+        from tools.bb_enemizer.orphan_contract import patch_orphan_at_cleric
+        from tools.build_boss_encounters import ORPHAN_ALLOCATION
+        bundle = Path(__file__).resolve().parents[1] / 'research/bb_inputs.db'
+        def source(name):
+            return read_blob(bundle, 'event/' + name).decode('utf-8-sig')
+        original = source('m24_01_00_00.emevd.dcx.js')
+        gascoigne = patch_portable_donor_at_gascoigne(
+            original, PAARL_PACKAGE, source(PAARL_PACKAGE.event_file))
+        cleric = patch_orphan_at_cleric(
+            original, source('m36_00_00_00.emevd.dcx.js'), ORPHAN_ALLOCATION)
+        result = compose_event_patches(original, [gascoigne, cleric], [12411800])
+        self.assertEqual(result, compose_event_patches(original, [cleric, gascoigne], [12411800]))
+        before, after = event_blocks(original), event_blocks(result)
+        self.assertEqual(event_blocks(cleric)[12411700], after[12411700])
+        self.assertEqual(before[12411800], after[12411800])
+        self.assertNotIn('$InitializeEvent(0, 12415238,', after[0])
+        self.assertNotIn('$InitializeEvent(1, 12415238,', after[0])
+        for event in (12990601, 12990602, 12990603, 12990604, 12990605, 12995306, 12995307):
+            self.assertEqual(1, after[0].count(f'$InitializeEvent(0, {event});'))
+
     def test_reciprocal_real_bosses_share_map_without_losing_progression(self):
         from tools.bb_enemizer.boss_contracts import (
             BSB_ARENA, PAARL_ARENA, BSB_PACKAGE, PAARL_PACKAGE,

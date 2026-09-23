@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle adds reusable Logarius combat placements, the six base donors
+  in Laurence's and Gascoigne's arenas, and Maria in Laurence's arena.
+  Gascoigne replacements retire his original navigation commands while keeping
+  the arena's rewards and progression. In-game validation remains outstanding.
 - Boss shuffle can place the six base combat packages and Laurence in Maria's
   arena, preserving their phases and adapting entry, music and progression to
   the destination. Logarius replacements now include his sword-effect bank.
