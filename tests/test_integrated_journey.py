@@ -44,6 +44,19 @@ def request(op: str, params: dict | None = None, seq: int = 0, op_id: str = "op-
             "params": params or {}}
 
 
+def reap_fixture_process(child: subprocess.Popen) -> None:
+    """Terminate and reap only the harmless Python child started by tests."""
+    if child.poll() is None:
+        child.terminate()
+        try:
+            child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait(timeout=5)
+    else:
+        child.wait()
+
+
 def journey_backend(state: str, *, route: str = "copy",
                     game_running_at_arm: bool = False) -> Backend:
     def prepare(params: dict, op_id: str) -> dict:
@@ -183,7 +196,7 @@ class SimulatedJourneyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as state:
             backend = journey_backend(state)
             child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
-            self.addCleanup(lambda: child.kill() if child.poll() is None else None)
+            self.addCleanup(reap_fixture_process, child)
             backend.spawn_fn = lambda play, arm, params, verified: {
                 "executable": "C:\\games\\shadPS4.exe",
                 "executable_sha256": digest("shad-exe"), "pid": 4242,
@@ -210,7 +223,7 @@ class SimulatedJourneyTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as state:
             backend = journey_backend(state)
             child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
-            self.addCleanup(lambda: child.kill() if child.poll() is None else None)
+            self.addCleanup(reap_fixture_process, child)
             backend.spawn_fn = lambda play, arm, params, verified: {
                 "executable": "C:\\games\\shadPS4.exe",
                 "executable_sha256": digest("shad-exe"), "pid": 4242,

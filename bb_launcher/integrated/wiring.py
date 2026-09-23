@@ -129,8 +129,8 @@ def _process_plan(params: Mapping[str, Any], state_root: Path) -> Path:
 
 def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, Any]:
     from ..external import ExternalNamespace, export_external_package
-    from ..resources import application_root
-    from ..workflow import EnemizerOptions, LauncherSettings, LauncherWorkflow
+    from ..resources import application_root, resource_root
+    from ..workflow import EnemizerOptions, EnemizerToolchain, LauncherSettings, LauncherWorkflow
     from .policy import fork_build_warning
 
     game_root = Path(str(params["game_root"])).expanduser().resolve()
@@ -150,7 +150,10 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
         process_plan=plan_path,
         state_root=state_root,
     )
-    workflow = LauncherWorkflow(application_root())
+    workflow = LauncherWorkflow(
+        resource_root(),
+        toolchain=EnemizerToolchain(resource_root(), app_root=application_root()),
+    )
     prepared = workflow.prepare_seed(
         settings, EnemizerOptions(enabled=False),
         player_name=str(params.get("player_name", "")), progress=lambda _: None,
@@ -245,6 +248,17 @@ def production_spawn(play: Any, arm: Any, params: Mapping[str, Any], verified: A
     )
     from ..workflow import process_creation_time
 
+    def stop_child(child: Any) -> None:
+        if child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait(timeout=5)
+        else:
+            child.wait()
+
     game_root = Path(str(params["game_root"])).expanduser().resolve()
     state_root = Path(str(params.get("state_root", ""))).expanduser().resolve()
     install = GameInstall.from_root(game_root)
@@ -323,16 +337,12 @@ def production_spawn(play: Any, arm: Any, params: Mapping[str, Any], verified: A
     )
     game_executable = str(game.get("executable", ""))
     if not game_executable:
-        child.terminate()
+        stop_child(child)
         raise ValidationError("the started emulator executable path is unavailable")
     try:
         client_birth = process_creation_time(int(child.pid)) if os.name == "nt" else None
     except Exception:
-        child.terminate()
-        try:
-            child.wait(timeout=5)
-        except Exception:
-            child.kill()
+        stop_child(child)
         raise
     return {
         "executable": game_executable,
