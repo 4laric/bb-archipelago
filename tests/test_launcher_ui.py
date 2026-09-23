@@ -599,6 +599,8 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             [row["token_goods_id"] for row in rows],
         )
         self.assertLessEqual({"token_goods_id", "item_lot_id", "ack_flag"}, set(rows[0]))
+        cleanup = common["rows"]["toast_placeholders"]
+        self.assertEqual([], cleanup)
 
     def test_cathedral_build_failure_preserves_diagnostics_and_does_not_activate(self):
         toolchain = FakeToolchain()

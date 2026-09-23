@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Named pickup placeholders now clean themselves up.** The common event
+  overlay removes the seed-owned popup goods from held inventory, notices boxed
+  copies for removal after withdrawal, and cleans leftovers acquired before the client connected. Each newly sent
+  suppressed check once again queues the default one Blood Vial and one
+  Quicksilver Bullet sustain bundle; the singular bullet field remains for
+  compatibility with older clients.
+
 - **The launcher has a new look.** A Bloodborne-styled sidebar replaces the
   five tab strip: **Play**, **Create & host**, **Enemies** and **Advanced**
   (recovery tools, BBLauncher mode, session overrides and operator paths).
