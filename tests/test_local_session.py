@@ -167,6 +167,7 @@ class LocalSessionTests(unittest.TestCase):
                 patch("bb_launcher.local_session.subprocess.run", side_effect=run),
                 patch("bb_launcher.local_session.sys.executable", "C:\\FakePython314\\python.exe"),
                 patch("bb_launcher.local_session.sys.frozen", False, create=True),
+                patch("bb_launcher.local_session.sys.platform", "win32"),
             ):
                 tools = discover_ap_tools(root)
             self.assertEqual(("py", "-3.13", str(root / "Generate.py")), tools.generate_command)
