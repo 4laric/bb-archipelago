@@ -352,6 +352,50 @@ class BossPoolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'physical destination'):
             combine_ordinary_and_boss_plans(ordinary, [boss])
 
+    def test_one_pairs_initialization_anchor_cannot_land_on_another_pairs_swap(self):
+        """bb-archipelago#451: a different pair's actor transplant crashed the
+        native writer when it landed on a Part another pair's own primary
+        actor initialization still expected to hold that pair's own actor.
+        Swaps, actor additions and initializations previously tracked
+        occupancy in three separate, never-cross-checked sets."""
+
+        def plan(logical_key, destination_key, **extra):
+            return {
+                'format': 'bb-enemizer-plan-v2', 'seed': 's', 'dry_run': True,
+                'swaps': [{'logical_key': logical_key, 'destination_keys': [destination_key]}],
+                'scaling': {
+                    'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+                    'change_count': 0, 'changes': [], 'skip_count': 1,
+                    'skips': [{'logical_key': logical_key, 'reason': 'unknown source or destination tier'}],
+                },
+                'boss_contract': {'arena': logical_key},
+                **extra,
+            }
+
+        pair_a = plan('pairA', 'm24_02_00_00:c1000_0000')
+        pair_b = plan('pairB', 'm24_05_00_00:c2000_0000', boss_actor_initializations=[{
+            'source_map': 's', 'source_part': 'sp', 'source_entity_id': 1,
+            'source_archetype': {'model_name': 'x', 'npc_param_id': 1,
+                                  'think_param_id': 1, 'chara_init_id': 0},
+            'destination_map': 'm24_02_00_00', 'destination_part': 'c1000_0000',
+            'destination_entity_id': 999,
+        }])
+        with self.assertRaisesRegex(ValueError, 'overlap a physical actor placement'):
+            combine_native_plans('s', [pair_a, pair_b])
+
+        # A pair's own swap and its own initialization of that swap sharing
+        # a Part is the ordinary case (re-stamping dialogue/animation IDs on
+        # the actor the pair already swapped) and must stay allowed.
+        self_reuse = plan('pairC', 'm24_09_00_00:c3000_0000', boss_actor_initializations=[{
+            'source_map': 's', 'source_part': 'sp', 'source_entity_id': 1,
+            'source_archetype': {'model_name': 'a', 'npc_param_id': 5,
+                                  'think_param_id': 5, 'chara_init_id': 0},
+            'destination_map': 'm24_09_00_00', 'destination_part': 'c3000_0000',
+            'destination_entity_id': 998,
+        }])
+        result = combine_native_plans('s', [self_reuse])
+        self.assertEqual(1, len(result['boss_actor_initializations']))
+
 
 if __name__ == '__main__':
     unittest.main()
