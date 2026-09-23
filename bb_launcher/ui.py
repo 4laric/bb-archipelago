@@ -365,12 +365,16 @@ class LauncherApp:
 
         # The content column. The pages stretch and carry a floor
         # (bb-archipelago#190): a short display must never crush the page to
-        # zero height. The details drawer (rows 1-2) only takes weight while it
-        # is shown, so a collapsed drawer costs the pages nothing.
+        # zero height. The details drawer (row 1) only takes weight while it
+        # is shown, so a collapsed drawer costs the pages nothing -- and even
+        # shown, it stays a minority share (weight 1 against the pages' 3):
+        # an auto-revealed drawer covering most of the window and burying the
+        # fields a player is trying to fix is exactly the failure it should
+        # never cause.
         outer = ttk.Frame(shell)
         outer.grid(row=0, column=1, sticky="nsew")
         outer.columnconfigure(0, weight=1)
-        outer.rowconfigure(0, weight=1, minsize=240)
+        outer.rowconfigure(0, weight=3, minsize=240)
         outer.rowconfigure(1, weight=0, minsize=0)
 
         notebook = ttk.Notebook(outer, style="Pages.TNotebook")
@@ -569,9 +573,17 @@ class LauncherApp:
         log_frame.grid(row=1, column=0, sticky="nsew")
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(1, weight=1)
-        ttk.Label(log_frame, text="Progress", style="Section.TLabel").grid(
-            row=0, column=0, sticky="w", pady=(0, 4)
-        )
+        log_header = ttk.Frame(log_frame)
+        log_header.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 4))
+        log_header.columnconfigure(0, weight=1)
+        ttk.Label(log_header, text="Progress", style="Section.TLabel").grid(row=0, column=0, sticky="w")
+        # An error auto-reveals this drawer (see _append_log below); the only
+        # way to dismiss it was a link at the very bottom of the window, easy
+        # to miss under whatever just got logged. This sits right where a
+        # player's eye already is.
+        ttk.Button(
+            log_header, text="✕ Hide", style="Link.TButton", command=self._toggle_session_details,
+        ).grid(row=0, column=1, sticky="e")
         self.log = text_well(tk, log_frame, height=5)
         self.log.grid(row=1, column=0, sticky="nsew")
         scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
@@ -664,7 +676,7 @@ class LauncherApp:
             self.log_frame.grid_remove()
             self.status_frame.grid_remove()
             self.details_button.configure(text="Show Details")
-        self.log_frame.master.rowconfigure(1, weight=2 if visible else 0, minsize=120 if visible else 0)
+        self.log_frame.master.rowconfigure(1, weight=1 if visible else 0, minsize=120 if visible else 0)
 
     def _toggle_session_details(self) -> None:
         self._set_session_details_visible(not self.show_session_details.get())
