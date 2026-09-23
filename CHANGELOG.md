@@ -6,6 +6,14 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- The launcher offers three experimental enemy-randomization tranches
+  (all off by default): supported script contracts, script-spawn ambushes,
+  and Chara-bound hunters. Together they raise coverage from 308 to up to
+  1,546 logical placements (Central Yharnam 49 to 177 of 277), with quest
+  carriers, NPCs, talk-bound actors, boss wiring and model-specific
+  encounters still vanilla. Every tranche is statically tested;
+  in-game validation is still owed before any of it becomes default.
+
 - BBLauncher setup now detects the inactive mod library, explains invalid folders
   before a build, and offers a one-click correction. A guided prepare/activate/connect
   flow remembers the prepared mod automatically; recovery files live in Advanced

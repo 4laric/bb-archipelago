@@ -85,6 +85,12 @@ Optional JSON inputs:
   `size_class`, `tier`, `locomotion`, `target`, and `notes` fields.
 - `--slot-policy`: keyed by physical (`map:part`) or logical slot, with
   `randomize`, `reason`, compatibility fields, and per-slot `bans`.
+- `--release-file`: a `bb-enemizer-release-v1` record from
+  `build_enemizer_catalog.py --release-contracts` /
+  `--release-script-spawns` / `--release-chara-bound` (repeatable; tranches
+  compose by union). Replaces one blanket exclusion each with reviewed
+  compatibility handling; see `docs/ENEMIZER-EXPANSION.md` for the
+  implemented-vs-validated ledger. Default: conservative policy.
 
 ## MSBB writer
 

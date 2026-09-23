@@ -72,9 +72,25 @@ def load_slot_overrides(path: str | Path | None) -> dict[str, dict]:
     return raw
 
 
-def classify_slot(slot: Slot, overrides: dict[str, dict]) -> SlotPolicy:
+def classify_slot(
+    slot: Slot,
+    overrides: dict[str, dict],
+    release: dict[str, set[str]] | None = None,
+) -> SlotPolicy:
+    """Classify one physical slot copy.
+
+    ``release`` maps a release tranche name to the set of logical keys that
+    tranche covers (see ``tools/bb_enemizer/script_contracts.py`` and the
+    ``bb-enemizer-release-v1`` records emitted by
+    ``tools/build_enemizer_catalog.py``). A tranche suppresses exactly one
+    gate for exactly its listed keys; every other gate still applies, and
+    talk-bound, non-character-model, and missing-parameter gates are never
+    releasable through this mechanism. ``None`` (the default) reproduces the
+    historical conservative behavior exactly.
+    """
+    released = release.get(slot.logical_key, set()) if release else set()
     override = overrides.get(slot.key) or overrides.get(slot.logical_key)
-    if override is not None:
+    if override is not None and "contracts" not in released:
         return SlotPolicy(
             randomize=bool(override.get("randomize", False)),
             reason=str(override.get("reason", "explicit override")),
@@ -83,11 +99,11 @@ def classify_slot(slot: Slot, overrides: dict[str, dict]) -> SlotPolicy:
             locomotion=str(override.get("locomotion", "unknown")),
             bans=tuple(override.get("bans", ())),
         )
-    if slot.dummy:
+    if slot.dummy and "spawns" not in released:
         return SlotPolicy(False, "dummy/script-spawn Part")
     if slot.talk_id > 0:
         return SlotPolicy(False, "talk-bound character")
-    if slot.archetype.chara_init_id > 0:
+    if slot.archetype.chara_init_id > 0 and "chara" not in released:
         return SlotPolicy(False, "character-init-bound NPC or hunter")
     if not slot.archetype.model_name.startswith("c"):
         return SlotPolicy(False, "non-character model")

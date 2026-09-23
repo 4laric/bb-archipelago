@@ -1,0 +1,1438 @@
+{
+  "carriers": {
+    "m22_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800400,
+      "npc_param_id": 118040,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m22_00_00_00:c1180_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800410,
+      "npc_param_id": 118041,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m23_00_00_00:c0000_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 50000,
+      "npc_param_id": 6310,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m23_00_00_00:c0000_0005": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 33010,
+      "npc_param_id": 6300,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4112
+        ]
+      ],
+      "team_type": "23"
+    },
+    "m23_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800200,
+      "npc_param_id": 118020,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m23_00_00_00:c1180_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800210,
+      "npc_param_id": 118021,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m23_00_00_00:c1180_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800220,
+      "npc_param_id": 118022,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c0000_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 26040,
+      "npc_param_id": 6090,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0006": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 32030,
+      "npc_param_id": 6140,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0007": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28010,
+      "npc_param_id": 6110,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          313000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0008": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 27070,
+      "npc_param_id": 6100,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0009": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 25000,
+      "npc_param_id": 6080,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0010": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 34035,
+      "npc_param_id": 6155,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0011": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28010,
+      "npc_param_id": 6110,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          313000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0012": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 34020,
+      "npc_param_id": 6154,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0013": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 35020,
+      "npc_param_id": 6161,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4111
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0014": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 56000,
+      "npc_param_id": 6410,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c0000_0015": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28010,
+      "npc_param_id": 6110,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          313000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0016": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28010,
+      "npc_param_id": 6110,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          313000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0017": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 32030,
+      "npc_param_id": 6140,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0018": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 27070,
+      "npc_param_id": 6100,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0019": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 32030,
+      "npc_param_id": 6140,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0020": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 32030,
+      "npc_param_id": 6140,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0021": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 35020,
+      "npc_param_id": 6161,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4111
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0022": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 35020,
+      "npc_param_id": 6161,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4111
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0023": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 58000,
+      "npc_param_id": 6430,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c0000_0024": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 57000,
+      "npc_param_id": 6420,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c0000_0025": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 34030,
+      "npc_param_id": 6151,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c0000_0026": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 26040,
+      "npc_param_id": 6090,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c1130_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 22010,
+      "npc_param_id": 113010,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "27"
+    },
+    "m24_00_00_00:c1130_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 22010,
+      "npc_param_id": 113010,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "27"
+    },
+    "m24_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800110,
+      "npc_param_id": 118011,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800100,
+      "npc_param_id": 118010,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800100,
+      "npc_param_id": 118010,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800110,
+      "npc_param_id": 118011,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800120,
+      "npc_param_id": 118012,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0005": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800140,
+      "npc_param_id": 118014,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0006": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800120,
+      "npc_param_id": 118012,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0007": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800130,
+      "npc_param_id": 118013,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c1180_0008": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800150,
+      "npc_param_id": 118015,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_00_00_00:c2521_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28040,
+      "npc_param_id": 252100,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4321
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_00_00_00:c5040_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 27070,
+      "npc_param_id": 504020,
+      "npc_type": "1",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "27"
+    },
+    "m24_01_00_00:c0000_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 24075,
+      "npc_param_id": 6071,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4322
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_01_00_00:c0000_0005": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28010,
+      "npc_param_id": 6113,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          313000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_01_00_00:c0000_0008": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 35020,
+      "npc_param_id": 6160,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4111
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_01_00_00:c0000_0009": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 24070,
+      "npc_param_id": 6070,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m24_01_00_00:c0000_0010": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 55000,
+      "npc_param_id": 6400,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c1091_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 29010,
+      "npc_param_id": 109100,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "27"
+    },
+    "m24_01_00_00:c2500_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 23010,
+      "npc_param_id": 250060,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          703
+        ]
+      ],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c2500_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 25000,
+      "npc_param_id": 250061,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c2500_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 27070,
+      "npc_param_id": 250062,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c2500_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 30020,
+      "npc_param_id": 250063,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c2500_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 26040,
+      "npc_param_id": 250064,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c2500_0005": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28010,
+      "npc_param_id": 250065,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          313000
+        ]
+      ],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c2500_0006": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 32030,
+      "npc_param_id": 250066,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m24_01_00_00:c2521_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 28040,
+      "npc_param_id": 252100,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4321
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m24_02_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800700,
+      "npc_param_id": 118070,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m25_00_00_00:c0000_0008": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 34040,
+      "npc_param_id": 6150,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m25_00_00_00:c1180_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800820,
+      "npc_param_id": 118082,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m26_00_00_00:c0000_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 49000,
+      "npc_param_id": 6440,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m26_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801000,
+      "npc_param_id": 118100,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m26_00_00_00:c1180_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801010,
+      "npc_param_id": 118101,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m26_00_00_00:c1180_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801030,
+      "npc_param_id": 118103,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m27_00_00_00:c0000_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 27070,
+      "npc_param_id": 6100,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m27_00_00_00:c1180_0006": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800520,
+      "npc_param_id": 118052,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m27_00_00_00:c5040_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 27070,
+      "npc_param_id": 504030,
+      "npc_type": "1",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "27"
+    },
+    "m28_00_00_00:c0000_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 32030,
+      "npc_param_id": 6140,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m28_00_00_00:c0000_0005": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 32030,
+      "npc_param_id": 6140,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m28_00_00_00:c0000_0010": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 51000,
+      "npc_param_id": 6340,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m28_00_00_00:c0000_0011": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 52000,
+      "npc_param_id": 6350,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m28_00_00_00:c0000_0012": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 53000,
+      "npc_param_id": 6360,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m28_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800300,
+      "npc_param_id": 118030,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m28_00_00_00:c1180_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800900,
+      "npc_param_id": 118090,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m28_00_00_00:c1180_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800910,
+      "npc_param_id": 118091,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m28_00_00_00:c1180_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11800920,
+      "npc_param_id": 118092,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m32_00_00_00:c0000_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 59000,
+      "npc_param_id": 6450,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m32_00_00_00:c1110_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 39020,
+      "npc_param_id": 111010,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m32_00_00_00:c5130_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 20000,
+      "npc_param_id": 513000,
+      "npc_type": "1",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m32_00_00_00:c5130_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 20000,
+      "npc_param_id": 513000,
+      "npc_type": "1",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m32_00_00_00:c8060_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 20000,
+      "npc_param_id": 513000,
+      "npc_type": "1",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m33_00_00_00:c0000_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 47000,
+      "npc_param_id": 6390,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c0000_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 48000,
+      "npc_param_id": 6395,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c0000_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 47000,
+      "npc_param_id": 6390,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1110_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 39020,
+      "npc_param_id": 111012,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "26"
+    },
+    "m33_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801110,
+      "npc_param_id": 118111,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801100,
+      "npc_param_id": 118110,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801110,
+      "npc_param_id": 118111,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801390,
+      "npc_param_id": 118139,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801120,
+      "npc_param_id": 118112,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0005": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801130,
+      "npc_param_id": 118113,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0008": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801150,
+      "npc_param_id": 118115,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0010": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801160,
+      "npc_param_id": 118116,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0012": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801180,
+      "npc_param_id": 118118,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0015": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801200,
+      "npc_param_id": 118120,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0019": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801220,
+      "npc_param_id": 118122,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0023": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801240,
+      "npc_param_id": 118124,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0025": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801260,
+      "npc_param_id": 118126,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0026": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801270,
+      "npc_param_id": 118127,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0028": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801290,
+      "npc_param_id": 118129,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0031": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801300,
+      "npc_param_id": 118130,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0032": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801310,
+      "npc_param_id": 118131,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0033": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801320,
+      "npc_param_id": 118132,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0037": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801340,
+      "npc_param_id": 118134,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0038": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801350,
+      "npc_param_id": 118135,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0039": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801360,
+      "npc_param_id": 118136,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1180_0043": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11801120,
+      "npc_param_id": 118112,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1190_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11900090,
+      "npc_param_id": 119009,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1190_0008": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11900020,
+      "npc_param_id": 119002,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1190_0010": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11900040,
+      "npc_param_id": 119004,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1190_0013": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11900050,
+      "npc_param_id": 119005,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m33_00_00_00:c1190_0015": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11900070,
+      "npc_param_id": 119007,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m34_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3401710,
+      "npc_param_id": 118700,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m34_00_00_00:c1180_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3401720,
+      "npc_param_id": 118701,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m34_00_00_00:c2090_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3401700,
+      "npc_param_id": 209010,
+      "npc_type": "1",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "24"
+    },
+    "m34_00_00_00:c4000_0029": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3401750,
+      "npc_param_id": 400028,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m34_00_00_00:c4000_0034": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3401740,
+      "npc_param_id": 400026,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m34_00_00_00:c4000_0036": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3401730,
+      "npc_param_id": 400025,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m34_00_00_00:c9010_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43300,
+      "npc_param_id": 901110,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          0,
+          26000000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c0000_0005": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43850,
+      "npc_param_id": 6580,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m35_00_00_00:c0000_0006": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43860,
+      "npc_param_id": 6585,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m35_00_00_00:c0000_0007": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43870,
+      "npc_param_id": 6620,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "27"
+    },
+    "m35_00_00_00:c0000_0009": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43870,
+      "npc_param_id": 6620,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "27"
+    },
+    "m35_00_00_00:c1170_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 11703510,
+      "npc_param_id": 117351,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m35_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3501700,
+      "npc_param_id": 118800,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m35_00_00_00:c1180_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3501710,
+      "npc_param_id": 118801,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m35_00_00_00:c1180_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3501720,
+      "npc_param_id": 118802,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m35_00_00_00:c4023_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43030,
+      "npc_param_id": 402300,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4019
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c4160_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43040,
+      "npc_param_id": 402290,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4342
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c4160_0001": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43500,
+      "npc_param_id": 402281,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4341
+        ]
+      ],
+      "team_type": "27"
+    },
+    "m35_00_00_00:c4160_0002": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43400,
+      "npc_param_id": 402280,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4340
+        ]
+      ],
+      "team_type": "27"
+    },
+    "m35_00_00_00:c4160_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43400,
+      "npc_param_id": 402280,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4340
+        ]
+      ],
+      "team_type": "27"
+    },
+    "m35_00_00_00:c9010_0004": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43400,
+      "npc_param_id": 402285,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4340
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c9010_0008": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43500,
+      "npc_param_id": 402286,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4341
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c9010_0009": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43400,
+      "npc_param_id": 402285,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4340
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c9010_0010": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43040,
+      "npc_param_id": 402290,
+      "npc_type": "2",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          4,
+          4342
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c9010_0011": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43710,
+      "npc_param_id": 901120,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          390000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m35_00_00_00:c9010_0012": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43700,
+      "npc_param_id": 901124,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          0,
+          29000000
+        ]
+      ],
+      "team_type": "23"
+    },
+    "m36_00_00_00:c1180_0000": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3601000,
+      "npc_param_id": 118900,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [],
+      "team_type": "23"
+    },
+    "m36_00_00_00:c4060_0003": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 3601100,
+      "npc_param_id": 406005,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          0,
+          27000000
+        ]
+      ],
+      "team_type": "23"
+    },
+    "m36_00_00_00:c9010_0020": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43730,
+      "npc_param_id": 901122,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          392000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m36_00_00_00:c9010_0021": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43740,
+      "npc_param_id": 901123,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          393000
+        ]
+      ],
+      "team_type": "26"
+    },
+    "m36_00_00_00:c9010_0022": {
+      "drop_field": "itemLotId_1",
+      "item_lot_id": 43720,
+      "npc_param_id": 901121,
+      "npc_type": "0",
+      "persistent_acquisition_flag": true,
+      "quest_goods": [
+        [
+          1,
+          391000
+        ]
+      ],
+      "team_type": "26"
+    }
+  },
+  "format": "bb-enemizer-quest-carriers-v1"
+}
