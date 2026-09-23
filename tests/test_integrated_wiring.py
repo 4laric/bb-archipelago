@@ -5,6 +5,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 import sys
+import os
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -74,7 +75,10 @@ class ProductionSpawnTests(unittest.TestCase):
             self.assertEqual(spawned["pid"], 4242)
             self.assertEqual(spawned["creation_time"], 123456)
             self.assertEqual(spawned["client_pid"], 5454)
-            self.assertEqual(spawned["client_creation_time"], 654321)
+            self.assertEqual(
+                spawned["client_creation_time"],
+                654321 if os.name == "nt" else None,
+            )
             self.assertEqual(spawned["executable"], str(shad_path))
             command = popen.call_args.args[0]
             self.assertEqual(command[0], str(client_path))
