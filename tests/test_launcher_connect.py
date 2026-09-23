@@ -123,7 +123,7 @@ class ConnectToRunningTests(unittest.TestCase):
             ).connect_to_running(self.fixture.settings(), player_name="Hunter")
         message = str(caught.exception)
         self.assertIn("owned overlay file size changed", message)
-        self.assertIn("Run Randomize & Launch again to rebuild the overlay.", message)
+        self.assertIn("Press Launch again to rebuild the overlay.", message)
         self.assertEqual(["sentinel"], self.launched, "witness: no launch spec was appended")
         # Refusing means refusing: nothing was moved aside here.
         self.assertEqual(tampered.read_bytes(), b"A MOD OVERWROTE THIS")

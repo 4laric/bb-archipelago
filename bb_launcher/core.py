@@ -147,7 +147,7 @@ FOREIGN_OVERLAY_ADVICE = (
 )
 # Every strict caller guards what shadPS4 is about to load, so it must not
 # heal -- but it can say which button rebuilds the overlay.
-REBUILD_OVERLAY_HINT = " Run Randomize & Launch again to rebuild the overlay."
+REBUILD_OVERLAY_HINT = " Press Launch again to rebuild the overlay."
 
 
 class LauncherError(RuntimeError):

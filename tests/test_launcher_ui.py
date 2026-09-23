@@ -27,6 +27,7 @@ from bb_launcher.core import EarlyExit
 from bb_launcher.plan import DEFAULT_SERVER, generate_process_plan, write_process_plan
 from bb_launcher.ui import (
     ENEMY_FIELDS,
+    ENEMY_MODES,
     FIELD_DEFINITIONS,
     LauncherApp,
     default_field_values,
@@ -1149,7 +1150,14 @@ class LauncherUiWorkflowTests(unittest.TestCase):
     def test_ui_contract_exposes_a_real_randomize_enemies_control(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         self.assertIn('"Randomize enemies"', source)
-        self.assertIn('text="Randomize & Launch"', source)
+        self.assertIn('"Randomize all enemies (experimental)"', source)
+        # Randomize and Launch are separate steps: one builds, one plays.
+        self.assertIn('text="Randomize"', source)
+        self.assertIn('text="Launch"', source)
+        self.assertIn("command=self._start_randomize", source)
+        randomize = source.split("def _start_randomize")[1].split("def _start(")[0]
+        self.assertIn("self.workflow.prepare_seed(", randomize)
+        self.assertNotIn("randomize_and_launch", randomize)
         self.assertIn("tools.bb_enemizer.cli", (self.repo / "bb_launcher" / "workflow.py").read_text())
         self.assertIn("BBEnemizerWriter.csproj", (self.repo / "bb_launcher" / "workflow.py").read_text())
 
@@ -1178,6 +1186,23 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         cli = (self.repo / "bb_launcher" / "cli.py").read_text(encoding="utf-8")
         self.assertIn("--allow-suppression-mismatch", cli)
         self.assertIn("--allow-seed-mismatch", cli)
+
+    def _build_source(self) -> str:
+        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        return source.split("    def _build(self)")[1].split("    def _set_session_details_visible")[0]
+
+    def test_enemy_modes_are_presets_over_the_saved_booleans(self):
+        from bb_launcher.ui import enemy_mode_flags, enemy_mode_for
+
+        self.assertEqual(enemy_mode_flags("standard"), (True, False))
+        self.assertEqual(enemy_mode_flags("all"), (True, True))
+        self.assertEqual(enemy_mode_flags("vanilla"), (False, False))
+        self.assertEqual(enemy_mode_for(True, (False, False, False)), "standard")
+        self.assertEqual(enemy_mode_for(True, (False, True, False)), "all")
+        self.assertEqual(enemy_mode_for(False, (True, True, True)), "vanilla")
+        for mode in ("standard", "all", "vanilla"):
+            randomize, tranches = enemy_mode_flags(mode)
+            self.assertEqual(enemy_mode_for(randomize, (tranches,) * 3), mode)
 
     def _build_widget_tree(self):
         """(parent-of-var, widgets-by-parent-var) read out of `_build` itself.
@@ -1238,17 +1263,15 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         return tabs, parent_of, texts_by_parent
 
     def test_ui_contract_tabs_the_setup_and_the_enemizer(self):
-        """The normal flow stays small; advanced controls have their own page.
+        """The normal flow stays on Play; fine-tuning has its own page.
 
-        A single tall column let Tk crush the only weighted row to zero on a
-        short display, taking the Randomize Enemies toggle with it.
+        The enemy decision is one radio group on Play, not a separate page
+        of checkboxes a new player has to find and understand.
         """
         tabs, parent_of, texts_by_parent = self._build_widget_tree()
-        self.assertEqual(set(tabs), {"Play", "Enemies", "Advanced"})
-        enemy_tab = tabs["Enemies"]
+        self.assertEqual(set(tabs), {"Play", "Advanced"})
         setup_tab = tabs["Play"]
         troubleshooting_tab = tabs["Advanced"]
-        self.assertEqual(parent_of[enemy_tab], "notebook")
         self.assertEqual(parent_of[setup_tab], "notebook")
         # Every page hosts a scrolling canvas; its controls sit on the body
         # frame inside it, so gather texts from the page's descendants.
@@ -1269,26 +1292,33 @@ class LauncherUiWorkflowTests(unittest.TestCase):
                 found |= texts_by_parent.get(frame, set())
             return found
 
-        # Enemies is down to two decisions; the BSB single-boss playtest mode
-        # and every fine-tuning knob (seed, tier mixing, locomotion, stat
-        # normalization) live on Advanced instead, per player, not behind a
-        # second disclosure toggle nested inside this tab.
-        enemy_texts = texts_under(enemy_tab)
-        self.assertLessEqual(
-            {"Randomize enemies", "Boss shuffle (reviewed encounters)"}, enemy_texts,
+        # Play carries the one enemy decision (a radio group built from
+        # ENEMY_MODES) and no checkboxes; every fine-tuning knob lives on
+        # Advanced. The release tranches have no boxes of their own.
+        build = self._build_source()
+        self.assertIn("in enumerate(ENEMY_MODES)", build)
+        self.assertIn("ttk.Radiobutton(\n                modes,", build)
+        self.assertEqual(parent_of["modes"], "play")
+        self.assertEqual(
+            [mode[1] for mode in ENEMY_MODES],
+            ["Randomize enemies", "Randomize all enemies (experimental)", "Vanilla"],
         )
-        for retired in ("Allow tier mixing", "Normalize enemy stats", "Preserve locomotion",
-                        "Enemy seed", "Boss playtest: BSB at Cleric Beast",
-                        "BSB at Cleric Beast (playtest)"):
-            self.assertNotIn(retired, enemy_texts)
+        play_texts = texts_under(setup_tab)
         troubleshooting_texts = texts_under(troubleshooting_tab)
-        self.assertLessEqual(
-            {"Allow tier mixing", "Normalize enemy stats", "Preserve locomotion", "Enemy seed"},
-            troubleshooting_texts,
-        )
+        # The enemy seed is shown on Play, beside the choice it seeds.
+        self.assertIn("Enemy seed", play_texts)
+        self.assertNotIn("Enemy seed", troubleshooting_texts)
+        for tuning in ("Allow tier mixing", "Normalize enemy stats", "Preserve locomotion",
+                       "Shuffle bosses"):
+            self.assertIn(tuning, troubleshooting_texts)
+            self.assertNotIn(tuning, play_texts)
+        for retired in ("Scripted enemies: supported contracts", "Script-spawn ambushes",
+                        "Chara-bound hunters", "Boss shuffle (reviewed encounters)",
+                        "BSB at Cleric Beast (playtest)"):
+            self.assertNotIn(retired, troubleshooting_texts | play_texts)
         self.assertEqual(parent_of[troubleshooting_tab], "notebook")
         # The operator override is available without cluttering normal setup.
-        for retired_tab in (troubleshooting_tab, enemy_tab, setup_tab):
+        for retired_tab in (troubleshooting_tab, setup_tab):
             self.assertNotIn("Allow suppression binder mismatch", texts_under(retired_tab))
 
     def test_ui_contract_keeps_the_log_and_status_out_of_the_notebook(self):
@@ -1392,6 +1422,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
         self.assertIn("self._enemy_widgets.extend((entry, button))", build)
         self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))", build)
+        self.assertIn("self._enemy_widgets.append(boss_pool_box)", build)
         toggle = source.split("def _toggle_enemy_fields")[1].split("def _state_root")[0]
         self.assertIn("for widget in self._enemy_widgets", toggle)
         self.assertIn('widget.configure(state=state)', toggle)
@@ -1443,6 +1474,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn('missing.append("player")', gate)
         self.assertIn('self.launch_hint.set("Needed: "', gate)
         self.assertIn('self.launch_button.configure(state="disabled")', gate)
+        self.assertIn('self.randomize_button.configure(state="disabled")', gate)
 
     def test_pasted_play_paths_refresh_setup_on_focus_or_return(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
@@ -2215,6 +2247,46 @@ class LauncherUiEarlyExitTests(unittest.TestCase):
         )
         self.assertIn("Client log: client.log", app.log)
         self.assertIn("shadPS4 log: shadps4.log", app.log)
+
+
+class RandomizeWithoutLaunchTests(unittest.TestCase):
+    """Randomize reports what it built and leaves Launch to start the game."""
+
+    class Status:
+        def __init__(self):
+            self.value = ""
+
+        def set(self, value):
+            self.value = value
+
+    def _randomized(self, *, reused, swaps, enabled=True):
+        from types import SimpleNamespace
+
+        app = FakeApp()
+        app.status = self.Status()
+        app._randomized_key = None
+        enemizer = None if swaps is None else SimpleNamespace(manifest={"swaps": [{}] * swaps})
+        prepared = SimpleNamespace(
+            build=SimpleNamespace(cache_key="ab" * 32, manifest={}),
+            enemizer=enemizer, reused=reused,
+        )
+        LauncherApp._randomized(app, prepared, EnemizerOptions(enabled=enabled))
+        return app
+
+    def test_a_fresh_build_names_its_swaps_and_points_at_launch(self):
+        app = self._randomized(reused=False, swaps=412)
+        self.assertEqual(app._randomized_key, "ab" * 32)
+        self.assertEqual(app.busy, [False])
+        # Reported in the action bar and log only: no modal to dismiss.
+        self.assertEqual(app.log, [app.status.value])
+        self.assertIn("412 enemy swaps", app.status.value)
+        self.assertIn("built and verified", app.status.value)
+        self.assertIn("Press Launch to play", app.status.value)
+
+    def test_a_cached_vanilla_build_says_so(self):
+        app = self._randomized(reused=True, swaps=None, enabled=False)
+        self.assertIn("enemies unchanged", app.status.value)
+        self.assertIn("already built", app.status.value)
 
 
 class HiddenDetailsLayoutTests(unittest.TestCase):

@@ -76,8 +76,8 @@ The exported package contains generated game data only. It contains no
 executable, AP server/password, save, log, ledger, runtime configuration, or
 receipt. Public releases must not ship a universal game-derived package.
 
-Standalone **Randomize & Launch**, **Launch Vanilla**, **Restore Previous**, and
-the standalone **Connect to running game** ownership path are unavailable in
+Standalone **Randomize**, **Launch**, **Launch Vanilla**, **Restore Previous**, and
+the standalone **Reconnect client** ownership path are unavailable in
 BBLauncher mode. The external verifier returns a separate
 `VerifiedExternalActivation`; it never creates `.bb-ap-owner.json`, weakens the
 standalone owner check, repairs BBLauncher state, or activates a package.
