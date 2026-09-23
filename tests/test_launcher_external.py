@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
+from types import MappingProxyType
 from unittest.mock import patch
 
 from bb_launcher.core import (
@@ -28,15 +29,18 @@ from bb_launcher.external import (
     BBLauncherBuildPin,
     EXTERNAL_RECEIPT_FORMAT,
     ExternalNamespace,
-    LIVE_ACCEPTANCE_CANDIDATES,
     export_external_package,
     load_external_receipt,
     verify_external_activation,
 )
 
 
-CANDIDATE_COMMIT = next(iter(LIVE_ACCEPTANCE_CANDIDATES))
-CANDIDATE_EXE = next(iter(LIVE_ACCEPTANCE_CANDIDATES[CANDIDATE_COMMIT]))
+# Synthetic, not a real pinned build: this file exercises the general
+# candidate mechanism, independent of whichever real build is currently
+# supported (f092023 graduated to SUPPORTED_BBLAUNCHER_BUILDS after its own
+# live-acceptance run and no longer belongs to this dict).
+CANDIDATE_COMMIT = "1" * 40
+CANDIDATE_EXE = "2" * 64
 
 
 def digest(data: bytes) -> str:
@@ -59,6 +63,12 @@ def identity(seed: str, slot: str = "Hunter / One") -> SeedIdentity:
 
 class ExternalArtifactTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.candidates_patch = patch(
+            "bb_launcher.external.LIVE_ACCEPTANCE_CANDIDATES",
+            new=MappingProxyType({CANDIDATE_COMMIT: frozenset({CANDIDATE_EXE})}),
+        )
+        self.candidates_patch.start()
+        self.addCleanup(self.candidates_patch.stop)
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         game = self.root / "game"

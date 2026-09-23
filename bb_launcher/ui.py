@@ -74,8 +74,8 @@ ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 # The palette and every ttk style live in ``theme``; this module only lays
 # widgets out.
 from .theme import (  # noqa: E402
-    Sidebar, apply_theme, autohide, field, option, page_header, scroll_page, section,
-    text_well,
+    Dialogs, Sidebar, apply_theme, autohide, enable_dark_titlebar, field, option,
+    page_header, scroll_page, section, text_well,
 )
 from .version import launcher_version  # noqa: E402
 
@@ -257,20 +257,21 @@ def settings_from_fields(fields: Mapping[str, str]) -> LauncherSettings:
 class LauncherApp:
     def __init__(self, root: Any, *, repo_root: Path, settings_path: Path):
         import tkinter as tk
-        from tkinter import filedialog, messagebox, ttk
+        from tkinter import filedialog, ttk
 
         self.tk = tk
         self.ttk = ttk
         self.filedialog = filedialog
-        self.messagebox = messagebox
         self.root = root
+        # A themed drop-in for tkinter.messagebox: same call shape, no
+        # white OS-chrome popup flashing against the dark body.
+        self.messagebox = Dialogs(tk, ttk, self.root)
         self.repo_root = repo_root.resolve()
         self.settings_path = settings_path.expanduser().resolve()
         self.workflow = LauncherWorkflow(self.repo_root)
         self.packaged_toolchain = self.workflow.toolchain.is_bundled
         self.fields = {name: tk.StringVar() for name, _label, _kind in FIELD_DEFINITIONS}
         self.randomize_enemies = tk.BooleanVar(value=True)
-        self.show_enemy_advanced = tk.BooleanVar(value=False)
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
         self.player_name = tk.StringVar()
@@ -279,8 +280,14 @@ class LauncherApp:
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
         self.normalize_scaling = tk.BooleanVar(value=False)
+        # The BSB-at-Cleric-Beast single-boss playtest mode is retired from the
+        # GUI (kept in the settings schema and workflow for a hand-edited
+        # settings.json); the var stays, permanently False, so nothing else
+        # that reads it needs to change.
         self.boss_canary = tk.BooleanVar(value=False)
-        self.boss_pool = tk.BooleanVar(value=False)
+        # On by default alongside enemy randomization: reviewed, though
+        # gameplay-untested, boss shuffle is the intended normal experience.
+        self.boss_pool = tk.BooleanVar(value=True)
         # Operator override (bb-archipelago#183).  Deliberately absent from
         # _save_settings and _load_settings_if_present: it is per-session by
         # construction, so it can never be left on and forgotten.
@@ -297,7 +304,6 @@ class LauncherApp:
         self.client_health = tk.StringVar(value="Client: not running (no live status)")
         self._health_monitoring = False
         self._enemy_widgets: list[Any] = []
-        self._enemy_advanced_widgets: list[Any] = []
         self._busy = False
 
         root.title("Bloodborne Archipelago")
@@ -317,7 +323,6 @@ class LauncherApp:
             name: self.fields[name].get().strip() for name in PRIMARY_FIELDS
         }
         self._toggle_enemy_fields()
-        self._toggle_enemy_advanced()
         self._refresh_launch_gate()
         self.root.after(0, self._refresh_status)
 
@@ -325,6 +330,7 @@ class LauncherApp:
         """Every colour, font and ttk style comes from ``theme``; nothing is
         configured ad hoc here, so the pages cannot drift from the palette."""
         apply_theme(self.root, self.ttk)
+        enable_dark_titlebar(self.root)
 
     def _apply_default_fields(self) -> None:
         """Fill derived fields and repair suppression paths from old packages."""
@@ -380,6 +386,12 @@ class LauncherApp:
         primary_rows = {"ap_request": seed_row, **game_rows}
 
         # --- Enemies ------------------------------------------------------
+        # Two decisions, not a checklist: whether enemies are randomized at
+        # all, and how bosses are handled -- the three ways bosses can be
+        # handled were already mutually exclusive at the workflow layer, so
+        # a radio group shows that instead of two checkboxes that looked
+        # independent but were not. Everything else here is fine-tuning
+        # almost nobody touches; it lives on Advanced instead.
         options_host = ttk.Frame(notebook)
         notebook.add(options_host, text="Enemies")
         options = scroll_page(tk, ttk, options_host)
@@ -392,47 +404,11 @@ class LauncherApp:
             command=self._toggle_enemy_fields,
         )
         enemy_row += 1
-        advanced_toggle, _advanced_toggle_row = option(
-            ttk, options, enemy_row, "Advanced enemy options", self.show_enemy_advanced,
-            command=self._toggle_enemy_advanced,
+        boss_pool_box, _ = option(
+            ttk, options, enemy_row, "Boss shuffle (reviewed encounters)", self.boss_pool,
+            caption="Every boss reassigned. Off keeps vanilla boss placement. Gameplay untested.",
         )
-        enemy_row += 1
-        # One frame holds everything the toggle discloses, so a caption can
-        # never be left behind by its control.
-        advanced = ttk.Frame(options)
-        advanced.grid(row=enemy_row, column=0, columnspan=3, sticky="ew")
-        advanced.columnconfigure(1, weight=1)
-        self._enemy_advanced_widgets = [advanced]
-        advanced_row = section(ttk, advanced, 0, "Seed")
-        seed_label, seed_entry, _ = field(
-            ttk, advanced, advanced_row, "Enemy seed", self.enemy_seed,
-            trailing="from the AP seed when blank",
-        )
-        advanced_row = section(ttk, advanced, advanced_row + 1, "Experimental")
-        tier, _tier_row = option(
-            ttk, advanced, advanced_row, "Allow tier mixing", self.allow_tier_mixing,
-            caption="Replacements may come from a different difficulty tier.",
-        )
-        locomotion, _locomotion_row = option(
-            ttk, advanced, advanced_row + 1, "Preserve locomotion", self.preserve_locomotion,
-            caption="Keep each slot's movement class. Tags are incomplete.",
-        )
-        scaling, _scaling_row = option(
-            ttk, advanced, advanced_row + 2, "Normalize enemy stats", self.normalize_scaling,
-            caption="Scale replacements to the slot they fill. Playtest only.",
-        )
-        boss, _boss_row = option(
-            ttk, advanced, advanced_row + 3, "Boss playtest: BSB at Cleric Beast", self.boss_canary,
-            caption="Only that swap, with scaling. Other enemies unchanged.",
-        )
-        pool, _pool_row = option(
-            ttk, advanced, advanced_row + 4, "Boss shuffle (reviewed encounters)", self.boss_pool,
-            caption="Gameplay untested.",
-        )
-        advanced_row = section(ttk, advanced, advanced_row + 5, "Build inputs")
-        enemy_inputs = ttk.Frame(advanced)
-        enemy_inputs.grid(row=advanced_row, column=0, columnspan=3, sticky="ew")
-        enemy_inputs.columnconfigure(1, weight=1)
+        self._boss_mode_widgets = (boss_pool_box,)
 
         # --- Create & host (inserts itself at index 1) --------------------
         from .local_session_ui import LocalSessionPanel
@@ -476,6 +452,35 @@ class LauncherApp:
         ).grid(row=troubleshooting_row, column=0, columnspan=3, sticky="w")
         troubleshooting_row += 1
 
+        # Seed override, tier mixing, locomotion preservation and stat
+        # normalization: real knobs, but ones almost nobody needs for a
+        # normal launch, so they live here rather than behind their own
+        # disclosure toggle on the Enemies page.
+        troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Enemy tuning")
+        seed_label, seed_entry, _ = field(
+            ttk, troubleshooting, troubleshooting_row, "Enemy seed", self.enemy_seed,
+            trailing="from the AP seed when blank",
+        )
+        troubleshooting_row += 1
+        tier, _tier_row = option(
+            ttk, troubleshooting, troubleshooting_row, "Allow tier mixing", self.allow_tier_mixing,
+            caption="Replacements may come from a different difficulty tier.",
+        )
+        locomotion, _locomotion_row = option(
+            ttk, troubleshooting, troubleshooting_row + 1, "Preserve locomotion", self.preserve_locomotion,
+            caption="Keep each slot's movement class. Tags are incomplete.",
+        )
+        scaling, _scaling_row = option(
+            ttk, troubleshooting, troubleshooting_row + 2, "Normalize enemy stats", self.normalize_scaling,
+            caption="Scale replacements to the slot they fill. Always on for the BSB "
+                    "playtest, regardless of this box.",
+        )
+        troubleshooting_row += 3
+        enemy_inputs = ttk.Frame(troubleshooting)
+        enemy_inputs.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
+        enemy_inputs.columnconfigure(1, weight=1)
+        troubleshooting_row += 1
+
         troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "BBLauncher mode")
         bblauncher = ttk.Frame(troubleshooting)
         bblauncher.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
@@ -483,29 +488,12 @@ class LauncherApp:
         from .external_ui import BBLauncherPanel
         self.bblauncher_panel = BBLauncherPanel(self, bblauncher)
 
-        troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Session overrides")
-        ttk.Label(
-            troubleshooting, text="Operators only. Never saved: every override resets when the launcher closes.",
-            style="Dim.TLabel",
-        ).grid(row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(0, 4))
-        troubleshooting_row += 1
-        # Outside the enemy-randomization widget group on purpose: it stays
-        # usable with Randomize Enemies off, and it is never saved.
-        option(
-            ttk, troubleshooting, troubleshooting_row, "Allow suppression binder mismatch",
-            self.allow_suppression_mismatch,
-        )
-        option(
-            ttk, troubleshooting, troubleshooting_row + 1, "Enable research captures",
-            self.research_captures, caption="Playtest diagnostics.",
-        )
-        option(
-            ttk, troubleshooting, troubleshooting_row + 2, "Allow AP seed/slot mismatch",
-            self.allow_seed_mismatch,
-            caption="The warning names the expected and connected identity.",
-        )
-        troubleshooting_row += 3
-
+        # Session overrides (suppression-binder mismatch, seed/slot mismatch,
+        # research captures) retired from the GUI: they were operator-only,
+        # never-saved escape hatches that had outlived their usefulness here.
+        # The vars stay permanently False now that nothing sets them; the CLI
+        # doctor command (--allow-suppression-mismatch, --allow-seed-mismatch)
+        # remains the way to invoke them when genuinely needed.
         troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Paths")
         paths = ttk.Frame(troubleshooting)
         paths.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
@@ -561,8 +549,8 @@ class LauncherApp:
             row=summary_row, column=0, columnspan=3, sticky="w", pady=(6, 0)
         )
 
-        self._enemy_widgets.extend((seed_entry, tier, locomotion))
-        self._enemy_widgets.extend((scaling, boss, pool))
+        self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))
+        self._enemy_widgets.extend(self._boss_mode_widgets)
 
         # --- Details drawer: launch progress and session status ------------
         # Outside the notebook so no page can hide it (bb-archipelago#190).
@@ -807,13 +795,6 @@ class LauncherApp:
             text="Randomize & Launch" if self.randomize_enemies.get() else "Build & Launch"
         )
 
-    def _toggle_enemy_advanced(self) -> None:
-        visible = self.show_enemy_advanced.get()
-        for widget in self._enemy_advanced_widgets:
-            if visible:
-                widget.grid()
-            else:
-                widget.grid_remove()
 
     def _show_player_choice(self, visible: bool) -> None:
         for widget in (self.player_label, self.player_combo, self.player_help):
@@ -1203,11 +1184,15 @@ class LauncherApp:
 
         from .enemy_report import MAP_AREAS
 
+        from .theme import THEME_BACKGROUND, THEME_BORDER, THEME_FOREGROUND, THEME_PANEL
+
         tk = self.tk
         dialog = tk.Toplevel(self.root)
         dialog.title("Report a Bad Enemy")
         dialog.transient(self.root)
+        dialog.configure(bg=THEME_BACKGROUND)
         dialog.resizable(False, False)
+        enable_dark_titlebar(dialog)
         frame = ttk.Frame(dialog, padding=12)
         frame.grid(row=0, column=0, sticky="nsew")
         frame.columnconfigure(1, weight=1)
@@ -1221,7 +1206,11 @@ class LauncherApp:
         echoes_var = tk.StringVar()
         ttk.Entry(frame, textvariable=echoes_var, width=12).grid(row=1, column=1, sticky="w", pady=4)
         ttk.Label(frame, text="What did you see?").grid(row=2, column=0, sticky="nw", pady=4)
-        note = tk.Text(frame, height=4, width=44, wrap="word")
+        note = tk.Text(
+            frame, height=4, width=44, wrap="word", relief="flat", borderwidth=1,
+            highlightthickness=1, highlightbackground=THEME_BORDER, highlightcolor=THEME_BORDER,
+            bg=THEME_PANEL, fg=THEME_FOREGROUND, insertbackground=THEME_FOREGROUND,
+        )
         note.grid(row=2, column=1, sticky="ew", pady=4)
         result: dict[str, Any] = {}
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import threading
 import uuid
+import webbrowser
 from pathlib import Path
 
 from .core import ValidationError
@@ -19,6 +20,11 @@ from .local_session import (
 from .resources import resource_root
 from .seed_request import archive_slots
 from .workflow import _request_identity, check_seed_slot_identity
+
+# The full options wizard: renders from the apworld's own option surface (see
+# tools/build_wizard.py), so the launcher links to it instead of hand-
+# maintaining a second, second-hand options catalog in Tk.
+WIZARD_URL = "https://peliarch.ca/bb/wizard.html"
 
 
 def write_solo_player(root: Path, name: str, include_dlc: bool) -> Path:
@@ -60,15 +66,31 @@ class LocalSessionPanel:
         self._load()
         from .theme import field, option, page_header, scroll_page, section
         host_frame = ttk.Frame(notebook)
-        notebook.insert(1, host_frame, text="Create & host")
+        # Play and Enemies are what every normal launch touches; Create & host
+        # is occasional setup, so it sits after them, ahead of Advanced.
+        notebook.insert(2, host_frame, text="Create & host")
         frame = scroll_page(tk, ttk, host_frame)
         row = page_header(ttk, frame, "Create & host", "Generate a seed on this PC and host it for yourself.")
         row = section(ttk, frame, row, "Your game", first=True)
         field(ttk, frame, row, "Player name", self.name)
         option(ttk, frame, row + 1, "Include The Old Hunters DLC", self.include_dlc)
-        row = section(ttk, frame, row + 2, "Multiworld")
+        wizard_row = ttk.Frame(frame)
+        wizard_row.grid(row=row + 2, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+        ttk.Label(
+            wizard_row,
+            text="Want to choose your goal, item pool, deathlink, and everything else the "
+                 "apworld exposes? Build a custom yaml in your browser instead of the name "
+                 "and DLC above.",
+            style="Dim.TLabel", wraplength=520,
+        ).grid(row=0, column=0, sticky="w")
+        ttk.Button(
+            wizard_row, text="Build a custom yaml…", style="Ghost.TButton",
+            command=self._open_wizard,
+        ).grid(row=0, column=1, sticky="e", padx=(12, 0))
+        wizard_row.columnconfigure(0, weight=1)
+        row = section(ttk, frame, row + 3, "Multiworld")
         option(ttk, frame, row, "Use existing player YAML files", self.use_folder,
-               caption="Bring your own player files instead of a solo seed.")
+               caption="Bring your own player files, including one from the yaml builder above.")
         field(ttk, frame, row + 1, "YAML folder", self.players, browse=self._browse_players)
         row = section(ttk, frame, row + 2, "Local server")
         option(ttk, frame, row, "Start the server after generation", self.auto_host)
@@ -98,6 +120,13 @@ class LocalSessionPanel:
         frame.bind("<Configure>", lambda e: status.configure(wraplength=max(300, e.width - 60)), add="+")
         app.root.protocol("WM_DELETE_WINDOW", self._close)
         app.root.after(1000, self._poll)
+
+    def _open_wizard(self):
+        """Open the full options builder; never fails the app if it can't."""
+        try:
+            webbrowser.open(WIZARD_URL)
+        except Exception as exc:  # noqa: BLE001 - opening a browser is a convenience
+            self._error(f"Could not open the options builder: {exc}")
 
     def _browse_root(self):
         value = self.app.filedialog.askdirectory(title="Archipelago installation")

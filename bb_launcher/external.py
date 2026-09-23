@@ -62,18 +62,21 @@ class ExternalPackageExists(ValidationError):
         )
         self.path = path
 
-# Support remains deliberately empty until a complete Windows live-acceptance
-# run has passed.  The source-reviewed local binary below may be used only when
-# both the pin and the call explicitly mark it as a live-acceptance candidate.
-SUPPORTED_BBLAUNCHER_BUILDS: frozenset[tuple[str, str]] = frozenset()
-LIVE_ACCEPTANCE_CANDIDATES = MappingProxyType({
-    "f092023f6cdf36a83ce735f7124b7835e9cf03b0": frozenset({
-        # Release 16.10 UAC and no-UAC Windows binaries.  They share source
-        # paths but exercise BBLauncher's symlink and copy routes respectively.
-        "a990d5507f22d8b0590d8b9426519c98de6fe86042a61a32e679e4a1a66b2d0a",
-        "2cfa43cf05a16e0c0ebaf87275d295961afff32c91ea57962e83c474358881f0",
-    }),
+# f092023 (release 16.10) completed live acceptance in-game and is fully
+# supported: no operator opt-in required.  Both hashes are the same build's
+# UAC and no-UAC Windows binaries, exercising BBLauncher's symlink and copy
+# routes respectively.  Support stays empty for any OTHER build until it has
+# passed its own live-acceptance run.
+SUPPORTED_BBLAUNCHER_BUILDS: frozenset[tuple[str, str]] = frozenset({
+    ("f092023f6cdf36a83ce735f7124b7835e9cf03b0",
+     "a990d5507f22d8b0590d8b9426519c98de6fe86042a61a32e679e4a1a66b2d0a"),
+    ("f092023f6cdf36a83ce735f7124b7835e9cf03b0",
+     "2cfa43cf05a16e0c0ebaf87275d295961afff32c91ea57962e83c474358881f0"),
 })
+# Deliberately empty until a NEXT build completes its own live-acceptance run.
+# A source-reviewed development build may be used only when both the pin and
+# the call explicitly mark it as a live-acceptance candidate.
+LIVE_ACCEPTANCE_CANDIDATES: "MappingProxyType[str, frozenset[str]]" = MappingProxyType({})
 
 
 @dataclass(frozen=True)

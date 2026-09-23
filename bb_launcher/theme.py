@@ -177,6 +177,20 @@ def apply_theme(root: Any, ttk: Any) -> None:
     style.configure("Heading.TCheckbutton", font=("Segoe UI", 11, "bold"))
 
     style.configure(
+        "TRadiobutton", background=THEME_BACKGROUND, foreground=THEME_FOREGROUND,
+        indicatorbackground=THEME_PANEL, indicatorforeground=THEME_FOREGROUND,
+        indicatormargin=(0, 2, 8, 2), focuscolor=THEME_BACKGROUND, padding=(0, 2),
+    )
+    style.map(
+        "TRadiobutton",
+        background=[("active", THEME_BACKGROUND)],
+        indicatorbackground=[("disabled", THEME_BACKGROUND), ("selected", THEME_BLOOD),
+                             ("active", THEME_PANEL_HOVER)],
+        indicatorforeground=[("disabled", THEME_DIM), ("selected", THEME_ON_BLOOD)],
+        foreground=[("disabled", THEME_DIM)],
+    )
+
+    style.configure(
         "Horizontal.TProgressbar", background=THEME_BLOOD, troughcolor=THEME_PANEL,
         bordercolor=THEME_PANEL, lightcolor=THEME_BLOOD, darkcolor=THEME_BLOOD, thickness=3,
     )
@@ -302,6 +316,28 @@ def option(ttk: Any, parent: Any, row: int, text: str, variable: Any, *,
             row=1, column=0, sticky="w", padx=(26, 0), pady=(0, 2)
         )
     return box, holder
+
+
+def radio_option(ttk: Any, parent: Any, row: int, text: str, variable: Any, value: str, *,
+                  caption: str | None = None, command: Callable[[], None] | None = None,
+                  columnspan: int = 3, indent: int = 0):
+    """One choice in a mutually-exclusive group, same shape as ``option``.
+
+    Use this instead of two independent checkboxes whenever a control only
+    lets one of several states be true at once -- the exclusivity should be
+    visible in the control, not left for the backend validation to enforce
+    silently. Returns ``(radiobutton, row_frame)``.
+    """
+    holder = ttk.Frame(parent)
+    holder.grid(row=row, column=0, columnspan=columnspan, sticky="ew", padx=(indent, 0), pady=(2, 2))
+    holder.columnconfigure(0, weight=1)
+    button = ttk.Radiobutton(holder, text=text, variable=variable, value=value, command=command)
+    button.grid(row=0, column=0, sticky="w")
+    if caption:
+        ttk.Label(holder, text=caption, style="Dim.TLabel").grid(
+            row=1, column=0, sticky="w", padx=(26, 0), pady=(0, 2)
+        )
+    return button, holder
 
 
 def scroll_page(tk: Any, ttk: Any, host: Any, *, padding: tuple[int, int, int, int] = (28, 22, 28, 22)) -> Any:
@@ -474,3 +510,149 @@ def health_tone(text: str) -> str:
                                         "checking", "paused", "unverified", "no prepared")):
         return THEME_WARN
     return THEME_DIM
+
+
+class Dialogs:
+    """A themed drop-in for ``tkinter.messagebox``.
+
+    Same call shape as the stock module (``showerror(title, message, parent=...)``,
+    ``askyesno(...) -> bool``) so every existing ``self.messagebox.showerror(...)``
+    call site works unchanged; only what ``self.messagebox`` points at changes.
+    The stock dialogs render as an unthemed white OS window no matter how dark
+    the rest of the app is, which is exactly the jarring flash this replaces.
+    """
+
+    _KIND_STYLE = {
+        "error": (THEME_BAD, "✕"),      # heavy multiplication x
+        "warning": (THEME_WARN, "⚠"),   # warning sign
+        "info": (THEME_GOLD, "ℹ"),      # information source
+        "question": (THEME_GOLD, "?"),
+    }
+
+    def __init__(self, tk: Any, ttk: Any, default_parent: Any) -> None:
+        self.tk = tk
+        self.ttk = ttk
+        self.default_parent = default_parent
+
+    def showerror(self, title: str, message: str, *, parent: Any = None) -> None:
+        self._modal("error", title, message, parent, buttons=("OK",))
+
+    def showwarning(self, title: str, message: str, *, parent: Any = None) -> None:
+        self._modal("warning", title, message, parent, buttons=("OK",))
+
+    def showinfo(self, title: str, message: str, *, parent: Any = None) -> None:
+        self._modal("info", title, message, parent, buttons=("OK",))
+
+    def askyesno(self, title: str, message: str, *, parent: Any = None) -> bool:
+        choice = self._modal("question", title, message, parent, buttons=("No", "Yes"))
+        return choice == "Yes"
+
+    def _modal(self, kind: str, title: str, message: str, parent: Any, *, buttons: tuple[str, ...]) -> str | None:
+        tk, ttk = self.tk, self.ttk
+        owner = parent or self.default_parent
+        colour, glyph = self._KIND_STYLE[kind]
+        window = tk.Toplevel(owner)
+        window.withdraw()
+        window.title(title)
+        window.transient(owner)
+        window.resizable(False, False)
+        window.configure(bg=THEME_BACKGROUND)
+        window.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        outer = ttk.Frame(window, padding=20)
+        outer.grid(row=0, column=0, sticky="nsew")
+        window.columnconfigure(0, weight=1)
+        window.rowconfigure(0, weight=1)
+
+        header = ttk.Frame(outer)
+        header.grid(row=0, column=0, sticky="ew")
+        header.columnconfigure(1, weight=1)
+        badge = tk.Canvas(header, width=28, height=28, bg=THEME_BACKGROUND, highlightthickness=0)
+        badge.grid(row=0, column=0, sticky="n", padx=(0, 14))
+        badge.create_oval(1, 1, 27, 27, fill=colour, outline="")
+        badge.create_text(14, 15, text=glyph, fill=THEME_BACKGROUND, font=("Segoe UI", 12, "bold"))
+        ttk.Label(header, text=title, style="Title.TLabel", font=("Georgia", 15)).grid(
+            row=0, column=1, sticky="w"
+        )
+
+        # Long text (a traceback, a multi-line doctor report) gets a scrolling
+        # read-only well instead of an unbounded Label, so the window never
+        # grows past the screen and short text never grows a needless scrollbar.
+        lines = message.count("\n") + 1
+        body_height = min(max(lines, 2), 14)
+        body_frame = ttk.Frame(outer)
+        body_frame.grid(row=1, column=0, sticky="nsew", pady=(16, 0))
+        body_frame.columnconfigure(0, weight=1)
+        outer.rowconfigure(1, weight=1)
+        body = text_well(tk, body_frame, height=body_height, width=56)
+        body.configure(state="normal")
+        body.insert("1.0", message.rstrip())
+        body.configure(state="disabled")
+        body.grid(row=0, column=0, sticky="nsew")
+        scrollbar = ttk.Scrollbar(body_frame, orient="vertical", command=body.yview)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+        body.configure(yscrollcommand=autohide(scrollbar))
+
+        result: dict[str, str] = {}
+
+        def choose(value: str) -> None:
+            result["value"] = value
+            window.destroy()
+
+        actions = ttk.Frame(outer)
+        actions.grid(row=2, column=0, sticky="e", pady=(16, 0))
+        default_button = None
+        for index, label in enumerate(buttons):
+            style = "Accent.TButton" if index == len(buttons) - 1 else "Ghost.TButton"
+            button = ttk.Button(actions, text=label, style=style, command=lambda v=label: choose(v))
+            button.grid(row=0, column=index, padx=(8 if index else 0, 0))
+            default_button = button
+        window.bind("<Return>", lambda _e: choose(buttons[-1]))
+        window.bind("<Escape>", lambda _e: choose(buttons[0]))
+
+        window.update_idletasks()
+        if owner is not None and owner.winfo_viewable():
+            x = owner.winfo_rootx() + (owner.winfo_width() - window.winfo_reqwidth()) // 2
+            y = owner.winfo_rooty() + (owner.winfo_height() - window.winfo_reqheight()) // 3
+            window.geometry(f"+{max(x, 0)}+{max(y, 0)}")
+        window.deiconify()
+        window.lift()
+        window.grab_set()
+        window.focus_set()
+        if default_button is not None:
+            default_button.focus_set()
+        window.wait_window()
+        return result.get("value")
+
+
+def enable_dark_titlebar(window: Any) -> None:
+    """Ask Windows to draw ``window``'s native title bar in dark mode.
+
+    Without this, every Tk top-level (the main window, every themed dialog,
+    every settings Toplevel) keeps the stock light title bar and border no
+    matter how dark the body is -- exactly the washed-out strip across the
+    top of an otherwise dark window. Windows-only and best-effort: any
+    failure here is cosmetic, never worth losing the window over.
+    """
+    import sys
+
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        window.update_idletasks()
+        # winfo_id() on Tk/Windows returns the drawing-surface HWND, a child
+        # of the real decorated frame; GetParent walks up to that frame,
+        # which is the window DWM actually paints a title bar for.
+        hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
+        # 20 on Windows 10 2004+/11; 19 on the original 1809-1909 builds.
+        for attribute in (20, 19):
+            value = ctypes.c_int(1)
+            result = ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, attribute, ctypes.byref(value), ctypes.sizeof(value)
+            )
+            if result == 0:
+                break
+    except Exception:  # noqa: BLE001 - title bar colour is cosmetic only
+        pass

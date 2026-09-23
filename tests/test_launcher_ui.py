@@ -600,7 +600,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
         self.assertLessEqual({"token_goods_id", "item_lot_id", "ack_flag"}, set(rows[0]))
         cleanup = common["rows"]["toast_placeholders"]
-        self.assertEqual([], cleanup)
+        self.assertFalse(cleanup)
 
     def test_cathedral_build_failure_preserves_diagnostics_and_does_not_activate(self):
         toolchain = FakeToolchain()
@@ -1152,34 +1152,31 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("tools.bb_enemizer.cli", (self.repo / "bb_launcher" / "workflow.py").read_text())
         self.assertIn("BBEnemizerWriter.csproj", (self.repo / "bb_launcher" / "workflow.py").read_text())
 
-    def test_ui_contract_offers_the_override_checkbox_and_never_persists_it(self):
-        """bb-archipelago#183: opt-in per session, and impossible to leave on.
-
-        The UI writes every other toggle into the saved setup; this one is
-        absent from both the save and the load on purpose, so an operator who
-        used it once cannot silently launch a player's seed unvalidated a week
-        later.
+    def test_session_override_checkboxes_are_retired_from_the_gui(self):
+        """These were operator-only, never-saved escape hatches (bb-archipelago
+        #183, #347) that had outlived their usefulness as GUI controls. The
+        vars stay (permanently False, since nothing sets them any more) so the
+        background-thread call signatures below them are untouched; only the
+        checkbox text goes. The CLI doctor command keeps the real escape hatch.
         """
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('"Allow suppression binder mismatch"', source)
+        for retired in ('"Allow suppression binder mismatch"', '"Enable research captures"',
+                        '"Allow AP seed/slot mismatch"'):
+            self.assertNotIn(retired, source)
         self.assertIn("allow_suppression_mismatch=allow_suppression_mismatch", source)
-        save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
-        load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
-        # The control: the neighbouring toggles ARE persisted, so this is a
-        # statement about this knob, not about an inert pair of blocks.
-        self.assertIn("allow_tier_mixing", save)
-        self.assertIn("allow_tier_mixing", load)
-        self.assertNotIn("allow_suppression_mismatch", save)
-        self.assertNotIn("allow_suppression_mismatch", load)
-
-    def test_ui_contract_offers_research_captures_and_never_persists_it(self):
-        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('"Enable research captures"', source)
         self.assertIn("research_captures=research_captures", source)
         save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
         load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
-        self.assertNotIn("research_captures", save)
-        self.assertNotIn("research_captures", load)
+        # The control: the neighbouring toggles ARE persisted, so this is a
+        # statement about these knobs, not about an inert pair of blocks.
+        self.assertIn("allow_tier_mixing", save)
+        self.assertIn("allow_tier_mixing", load)
+        for retired in ("allow_suppression_mismatch", "research_captures", "allow_seed_mismatch"):
+            self.assertNotIn(retired, save)
+            self.assertNotIn(retired, load)
+        cli = (self.repo / "bb_launcher" / "cli.py").read_text(encoding="utf-8")
+        self.assertIn("--allow-suppression-mismatch", cli)
+        self.assertIn("--allow-seed-mismatch", cli)
 
     def _build_widget_tree(self):
         """(parent-of-var, widgets-by-parent-var) read out of `_build` itself.
@@ -1271,22 +1268,27 @@ class LauncherUiWorkflowTests(unittest.TestCase):
                 found |= texts_by_parent.get(frame, set())
             return found
 
+        # Enemies is down to two decisions; the BSB single-boss playtest mode
+        # and every fine-tuning knob (seed, tier mixing, locomotion, stat
+        # normalization) live on Advanced instead, per player, not behind a
+        # second disclosure toggle nested inside this tab.
+        enemy_texts = texts_under(enemy_tab)
         self.assertLessEqual(
-            {
-                "Randomize enemies",
-                "Allow tier mixing",
-                "Normalize enemy stats",
-                "Boss playtest: BSB at Cleric Beast",
-                "Preserve locomotion",
-                "Enemy seed",
-            },
-            texts_under(enemy_tab),
+            {"Randomize enemies", "Boss shuffle (reviewed encounters)"}, enemy_texts,
+        )
+        for retired in ("Allow tier mixing", "Normalize enemy stats", "Preserve locomotion",
+                        "Enemy seed", "Boss playtest: BSB at Cleric Beast",
+                        "BSB at Cleric Beast (playtest)"):
+            self.assertNotIn(retired, enemy_texts)
+        troubleshooting_texts = texts_under(troubleshooting_tab)
+        self.assertLessEqual(
+            {"Allow tier mixing", "Normalize enemy stats", "Preserve locomotion", "Enemy seed"},
+            troubleshooting_texts,
         )
         self.assertEqual(parent_of[troubleshooting_tab], "notebook")
         # The operator override is available without cluttering normal setup.
-        self.assertIn("Allow suppression binder mismatch", texts_under(troubleshooting_tab))
-        self.assertNotIn("Allow suppression binder mismatch", texts_under(enemy_tab))
-        self.assertNotIn("Allow suppression binder mismatch", texts_under(setup_tab))
+        for retired_tab in (troubleshooting_tab, enemy_tab, setup_tab):
+            self.assertNotIn("Allow suppression binder mismatch", texts_under(retired_tab))
 
     def test_ui_contract_keeps_the_log_and_status_out_of_the_notebook(self):
         """The progress log is launch progress, so no tab can hide it."""
@@ -1388,7 +1390,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             ENEMY_FIELDS, {"map_studio_source", "enemy_inventory", "soulsformats_next"}
         )
         self.assertIn("self._enemy_widgets.extend((entry, button))", build)
-        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion))", build)
+        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))", build)
         toggle = source.split("def _toggle_enemy_fields")[1].split("def _state_root")[0]
         self.assertIn("for widget in self._enemy_widgets", toggle)
         self.assertIn('widget.configure(state=state)', toggle)
@@ -1419,9 +1421,11 @@ class LauncherUiWorkflowTests(unittest.TestCase):
 
     def test_everyday_launch_controls_disclose_only_when_needed(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('"Advanced enemy options"', source)
-        self.assertIn("self._enemy_advanced_widgets", source)
-        self.assertIn("widget.grid_remove()", source)
+        # The Enemies page's own "Advanced enemy options" disclosure toggle is
+        # retired: fine-tuning lives permanently on the Advanced page instead
+        # of behind a second nested toggle.
+        self.assertNotIn('"Advanced enemy options"', source)
+        self.assertNotIn("_enemy_advanced_widgets", source)
         self.assertIn("self._show_player_choice(len(names) > 1)", source)
         self.assertIn("self._show_player_choice(False)", source)
 
@@ -1554,6 +1558,16 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         for method in ("_start_enemy_report", "_run_enemy_report", "write_report", "load_context"):
             self.assertIn(method, source)
 
+    def test_create_and_host_links_to_the_full_options_builder(self):
+        """bb-archipelago: the solo form only ever covered name + DLC; the
+        real option surface (goal, item pool, deathlink, ...) is the wizard
+        that already renders from the apworld's own metadata, not a second
+        hand-maintained catalog in Tk."""
+        source = (self.repo / "bb_launcher" / "local_session_ui.py").read_text(encoding="utf-8")
+        self.assertIn('WIZARD_URL = "https://peliarch.ca/bb/wizard.html"', source)
+        self.assertIn("webbrowser.open(WIZARD_URL)", source)
+        self.assertIn("Build a custom yaml", source)
+
     def test_ui_contract_can_generate_the_launch_plan(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         self.assertNotIn('text="Generate Launch Plan"', source)
@@ -1641,8 +1655,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             selected_manifest = root / "selected.json"
             selected_binder.write_bytes(b"selected")
             selected_manifest.write_text("{}", encoding="utf-8")
-            self.assertEqual(
-                {},
+            self.assertFalse(
                 repair_stale_packaged_suppression_paths(
                     {
                         "suppression_binder": str(selected_binder),
