@@ -43,6 +43,11 @@ checkout:
   -PythonExecutable "D:\Python312\python.exe"
 ```
 
+[Clean Windows distribution evidence](standalone-windows-package-checkpoint.json)
+records the package at commit `938e129`, all 39 focused tests, and a complete
+frozen build/export/verify run with PATH limited to Windows system directories.
+All 37 decompressed game payloads match the source build exactly.
+
 ## Planner development interface
 
 To generate an item plan directly from source:

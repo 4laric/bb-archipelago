@@ -1,0 +1,462 @@
+{
+  "format": "bb-standalone-windows-package-checkpoint-v1",
+  "package": {
+    "revision": "938e12942d6f4cfc5098adaa380da5fe8b30146f",
+    "dirty": false,
+    "verified_files": 75,
+    "zip_size": 106164609,
+    "zip_sha256": "cd8f60147e050d3d4a5c7588080d6fa25a61daef466d0fb2d84ade238b2ccdf5",
+    "filename": "BloodborneStandaloneRandomizer-win-x64.zip",
+    "manifest_sha256": "0e7b7beaeaf5fa3e7f0ab692c3fea1db7d3b3476e709b525d8d3c5ce3910feab",
+    "self_contained": true,
+    "includes_archipelago_runtime": false,
+    "includes_pinned_research_bundle": true
+  },
+  "validation": {
+    "focused_tests_passed": 39,
+    "local_native_item_tests_passed": 5,
+    "package_crc_and_all_file_hashes_verified": true,
+    "frozen_modules_inspected": true,
+    "build_export_verify_passed_with_path_limited_to_windows_directories": true,
+    "gameplay_tested": false
+  },
+  "seed_build": {
+    "seed": "standalone-installed-inputs-1",
+    "identity_sha256": "19a4a213df9afb2e463001e6fedb7714dc7591fc594fbb057c4f1b9c521ddfb0",
+    "receipt_sha256": "a65354c0ed7912a54e43de34eff8c72dd78273465ba19079e826822f3aae5adb",
+    "verified_build_files": 45,
+    "native_payload_files": 37,
+    "item_locations": 503,
+    "logical_enemy_swaps": 308,
+    "physical_enemy_parts": 545,
+    "maps": 22,
+    "ai_banks": 14,
+    "unresolved_ai_goals": 0,
+    "scaled_npcs": 226,
+    "scaling_effects": 62
+  },
+  "bblauncher_export": {
+    "archive_sha256": "e171e103b81a8c95ad184a2d696a352e6f66ed238ae4b8b2f464aa1f1ae8bb31",
+    "files": [
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m22_00_00_00.msb.dcx",
+        "sha256": "467b464450f828eecaf1da0153d6fc4d529b337ad724886ccd2c77e0adc04e93",
+        "size": 74085
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m23_00_00_00.msb.dcx",
+        "sha256": "6b579cc4070c8c9766d73273f532932eec9b56f9e0305e9f810d8f6c43b856cd",
+        "size": 106758
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m23_00_00_01.msb.dcx",
+        "sha256": "c09df9517ef21b9048078cf6da33963f47cd0bfc8baf04f7e8af840ad200931e",
+        "size": 107027
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_00_00_00.msb.dcx",
+        "sha256": "b18f15cefd739671a2bd981f2a74f9be941d684c5432c978cb1e4f815cddaada",
+        "size": 223649
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_00_00_01.msb.dcx",
+        "sha256": "a3f8debc002fdf972cbd464a251be4967f1b8064b36fa1fd5d36cc581c8a3896",
+        "size": 224010
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_01_00_00.msb.dcx",
+        "sha256": "fc797313c11ded532eda70c2d86d26c5f9e6aa881d7d9bfdb01790427598ee19",
+        "size": 250545
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_01_00_01.msb.dcx",
+        "sha256": "a9e85f0aaa852ab6553125e83f1d408a2bfcb72f63712ad411569af050ef7fcb",
+        "size": 250273
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_01_00_11.msb.dcx",
+        "sha256": "0f999c05f5f584dede3e5f56d8b2164bd7ea8f9cc9e766235e95f1c9d919c5b0",
+        "size": 250245
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_02_00_00.msb.dcx",
+        "sha256": "7433ff42902b232ae5423f8c88d3fe6fc3a153d00a21c4ef99713e15a7ffe983",
+        "size": 46987
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_02_00_01.msb.dcx",
+        "sha256": "b2b227b48911d305e98bea49621ac28a0ce1a7685ebef6723acf59eccd45dd17",
+        "size": 47230
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m25_00_00_00.msb.dcx",
+        "sha256": "3eae10710e23bf61cce7df73194aac85995e48e4201dc54d91c2329fe3dd768b",
+        "size": 48745
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m26_00_00_00.msb.dcx",
+        "sha256": "78f34ba4cd220158cc50b74dfb51af877a8356c410386459c2a4ff7f7692480b",
+        "size": 144405
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m27_00_00_00.msb.dcx",
+        "sha256": "aaf837ecb98c25bed5f218777cfc89befeb63fe493407ab158ca78273d2997d7",
+        "size": 187353
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m27_00_00_01.msb.dcx",
+        "sha256": "64491d817c2e525e2fa9e05dd25695971bdae6760dd59409d11261bf30fedb9c",
+        "size": 188215
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m28_00_00_00.msb.dcx",
+        "sha256": "21f1822122b6fa302742edbbb7d3b5a2cd63cbb0c8a81e5abfb5ae25e8500fb2",
+        "size": 134524
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m28_00_00_01.msb.dcx",
+        "sha256": "ecf509d4eefb2cb9bd2c0ea2bd3d5f17f83b9cd074577081ba6059613d90b18e",
+        "size": 134987
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m32_00_00_00.msb.dcx",
+        "sha256": "91aea247db82f1bdab5735fd2d7ab0a5f68daff6a8e4c52bf46efcf184692dc3",
+        "size": 89845
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m32_00_00_01.msb.dcx",
+        "sha256": "2474051d9c25b700ff63b4b00ce67ebf1e2c8ec8380d4467027638fa97d06de3",
+        "size": 90572
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m33_00_00_00.msb.dcx",
+        "sha256": "bd134fdf809e687984c01d92f952cbbc4614232633191ae3bffea46923f7ddd6",
+        "size": 60784
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m34_00_00_00.msb.dcx",
+        "sha256": "0532c89aa51b743da28a0eda0abaf4d785162db3512de75678ea01bac1bb64f5",
+        "size": 139060
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m35_00_00_00.msb.dcx",
+        "sha256": "1b827d8e61963bac0d5152fed5432b0aee4617e6e9717e4d0d354bb27cf6ecc1",
+        "size": 159713
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m36_00_00_00.msb.dcx",
+        "sha256": "cd1c21efb5ed76d0ee895984dfa0edfe9fcf52b83be0328acbfe777aac22dc57",
+        "size": 78807
+      },
+      {
+        "path": "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx",
+        "sha256": "5ac7523b4a0cd9991c2619b2ceee317c524ee0175187791b7de356ba2adcfe2d",
+        "size": 1540611
+      },
+      {
+        "path": "dvdroot_ps4/script/m22_00_00_00.luabnd.dcx",
+        "sha256": "dbb00147556ba659cdab436ee413e3d2561048984aafb8976ad52b50c490ead9",
+        "size": 48237
+      },
+      {
+        "path": "dvdroot_ps4/script/m23_00_00_00.luabnd.dcx",
+        "sha256": "bed8222d5e8a0013c73d3b12e586104668e108d45d3d6da7b1833c3fbb76b4d2",
+        "size": 63935
+      },
+      {
+        "path": "dvdroot_ps4/script/m24_00_00_00.luabnd.dcx",
+        "sha256": "dfbe1f4acf077ed7d29e71b68c4463390858f4aad63aead4eb5c50ad5b47e049",
+        "size": 160053
+      },
+      {
+        "path": "dvdroot_ps4/script/m24_01_00_00.luabnd.dcx",
+        "sha256": "d7fa70d66ca6cf82bc70d83fa93d79c17c59a1e79a2ad626853995045869f167",
+        "size": 151472
+      },
+      {
+        "path": "dvdroot_ps4/script/m24_02_00_00.luabnd.dcx",
+        "sha256": "7109844906cc1487dc34ee2b9c012d667832f6cc9f1452398661a83885c43ab3",
+        "size": 127960
+      },
+      {
+        "path": "dvdroot_ps4/script/m25_00_00_00.luabnd.dcx",
+        "sha256": "7a11ca3e907aa72b54fc46e60e64ea77cf9d265ed425f14384bc2e1cb4773260",
+        "size": 65607
+      },
+      {
+        "path": "dvdroot_ps4/script/m26_00_00_00.luabnd.dcx",
+        "sha256": "2d699f67bc11b419d03389bb00cd0e2a734b67f68327b1f8c7c5caa65ff53e17",
+        "size": 122036
+      },
+      {
+        "path": "dvdroot_ps4/script/m27_00_00_00.luabnd.dcx",
+        "sha256": "002401590e30f194c20ddc118eae03494c6423f3592582855725525395e97e1d",
+        "size": 138642
+      },
+      {
+        "path": "dvdroot_ps4/script/m28_00_00_00.luabnd.dcx",
+        "sha256": "d9724c7405e85b954a3cc9404a64d89e7978471ec66af8826d59de4fd2ed4141",
+        "size": 109012
+      },
+      {
+        "path": "dvdroot_ps4/script/m32_00_00_00.luabnd.dcx",
+        "sha256": "ce8221154b21cf99149b6fc7ded04c9125fa9efc52301083a0a2aad96d58a003",
+        "size": 63963
+      },
+      {
+        "path": "dvdroot_ps4/script/m33_00_00_00.luabnd.dcx",
+        "sha256": "a12e5347eb515bbc88953fe57ac90cd452becf1050774178e4e6c8da44d5d405",
+        "size": 84657
+      },
+      {
+        "path": "dvdroot_ps4/script/m34_00_00_00.luabnd.dcx",
+        "sha256": "770d170da50e5bb3382e64afcc57dcc0e437f9bd05cdb02a2ef5e64f1f5be090",
+        "size": 175549
+      },
+      {
+        "path": "dvdroot_ps4/script/m35_00_00_00.luabnd.dcx",
+        "sha256": "9cbc59744f09c76de51d7086a89acc06fc072f37aa637a1bdc91ab541f944dd5",
+        "size": 154094
+      },
+      {
+        "path": "dvdroot_ps4/script/m36_00_00_00.luabnd.dcx",
+        "sha256": "2e0652e77ac146048c3907f4cdc0df6e4bda39b904a7ba772e6ac41b1b0bff25",
+        "size": 73000
+      }
+    ]
+  },
+  "development_build_comparison": {
+    "all_uncompressed_files_identical": true,
+    "compressed_files_different": 30,
+    "files": [
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m22_00_00_00.msb.dcx",
+        "raw_size": 821272,
+        "raw_sha256": "4210a154378f1442682fa7f7b1d0e24abc79a19c1d5312def4a16dc09ea44495",
+        "compressed_bytes_equal": true
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m23_00_00_00.msb.dcx",
+        "raw_size": 1220256,
+        "raw_sha256": "fafc53fc397f39520357ea3c239553918b1a2ebd75ee635607c020801cfad852",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m23_00_00_01.msb.dcx",
+        "raw_size": 1221592,
+        "raw_sha256": "90a479057158e1ac73e400fe527cb19933dab4d2a55e6b235e6b0b69a24e338a",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_00_00_00.msb.dcx",
+        "raw_size": 2595456,
+        "raw_sha256": "4969117ee0442bacabe9490ba0b9b465ba51e3258136cb6c5be2e4da510b1fed",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_00_00_01.msb.dcx",
+        "raw_size": 2597672,
+        "raw_sha256": "5985c626519bf82d862b8c1e822512b1df566b8a5df32837208963ae28520df8",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_01_00_00.msb.dcx",
+        "raw_size": 2984480,
+        "raw_sha256": "8cd06b5f3ee4f4e38fcb499f1a4de3c0a69eb3d67036dad5550ea579a50a10b6",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_01_00_01.msb.dcx",
+        "raw_size": 2982544,
+        "raw_sha256": "f74c2aa4086e13a5c6bc273c6f8331e2e464c31c42294f804c6dd49749029639",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_01_00_11.msb.dcx",
+        "raw_size": 2982976,
+        "raw_sha256": "701a9a298dcaf46d5cfb5b7d350b7af5aa9eda6963f71dca10830c9d04b7b120",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_02_00_00.msb.dcx",
+        "raw_size": 492656,
+        "raw_sha256": "d29dc11b865885af39da2d18ab9a91dc716d778c0cbb1fef1a7e5d3219d3ad6a",
+        "compressed_bytes_equal": true
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m24_02_00_01.msb.dcx",
+        "raw_size": 493624,
+        "raw_sha256": "6144ae105641d47f784dc3e83a3feb5bf5e3bef3821d5f8cf98c8e2a1587136e",
+        "compressed_bytes_equal": true
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m25_00_00_00.msb.dcx",
+        "raw_size": 585432,
+        "raw_sha256": "29901814009cfbc65f7cea673ba467089e3b8b163abf50c75eb1dc0ef94a28c5",
+        "compressed_bytes_equal": true
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m26_00_00_00.msb.dcx",
+        "raw_size": 1904120,
+        "raw_sha256": "331c8a59c7bcbe469972a87d48013b10c950d5e56704a3c0819b9cd40ea76758",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m27_00_00_00.msb.dcx",
+        "raw_size": 2070968,
+        "raw_sha256": "82114243b8c0b802a7d79336f4d053ac70f5b352874d51f54294ed4083d45bf8",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m27_00_00_01.msb.dcx",
+        "raw_size": 2075008,
+        "raw_sha256": "7d40af5e4e1beaaca8ac4c2705924fa62f3a0d23e60e0d0f7c6fb55029f642f1",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m28_00_00_00.msb.dcx",
+        "raw_size": 1795920,
+        "raw_sha256": "601ab3f29833f1dc1299bc9cfa11676be3550f0980d713107cc95a1c4b63a045",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m28_00_00_01.msb.dcx",
+        "raw_size": 1797752,
+        "raw_sha256": "a4624a4d28c86735388b2350e3eacb99c51dc17b1bec48613da214e465025515",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m32_00_00_00.msb.dcx",
+        "raw_size": 1224944,
+        "raw_sha256": "425136a5098a4784546bd34d9f763cb4f7ec901adaf1e84a41ef3b19aaf7564e",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m32_00_00_01.msb.dcx",
+        "raw_size": 1228008,
+        "raw_sha256": "ba45ae0296f1e135fb74306583caf73fd9a6d7daff8913cf8165f039971e8d59",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m33_00_00_00.msb.dcx",
+        "raw_size": 681760,
+        "raw_sha256": "07c3077eb7e646228fdda256ea4771aafab267ea103ab84f79d3d91b7bef8ad3",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m34_00_00_00.msb.dcx",
+        "raw_size": 1638568,
+        "raw_sha256": "557e9ed65746bf353ead8bcd7aeba5ee61a2411d9abc8f013cc6cd2247575aa3",
+        "compressed_bytes_equal": true
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m35_00_00_00.msb.dcx",
+        "raw_size": 2254472,
+        "raw_sha256": "462a700f4b1a076bd7db227a53ed9253a5e2ebc8556375ac11ff94cbbef8b277",
+        "compressed_bytes_equal": true
+      },
+      {
+        "path": "dvdroot_ps4/map/MapStudio/m36_00_00_00.msb.dcx",
+        "raw_size": 994224,
+        "raw_sha256": "51a4af80837369644249148bca920fc2c21b5138b4dace8c3e7293fd8bab976b",
+        "compressed_bytes_equal": true
+      },
+      {
+        "path": "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx",
+        "raw_size": 18010708,
+        "raw_sha256": "953f811c1b17747767c18ddb505780b3456d84045823952e2a0198e78f8e23a7",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m22_00_00_00.luabnd.dcx",
+        "raw_size": 287840,
+        "raw_sha256": "2940fa58a060245b03a10fda6c73a860f1b7e58fdaedcbaabde101dc29675605",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m23_00_00_00.luabnd.dcx",
+        "raw_size": 340064,
+        "raw_sha256": "1cd0a8afe85de027b202186e052de899b7f5b1bbd2b11f9fa8fbb23bacbc7b21",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m24_00_00_00.luabnd.dcx",
+        "raw_size": 937664,
+        "raw_sha256": "351b55e29da6618cd813d2ff02a976d52ef935a9545bef1a3318d1f9aa0a4091",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m24_01_00_00.luabnd.dcx",
+        "raw_size": 904352,
+        "raw_sha256": "6162aa4c1b96cc6c7b21bffc4a4ed94a43dc7113fcea0df6c0c3b3fdce243154",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m24_02_00_00.luabnd.dcx",
+        "raw_size": 858304,
+        "raw_sha256": "1d710d40764e469ce982332265f42ac8f951a2e014085b1239e5a678336024e7",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m25_00_00_00.luabnd.dcx",
+        "raw_size": 378832,
+        "raw_sha256": "66e46b44979a3181b8115c37c0597b6d8c7e8d78941a804e99d9d2ef99920cf5",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m26_00_00_00.luabnd.dcx",
+        "raw_size": 759952,
+        "raw_sha256": "c5af6b8fa9294b2ec4ca1d160978acd0e48b5dee229d541621c5a45b58d908a2",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m27_00_00_00.luabnd.dcx",
+        "raw_size": 843904,
+        "raw_sha256": "8a5fb9197e177d6faf3d49bf48d931f3ee6553e02f99925073c5447fde93d4c6",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m28_00_00_00.luabnd.dcx",
+        "raw_size": 632912,
+        "raw_sha256": "7f3d3445acf70016236b9fe75fd0da7a6a9c06264f3ce337107ae161db17d4dc",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m32_00_00_00.luabnd.dcx",
+        "raw_size": 351680,
+        "raw_sha256": "d220a8808fbe876494d56b701e10cf970b80031c6382b5e8d66ad87165c6fbd7",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m33_00_00_00.luabnd.dcx",
+        "raw_size": 555488,
+        "raw_sha256": "3eb06d2fee204deebaeda9cb67e24d4b3e4989ea3901f3ee90476b3fb2ff02aa",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m34_00_00_00.luabnd.dcx",
+        "raw_size": 1029200,
+        "raw_sha256": "a6bba3dbe7fbff4c7ab3cdce7b371d6ed87dfc1ff2f9215684789531c495df97",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m35_00_00_00.luabnd.dcx",
+        "raw_size": 898576,
+        "raw_sha256": "679525a5a5a4d20ade96207dc8da6cb69c8d349f23b1d43636311e68f9cd253a",
+        "compressed_bytes_equal": false
+      },
+      {
+        "path": "dvdroot_ps4/script/m36_00_00_00.luabnd.dcx",
+        "raw_size": 427360,
+        "raw_sha256": "c9a54f201e9efe6d74ad894529558cfda65d046a540cfdb563eca42a39606e4e",
+        "compressed_bytes_equal": false
+      }
+    ]
+  },
+  "limits": [
+    "Windows x64 CLI distribution; uses the existing BBLauncher mod manager.",
+    "Native file construction and verification passed; no game launch, mod activation or save writes.",
+    "Boss shuffle remains a separate development track.",
+    "Different native runtime builds recompress some DCX containers differently; all 37 decompressed payloads match the original-input development build exactly."
+  ]
+}
