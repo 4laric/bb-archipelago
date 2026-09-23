@@ -143,7 +143,7 @@ class SimulatedJourneyTests(unittest.TestCase):
             self.assertEqual(first["result"]["session_id"], second["result"]["session_id"])
             self.assertEqual(backend.spawned["count"], 1)  # type: ignore[attr-defined]
 
-    def test_symlink_activation_is_refused_before_connection(self) -> None:
+    def test_symlink_activation_remains_usable_when_integrity_checks_pass(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             backend = journey_backend(state, route="symlink")
             play_id = backend.handle(
@@ -151,8 +151,7 @@ class SimulatedJourneyTests(unittest.TestCase):
             arm = backend.handle(request(
                 "verify_and_arm",
                 {"play_id": play_id, "game_root": state, "mods_root": state}, op_id="a1"))
-            self.assertFalse(arm["ok"])
-            self.assertEqual(arm["error"]["code"], "activation-route-refused")
+            self.assertTrue(arm["ok"], arm)
 
     def test_arming_while_the_game_runs_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as state:

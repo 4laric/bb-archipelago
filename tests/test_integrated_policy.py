@@ -1,11 +1,10 @@
-"""Copy-route policy, fork provenance, journal recovery, locks, supervisor."""
+"""Fork provenance, journal recovery, locks, supervisor, and activation integrity."""
 
 from __future__ import annotations
 
 import hashlib
 import tempfile
 import unittest
-from dataclasses import dataclass
 from pathlib import Path
 from unittest.mock import patch
 
@@ -16,10 +15,7 @@ from bb_launcher.integrated.journal import (
     plan_activation,
     read_journal,
 )
-from bb_launcher.integrated.policy import (
-    fork_build_warning,
-    require_copy_activation,
-)
+from bb_launcher.integrated.policy import fork_build_warning
 from bb_launcher.integrated.protocol import ProtocolError
 from bb_launcher.integrated.sessions import (
     install_lock,
@@ -37,34 +33,6 @@ from bb_launcher.integrated.supervisor import (
 from bb_launcher.core import ValidationError
 
 
-@dataclass
-class FakeFile:
-    path: str
-    installation: str
-
-
-class CopyPolicyTests(unittest.TestCase):
-    def test_all_copy_passes(self) -> None:
-        require_copy_activation(
-            [FakeFile("dvdroot_ps4/a", "copy"), FakeFile("dvdroot_ps4/b", "copy")],
-            stage="arming",
-        )
-
-    def test_symlink_is_refused_before_arming(self) -> None:
-        with self.assertRaises(ProtocolError) as caught:
-            require_copy_activation(
-                [FakeFile("dvdroot_ps4/a", "copy"), FakeFile("dvdroot_ps4/b", "symlink")],
-                stage="arming",
-            )
-        self.assertEqual(caught.exception.code, "activation-route-refused")
-        self.assertIn("dvdroot_ps4/b", caught.exception.detail)
-
-    def test_mixed_is_refused_before_connection(self) -> None:
-        with self.assertRaises(ProtocolError) as caught:
-            require_copy_activation([FakeFile("dvdroot_ps4/a", "mixed")], stage="connection")
-        self.assertEqual(caught.exception.code, "activation-route-refused")
-
-
 class ForkProvenanceTests(unittest.TestCase):
     def test_unvalidated_fork_is_reported_without_blocking(self) -> None:
         warning = fork_build_warning("0" * 40, hashlib.sha256(b"x").hexdigest())
@@ -75,7 +43,7 @@ class ForkProvenanceTests(unittest.TestCase):
         with patch.object(fork_identity, "SUPPORTED_FORK_BUILDS", frozenset({(commit, exe)})):
             self.assertIsNone(fork_build_warning(commit, exe))
 
-    def test_malformed_pin_is_refused_not_loosened(self) -> None:
+    def test_malformed_pin_gets_an_informational_warning(self) -> None:
         self.assertIn("not been validated", fork_build_warning("not-a-commit", "not-a-digest") or "")
 
 
@@ -135,8 +103,8 @@ class JournalRecoveryTests(unittest.TestCase):
         self.assertIn("a", decision.conflicts)
 
 
-class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
-    """The copy gate runs on real verifier output, not stub shapes."""
+class ExternalIntegrityAgainstRealVerificationTests(unittest.TestCase):
+    """Route classification is informational; hashes still come from the verifier."""
 
     def setUp(self) -> None:
         import shutil
@@ -151,7 +119,7 @@ class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
         from bb_launcher.external import (
             ACTIVE_MODS_DIR_NAME,
             ExternalNamespace,
-            LIVE_ACCEPTANCE_CANDIDATES,
+            SUPPORTED_BBLAUNCHER_BUILDS,
             BBLauncherBuildPin,
             export_external_package,
             verify_external_activation,
@@ -173,9 +141,8 @@ class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
         self.mods_root = self.root / "bblauncher" / "Mods"
         self.mods_root.mkdir(parents=True)
         self.state_root = self.root / "state"
-        commit = next(iter(LIVE_ACCEPTANCE_CANDIDATES))
-        exe = next(iter(LIVE_ACCEPTANCE_CANDIDATES[commit]))
-        pin = BBLauncherBuildPin("local", commit, exe, live_acceptance_candidate=True)
+        commit, exe = next(iter(SUPPORTED_BBLAUNCHER_BUILDS))
+        pin = BBLauncherBuildPin("local", commit, exe)
 
         def make_identity(seed: str) -> SeedIdentity:
             return SeedIdentity(
@@ -234,7 +201,7 @@ class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
                 output.write_bytes(source.read_bytes())
         return active
 
-    def test_real_copy_activation_passes_the_gate(self) -> None:
+    def test_real_copy_activation_verifies_all_owned_bytes(self) -> None:
         self._activate(symlink=False)
         verified = self._verify(
             self.exported.receipt, install=self.install, mods_root=self.mods_root,
@@ -242,17 +209,15 @@ class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
         self.assertTrue(verified.files, "verification must cover at least one file")
         for item in verified.files:
             self.assertEqual(item.installation, "copy")
-        require_copy_activation(verified.files, stage="arming")  # must not raise
+        self.assertTrue(all(item.sha256 for item in verified.files))
 
-    def test_real_symlink_activation_is_refused(self) -> None:
+    def test_real_symlink_activation_passes_integrity_verification(self) -> None:
         self._activate(symlink=True)
         verified = self._verify(
             self.exported.receipt, install=self.install, mods_root=self.mods_root,
             allow_live_acceptance_candidate=True)
         self.assertTrue(any(item.installation == "symlink" for item in verified.files))
-        with self.assertRaises(ProtocolError) as caught:
-            require_copy_activation(verified.files, stage="connection")
-        self.assertEqual(caught.exception.code, "activation-route-refused")
+        self.assertTrue(all(item.sha256 for item in verified.files))
     def test_second_holder_times_out(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             game = Path(state) / "game"

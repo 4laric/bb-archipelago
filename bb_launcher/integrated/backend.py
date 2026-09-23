@@ -37,7 +37,7 @@ from ..core import ValidationError
 from . import fork_identity
 from .import_state import detect_installations, import_companion_state
 from .journal import append_entry, decide_recovery, plan_activation, read_journal
-from .policy import fork_build_warning, require_copy_activation
+from .policy import fork_build_warning
 from .protocol import PROTOCOL_VERSION, ProtocolError, check_request, error_response, ok_response
 from .sessions import (
     arms_dir,
@@ -258,7 +258,6 @@ class Backend:
         launch_params = {**play.launch_config, **params}
         self.preflight(launch_params, stage="arm")
         verified = self._verify(play, launch_params)
-        require_copy_activation(verified.files, stage="arming")
         arm = mint_arm(
             self.state_root, play_id=play.play_id, receipt_id=play.receipt_id,
             activation_fingerprint=verified.activation_fingerprint,
@@ -343,7 +342,6 @@ class Backend:
         self.preflight(launch_params, stage="connect")
         # Late checks: installed bytes + fresh game process, never PID alone.
         verified = self._verify(play, launch_params)
-        require_copy_activation(verified.files, stage="connection")
         if verified.activation_fingerprint != arm.activation_fingerprint:
             raise ProtocolError("verification-failed", "activation drifted since arming",
                                 recovery=("prepare-again",))
