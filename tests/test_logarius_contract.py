@@ -49,6 +49,8 @@ class LogariusContractTests(unittest.TestCase):
         self.assertIn(
             "WarpCharacterAndCopyFloor(980005", after[DEFAULT_IDS.sword_event_id]
         )
+        self.assertIn("SpawnOneshotSFX", after[DEFAULT_IDS.sword_event_id])
+        self.assertIn("623206", after[DEFAULT_IDS.sword_event_id])
         self.assertIn(
             "ShootBullet(980006, 2300800, 6, 223200590",
             after[DEFAULT_IDS.aura_event_id],
@@ -126,6 +128,21 @@ class LogariusContractTests(unittest.TestCase):
             plan["boss_contract"]["effect_owner_adapter"]["evidence_status"],
         )
         self.assertTrue(plan["scaling"]["enabled"])
+        requirement = plan["boss_emevd_ffx_requirements"][0]
+        self.assertEqual(
+            ("m25_00_00_00.emevd.dcx", 12504806),
+            (requirement["source_event_file"], requirement["source_event_id"]),
+        )
+        self.assertEqual(
+            ("m23_00_00_00.emevd.dcx", DEFAULT_IDS.sword_event_id, 623206),
+            (requirement["destination_event_file"],
+             requirement["destination_event_id"], requirement["effect_id"]),
+        )
+        merge = plan["boss_ffx_merges"][0]
+        self.assertEqual(
+            ("frpg_sfxbnd_m25.ffxbnd.dcx", "frpg_sfxbnd_m23.ffxbnd.dcx", [623206]),
+            (merge["source_file"], merge["destination_file"], merge["required_effect_ids"]),
+        )
 
     def test_helper_scaling_is_declared_for_post_combination_allocation(self):
         plan = native_plan_logarius_at_bsb(

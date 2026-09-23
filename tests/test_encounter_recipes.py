@@ -13,6 +13,7 @@ from tools.bb_enemizer.boss_contracts import (
     event_blocks,
 )
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
+from tools.bb_enemizer.maria_arena_contract import MARIA_ARENA_CONTRACT
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.scaling import load_params
 
@@ -43,15 +44,17 @@ class EncounterRecipeTests(unittest.TestCase):
             for donor in donors
         }
         maria_keys = {(arena.key, "lady-maria") for arena in ARENAS}
-        laurence_keys = {(arena.key, "laurence") for arena in ARENAS}
-        self.assertEqual(base_keys | maria_keys | laurence_keys, set(self.recipes))
+        laurence_keys = {(arena.key, "laurence") for arena in (*ARENAS, MARIA_ARENA_CONTRACT)}
+        maria_arena_keys = {("lady-maria", donor.key) for donor in PACKAGES}
+        self.assertEqual(base_keys | maria_keys | laurence_keys | maria_arena_keys, set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)
         )
         self.assertEqual(len(ARENAS), len(maria_keys))
-        self.assertEqual(len(ARENAS), len(laurence_keys))
+        self.assertEqual(7, len(laurence_keys))
+        self.assertEqual(6, len(maria_arena_keys))
         self.assertEqual(
-            len(base_keys) + len(maria_keys) + len(laurence_keys),
+            len(base_keys) + len(maria_keys) + len(laurence_keys) + len(maria_arena_keys),
             len(self.recipes),
         )
         self.assertFalse({key for key in self.recipes if key[0] == key[1]})
@@ -59,7 +62,7 @@ class EncounterRecipeTests(unittest.TestCase):
             len(self.recipes), len({id(recipe) for recipe in self.recipes.values()})
         )
 
-        arenas = {arena.key: arena for arena in ARENAS}
+        arenas = {arena.key: arena for arena in (*ARENAS, MARIA_ARENA_CONTRACT)}
         packages = {package.key: package for package in PACKAGES}
         for key in base_keys:
             recipe = self.recipes[key]

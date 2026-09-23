@@ -82,7 +82,8 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
         raise ValueError('boss pool has no pair plans')
     swaps, changes, skips, contracts, additions, generators, regions, objects = [], [], [], [], [], [], [], []
     region_names = set()
-    sfx_additions, ffx_merges = [], {}
+    sfx_additions, ffx_merges, emevd_ffx_requirements = [], {}, []
+    emevd_ffx_bindings = set()
     added_parts, added_entities = set(), set()
     generator_names, generator_events = set(), set()
     initializations, initialized_parts = [], set()
@@ -181,6 +182,14 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
                                                         | set(merge['required_effect_ids']))
             else:
                 ffx_merges[key] = copy.deepcopy(merge)
+        for requirement in plan.get('boss_emevd_ffx_requirements', []):
+            binding = (requirement['source_event_file'], requirement['source_event_id'],
+                       requirement['destination_event_file'], requirement['destination_event_id'],
+                       requirement['effect_id'])
+            if binding in emevd_ffx_bindings:
+                raise ValueError('boss pair plans overlap an EMEVD FFX requirement')
+            emevd_ffx_bindings.add(binding)
+            emevd_ffx_requirements.append(copy.deepcopy(requirement))
         for region in plan.get('boss_region_additions', []):
             map_name = region['destination_map'].removesuffix('.dcx').removesuffix('.msb')
             name = (map_name, region['destination_region'])
@@ -231,6 +240,10 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
             row['destination_map'], row['destination_event_id']))
     if ffx_merges:
         result['boss_ffx_merges'] = [ffx_merges[key] for key in sorted(ffx_merges)]
+    if emevd_ffx_requirements:
+        result['boss_emevd_ffx_requirements'] = sorted(emevd_ffx_requirements, key=lambda row: (
+            row['source_event_file'], row['source_event_id'], row['destination_event_file'],
+            row['destination_event_id'], row['effect_id']))
     if regions:
         result['boss_region_additions'] = sorted(regions, key=lambda row: (
             row['destination_map'], row['destination_region']))
@@ -265,7 +278,8 @@ def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence
     forbidden = {
         'boss_adapter', 'boss_contract', 'boss_encounters', 'boss_actor_additions',
         'boss_actor_initializations', 'boss_generator_additions', 'boss_region_additions',
-        'boss_object_additions', 'boss_sfx_additions', 'boss_ffx_merges', 'boss_external_references',
+        'boss_object_additions', 'boss_sfx_additions', 'boss_ffx_merges',
+        'boss_emevd_ffx_requirements', 'boss_external_references',
     }
     present = forbidden.intersection(ordinary_plan)
     if present:
@@ -318,7 +332,8 @@ def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence
     }
     result['boss_contract'] = copy.deepcopy(bosses['boss_contract'])
     for field in ('boss_actor_additions', 'boss_generator_additions', 'boss_region_additions', 'boss_object_additions',
-                  'boss_actor_initializations', 'boss_sfx_additions', 'boss_ffx_merges', 'boss_external_references'):
+                  'boss_actor_initializations', 'boss_sfx_additions', 'boss_ffx_merges',
+                  'boss_emevd_ffx_requirements', 'boss_external_references'):
         if field in bosses:
             result[field] = copy.deepcopy(bosses[field])
     return result

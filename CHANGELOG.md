@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle can place the six base combat packages and Laurence in Maria's
+  arena, preserving their phases and adapting entry, music and progression to
+  the destination. Logarius replacements now include his sword-effect bank.
+  These additions still need in-game validation.
 - Boss shuffle adds the remaining placements among Cleric Beast, Blood-starved
   Beast, Paarl, Amelia, Amygdala and Ebrietas, plus Laurence in all six arenas.
   Replacement encounters skip character-specific entrance cinematics while

@@ -55,6 +55,8 @@ class LogariusWetNurseContractTests(unittest.TestCase):
             "WarpCharacterAndCopyFloor(980500, TargetEntityType.Character, 2600800",
             after[DEFAULT_IDS.sword_event],
         )
+        self.assertIn("SpawnOneshotSFX", after[DEFAULT_IDS.sword_event])
+        self.assertIn("623206", after[DEFAULT_IDS.sword_event])
         self.assertIn(
             "ShootBullet(980501, 2600800, 6, 223200590", after[DEFAULT_IDS.aura_event]
         )
@@ -113,6 +115,27 @@ class LogariusWetNurseContractTests(unittest.TestCase):
                 set(helper["source_initialization"]),
             )
         self.assertTrue(plan["scaling"]["enabled"])
+        requirement = plan["boss_emevd_ffx_requirements"][0]
+        self.assertEqual(
+            ("m25_00_00_00.emevd.dcx", 12504806),
+            (requirement["source_event_file"], requirement["source_event_id"]),
+        )
+        self.assertEqual(
+            ("m26_00_00_00.emevd.dcx", DEFAULT_IDS.sword_event, 623206),
+            (
+                requirement["destination_event_file"],
+                requirement["destination_event_id"],
+                requirement["effect_id"],
+            ),
+        )
+        self.assertEqual(
+            ("frpg_sfxbnd_m25.ffxbnd.dcx", "frpg_sfxbnd_m26.ffxbnd.dcx", [623206]),
+            (
+                plan["boss_ffx_merges"][0]["source_file"],
+                plan["boss_ffx_merges"][0]["destination_file"],
+                plan["boss_ffx_merges"][0]["required_effect_ids"],
+            ),
+        )
 
     def test_ids_and_pinned_source_or_destination_drift_refuse(self):
         with self.assertRaisesRegex(ValueError, "129926xx"):

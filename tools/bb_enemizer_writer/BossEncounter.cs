@@ -280,7 +280,10 @@ internal static class BossEncounter
         BossRegionTransplant.ValidatePlan(planPath, required: false);
         BossSfxTransplant.ValidatePlan(planPath, required: false);
         var ffxMerges = FfxBundleTransplant.Read(planPath);
-        Need(ffxMerges.Count == 0 || sfxPath is not null, "boss FFX merges require original --sfx inputs");
+        var emevdFfxRequirements = FfxBundleTransplant.ValidateEmevdInputs(
+            planPath, eventInputDirectory, encounterList);
+        Need((ffxMerges.Count == 0 && emevdFfxRequirements.Count == 0) || sfxPath is not null,
+            "boss FFX dependencies require original --sfx inputs");
         var externalReferences = BossExternalReference.Read(planPath, required: false);
         BossExternalReference.ValidateEncounterBindings(externalReferences, encounterList);
 
@@ -333,6 +336,8 @@ internal static class BossEncounter
                 File.WriteAllBytes(eventPath, events);
                 Need(Hash(File.ReadAllBytes(eventPath)) == Hash(events), "boss encounter event copy verification failed");
             }
+            FfxBundleTransplant.ValidateEmevdFinal(emevdFfxRequirements,
+                Path.Combine(overlay, "dvdroot_ps4", "event"));
             BossExternalReference.ValidateFinal(externalReferences,
                 Path.Combine(overlay, "dvdroot_ps4", "map", "MapStudio"), Path.Combine(overlay, "dvdroot_ps4", "event"));
             if (externalReferences.Count > 0)
@@ -352,7 +357,9 @@ internal static class BossEncounter
                     protected_completion_event_ids = item.Encounter.ProtectedCompletionEventIds,
                     terminal_predicates = item.Encounter.TerminalPredicates ?? [],
                     compiled_event_fingerprints = item.Encounter.CompiledEventFingerprints,
-                }), external_references = externalReferences, region_additions = regionAdditions, object_additions = objectAdditions, sfx_additions = sfxAdditions, ffx_merges = ffxAdditions, files,
+                }), external_references = externalReferences, region_additions = regionAdditions, object_additions = objectAdditions,
+                sfx_additions = sfxAdditions, emevd_ffx_requirements = emevdFfxRequirements,
+                ffx_merges = ffxAdditions, files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",
             }, Json));
             Directory.Move(overlay, output);

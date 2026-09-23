@@ -25,7 +25,7 @@ class EncounterBuildTests(unittest.TestCase):
     def test_reusable_laurence_routes_reach_the_compiler_pin_gate(self):
         from tools.bb_enemizer.laurence_donor import SUPPORTED_LAURENCE_ARENAS
 
-        self.assertEqual(6, len(SUPPORTED_LAURENCE_ARENAS))
+        self.assertEqual(7, len(SUPPORTED_LAURENCE_ARENAS))
         with tempfile.TemporaryDirectory() as temporary:
             compiler = Path(temporary) / 'untrusted-compiler.exe'
             compiler.write_bytes(b'not the pinned compiler')

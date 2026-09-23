@@ -724,7 +724,7 @@ implementation, not a live observation of equivalent cinematic relocation.
 Native compilation and receipt verification cannot establish its runtime
 positioning, orientation or multiplayer behavior.
 
-The current [native matrix](boss-composition-native-matrix.json) records 27
+The preceding [native matrix](https://github.com/4laric/bb-archipelago/blob/692b57bc5cd969e9a3588895f835340d37c021c5/docs/boss-composition-native-matrix.json) records 27
 full-roster builds covering all 90 implemented pairs, with 59 verified files
 per build. The combined `composition-26` source and frozen builds include 308
 normalized ordinary swaps, 22 boss encounters and the Cathedral AP event
@@ -736,8 +736,39 @@ These results establish native construction and packaging, not gameplay.
 A subsequent asset audit found a construction gap in the existing Logarius
 routes: his sword routine references one-shot effect `623206`, which is present
 in the original m25 effect bank but absent from the other inspected map banks.
-Those adapters currently copy his AI and actors without declaring that effect
-bank merge. The native receipts therefore do not prove complete Logarius
-effect delivery. A follow-up must represent EMEVD-only effect dependencies in
-the writer and copy their pinned source bank; the gameplay consequence has not
-been observed.
+Those adapters previously copied his AI and actors without declaring that
+effect bank merge. Their earlier native receipts did not prove complete
+Logarius effect delivery; the gameplay consequence has not been observed.
+
+## Reusable Maria destination and Logarius effect delivery
+
+The Maria destination now accepts Cleric Beast, Blood-starved Beast, Paarl,
+Amelia, Amygdala, Ebrietas and Laurence. This raises implemented coverage to
+95 of 462 directed pairings, all usable in complete assignments, leaving 367
+implementation gaps. It does not establish unrestricted or gameplay-validated
+shuffle coverage.
+
+Donor health, cooperative scaling, combat phases and startup protections are
+preserved with destination-owned entry, notification, telemetry and completion
+flags. Donor wake sequences signal readiness before AI activation. Maria's
+entry and cooperative restoration remain intact before the shared cinematic
+normalizer applies the approved replacement policy. Ebrietas's projectile
+owner stays active during combat and is cleaned after destination completion.
+Single-boundary music uses Maria's opening/final tracks while retaining active
+fight reload recovery; two-boundary donors retain both transitions. These music
+and camera choices adapt destination presentation while retaining combat.
+
+Logarius's existing Blood-starved Beast and Wet Nurse routes now declare the
+EMEVD-only `623206` dependency and merge the pinned original m25 effect bank.
+The native writer checks the source event instruction, rejects parameterized
+effect operands, verifies the destination encounter owns the declared event,
+and checks the effect operand in the final compiled event. Binder merge
+coverage includes both map-linked and EMEVD-only effect requirements.
+
+The current [native matrix](boss-composition-native-matrix.json) records 18
+full-roster builds covering all 95 implemented pairs, with 60 verified output
+files per build. Python and native writer sources, writer binary and compiler
+stayed unchanged throughout. The combined `composition-26` source and frozen
+builds contain 308 ordinary enemy swaps, all 22 boss encounters and the actual
+Cathedral AP override; all 60 output hashes and their receipts match exactly.
+These results validate native construction and packaging, not gameplay.

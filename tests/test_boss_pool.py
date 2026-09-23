@@ -35,18 +35,31 @@ class BossPoolTests(unittest.TestCase):
                  'destination_file': 'frpg_sfxbnd_m34.ffxbnd.dcx',
                  'source_sha256': 'a' * 64, 'destination_sha256': 'b' * 64,
                  'policy': 'preserve_destination_union_source_v1', 'required_effect_ids': [640320]}
+        requirement = {
+            'format': 'bb-boss-emevd-ffx-requirement-v1',
+            'source_map': 'm35_00_00_00', 'destination_map': 'm34_00_00_00',
+            'source_event_file': 'm35_00_00_00.emevd.dcx',
+            'source_event_sha256': 'd' * 64, 'source_event_id': 13504820,
+            'destination_event_file': 'm34_00_00_00.emevd.dcx',
+            'destination_event_id': 12990020, 'effect_id': 640320,
+        }
         plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'effects', 'dry_run': True,
                 'swaps': [], 'scaling': {'enabled': False,
                     'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
                     'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
-                'boss_sfx_additions': [effect], 'boss_ffx_merges': [merge]}
+                'boss_sfx_additions': [effect], 'boss_ffx_merges': [merge],
+                'boss_emevd_ffx_requirements': [requirement]}
         second = copy.deepcopy(plan)
         second['boss_sfx_additions'][0].update(destination_event='meteor2',
             destination_event_id=980033, destination_entity_id=980028)
         second['boss_ffx_merges'][0]['required_effect_ids'] = [640321, 640320]
+        second['boss_emevd_ffx_requirements'][0].update(
+            destination_event_id=12990021, effect_id=640321)
         combined = combine_native_plans('effects', [plan, second])
         self.assertEqual([dict(merge, required_effect_ids=[640320, 640321])], combined['boss_ffx_merges'])
         self.assertEqual([effect, second['boss_sfx_additions'][0]], combined['boss_sfx_additions'])
+        self.assertEqual([requirement, second['boss_emevd_ffx_requirements'][0]],
+                         combined['boss_emevd_ffx_requirements'])
         self.assertEqual([640320], merge['required_effect_ids'])
         second['boss_ffx_merges'][0]['source_sha256'] = 'c' * 64
         with self.assertRaisesRegex(ValueError, 'FFX binder provenance'):
@@ -63,6 +76,12 @@ class BossPoolTests(unittest.TestCase):
         for plans in ([plan, other], [other, plan]):
             with self.assertRaisesRegex(ValueError, 'overlap an added'):
                 combine_native_plans('effects', plans)
+        duplicate_requirement = copy.deepcopy(second)
+        duplicate_requirement.pop('boss_sfx_additions')
+        duplicate_requirement.pop('boss_ffx_merges')
+        duplicate_requirement['boss_emevd_ffx_requirements'] = [copy.deepcopy(requirement)]
+        with self.assertRaisesRegex(ValueError, 'overlap an EMEVD FFX requirement'):
+            combine_native_plans('effects', [plan, duplicate_requirement])
 
     def test_auxiliary_actors_survive_pool_composition_and_collisions_fail(self):
         def pair(key, entity, map_name='m23_00_00_00'):

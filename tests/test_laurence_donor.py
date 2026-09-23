@@ -17,6 +17,7 @@ from tools.bb_enemizer.boss_contracts import (
     EBRIETAS_ARENA,
     PAARL_ARENA,
 )
+from tools.bb_enemizer.maria_arena_contract import MARIA_ARENA_CONTRACT
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.laurence_contract import LaurenceIds, patch_laurence_at_cleric
 from tools.bb_enemizer.laurence_donor import (
@@ -70,7 +71,7 @@ class LaurenceDonorTests(unittest.TestCase):
         for value in IDS.values():
             self.assertNotIn(str(value), joined)
 
-    def test_all_six_arenas_receive_full_combat_with_destination_telemetry(self):
+    def test_all_supported_arenas_receive_full_combat_with_destination_telemetry(self):
         for arena in SUPPORTED_LAURENCE_ARENAS:
             with self.subTest(arena=arena.key):
                 before = event_blocks(self.destinations[arena.key])
@@ -84,9 +85,19 @@ class LaurenceDonorTests(unittest.TestCase):
                 health = after[arena.health_bar_event]
                 self.assertIn(f"$Event({arena.health_bar_event}, Restart", health)
                 self.assertIn(f"EndIf(EventFlag({arena.completion_event}))", health)
-                self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))", health)
-                self.assertIn(f"if (!EventFlag({IDS.health_initialized_flag}))", health)
-                self.assertIn(f"SetEventFlag({IDS.health_initialized_flag}, ON)", health)
+                readiness = (
+                    arena.activation_event
+                    if arena.key == MARIA_ARENA_CONTRACT.key
+                    else arena.start_flag
+                )
+                self.assertIn(f"WaitFor(EventFlag({readiness}))", health)
+                notification_guard = (
+                    13504810
+                    if arena.key == MARIA_ARENA_CONTRACT.key
+                    else IDS.health_initialized_flag
+                )
+                self.assertIn(f"if (!EventFlag({notification_guard}))", health)
+                self.assertIn(f"SetEventFlag({notification_guard}, ON)", health)
                 self.assertIn(
                     f"SetNetworkUpdateAuthority({arena.actor}, AuthorityLevel.Forced)", health
                 )
@@ -131,11 +142,12 @@ class LaurenceDonorTests(unittest.TestCase):
                 self.assertEqual(5, blocks[0].count(str(IDS.limbs_event)))
                 self.assertEqual(1, blocks[0].count(str(IDS.hitmask_event)))
                 retired = {
-                    *arena.phase_slots,
-                    arena.part_routine_event,
-                    *(() if arena.cloth_routine_event is None else (arena.cloth_routine_event,)),
-                    *(() if arena.attachment_anchor_event is None
-                      else (arena.attachment_anchor_event,)),
+                    event_id for event_id in (
+                        *arena.phase_slots,
+                        arena.part_routine_event,
+                        arena.cloth_routine_event,
+                        arena.attachment_anchor_event,
+                    ) if event_id is not None
                 }
                 for event_id in retired:
                     self.assertIn("EndEvent();", blocks[event_id])
@@ -190,6 +202,86 @@ class LaurenceDonorTests(unittest.TestCase):
         amelia = patched[AMELIA_ARENA.key]
         self.assertLess(amelia.index("IssueBossRoomEntryNotification(0)"),
                         amelia.index(f"SetEventFlag({IDS.health_initialized_flag}, ON)"))
+
+    def test_maria_keeps_progression_and_gates_laurence_combat_after_entry(self):
+        arena = MARIA_ARENA_CONTRACT
+        before = event_blocks(self.destinations[arena.key])
+        after = event_blocks(patch_laurence_donor(
+            arena, self.destinations[arena.key], self.laurence, IDS
+        ))
+
+        self.assertEqual(before[13501800], after[13501800])
+        self.assertIn("EndEvent();", after[13504822])
+        self.assertNotIn("CharacterHasEventMessage", after[13504822])
+        self.assertEqual(5, after[0].count(str(IDS.limbs_event)))
+        self.assertEqual(1, after[0].count(str(IDS.hitmask_event)))
+
+        entry = after[13501801]
+        self.assertIn("WaitFor(EventFlag(13500947))", entry)
+        self.assertLess(entry.index("ChangeCharacterEnableState(3500800, Enabled)"),
+                        entry.index("ForceAnimationPlayback(3500800, 3029"))
+        self.assertLess(entry.index("ForceAnimationPlayback(3500800, 3029"),
+                        entry.index("SetEventFlag(13504808, ON)"))
+        # On an active-fight reload ThisEvent is already set.  Maria's pinned
+        # retry branch exits before L5, so 3029 is not replayed and the source
+        # health event may resume AI exactly as Laurence's original does.
+        self.assertLess(entry.index("if (!(!EventFlag(13501800) && !ThisEvent()))"),
+                        entry.index("EndEvent();"))
+        self.assertLess(entry.index("EndEvent();"), entry.index("L5:"))
+        self.assertLess(entry.index("L5:"), entry.index("ForceAnimationPlayback(3500800, 3029"))
+        co_op = after[13501807]
+        self.assertEqual(before[13501807], co_op)
+        self.assertLess(co_op.index("WaitFor(CharacterType(10000, TargetType.Alive)"),
+                        co_op.index("EndIf(HasMultiplayerState(MultiplayerState.Host))"))
+        self.assertLess(co_op.index("EndIf(HasMultiplayerState(MultiplayerState.Host))"),
+                        co_op.index("ChangeCharacterEnableState(3500800, Enabled)"))
+        self.assertNotIn("3029", co_op)
+
+        health = after[13504802]
+        self.assertIn("WaitFor(EventFlag(13501801))", health)
+        self.assertIn("if (!EventFlag(13504810))", health)
+        self.assertIn("SetEventFlag(13504810, ON)", health)
+        self.assertNotIn(str(IDS.health_initialized_flag), health)
+        # Maria's original fog/helper initializer passes 13504810 to the
+        # controller that may set the room-entry notification guard.  The
+        # transplanted health body must use that same destination-owned flag.
+        self.assertIn(
+            "$InitializeEvent(0, 13504730, 3500790, 13504701, 13504711, "
+            "3510, 13504810, 999, 999, 13504712)",
+            after[0],
+        )
+        self.assertLess(health.index("WaitFor(EventFlag(13501801))"),
+                        health.index("SetCharacterAIState(3500800, Enabled)"))
+        self.assertEqual(1, health.count(
+            "SetCharacterInvincibility(3500800, Disabled)"))
+        self.assertLess(
+            health.index("SetCharacterInvincibility(3500800, Disabled)"),
+            health.index("SetCharacterAIState(3500800, Enabled)"),
+        )
+        self.assertIn("CreatePlaylog(58)", health)
+        self.assertIn("StartTimeMeasurement(3500010, 74, Enabled)", health)
+
+        music = after[13504803]
+        self.assertIn("CharacterHasEventMessage(3500800, 400)", music)
+        self.assertNotIn("CharacterHasEventMessage(3500800, 300)", music)
+        self.assertNotIn("EnableBossMapSound(3503803, Enabled)", music)
+        self.assertEqual(2, music.count("EnableBossMapSound(3503804, Enabled)"))
+        self.assertIn("chrFlagArea2 &= EventFlag(13504811)", music)
+        # The outside L1 block is the active-fight reload recovery. It must
+        # remain reachable when ThisEvent skips the first-run transition.
+        self.assertEqual(1, music.count("L1:"))
+        self.assertLess(music.index("L1:"),
+                        music.rindex("WaitFor(chrFlagArea2)"))
+        self.assertLess(music.rindex("WaitFor(chrFlagArea2)"),
+                        music.rindex("EnableBossMapSound(3503804, Enabled)"))
+
+        contract = laurence_donor_contract(arena, IDS)
+        self.assertEqual(13501801,
+                         contract["readiness_adapter"]["health_wait_flag"])
+        self.assertEqual(13501807,
+                         contract["readiness_adapter"]["preserved_co_op_restore_event"])
+        self.assertEqual(13504810,
+                         contract["destination_notification_guard"]["flag"])
 
     def test_contract_records_full_source_graph_and_destination_ownership(self):
         for arena in SUPPORTED_LAURENCE_ARENAS:
@@ -282,7 +374,11 @@ class LaurenceDonorTests(unittest.TestCase):
     def test_reusable_output_compiles_with_pinned_darkscript_when_available(self):
         compiler = ROOT / "work" / "DarkScript3" / "DarkScript3.exe"
         events = ROOT / "work" / "boss-shuffle-validation" / "events"
-        required = ("common.emevd.dcx", "m24_00_00_00.emevd.dcx")
+        required = (
+            "common.emevd.dcx",
+            "m24_00_00_00.emevd.dcx",
+            "m35_00_00_00.emevd.dcx",
+        )
         if not compiler.is_file() or any(not (events / name).is_file() for name in required):
             self.skipTest("pinned DarkScript/original event fixture unavailable")
         self.assertEqual(
@@ -309,11 +405,22 @@ class LaurenceDonorTests(unittest.TestCase):
                 ),
                 encoding="utf-8-sig",
             )
+            maria_path = source / MARIA_ARENA_CONTRACT.event_file
+            maria_path.write_text(
+                patch_laurence_donor(
+                    MARIA_ARENA_CONTRACT,
+                    maria_path.read_text(encoding="utf-8-sig"),
+                    self.laurence,
+                    IDS,
+                ),
+                encoding="utf-8-sig",
+            )
             subprocess.run([
                 str(compiler), "/cmd", "-compile", "-game", "bb",
                 "-indir", str(source), "-outdir", str(output), "-force", "-silent",
             ], check=True)
             self.assertTrue((output / "m24_00_00_00.emevd.dcx").is_file())
+            self.assertTrue((output / "m35_00_00_00.emevd.dcx").is_file())
 
 
 if __name__ == "__main__":

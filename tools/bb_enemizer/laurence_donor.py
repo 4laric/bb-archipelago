@@ -31,6 +31,7 @@ from .maria_contract import (
     _verify,
     event_blocks,
 )
+from .maria_arena_contract import MARIA_ARENA_CONTRACT
 from .model import Archetype, Slot, Swap
 from .scaling import plan_scaling
 
@@ -60,6 +61,7 @@ SUPPORTED_LAURENCE_ARENAS = (
     AMELIA_ARENA,
     AMYGDALA_ARENA,
     EBRIETAS_ARENA,
+    MARIA_ARENA_CONTRACT,
 )
 
 
@@ -168,6 +170,20 @@ def _mark_existing_entry_notification(block: str,
 def _adapt_activation(arena: ArenaContract, block: str,
                       allocation: LaurenceDonorAllocation) -> str:
     """Keep arena entry predicates and play Laurence's pinned 3029 wake-up."""
+    if arena.key == MARIA_ARENA_CONTRACT.key:
+        enabled = f"    ChangeCharacterEnableState({arena.actor}, Enabled);\n"
+        start = f"    SetEventFlag({arena.start_flag}, ON);\n"
+        if block.count(enabled) != 1 or block.count(start) != 1:
+            raise ValueError("Maria entry lacks its pinned enable/start sequence")
+        if block.index(enabled) > block.index(start):
+            raise ValueError("Maria entry enables its actor after the start flag")
+        return _replace_once(
+            block,
+            enabled,
+            enabled + f"    ForceAnimationPlayback({arena.actor}, "
+            f"{LAURENCE_ENTRY_ANIMATION}, false, false, false);\n",
+            "Maria Laurence wake insertion",
+        )
     result = block
     if f"    SetCharacterImmortality({arena.actor}, Enabled);\n" in result:
         # Ebrietas must remain immortal while damage is used as the start
@@ -248,6 +264,35 @@ def _adapt_activation(arena: ArenaContract, block: str,
 
 
 def _destination_music(arena: ArenaContract, block: str) -> str:
+    if arena.key == MARIA_ARENA_CONTRACT.key:
+        first = "        chrFlagArea &= CharacterHasEventMessage(3500800, 100);\n"
+        second = "        chrFlagArea2 &= CharacterHasEventMessage(3500800, 300);\n"
+        result = _replace_once(
+            block,
+            first,
+            f"        chrFlagArea &= CharacterHasEventMessage(3500800, "
+            f"{LAURENCE_PHASE_MESSAGE});\n",
+            "Maria opening music boundary",
+        )
+        # Laurence has one source-backed combat boundary. Preserve Maria's
+        # outside-L1 recovery path for active-fight reloads, while sending the
+        # first boundary directly to the final track. The first transition
+        # sets 13504811, so the retained second predicate becomes immediate.
+        result = _replace_once(
+            result,
+            "    EnableBossMapSound(3503803, Enabled);\n",
+            "    EnableBossMapSound(3503804, Enabled);\n",
+            "Maria intermediate music enable",
+        )
+        result = _replace_once(
+            result,
+            second,
+            "        chrFlagArea2 &= EventFlag(13504811);\n",
+            "Maria unreachable second music boundary",
+        )
+        if "    SetEventFlag(13504811, ON);\n" not in result:
+            raise ValueError("Maria music lacks its destination phase/SFX marker")
+        return result
     if arena.phase_music_message is None:
         return _replace_once(
             block,
@@ -300,6 +345,14 @@ def _constructor(arena: ArenaContract, destination_zero: str, donor_zero: str,
             allocation.hitmask_event,
         ),
     ]
+    if arena.key == MARIA_ARENA_CONTRACT.key:
+        anchor = "    $InitializeEvent(0, 13504822);"
+        return _replace_once(
+            destination_zero,
+            anchor,
+            anchor + "\n" + "\n".join(calls),
+            "Maria cleanup initializer anchor",
+        )
     anchors = [
         f"    $InitializeEvent(0, {event_id});"
         for event_id in reversed(arena.phase_slots)
@@ -318,10 +371,14 @@ def _constructor(arena: ArenaContract, destination_zero: str, donor_zero: str,
 
 def _retired_controllers(arena: ArenaContract) -> set[int]:
     return {
-        *arena.phase_slots,
-        arena.part_routine_event,
-        *(() if arena.cloth_routine_event is None else (arena.cloth_routine_event,)),
-        *(() if arena.attachment_anchor_event is None else (arena.attachment_anchor_event,)),
+        event_id
+        for event_id in (
+            *arena.phase_slots,
+            arena.part_routine_event,
+            arena.cloth_routine_event,
+            arena.attachment_anchor_event,
+        )
+        if event_id is not None
     }
 
 
@@ -340,7 +397,7 @@ def laurence_donor_contract(
         (LAURENCE_LIMB_EVENT, allocation.limbs_event),
         (LAURENCE_HITMASK_EVENT, allocation.hitmask_event),
     )
-    return {
+    contract = {
         "format": "bb-laurence-donor-contract-v1",
         "status": "experimental",
         "arena": arena.key,
@@ -400,6 +457,25 @@ def laurence_donor_contract(
             "reason": "destination completion owns the matching measurement lifecycle",
         },
     }
+    if arena.key == MARIA_ARENA_CONTRACT.key:
+        contract["readiness_adapter"] = {
+            "destination_event": arena.activation_event,
+            "host_sequence": [
+                f"ChangeCharacterEnableState({arena.actor}, Enabled)",
+                f"ForceAnimationPlayback({arena.actor}, {LAURENCE_ENTRY_ANIMATION})",
+                f"SetEventFlag({arena.start_flag}, ON)",
+            ],
+            "health_wait_flag": arena.activation_event,
+            "preserved_co_op_restore_event": arena.co_op_entry_event,
+            "pre_trigger_protection": "destination actor remains disabled",
+        }
+        contract["destination_notification_guard"] = {
+            "flag": 13504810,
+            "source_guard_replaced": LAURENCE_HEALTH_INITIALIZED_FLAG,
+            "fog_helper_initializer_event": 13504730,
+            "reason": "Maria fog/helper and health must share one notification flag",
+        }
+    return contract
 
 
 def patch_laurence_donor(
@@ -411,18 +487,40 @@ def patch_laurence_donor(
     original, donor = event_blocks(destination), event_blocks(donor_source)
     _verify(original, arena.expected, f"{arena.key} arena")
     _verify(donor, LAURENCE_SOURCE_HASHES, "Laurence donor")
+    if donor[LAURENCE_ENTRY_EVENT].count(
+            f"ForceAnimationPlayback({LAURENCE_ACTOR}, "
+            f"{LAURENCE_ENTRY_ANIMATION}, false, false, false);") != 1:
+        raise ValueError("Laurence donor lacks its pinned entry animation witness")
     _require_allocation(allocation)
     if set(allocation.values()) & _numeric_literals(destination):
         raise ValueError("Laurence allocation collides with destination literal")
 
+    readiness_flag = (
+        arena.activation_event
+        if arena.key == MARIA_ARENA_CONTRACT.key
+        else arena.start_flag
+    )
+    health_initialized_flag = (
+        13504810
+        if arena.key == MARIA_ARENA_CONTRACT.key
+        else allocation.health_initialized_flag
+    )
     health = _numbers(donor[LAURENCE_HEALTH_EVENT], {
         LAURENCE_HEALTH_EVENT: arena.health_bar_event,
         LAURENCE_ACTOR: arena.actor,
         LAURENCE_COMPLETION: arena.completion_event,
-        LAURENCE_START_FLAG: arena.start_flag,
-        LAURENCE_HEALTH_INITIALIZED_FLAG: allocation.health_initialized_flag,
+        LAURENCE_START_FLAG: readiness_flag,
+        LAURENCE_HEALTH_INITIALIZED_FLAG: health_initialized_flag,
     })
     health = _destination_health_telemetry(health, original[arena.health_bar_event])
+    if arena.key == MARIA_ARENA_CONTRACT.key:
+        health = _replace_once(
+            health,
+            f"    SetCharacterAIState({arena.actor}, Enabled);\n",
+            f"    SetCharacterInvincibility({arena.actor}, Disabled);\n"
+            f"    SetCharacterAIState({arena.actor}, Enabled);\n",
+            "Maria pre-combat invincibility clear",
+        )
     camera = _numbers(donor[LAURENCE_CAMERA_EVENT], {
         LAURENCE_CAMERA_EVENT: arena.lockcam_event,
         LAURENCE_ACTOR: arena.actor,

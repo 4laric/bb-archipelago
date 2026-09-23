@@ -49,6 +49,8 @@ internal static class FfxBundleTests
                 destination_sha256 = Hash(File.ReadAllBytes(destinationPath)), required_effect_ids = new[] { 222 }, policy = "preserve_destination_union_source_v1",
             };
             void WritePlan(params object[] rows) => File.WriteAllText(plan, JsonSerializer.Serialize(new { boss_ffx_merges = rows }));
+            void WritePlanWithRequirements(object[] rows, object[] requirements) => File.WriteAllText(plan,
+                JsonSerializer.Serialize(new { boss_ffx_merges = rows, boss_emevd_ffx_requirements = requirements }));
 
             WritePlan(FirstMerge(), SecondMerge());
             var applied = FfxBundleTransplant.Apply(plan, originals, output);
@@ -109,21 +111,21 @@ internal static class FfxBundleTests
                 new string('a', 64));
             FfxBundleTransplant.VerifyCoverage(plan, [covered]);
             Refused(() => FfxBundleTransplant.VerifyCoverage(plan, [covered with { SourceMap = "m36_00_00_00" }]),
-                "FFX merge required effects do not exactly cover added map SFX");
+                "FFX merge required effects do not exactly cover declared SFX dependencies");
             Refused(() => FfxBundleTransplant.VerifyCoverage(plan, [covered with { DestinationMap = "m33_00_00_00" }]),
-                "FFX merge required effects do not exactly cover added map SFX");
+                "FFX merge required effects do not exactly cover declared SFX dependencies");
             Refused(() => FfxBundleTransplant.VerifyCoverage(plan, [covered with { EffectId = 222 }]),
-                "FFX merge required effects do not exactly cover added map SFX");
+                "FFX merge required effects do not exactly cover declared SFX dependencies");
             WritePlan(new { source_file = m35, source_sha256 = Hash(File.ReadAllBytes(source35Path)), destination_file = m34,
                 destination_sha256 = Hash(File.ReadAllBytes(destinationPath)), required_effect_ids = new[] { 111, 222 }, policy = "preserve_destination_union_source_v1" });
             Refused(() => FfxBundleTransplant.VerifyCoverage(plan, [covered]),
-                "FFX merge required effects do not exactly cover added map SFX");
+                "FFX merge required effects do not exactly cover declared SFX dependencies");
             WritePlan(FirstMerge(), SecondMerge());
             Refused(() => FfxBundleTransplant.VerifyCoverage(plan, [covered]),
-                "FFX merge manifest does not exactly cover added map SFX");
+                "FFX merge manifest does not exactly cover declared SFX dependencies");
             File.WriteAllText(plan, "{}");
             Refused(() => FfxBundleTransplant.VerifyCoverage(plan, [covered]),
-                "FFX merge manifest does not exactly cover added map SFX");
+                "FFX merge manifest does not exactly cover declared SFX dependencies");
             WritePlan(new { source_file = m35, source_sha256 = Hash(File.ReadAllBytes(source35Path)), destination_file = m35,
                 destination_sha256 = Hash(File.ReadAllBytes(source35Path)), required_effect_ids = new[] { 111 }, policy = "preserve_destination_union_source_v1" });
             FfxBundleTransplant.VerifyCoverage(plan, [covered with { DestinationMap = "m35_00_00_00" }]);
@@ -137,6 +139,61 @@ internal static class FfxBundleTests
             WritePlan(new { source_file = m35, source_sha256 = Hash(File.ReadAllBytes(source35Path)), destination_file = m35,
                 destination_sha256 = new string('0', 64), required_effect_ids = new[] { 111 }, policy = "preserve_destination_union_source_v1" });
             Refused(() => FfxBundleTransplant.Read(plan), "same-bank FFX reuse requires identical");
+
+            string events = Path.Combine(root, "events"), finalEvents = Path.Combine(root, "final-events");
+            Directory.CreateDirectory(events); Directory.CreateDirectory(finalEvents);
+            byte[] SfxArgs(int effect) => new[] { 4, 500, -1, effect }
+                .SelectMany(value => BitConverter.GetBytes(value)).ToArray();
+            EMEVD OneSfxEvent(long id, int effect) {
+                var file = new EMEVD(EMEVD.Game.Bloodborne); var item = new EMEVD.Event(id);
+                item.Instructions.Add(new EMEVD.Instruction(2006, 3, SfxArgs(effect))); file.Events.Add(item); return file;
+            }
+            const string sourceEventFile = "m35_00_00_00.emevd.dcx", destinationEventFile = "m34_00_00_00.emevd.dcx";
+            string sourceEventPath = Path.Combine(events, sourceEventFile), finalEventPath = Path.Combine(finalEvents, destinationEventFile);
+            File.WriteAllBytes(sourceEventPath, OneSfxEvent(500, 111).Write());
+            File.WriteAllBytes(finalEventPath, OneSfxEvent(900, 111).Write());
+            object Requirement(string hash) => new {
+                format = "bb-boss-emevd-ffx-requirement-v1", source_map = "m35_00_00_00",
+                destination_map = "m34_00_00_00", source_event_file = sourceEventFile,
+                source_event_sha256 = hash, source_event_id = 500, destination_event_file = destinationEventFile,
+                destination_event_id = 900, effect_id = 111,
+            };
+            var encounter = new BossEncounter.Encounter(destinationEventFile, new string('0', 64), [900],
+                new Dictionary<long, string>(), [30]);
+            WritePlanWithRequirements([FirstMerge()], [Requirement(Hash(File.ReadAllBytes(sourceEventPath)))]);
+            var requirements = FfxBundleTransplant.ValidateEmevdInputs(plan, events, [encounter]);
+            Need(requirements.Count == 1 && requirements[0].EffectId == 111,
+                "source-pinned EMEVD effect requirement binds one reviewed destination edit");
+            FfxBundleTransplant.ValidateEmevdFinal(requirements, finalEvents);
+            FfxBundleTransplant.VerifyCoverage(plan, []);
+            FfxBundleTransplant.VerifyCoverage(plan, [covered]);
+            File.WriteAllBytes(sourceEventPath, OneSfxEvent(500, 222).Write());
+            Refused(() => FfxBundleTransplant.ValidateEmevdInputs(plan, events, [encounter]),
+                "EMEVD FFX source provenance drift");
+            var duplicateEffect = OneSfxEvent(500, 111);
+            duplicateEffect.Events[0].Instructions.Add(new EMEVD.Instruction(2006, 3, SfxArgs(111)));
+            File.WriteAllBytes(sourceEventPath, duplicateEffect.Write());
+            WritePlanWithRequirements([FirstMerge()], [Requirement(Hash(File.ReadAllBytes(sourceEventPath)))]);
+            Refused(() => FfxBundleTransplant.ValidateEmevdInputs(plan, events, [encounter]),
+                "exactly one declared SpawnOneshotSFX effect");
+            File.WriteAllBytes(sourceEventPath, OneSfxEvent(500, 111).Write());
+            WritePlanWithRequirements([FirstMerge()], [Requirement(Hash(File.ReadAllBytes(sourceEventPath)))]);
+            Refused(() => FfxBundleTransplant.ValidateEmevdInputs(plan, events,
+                [encounter with { ChangedEventIds = [901] }]), "not one reviewed encounter edit");
+            File.WriteAllBytes(finalEventPath, OneSfxEvent(900, 222).Write());
+            Refused(() => FfxBundleTransplant.ValidateEmevdFinal(requirements, finalEvents),
+                "exactly one declared SpawnOneshotSFX effect");
+            var parameterized = OneSfxEvent(500, 111);
+            parameterized.Events[0].Parameters.Add(new EMEVD.Parameter(0, 12, 0, 4));
+            File.WriteAllBytes(sourceEventPath, parameterized.Write());
+            WritePlanWithRequirements([FirstMerge()], [Requirement(Hash(File.ReadAllBytes(sourceEventPath)))]);
+            Refused(() => FfxBundleTransplant.ValidateEmevdInputs(plan, events, [encounter]),
+                "parameterizes the declared SpawnOneshotSFX effect operand");
+            File.WriteAllText(plan, JsonSerializer.Serialize(new {
+                boss_emevd_ffx_requirements = new[] { Requirement(Hash(File.ReadAllBytes(sourceEventPath))) },
+            }));
+            Refused(() => FfxBundleTransplant.VerifyCoverage(plan, []),
+                "FFX merge manifest does not exactly cover declared SFX dependencies");
             Console.WriteLine($"PASS: {assertions} FFX bundle transplant assertions");
         } finally {
             if (Path.GetDirectoryName(root) != Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar) || !Path.GetFileName(root).StartsWith("bb-ffx-bundle-")) throw new Exception("unsafe cleanup path");

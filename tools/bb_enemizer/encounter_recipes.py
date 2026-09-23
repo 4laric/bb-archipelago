@@ -161,13 +161,14 @@ def _laurence_recipes() -> tuple[EncounterRecipe, ...]:
     from .laurence_donor import (
         DEFAULT_LAURENCE_ALLOCATION,
         LAURENCE_EVENT_FILE,
+        SUPPORTED_LAURENCE_ARENAS,
         native_plan_laurence_donor,
         patch_laurence_donor,
     )
 
     donor = DonorIdentity("laurence", LAURENCE_EVENT_FILE)
     recipes: list[EncounterRecipe] = []
-    for arena in ARENAS:
+    for arena in SUPPORTED_LAURENCE_ARENAS:
 
         def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
             return patch_laurence_donor(
@@ -207,6 +208,40 @@ def _laurence_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _maria_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    from .maria_arena_contract import (
+        MARIA_ARENA_CONTRACT,
+        native_plan_portable_donor_at_maria,
+        patch_portable_donor_at_maria,
+        portable_maria_donors,
+    )
+
+    arena = MARIA_ARENA_CONTRACT
+    recipes: list[EncounterRecipe] = []
+    for donor in portable_maria_donors():
+        def patch(destination: str, donor_source: str, *, _donor=donor) -> str:
+            return patch_portable_donor_at_maria(destination, _donor, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _donor=donor,
+        ) -> dict:
+            return native_plan_portable_donor_at_maria(_donor, slots, npcs, effects, seed)
+
+        def requirements(slots: list, *, _donor=donor) -> list[dict]:
+            return actor_addition_requirements(arena, _donor, slots)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="maria-arena:portable-combat",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=requirements,
+        ))
+    return tuple(recipes)
+
+
 def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     """Return every route backed by a parameterized, source-pinned adapter."""
     arenas = {arena.key: arena for arena in ARENAS}
@@ -224,7 +259,7 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
                 raise ValueError(f"duplicate reusable encounter recipe {recipe.key}")
             recipes[recipe.key] = recipe
 
-    for recipe in (*_maria_recipes(), *_laurence_recipes()):
+    for recipe in (*_maria_recipes(), *_laurence_recipes(), *_maria_arena_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

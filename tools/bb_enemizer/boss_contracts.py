@@ -88,7 +88,9 @@ class ArenaContract:
     lockcam_subarea: int
     phase_slots: tuple[int, ...]
     co_op_entry_event: int
-    part_routine_event: int
+    # Some arenas use ``attachment_anchor_event`` only as an Event(0)
+    # replacement site.  They have no destination body routine to transplant.
+    part_routine_event: int | None
     cloth_routine_event: int | None
     part_slots: tuple[PartBinding, ...]
     attachment_event_ids: tuple[int, ...]
@@ -104,6 +106,17 @@ class ArenaContract:
     # ``expected``; this field says which witnessed destination operand the
     # reusable adapter may replace.
     phase_music_event_flag: int | None = None
+    # Most original arenas have one transition.  An arena with more than one
+    # declares every separately witnessed destination message here instead of
+    # letting a donor adapter silently leave an extra transition behind.
+    music_phase_messages: tuple[int, ...] = ()
+    # Controllers which are tied to the destination model rather than its
+    # progression.  An arena extension must explicitly retire these before a
+    # donor's Event(0) calls are installed.
+    retired_combat_events: tuple[int, ...] = ()
+    # Complex entrance handling may be normalized by a separate, pinned
+    # adapter.  The ordinary base arenas continue to use ``single-idle``.
+    activation_profile: str = "single-idle"
 
 
 @dataclass(frozen=True)
@@ -139,6 +152,25 @@ class CombatPackage:
     # initialization copying.  The native writer pins and transfers TalkID,
     # UnkT18, InitAnimID, and DamageAnimID from this source Part.
     primary_state_bindings: tuple[tuple[str, str], ...] = ()
+    # Ordered, source-pinned combat boundaries usable by arenas with multiple
+    # music transitions.  ``event_flag`` means the remapped source event's
+    # completion flag; ``message`` is a witnessed CharacterHasEventMessage in
+    # ``source_event``.
+    music_phase_signals: tuple["MusicPhaseSignal", ...] = ()
+    # A source-backed wake lifecycle.  Generic arenas use this only when they
+    # implement the named profile; it is deliberately separate from an entry
+    # animation operand because protection, gravity, and first-damage gates
+    # are combat state rather than presentation.
+    activation_profile: str = "unsupported"
+
+
+@dataclass(frozen=True)
+class MusicPhaseSignal:
+    """One declared source combat boundary for destination music adaptation."""
+
+    kind: str
+    source_event: int
+    message: int | None = None
 
 
 CLERIC_ARENA = ArenaContract(
@@ -460,6 +492,11 @@ BSB_PACKAGE = CombatPackage(
     },
     legacy_canary=True,
     primary_state_bindings=(("00", "00"), ("01", "01"), ("11", "00")),
+    music_phase_signals=(
+        MusicPhaseSignal("event_flag", 12304807),
+        MusicPhaseSignal("event_flag", 12304808),
+    ),
+    activation_profile="host-entry-animation",
 )
 
 PAARL_PACKAGE = CombatPackage(
@@ -503,6 +540,8 @@ PAARL_PACKAGE = CombatPackage(
         12304715: "015e8810e6bdab08aa66827c290b554890e0c45be100efe95fcf6730a00ee74e",
     },
     primary_state_bindings=(("00", "00"), ("01", "01"), ("11", "00")),
+    music_phase_signals=(MusicPhaseSignal("message", 12304707, 20),),
+    activation_profile="protected-radius-wake",
 )
 
 CLERIC_PACKAGE = CombatPackage(
@@ -563,6 +602,8 @@ CLERIC_PACKAGE = CombatPackage(
     },
     generic_activation=True,
     primary_state_bindings=(("00", "00"), ("01", "01"), ("11", "11")),
+    music_phase_signals=(MusicPhaseSignal("message", 12414707, 100),),
+    activation_profile="gravity-warp-wake",
 )
 
 AMELIA_PACKAGE = CombatPackage(
@@ -628,6 +669,8 @@ AMELIA_PACKAGE = CombatPackage(
     },
     generic_activation=True,
     primary_state_bindings=(("00", "00"), ("01", "01"), ("11", "00")),
+    music_phase_signals=(MusicPhaseSignal("message", 12404807, 100),),
+    activation_profile="object-gated-wake",
 )
 
 AMYGDALA_PACKAGE = CombatPackage(
@@ -687,6 +730,11 @@ AMYGDALA_PACKAGE = CombatPackage(
     lockcam_subarea=0,
     expected=dict(AMYGDALA_ARENA.expected),
     primary_state_bindings=(("00", "00"), ("01", "00"), ("11", "00")),
+    music_phase_signals=(
+        MusicPhaseSignal("event_flag", 13304807),
+        MusicPhaseSignal("event_flag", 13304808),
+    ),
+    activation_profile="protected-area-wake",
 )
 
 # Ebrietas' bullet owner is a concrete MSB actor, not an EMEVD-only helper.
@@ -754,6 +802,8 @@ EBRIETAS_PACKAGE = CombatPackage(
         12424990: "0b8bf3929d610e3938673ca58072126cbde658e3aa75911c958a1b7e7f43a700",
     },
     primary_state_bindings=(("00", "00"), ("01", "01"), ("11", "00")),
+    music_phase_signals=(MusicPhaseSignal("message", 12424803, 100),),
+    activation_profile="first-damage-wake",
 )
 
 ARENAS: tuple[ArenaContract, ...] = (
