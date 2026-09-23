@@ -47,19 +47,21 @@ namespaces. The companion summary records that no protection policy changed.
 It reads `research/bb_inputs.db` by default, so regenerating the census needs no
 game dump; `--inventory` plus `--events` remains available for dump comparison.
 
-The census finds actual character-operation use for 2,254 slots. The remaining
-145 have only event arguments or other operation families and need review; this
+The census finds actual character-operation use for 2,332 slots. The remaining
+67 have only resolved non-character operation families and need review; this
 is not evidence that they are safe. Although 308 protected physical slots share
 a number with an ItemLotParam row, only two occurrences are `AwardItemLot`
-operands, and only 20 of those collisions lack a separate character operation.
+operands, and only 10 of those collisions lack a separate character operation.
 This disproves the stronger "all numeric collisions are item-lot uses" premise
 without converting the opposite heuristic into policy. Any relaxation remains
 blocked on an in-game map-load and playtest pass. `docs/ENEMIZER-COVERAGE.md`
 sharpens this decomposition, proposes the character-operation predicate, and
-measures the coverage delta it would earn (308 → 336 swaps, +28, all
+measures the coverage delta it would earn (308 → 327 swaps, +19, all
 non-boss). That wider mode is available behind the off-by-default
 `build_enemizer_catalog.py --relax-non-character-emevd` flag; the conservative
-default swap set is unchanged.
+default swap set is unchanged. The full protection audit, including the
+common-event correction that reduced the earlier +28 claim, is in
+`docs/ENEMIZER-PROTECTION-AUDIT.md`.
 
 Target selection follows the Nightreign engine's two-stage model. It chooses a
 character model family uniformly, preventing enemies with many authored
@@ -83,6 +85,12 @@ Optional JSON inputs:
   `size_class`, `tier`, `locomotion`, `target`, and `notes` fields.
 - `--slot-policy`: keyed by physical (`map:part`) or logical slot, with
   `randomize`, `reason`, compatibility fields, and per-slot `bans`.
+- `--release-file`: a `bb-enemizer-release-v1` record from
+  `build_enemizer_catalog.py --release-contracts` /
+  `--release-script-spawns` / `--release-chara-bound` (repeatable; tranches
+  compose by union). Replaces one blanket exclusion each with reviewed
+  compatibility handling; see `docs/ENEMIZER-EXPANSION.md` for the
+  implemented-vs-validated ledger. Default: conservative policy.
 
 ## MSBB writer
 

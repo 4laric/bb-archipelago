@@ -292,6 +292,12 @@ class LauncherApp:
         # On by default alongside enemy randomization: reviewed, though
         # gameplay-untested, boss shuffle is the intended normal experience.
         self.boss_pool = tk.BooleanVar(value=True)
+        # Release tranches replace one blanket exclusion each with reviewed
+        # compatibility handling (docs/ENEMIZER-EXPANSION.md). All default
+        # off; they persist like the other enemy options.
+        self.release_contracts = tk.BooleanVar(value=False)
+        self.release_spawns = tk.BooleanVar(value=False)
+        self.release_chara = tk.BooleanVar(value=False)
         # Operator override (bb-archipelago#183).  Deliberately absent from
         # _save_settings and _load_settings_if_present: it is per-session by
         # construction, so it can never be left on and forgotten.
@@ -486,7 +492,22 @@ class LauncherApp:
             caption="Scale replacements to the slot they fill. Always on for the BSB "
                     "playtest, regardless of this box.",
         )
-        troubleshooting_row += 3
+        contracts, _contracts_row = option(
+            ttk, troubleshooting, troubleshooting_row + 3, "Scripted enemies: supported contracts",
+            self.release_contracts,
+            caption="Extends randomization to reviewed contract-safe script-driven enemies. Gameplay untested.",
+        )
+        spawns, _spawns_row = option(
+            ttk, troubleshooting, troubleshooting_row + 4, "Script-spawn ambushes",
+            self.release_spawns,
+            caption="Includes reviewed script-spawn ambush slots. Gameplay untested.",
+        )
+        chara, _chara_row = option(
+            ttk, troubleshooting, troubleshooting_row + 5, "Chara-bound hunters",
+            self.release_chara,
+            caption="Includes reviewed CharaInit-bound hunter placements. Gameplay untested.",
+        )
+        troubleshooting_row += 6
         enemy_inputs = ttk.Frame(troubleshooting)
         enemy_inputs.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
         enemy_inputs.columnconfigure(1, weight=1)
@@ -565,6 +586,7 @@ class LauncherApp:
 
         self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))
         self._enemy_widgets.extend(self._boss_mode_widgets)
+        self._enemy_widgets.extend((contracts, spawns, chara))
 
         # --- Details drawer: launch progress and session status ------------
         # Outside the notebook so no page can hide it (bb-archipelago#190).
@@ -887,6 +909,9 @@ class LauncherApp:
                 "normalize_scaling": self.normalize_scaling.get(),
                 "boss_canary": self.boss_canary.get(),
                 "boss_pool": self.boss_pool.get(),
+                "release_contracts": self.release_contracts.get(),
+                "release_spawns": self.release_spawns.get(),
+                "release_chara": self.release_chara.get(),
             }
             self.settings_path.write_text(
                 json.dumps(value, indent=2, sort_keys=True) + "\n",
@@ -920,6 +945,9 @@ class LauncherApp:
             self.normalize_scaling.set(bool(value.get("normalize_scaling", False)))
             self.boss_canary.set(bool(value.get("boss_canary", False)))
             self.boss_pool.set(bool(value.get("boss_pool", False)))
+            self.release_contracts.set(bool(value.get("release_contracts", False)))
+            self.release_spawns.set(bool(value.get("release_spawns", False)))
+            self.release_chara.set(bool(value.get("release_chara", False)))
         except (OSError, UnicodeError, json.JSONDecodeError, LauncherError) as exc:
             self.messagebox.showwarning("Saved setup ignored", str(exc), parent=self.root)
 
@@ -1087,6 +1115,9 @@ class LauncherApp:
                 normalize_scaling=self.normalize_scaling.get(),
                 boss_canary=self.boss_canary.get(),
                 boss_pool="reviewed" if self.boss_pool.get() else None,
+                release_contracts=self.release_contracts.get(),
+                release_spawns=self.release_spawns.get(),
+                release_chara=self.release_chara.get(),
             )
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()
@@ -1436,6 +1467,9 @@ class LauncherApp:
                 normalize_scaling=self.normalize_scaling.get(),
                 boss_canary=self.boss_canary.get(),
                 boss_pool="reviewed" if self.boss_pool.get() else None,
+                release_contracts=self.release_contracts.get(),
+                release_spawns=self.release_spawns.get(),
+                release_chara=self.release_chara.get(),
             )
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()

@@ -227,7 +227,10 @@ def main(argv: list[str] | None = None) -> int:
                     EnemizerOptions(enabled=not args.no_enemizer,
                         seed=raw.get("enemy_seed"), allow_tier_mixing=bool(raw.get("allow_tier_mixing")),
                         preserve_locomotion=bool(raw.get("preserve_locomotion")),
-                        normalize_scaling=bool(raw.get("normalize_scaling")), boss_canary=bool(raw.get("boss_canary"))),
+                        normalize_scaling=bool(raw.get("normalize_scaling")), boss_canary=bool(raw.get("boss_canary")),
+                        release_contracts=bool(raw.get("release_contracts")),
+                        release_spawns=bool(raw.get("release_spawns")),
+                        release_chara=bool(raw.get("release_chara"))),
                     player_name=args.player_name, progress=print,
                     replace_existing=args.replace_existing, **kwargs)
                 _print({"package": str(result.package_path), "receipt": str(result.receipt_path)})
