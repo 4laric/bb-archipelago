@@ -1144,3 +1144,7 @@ complete one-of-each, no-self assignments; **274** implementation gaps remain.
 Forty-seven focused donor, registry, builder and composition tests pass. Combat
 geometry, navigation, recursive FXR dependencies and runtime behavior remain
 unvalidated.
+
+The character-proof resource uses LF bytes in Git and its integrity pin. The
+native matrices captured the equivalent local CRLF serialization before it was
+normalized; the parsed proof and generated native payload are unchanged.
