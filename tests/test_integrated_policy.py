@@ -140,9 +140,20 @@ class JournalRecoveryTests(unittest.TestCase):
 class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
     """The copy gate runs on real verifier output, not stub shapes."""
 
+    # A synthetic candidate, independent of whatever real build the launcher
+    # currently treats as a live-acceptance candidate (that map is empty
+    # between graduations -- see bb_launcher/external.py). This class exists
+    # to exercise the live-acceptance-candidate code path, not to assert
+    # anything about which build is presently a candidate; a real commit/exe
+    # pair would make the test start failing every time that build graduates
+    # to SUPPORTED_BBLAUNCHER_BUILDS, same as it did after commit 90e1109e.
+    _CANDIDATE_COMMIT = "3" * 40
+    _CANDIDATE_EXE = "4" * 64
+
     def setUp(self) -> None:
         import shutil
         from datetime import datetime, timezone
+        from types import MappingProxyType
 
         from bb_launcher.core import (
             SERIAL,
@@ -153,7 +164,6 @@ class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
         from bb_launcher.external import (
             ACTIVE_MODS_DIR_NAME,
             ExternalNamespace,
-            LIVE_ACCEPTANCE_CANDIDATES,
             BBLauncherBuildPin,
             export_external_package,
             verify_external_activation,
@@ -161,6 +171,14 @@ class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
 
         self._sha256_file = sha256_file
         self._verify = verify_external_activation
+        candidates_patch = patch(
+            "bb_launcher.external.LIVE_ACCEPTANCE_CANDIDATES",
+            new=MappingProxyType(
+                {self._CANDIDATE_COMMIT: frozenset({self._CANDIDATE_EXE})}
+            ),
+        )
+        candidates_patch.start()
+        self.addCleanup(candidates_patch.stop)
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         game = self.root / "game"
@@ -175,9 +193,10 @@ class CopyPolicyAgainstRealVerificationTests(unittest.TestCase):
         self.mods_root = self.root / "bblauncher" / "Mods"
         self.mods_root.mkdir(parents=True)
         self.state_root = self.root / "state"
-        commit = next(iter(LIVE_ACCEPTANCE_CANDIDATES))
-        exe = next(iter(LIVE_ACCEPTANCE_CANDIDATES[commit]))
-        pin = BBLauncherBuildPin("local", commit, exe, live_acceptance_candidate=True)
+        pin = BBLauncherBuildPin(
+            "local", self._CANDIDATE_COMMIT, self._CANDIDATE_EXE,
+            live_acceptance_candidate=True,
+        )
 
         def make_identity(seed: str) -> SeedIdentity:
             return SeedIdentity(
