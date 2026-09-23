@@ -55,8 +55,8 @@ MOON_PACKAGE=CombatPackage(
  start_flag=12104850, activation_event=12101852, health_bar_event=12104852,
  health_bar_label=540000, phase_events=(), co_op_entry_event=None, lockcam_event=12104854,
  phase_music_message=500, part_routine_event=12104860,
- part_bindings=(PartBinding(0,("5","5","NPCPartType.Part1","100","480","490","8000")),PartBinding(1,("6","6","NPCPartType.Part2","150","481","491","8010")),PartBinding(2,("7","7","NPCPartType.Part3","150","482","492","8010")),PartBinding(3,("8","8","NPCPartType.Part4","200","483","493","8020")),PartBinding(4,("9","9","NPCPartType.Part5","200","484","494","8040"))),
- attachments=(EventAttachment(12104860,(PartBinding(0,("5","5","NPCPartType.Part1","100","480","490","8000")),PartBinding(1,("6","6","NPCPartType.Part2","150","481","491","8010")),PartBinding(2,("7","7","NPCPartType.Part3","150","482","492","8010")),PartBinding(3,("8","8","NPCPartType.Part4","200","483","493","8020")),PartBinding(4,("9","9","NPCPartType.Part5","200","484","494","8040")))),EventAttachment(12104870,(PartBinding(0,()),))), virtual_entities=(),
+ part_bindings=(PartBinding(0,("5","5","NPCPartType.Part1","100","480","490","8000")),PartBinding(1,("6","6","NPCPartType.Part2","150","481","491","8010")),PartBinding(2,("7","7","NPCPartType.Part3","150","482","492","8030")),PartBinding(3,("8","8","NPCPartType.Part4","200","483","493","8020")),PartBinding(4,("9","9","NPCPartType.Part5","200","484","494","8040"))),
+ attachments=(EventAttachment(12104860,(PartBinding(0,("5","5","NPCPartType.Part1","100","480","490","8000")),PartBinding(1,("6","6","NPCPartType.Part2","150","481","491","8010")),PartBinding(2,("7","7","NPCPartType.Part3","150","482","492","8030")),PartBinding(3,("8","8","NPCPartType.Part4","200","483","493","8020")),PartBinding(4,("9","9","NPCPartType.Part5","200","484","494","8040")))),EventAttachment(12104870,(PartBinding(0,()),))), virtual_entities=(),
  entry_animation=None, lockcam_map=21, lockcam_subarea=0, expected=PINS)
 
 
@@ -182,13 +182,16 @@ def patch_moon_at_gehrman(source: str, ids: FinalAttachmentIds) -> str:
                           "CharacterHasEventMessage(2100800, 500)", "Moon phase music")
     lockcam = _renamed_event(original[12104854], 12104854, 12104804,
         {MOON: GEHRMAN, 12101850: 12101800})
-    limb_specs = ((0, 5, 100, 480, 490, 8000), (1, 6, 150, 481, 491, 8010),
-                  (2, 7, 150, 482, 492, 8010), (3, 8, 200, 483, 493, 8020),
-                  (4, 9, 200, 484, 494, 8040))
-    limb_calls = "\n".join(
-        f"    $InitializeEvent({slot}, {ids.first}, {part}, {part}, NPCPartType.Part{slot + 1}, {hp}, {effect}, {effect2}, {animation});"
-        for slot, part, hp, effect, effect2, animation in limb_specs
-    )
+    # Copy every source-authored limb initializer through the shared package.
+    # A mismatched package operand must refuse rather than silently substitute
+    # another limb's break animation.
+    limb_lines = []
+    for binding in MOON_PACKAGE.part_bindings:
+        arguments = ", ".join(binding.arguments)
+        source_line = f"    $InitializeEvent({binding.slot}, 12104860, {arguments});"
+        _witness_initializer(original[0], source_line, 12104860)
+        limb_lines.append(source_line.replace("12104860", str(ids.first), 1))
+    limb_calls = "\n".join(limb_lines)
     init = _replace_once(original[0], "    $InitializeEvent(0, 12104870);",
         "    $InitializeEvent(0, 12104870);\n" + limb_calls + f"\n    $InitializeEvent(0, {ids.second});",
         "Gehrman append initializer anchor")

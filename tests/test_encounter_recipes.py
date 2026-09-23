@@ -16,6 +16,7 @@ from tools.bb_enemizer.encounter_recipes import reusable_recipes
 from tools.bb_enemizer.maria_arena_contract import MARIA_ARENA_CONTRACT
 from tools.bb_enemizer.laurence_arena_contract import LAURENCE_ARENA_CONTRACT
 from tools.bb_enemizer.gascoigne_arena_contract import GASCOIGNE_ARENA_CONTRACT
+from tools.bb_enemizer.orphan_arena_contract import ORPHAN_ARENA_CONTRACT
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.scaling import load_params
 
@@ -55,9 +56,19 @@ class EncounterRecipeTests(unittest.TestCase):
         gascoigne_arena_keys = {("father-gascoigne", donor.key) for donor in PACKAGES}
         logarius_arena_keys = {("martyr-logarius", donor.key) for donor in PACKAGES}
         orphan_keys = {(arena.key, "orphan-of-kos") for arena in ARENAS}
+        orphan_arena_keys = {
+            ("orphan-of-kos", donor.key)
+            for donor in PACKAGES
+            if donor.key != "blood-starved-beast"
+        }
+        ludwig_arena_keys = {("ludwig", donor.key) for donor in PACKAGES
+                             if donor.key != "cleric-beast"}
+        ludwig_keys = {(arena.key, "ludwig") for arena in ARENAS}
+        gascoigne_donor_keys = {(arena.key, "father-gascoigne") for arena in ARENAS}
         groups = (base_keys, maria_keys, laurence_keys, maria_arena_keys, logarius_keys,
                   laurence_arena_keys, gascoigne_arena_keys, logarius_arena_keys,
-                  orphan_keys)
+                  orphan_keys, orphan_arena_keys, ludwig_keys, gascoigne_donor_keys,
+                  ludwig_arena_keys)
         self.assertEqual(set.union(*groups), set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)
@@ -70,6 +81,10 @@ class EncounterRecipeTests(unittest.TestCase):
         self.assertEqual(6, len(gascoigne_arena_keys))
         self.assertEqual(6, len(logarius_arena_keys))
         self.assertEqual(6, len(orphan_keys))
+        self.assertEqual(5, len(orphan_arena_keys))
+        self.assertEqual(5, len(ludwig_arena_keys))
+        self.assertEqual(6, len(ludwig_keys))
+        self.assertEqual(6, len(gascoigne_donor_keys))
         self.assertEqual(
             sum(map(len, groups)),
             len(self.recipes),
@@ -93,6 +108,10 @@ class EncounterRecipeTests(unittest.TestCase):
             recipe = self.recipes[key]
             self.assertIs(arenas[key[0]], recipe.arena)
             self.assertEqual("laurence", recipe.donor.key)
+
+        self.assertNotIn(("orphan-of-kos", "blood-starved-beast"), self.recipes)
+        for key in orphan_arena_keys:
+            self.assertIs(ORPHAN_ARENA_CONTRACT, self.recipes[key].arena)
 
     def test_recipe_metadata_is_explicit_and_frozen_without_runtime_claim(self):
         recipe = self.recipes[(PAARL_ARENA.key, EBRIETAS_PACKAGE.key)]
@@ -208,6 +227,61 @@ class EncounterRecipeTests(unittest.TestCase):
                 for binding in plan["primary_init_source_bindings"]
             },
         )
+
+        ludwig = self.recipes[(arena.key, "ludwig")]
+        donor_source = read_blob(BUNDLE, "event/m34_00_00_00.emevd.dcx.js").decode(
+            "utf-8-sig"
+        )
+        after = event_blocks(ludwig.patch(destination, donor_source))
+        self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+        self.assertEqual(
+            {12995800, 12995801, 12995802, 12995803, 12995804, 12995805,
+             12995806, 12995807, 12995808, 12995809, 12995810, 12995811},
+            set(after) - set(before),
+        )
+        plan = ludwig.native_plan(self.slots, self.npcs, self.effects, "recipe-ludwig")
+        self.assertEqual("ludwig", plan["boss_contract"]["donor"])
+        self.assertEqual(arena.destination_count, len(plan["boss_actor_additions"]))
+        self.assertEqual(645114, plan["boss_emevd_ffx_requirements"][0]["effect_id"])
+
+        gascoigne = self.recipes[(arena.key, "father-gascoigne")]
+        donor_source = read_blob(BUNDLE, "event/m24_01_00_00.emevd.dcx.js").decode(
+            "utf-8-sig"
+        )
+        after = event_blocks(gascoigne.patch(destination, donor_source))
+        self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+        self.assertEqual(
+            {12995600, 12995601, 12995602, 12995603, 12995604, 12995606},
+            set(after) - set(before),
+        )
+        plan = gascoigne.native_plan(self.slots, self.npcs, self.effects, "recipe-gascoigne")
+        self.assertEqual("father-gascoigne", plan["boss_contract"]["donor"])
+        self.assertEqual(arena.destination_count, len(plan["boss_actor_additions"]))
+        self.assertEqual({983100}, {row["destination_entity_id"]
+                                    for row in plan["boss_actor_additions"]})
+
+        orphan_arena = self.recipes[("orphan-of-kos", "cleric-beast")]
+        destination = read_blob(BUNDLE, "event/m36_00_00_00.emevd.dcx.js").decode(
+            "utf-8-sig"
+        )
+        donor_source = self.sources[arena.event_file]
+        before = event_blocks(destination)
+        after = event_blocks(orphan_arena.patch(destination, donor_source))
+        self.assertEqual(before[13601800], after[13601800])
+        self.assertEqual(
+            {12995700, 12995701, 12995702, 12995703,
+             12995705, 12995706, 12995707},
+            set(after) - set(before),
+        )
+        plan = orphan_arena.native_plan(
+            self.slots, self.npcs, self.effects, "recipe-orphan-arena"
+        )
+        self.assertEqual("orphan-of-kos", plan["boss_contract"]["arena"])
+        self.assertEqual("cleric-beast", plan["boss_contract"]["donor"])
+        self.assertEqual({3600800}, {
+            row["destination_entity_id"]
+            for row in plan["primary_init_source_bindings"]
+        })
 
 
 if __name__ == "__main__":

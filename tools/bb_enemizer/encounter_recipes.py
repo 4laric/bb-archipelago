@@ -394,6 +394,155 @@ def _orphan_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _orphan_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    """Register base combat packages at the reusable Orphan arena.
+
+    Blood-starved Beast keeps its earlier dedicated adapter.  The reusable
+    arena supports it as a public API, but replacing a reviewed route is not
+    required to expand the graph with the other five donors.
+    """
+    from .orphan_arena_contract import (
+        ORPHAN_ARENA_CONTRACT,
+        native_plan_portable_donor_at_orphan,
+        patch_portable_donor_at_orphan,
+        portable_orphan_donors,
+    )
+
+    arena = ORPHAN_ARENA_CONTRACT
+    recipes: list[EncounterRecipe] = []
+    for donor in portable_orphan_donors():
+        if donor.key == "blood-starved-beast":
+            continue
+
+        def patch(destination: str, donor_source: str, *, _donor=donor) -> str:
+            return patch_portable_donor_at_orphan(destination, _donor, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _donor=donor,
+        ) -> dict:
+            return native_plan_portable_donor_at_orphan(
+                _donor, slots, npcs, effects, seed
+            )
+
+        def requirements(slots: list, *, _donor=donor) -> list[dict]:
+            return actor_addition_requirements(arena, _donor, slots)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="orphan-arena:portable-combat",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=requirements,
+        ))
+    return tuple(recipes)
+
+
+def _ludwig_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    """Bind reusable donors while retaining the existing Cleric arena adapter."""
+    from .ludwig_arena_contract import (
+        LUDWIG_ARENA_CONTRACT,
+        native_plan_portable_donor_at_ludwig,
+        patch_portable_donor_at_ludwig,
+        portable_ludwig_donors,
+    )
+
+    arena = LUDWIG_ARENA_CONTRACT
+    recipes: list[EncounterRecipe] = []
+    for donor in portable_ludwig_donors():
+        if donor.key == "cleric-beast":
+            continue
+
+        def patch(destination: str, donor_source: str, *, _donor=donor) -> str:
+            return patch_portable_donor_at_ludwig(destination, _donor, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _donor=donor,
+        ) -> dict:
+            return native_plan_portable_donor_at_ludwig(
+                _donor, slots, npcs, effects, seed
+            )
+
+        def requirements(slots: list, *, _donor=donor) -> list[dict]:
+            return actor_addition_requirements(arena, _donor, slots)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="ludwig-arena:portable-combat",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=requirements,
+        ))
+    return tuple(recipes)
+
+
+def _ludwig_recipes() -> tuple[EncounterRecipe, ...]:
+    """Register the normal two-body Ludwig donor at every base arena."""
+    from .ludwig_donor import (
+        ARENAS as SUPPORTED_LUDWIG_ARENAS,
+        EVENT_FILE,
+        native_plan_ludwig_donor,
+        patch_ludwig_donor,
+    )
+
+    donor = DonorIdentity("ludwig", EVENT_FILE)
+    recipes: list[EncounterRecipe] = []
+    for arena in SUPPORTED_LUDWIG_ARENAS:
+        def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
+            return patch_ludwig_donor(_arena, destination, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _arena=arena,
+        ) -> dict:
+            return native_plan_ludwig_donor(_arena, slots, npcs, effects, seed)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="ludwig-donor:normal-two-body",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=lambda slots: [],
+        ))
+    return tuple(recipes)
+
+
+def _gascoigne_donor_recipes() -> tuple[EncounterRecipe, ...]:
+    """Register Gascoigne's human/beast donor at base arenas."""
+    from .gascoigne_donor import (
+        GASCOIGNE_EVENT_SOURCE,
+        SUPPORTED_GASCOIGNE_ARENAS,
+        native_plan_gascoigne_donor,
+        patch_gascoigne_donor,
+    )
+
+    donor = DonorIdentity("father-gascoigne", GASCOIGNE_EVENT_SOURCE.removeprefix("event/"))
+    recipes: list[EncounterRecipe] = []
+    for arena in SUPPORTED_GASCOIGNE_ARENAS:
+        def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
+            return patch_gascoigne_donor(_arena, destination, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _arena=arena,
+        ) -> dict:
+            return native_plan_gascoigne_donor(_arena, slots, npcs, effects, seed)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="gascoigne-donor:human-beast",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=lambda slots: [],
+        ))
+    return tuple(recipes)
+
+
 def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     """Return every route backed by a parameterized, source-pinned adapter."""
     arenas = {arena.key: arena for arena in ARENAS}
@@ -413,7 +562,9 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
 
     for recipe in (*_maria_recipes(), *_laurence_recipes(), *_maria_arena_recipes(),
                    *_logarius_recipes(), *_laurence_arena_recipes(), *_gascoigne_arena_recipes(),
-                   *_logarius_arena_recipes(), *_orphan_recipes()):
+                   *_logarius_arena_recipes(), *_orphan_recipes(), *_orphan_arena_recipes(),
+                   *_ludwig_recipes(),
+                   *_gascoigne_donor_recipes(), *_ludwig_arena_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

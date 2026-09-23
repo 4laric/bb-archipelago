@@ -20,6 +20,10 @@ if (args.Length == 2 && args[0] == "--boss-object-pins")
     return BossObjectTransplant.Inspect(args[1]);
 if (args.Length == 2 && args[0] == "--boss-sfx-pins")
     return BossSfxTransplant.Inspect(args[1]);
+if (args.Length == 14 && args[0] == "--boss-encounters" && args[9] == "--sfx" && args[11] == "--characters" && args[13] == "--apply")
+    return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[10], args[12]);
+if (args.Length == 12 && args[0] == "--boss-encounters" && args[9] == "--characters" && args[11] == "--apply")
+    return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], charactersPath: args[10]);
 if (args.Length == 12 && args[0] == "--boss-encounters" && args[9] == "--sfx" && args[11] == "--apply")
     return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[10]);
 if (args.Length == 10 && args[0] == "--boss-encounters" && args[9] == "--apply")
@@ -49,7 +53,7 @@ if (args.Length != 4 || args[3] != "--apply")
     Console.Error.WriteLine(
         "Native boss canary: BBEnemizerWriter --boss-native <plan> <built-gameparam> <paramdef> <maps> <scripts> <original-event> <new-output-root> --apply");
     Console.Error.WriteLine(
-        "Boss encounters: BBEnemizerWriter --boss-encounters <plan> <built-gameparam> <paramdef> <maps> <scripts> <event-input-dir> <compiled-event-dir> <new-output-root> [--sfx <original-sfx-dir>] --apply");
+        "Boss encounters: BBEnemizerWriter --boss-encounters <plan> <built-gameparam> <paramdef> <maps> <scripts> <event-input-dir> <compiled-event-dir> <new-output-root> [--sfx <original-sfx-dir>] [--characters <original-character-dir>] --apply");
     Console.Error.WriteLine("Actor evidence: BBEnemizerWriter --boss-actor-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("Region evidence: BBEnemizerWriter --boss-region-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("Object evidence: BBEnemizerWriter --boss-object-pins <original-map.msb.dcx>");
@@ -102,6 +106,8 @@ if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_region_additi
     throw new InvalidDataException("boss region additions require --boss-encounters and reviewed map evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_object_additions", out _))
     throw new InvalidDataException("boss object additions require --boss-encounters and reviewed map evidence");
+if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_character_ffx_requirements", out _))
+    throw new InvalidDataException("boss character FFX requirements require --boss-encounters and reviewed character evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_ffx_merges", out _))
     throw new InvalidDataException("boss FFX merges require --boss-encounters and reviewed asset evidence");
 if (!bossPrepared && planDocument.RootElement.TryGetProperty("boss_sfx_additions", out _))

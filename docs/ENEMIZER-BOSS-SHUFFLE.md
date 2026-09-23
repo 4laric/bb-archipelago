@@ -891,3 +891,87 @@ asset audit above records a separate known gap that these checks do not cover.
 
 Both full test passes completed with 1,852 tests and 57 optional skips
 (865.676s and 807.476s). Generated-data and shipping preflight passed.
+
+
+## Character effect evidence and asset conflicts
+
+The native encounter writer and Python builder accept an input-only
+`--characters` directory for plans declaring `boss_character_ffx_requirements`.
+Each requirement binds an exact source map/part/entity to its model, animation
+archive, embedded TAE hash, animation count and ordered type-96/100/118 effect
+witnesses. The verifier reads the original archives; it does not write a
+character overlay or assert complete combat-asset closure. Shared models can
+serve multiple source actors only when their archive evidence agrees.
+Composition retains these requirements and rejects conflicting declarations
+before calling the native writer.
+
+A real Orphan-to-Cleric native CLI smoke verifies all three source bindings
+and their 30/55/0 typed witnesses in the output receipt. The native harness
+passes 36 character checks including installed-original Orphan, Ludwig and
+shared-human archives. Ludwig has 265 ordered witnesses, including 30 type-118 blade
+effects. These add roots 645115 and 645119 to the earlier 37-root set. Both
+source Ludwig actors verify against the same pinned archive; changing a
+type-118 operand is rejected even when the archive hashes are updated.
+The separate event-effect validator now accepts a declared positive occurrence
+count and checks that exact count in source and final events, including every
+matched effect operand. This preserves Ludwig's sixteen original spawns of
+645114 instead of collapsing his visual sequence; omitted counts retain the
+previous single-occurrence behavior. Its 39 native FFX checks pass.
+
+The [original area-bank conflict survey](boss-area-bank-conflicts.json) records
+all 13 fixed-boss area bank hashes and the different-byte intersections. Thirteen
+unordered bank pairs contain 82 conflicting entries, all FXRs; no non-FXR
+resource conflicts occur in this pinned set. This supports retaining all
+source textures/models/animation resources while developing selective FXR
+delivery. It does not prove an FXR can safely be omitted or establish runtime
+bank precedence. Indexed effect and action-resource references still need
+resolution before the conflicting Ludwig and Orphan routes have complete
+asset delivery. Character proofs are not yet enabled by production donors.
+
+The [direct-root availability audit](boss-character-direct-root-availability.json)
+checks Ludwig and Orphan against all 37 original effect banks. Every one of
+Ludwig's 39 and Orphan's 12 decoded direct roots has an original bank entry.
+This locates input assets; it does not establish destination availability,
+recursive effect closure, or engine load order. The typed animation decoder
+is partial: types other than 96, 100 and 118 remain outside its claim.
+
+The [additional character archive census](boss-additional-character-archive-census.json)
+records seven more original archives: Gehrman, Moon Presence, Maria, Laurence,
+Rom, his spider model and the shared human model used by Micolash. The last
+archive contains 80 separate TAE entries. Its inventory does not identify
+which entries Micolash uses. The v2 character-proof format now supports an
+ordered `source_tae_entries` list per source actor/archive, and v1 normalizes
+to a one-entry proof. Receipts retain each entry ID/path/hash, decoded event
+types, `coverage_scope: partial-typed-witness`, and
+`fxr_delivery_status: not-validated`. A full native CLI smoke verifies all
+80 entries and 4,742 selected witnesses on the materialized Micolash source
+binding, with 60 output files verified. This is archive evidence only, not
+proof that Micolash executes every listed animation.
+
+## Ludwig destination integration in progress
+
+The reusable Ludwig destination is wired for five additional base donors;
+the existing Cleric and Laurence destination routes retain their dedicated
+implementations. The current local graph has 142 directed routes and 105
+reusable recipe bindings. Every graph edge can participate in a complete
+22-boss, one-of-each, no-self assignment. This is graph feasibility evidence,
+not native-build or gameplay validation, and the [six direct native builds](boss-ludwig-arena-native-matrix.json) now
+pass against original inputs, with eight receipt-verified files per build.
+The reusable module also passes all seven focused checks, including compilation
+of all six donor variants. [Five complete-roster composition builds](boss-ludwig-arena-full22-matrix.json)
+cover all five new destination routes, with 22 boss contracts, 15 event files,
+and 60–61 receipt-verified files per build. No gameplay or complete
+character-effect delivery is claimed. The other 320 directed
+pairings remain implementation work, not established incompatibilities.
+
+The frozen preceding 137-route worktree passed both full regression passes:
+1,876 tests and 57 optional skips each, in 963.692 and 972.727 seconds.
+Generated-data and shipping preflight also passed. Those results do not cover
+the newer Ludwig destination, multi-TAE proof, or Moon limb correction in this
+worktree; these changes have separate focused and native checks.
+
+Review of the next reusable donors found and corrected Moon Presence's third
+limb break animation from 8010 to the original 8030. The dedicated Gehrman
+route now derives every limb initializer from the shared package and verifies
+each exact original initializer before emission. Its source-comparison tests
+and original-input native build pass.

@@ -814,7 +814,8 @@ def build(args) -> dict:
         ('orphan-of-kos', 'blood-starved-beast'),
         ('orphan-of-kos', 'ludwig'),
     }
-    if direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in reviewed_orphan_pairs:
+    if (direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in recipes
+            and direct_orphan not in reviewed_orphan_pairs):
         raise ValueError('Orphan arena requires a reviewed donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if (direct_logarius[0] == 'martyr-logarius' and direct_logarius not in recipes
@@ -826,7 +827,8 @@ def build(args) -> dict:
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
     ludwig_arena = getattr(args, 'arena', None) == 'ludwig'
     reviewed_ludwig_donors = LUDWIG_COMPATIBILITY['ludwig']
-    if ludwig_arena and getattr(args, 'donor', None) not in reviewed_ludwig_donors:
+    if (ludwig_arena and direct_orphan not in recipes
+            and getattr(args, 'donor', None) not in reviewed_ludwig_donors):
         raise ValueError('Ludwig arena requires a reviewed donor adapter')
     if (laurence_arena and direct_orphan not in recipes
             and getattr(args, 'donor', None) not in (*LAURENCE_COMPATIBILITY['laurence'], 'living-failures')):
@@ -842,7 +844,8 @@ def build(args) -> dict:
     if direct_gascoigne[0] == 'father-gascoigne' or direct_gascoigne[1] == 'father-gascoigne':
         if direct_gascoigne not in reviewed_gascoigne_pairs and direct_gascoigne not in recipes:
             raise ValueError('Father Gascoigne is available only in the reviewed Cleric reciprocal adapters')
-    if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam'):
+    if (ludwig and not getattr(args, 'pool', None) and direct_orphan not in recipes
+            and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam')):
         raise ValueError('Ludwig donor requires a reviewed Cleric, Orphan or Shadows arena adapter')
     if (laurence and direct_orphan not in recipes
             and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig', 'living-failures'))):
@@ -873,6 +876,8 @@ def build(args) -> dict:
                               args.paramdef, args.bundle, args.writer, args.darkscript))
     if getattr(args, 'sfx', None):
         check_output(args.output, (args.sfx,))
+    if getattr(args, 'characters', None):
+        check_output(args.output, (args.characters,))
     event_overrides = getattr(args, 'event_overrides', None)
     if event_overrides is not None:
         if not event_overrides.is_dir():
@@ -1375,11 +1380,13 @@ def build(args) -> dict:
         plan_path.parent.mkdir()
         plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + '\n', encoding='utf-8')
         output = scratch / 'overlay'
-        sfx_args = ['--sfx', str(args.sfx)] if getattr(args, 'sfx', None) else []
+        asset_args = ['--sfx', str(args.sfx)] if getattr(args, 'sfx', None) else []
+        if getattr(args, 'characters', None):
+            asset_args.extend(['--characters', str(args.characters)])
         subprocess.run(command_for(args) + [
             '--boss-encounters', str(plan_path), str(args.gameparam), str(args.paramdef),
             str(args.maps), str(args.scripts), str(originals), str(compiled), str(output),
-        ] + sfx_args + ['--apply'], check=True)
+        ] + asset_args + ['--apply'], check=True)
         receipt = verify_receipt(output)
         if args.output.exists():
             raise ValueError('output appeared during build; refusing to replace it')
@@ -1393,6 +1400,7 @@ def main(argv=None) -> int:
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--dotnet', type=Path)
     parser.add_argument('--sfx', type=Path, help='original effective SFX binder directory for encounter asset closure')
+    parser.add_argument('--characters', type=Path, help='original animation binders for declared character effect witnesses')
     parser.add_argument('--ordinary-plan', type=Path,
                         help='compose an ordinary enemy plan before one shared scaling/map/AI pass')
     parser.add_argument('--event-overrides', type=Path,

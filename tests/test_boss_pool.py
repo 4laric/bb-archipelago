@@ -28,6 +28,93 @@ $Event(30, Default, function() {
 
 
 class BossPoolTests(unittest.TestCase):
+    def test_character_effect_witnesses_survive_both_compositions_and_refuse_disagreement(self):
+        row = {'source_map': 'm36_00_00_00', 'source_part': 'c4540_0000',
+               'source_entity_id': 3600800, 'source_character': 'c4540',
+               'source_anibnd_sha256': 'a' * 64, 'direct_effect_ids': [645400],
+               'typed_event_witnesses': [{'animation_id': 0, 'effect_id': 645400}]}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'characters', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_character_ffx_requirements': [row]}
+        second = copy.deepcopy(plan)
+        combined = combine_native_plans('characters', [plan, second])
+        self.assertEqual([row], combined['boss_character_ffx_requirements'])
+        ordinary = copy.deepcopy(plan)
+        ordinary['options'] = {}
+        ordinary['swaps'] = [{'logical_key': 'ordinary', 'destination_keys': ['m24_00_00_00:ordinary']}]
+        ordinary['scaling'].update(skip_count=1, skips=[{'logical_key': 'ordinary'}])
+        ordinary.pop('boss_contract')
+        ordinary.pop('boss_character_ffx_requirements')
+        with self.assertRaisesRegex(ValueError, 'already carries boss metadata'):
+            combine_ordinary_and_boss_plans(dict(ordinary, boss_character_ffx_requirements=[row]), [plan])
+        both = combine_ordinary_and_boss_plans(ordinary, [plan, second])
+        self.assertEqual([row], both['boss_character_ffx_requirements'])
+        both['boss_character_ffx_requirements'][0]['direct_effect_ids'].append(123)
+        self.assertEqual([645400], row['direct_effect_ids'])
+        second['boss_character_ffx_requirements'][0]['source_anibnd_sha256'] = 'b' * 64
+        with self.assertRaisesRegex(ValueError, 'disagree on character FFX provenance'):
+            combine_native_plans('characters', [plan, second])
+        second = copy.deepcopy(plan)
+        second['boss_character_ffx_requirements'][0]['source_character'] = 'c4541'
+        with self.assertRaisesRegex(ValueError, 'disagree on character FFX provenance'):
+            combine_native_plans('characters', [plan, second])
+        duplicate = copy.deepcopy(plan)
+        duplicate['boss_character_ffx_requirements'].append(copy.deepcopy(row))
+        with self.assertRaisesRegex(ValueError, 'repeats a character FFX actor binding'):
+            combine_native_plans('characters', [duplicate])
+        second = copy.deepcopy(plan)
+        second['boss_character_ffx_requirements'][0].update(source_part='c4540_0001', source_entity_id=3600801)
+        self.assertEqual(2, len(combine_native_plans('characters', [plan, second])[
+            'boss_character_ffx_requirements']))
+
+    def test_multi_tae_proofs_preserve_every_entry_and_refuse_changed_shared_actor(self):
+        entries = [
+            {'source_tae_entry_id': index, 'source_tae_entry': f'chr/c0000/tae/a{index:02}.tae',
+             'source_tae_sha256': str(index + 1) * 64, 'source_animation_count': 1,
+             'typed_event_witnesses': [{'animation_id': 0, 'event_index': 0,
+                 'event_type': 96, 'parameter_offset': 160, 'effect_id': 7000 + index}],
+             'direct_effect_ids': [7000 + index]}
+            for index in range(2)
+        ]
+        row = {'format': 'bb-boss-character-ffx-requirement-v2',
+               'source_map': 'm26_00_00_00', 'source_part': 'shared-human',
+               'source_entity_id': 2600800, 'source_character': 'c0000',
+               'source_anibnd_file': 'c0000.anibnd.dcx',
+               'source_anibnd_sha256': 'a' * 64, 'source_tae_entries': entries,
+               'direct_effect_ids': [7000, 7001]}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'multi-tae', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_character_ffx_requirements': [row]}
+        ordinary = copy.deepcopy(plan)
+        ordinary.pop('boss_contract')
+        ordinary.pop('boss_character_ffx_requirements')
+        ordinary['options'] = {}
+        ordinary['swaps'] = [{'logical_key': 'ordinary',
+                             'destination_keys': ['m24_00_00_00:ordinary']}]
+        ordinary['scaling'].update(skip_count=1, skips=[{'logical_key': 'ordinary'}])
+        result = combine_ordinary_and_boss_plans(ordinary, [plan, copy.deepcopy(plan)])
+        self.assertEqual([row], result['boss_character_ffx_requirements'])
+        # Mutation of a nested receipt/plan must not rewrite another donor's proof.
+        result['boss_character_ffx_requirements'][0]['source_tae_entries'][1][
+            'typed_event_witnesses'][0]['effect_id'] = 9999
+        self.assertEqual(7001, entries[1]['typed_event_witnesses'][0]['effect_id'])
+        for field, value in (('source_tae_entry_id', 3),
+                             ('source_tae_entry', 'chr/c0000/tae/a03.tae'),
+                             ('source_tae_sha256', 'b' * 64)):
+            changed = copy.deepcopy(plan)
+            changed['boss_character_ffx_requirements'][0]['source_tae_entries'][1][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(
+                    ValueError, 'disagree on character FFX provenance'):
+                combine_native_plans('multi-tae', [plan, changed])
+        truncated = copy.deepcopy(plan)
+        truncated['boss_character_ffx_requirements'][0]['source_tae_entries'].pop()
+        with self.assertRaisesRegex(ValueError, 'disagree on character FFX provenance'):
+            combine_native_plans('multi-tae', [plan, truncated])
+
     def test_effect_composition_unions_pinned_banks_and_rejects_native_collisions(self):
         effect = {'destination_map': 'm34_00_00_00', 'destination_event': 'meteor',
                   'destination_event_id': 980032, 'destination_entity_id': 980027}
