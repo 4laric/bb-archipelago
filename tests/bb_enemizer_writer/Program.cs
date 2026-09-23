@@ -232,6 +232,7 @@ try
     FfxBundleTests.Run();
     BossExternalReferenceTests.Run();
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
+    WakeupFallbackTests.Run();
     // A destination may contain the donor bytes but omit their registrations.
     // Reusing that chunk must still import metadata and the helper/subgoal closure.
     Archive(scriptRoot, "m99_00_00_00", [("800000_battle.lua", original), ("900000_battle.lua", battle)],
