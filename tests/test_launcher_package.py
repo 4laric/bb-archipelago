@@ -232,6 +232,49 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertGreater(data["world"]["runtime_items"], 200)
         self.assertEqual(59, data["world"]["category8_awards"])
         self.assertIn("BBEventWriter.exe", data["tools"])
+        # The GUI actually constructs (or, on headless CI with no display,
+        # says so without failing the check) -- see the ``gui`` regression
+        # tests below for what a real construction failure looks like.
+        self.assertIn("gui", data)
+        self.assertIn(data["gui"]["ok"], (True, False))
+
+    def test_self_check_reports_a_gui_construction_failure(self):
+        """The class of bug this check exists for: a real packaged release
+        crashed on launch ('Slave index 2 out of bounds') with nothing in the
+        source-text/AST test suite able to see it, because none of them build
+        a real widget tree. This proves the self-check would have."""
+        from bb_launcher.self_check import run_self_check
+
+        report = self.root / "gui-check.json"
+        with patch("bb_launcher.self_check._check_gui_boot",
+                   return_value={"ok": False, "skipped": False,
+                                 "error": "TclError('Slave index 2 out of bounds')",
+                                 "traceback": "..."}):
+            self.assertEqual(1, run_self_check(report, require_bundled_tools=False))
+            data = json.loads(report.read_text(encoding="utf-8"))
+            self.assertFalse(data["ok"])
+            self.assertTrue([p for p in data["problems"] if "GUI failed to construct" in p], data["problems"])
+
+    def test_gui_boot_check_treats_no_display_as_skipped_not_failed(self):
+        """Headless Linux CI (this repo's unit-test job) has no display at
+        all; that must never fail the self-check or the tests that call it
+        with require_bundled_tools=True, which exist to test other failure
+        modes entirely."""
+        from bb_launcher.self_check import _check_gui_boot
+
+        class _FakeTclError(Exception):
+            pass
+
+        class _NoDisplayTkinter:
+            TclError = _FakeTclError
+
+            def Tk(self):
+                raise _FakeTclError("no display name and no $DISPLAY environment variable")
+
+        with patch.dict("sys.modules", {"tkinter": _NoDisplayTkinter()}):
+            result = _check_gui_boot()
+        self.assertTrue(result["ok"])
+        self.assertTrue(result["skipped"])
 
     def test_self_check_fails_when_a_bundled_tool_is_required_and_missing(self):
         from bb_launcher.self_check import run_self_check

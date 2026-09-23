@@ -1568,6 +1568,21 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("webbrowser.open(WIZARD_URL)", source)
         self.assertIn("Build a custom yaml", source)
 
+    def test_create_and_host_tab_uses_add_not_a_numeric_insert(self):
+        """A packaged release crashed on launch with 'Slave index 2 out of
+        bounds': the bundled Tcl/Tk there rejects a numeric
+        notebook.insert(2, ...) one past the last existing tab, where the dev
+        machine's newer Tk tolerated it as an append. notebook.add() has no
+        such version-dependent ambiguity and lands in the same place, since
+        this constructor runs after Play and Enemies are added and before
+        Advanced is."""
+        source = (self.repo / "bb_launcher" / "local_session_ui.py").read_text(encoding="utf-8")
+        self.assertIn('notebook.add(host_frame, text="Create & host")', source)
+        code = "\n".join(
+            line for line in source.splitlines() if not line.strip().startswith("#")
+        )
+        self.assertNotIn("notebook.insert(", code)
+
     def test_ui_contract_can_generate_the_launch_plan(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         self.assertNotIn('text="Generate Launch Plan"', source)

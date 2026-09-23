@@ -67,8 +67,14 @@ class LocalSessionPanel:
         from .theme import field, option, page_header, scroll_page, section
         host_frame = ttk.Frame(notebook)
         # Play and Enemies are what every normal launch touches; Create & host
-        # is occasional setup, so it sits after them, ahead of Advanced.
-        notebook.insert(2, host_frame, text="Create & host")
+        # is occasional setup, so it sits after them, ahead of Advanced. This
+        # constructor runs after Play and Enemies are added and before
+        # Advanced is, so a plain append already lands in the right place --
+        # a numeric notebook.insert(2, ...) crashed the packaged build
+        # ("Slave index 2 out of bounds"): the bundled Tcl/Tk there rejects a
+        # numeric index one past the last existing tab, where a newer Tk
+        # tolerates it as an append. add() has no such ambiguity.
+        notebook.add(host_frame, text="Create & host")
         frame = scroll_page(tk, ttk, host_frame)
         row = page_header(ttk, frame, "Create & host", "Generate a seed on this PC and host it for yourself.")
         row = section(ttk, frame, row, "Your game", first=True)
