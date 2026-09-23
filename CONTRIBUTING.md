@@ -190,3 +190,88 @@ notes until tag time.
 Draft pull requests are welcome for research with a clear evidence boundary.
 Do not describe static analysis as playtested, or a single-build observation as
 portable.
+
+## Postmortem: launcher UI/UX pass (September 2026)
+
+A multi-session redesign of `bb_launcher/` (theme, wizard flow, session details
+drawer, py-launcher discovery) shipped real improvements, but the pass ran far
+longer than it should have because visual work and functional work were not
+kept separate enough:
+
+- Polish changes (palette, layout, collapsible drawers) and behavior changes
+  (Python interpreter discovery, seed/slot validation) landed in the same
+  branches and the same review passes. When a behavior change broke a real
+  launch, the polish work around it made the diff harder to bisect and the
+  regression harder to isolate.
+- Several sessions reported "the UI looks done" while the underlying launch
+  path was still broken -- a packaged build a user actually downloaded could
+  not generate or host a seed. Visual completeness was mistaken for
+  functional completeness more than once. Treat "looks good" and "works" as
+  two separate acceptance criteria that both must be checked against a real
+  build, not just against `pytest`; see `docs/DESIGN.md`-equivalent guidance
+  in this file about evidence boundaries -- a passing unit test for UI code
+  is not evidence the packaged app launches a seed.
+- For the record: "looks done" was also not the same as "looks good."
+  Getting the launch path working became the overriding priority partway
+  through the pass, and rightly so, but that did not retroactively make the
+  visual/UX state of the launcher acceptable. After the pass, the launcher
+  was still genuinely ugly and a bad user experience. Fixing the launch
+  blocker does not close out the polish work it interrupted; the polish work
+  is still owed, not satisfied by having shipped something that runs.
+- The fix that actually unblocked play (`py`-launcher interpreter discovery,
+  see `bb_launcher/local_session.py`) was implemented and sitting uncommitted
+  for a stretch while cosmetic iteration continued elsewhere. When a change
+  is release-blocking, land and ship it before returning to unrelated polish,
+  even if the polish was requested first.
+- A release tag (`v0.1.0.5`) had to be re-pointed at a later commit to pick up
+  a launch-blocking fix after the fact. The tag was still an unpublished
+  draft at the time, so this did not violate "never move a published tag"
+  above, but it is a symptom of the same problem: the fix should have been on
+  the branch before the tag was first cut.
+
+Takeaway for future launcher work: land and verify the functional fix first
+(against a real packaged build, not just tests), *then* do the cosmetic pass
+on top of a working baseline. Do not let "make it pretty" and "make it work"
+share a commit, a branch, or a review pass when the launch path is at risk.
+
+## Item: the launcher's blocking-check gauntlet needs to shrink
+
+Recent launcher work (attributed to the Codex agent lane rather than this
+pass) added several launch-time guard checks in `bb_launcher/doctor.py` and
+`bb_launcher/workflow.py` -- seed/slot mismatch checks, the suppression
+binder pin check, save-file/profile checks -- each of which can independently
+refuse to let a user proceed. Individually each check has a rationale, but
+together they turned "click play" into a gauntlet, and every guard is one
+more thing that can misfire and block a real launch for a reason unrelated to
+whether the game can actually run.
+
+Two concrete problems this caused during the UI/UX pass:
+
+- These checks fire *before* the thing the user actually wants (host or join
+  a seed), so a false positive or an overly strict check looks identical to a
+  real launch failure from the user's side. Several hours of the "why can't I
+  launch" debugging this pass were spent proving a guard was wrong, not that
+  the launch path was broken.
+- Stacking checks compounds failure surface without compounding value: each
+  new check is a new way to block a launch, but the checks do not compose --
+  passing four checks and failing one still means no seed. Every guard added
+  is a net subtraction from launch reliability unless it is checking
+  something that would otherwise corrupt a save or desync a multiworld.
+
+Going forward, a new launch-time guard needs to justify itself against that
+cost, not just against the failure mode it prevents:
+
+- Prefer a warning the user can see and dismiss (or an `--allow-*` /
+  `allow_*` override, as already exists for seed mismatch in
+  `bb_launcher/ui.py`) over a hard refusal, unless the failure mode is
+  unrecoverable (for example, corrupting a save file in place).
+  Recoverable/informational mismatches should not be launch-blocking by
+  default.
+- A guard should say precisely what it checked and what it found, not just
+  that it failed -- vague guard errors are what obscured the actual
+  py-launcher interpreter bug for multiple sessions in this pass.
+  Investigate whether a check is masking a different, fixable problem before
+  adding another layer that suppresses or works around its symptom.
+- When in doubt, remove a check rather than add one. If a guard has not
+  caught a real problem in practice, or exists to police a state that the
+  workflow already can't reach, delete it instead of tuning it.
