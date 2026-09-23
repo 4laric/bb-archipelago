@@ -1,0 +1,85 @@
+{
+  "format": "bb-celestial-paarl-character-bank-probe-v1",
+  "writer_sha256": "62a5c289da174dfba30ba7b1c849eed6c5cc62e4ebcdbb872975240fc3020394",
+  "plan_sha256": "ae0323066622035c8b4956999028df279ba3b2826fceea8c9fc80951041cb1fe",
+  "receipt_sha256": "07e9f24e882b410bef0190b132dc0f4a899a1d471253d3499fc01e471db3553a",
+  "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+  "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+  "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+  "destination_bank_sha256": "b92037c5ae58ac81e5e59f7b9596966faf65ea56bf1b9ea9913045097213cfec",
+  "output_bank_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+  "witness_count_625700": 12,
+  "selected_witness": {
+    "animation_id": 3000,
+    "event_index": 3,
+    "event_type": 96,
+    "parameter_offset": 133600,
+    "effect_id": 625700
+  },
+  "deliveries": [
+    {
+      "source_map": "m24_02_00_00",
+      "source_part": "c2570_0001",
+      "source_entity_id": 2420811,
+      "source_character": "c2570",
+      "destination_map": "m23_00_00_00",
+      "destination_part": "ap_ce_giant",
+      "destination_entity_id": 980600,
+      "source_anibnd_file": "c2570.anibnd.dcx",
+      "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+      "source_tae_entry_id": 3000000,
+      "source_tae_entry": "chr/c2570/tae/c2570.tae",
+      "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+      "witness": {
+        "animation_id": 3000,
+        "event_index": 3,
+        "event_type": 96,
+        "parameter_offset": 133600,
+        "effect_id": 625700
+      },
+      "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+      "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+      "destination_bank": "frpg_sfxbnd_m23.ffxbnd.dcx",
+      "destination_bank_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+      "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+      "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+      "recursive_fxr_dependencies": "not-validated",
+      "runtime_validated": false
+    },
+    {
+      "source_map": "m24_02_00_01",
+      "source_part": "c2570_0001",
+      "source_entity_id": 2420811,
+      "source_character": "c2570",
+      "destination_map": "m23_00_00_01",
+      "destination_part": "ap_ce_giant",
+      "destination_entity_id": 980600,
+      "source_anibnd_file": "c2570.anibnd.dcx",
+      "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+      "source_tae_entry_id": 3000000,
+      "source_tae_entry": "chr/c2570/tae/c2570.tae",
+      "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+      "witness": {
+        "animation_id": 3000,
+        "event_index": 3,
+        "event_type": 96,
+        "parameter_offset": 133600,
+        "effect_id": 625700
+      },
+      "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+      "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+      "destination_bank": "frpg_sfxbnd_m23.ffxbnd.dcx",
+      "destination_bank_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+      "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+      "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+      "recursive_fxr_dependencies": "not-validated",
+      "runtime_validated": false
+    }
+  ],
+  "files_verified": 10,
+  "limits": [
+    "Typed direct-root delivery to the selected destination bank only.",
+    "Recursive dependencies, executed animation selection, runtime loading and gameplay remain unvalidated.",
+    "The source is the original m24_02 subarea bank; an earlier broad-m24 bank assumption was incorrect."
+  ]
+}

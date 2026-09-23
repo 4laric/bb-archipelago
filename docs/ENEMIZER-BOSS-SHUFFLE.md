@@ -1079,5 +1079,24 @@ cover all twelve reusable bindings, with 22 contracts, 15 event files and
 resets in the shared m34 constructor. After narrowly permitting independent
 literal OFF resets before initialization, that seed rebuilt successfully;
 all 19 composition tests pass, including rejection of mixed or late writes.
-The preceding 166-route commit passed its first full 1,906-test regression
-run (57 optional skips) and all CI checks; its second local pass remains active.
+The preceding 166-route commit passed both full 1,906-test regression runs
+(57 optional skips each) and preflight. The exact source and log hashes are in
+[boss-166-regression-checkpoint.json](boss-166-regression-checkpoint.json).
+
+
+## Typed character effects delivered through explicit area banks
+
+The native writer can bind a selected character-animation effect root to its
+exact typed TAE witness, transplanted source/destination actors and pinned bank
+merge. Source and destination bank filenames are explicit and must match the
+actor map area or subarea. This avoids assuming that every character's effects
+live in its broad area bank. Whole-bank collision refusal remains unchanged.
+
+An [original-input Celestial Emissary to Paarl probe](boss-celestial-character-bank-proof.json)
+delivered effect 625700 for both map-state actors. Its actual source is
+`frpg_sfxbnd_m24_02.ffxbnd.dcx`: 159 source entries, 290 destination entries
+retained, and 154 imported. All delivered root bytes match the original source.
+The prior broad-m24 collision was an incorrect source-bank inference for this
+character. Nineteen native assertions cover witness, actor, bank, coverage and
+output drift. This proves direct-root delivery to the selected bank; animation
+execution, recursive dependencies and runtime bank loading remain unvalidated.

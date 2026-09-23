@@ -6,8 +6,9 @@ using SoulsFormats;
 
 // Verifies one explicitly declared, supported set of Bloodborne typed TAE effect roots.
 // This is deliberately a partial typed witness set, not all TAE behavior or
-// combat closure. It does not deliver FXR resources: a separate, reviewed
-// closure manifest is required before character effects can enter boss plans.
+// combat closure. It does not deliver FXR resources; explicit typed-character
+// bank requirements can deliver selected roots without claiming recursive or
+// runtime FXR closure.
 internal static class CharacterFfxRequirements
 {
     static readonly JsonSerializerOptions Json = new() {

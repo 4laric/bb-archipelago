@@ -1,0 +1,28 @@
+{
+  "format": "bb-boss-regression-checkpoint-v1",
+  "source_commit": "1cb3ccdeeced5cde4996ed5fee57836a1e1c28a3",
+  "tracked_worktree_clean_after_completion": true,
+  "command": ".\\build.ps1 -Test -Preflight",
+  "exit_code": 0,
+  "log_sha256": "59df914ec4839429fb745d917aad72315f310ea464d643ad74b30edd46f635db",
+  "runs": [
+    {
+      "tests": 1906,
+      "skipped": 57,
+      "seconds": 1165.177,
+      "result": "PASS"
+    },
+    {
+      "tests": 1906,
+      "skipped": 57,
+      "seconds": 1262.246,
+      "result": "PASS"
+    }
+  ],
+  "preflight": "PASS: model/tests, generated tables, and shipping boundary",
+  "limits": [
+    "Scoped to the specified 166-route source commit.",
+    "Does not cover later Micolash arena, Wet Nurse donor, Micolash donor, or typed character-bank changes.",
+    "Does not establish gameplay behavior or complete character-effect delivery."
+  ]
+}

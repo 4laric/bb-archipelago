@@ -281,6 +281,7 @@ internal static class BossEncounter
         BossRegionTransplant.ValidatePlan(planPath, required: false);
         BossSfxTransplant.ValidatePlan(planPath, required: false);
         var characterFfxRequirements = CharacterFfxRequirements.Validate(planPath, charactersPath);
+        var characterFfxBankRequirements = CharacterFfxBankRequirements.Validate(planPath, characterFfxRequirements);
         var ffxMerges = FfxBundleTransplant.Read(planPath);
         var emevdFfxRequirements = FfxBundleTransplant.ValidateEmevdInputs(
             planPath, eventInputDirectory, encounterList);
@@ -331,8 +332,12 @@ internal static class BossEncounter
             BossRegionTransplant.VerifyFinal(regionAdditions, mapsPath, overlayMaps);
             BossObjectTransplant.VerifyFinal(objectAdditions, mapsPath, overlayMaps);
             BossSfxTransplant.VerifyFinal(sfxAdditions, mapsPath, overlayMaps);
-            FfxBundleTransplant.VerifyCoverage(planPath, sfxAdditions);
+            CharacterFfxBankRequirements.VerifyFinalActors(characterFfxBankRequirements, overlayMaps);
+            FfxBundleTransplant.VerifyCoverage(planPath, sfxAdditions, characterFfxBankRequirements);
             var ffxAdditions = FfxBundleTransplant.Apply(planPath, sfxPath, Path.Combine(overlay, "dvdroot_ps4", "sfx"));
+            var characterFfxBankDeliveries = CharacterFfxBankRequirements.VerifyDelivered(
+                characterFfxBankRequirements, ffxAdditions, sfxPath ?? "",
+                Path.Combine(overlay, "dvdroot_ps4", "sfx"), planPath);
             foreach (var (encounter, events) in prepared) {
                 string eventPath = Path.Combine(overlay, "dvdroot_ps4", "event", encounter.DestinationEventFile);
                 Directory.CreateDirectory(Path.GetDirectoryName(eventPath)!);
@@ -363,6 +368,7 @@ internal static class BossEncounter
                 }), external_references = externalReferences, region_additions = regionAdditions, object_additions = objectAdditions,
                 sfx_additions = sfxAdditions, emevd_ffx_requirements = emevdFfxRequirements,
                 character_ffx_requirements = characterFfxRequirements,
+                character_ffx_bank_deliveries = characterFfxBankDeliveries,
                 ffx_merges = ffxAdditions, files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",
             }, Json));

@@ -232,6 +232,7 @@ try
     BossSfxTests.Run();
     FfxBundleTests.Run();
     CharacterFfxRequirementTests.Run();
+    CharacterFfxBankRequirementTests.Run();
     BossExternalReferenceTests.Run();
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
     WakeupFallbackTests.Run();

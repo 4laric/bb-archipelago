@@ -21,7 +21,7 @@ internal static class FfxBundleTransplant
     static void Need(bool value, string why) { if (!value) throw new InvalidDataException(why); }
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     static string Resolve(string root, string name) {
-        Need(Regex.IsMatch(name, @"^frpg_sfxbnd_m\d{2}\.ffxbnd\.dcx$"), "invalid FFX binder filename");
+        Need(Regex.IsMatch(name, @"^frpg_sfxbnd_m\d{2}(?:_\d{2})?\.ffxbnd\.dcx$"), "invalid FFX binder filename");
         return Path.Combine(root, name);
     }
     static void RequireHash(string path, string expected) {
@@ -141,7 +141,8 @@ internal static class FfxBundleTransplant
                     "EMEVD FFX destination");
         }
     }
-    internal static void VerifyCoverage(string planPath, IEnumerable<BossSfxTransplant.Applied> effects) {
+    internal static void VerifyCoverage(string planPath, IEnumerable<BossSfxTransplant.Applied> effects,
+        IEnumerable<CharacterFfxBankRequirements.Validated>? characterRoots = null) {
         var merges = Read(planPath);
         var expected = new Dictionary<(string SourceFile, string DestinationFile), HashSet<int>>();
         foreach (var effect in effects) {
@@ -153,6 +154,11 @@ internal static class FfxBundleTransplant
             var key = (Binder(requirement.SourceMap), Binder(requirement.DestinationMap));
             if (!expected.TryGetValue(key, out var ids)) expected[key] = ids = [];
             ids.Add(requirement.EffectId);
+        }
+        foreach (var requirement in characterRoots ?? []) {
+            var key = (requirement.SourceBank, requirement.DestinationBank);
+            if (!expected.TryGetValue(key, out var ids)) expected[key] = ids = [];
+            foreach (var root in requirement.Roots) ids.Add(root.Witness.EffectId);
         }
         Need(merges.Count == expected.Count, "FFX merge manifest does not exactly cover declared SFX dependencies");
         foreach (var row in merges) {
