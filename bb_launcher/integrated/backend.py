@@ -253,6 +253,47 @@ class Backend:
             require_fork_provenance(str(fork.get("commit", "")),
                                     str(fork.get("executable_sha256", "")))
 
+    def _check_claimed_process(self, claimed: Mapping[str, Any],
+                                 live: Mapping[str, Any]) -> None:
+        """Cross-check the fork-reported process identity against live state.
+
+        A PID alone is never sufficient: the claimed executable path and
+        hash must match the live process, and a claimed creation time must
+        equal the live one, or the PID was reused by another process.
+        """
+
+        if not live.get("game_running"):
+            raise ProtocolError("stale-session", "the game is no longer running",
+                                retryable=False, recovery=("fresh-boot",))
+        if live.get("ambiguous") and int(claimed.get("pid", -1)) < 0:
+            raise ProtocolError("stale-session",
+                                "several game processes are running; the session "
+                                "cannot be identified",
+                                retryable=False, recovery=("fresh-boot",))
+        claimed_exe = str(claimed.get("executable", ""))
+        live_exe = str(live.get("executable", ""))
+        if claimed_exe and live_exe and claimed_exe.casefold() != live_exe.casefold():
+            raise ProtocolError("stale-session", "game executable path changed",
+                                retryable=False, recovery=("fresh-boot",))
+        claimed_sha = str(claimed.get("executable_sha256", "")).lower()
+        live_sha = str(live.get("executable_sha256", "")).lower()
+        if claimed_sha and live_sha and claimed_sha != live_sha:
+            raise ProtocolError("stale-session", "game executable hash changed",
+                                retryable=False, recovery=("fresh-boot",))
+        try:
+            claimed_pid = int(claimed.get("pid", -1))
+        except (TypeError, ValueError):
+            claimed_pid = -1
+        if claimed_pid >= 0 and live.get("pid") != claimed_pid:
+            raise ProtocolError("stale-session",
+                                "the game process is not the armed one (PID changed)",
+                                retryable=False, recovery=("fresh-boot",))
+        claimed_birth = claimed.get("creation_time")
+        if (claimed_birth is not None and live.get("creation_time") is not None
+                and str(claimed_birth) != str(live.get("creation_time"))):
+            raise ProtocolError("stale-session", "PID was reused by another process",
+                                retryable=False, recovery=("fresh-boot",))
+
     def _connect_and_start_client(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
         arm_id = str(params.get("arm_id", ""))
         arm = load_arm(self.state_root, arm_id)
@@ -265,7 +306,16 @@ class Backend:
             raise ProtocolError("verification-failed", "activation drifted since arming",
                                 recovery=("prepare-again",))
         live = self.process_check_fn() if self.process_check_fn else {}
-        expected_pid = (live.get("pid"), live.get("creation_time"))
+        claimed = params.get("process") or {}
+        if claimed:
+            # The fork started the game through its emulator service after
+            # arming and reports the actual process identity: cross-check
+            # it against the live enumeration instead of trusting it.
+            self._check_claimed_process(claimed, live)
+            live = {**live, **{k: claimed[k] for k in
+                               ("pid", "creation_time", "executable",
+                                "executable_sha256") if k in claimed},
+                    "alive": live.get("alive", True)}
         prior = existing_session_for_play(self.state_root, play.play_id)
         if prior is not None and live.get("pid") == prior.pid:
             # Duplicate Play reuses the live session instead of spawning again.

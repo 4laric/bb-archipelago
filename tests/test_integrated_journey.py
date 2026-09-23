@@ -202,5 +202,78 @@ class SimulatedJourneyTests(unittest.TestCase):
             self.assertEqual(play["error"]["code"], "cancelled")
 
 
+def claimed_backend(state: str, live: dict) -> Backend:
+    backend = journey_backend(state)
+    backend.process_check_fn = lambda: dict(live)  # type: ignore[method-assign]
+    return backend
+
+
+def armed_stopped(backend: Backend, state: str) -> str:
+    """Arm while the game is stopped, as the real flow requires."""
+
+    backend.process_check_fn = lambda: {"game_running": False}  # type: ignore[method-assign]
+    play_id = backend.handle(
+        request("prepare_play", {"game_root": state}, op_id="p1"))["result"]["play_id"]
+    return backend.handle(request(
+        "verify_and_arm",
+        {"play_id": play_id, "game_root": state, "mods_root": state},
+        op_id="a1"))["result"]["arm_id"]
+
+
+class ClaimedProcessTests(unittest.TestCase):
+    live = {"game_running": True, "pid": 4242, "creation_time": 987654,
+            "executable": "C:\\games\\shadPS4.exe",
+            "executable_sha256": digest("shad-exe"), "alive": True}
+
+    def connect(self, backend: Backend, state: str, arm_id: str,
+                process: dict | None, live: dict | None = None) -> dict:
+        backend.process_check_fn = (  # type: ignore[method-assign]
+            lambda: dict(self.live if live is None else live))
+        params = {"arm_id": arm_id, "game_root": state, "mods_root": state,
+                  "process_plan": "plan"}
+        if process is not None:
+            params["process"] = process
+        return backend.handle(request("connect_and_start_client", params, op_id="c1"))
+
+    def test_matching_claimed_identity_connects(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, self.live)
+            arm_id = armed_stopped(backend, state)
+            response = self.connect(backend, state, arm_id, {
+                "executable": "C:\\games\\shadPS4.exe",
+                "executable_sha256": digest("shad-exe"),
+                "pid": 4242, "creation_time": 987654})
+            self.assertTrue(response["ok"], response)
+
+    def test_reused_pid_with_new_birth_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, self.live)
+            arm_id = armed_stopped(backend, state)
+            response = self.connect(backend, state, arm_id, {
+                "executable": "C:\\games\\shadPS4.exe", "pid": 4242,
+                "creation_time": 111111})
+            self.assertFalse(response["ok"])
+            self.assertEqual(response["error"]["code"], "stale-session")
+
+    def test_swapped_executable_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, self.live)
+            arm_id = armed_stopped(backend, state)
+            response = self.connect(backend, state, arm_id, {
+                "executable": "C:\\evil\\shadPS4.exe", "pid": 4242})
+            self.assertFalse(response["ok"])
+            self.assertEqual(response["error"]["code"], "stale-session")
+
+    def test_dead_game_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, {**self.live, "game_running": False})
+            arm_id = armed_stopped(backend, state)
+            response = self.connect(backend, state, arm_id, {"pid": 4242},
+                                    {**self.live, "game_running": False})
+            self.assertFalse(response["ok"])
+            self.assertEqual(response["error"]["code"], "stale-session")
+
+
 if __name__ == "__main__":
     unittest.main()
+

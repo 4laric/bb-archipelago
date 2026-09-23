@@ -357,6 +357,7 @@ def main(argv: list[str] | None = None) -> int:
             from .integrated.backend import Backend, serve
             from .integrated.wiring import (
                 production_prepare,
+                production_process_check,
                 production_spawn,
                 production_verify,
             )
@@ -366,6 +367,7 @@ def main(argv: list[str] | None = None) -> int:
                 prepare_fn=production_prepare,
                 verify_fn=production_verify,
                 spawn_fn=production_spawn,
+                process_check_fn=production_process_check,
             )
             return serve(backend)
         elif args.command == "run":
