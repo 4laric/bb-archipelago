@@ -6,6 +6,15 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- The integrated BBLauncher fork now sends enemy-randomization settings through
+  preparation and cache identity instead of forcing enemies off. Its Play page
+  enables randomization and expanded coverage by default and reports actual
+  changed placements. Expanded coverage adds an awake-enemy fallback for ten
+  Central Yharnam sleep-script placements: only randomized actors lose that
+  model-specific sleep routine, while spawn and quest logic remain intact.
+  At test seed 12345, combined coverage is 1,556 swaps, including 187 of 277
+  Central Yharnam placements. Native/static checks do not replace gameplay testing.
+
 - Fixed the integrated launcher's seed selection, package handoff and client-only
   startup. Returning to a running game preserves its session; switching away
   stops owned processes before changing mods. Interrupted mod changes retain

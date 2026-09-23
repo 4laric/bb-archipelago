@@ -38,8 +38,9 @@ runtime installed. Use `-PythonExecutable` to select the build environment
 with PyInstaller installed. The player does not need Python. A separate
 `-ClientPath` can override the client executable in the tools directory.
 
-The script runs `smoke_fork_bundle.py` against the actual frozen backend from
-a temporary working directory. It checks the protocol and seed inspection.
+The script runs `smoke_fork_bundle.py` against the actual packaged Qt executable,
+frozen backend and enemy planner from a temporary working directory. It checks
+startup, seed inspection, and increased coverage with the shipped expansion data.
 Qt widget/coordinator tests and the repository gate remain separate checks;
 none of these replaces the live game test. The manifest records source and
 client provenance, executable hashes, and that gameplay has not been tested.
@@ -49,6 +50,17 @@ available. Select the existing game and emulator through the fork's settings,
 then open Archipelago, choose a seed and press Play. Unknown fork provenance
 is an informational warning, not a build-approval gate or an extra checkbox.
 The game and AP client must stop before switching seeds or removing AP mods.
+
+Enemy randomization and expanded coverage start enabled in the fork. Uncheck
+Randomize enemies for a vanilla enemy layout, or narrow the scripted-enemy,
+ambush and hunter options. Advanced options include an optional enemy seed;
+leaving it blank uses the seed file. Changing these settings produces a different
+cached mod. The prepared result reports actual changed placements.
+
+For the reviewed Central Yharnam sleep routine, randomized replacements start
+awake with their own AI. The fallback removes only that placement's sleep-routine
+invocation; it leaves spawn triggers, quest logic and unrandomized actors intact.
+This behavior is checked statically and in native writer fixtures, not yet in game.
 
 The Qt backend protocol passes opaque play/arm IDs. The backend retains the
 prepared launch plan behind those IDs and starts only the AP client; Qt owns

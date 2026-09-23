@@ -83,15 +83,17 @@ def smoke(package: Path) -> None:
                        '--slot-policy', str(data / 'enemizer/slot_policy.json'),
                        '--facts', str(data / 'enemizer/archetype_facts.json')]
             if expanded:
-                for name in ('contracts', 'spawns', 'chara'):
+                for name in ('contracts', 'spawns', 'chara', 'wakeup'):
                     command += ['--release-file', str(data / f'enemizer/release_{name}.json')]
             result = subprocess.run(command, capture_output=True, text=True, timeout=90, cwd=temp)
             if result.returncode:
                 raise RuntimeError(f'Packaged enemy planner failed: {result.stderr}')
             plan = json.loads(output.read_text(encoding='utf-8'))
             counts.append(plan['swap_count'])
-            if expanded and plan['options']['release_tranches'] != ['chara', 'contracts', 'spawns']:
+            if expanded and plan['options']['release_tranches'] != ['chara', 'contracts', 'spawns', 'wakeup']:
                 raise RuntimeError('Packaged planner did not apply expanded coverage')
+            if expanded and not plan.get('wakeup_fallbacks'):
+                raise RuntimeError('Packaged planner omitted the Central Yharnam wakeup fallback')
         if not 0 < counts[0] < counts[1]:
             raise RuntimeError(f'Expanded coverage did not increase enemy swaps: {counts}')
     print(f'Packaged client: {client.stdout.strip()}')
