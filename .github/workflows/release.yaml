@@ -404,11 +404,23 @@ jobs:
               gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
                 --notes-file packaging/PACKAGE-README.txt --draft --target "$env:GITHUB_SHA"
             } elseif ($isPrerelease) {
+              # --draft=false clears a draft left over from an earlier draft
+              # dispatch of this same tag. Without it, gh leaves the release
+              # marked draft:true because this edit never mentions --draft,
+              # and a later publish of the same tag fails with "Latest
+              # release cannot be draft or prerelease" even though this
+              # command's own flags look right.
               gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
-                --notes-file packaging/PACKAGE-README.txt --prerelease
+                --notes-file packaging/PACKAGE-README.txt --draft=false --prerelease
             } else {
+              # Same reason as the prerelease branch above: an existing
+              # release from a prior draft dispatch stays draft:true unless
+              # --draft=false is passed here too, which then makes --latest
+              # fail with HTTP 422 "Latest release cannot be draft or
+              # prerelease" -- not because --latest itself is wrong, but
+              # because the release was still draft going into this edit.
               gh release edit "$env:RELEASE_TAG" --repo ${{ github.repository }} `
-                --notes-file packaging/PACKAGE-README.txt --prerelease=false --latest
+                --notes-file packaging/PACKAGE-README.txt --draft=false --prerelease=false --latest
             }
             if ($LASTEXITCODE -ne 0) { throw "Updating release hashes failed" }
           } else {
