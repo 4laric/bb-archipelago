@@ -171,7 +171,11 @@ class EmevdResolverTests(unittest.TestCase):
         relaxable = {key for key, items in grouped.items()
                      if not any(has_character_operation(item["usage_classes"]) for item in items)}
         self.assertEqual(39, len(relaxable))
-        self.assertFalse(any(":c1051_" in key for key in relaxable))
+        # Witnessed per-key form: relaxable is proven non-empty above, and
+        # each member is checked individually (a bare assertFalse(any(...))
+        # would trip the witnessless-assertion ratchet).
+        for key in sorted(relaxable):
+            self.assertNotIn(":c1051_", key)
 
     def test_no_comment_only_or_cross_canonical_protections(self):
         rows = _census_rows()
