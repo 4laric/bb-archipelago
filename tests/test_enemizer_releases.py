@@ -15,7 +15,9 @@ import unittest
 from collections import defaultdict
 from pathlib import Path
 
-from tools.bb_enemizer.cli import RELEASE_FORMAT, RELEASE_TRANCHES, load_release_files
+from tools.bb_enemizer.cli import (
+    RELEASE_FORMAT, RELEASE_TRANCHES, load_release_files, wakeup_fallbacks,
+)
 from tools.bb_enemizer.inventory import (
     apply_archetype_tag, classify_slot, load_slot_overrides, load_slots, load_tags,
 )
@@ -24,6 +26,7 @@ from tools.bb_enemizer.planner import EnemizerConfig, plan_swaps
 from tools.bb_enemizer.script_contracts import (
     HARD_OPS, SUPPORTED_OPS, classify_ops, placement_operations,
 )
+from tools.bb_enemizer.wakeup_fallback import build_release as build_wakeup_release
 from tools.build_emevd_entity_usage import has_character_operation, materialize_bundle
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +44,8 @@ PINNED_COUNTS = {
     ("spawns",): 797,
     ("chara",): 345,
     ("chara", "contracts", "spawns"): 1546,
+    ("wakeup",): 316,
+    ("chara", "contracts", "spawns", "wakeup"): 1556,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -64,7 +69,9 @@ class ReleaseRecordTests(unittest.TestCase):
         for tranche, record in self.records.items():
             self.assertEqual(RELEASE_FORMAT, record["format"])
             self.assertEqual(tranche, record["tranche"])
-            self.assertGreater(len(record["releases"]), 100)
+            self.assertGreater(len(record["releases"]), 0)
+            if tranche != "wakeup":
+                self.assertGreater(len(record["releases"]), 100)
 
     def test_snatcher_and_quest_carriers_never_released(self):
         for tranche, record in self.records.items():
@@ -91,7 +98,66 @@ class ReleaseRecordTests(unittest.TestCase):
 
     def test_record_counts(self):
         counts = {tranche: len(record["releases"]) for tranche, record in self.records.items()}
-        self.assertEqual({"contracts": 750, "spawns": 588, "chara": 294}, counts)
+        self.assertEqual({"contracts": 750, "spawns": 588, "chara": 294, "wakeup": 10}, counts)
+
+    def test_central_wakeup_fallback_is_source_pinned(self):
+        record = self.records["wakeup"]
+        fallback = record["awake_fallback"]
+        self.assertEqual("m24_01_00_00", fallback["map"])
+        self.assertEqual(12415130, fallback["event_id"])
+        self.assertEqual("suppress_initializer_for_swapped_entity", fallback["operation"])
+        initializers = fallback["initializers"]
+        expected = {
+            "m24_01_00_00:c1120_0009": (2410148, 8, 1),
+            "m24_01_00_00:c1120_0010": (2410149, 9, 1),
+            "m24_01_00_00:c1120_0011": (2410150, 10, 0),
+            "m24_01_00_00:c1120_0015": (2410154, 14, 1),
+            "m24_01_00_00:c1120_0016": (2410140, 0, 1),
+            "m24_01_00_00:c1120_0017": (2410141, 1, 0),
+            "m24_01_00_00:c1120_0019": (2410143, 3, 0),
+            "m24_01_00_00:c1120_0020": (2410144, 4, 1),
+            "m24_01_00_00:c1120_0022": (2410146, 6, 0),
+            "m24_01_00_00:c1120_0023": (2410147, 7, 0),
+        }
+        actual = {
+            item["logical_key"]: (item["entity_id"], item["event_slot"], item["arguments"][-1])
+            for item in initializers
+        }
+        self.assertEqual(expected, actual)
+        self.assertEqual(
+            "6d58b164e95233201e1490db0a443ac2fae99000de045840c6be0344a8c8d888",
+            fallback["source_sha256"],
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            _inventory, event_root = materialize_bundle(
+                ROOT / "research/bb_inputs.db", Path(temporary))
+            self.assertEqual(record, build_wakeup_release(event_root))
+            source = event_root / fallback["source_event_file"]
+            raw = source.read_bytes()
+            import hashlib
+            self.assertEqual(fallback["source_sha256"], hashlib.sha256(raw).hexdigest())
+            text = raw.decode("utf-8-sig")
+        import re
+        calls = re.findall(
+            r"\$InitializeEvent\((\d+),\s*12415130,\s*(\d+),\s*9000,\s*9061,\s*52410270,\s*112499,\s*112400,\s*(\d+)\);",
+            text,
+        )
+        self.assertEqual(
+            {(str(slot), str(entity), str(flag))
+             for entity, slot, flag in expected.values()},
+            set(calls),
+        )
+        body = re.search(r"\$Event\(12415130,[\s\S]*?\n\}\);", text).group(0)
+        for witness in (
+            "ForceAnimationPlayback(chrEntityId, animationId",
+            "SetCharacterAIId(chrEntityId, aiId)",
+            "CharacterAIState(chrEntityId, AIStateType.Alert)",
+            "ForceAnimationPlayback(chrEntityId, animationId2",
+            "SetCharacterAIId(chrEntityId, aiId2)",
+        ):
+            self.assertIn(witness, body)
+        self.assertEqual(10, text.count("52410270"))
 
 
 class ReleasePlanningTests(unittest.TestCase):
@@ -183,12 +249,31 @@ class ReleasePlanningTests(unittest.TestCase):
 
     def test_central_yharnam_visibility(self):
         expected = {(): 49, ("contracts",): 94, ("spawns",): 106,
-                    ("chara",): 59, ("chara", "contracts", "spawns"): 177}
+                    ("chara",): 59, ("chara", "contracts", "spawns"): 177,
+                    ("wakeup",): 57,
+                    ("chara", "contracts", "spawns", "wakeup"): 187}
         for tranches, count in expected.items():
             swaps, _rejections, _release = self._plan(tranches)
             central = [swap for swap in swaps
                        if swap.logical_key.startswith("m24_01_00_00:")]
             self.assertEqual(count, len(central), f"tranches={tranches}")
+
+    def test_wakeup_manifest_names_only_changed_entities(self):
+        swaps, _rejections, release = self._plan(("wakeup",))
+        records = wakeup_fallbacks(swaps, self.slots, release)
+        self.assertEqual(8, len(records))
+        self.assertEqual({"map": "m24_01_00_00", "event_id": 12415130},
+                         {key: records[0][key] for key in ("map", "event_id")})
+        wakeup_keys = set(json.loads(
+            RELEASE_FILES["wakeup"].read_text(encoding="utf-8"))["releases"])
+        self.assertEqual(
+            wakeup_keys & {swap.logical_key for swap in swaps},
+            {record["logical_key"] for record in records},
+        )
+        base_swaps, _, _ = self._plan(())
+        self.assertEqual([], wakeup_fallbacks(base_swaps, self.slots, {}))
+        all_swaps, _, all_release = self._plan(("contracts", "spawns", "chara", "wakeup"))
+        self.assertEqual(10, len(wakeup_fallbacks(all_swaps, self.slots, all_release)))
 
 
 class ClassifyReleaseTests(unittest.TestCase):
@@ -226,6 +311,25 @@ class ClassifyReleaseTests(unittest.TestCase):
         # A contracts release does not lift the dummy gate.
         self.assertEqual("dummy/script-spawn Part",
                          classify_slot(slot, {}, {slot.logical_key: {"contracts"}}).reason)
+
+    def test_wakeup_release_suppresses_only_the_script_contract_gate(self):
+        source = self._first(lambda s: s.logical_key == "m24_01_00_00:c1120_0009")
+        self.assertEqual(
+            "entity ID referenced by area EMEVD",
+            classify_slot(source, load_slot_overrides(
+                ROOT / "research/enemizer/slot_policy.json")).reason,
+        )
+        overrides = load_slot_overrides(ROOT / "research/enemizer/slot_policy.json")
+        self.assertTrue(classify_slot(source, overrides, {source.logical_key: {"wakeup"}}).randomize)
+
+        dummy = self._first(lambda s: s.logical_key == "m24_01_00_00:c1120_0019")
+        self.assertEqual(
+            "dummy/script-spawn Part",
+            classify_slot(dummy, overrides, {dummy.logical_key: {"wakeup"}}).reason,
+        )
+        self.assertTrue(classify_slot(
+            dummy, overrides, {dummy.logical_key: {"wakeup", "spawns"}}
+        ).randomize)
 
     def test_contracts_release_suppresses_only_the_override(self):
         overrides = load_slot_overrides(ROOT / "research/enemizer/slot_policy.json")

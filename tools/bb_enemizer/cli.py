@@ -39,7 +39,7 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument(
         "--release-file", action="append", default=[],
         help="bb-enemizer-release-v1 record emitted by build_enemizer_catalog.py "
-             "--release-contracts/--release-script-spawns/--release-chara-bound "
+             "--release-contracts/--release-script-spawns/--release-chara-bound/--release-wakeup-fallbacks "
              "(repeatable; tranches compose by union; default: conservative policy)",
     )
     result.add_argument(
@@ -72,7 +72,7 @@ def _stress_matched(stress: StressProfile, swap) -> bool:
 
 
 RELEASE_FORMAT = "bb-enemizer-release-v1"
-RELEASE_TRANCHES = ("contracts", "spawns", "chara")
+RELEASE_TRANCHES = ("contracts", "spawns", "chara", "wakeup")
 
 
 def load_release_files(paths: list[str]) -> dict[str, set[str]]:
@@ -91,6 +91,27 @@ def load_release_files(paths: list[str]) -> dict[str, set[str]]:
         for logical_key in releases:
             merged.setdefault(logical_key, set()).add(tranche)
     return merged
+
+
+def wakeup_fallbacks(swaps, slots, release: dict[str, set[str]]) -> list[dict]:
+    """Return pinned EMEVD fallbacks only for wakeup placements that swapped."""
+    swapped = {swap.logical_key for swap in swaps}
+    entities: dict[str, set[int]] = {}
+    for slot in slots:
+        if slot.logical_key in swapped and "wakeup" in release.get(slot.logical_key, set()):
+            entities.setdefault(slot.logical_key, set()).add(slot.entity_id)
+    records = []
+    for logical_key in sorted(entities):
+        ids = entities[logical_key] - {-1}
+        if len(ids) != 1:
+            raise ValueError(f"wakeup fallback requires one pinned entity ID: {logical_key}")
+        records.append({
+            "logical_key": logical_key,
+            "entity_id": ids.pop(),
+            "map": "m24_01_00_00",
+            "event_id": 12415130,
+        })
+    return records
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -187,6 +208,7 @@ def main(argv: list[str] | None = None) -> int:
         "swap_count": len(swaps),
         "rejection_count": len(rejections),
         "swaps": [swap.json() for swap in swaps],
+        "wakeup_fallbacks": wakeup_fallbacks(swaps, slots, release),
         "rejections": rejections,
         "scaling": {
             "enabled": bool(args.normalize_scaling),
