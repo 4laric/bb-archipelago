@@ -2256,6 +2256,7 @@ def activate_build(
     failpoint: Callable[[str], None] | None = None,
     suppression_override: Sequence[str] | None = None,
     identity: SeedIdentity | None = None,
+    adopt_foreign_overlay: bool = False,
 ) -> dict[str, Any]:
     """Atomically activate a verified build, preserving any owned predecessor.
 
@@ -2268,7 +2269,12 @@ def activate_build(
     modified is moved aside and rebuilt, and the resulting owner dict carries a
     ``healed_from`` note for the caller to report (bb-archipelago#408).  A
     directory with no ownership manifest, or one from another launcher, is
-    still refused -- it may be the player's own work.
+    still refused by default -- it may be the player's own work, and moving it
+    is a bigger decision than the launcher gets to make on its own.  A caller
+    that has gotten the player's explicit confirmation that the folder is not
+    theirs to keep may pass ``adopt_foreign_overlay=True`` to have it moved
+    aside (never deleted), the same way a damaged owned overlay is healed,
+    instead of leaving the player to rename it outside the app.
     """
 
     _require_shad_stopped(process_is_running)
@@ -2292,12 +2298,15 @@ def activate_build(
             heal_notes.append(_move_overlay_aside(install, str(exc)))
         except ConflictError as exc:
             # No manifest at all, or another launcher's: possibly the player's
-            # own mod folder.  Moving it is not the launcher's call.  A
-            # symlinked or non-directory path is a different problem and keeps
-            # its own message.
+            # own mod folder.  Moving it is not the launcher's call, unless the
+            # player has explicitly said otherwise via adopt_foreign_overlay.
+            # A symlinked or non-directory path is a different problem and
+            # keeps its own message regardless.
             if not install.mods.is_dir() or install.mods.is_symlink():
                 raise
-            raise ConflictError(f"{exc} {FOREIGN_OVERLAY_ADVICE}") from exc
+            if not adopt_foreign_overlay:
+                raise ConflictError(f"{exc} {FOREIGN_OVERLAY_ADVICE}") from exc
+            heal_notes.append(_move_overlay_aside(install, str(exc)))
     if previous_owner is not None:
         active_fingerprint = ""
         section = previous_owner.get("user_merge")
