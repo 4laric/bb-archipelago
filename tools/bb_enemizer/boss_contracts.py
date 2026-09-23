@@ -782,9 +782,16 @@ _SPECIALIZED_CAPABILITIES: dict[tuple[str, str], ContractCapability] = {
     (BSB_ARENA.key, PAARL_PACKAGE.key): ContractCapability("paarl-entry"),
     (PAARL_ARENA.key, BSB_PACKAGE.key): ContractCapability("bsb-entry"),
     (EBRIETAS_ARENA.key, BSB_PACKAGE.key): ContractCapability("bsb-ebrietas-entry"),
+    (CLERIC_ARENA.key, AMYGDALA_PACKAGE.key): ContractCapability("amygdala-entry"),
+    (BSB_ARENA.key, AMYGDALA_PACKAGE.key): ContractCapability("amygdala-entry"),
     (PAARL_ARENA.key, AMYGDALA_PACKAGE.key): ContractCapability("amygdala-entry"),
     (AMELIA_ARENA.key, AMYGDALA_PACKAGE.key): ContractCapability("amygdala-entry"),
     (EBRIETAS_ARENA.key, AMYGDALA_PACKAGE.key): ContractCapability("amygdala-entry"),
+    (AMELIA_ARENA.key, BSB_PACKAGE.key): ContractCapability("bsb-phase-slots"),
+    (AMYGDALA_ARENA.key, BSB_PACKAGE.key): ContractCapability("bsb-phase-slots"),
+    (AMELIA_ARENA.key, PAARL_PACKAGE.key): ContractCapability("paarl-entry"),
+    (AMYGDALA_ARENA.key, PAARL_PACKAGE.key): ContractCapability("paarl-appended-body"),
+    (EBRIETAS_ARENA.key, PAARL_PACKAGE.key): ContractCapability("paarl-appended-body"),
 }
 
 
@@ -894,6 +901,18 @@ def _end_event(block: str) -> str:
         name.strip() if name.strip().startswith("unused_") else "unused_" + name.strip()
         for name in match[1].split(",") if name.strip()) + ")", declaration)
     return declaration + "\n    EndEvent();\n});"
+
+
+def _retire_unreused_attachment_anchor(arena: ArenaContract, original: EventBlocks,
+                                        edits: dict[int, str]) -> None:
+    """No-op a destination-only attachment controller unless a donor reused it."""
+    anchor = arena.attachment_anchor_event
+    if anchor is None or anchor in edits:
+        return
+    block = original.get(anchor)
+    if block is None:
+        raise ValueError(f"{arena.key} attachment controller is absent")
+    edits[anchor] = _end_event(block)
 
 
 def _remap_declared_literals(block: str, *, actor: tuple[int, int],
@@ -1109,35 +1128,90 @@ def _append_attachment_events(source: str, donor_blocks: EventBlocks,
     return source.rstrip() + "\n\n" + "\n\n".join(additions) + "\n"
 
 
+def _paarl_wake_after_entry(arena: ArenaContract) -> str:
+    """Paarl's pinned post-trigger wake-up, with a local arena start flag."""
+    return (
+        f"    ForceAnimationPlayback({arena.actor}, 7001, false, false, false);\n"
+        "    WaitFixedTimeFrames(70);\n"
+        f"    SetCharacterInvincibility({arena.actor}, Disabled);\n"
+        f"    SetEventFlag({arena.start_flag}, ON);\n"
+    )
+
+
 def _paarl_activation(arena: ArenaContract, original: str) -> str:
-    """Keep the arena's trigger/fog geometry but use Paarl's native wake-up."""
+    """Retain a destination set-piece around Paarl's pinned entry lifecycle."""
+    pre = (f"    SetCharacterInvincibility({arena.actor}, Enabled);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7000, true, false, false);\n")
+    wake = _paarl_wake_after_entry(arena)
     if arena is CLERIC_ARENA:
         activation = _replace_once(
-            original, "    SetCharacterGravity(2410800, Disabled);\n",
-            "    SetCharacterInvincibility(2410800, Enabled);\n", "Paarl pre-entry invincibility")
+            original, f"    SetCharacterGravity({arena.actor}, Disabled);\n",
+            pre, "Paarl pre-entry invincibility")
         activation = _replace_once(
-            activation, "    SetCharacterMaphits(2410800, true);\n",
-            "    ForceAnimationPlayback(2410800, 7000, true, false, false);\n", "Paarl pre-entry animation")
+            activation, f"    SetCharacterMaphits({arena.actor}, true);\n", "",
+            "arena-only maphit preparation")
         activation = _replace_once(activation,
-            "    IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);\n", "", "arena-only warp")
+            f"    IssueShortWarpRequest({arena.actor}, TargetEntityType.Area, 2412831, -1);\n", "",
+            "arena-only warp")
         activation = _replace_once(
-            activation, "ForceAnimationPlayback(2410800, 3028,", "ForceAnimationPlayback(2410800, 7001,",
+            activation, f"ForceAnimationPlayback({arena.actor}, 3028,",
+            f"ForceAnimationPlayback({arena.actor}, 7001,",
             "declared arena activation animation")
         activation = _replace_once(activation, "    WaitFixedTimeFrames(110);\n",
-            "    WaitFixedTimeFrames(70);\n    SetCharacterInvincibility(2410800, Disabled);\n",
+            "    WaitFixedTimeFrames(70);\n    SetCharacterInvincibility(" + str(arena.actor) + ", Disabled);\n",
             "Paarl entry delay")
-        activation = _replace_once(activation, "    SetCharacterGravity(2410800, Enabled);\n", "", "arena-only gravity reset")
-        return _replace_once(activation, "    SetCharacterMaphits(2410800, false);\n", "", "arena-only maphit reset")
+        activation = _replace_once(activation, f"    SetCharacterGravity({arena.actor}, Enabled);\n", "",
+            "arena-only gravity reset")
+        return _replace_once(activation, f"    SetCharacterMaphits({arena.actor}, false);\n", "",
+                             "arena-only maphit reset")
     if arena is BSB_ARENA:
-        activation = _replace_once(original, "    WaitFor(\n",
-            "    SetCharacterInvincibility(2300800, Enabled);\n"
-            "    ForceAnimationPlayback(2300800, 7000, true, false, false);\n"
-            "    WaitFor(\n", "Paarl pre-entry sequence")
-        activation = _replace_once(activation, "    ForceAnimationPlayback(2300800, 7001, false, false, false);\n",
-            "    ForceAnimationPlayback(2300800, 7001, false, false, false);\n"
-            "    WaitFixedTimeFrames(70);\n"
-            "    SetCharacterInvincibility(2300800, Disabled);\n", "Paarl entry delay")
-        return activation
+        activation = _replace_once(original, "    WaitFor(\n", pre + "    WaitFor(\n",
+                                   "Paarl pre-entry sequence")
+        return _replace_once(activation,
+            f"    ForceAnimationPlayback({arena.actor}, 7001, false, false, false);\n"
+            f"    SetEventFlag({arena.start_flag}, ON);\n", wake,
+            "Paarl entry wake-up")
+    if arena is AMELIA_ARENA:
+        activation = _replace_once(
+            original, "    SetObjectInvulnerability(2400801, Enabled);\n    WaitFor(\n",
+            "    SetObjectInvulnerability(2400801, Enabled);\n" + pre + "    WaitFor(\n",
+            "Paarl pre-cutscene sequence")
+        old = (f"    ForceAnimationPlayback({arena.actor}, 7000, false, false, false);\n"
+               f"    ForceAnimationPlayback({arena.actor}, 7001, false, false, false);\n"
+               f"    SetEventFlag({arena.start_flag}, ON);\n")
+        return _replace_once(activation, old, wake, "Paarl post-cutscene wake-up")
+    if arena is AMYGDALA_ARENA:
+        activation = _replace_once(
+            original,
+            f"    SetCharacterMaphits({arena.actor}, true);\n"
+            f"    SetCharacterGravity({arena.actor}, Disabled);\n"
+            f"    SetCharacterInvincibility({arena.actor}, Enabled);\n"
+            f"    ForceAnimationPlayback({arena.actor}, 7003, true, false, false);\n",
+            pre, "Paarl pre-entry sequence")
+        old = (f"    SetEventFlag({arena.start_flag}, ON);\n"
+               f"    ForceAnimationPlayback({arena.actor}, 7006, false, false, false);\n"
+               "    WaitFixedTimeFrames(30);\n"
+               f"    ForceAnimationPlayback({arena.actor}, 7002, false, false, false);\n"
+               "    WaitFixedTimeFrames(160);\n"
+               f"    SetCharacterGravity({arena.actor}, Enabled);\n"
+               f"    SetCharacterInvincibility({arena.actor}, Disabled);\n"
+               f"    SetCharacterMaphits({arena.actor}, false);\n")
+        return _replace_once(activation, old, wake, "Paarl post-entry wake-up")
+    if arena is EBRIETAS_ARENA:
+        for instruction in (
+            f"    ForceAnimationPlayback({arena.actor}, 7001, true, false, false);\n",
+            f"    SetSpEffect({arena.actor}, 5647, false);\n",
+        ):
+            original = _replace_once(original, instruction, "", "Ebrietas-only pre-wake state")
+        old = (f"    ForceAnimationPlayback({arena.actor}, 7000, false, true, false);\n"
+               f"    SetCharacterImmortality({arena.actor}, Disabled);\n"
+               f"    ClearSpEffect({arena.actor}, 5647);\n"
+               f"    SetEventFlag({arena.start_flag}, ON);\n")
+        new = (f"    ForceAnimationPlayback({arena.actor}, 7001, false, false, false);\n"
+               "    WaitFixedTimeFrames(70);\n"
+               f"    SetCharacterImmortality({arena.actor}, Disabled);\n"
+               f"    SetEventFlag({arena.start_flag}, ON);\n")
+        return _replace_once(original, old, new, "Paarl post-damage wake-up")
     raise ValueError(f"no Paarl activation contract for arena {arena.key}")
 
 
@@ -1192,14 +1266,17 @@ def _paarl_patch(arena: ArenaContract, donor: CombatPackage,
         original[arena.health_bar_event],
         f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {arena.health_bar_label})",
         f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {donor.health_bar_label})", "health-bar label")
-    if arena is CLERIC_ARENA:
+    if arena.phase_music_event_flag is not None:
         edits[arena.music_event] = _replace_once(
-            original[arena.music_event], "CharacterHasEventMessage(2410800, 100)",
-            f"CharacterHasEventMessage(2410800, {donor.phase_music_message})", "music phase message")
-    elif arena is BSB_ARENA:
+            original[arena.music_event], f"flagArea2 &= EventFlag({arena.phase_music_event_flag});",
+            f"flagArea2 &= CharacterHasEventMessage({arena.actor}, {donor.phase_music_message});",
+            "Paarl music phase trigger")
+    elif arena.phase_music_message is not None:
         edits[arena.music_event] = _replace_once(
-            original[arena.music_event], "flagArea2 &= EventFlag(12304808);",
-            f"flagArea2 &= CharacterHasEventMessage({arena.actor}, {donor.phase_music_message});", "music phase trigger")
+            original[arena.music_event],
+            f"CharacterHasEventMessage({arena.actor}, {arena.phase_music_message})",
+            f"CharacterHasEventMessage({arena.actor}, {donor.phase_music_message})",
+            "Paarl music phase message")
     else:
         raise ValueError(f"no Paarl music contract for arena {arena.key}")
     if donor.lockcam_event is not None:
@@ -1212,6 +1289,9 @@ def _paarl_patch(arena: ArenaContract, donor: CombatPackage,
         edits[destination_event] = _remap_declared_literals(
             donor_blocks[source_event], actor=(donor.actor, arena.actor),
             completion=(donor.completion_event, arena.completion_event), event=(source_event, destination_event))
+    for event_id in arena.phase_slots[len(donor.phase_events):]:
+        if event_id not in {arena.co_op_entry_event, arena.part_routine_event}:
+            edits[event_id] = _end_event(original[event_id])
     if donor.co_op_entry_event is not None:
         edits[arena.co_op_entry_event] = _remap_declared_literals(
             donor_blocks[donor.co_op_entry_event], actor=(donor.actor, arena.actor),
@@ -1226,6 +1306,7 @@ def _paarl_patch(arena: ArenaContract, donor: CombatPackage,
         event=(donor.part_routine_event, arena.part_routine_event))
     if arena.cloth_routine_event is not None:
         edits[arena.cloth_routine_event] = _end_event(original[arena.cloth_routine_event])
+    _retire_unreused_attachment_anchor(arena, original, edits)
 
     edits[0] = _replace_part_initializers(original[0], arena, donor)
 
@@ -1238,6 +1319,103 @@ def _paarl_patch(arena: ArenaContract, donor: CombatPackage,
             raise ValueError(f"contract touched unrelated arena event {event_id}")
     if output[arena.completion_event] != original[arena.completion_event]:
         raise ValueError("contract changed destination completion event")
+    return result
+
+
+def _append_paarl_body_routine(event_zero: str, arena: ArenaContract,
+                               donor_blocks: EventBlocks) -> tuple[str, int, str]:
+    """Append Paarl's witnessed limb event when target slots are incompatible."""
+    target = arena.attachment_event_ids[-1]
+    values = {int(value) for value in re.findall(r"(?<![\w])-?\d+(?![\w])", event_zero)}
+    if target in values:
+        raise ValueError(f"declared appended body event ID {target} collides with original arena literal")
+    donor_zero = donor_blocks[0]
+    expected_target_initializers = {
+        AMYGDALA_ARENA.key: 10,
+        EBRIETAS_ARENA.key: 1,
+    }.get(arena.key)
+    if expected_target_initializers is None:
+        raise ValueError(f"no appended Paarl body initializer contract for {arena.key}")
+    pattern = re.compile(
+        rf"(?m)^    \$InitializeEvent\([^\n]*, {arena.part_routine_event}(?:, [^\n]*)?\);\n?"
+    )
+    matches = pattern.findall(event_zero)
+    if len(matches) != expected_target_initializers:
+        raise ValueError("destination body initializer witness count drift")
+    event_zero = pattern.sub("", event_zero)
+    for source_binding in PAARL_PACKAGE.part_bindings:
+        witness = _initializer_line(source_binding.slot, PAARL_PACKAGE.part_routine_event,
+                                    source_binding.arguments)
+        if donor_zero.count(witness) != 1:
+            raise ValueError("Paarl Event(0) lacks unique body initializer witness")
+        if not event_zero.endswith("\n});"):
+            raise ValueError("destination Event(0) has no canonical closing delimiter")
+        event_zero = event_zero[:-3] + "\n" + _initializer_line(
+            source_binding.slot, target, source_binding.arguments) + "\n});"
+    copied = _remap_declared_literals(
+        donor_blocks[PAARL_PACKAGE.part_routine_event],
+        actor=(PAARL_PACKAGE.actor, arena.actor),
+        completion=(PAARL_PACKAGE.completion_event, arena.completion_event),
+        event=(PAARL_PACKAGE.part_routine_event, target),
+    )
+    return event_zero, target, copied
+
+
+def _paarl_appended_body_patch(arena: ArenaContract, donor: CombatPackage,
+                               destination: str, donor_source: str) -> str:
+    """Use a declared spare ID for Paarl limbs where target part slots differ."""
+    original, donor_blocks = event_blocks(destination), event_blocks(donor_source)
+    _verify_pins("arena", original, arena.expected)
+    _verify_pins("donor", donor_blocks, donor.expected)
+    if donor is not PAARL_PACKAGE or arena not in (AMYGDALA_ARENA, EBRIETAS_ARENA):
+        raise ValueError(f"no appended Paarl body contract for {arena.key}")
+    event_zero, body_event, copied_body = _append_paarl_body_routine(
+        original[0], arena, donor_blocks)
+    edits = {
+        0: event_zero,
+        arena.activation_event: _paarl_activation(arena, original[arena.activation_event]),
+        arena.health_bar_event: _replace_once(
+            original[arena.health_bar_event],
+            f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {arena.health_bar_label})",
+            f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {donor.health_bar_label})",
+            "Paarl health-bar label"),
+        arena.part_routine_event: _end_event(original[arena.part_routine_event]),
+    }
+    if arena.cloth_routine_event is not None:
+        edits[arena.cloth_routine_event] = _end_event(original[arena.cloth_routine_event])
+    if arena.phase_music_message is None:
+        raise ValueError(f"{arena.key} has no Paarl phase-music witness")
+    edits[arena.music_event] = _replace_once(
+        original[arena.music_event],
+        f"CharacterHasEventMessage({arena.actor}, {arena.phase_music_message})",
+        f"CharacterHasEventMessage({arena.actor}, {donor.phase_music_message})",
+        "Paarl phase-music message")
+    lockcam = _remap_declared_literals(
+        donor_blocks[donor.lockcam_event], actor=(donor.actor, arena.actor),
+        completion=(donor.completion_event, arena.completion_event),
+        event=(donor.lockcam_event, arena.lockcam_event))
+    edits[arena.lockcam_event] = _remap_lockcam(lockcam, arena, donor)
+    edits[arena.phase_slots[0]] = _remap_declared_literals(
+        donor_blocks[donor.phase_events[0]], actor=(donor.actor, arena.actor),
+        completion=(donor.completion_event, arena.completion_event),
+        event=(donor.phase_events[0], arena.phase_slots[0]))
+    for event_id in arena.phase_slots[1:]:
+        edits[event_id] = _end_event(original[event_id])
+    edits[arena.co_op_entry_event] = _remap_declared_literals(
+        donor_blocks[donor.co_op_entry_event], actor=(donor.actor, arena.actor),
+        completion=(donor.completion_event, arena.completion_event),
+        event=(donor.co_op_entry_event, arena.co_op_entry_event),
+        flags=((donor.start_flag, arena.start_flag), (donor.activation_event, arena.activation_event)))
+    _retire_unreused_attachment_anchor(arena, original, edits)
+    result = _replace_event(destination, edits).rstrip() + "\n\n" + copied_body + "\n"
+    output = event_blocks(result)
+    if set(output) != set(original) | {body_event}:
+        raise ValueError("appended Paarl body contract changed event identity")
+    for event_id in original:
+        if event_id not in edits and output[event_id] != original[event_id]:
+            raise ValueError(f"appended Paarl body contract touched unrelated arena event {event_id}")
+    if output[arena.completion_event] != original[arena.completion_event]:
+        raise ValueError("appended Paarl body contract changed destination completion event")
     return result
 
 
@@ -1312,6 +1490,53 @@ def _bsb_patch(arena: ArenaContract, donor: CombatPackage,
     return result
 
 
+def _bsb_phase_slot_patch(arena: ArenaContract, donor: CombatPackage,
+                          destination: str, donor_source: str) -> str:
+    """Put BSB's two pinned phases into a compatible arena's existing slots."""
+    original, donor_blocks = event_blocks(destination), event_blocks(donor_source)
+    _verify_pins("arena", original, arena.expected)
+    _verify_pins("donor", donor_blocks, donor.expected)
+    if donor is not BSB_PACKAGE or len(arena.phase_slots) != len(donor.phase_events):
+        raise ValueError(f"no BSB phase-slot contract for {arena.key}")
+    edits = {
+        arena.health_bar_event: _replace_once(
+            original[arena.health_bar_event],
+            f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {arena.health_bar_label})",
+            f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {donor.health_bar_label})",
+            "BSB health-bar label"),
+    }
+    if arena is AMYGDALA_ARENA:
+        edits[arena.activation_event] = _amygdala_arena_activation(
+            arena, donor, original[arena.activation_event])
+    if arena.phase_music_message is None:
+        raise ValueError(f"{arena.key} has no BSB phase-music witness")
+    edits[arena.music_event] = _replace_once(
+        original[arena.music_event],
+        f"CharacterHasEventMessage({arena.actor}, {arena.phase_music_message})",
+        f"CharacterHasEventMessage({arena.actor}, 20)",
+        "BSB phase-two music trigger")
+    for source_event, destination_event in zip(donor.phase_events, arena.phase_slots):
+        edits[destination_event] = _remap_declared_literals(
+            donor_blocks[source_event], actor=(donor.actor, arena.actor),
+            completion=(donor.completion_event, arena.completion_event),
+            event=(source_event, destination_event),
+            flags=((12304807, arena.phase_slots[0]),))
+    for event_id in (arena.part_routine_event, arena.cloth_routine_event):
+        if event_id is not None:
+            edits[event_id] = _end_event(original[event_id])
+    _retire_unreused_attachment_anchor(arena, original, edits)
+    result = _replace_event(destination, edits)
+    output = event_blocks(result)
+    if set(output) != set(original):
+        raise ValueError("BSB phase-slot contract changed event identity")
+    for event_id in original:
+        if event_id not in edits and output[event_id] != original[event_id]:
+            raise ValueError(f"BSB phase-slot contract touched unrelated arena event {event_id}")
+    if output[arena.completion_event] != original[arena.completion_event]:
+        raise ValueError("BSB phase-slot contract changed destination completion event")
+    return result
+
+
 def _bsb_at_ebrietas_patch(arena: ArenaContract, donor: CombatPackage,
                             destination: str, donor_source: str) -> str:
     """Use Ebrietas's local fog/camera while replacing her combat-only graph.
@@ -1360,6 +1585,49 @@ def _bsb_at_ebrietas_patch(arena: ArenaContract, donor: CombatPackage,
     if output[arena.completion_event] != original[arena.completion_event]:
         raise ValueError("BSB/Ebrietas contract changed Ebrietas completion/progression")
     return result
+
+
+def _amygdala_wake_after_entry(arena: ArenaContract) -> str:
+    """Amygdala's source-pinned post-entry animation and geometry reset."""
+    return (
+        f"    SetEventFlag({arena.start_flag}, ON);\n"
+        f"    ForceAnimationPlayback({arena.actor}, 7006, false, false, false);\n"
+        "    WaitFixedTimeFrames(30);\n"
+        f"    ForceAnimationPlayback({arena.actor}, 7002, false, false, false);\n"
+        "    WaitFixedTimeFrames(160);\n"
+        f"    SetCharacterGravity({arena.actor}, Enabled);\n"
+        f"    SetCharacterInvincibility({arena.actor}, Disabled);\n"
+        f"    SetCharacterMaphits({arena.actor}, false);\n"
+    )
+
+
+def _amygdala_at_cleric_activation(arena: ArenaContract, original: str) -> str:
+    """Keep Cleric's fog/warp trigger around Amygdala's full wake-up body."""
+    pre = (f"    SetCharacterInvincibility({arena.actor}, Enabled);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7003, true, false, false);\n")
+    original = _replace_once(original, f"    SetCharacterMaphits({arena.actor}, true);\n",
+                             pre, "Amygdala pre-entry sequence")
+    old = (f"    ForceAnimationPlayback({arena.actor}, 3028, false, false, false);\n"
+           "    WaitFixedTimeFrames(110);\n"
+           f"    SetCharacterGravity({arena.actor}, Enabled);\n"
+           f"    SetCharacterMaphits({arena.actor}, false);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    return _replace_once(original, old, _amygdala_wake_after_entry(arena),
+                         "Amygdala post-warp wake-up")
+
+
+def _amygdala_at_bsb_activation(arena: ArenaContract, original: str) -> str:
+    """Keep BSB's host/fog predicate around Amygdala's full wake-up body."""
+    pre = (f"    SetCharacterMaphits({arena.actor}, true);\n"
+           f"    SetCharacterGravity({arena.actor}, Disabled);\n"
+           f"    SetCharacterInvincibility({arena.actor}, Enabled);\n"
+           f"    ForceAnimationPlayback({arena.actor}, 7003, true, false, false);\n")
+    original = _replace_once(original, "    WaitFor(\n", pre + "    WaitFor(\n",
+                             "Amygdala pre-entry sequence")
+    old = (f"    ForceAnimationPlayback({arena.actor}, 7001, false, false, false);\n"
+           f"    SetEventFlag({arena.start_flag}, ON);\n")
+    return _replace_once(original, old, _amygdala_wake_after_entry(arena),
+                         "Amygdala post-entry wake-up")
 
 
 def _amygdala_at_paarl_activation(arena: ArenaContract, original: str) -> str:
@@ -1595,6 +1863,10 @@ def _attached_single_actor_activation(arena: ArenaContract, donor: CombatPackage
                                       original: str) -> str:
     """Retain reviewed arena entry geometry and use the donor's pinned wake-up."""
     if donor.key == "amygdala":
+        if arena.key == CLERIC_ARENA.key:
+            return _amygdala_at_cleric_activation(arena, original)
+        if arena.key == BSB_ARENA.key:
+            return _amygdala_at_bsb_activation(arena, original)
         if arena.key == PAARL_ARENA.key:
             return _amygdala_at_paarl_activation(arena, original)
         if arena.key == EBRIETAS_ARENA.key:
@@ -1715,6 +1987,10 @@ def patch_contract_swap(arena: ArenaContract, donor: CombatPackage,
         return _bsb_patch(arena, donor, destination, donor_source)
     if capability.adapter == "bsb-ebrietas-entry":
         return _bsb_at_ebrietas_patch(arena, donor, destination, donor_source)
+    if capability.adapter == "bsb-phase-slots":
+        return _bsb_phase_slot_patch(arena, donor, destination, donor_source)
+    if capability.adapter == "paarl-appended-body":
+        return _paarl_appended_body_patch(arena, donor, destination, donor_source)
     if capability.adapter in {"generic-attachment", "amygdala-entry", "ebrietas-entry"}:
         return _attached_single_actor_patch(
             arena, donor, destination, donor_source,
@@ -1725,6 +2001,10 @@ def patch_contract_swap(arena: ArenaContract, donor: CombatPackage,
 def _mapping(arena: ArenaContract, donor: CombatPackage) -> dict:
     attachments = (dict(zip((attachment.source_event for attachment in donor.attachments),
                             arena.attachment_event_ids)) if donor.attachments else {})
+    capability = contract_capability(arena, donor)
+    appended_body = ({donor.part_routine_event: arena.attachment_event_ids[-1]}
+                     if capability is not None and capability.adapter == "paarl-appended-body"
+                     else {})
     phase_map = ({event_id: attachments[event_id] for event_id in donor.phase_events
                   if event_id in attachments} if attachments
                  else dict(zip(donor.phase_events, arena.phase_slots)))
@@ -1739,10 +2019,12 @@ def _mapping(arena: ArenaContract, donor: CombatPackage) -> dict:
             str(donor.co_op_entry_event): arena.co_op_entry_event,
         },
         "part_routine": None if donor.part_routine_event is None else {
-            str(donor.part_routine_event): attachments.get(donor.part_routine_event,
-                                                           arena.part_routine_event),
+            str(donor.part_routine_event): appended_body.get(
+                donor.part_routine_event,
+                attachments.get(donor.part_routine_event, arena.part_routine_event)),
         },
-        "added_events": {str(source): target for source, target in attachments.items()},
+        "added_events": {str(source): target for source, target in
+                         {**attachments, **appended_body}.items()},
         "virtual_entities": {str(source): target for source, target in virtual_entities.items()},
     }
 

@@ -81,8 +81,8 @@ refuses an incomplete matching instead of dropping encounters.
 Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius, Gascoigne, Rom, Living Failures,
 Wet Nurse, Witch of Hemwick, Celestial Emissary, Micolash, The One Reborn, Shadows,
 Gehrman and Moon Presence.
-The current twenty-two-boss graph has 560 complete one-to-one assignments and
-63 feasible directed arena/donor edges. Every arena has at least two feasible
+The historical `aeb5d81` twenty-two-boss graph had 560 complete one-to-one assignments and
+63 feasible directed arena/donor edges. Every arena had at least two feasible
 donors, and every donor can reach at least two feasible destinations. The graph
 remains deliberately restricted rather than all-to-all. All donors are used
 once and no boss stays in its own arena. Cleric and
@@ -635,6 +635,10 @@ The user-approved design is to preserve donor combat and adapt arena-specific
 traversal and set pieces to the destination. Reproducing Micolash's original
 chase outside Mensis, for example, is not a prerequisite for moving his combat.
 Boss combat phases and destination progression still need explicit handling.
+The user also chose to skip character-specific entrance cinematics when a
+replacement boss occupies the arena. Entry triggers, player relocation and
+progression remain required; this decision does not remove donor combat-phase
+transitions or destination ending sequences.
 The existing one-of-each, no-self-placement policy gives 462 candidate directed
 pairings across the 22 encounters. This is the work inventory, not a claim that
 all 462 are implemented or playable.
@@ -664,13 +668,13 @@ helper requirements. Special encounter adapters remain in place while their
 combat/lifecycle boundaries are extracted. Adding a registry entry does not
 substitute for implementing those boundaries.
 
-This checkpoint implements 78 of the 462 directed pairings; all 78 participate
+The first composition checkpoint implemented 78 of the 462 directed pairings; all 78 participate
 in complete assignments. The six base arena contracts expose 23 of their 30
 off-diagonal pairs. Ebrietas's combat package now reaches all five other base
 arenas, and Amelia also reaches Cleric and Ebrietas. Maria uses one donor adapter
 across all six base arenas. The existing Blood-starved Beast at Celestial
-Emissary adapter is now included in the assignment graph. The other 384 pairs
-remain implementation work.
+Emissary adapter was included in the assignment graph. At that checkpoint,
+the other 384 pairs remained implementation work.
 
 Reusable routes preserve entry protection independently of removed model
 animations. Native plans bind each physical primary and Ebrietas helper to an
@@ -680,7 +684,7 @@ the destination retains its progression and health telemetry. This is static
 construction evidence. Entry, combat, death, reload and arena fit still require
 gameplay acceptance.
 
-The [composition native matrix](boss-composition-native-matrix.json) records
+The first [composition native matrix](https://github.com/4laric/bb-archipelago/blob/4de3eb490b1f85625652dcda2797e4f275442509/docs/boss-composition-native-matrix.json) records
 21 full-roster builds covering all 78 implemented pairs, with 59 verified files
 per build. After correcting Maria's duplicate room-entry notification at Amelia,
 both affected seeds were rebuilt; full-source comparisons prove the other five
@@ -689,3 +693,51 @@ normalized ordinary swaps, all 22 boss encounters and an actual Cathedral AP
 event override. The frozen Windows builder reproduces all 59 output hashes and
 the receipt exactly. Source, graph, tool and receipt hashes are recorded in the
 matrix; these remain native construction results, not gameplay observations.
+
+## Base arena completion and entrance policy
+
+The next implementation step expands the graph to 90 directed pairings, all
+usable in complete assignments. The initial six arenas now accept all 30
+off-diagonal combinations of their six combat packages. Laurence's reusable
+donor reaches those six arenas as well. This leaves 372 implementation gaps
+in the full 462-pair inventory.
+
+Specialized BSB/Paarl placements retire Amelia's original healing controller
+and Amygdala's original head-part controller so they cannot manipulate the
+replacement boss. Laurence carries his health/network lifecycle, five limb
+bindings, phase hitmask and camera; the destination retains progression and
+health telemetry.
+
+`boss_entrances.py` inventories all 22 original entrance events and applies
+the approved cinematic policy after each donor adapter. Twelve entrances
+contain cinematics; the others retain their adapter output. Each cinematic
+instruction is replaced one-for-one, retaining relative branch offsets,
+entry conditions, control flags and encounter-start ordering. Maria, Laurence,
+Gehrman and Moon Presence use their original explicit warp regions for a
+same-map short-warp replacement. Laurence's original client branch remains
+non-relocating. Combat-phase cinematics and ending sequences are outside this
+policy.
+
+The short-warp instruction's player operand and Area destination form are
+separately witnessed in the original corpus. Their combination is an inferred
+implementation, not a live observation of equivalent cinematic relocation.
+Native compilation and receipt verification cannot establish its runtime
+positioning, orientation or multiplayer behavior.
+
+The current [native matrix](boss-composition-native-matrix.json) records 27
+full-roster builds covering all 90 implemented pairs, with 59 verified files
+per build. The combined `composition-26` source and frozen builds include 308
+normalized ordinary swaps, 22 boss encounters and the Cathedral AP event
+override; all 59 output hashes and the receipt are identical. The entrance
+validator's aggregate-warp and newline-preservation changes leave all 90
+generated encounter scripts byte-identical on the builder's decoded inputs.
+These results establish native construction and packaging, not gameplay.
+
+A subsequent asset audit found a construction gap in the existing Logarius
+routes: his sword routine references one-shot effect `623206`, which is present
+in the original m25 effect bank but absent from the other inspected map banks.
+Those adapters currently copy his AI and actors without declaring that effect
+bank merge. The native receipts therefore do not prove complete Logarius
+effect delivery. A follow-up must represent EMEVD-only effect dependencies in
+the writer and copy their pinned source bank; the gameplay consequence has not
+been observed.

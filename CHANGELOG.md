@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle adds the remaining placements among Cleric Beast, Blood-starved
+  Beast, Paarl, Amelia, Amygdala and Ebrietas, plus Laurence in all six arenas.
+  Replacement encounters skip character-specific entrance cinematics while
+  retaining entry triggers and progression, with explicit player relocation
+  where the original entrance warped the player. These changes still need
+  in-game validation.
 - Boss shuffle now composes reusable combat adapters with destination arenas,
   expanding Maria and Ebrietas placements while preserving donor combat and
   adapting arena set pieces. The implementation coverage report distinguishes

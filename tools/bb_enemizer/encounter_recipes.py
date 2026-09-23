@@ -9,7 +9,7 @@ outside this registry until they expose the same reusable boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Mapping
+from typing import Callable, Mapping, Protocol
 
 from .boss_contracts import (
     ARENAS,
@@ -28,6 +28,21 @@ NativePlan = Callable[[list, Mapping[int, dict], Mapping[int, dict], str], dict]
 ActorRequirements = Callable[[list], list[dict]]
 
 
+class EncounterDonor(Protocol):
+    """Identity shared by full combat packages and specialized donor sources."""
+
+    key: str
+    event_file: str
+
+
+@dataclass(frozen=True)
+class DonorIdentity:
+    """Minimal identity for a source-pinned adapter outside boss_contracts."""
+
+    key: str
+    event_file: str
+
+
 @dataclass(frozen=True)
 class EncounterRecipe:
     """One concrete binding of a reusable arena and donor implementation.
@@ -37,7 +52,7 @@ class EncounterRecipe:
     """
 
     arena: ArenaContract
-    donor: CombatPackage
+    donor: EncounterDonor
     adapter: str
     _patch: Patch = field(repr=False, compare=False)
     _native_plan: NativePlan = field(repr=False, compare=False)
@@ -142,6 +157,56 @@ def _maria_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _laurence_recipes() -> tuple[EncounterRecipe, ...]:
+    from .laurence_donor import (
+        DEFAULT_LAURENCE_ALLOCATION,
+        LAURENCE_EVENT_FILE,
+        native_plan_laurence_donor,
+        patch_laurence_donor,
+    )
+
+    donor = DonorIdentity("laurence", LAURENCE_EVENT_FILE)
+    recipes: list[EncounterRecipe] = []
+    for arena in ARENAS:
+
+        def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
+            return patch_laurence_donor(
+                _arena,
+                destination,
+                donor_source,
+                DEFAULT_LAURENCE_ALLOCATION,
+            )
+
+        def native_plan(
+            slots: list,
+            npcs: Mapping[int, dict],
+            effects: Mapping[int, dict],
+            seed: str,
+            *,
+            _arena=arena,
+        ) -> dict:
+            return native_plan_laurence_donor(
+                _arena,
+                slots,
+                npcs,
+                effects,
+                seed,
+                DEFAULT_LAURENCE_ALLOCATION,
+            )
+
+        recipes.append(
+            EncounterRecipe(
+                arena=arena,
+                donor=donor,
+                adapter="laurence-donor:portable-combat",
+                _patch=patch,
+                _native_plan=native_plan,
+                _actor_requirements=lambda slots: [],
+            )
+        )
+    return tuple(recipes)
+
+
 def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     """Return every route backed by a parameterized, source-pinned adapter."""
     arenas = {arena.key: arena for arena in ARENAS}
@@ -159,7 +224,7 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
                 raise ValueError(f"duplicate reusable encounter recipe {recipe.key}")
             recipes[recipe.key] = recipe
 
-    for recipe in _maria_recipes():
+    for recipe in (*_maria_recipes(), *_laurence_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

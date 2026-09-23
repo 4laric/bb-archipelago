@@ -11,6 +11,7 @@ from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_co
 from tools.build_boss_encounters import (
     ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
     event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
+    build,
     is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers, pin_region_requirements, pin_actor_requirements, pin_object_requirements,
 )
 from tools.bb_enemizer.boss_pool import compose_event_patches, assign_donors
@@ -21,6 +22,20 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
+    def test_reusable_laurence_routes_reach_the_compiler_pin_gate(self):
+        from tools.bb_enemizer.laurence_donor import SUPPORTED_LAURENCE_ARENAS
+
+        self.assertEqual(6, len(SUPPORTED_LAURENCE_ARENAS))
+        with tempfile.TemporaryDirectory() as temporary:
+            compiler = Path(temporary) / 'untrusted-compiler.exe'
+            compiler.write_bytes(b'not the pinned compiler')
+            for arena in SUPPORTED_LAURENCE_ARENAS:
+                with self.subTest(arena=arena.key):
+                    args = SimpleNamespace(arena=arena.key, donor='laurence',
+                                           pool=None, seed='laurence-recipe', darkscript=compiler)
+                    with self.assertRaisesRegex(ValueError, 'requires pinned DarkScript'):
+                        build(args)
+
     def test_authored_actor_pins_are_verified_instead_of_replaced_with_current_input(self):
         part = {'name': 'core', 'entity_id': 123, 'source_archetype': {'model_name': 'c1000'},
                 'source_initialization': {'talk_id': 0}, 'fingerprint': 'a' * 64}

@@ -53,6 +53,7 @@ from tools.bb_enemizer.boss_pool import (
     combine_ordinary_and_boss_plans,
 )
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
+from tools.bb_enemizer.boss_entrances import skip_replacement_entrance
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.gascoigne_contract import (
     ProjectOwnedIds, NativeActorPin, patch_gascoigne_at_cleric, native_plan_gascoigne_at_cleric,
@@ -768,6 +769,7 @@ def verify_receipt(root: Path) -> dict:
 
 def build(args) -> dict:
     args._actor_pin_cache = {}
+    recipes = reusable_recipes()
     ludwig = getattr(args, 'donor', None) == 'ludwig'
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
@@ -838,7 +840,8 @@ def build(args) -> dict:
             raise ValueError('Father Gascoigne is available only in the reviewed Cleric reciprocal adapters')
     if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam'):
         raise ValueError('Ludwig donor requires a reviewed Cleric, Orphan or Shadows arena adapter')
-    if laurence and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig', 'living-failures')):
+    if (laurence and direct_orphan not in recipes
+            and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig', 'living-failures'))):
         raise ValueError('Laurence donor requires a reviewed Cleric, Ludwig or Living Failures arena adapter')
     if getattr(args, 'pool', None):
         graph = {
@@ -860,7 +863,6 @@ def build(args) -> dict:
         pairs = [(ARENAS[key], PACKAGES[value]) for key, value in mapping.items()]
     else:
         pairs = [(ARENAS[args.arena], PACKAGES[args.donor])]
-    recipes = reusable_recipes()
     if digest(args.darkscript) != DARKSCRIPT_SHA256:
         raise ValueError('requires pinned DarkScript 3.6.3')
     check_output(args.output, (args.maps, args.scripts, args.events, args.gameparam,
@@ -1069,6 +1071,7 @@ def build(args) -> dict:
             else:
                 patched = patch_contract_swap(arena, package, texts[arena.event_file], texts[package.event_file],
                     allow_materialized_actor_additions=bool(materializations.get(arena.key)))
+            patched = skip_replacement_entrance(arena.key, texts[arena.event_file], patched)
             variants.setdefault(arena.event_file, []).append(patched)
         override_inputs = []
         if event_overrides is not None:
