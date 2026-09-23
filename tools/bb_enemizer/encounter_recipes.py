@@ -543,6 +543,40 @@ def _gascoigne_donor_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _final_boss_donor_recipes() -> tuple[EncounterRecipe, ...]:
+    """Bind final-boss combat independently of Hunter's Dream progression."""
+    from .final_boss_donors import (
+        SUPPORTED_FINAL_BOSS_ARENAS,
+        final_boss_actor_requirements,
+        native_plan_final_boss_donor,
+        patch_final_boss_donor,
+        portable_final_boss_donors,
+    )
+
+    recipes: list[EncounterRecipe] = []
+    for arena in SUPPORTED_FINAL_BOSS_ARENAS:
+        for donor in portable_final_boss_donors():
+            def patch(destination: str, donor_source: str, *,
+                      _arena=arena, _donor=donor) -> str:
+                return patch_final_boss_donor(_arena, _donor, destination, donor_source)
+
+            def native_plan(slots: list, npcs: Mapping[int, dict],
+                            effects: Mapping[int, dict], seed: str, *,
+                            _arena=arena, _donor=donor) -> dict:
+                return native_plan_final_boss_donor(_arena, _donor, slots, npcs, effects, seed)
+
+            def actor_requirements(slots: list, *, _arena=arena, _donor=donor) -> list[dict]:
+                return final_boss_actor_requirements(_arena, _donor, slots)
+
+            recipes.append(EncounterRecipe(
+                arena=arena, donor=donor,
+                adapter="final-boss-donor:source-combat",
+                _patch=patch, _native_plan=native_plan,
+                _actor_requirements=actor_requirements,
+            ))
+    return tuple(recipes)
+
+
 def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     """Return every route backed by a parameterized, source-pinned adapter."""
     arenas = {arena.key: arena for arena in ARENAS}
@@ -564,7 +598,8 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
                    *_logarius_recipes(), *_laurence_arena_recipes(), *_gascoigne_arena_recipes(),
                    *_logarius_arena_recipes(), *_orphan_recipes(), *_orphan_arena_recipes(),
                    *_ludwig_recipes(),
-                   *_gascoigne_donor_recipes(), *_ludwig_arena_recipes()):
+                   *_gascoigne_donor_recipes(), *_ludwig_arena_recipes(),
+                   *_final_boss_donor_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

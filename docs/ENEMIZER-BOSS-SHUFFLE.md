@@ -965,7 +965,7 @@ proof that Micolash executes every listed animation.
 
 The reusable Ludwig destination is wired for five additional base donors;
 the existing Cleric and Laurence destination routes retain their dedicated
-implementations. The current local graph has 142 directed routes and 105
+implementations. That checkpoint's graph has 142 directed routes and 105
 reusable recipe bindings. Every graph edge can participate in a complete
 22-boss, one-of-each, no-self assignment. This is graph feasibility evidence,
 not native-build or gameplay validation, and the [six direct native builds](boss-ludwig-arena-native-matrix.json) now
@@ -988,3 +988,25 @@ limb break animation from 8010 to the original 8030. The dedicated Gehrman
 route now derives every limb initializer from the shared package and verifies
 each exact original initializer before emission. Its source-comparison tests
 and original-input native build pass.
+
+## Final-boss donors in progress
+
+Gehrman and Moon Presence now expose reusable combat packages at all six base
+arenas. Their source combat phases, Moon's five limb routines and player-effect
+controller, and Gehrman's physical event-target actor are transplanted with
+original-source pins. Destination progression and co-op entry remain owned by
+the arena. Gehrman's transplanted combat actor receives TalkID 0; the separate
+Hunter's Dream quest NPC is not imported.
+
+All [twelve direct native builds](boss-final-donor-native-matrix.json) pass
+against original inputs, with 8–10 receipt-verified files each. Eight focused
+tests include compilation of all twelve variants. Registry integration checks
+also exercise each donor/arena binding rather than only counting entries.
+
+This brings the local adapter registry to 154 directed routes, but the twelve
+new routes cannot yet occur in a full22 one-of-each assignment. The Gehrman,
+Moon Presence and Micolash arenas still accept only those three donors, so
+moving one outside that group leaves a destination unfilled. Incoming reusable
+arena adapters are the missing implementation; this is not evidence that the
+outgoing pairings are incompatible. The prior 142 graph edges remain feasible.
+Character-effect delivery and live combat remain unverified for these donors.

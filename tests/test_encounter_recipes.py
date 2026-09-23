@@ -65,10 +65,12 @@ class EncounterRecipeTests(unittest.TestCase):
                              if donor.key != "cleric-beast"}
         ludwig_keys = {(arena.key, "ludwig") for arena in ARENAS}
         gascoigne_donor_keys = {(arena.key, "father-gascoigne") for arena in ARENAS}
+        final_boss_donor_keys = {(arena.key, donor) for arena in ARENAS
+                                 for donor in ("gehrman", "moon-presence")}
         groups = (base_keys, maria_keys, laurence_keys, maria_arena_keys, logarius_keys,
                   laurence_arena_keys, gascoigne_arena_keys, logarius_arena_keys,
                   orphan_keys, orphan_arena_keys, ludwig_keys, gascoigne_donor_keys,
-                  ludwig_arena_keys)
+                  ludwig_arena_keys, final_boss_donor_keys)
         self.assertEqual(set.union(*groups), set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)
@@ -85,6 +87,7 @@ class EncounterRecipeTests(unittest.TestCase):
         self.assertEqual(5, len(ludwig_arena_keys))
         self.assertEqual(6, len(ludwig_keys))
         self.assertEqual(6, len(gascoigne_donor_keys))
+        self.assertEqual(12, len(final_boss_donor_keys))
         self.assertEqual(
             sum(map(len, groups)),
             len(self.recipes),
@@ -282,6 +285,31 @@ class EncounterRecipeTests(unittest.TestCase):
             row["destination_entity_id"]
             for row in plan["primary_init_source_bindings"]
         })
+
+        final_source = read_blob(BUNDLE, "event/m21_00_00_00.emevd.dcx.js").decode("utf-8-sig")
+        for final_arena in ARENAS:
+            for donor in ("gehrman", "moon-presence"):
+                with self.subTest(arena=final_arena.key, donor=donor):
+                    recipe = self.recipes[(final_arena.key, donor)]
+                    destination = self.sources[final_arena.event_file]
+                    before = event_blocks(destination)
+                    after = event_blocks(recipe.patch(destination, final_source))
+                    self.assertEqual(before[final_arena.completion_event],
+                                     after[final_arena.completion_event])
+                    plan = recipe.native_plan(self.slots, self.npcs, self.effects,
+                                              "recipe-final-boss")
+                    self.assertEqual(final_arena.key, plan["boss_contract"]["arena"])
+                    self.assertEqual(donor, plan["boss_contract"]["donor"])
+                    self.assertEqual({final_arena.actor}, {
+                        row["destination_entity_id"]
+                        for row in plan["primary_init_source_bindings"]
+                    })
+                    helpers = recipe.actor_requirements(self.slots)
+                    self.assertEqual(final_arena.destination_count if donor == "gehrman" else 0,
+                                     len(helpers))
+                    for helper in helpers:
+                        self.assertEqual("c9010_0004", helper["source_part"])
+                        self.assertEqual(2100801, helper["source_entity_id"])
 
 
 if __name__ == "__main__":
