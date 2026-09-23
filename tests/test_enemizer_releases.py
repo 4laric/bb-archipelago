@@ -271,7 +271,8 @@ class ReleasePlanningTests(unittest.TestCase):
             {record["logical_key"] for record in records},
         )
         base_swaps, _, _ = self._plan(())
-        self.assertEqual([], wakeup_fallbacks(base_swaps, self.slots, {}))
+        self.assertEqual(308, len(base_swaps))
+        self.assertEqual(0, len(wakeup_fallbacks(base_swaps, self.slots, {})))
         all_swaps, _, all_release = self._plan(("contracts", "spawns", "chara", "wakeup"))
         self.assertEqual(10, len(wakeup_fallbacks(all_swaps, self.slots, all_release)))
 
