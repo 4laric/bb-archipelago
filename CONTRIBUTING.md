@@ -79,6 +79,30 @@ version: a probe must have captured a known, planted event before it is pointed
 at an unknown one, every session is pre-registered with a prediction, and
 "nothing was captured" is a diagnostic miss unless the bundle proves otherwise.
 
+**Design probes to settle a question and save playtest time.** Before asking
+the operator to launch, define the question and an outcome table: every expected
+result, including no visible change, partial results and control failure, must
+have a distinguishable observation, interpretation and next action. A valid
+run should answer the question whichever substantive result occurs. If two
+competing explanations still look identical, redesign the probe before spending
+operator time. An unexpected or invalid result stops the experiment and returns
+to engineering; it is not permission for an endless series of "try this build"
+requests.
+
+Minimize the operator's total effort: setup, travel, combat, waiting, restarts,
+capture and cleanup. Prefer an immediate, unmistakable canary over a distant
+single target when both answer the same question. In the Saw Spear example
+reported by the maintainer on 2026-09-23, a probe changed that one pickup and
+asked the player to travel to it. For the question "is this item patch active?",
+changing every applicable item to an unmistakable canary in a disposable test
+overlay would let the next convenient pickup answer it. That is one controlled
+change applied broadly, not several independent experiments. Verify coverage
+and activation, and provide restoration; a broad canary proves the tested patch
+path is active, not that every item path works. Use a specific item only when
+its identity or behavior is the question. The request must explain why a cheaper
+action cannot give the same answer. See the live-probe contract for the required
+outcome table, time budget and stop conditions.
+
 ## The client pin
 
 `packaging/client-ref.txt` holds the full commit SHA of
