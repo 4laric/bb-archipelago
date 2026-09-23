@@ -1,204 +1,199 @@
 {
   "format": "bb-standalone-bblauncher-export-checkpoint-v1",
-  "seed": "standalone-composed-native-1",
-  "archive_sha256": "a0e2b5ecad4edcd1f0f85a0f5dbb27b327f92e2c74c591417f1bedd0bb778751",
-  "archive_size": 5955307,
+  "seed": "standalone-installed-inputs-1",
+  "archive_sha256": "57837d9031694482a1e5fdd75a180b438a472c885c284e6a91464a1802b58ac8",
+  "archive_size": 5906114,
   "build": {
     "identity_format": "bb-standalone-build-identity-v1",
-    "identity_sha256": "0d1aa2dcecd7890fe626c01ca0545a22691343fb4f37d993b7aa9e31826f4c02",
+    "identity_sha256": "d25e7a2b6fb30cd1fecc49bd79d8dbdc6140ceeda13072adfcd9956e741d8f24",
     "receipt_format": "bb-standalone-build-receipt-v1",
-    "receipt_sha256": "b180ad2dd0c5c6ab34b5aa95d3f25d2fe9b1b5831e89079356945be65e2ad04b"
+    "receipt_sha256": "2119c6d6b5fe13697703d1468ea782a3cd42b227559a41c2d230b4a407b5465d"
   },
   "files": [
     {
       "path": "dvdroot_ps4/map/MapStudio/m22_00_00_00.msb.dcx",
-      "sha256": "5f4bc8c1692cf1819e974aa5bffeadc67064bafdbea0618b2941604fd10fd5fc",
-      "size": 74078
+      "sha256": "467b464450f828eecaf1da0153d6fc4d529b337ad724886ccd2c77e0adc04e93",
+      "size": 74085
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m23_00_00_00.msb.dcx",
-      "sha256": "d62374ce9ec6b58307e6e3c7eede3eb2b00e54c631ff9da4222b46dd91c63b9f",
+      "sha256": "c67c09b4596c40094fe77f8818a496689a7fd6b862ba8631d9ae4710eda80851",
       "size": 106759
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m23_00_00_01.msb.dcx",
-      "sha256": "5b8a0d48b01cdc9a341d14f7480cea654b674d266655236babcd68784b1dca42",
-      "size": 107040
+      "sha256": "e6ad5fc914bf6289bb4b6fe8d51efb3f7f84a0cc16737c4eb1b2e56835317857",
+      "size": 107028
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m24_00_00_00.msb.dcx",
-      "sha256": "52e72f94a0f6dd64040d56684dbf5e3938778bf1fc9840c59ca2139abb54288b",
-      "size": 223698
+      "sha256": "1ad8d8268234ec02564730fc180535fec65643c07e2d27de0e39579d7e70f197",
+      "size": 223647
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m24_00_00_01.msb.dcx",
-      "sha256": "0c1e46ed622fbd587f9ef173d2c67bcedeada0a545c004188237f98ce65a4832",
-      "size": 224058
+      "sha256": "b09d7bf764e263109dce24422d6120fa05632b48cbb427da375de28e84c67d9e",
+      "size": 224007
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m24_01_00_00.msb.dcx",
-      "sha256": "7647eacc0665d17c7ee14714aa6f43b3c14955b70ce42e5a5ea8ee9d489868c6",
-      "size": 250560
+      "sha256": "0c613096bda05a8bb9697d3f34d9948cdc105a843a09a3920e143c1bc57eab63",
+      "size": 250547
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m24_01_00_01.msb.dcx",
-      "sha256": "92dd8535ef941485826c9efaa46b534092d4aa19ad3b8643dc5332c0e0534464",
-      "size": 250334
+      "sha256": "acb8eb1e73d11f53276ae93345c1f7539dca7a03b01677a650550c891154715c",
+      "size": 250275
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m24_01_00_11.msb.dcx",
-      "sha256": "e4fab2b3bf3137d4ea5397e1ebd8bd394c70b25edf1eb9de9536944bb8342e96",
-      "size": 250245
+      "sha256": "0e0e2fe8d99e53edcc7bded6c4f2803db9726977ea9bb1014a8cd7898ec1fa08",
+      "size": 250247
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m24_02_00_00.msb.dcx",
-      "sha256": "1da14291558cc4f80a65e3713d251f0238e6b8ff6c1f1e0bce904e19e0fb7fd7",
-      "size": 46977
+      "sha256": "7433ff42902b232ae5423f8c88d3fe6fc3a153d00a21c4ef99713e15a7ffe983",
+      "size": 46987
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m24_02_00_01.msb.dcx",
-      "sha256": "ab950cd058f1ded1a2ecb1db42bfcecbdb6d64a7bd47704d392f8e39fe98349c",
-      "size": 47209
+      "sha256": "b2b227b48911d305e98bea49621ac28a0ce1a7685ebef6723acf59eccd45dd17",
+      "size": 47230
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m25_00_00_00.msb.dcx",
-      "sha256": "6d4a9d7b92f9223daff591ccfcc2033a4fd7cb424706f49fc7a2ffceac312262",
-      "size": 48775
+      "sha256": "3eae10710e23bf61cce7df73194aac85995e48e4201dc54d91c2329fe3dd768b",
+      "size": 48745
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m26_00_00_00.msb.dcx",
-      "sha256": "bce8f27d72b84b5f693edc9d58609e8ec22d7418954099e89f9372ff0bbe405a",
-      "size": 144328
+      "sha256": "1beab36052a10eaa4c7ac6feb7be3f53a0cbab34dbf981a760968824bbdf11c5",
+      "size": 144405
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m27_00_00_00.msb.dcx",
-      "sha256": "453119ed0e647394d962f64bafc988e93bd6e7f55778223ebdf15145b4e6c6d7",
-      "size": 187345
+      "sha256": "eeb37a3689053c1e3cc78b03d3a9c673bdc542ac4726bd28e9b90fe577b67996",
+      "size": 187352
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m27_00_00_01.msb.dcx",
-      "sha256": "acb906ec1d79465e974a134808c9b79e60e3bc97d70a8bbce6d27f44d9c0045d",
-      "size": 188187
+      "sha256": "0ac57a1073093151b7790d7abea6f389a9c21cb0579d6866cb54a0c22018a89d",
+      "size": 188214
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m28_00_00_00.msb.dcx",
-      "sha256": "cd3573e4b4f5c9b61f0c35750ca5aba639f0f47eddeb9ab3a96b95bbcc04908b",
-      "size": 134524
+      "sha256": "a5e02dbd7dc9ffe9c3355835915496ab080a57e58c510d6ff7443d1ba49161f5",
+      "size": 134525
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m28_00_00_01.msb.dcx",
-      "sha256": "69c4f664bc4c88dac8d9abf1260ae42fc76bd960690b9fe8502c131f612718d8",
-      "size": 134983
+      "sha256": "6a7ce34f9100a92d481cc6dcc311c94b4cf3464185eb935b689d2fe90b4d7099",
+      "size": 134986
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m32_00_00_00.msb.dcx",
-      "sha256": "5a618ff67ac7b04b7699603a52af53a09e4ea092404ade3ce5713bed7fce8f48",
-      "size": 89887
+      "sha256": "152a36e399548bc8d57586baaa284a5ac2ff5b2ab7fe3ecc709432984f1cf61c",
+      "size": 89900
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m32_00_00_01.msb.dcx",
-      "sha256": "41e0bb63e8f44755a76ecb4e4dee1d5c21fe9e8afb7908e82e94090ce078eacd",
-      "size": 90621
+      "sha256": "df6d74660a91d07c72f201cadb48bf5c3d3d48a864d7107b509a367b7d0dc53c",
+      "size": 90631
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m33_00_00_00.msb.dcx",
-      "sha256": "d3233397ebb8d2dccc92f1e1bef34f56673124c5b838360bc2fb8f9252639b94",
-      "size": 60766
+      "sha256": "83894133dc94c013daa673848e7f7627495ab86b4b829146add28a7a3e354536",
+      "size": 60786
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m34_00_00_00.msb.dcx",
-      "sha256": "baa5454797b96268b1a0d2133dba7b3198e6c00265aad556bd9ad09ac700bc0b",
-      "size": 139125
+      "sha256": "0532c89aa51b743da28a0eda0abaf4d785162db3512de75678ea01bac1bb64f5",
+      "size": 139060
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m35_00_00_00.msb.dcx",
-      "sha256": "95542a2f1be2b479a60d6fb5348164c376936db55ebeb20f71634203d9c47ac7",
-      "size": 159847
+      "sha256": "1b827d8e61963bac0d5152fed5432b0aee4617e6e9717e4d0d354bb27cf6ecc1",
+      "size": 159713
     },
     {
       "path": "dvdroot_ps4/map/MapStudio/m36_00_00_00.msb.dcx",
-      "sha256": "60976bd14d0073e18e14e2a56b8f2645d2db2ab887eb71733169c4de786434e9",
-      "size": 78819
+      "sha256": "cd1c21efb5ed76d0ee895984dfa0edfe9fcf52b83be0328acbfe777aac22dc57",
+      "size": 78807
     },
     {
       "path": "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx",
-      "sha256": "1cae9fce0a89e32a9e2035b4f36c21c46f15feb45af1559eaa7a77dbcbb14681",
-      "size": 1543886
-    },
-    {
-      "path": "dvdroot_ps4/script.json",
-      "sha256": "5c5e534b33eedda201624f6c5b2eb6cd72ac5b1d8acbfc36bfcd1dc20a20d292",
-      "size": 78399
+      "sha256": "752d4141280d1002e859134e553d67dc1893b395de71a86abf0885e5dd91ae53",
+      "size": 1543756
     },
     {
       "path": "dvdroot_ps4/script/m22_00_00_00.luabnd.dcx",
-      "sha256": "00228500546aadf67415d255473b3efbfab87db5a86f9c8dc0d65e090058a253",
-      "size": 52862
+      "sha256": "10ee6ee45be15c350c038015db4463946c4533b31c790ac99fd273748977b322",
+      "size": 48330
     },
     {
       "path": "dvdroot_ps4/script/m23_00_00_00.luabnd.dcx",
-      "sha256": "ec379dbccbd08343c8e8308cd2de87bb0840b03d5380b34546ed0b951baa23ef",
-      "size": 62591
+      "sha256": "e1868d512af0a006ee161b5095b7daa499754f0ebb8c74352dc3c7c7551500d4",
+      "size": 63984
     },
     {
       "path": "dvdroot_ps4/script/m24_00_00_00.luabnd.dcx",
-      "sha256": "1fc6970a5e2d4976d474e4585effb85dcd3de969320a2d7589939d069a430728",
-      "size": 172914
+      "sha256": "a868ba50480a297ab93057f04985e1a13b4d1acac4b185a55697965440ed5d30",
+      "size": 160252
     },
     {
       "path": "dvdroot_ps4/script/m24_01_00_00.luabnd.dcx",
-      "sha256": "dce9cea0a31f1269a2d159b8e378fb3b4b9e68b1fb1b853c645bc95add852d14",
-      "size": 153073
+      "sha256": "0a54ce18443ea11a483b0c90093a3b242d225c595ea0b56f062cbd259605a28b",
+      "size": 151617
     },
     {
       "path": "dvdroot_ps4/script/m24_02_00_00.luabnd.dcx",
-      "sha256": "456efa368eaac4a63b3f91c632c9d890312b0a223db5c9619df9b40580e836e3",
-      "size": 121516
+      "sha256": "def2c16a17e21812e90874bdff9be881a0b04bb876ed76bbdc72302b8446f745",
+      "size": 128346
     },
     {
       "path": "dvdroot_ps4/script/m25_00_00_00.luabnd.dcx",
-      "sha256": "3c7de16055d2421179db2bef7c1a51c8a5ebbff6caac2a731988e4b152d13819",
-      "size": 68674
+      "sha256": "03f4c1d3580b1978605d4070853b24a6a5788fb71aff6e1c487f73861fcdcac4",
+      "size": 65721
     },
     {
       "path": "dvdroot_ps4/script/m26_00_00_00.luabnd.dcx",
-      "sha256": "63af360a6fc1038bc7eebb23d47707e42e3b2e0f1b1591f5a9b2824d2016c81a",
-      "size": 132199
+      "sha256": "91aff96f29b904de6196a53c58c42805e9ae6126dc294efed764ba5c01ebd4c9",
+      "size": 122352
     },
     {
       "path": "dvdroot_ps4/script/m27_00_00_00.luabnd.dcx",
-      "sha256": "0f65bbb548d03d85c960d778ec0eabefff26da9d9ff2181bf6fedfa6ba205b4b",
-      "size": 142211
+      "sha256": "f7b02eb0faaf6c59460b1125c9f93e2e05846f46626a2240527936e8ea822702",
+      "size": 138993
     },
     {
       "path": "dvdroot_ps4/script/m28_00_00_00.luabnd.dcx",
-      "sha256": "82dc035143a489471c835810b787081eea0d651916891de7926ff2b272782ccb",
-      "size": 121336
+      "sha256": "a27e4e385489c82294b43e244606cd4483457f041c9374b0ea2cb516205a8866",
+      "size": 109215
     },
     {
       "path": "dvdroot_ps4/script/m32_00_00_00.luabnd.dcx",
-      "sha256": "22aa6724e13843136ca7a00cd0650ec738e5e2db6eca49e28d3e35820232f34c",
-      "size": 69731
+      "sha256": "262c9ffae390acd28f4dee0d949d2cfda32bf32a816e30ce344212d8b32696e9",
+      "size": 64115
     },
     {
       "path": "dvdroot_ps4/script/m33_00_00_00.luabnd.dcx",
-      "sha256": "2d94d4e577e757d82dbea3101f27e760a9ea191ac76a84741efb29d3eb75822e",
-      "size": 72969
+      "sha256": "b90ddf83aba80c9774d00fb61a53605402c3a0f33e974f2850f8ad7577bd84af",
+      "size": 85150
     },
     {
       "path": "dvdroot_ps4/script/m34_00_00_00.luabnd.dcx",
-      "sha256": "9fe204cc51d197ba6684cfcebd504cc808b61756e0e139e9acebaa2360b472b4",
-      "size": 186072
+      "sha256": "caed2d319925e8da3924ee2589e201fc32cf648b20a1443664c17dba5f907978",
+      "size": 175874
     },
     {
       "path": "dvdroot_ps4/script/m35_00_00_00.luabnd.dcx",
-      "sha256": "2a42714a50f88eecd0b2183fa1da50f08cb38acacff95216c953fad5e72081bf",
-      "size": 155091
+      "sha256": "cf5b31d1013f594bdb44d012b33a3da6216697da1bcee24012322dfcf9c10c70",
+      "size": 154400
     },
     {
       "path": "dvdroot_ps4/script/m36_00_00_00.luabnd.dcx",
-      "sha256": "5d5820adf952d62707e136bc36e1ce6417ab64fb568cad31cd51a03832d104d4",
-      "size": 73125
+      "sha256": "6e0b649832bbf5f9a5d35317405b4b2f2dcfb4d77c752faa29e6c766649c1eb6",
+      "size": 73054
     }
   ],
   "validation": {
@@ -207,6 +202,7 @@
   },
   "limits": [
     "Uses the existing BBLauncher native data-mod layout.",
-    "ZIP/tree/receipt verification passed; no BBLauncher activation, game launch, or save writes were performed."
+    "ZIP/tree/receipt verification passed; no BBLauncher activation, game launch, or save writes were performed.",
+    "All 37 payload files are native game files; planner and AI receipts remain outside the game payload."
   ]
 }

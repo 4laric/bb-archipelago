@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -176,8 +177,14 @@ class StandaloneRandomizerTests(unittest.TestCase):
             hashes = temp / "hashes.json"
             output = temp / "plan.json"
             hashes.write_text(json.dumps(SOURCE_HASHES), encoding="utf-8")
+            # CI also runs this suite from an AP checkout, whose worlds package
+            # bootstraps AP before loading Bloodborne. Stage only the standalone
+            # distribution's own modules so -S really tests an AP-free install.
+            isolated = temp / "standalone"
+            shutil.copytree(ROOT / "tools/bb_standalone", isolated / "tools/bb_standalone")
+            shutil.copytree(ROOT / "worlds/bloodborne", isolated / "worlds/bloodborne")
             environment = dict(os.environ)
-            environment["PYTHONPATH"] = str(ROOT)
+            environment["PYTHONPATH"] = str(isolated)
             completed = subprocess.run(
                 [
                     sys.executable,
@@ -191,7 +198,7 @@ class StandaloneRandomizerTests(unittest.TestCase):
                     "--output",
                     str(output),
                 ],
-                cwd=ROOT,
+                cwd=isolated,
                 env=environment,
                 capture_output=True,
                 text=True,

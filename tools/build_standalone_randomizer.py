@@ -293,6 +293,7 @@ def _verify_scaling(stage: Path, plan_path: Path, item_binder: Path) -> dict[str
         or report.get("source_plan_sha256") != _hash_file(plan_path)
         or report.get("source_gameparam_sha256") != _hash_file(item_binder)
         or report.get("output_gameparam_sha256") != _hash_file(output)
+        or report.get("output_plan_sha256") != _hash_file(stage / "bb-enemizer-plan.json")
     ):
         raise ValueError("enemy scaling writer produced an invalid composition receipt")
     return report
@@ -374,10 +375,9 @@ def build(
                 enemy_inventory_path = config.enemy_inventory
                 enemy_inventory_sha256 = _hash_file(config.enemy_inventory)
             enemy_plan_path = work / "standalone-enemy-plan.json"
-            planner_command = [
-                sys.executable,
-                "-m",
-                "tools.bb_enemizer.cli",
+            planner_command = ([sys.executable, "--internal-enemy-planner"]
+                               if getattr(sys, "frozen", False)
+                               else [sys.executable, "-m", "tools.bb_enemizer.cli"]) + [
                 "--seed",
                 enemy_seed,
                 "--inventory",
@@ -452,6 +452,12 @@ def build(
                     runner,
                 )
                 enemy_receipt = _verify_ai(stage, enemy_plan_path)
+            # Native writers place their audit next to script/. Keep it in the
+            # build records, outside the game payload consumed by BBLauncher.
+            applied_plan = (stage / "bb-enemizer-plan.json"
+                            if config.enemy_options.normalize_scaling else enemy_plan_path)
+            _verify_ai(stage, applied_plan)
+            (stage / "dvdroot_ps4/script.json").rename(stage / "enemy-ai-receipt.json")
         else:
             stage.mkdir()
             final_binder = stage / GAMEPARAM_PATH

@@ -24,7 +24,7 @@ for the guarded native writer.
 The writer receives the tracked catalog as a separate, hash-bound input:
 
 ```powershell
-BBEnemizerWriter.exe --standalone-items `
+BBSuppressionWriter.exe --standalone-items `
   standalone-item-plan.json `
   tools/bb_standalone/award_targets.json `
   gameparam.parambnd.dcx `
@@ -128,7 +128,7 @@ activate the overlay.
 
 A [real combined build](standalone-composed-native-checkpoint.json) passes with
 503 item locations, 308 logical enemy replacements across 545 physical parts in
-22 maps, 14 AI bundles with zero unresolved goals, and 238 scaled NPCs. All 45
+22 maps, 14 AI bundles with zero unresolved goals, and 226 scaled NPCs. All 45
 receipt files were independently hash-checked. This is build validation, not live
 acceptance.
 
@@ -157,5 +157,14 @@ Starting Bloodborne through BBLauncher requires no AP client or server.
 `python tools/export_standalone_mod.py verify --package <folder-or-zip>
 --receipt <export-receipt.json> --overlay <standalone-build>` verifies the export
 against the original build. The [native export checkpoint](standalone-bblauncher-export-checkpoint.json)
-contains 38 game payload files from the combined item/enemy test seed. Export
+contains 37 game payload files from the combined item/enemy test seed. Export
 verification passed; in-game standalone acceptance remains untested.
+
+## Original-input test gate
+
+Set `BB_STANDALONE_WRITER_INPUTS` to a JSON manifest containing `writer`,
+`gameparam`, and `paramdef` paths, then run
+`python tools/run_tests.py --expect-file tests/expected_counts.tsv
+--require test_standalone_item_writer=5`. This requires all five native
+round-trip and refusal tests to execute. Hosted CI lacks those original inputs
+and permits their exact skips; it still collects the tests.

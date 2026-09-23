@@ -97,12 +97,21 @@ class FakeToolchain:
             binder = output / GAMEPARAM_PATH
             binder.parent.mkdir(parents=True)
             binder.write_bytes(b"scaled:" + source.read_bytes())
+            applied_plan = output / "bb-enemizer-plan.json"
+            applied_plan.write_text(json.dumps({"native_scaled": True}), encoding="utf-8")
             maps = output / "dvdroot_ps4/map/MapStudio"
             maps.mkdir(parents=True)
             (maps / "m21_00_00_00.msb.dcx").write_bytes(b"scaled map")
             scripts = output / "dvdroot_ps4/script"
             scripts.mkdir(parents=True)
             (scripts / "m21_00_00_00.luabnd.dcx").write_bytes(b"scaled script")
+            (output / "dvdroot_ps4/script.json").write_text(json.dumps({
+                "format": "bb-enemizer-ai-v1", "applied": True,
+                "plan_sha256": digest(applied_plan), "maps": [{
+                    "map": "m21_00_00_00.luabnd.dcx", "missing_goals_after": 0,
+                    "output_sha256": digest(scripts / "m21_00_00_00.luabnd.dcx"),
+                }],
+            }), encoding="utf-8")
             (output / "scaling-report.json").write_text(
                 json.dumps(
                     {
@@ -111,6 +120,7 @@ class FakeToolchain:
                         "source_plan_sha256": digest(plan),
                         "source_gameparam_sha256": digest(source),
                         "output_gameparam_sha256": digest(binder),
+                        "output_plan_sha256": digest(applied_plan),
                     }
                 ),
                 encoding="utf-8",
@@ -263,6 +273,8 @@ class StandaloneBuildTests(unittest.TestCase):
         self.assertTrue((self.output / GAMEPARAM_PATH).read_bytes().startswith(b"items:"))
         self.assertTrue((self.output / "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx").is_file())
         self.assertTrue((self.output / "dvdroot_ps4/script/m21_00_00_00.luabnd.dcx").is_file())
+        self.assertTrue((self.output / "enemy-ai-receipt.json").is_file())
+        self.assertFalse((self.output / "dvdroot_ps4/script.json").exists())
         identity = json.loads((self.output / "standalone-build-identity.json").read_text())
         self.assertIn(
             "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx",
@@ -279,6 +291,8 @@ class StandaloneBuildTests(unittest.TestCase):
             runner=self.toolchain,
             planner=self.plan,
         )
+        self.assertTrue((self.output / "enemy-ai-receipt.json").is_file())
+        self.assertFalse((self.output / "dvdroot_ps4/script.json").exists())
         scaled = next(command for command in self.toolchain.commands if "--scaled" in command)
         index = scaled.index("--scaled")
         staged_items = Path(scaled[index + 2])

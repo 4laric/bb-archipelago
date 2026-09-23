@@ -206,6 +206,17 @@ def _require_sha256(value: Any, label: str) -> str:
     return value
 
 
+def _is_native_payload_path(relative: str) -> bool:
+    if relative == GAMEPARAM_PATH:
+        return True
+    parts = PurePosixPath(relative).parts
+    if len(parts) == 4 and parts[:3] == ("dvdroot_ps4", "map", "MapStudio"):
+        return parts[3].endswith(".msb.dcx") and len(parts[3]) > len(".msb.dcx")
+    if len(parts) == 3 and parts[:2] == ("dvdroot_ps4", "script"):
+        return parts[2].endswith(".luabnd.dcx") and len(parts[2]) > len(".luabnd.dcx")
+    return False
+
+
 def validate_overlay(path: Path | str) -> ValidatedOverlay:
     """Validate an unpublished builder overlay without modifying it."""
     root = _regular_directory(path, "standalone overlay")
@@ -286,8 +297,19 @@ def validate_overlay(path: Path | str) -> ValidatedOverlay:
     elif enemy_plan is None or enemy_digest != enemy_plan.sha256:
         raise ValueError("standalone enemy plan provenance does not match the build identity")
 
-    payload = tuple(record for record in records if record.path.startswith("dvdroot_ps4/"))
-    if not payload or any(record.path == "dvdroot_ps4" for record in payload):
+    game_records = tuple(
+        record for record in records if record.path.startswith("dvdroot_ps4/")
+    )
+    unexpected_game_paths = [
+        record.path for record in game_records if not _is_native_payload_path(record.path)
+    ]
+    if unexpected_game_paths:
+        raise ValueError(
+            "standalone build contains an unexpected game-data payload path: "
+            + ", ".join(unexpected_game_paths)
+        )
+    payload = game_records
+    if not payload:
         raise ValueError("standalone build contains no BBLauncher game-data payload")
     return ValidatedOverlay(
         root=root,
@@ -565,8 +587,14 @@ def load_export_receipt(path: Path | str) -> dict[str, Any]:
         raise ValueError("standalone BBLauncher export receipt has invalid build provenance")
     _require_sha256(build.get("receipt_sha256"), "export build receipt sha256")
     records = _parse_records(receipt.get("files"), "export receipt files")
-    if any(not record.path.startswith("dvdroot_ps4/") for record in records):
-        raise ValueError("export receipt contains a non-game-data file")
+    invalid_payload = [
+        record.path for record in records if not _is_native_payload_path(record.path)
+    ]
+    if invalid_payload:
+        raise ValueError(
+            "export receipt contains an unexpected game-data payload path: "
+            + ", ".join(invalid_payload)
+        )
     archive_digest = receipt.get("archive_sha256")
     if receipt["package_kind"] == "zip":
         _require_sha256(archive_digest, "export archive sha256")

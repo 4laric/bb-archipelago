@@ -215,6 +215,19 @@ class StandaloneModExportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "authenticate its identity"):
             validate_overlay(provenance)
 
+    def test_native_ai_writer_receipt_inside_game_root_is_refused(self):
+        overlay = make_overlay(self.root, seed="misplaced-native-receipt")
+        misplaced = overlay / "dvdroot_ps4/script.json"
+        write_json(misplaced, {"format": "bb-enemizer-ai-receipt-v1"})
+        receipt_path = overlay / BUILD_RECEIPT_NAME
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+        receipt["files"].append(file_record(overlay, "dvdroot_ps4/script.json"))
+        write_json(receipt_path, receipt)
+        with self.assertRaisesRegex(
+            ValueError, "unexpected game-data payload path.*dvdroot_ps4/script.json"
+        ):
+            validate_overlay(overlay)
+
     def test_existing_destination_is_preserved(self):
         overlay = validate_overlay(self.overlay)
         target = self.mods / package_name(overlay)
