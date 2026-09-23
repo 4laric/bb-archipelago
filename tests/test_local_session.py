@@ -55,8 +55,69 @@ class LocalSessionTests(unittest.TestCase):
             python = root / "python.exe"
             for name in ("Generate.py", "MultiServer.py", "python.exe"):
                 (root / name).touch()
-            tools = discover_ap_tools(root, python)
+            with patch(
+                "bb_launcher.local_session.subprocess.run",
+                return_value=subprocess.CompletedProcess([], 0, stdout="3.12.4\n", stderr=""),
+            ):
+                tools = discover_ap_tools(root, python)
             self.assertEqual(tools.server_command, (str(python), str(root / "MultiServer.py")))
+
+    def test_source_checkout_refuses_an_unsupported_python(self):
+        """A player's own Generate.py crashed with a raw traceback ('Official
+        3.11.9 through 3.13.x is supported') from an unremarkable system
+        Python 3.14: this must be a clear, actionable message from
+        discover_ap_tools before Generate.py ever runs, not a traceback
+        surfacing through the progress log."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            python = root / "python.exe"
+            for name in ("Generate.py", "MultiServer.py", "python.exe"):
+                (root / name).touch()
+            with patch(
+                "bb_launcher.local_session.subprocess.run",
+                return_value=subprocess.CompletedProcess([], 0, stdout="3.14.7\n", stderr=""),
+            ):
+                with self.assertRaisesRegex(ValidationError, "3.14.7.*not supported"):
+                    discover_ap_tools(root, python)
+
+    def test_source_checkout_refuses_a_too_old_python(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            python = root / "python.exe"
+            for name in ("Generate.py", "MultiServer.py", "python.exe"):
+                (root / name).touch()
+            with patch(
+                "bb_launcher.local_session.subprocess.run",
+                return_value=subprocess.CompletedProcess([], 0, stdout="3.11.0\n", stderr=""),
+            ):
+                with self.assertRaisesRegex(ValidationError, "3.11.0.*not supported"):
+                    discover_ap_tools(root, python)
+
+    def test_source_checkout_accepts_the_documented_boundaries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            python = root / "python.exe"
+            for name in ("Generate.py", "MultiServer.py", "python.exe"):
+                (root / name).touch()
+            for supported in ("3.11.9", "3.12.0", "3.13.9"):
+                with patch(
+                    "bb_launcher.local_session.subprocess.run",
+                    return_value=subprocess.CompletedProcess([], 0, stdout=f"{supported}\n", stderr=""),
+                ):
+                    discover_ap_tools(root, python)  # must not raise
+
+    def test_source_checkout_reports_an_unreadable_python_version(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            python = root / "python.exe"
+            for name in ("Generate.py", "MultiServer.py", "python.exe"):
+                (root / name).touch()
+            with patch(
+                "bb_launcher.local_session.subprocess.run",
+                return_value=subprocess.CompletedProcess([], 1, stdout="", stderr="not a real interpreter"),
+            ):
+                with self.assertRaisesRegex(ValidationError, "not a real interpreter"):
+                    discover_ap_tools(root, python)
 
     def test_world_manifest_must_match(self):
         expected = {"game": "Bloodborne", "world_version": "0.1.0", "minimum_ap_version": "0.6.7"}

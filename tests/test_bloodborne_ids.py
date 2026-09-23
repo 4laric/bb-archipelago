@@ -686,3 +686,12 @@ class SustainItemTests(unittest.TestCase):
         self.assertEqual(sustain["descriptor_evidence"], binding.descriptor_evidence)
         self.assertEqual(sustain["normalized_item_id"], binding.normalized_item_id)
         self.assertEqual(sustain["raw_descriptor"], binding.raw_descriptor)
+
+    def test_slot_data_publishes_the_default_vial_and_bullet_bundle(self):
+        slot_data = build_runtime_slot_data()
+        self.assertEqual(
+            [row["normalized_item_id"] for row in slot_data["sustain_items"]],
+            [0x400003E8, 0x40000384],
+        )
+        self.assertTrue(all(row["quantity"] == 1 for row in slot_data["sustain_items"]))
+        self.assertEqual(slot_data["sustain_item"], slot_data["sustain_items"][1])

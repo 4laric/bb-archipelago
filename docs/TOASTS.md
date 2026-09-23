@@ -32,6 +32,10 @@ from logs and offline reproduction before spending additional player time.
 - The goods clone retains Blood Vial 1000's stackable acquisition shape. The
   writer refuses a modal-dialog ID, unique-item flag, occupied ID range, or lot
   without exactly one Blood Vial placeholder slot.
+- The common event overlay watches every seed-owned placeholder goods ID and
+  removes held copies after the pickup popup has served its purpose. It also
+  notices storage-box copies and removes them after withdrawal, and cleans
+  placeholders collected before the client starts.
 - Parameters are composed first, names next, optional enemy scaling last.
   Each language starts from the same input parameters and must produce the same
   parameter hash. All outputs activate together in the owned overlay.

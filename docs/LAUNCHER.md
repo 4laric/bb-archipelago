@@ -313,11 +313,11 @@ that discovery is unambiguous. The normal **Setup** tab asks for only:
   it actually contains. The setup shows the resolved player, seed, and
   required runtime before launch.
 
-MapStudio and the guarded enemy options live under **Enemy randomization**;
+MapStudio and the guarded enemy options live under **Enemies**;
 the uncommon seed and tier controls stay collapsed until **Advanced enemy
 options** is selected.
 Suppression, cache, state, log, and explicit process-plan overrides live under
-**Troubleshooting**; packaged players do not need to touch them. Setup is saved
+**Advanced**; packaged players do not need to touch them. Setup is saved
 automatically whenever an action starts.
 Changing the seed, player, game, shadPS4 path, or server refreshes the
 readiness view. Launch stays unavailable and names the missing setup pieces
@@ -412,7 +412,7 @@ The packaged path calls `BBEnemizerPlanner.exe`, `MSBBMiner.exe`, and
 checkout, repository checkout, or pre-extracted enemy inventory. The checkout
 path retains the original Python/`dotnet` fallback for development.
 
-Secondary actions live under **Troubleshooting**, each running the same guarded
+Secondary actions live under **Advanced**, each running the same guarded
 core operations as the CLI:
 
 - **Launch Vanilla** resolves the plan first (a plan still carrying client

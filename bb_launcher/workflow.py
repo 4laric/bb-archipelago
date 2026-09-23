@@ -2064,6 +2064,10 @@ class LauncherWorkflow:
                 common_rows = temporary / "category8-award-rows.json"
                 common_rows.write_text(json.dumps({
                     "category8_awards": [row.__dict__ for row in CATEGORY8_AWARDS],
+                    "toast_placeholders": (
+                        request["toast_placeholders"]["entries"]
+                        if request["toast_placeholders"] is not None else []
+                    ),
                 }, indent=2) + "\n", encoding="utf-8")
                 source_common = install.resolve_file(COMMON_EVENT_PATH, include_mods=False)[1]
                 self.toolchain.write_common_event(

@@ -35,6 +35,7 @@ from .model import ItemKind, Rule
 from .resource_data import read_resource_text
 from .runtime_bindings import (
     CONSUMABLE_STACK_CAPS,
+    DELIVERY_FIXTURES,
     ITEM_BINDINGS,
     LOCATION_BINDINGS,
     MAX_GRANT_QUANTITY,
@@ -568,25 +569,30 @@ def build_runtime_slot_data(
             "plan_sha256": SUPPRESSION_PLAN_SHA256,
         },
         "goal_location": LOCATION_ID_BY_KEY[goal_location_key],
-        "sustain_item": sustain_item_binding(),
+        # Keep the singular field for clients predating the restored two-item
+        # sustain bundle.  New clients prefer the list and grant both entries.
+        "sustain_item": sustain_item_bindings()[1],
+        "sustain_items": sustain_item_bindings(),
     }
 
 
-def sustain_item_binding() -> dict[str, Any]:
-    """The single good the client grants after every location check.
+def sustain_item_bindings() -> list[dict[str, Any]]:
+    """The vial-and-bullet bundle the client grants after every check.
 
     The client used to hardcode this descriptor and shipped the wrong goods
     id (1100, the Antidote) for a day; publishing it here makes
     `runtime_bindings.py` the only source. Quantity is fixed at one.
     """
-    binding = ITEM_BINDINGS["quicksilver_bullets"]
-    return {
-        "normalized_item_id": binding.normalized_item_id,
-        "raw_descriptor": binding.raw_descriptor,
-        "item_category": binding.item_category,
-        "descriptor_evidence": binding.descriptor_evidence,
-        "quantity": 1,
-    }
+    return [
+        {
+            "normalized_item_id": binding.normalized_item_id,
+            "raw_descriptor": binding.raw_descriptor,
+            "item_category": binding.item_category,
+            "descriptor_evidence": binding.descriptor_evidence,
+            "quantity": 1,
+        }
+        for binding in (DELIVERY_FIXTURES["blood_vial"], ITEM_BINDINGS["quicksilver_bullets"])
+    ]
 
 try:
     from BaseClasses import (

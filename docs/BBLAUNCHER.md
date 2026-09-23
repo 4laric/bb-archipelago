@@ -5,11 +5,12 @@ For the proposed single-application player experience, see the
 That document is a design proposal; the implementation and acceptance status
 below describe the current companion.
 
-Status, 2026-09-22: **development candidate; unsupported for general play**.
-The adapter is implemented, but its live acceptance matrix is incomplete. It
-fails closed unless the operator explicitly enables the pinned live-acceptance
-candidate. Do not describe a local source build or a passing filesystem fixture
-as supported BBLauncher integration.
+Status, 2026-09-23: **supported**. Release 16.10 (build 2026-08-09-f092023)
+completed live acceptance in-game and is the pinned, fully supported build;
+no per-session opt-in is required to select it. Any OTHER BBLauncher build is
+still refused until it completes its own live-acceptance run -- do not
+describe a local source build or a passing filesystem fixture as supported
+BBLauncher integration.
 
 This mode exports a seed-specific data mod for rainmakerv3's BBLauncher. It
 does not embed the AP client in BBLauncher and does not let the standalone
@@ -17,21 +18,25 @@ launcher transaction adopt BBLauncher's overlay.
 
 ## Player workflow
 
-Use the **BBLauncher** tab in the desktop launcher:
+Use the **BBLauncher mode** section of the **Advanced** page in the desktop launcher:
 
 1. Select **Use BBLauncher to manage and start Bloodborne** and choose the
-   **BBLauncher app**. The companion detects its inactive `BBLauncher/Mods`
-   library. Choose your game installation, AP seed and player in **Play**.
-2. During development acceptance only, select **Enable experimental BBLauncher
-   integration for this session**. A normal invocation refuses the candidate.
-3. Select **Build mod for BBLauncher**. The companion remembers the prepared
-   mod and shows its name; no receipt file selection is needed.
-4. With shadPS4 stopped, open Mod Manager in BBLauncher. Deactivate any previous
+   **BBLauncher app** (release 16.10, build 2026-08-09-f092023). The companion
+   detects its inactive `BBLauncher/Mods` library. Choose your game
+   installation, AP seed and player in **Play**.
+2. Select **Build mod for BBLauncher**. The companion remembers the prepared
+   mod and shows its name; no receipt file selection is needed. Building the
+   same seed again finds the earlier inactive export and asks whether to
+   replace it (or pass `--replace-existing` on the CLI); an activated copy is
+   never replaced.
+3. With shadPS4 stopped, open Mod Manager in BBLauncher. Deactivate any previous
    Archipelago mod, then activate the named prepared mod. Keep only one AP mod
    active. If BBLauncher reports a file conflict, cancel and deactivate the
    conflicting mod; do not accept an override or use Mod Merger.
-5. With shadPS4 still stopped, select **Check activated mod** in the companion.
-6. Start Bloodborne from BBLauncher, then select **Connect to game** here.
+4. With shadPS4 still stopped, select **Verify activated mod** in the companion.
+   This step is mandatory: connecting refuses until the activated files match
+   the receipt.
+5. Start Bloodborne from BBLauncher, then select **Connect to game** here.
 
 The game's `install/CUSA03173-mods` folder is the activated overlay, not the
 export destination. An incorrect saved folder gets an inline explanation and
@@ -47,13 +52,17 @@ To play without AP, stop the AP client and shadPS4, deactivate the AP package in
 BBLauncher, and start the game there. **How to play without Archipelago** explains
 this sequence; it does not deactivate other BBLauncher mods.
 
-The same development flow is available from the CLI:
+The same flow is available from the CLI:
 
 ```powershell
-python -m bb_launcher bblauncher-export --settings launcher-settings.json --live-acceptance-candidate
-python -m bb_launcher bblauncher-verify --settings launcher-settings.json --live-acceptance-candidate
-python -m bb_launcher bblauncher-connect --settings launcher-settings.json --live-acceptance-candidate
+python -m bb_launcher bblauncher-export --settings launcher-settings.json
+python -m bb_launcher bblauncher-verify --settings launcher-settings.json
+python -m bb_launcher bblauncher-connect --settings launcher-settings.json
 ```
+
+`--live-acceptance-candidate` remains available for a future, not-yet-supported
+BBLauncher build during its own development acceptance; it is not needed for
+release 16.10.
 
 ## Responsibility split
 
@@ -115,7 +124,7 @@ and one-button launch from BBLauncher's Play button are unsupported. Deletion or
 tombstone mods are unsupported beside AP. Additive cosmetic/SFX mods are allowed
 only when they do not occupy an AP-owned path.
 
-The only accepted development candidates currently come from BBLauncher commit
+The supported build comes from BBLauncher commit
 `f092023f6cdf36a83ce735f7124b7835e9cf03b0` (Release 16.10 source):
 
 - UAC/symlink executable SHA-256
@@ -123,13 +132,18 @@ The only accepted development candidates currently come from BBLauncher commit
 - no-UAC/copy executable SHA-256
   `2cfa43cf05a16e0c0ebaf87275d295961afff32c91ea57962e83c474358881f0`.
 
-Both remain candidates. The opt-in flag records development intent; it is not a
-support override for arbitrary builds.
+Both hashes are in `SUPPORTED_BBLAUNCHER_BUILDS`; no operator opt-in is needed
+to select either. Any OTHER build's commit and hash must still complete its own
+live-acceptance run and be selected with the `--live-acceptance-candidate`
+flag as an explicit development opt-in; that flag is not a support override
+for an arbitrary build.
 
 ## Live acceptance record
 
-The implementation becomes supported only after both pinned Windows routes pass
-the complete matrix. Current evidence is deliberately narrower:
+The no-UAC/copy route completed live acceptance in-game and is supported; the
+UAC/symlink route uses the same package and receipt format but has not yet run
+its own full matrix, so treat it as unproven until its rows below fill in.
+Current evidence:
 
 | Check | no-UAC copy | UAC symlink |
 | --- | --- | --- |

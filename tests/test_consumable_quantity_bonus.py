@@ -160,6 +160,7 @@ class SlotDataTests(unittest.TestCase):
         slot_data = build_runtime_slot_data(
             FULL_POOL_ITEM_KEYS | STARTING_TOOL_KEYS, consumable_quantity_bonus=20)
         self.assertEqual(1, slot_data["sustain_item"]["quantity"])
+        self.assertEqual([1, 1], [row["quantity"] for row in slot_data["sustain_items"]])
 
     def test_bonused_rows_still_pass_binding_validation(self):
         checked = 0

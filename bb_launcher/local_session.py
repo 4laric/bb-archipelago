@@ -98,6 +98,40 @@ def _source_ap_tools(root: Path) -> tuple[Path, Path] | None:
     return (generate, server) if generate.is_file() and server.is_file() else None
 
 
+# Archipelago's own ModuleUpdate.py refuses outside this range ("Official
+# 3.11.9 through 3.13.x is supported"). Checked here too so a mismatch is a
+# clear, actionable message before Generate.py ever runs, instead of a raw
+# Python traceback surfacing through the launcher's progress log.
+_MIN_SUPPORTED_PYTHON = (3, 11, 9)
+_MAX_SUPPORTED_PYTHON_MINOR = (3, 13)
+
+
+def _require_supported_python(python: str) -> None:
+    try:
+        completed = subprocess.run(
+            [python, "-c", "import sys; print('.'.join(map(str, sys.version_info[:3])))"],
+            capture_output=True, text=True, timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise ValidationError(f"could not run the selected Python ({python}): {exc}") from exc
+    if completed.returncode != 0 or not completed.stdout.strip():
+        detail = completed.stderr.strip() or f"exit code {completed.returncode}"
+        raise ValidationError(f"could not read the version of the selected Python ({python}): {detail}")
+    raw = completed.stdout.strip()
+    try:
+        version = tuple(int(part) for part in raw.split("."))
+    except ValueError:
+        raise ValidationError(f"could not parse the version reported by {python}: {raw!r}") from None
+    if version < _MIN_SUPPORTED_PYTHON or version[:2] > _MAX_SUPPORTED_PYTHON_MINOR:
+        raise ValidationError(
+            f"Python {raw} at {python} is not supported by Archipelago "
+            f"(needs {'.'.join(map(str, _MIN_SUPPORTED_PYTHON))} through "
+            f"{_MAX_SUPPORTED_PYTHON_MINOR[0]}.{_MAX_SUPPORTED_PYTHON_MINOR[1]}.x). "
+            "Install a supported Python and select it under Python (source checkout only), "
+            "or use a packaged Archipelago release instead of a source checkout."
+        )
+
+
 def is_archipelago_root(ap_root: Path | str) -> bool:
     """Whether this folder is an Archipelago install the launcher recognises.
 
@@ -128,8 +162,10 @@ def discover_ap_tools(ap_root: Path | str, python_executable: Path | str | None 
         python = Path(python_executable).expanduser().resolve()
         if not python.is_file():
             raise ValidationError(f"the selected Python executable does not exist: {python}")
+        _require_supported_python(str(python))
         return APTools(root, (str(python), str(generate_py)), (str(python), str(server_py)))
     if source is not None and not getattr(sys, "frozen", False):
+        _require_supported_python(sys.executable)
         return APTools(root, (sys.executable, str(generate_py)), (sys.executable, str(server_py)))
 
     detail = " Select a Python executable for this source checkout." if generate_py.is_file() else ""

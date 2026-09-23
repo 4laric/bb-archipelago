@@ -146,7 +146,7 @@ playtest is:
 
 ## What to send back after a session
 
-In the launcher, click **Open Diagnostics** — it opens the folder with your
+In the launcher, open **Advanced** and click **Open Diagnostics** — it opens the folder with your
 session files. Send your host:
 
 1. **`ledger.json`** from the current session folder (`sessions\<long-hash>\`).
