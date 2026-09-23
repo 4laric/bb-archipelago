@@ -1,6 +1,7 @@
 import unittest
 import copy
 import tempfile
+from itertools import permutations
 from pathlib import Path
 
 from tools.bb_enemizer.boss_pool import (
@@ -304,6 +305,35 @@ class BossPoolTests(unittest.TestCase):
     def test_impossible_pool_is_refused_instead_of_dropping_boss(self):
         with self.assertRaisesRegex(ValueError, 'no complete'):
             assign_donors('seed', {'a': ['b'], 'b': ['a'], 'c': ['b']})
+        # Every arena has candidates and the union covers every donor, but
+        # three arenas compete for only two distinct donors. A global union
+        # or nonempty-candidate check cannot detect this impossible pool.
+        graph = {'a': ['d', 'e'], 'b': ['d', 'e'], 'c': ['d', 'e'],
+                 'd': ['a', 'b', 'c'], 'e': ['a', 'b', 'c']}
+        with self.assertRaisesRegex(ValueError, 'no complete'):
+            assign_donors('hall-subset', graph)
+
+        # Independent exhaustive oracle: every four-boss directed graph,
+        # compared with permutations rather than another matching algorithm.
+        roster = ('a', 'b', 'c', 'd')
+        edges = [(a, d) for a in roster for d in roster if a != d]
+        candidates = list(permutations(roster))
+        for mask in range(1 << len(edges)):
+            graph = {arena: [] for arena in roster}
+            for index, (arena, donor) in enumerate(edges):
+                if mask & (1 << index):
+                    graph[arena].append(donor)
+            possible = any(all(donor in graph[arena]
+                               for arena, donor in zip(roster, assignment))
+                           for assignment in candidates)
+            if possible:
+                assignment = assign_donors('exhaustive', graph)
+                self.assertEqual(set(roster), set(assignment.values()))
+                self.assertTrue(all(donor in graph[arena]
+                                    for arena, donor in assignment.items()))
+            else:
+                with self.assertRaisesRegex(ValueError, 'no complete'):
+                    assign_donors('exhaustive', graph)
 
     def test_same_map_disjoint_constructor_edits_compose_in_either_order(self):
         first = SOURCE.replace('$InitializeEvent(0, 10, 100);', '$InitializeEvent(0, 10, 300);')

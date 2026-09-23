@@ -373,9 +373,32 @@ def assign_donors(seed: str, compatible: Mapping[str, Sequence[str]], *,
         choices[arena] = candidates
     result = {}
 
+    def can_complete(remaining: list[str], used: set[str]) -> bool:
+        # A donor can be reachable from every remaining arena yet still leave
+        # a subset with too few distinct donors. Detect that with an augmenting
+        # matching instead of enumerating every doomed seeded permutation.
+        # This only prunes impossible branches; search keeps its original RNG
+        # order and therefore its existing seed-to-assignment behavior.
+        owners: dict[str, str] = {}
+
+        def augment(arena: str, visited: set[str]) -> bool:
+            for donor in choices[arena]:
+                if donor in used or donor in visited:
+                    continue
+                visited.add(donor)
+                owner = owners.get(donor)
+                if owner is None or augment(owner, visited):
+                    owners[donor] = arena
+                    return True
+            return False
+
+        return all(augment(arena, set()) for arena in remaining)
+
     def search(remaining: list[str], used: set[str]) -> bool:
         if not remaining:
             return True
+        if not can_complete(remaining, used):
+            return False
         arena = min(remaining, key=lambda key: (sum(donor not in used for donor in choices[key]), key))
         for donor in choices[arena]:
             if donor in used:
