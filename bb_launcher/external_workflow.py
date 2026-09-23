@@ -56,7 +56,7 @@ def _paths(settings):
     return install
 
 
-def _pin(settings, *, candidate):
+def _pin(settings):
     from .external import BBLauncherBuildPin
     if sys.platform != "win32":
         raise ValidationError("BBLauncher integration currently requires Windows and a directory install")
@@ -64,17 +64,23 @@ def _pin(settings, *, candidate):
     if executable is None or not executable.is_file() or executable.is_symlink():
         raise ValidationError("Select a regular BBLauncher executable")
     digest = sha256_file(executable)
-    if digest not in (LOCAL_CANDIDATE_SHA, LOCAL_COPY_SHA) or not candidate:
-        raise ValidationError("This BBLauncher build has not completed live acceptance. Use an explicitly pinned acceptance candidate for development testing.")
+    if digest not in (LOCAL_CANDIDATE_SHA, LOCAL_COPY_SHA):
+        raise ValidationError(
+            "This BBLauncher build is not recognized. The supported build is "
+            "release 16.10 (2026-08-09-f092023); select that executable."
+        )
+    # f092023 completed live acceptance in-game: it is fully supported, not a
+    # candidate, so no operator opt-in is required to select it.
     return BBLauncherBuildPin(build="2026-08-09-f092023" + ("-noUAC" if digest == LOCAL_COPY_SHA else ""), commit=LOCAL_CANDIDATE_COMMIT,
-                              executable_sha256=digest, live_acceptance_candidate=True)
+                              executable_sha256=digest, live_acceptance_candidate=False)
 
 
 def build_and_export(workflow: LauncherWorkflow, settings: LauncherSettings, options: EnemizerOptions,
-                     *, player_name="", progress=lambda _: None, allow_live_acceptance_candidate=False):
+                     *, player_name="", progress=lambda _: None, allow_live_acceptance_candidate=False,
+                     replace_existing=False):
     from .external import export_external_package, ExternalNamespace
     install = _paths(settings)
-    pin = _pin(settings, candidate=allow_live_acceptance_candidate)
+    pin = _pin(settings)
     prepared = workflow.prepare_seed(settings, options, player_name=player_name, progress=progress)
     client = next((p for p in prepared.plan.processes if p.name == CLIENT_PROCESS_NAME), None)
     if client is None:
@@ -87,6 +93,7 @@ def build_and_export(workflow: LauncherWorkflow, settings: LauncherSettings, opt
         suppression_manifest_sha256=sha256_file(settings.suppression_manifest),
         namespace=ExternalNamespace(prepared.build.cache_key, session_key(prepared.identity.seed, prepared.identity.slot)),
         allow_live_acceptance_candidate=allow_live_acceptance_candidate,
+        replace_existing=replace_existing,
     )
     progress(f"Exported {result.package_path}. Seed {prepared.identity.seed}; slot {prepared.identity.slot}. Activate with BBLauncher while the game is stopped, then verify before booting.")
     return result
@@ -95,7 +102,7 @@ def build_and_export(workflow: LauncherWorkflow, settings: LauncherSettings, opt
 def _receipt(settings, *, candidate):
     from .external import load_external_receipt
     install = _paths(settings)
-    pin = _pin(settings, candidate=candidate)
+    pin = _pin(settings)
     if settings.bblauncher_receipt is None:
         raise ValidationError("Select the exported AP mod receipt")
     receipt = load_external_receipt(settings.bblauncher_receipt, allow_live_acceptance_candidate=candidate)

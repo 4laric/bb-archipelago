@@ -45,18 +45,37 @@ EXTERNAL_RECEIPT_FORMAT = "bb-launcher-external-export-v1"
 ACTIVE_MODS_DIR_NAME = "Mods-Active (DO NOT DELETE)"
 PACKAGE_PREFIX = "Archipelago-"
 
-# Exact support pins are populated after live acceptance. Unknown, valid pins
-# remain usable but carry an informational compatibility status; live
-# acceptance must not be confused with receipt/file integrity validation.
-SUPPORTED_BBLAUNCHER_BUILDS: frozenset[tuple[str, str]] = frozenset()
-LIVE_ACCEPTANCE_CANDIDATES = MappingProxyType({
-    "f092023f6cdf36a83ce735f7124b7835e9cf03b0": frozenset({
-        # Release 16.10 UAC and no-UAC Windows binaries.  They share source
-        # paths but exercise BBLauncher's symlink and copy routes respectively.
-        "a990d5507f22d8b0590d8b9426519c98de6fe86042a61a32e679e4a1a66b2d0a",
-        "2cfa43cf05a16e0c0ebaf87275d295961afff32c91ea57962e83c474358881f0",
-    }),
+
+class ExternalPackageExists(ValidationError):
+    """The inactive Mods library already holds this exact package.
+
+    The package name is derived from the slot and the verified cache key, so
+    rebuilding the same seed with the same options lands on the same name.
+    The UI catches this to offer a replacement instead of a dead end; the
+    active package directory never takes this path.
+    """
+
+    def __init__(self, path: Path):
+        super().__init__(
+            f"a prepared mod for this seed already exists in BBLauncher's Mods "
+            f"library: {path}"
+        )
+        self.path = path
+
+# f092023 (release 16.10) completed live acceptance in-game and is fully
+# supported: no operator opt-in required.  Both hashes are the same build's
+# UAC and no-UAC Windows binaries, exercising BBLauncher's symlink and copy
+# routes respectively. Other valid build pins remain usable with an
+# informational unvalidated compatibility status.
+SUPPORTED_BBLAUNCHER_BUILDS: frozenset[tuple[str, str]] = frozenset({
+    ("f092023f6cdf36a83ce735f7124b7835e9cf03b0",
+     "a990d5507f22d8b0590d8b9426519c98de6fe86042a61a32e679e4a1a66b2d0a"),
+    ("f092023f6cdf36a83ce735f7124b7835e9cf03b0",
+     "2cfa43cf05a16e0c0ebaf87275d295961afff32c91ea57962e83c474358881f0"),
 })
+# Legacy candidate metadata remains readable. Unknown valid build pins do not
+# require an operator opt-in; receipt and activated-file integrity are separate.
+LIVE_ACCEPTANCE_CANDIDATES: "MappingProxyType[str, frozenset[str]]" = MappingProxyType({})
 
 
 @dataclass(frozen=True)
@@ -303,6 +322,42 @@ def _refuse_casefold_child(directory: Path, name: str, label: str) -> None:
         )
 
 
+def _replaceable_package(mods: Path, package_name: str, *, replace: bool) -> Path | None:
+    """The existing inactive package this export may replace, or None.
+
+    Without ``replace`` any name collision is the typed refusal.  With it, the
+    collision must be exactly one regular directory that this companion could
+    have written (its own prefix, no reparse point); anything else stays a
+    refusal, so a player can never be talked into deleting a foreign mod.
+    """
+    try:
+        matches = [
+            entry for entry in mods.iterdir()
+            if entry.name.casefold() == package_name.casefold()
+        ]
+    except OSError as exc:
+        raise ValidationError(f"could not inspect BBLauncher Mods directory {mods}: {exc}") from exc
+    if not matches:
+        return None
+    if not replace:
+        raise ExternalPackageExists(matches[0])
+    if len(matches) != 1:
+        raise ValidationError(
+            f"more than one entry named like {package_name} in BBLauncher Mods directory"
+        )
+    existing = matches[0]
+    if (
+        not existing.name.startswith(PACKAGE_PREFIX)
+        or not existing.is_dir()
+        or _is_reparse(existing)
+    ):
+        raise ValidationError(
+            f"existing entry in BBLauncher Mods directory is not a replaceable companion "
+            f"package: {existing.name}"
+        )
+    return existing
+
+
 def _manifest_files(build: BuildResult) -> tuple[ExternalFile, ...]:
     records = build.manifest.get("files")
     if not isinstance(records, list) or not records:
@@ -365,8 +420,16 @@ def export_external_package(
     suppression_manifest_sha256: str | None = None,
     created_at: datetime | None = None,
     allow_live_acceptance_candidate: bool = False,
+    replace_existing: bool = False,
 ) -> ExternalExport:
-    """Publish one data-only inactive package plus its out-of-band receipt."""
+    """Publish one data-only inactive package plus its out-of-band receipt.
+
+    ``replace_existing`` lets a rebuild of the same seed replace the inactive
+    package this companion exported earlier.  Only a regular directory carrying
+    the companion's own package prefix is ever removed, and only from the
+    inactive library: an activated copy still refuses, because BBLauncher owns
+    deactivation.
+    """
 
     selected = SeedIdentity.from_dict(identity.as_dict())
     verified = SeedCache(build.path.parent).verify(build.path, expected_key=build.cache_key)
@@ -405,7 +468,7 @@ def export_external_package(
     records = _manifest_files(verified)
     package_name = f"{PACKAGE_PREFIX}{_safe_slot(selected.slot)}-{verified.cache_key[:12]}"
     target = mods / package_name
-    _refuse_casefold_child(mods, package_name, "BBLauncher Mods directory")
+    stale = _replaceable_package(mods, package_name, replace=replace_existing)
     active_root = mods.with_name(ACTIVE_MODS_DIR_NAME)
     if active_root.exists() or active_root.is_symlink():
         active = _regular_directory(active_root, "BBLauncher active Mods directory")
@@ -455,7 +518,9 @@ def export_external_package(
         _write_immutable_json(receipt_path, receipt.as_dict())
         # Receipt first: a crash may leave a harmless orphan receipt, but a
         # published package can never exist without its verification authority.
-        _refuse_casefold_child(mods, package_name, "BBLauncher Mods directory")
+        stale = _replaceable_package(mods, package_name, replace=replace_existing)
+        if stale is not None:
+            shutil.rmtree(stale)
         os.rename(stage, target)
     finally:
         if stage.exists() and not _is_reparse(stage):

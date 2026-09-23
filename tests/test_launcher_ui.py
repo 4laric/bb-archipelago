@@ -599,6 +599,8 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             [row["token_goods_id"] for row in rows],
         )
         self.assertLessEqual({"token_goods_id", "item_lot_id", "ack_flag"}, set(rows[0]))
+        cleanup = common["rows"]["toast_placeholders"]
+        self.assertFalse(cleanup)
 
     def test_cathedral_build_failure_preserves_diagnostics_and_does_not_activate(self):
         toolchain = FakeToolchain()
@@ -1145,39 +1147,36 @@ class LauncherUiWorkflowTests(unittest.TestCase):
 
     def test_ui_contract_exposes_a_real_randomize_enemies_control(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('text="Randomize Enemies"', source)
+        self.assertIn('"Randomize enemies"', source)
         self.assertIn('text="Randomize & Launch"', source)
         self.assertIn("tools.bb_enemizer.cli", (self.repo / "bb_launcher" / "workflow.py").read_text())
         self.assertIn("BBEnemizerWriter.csproj", (self.repo / "bb_launcher" / "workflow.py").read_text())
 
-    def test_ui_contract_offers_the_override_checkbox_and_never_persists_it(self):
-        """bb-archipelago#183: opt-in per session, and impossible to leave on.
-
-        The UI writes every other toggle into the saved setup; this one is
-        absent from both the save and the load on purpose, so an operator who
-        used it once cannot silently launch a player's seed unvalidated a week
-        later.
+    def test_session_override_checkboxes_are_retired_from_the_gui(self):
+        """These were operator-only, never-saved escape hatches (bb-archipelago
+        #183, #347) that had outlived their usefulness as GUI controls. The
+        vars stay (permanently False, since nothing sets them any more) so the
+        background-thread call signatures below them are untouched; only the
+        checkbox text goes. The CLI doctor command keeps the real escape hatch.
         """
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn("Allow suppression binder mismatch (operators only, not saved)", source)
+        for retired in ('"Allow suppression binder mismatch"', '"Enable research captures"',
+                        '"Allow AP seed/slot mismatch"'):
+            self.assertNotIn(retired, source)
         self.assertIn("allow_suppression_mismatch=allow_suppression_mismatch", source)
-        save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
-        load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
-        # The control: the neighbouring toggles ARE persisted, so this is a
-        # statement about this knob, not about an inert pair of blocks.
-        self.assertIn("allow_tier_mixing", save)
-        self.assertIn("allow_tier_mixing", load)
-        self.assertNotIn("allow_suppression_mismatch", save)
-        self.assertNotIn("allow_suppression_mismatch", load)
-
-    def test_ui_contract_offers_research_captures_and_never_persists_it(self):
-        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn("Enable research captures (playtest diagnostics, not saved)", source)
         self.assertIn("research_captures=research_captures", source)
         save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
         load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
-        self.assertNotIn("research_captures", save)
-        self.assertNotIn("research_captures", load)
+        # The control: the neighbouring toggles ARE persisted, so this is a
+        # statement about these knobs, not about an inert pair of blocks.
+        self.assertIn("allow_tier_mixing", save)
+        self.assertIn("allow_tier_mixing", load)
+        for retired in ("allow_suppression_mismatch", "research_captures", "allow_seed_mismatch"):
+            self.assertNotIn(retired, save)
+            self.assertNotIn(retired, load)
+        cli = (self.repo / "bb_launcher" / "cli.py").read_text(encoding="utf-8")
+        self.assertIn("--allow-suppression-mismatch", cli)
+        self.assertIn("--allow-seed-mismatch", cli)
 
     def _build_widget_tree(self):
         """(parent-of-var, widgets-by-parent-var) read out of `_build` itself.
@@ -1216,12 +1215,18 @@ class LauncherUiWorkflowTests(unittest.TestCase):
                 if label is not None:
                     tabs[label] = node.args[0].id
                 continue
-            if not node.args or not isinstance(node.args[0], ast.Name):
+            positional = [arg for arg in node.args if not (
+                isinstance(arg, ast.Name) and arg.id in {"tk", "ttk", "self"}
+            )]
+            if not positional or not isinstance(positional[0], ast.Name):
                 continue
-            parent = node.args[0].id
+            parent = positional[0].id
             for keyword in node.keywords:
                 if keyword.arg == "text" and isinstance(keyword.value, ast.Constant):
                     texts_by_parent.setdefault(parent, set()).add(keyword.value.value)
+            for arg in positional[1:]:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    texts_by_parent.setdefault(parent, set()).add(arg.value)
             for statement in ast.walk(build):
                 if isinstance(statement, ast.Assign) and statement.value is node:
                     for target in statement.targets:
@@ -1232,31 +1237,20 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         return tabs, parent_of, texts_by_parent
 
     def test_ui_contract_tabs_the_setup_and_the_enemizer(self):
-        """The normal flow stays small; advanced controls have their own tab.
+        """The normal flow stays small; advanced controls have their own page.
 
         A single tall column let Tk crush the only weighted row to zero on a
         short display, taking the Randomize Enemies toggle with it.
         """
         tabs, parent_of, texts_by_parent = self._build_widget_tree()
-        self.assertEqual(set(tabs), {"Play", "Enemy randomization", "Troubleshooting"})
-        enemy_tab = tabs["Enemy randomization"]
+        self.assertEqual(set(tabs), {"Play", "Enemies", "Advanced"})
+        enemy_tab = tabs["Enemies"]
         setup_tab = tabs["Play"]
-        troubleshooting_tab = tabs["Troubleshooting"]
+        troubleshooting_tab = tabs["Advanced"]
         self.assertEqual(parent_of[enemy_tab], "notebook")
         self.assertEqual(parent_of[setup_tab], "notebook")
-        self.assertLessEqual(
-            {
-                "Randomize Enemies",
-                "Allow tier mixing (experimental)",
-                "Normalize enemy stats (experimental playtest)",
-                "Boss playtest: BSB at Cleric Beast (other enemies unchanged; includes scaling)",
-                "Preserve locomotion (experimental: incomplete tags)",
-                "Enemy seed",
-            },
-            texts_by_parent[enemy_tab],
-        )
-        # The Troubleshooting tab hosts a scrolling canvas; its controls sit on
-        # the body frame inside it, so gather texts from the tab's descendants.
+        # Every page hosts a scrolling canvas; its controls sit on the body
+        # frame inside it, so gather texts from the page's descendants.
         def descendants(frame: str) -> set[str]:
             found = {frame}
             grew = True
@@ -1268,19 +1262,33 @@ class LauncherUiWorkflowTests(unittest.TestCase):
                         grew = True
             return found
 
-        troubleshooting_texts: set[str] = set()
-        for frame in descendants(troubleshooting_tab):
-            troubleshooting_texts |= texts_by_parent.get(frame, set())
-        self.assertEqual(parent_of[troubleshooting_tab], "notebook")
-        # The operator override is available without cluttering normal setup.
-        self.assertIn(
-            "Allow suppression binder mismatch (operators only, not saved)",
+        def texts_under(tab: str) -> set[str]:
+            found: set[str] = set()
+            for frame in descendants(tab):
+                found |= texts_by_parent.get(frame, set())
+            return found
+
+        # Enemies is down to two decisions; the BSB single-boss playtest mode
+        # and every fine-tuning knob (seed, tier mixing, locomotion, stat
+        # normalization) live on Advanced instead, per player, not behind a
+        # second disclosure toggle nested inside this tab.
+        enemy_texts = texts_under(enemy_tab)
+        self.assertLessEqual(
+            {"Randomize enemies", "Boss shuffle (reviewed encounters)"}, enemy_texts,
+        )
+        for retired in ("Allow tier mixing", "Normalize enemy stats", "Preserve locomotion",
+                        "Enemy seed", "Boss playtest: BSB at Cleric Beast",
+                        "BSB at Cleric Beast (playtest)"):
+            self.assertNotIn(retired, enemy_texts)
+        troubleshooting_texts = texts_under(troubleshooting_tab)
+        self.assertLessEqual(
+            {"Allow tier mixing", "Normalize enemy stats", "Preserve locomotion", "Enemy seed"},
             troubleshooting_texts,
         )
-        self.assertNotIn(
-            "Allow suppression binder mismatch (operators only, not saved)",
-            texts_by_parent[enemy_tab],
-        )
+        self.assertEqual(parent_of[troubleshooting_tab], "notebook")
+        # The operator override is available without cluttering normal setup.
+        for retired_tab in (troubleshooting_tab, enemy_tab, setup_tab):
+            self.assertNotIn("Allow suppression binder mismatch", texts_under(retired_tab))
 
     def test_ui_contract_keeps_the_log_and_status_out_of_the_notebook(self):
         """The progress log is launch progress, so no tab can hide it."""
@@ -1303,10 +1311,10 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         """
         import ast
 
-        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        source = (self.repo / "bb_launcher" / "theme.py").read_text(encoding="utf-8")
         theme = next(
             node for node in ast.walk(ast.parse(source))
-            if isinstance(node, ast.FunctionDef) and node.name == "_apply_theme"
+            if isinstance(node, ast.FunctionDef) and node.name == "apply_theme"
         )
         configured: dict[str, dict[str, ast.expr]] = {}
         mapped: dict[str, dict[str, ast.expr]] = {}
@@ -1330,9 +1338,11 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         """bb-archipelago#198: the #191 notebook was never given a theme entry.
 
         Unthemed, clam draws the selected tab as an empty dashed rectangle and
-        the unselected one as a grey ghost on the dark panel. The colours must
-        come from the THEME_ constants, not from fresh literals that can drift
-        away from the rest of the window.
+        the unselected one as a grey ghost on the dark panel. The page switcher
+        is now a tab-less notebook driven by the sidebar, so the contract is:
+        every colour any style takes comes from a THEME_ constant, never a
+        fresh literal that can drift away from the rest of the window, and the
+        stock tab strip (with its dashed focus ring) is laid out away.
         """
         import ast
 
@@ -1341,49 +1351,35 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         # a helper that found nothing cannot pass this test.
         self.assertIn("TButton", configured)
         self.assertIn("TButton", mapped)
+        self.assertIn("Pages.TNotebook", configured)
+        self.assertIn("Pages.TNotebook.Tab", configured)
 
-        self.assertIn("TNotebook", configured)
-        self.assertIn("TNotebook.Tab", configured)
-        self.assertIn("TNotebook.Tab", mapped)
+        colour_options = {
+            "background", "foreground", "bordercolor", "fieldbackground", "lightcolor",
+            "darkcolor", "troughcolor", "focuscolor", "arrowcolor", "insertcolor",
+            "indicatorbackground", "indicatorforeground", "selectbackground",
+            "selectforeground",
+        }
 
-        tab = configured["TNotebook.Tab"]
-        for option in ("background", "foreground", "padding"):
-            self.assertIn(option, tab, f"TNotebook.Tab has no {option}")
-        for option in ("background", "foreground", "bordercolor", "focuscolor"):
-            value = tab[option]
-            self.assertIsInstance(
-                value, ast.Name, f"TNotebook.Tab {option} is a literal, not a THEME_ constant"
-            )
-            self.assertTrue(
-                value.id.startswith("THEME_"),
-                f"TNotebook.Tab {option} uses {value.id}, not a THEME_ constant",
-            )
-        self.assertIsInstance(
-            configured["TNotebook"]["background"], ast.Name
-        )
-        self.assertTrue(configured["TNotebook"]["background"].id.startswith("THEME_"))
+        def assert_named(value: ast.expr, where: str) -> None:
+            self.assertIsInstance(value, ast.Name, f"{where} is a literal, not a THEME_ constant")
+            self.assertTrue(value.id.startswith("THEME_"), f"{where} uses {value.id}")
 
-        # The selected/active states are the illegible ones in the screenshot,
-        # so both must be remapped for both colours.
-        for option in ("background", "foreground"):
-            states = mapped["TNotebook.Tab"][option]
-            self.assertIsInstance(states, ast.List)
-            named = {
-                element.elts[0].value
-                for element in states.elts
-                if isinstance(element, ast.Tuple) and isinstance(element.elts[0], ast.Constant)
-            }
-            self.assertLessEqual({"selected", "active"}, named, f"{option} misses a state")
-        selected_fg = next(
-            element.elts[1] for element in mapped["TNotebook.Tab"]["foreground"].elts
-            if element.elts[0].value == "selected"
-        )
-        self.assertIsInstance(selected_fg, ast.Name)
-        self.assertTrue(selected_fg.id.startswith("THEME_"))
+        for style, options in configured.items():
+            for option, value in options.items():
+                if option in colour_options:
+                    assert_named(value, f"{style} {option}")
+        for style, options in mapped.items():
+            for option, states in options.items():
+                if option not in colour_options:
+                    continue
+                self.assertIsInstance(states, ast.List)
+                for element in states.elts:
+                    assert_named(element.elts[1], f"{style} {option} map")
 
-        # The dashed border is a focus element in clam's stock tab layout; the
-        # fix relayouts the tab to drop it.
-        self.assertIn("TNotebook.Tab", laid_out)
+        # The sidebar drives the pages, so the stock tab strip goes away.
+        self.assertIn("Pages.TNotebook.Tab", laid_out)
+        self.assertIn("Pages.TNotebook", laid_out)
 
     def test_ui_contract_gates_the_enemizer_inputs_across_both_tabs(self):
         """The enemizer path fields moved tabs; the disable group must follow."""
@@ -1394,13 +1390,15 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             ENEMY_FIELDS, {"map_studio_source", "enemy_inventory", "soulsformats_next"}
         )
         self.assertIn("self._enemy_widgets.extend((entry, button))", build)
-        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion))", build)
+        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))", build)
         toggle = source.split("def _toggle_enemy_fields")[1].split("def _state_root")[0]
         self.assertIn("for widget in self._enemy_widgets", toggle)
         self.assertIn('widget.configure(state=state)', toggle)
-        # Neither weighted panel can be starved to nothing again.
-        self.assertIn("outer.rowconfigure(2, weight=1, minsize=", build)
-        self.assertIn("outer.rowconfigure(3, weight=2, minsize=", build)
+        # The page row can never be starved to nothing again, and the details
+        # drawer only takes weight while it is shown.
+        self.assertIn("outer.rowconfigure(0, weight=1, minsize=", build)
+        details = source.split("def _set_session_details_visible")[1].split("def _toggle_session_details")[0]
+        self.assertIn("rowconfigure(1, weight=2 if visible else 0, minsize=", details)
 
     def test_ui_contract_exposes_a_session_status_panel(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
@@ -1423,11 +1421,17 @@ class LauncherUiWorkflowTests(unittest.TestCase):
 
     def test_everyday_launch_controls_disclose_only_when_needed(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('text="Advanced enemy options"', source)
-        self.assertIn("self._enemy_advanced_widgets", source)
-        self.assertIn("widget.grid_remove()", source)
-        self.assertIn("self._show_player_choice(len(names) > 1)", source)
-        self.assertIn("self._show_player_choice(False)", source)
+        # The Enemies page's own "Advanced enemy options" disclosure toggle is
+        # retired: fine-tuning lives permanently on the Advanced page instead
+        # of behind a second nested toggle.
+        self.assertNotIn('"Advanced enemy options"', source)
+        self.assertNotIn("_enemy_advanced_widgets", source)
+        # Hidden only for the unambiguous single-slot case: visible and
+        # free-typed with no seed loaded (Create & host's solo generation
+        # needs somewhere to type a name), visible and locked to the real
+        # slots when there is more than one.
+        self.assertIn("self._show_player_choice(len(names) != 1)", source)
+        self.assertIn("self._show_player_choice(True)", source)
 
     def test_launch_gate_names_missing_setup_instead_of_failing_late(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
@@ -1514,11 +1518,14 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         app._path_field_changed("ap_request")
 
         app._accept_ap_request.assert_not_called()
-        app.player_combo.configure.assert_called_once_with(values=())
-        app._show_player_choice.assert_called_once_with(False)
-        self.assertEqual("", app.player_name.get())
+        app.player_combo.configure.assert_called_once_with(values=(), state="normal")
+        app._show_player_choice.assert_called_once_with(True)
+        # Player name is preserved, not wiped: with no seed loaded it may be
+        # a name typed in for a solo generation on Create & host, not stale
+        # identity from the cleared seed.
+        self.assertEqual("Hunter", app.player_name.get())
         self.assertEqual("", app.enemy_seed.get())
-        self.assertEqual("Choose a seed to see its player and build.", app.seed_summary.get())
+        self.assertEqual("Choose a seed (.zip or .bbseed.json) to see its player and build.", app.seed_summary.get())
         app._refresh_launch_gate.assert_called_once_with()
         app._refresh_status.assert_called_once_with()
 
@@ -1547,7 +1554,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
     def test_ui_contract_wires_the_secondary_actions(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         for label in (
-            "Launch Vanilla", "Undo Last Build", "Rebuild", "Open Logs & Diagnostics",
+            "Launch Vanilla", "Undo Last Build", "Rebuild", "Open Diagnostics",
             "Check Setup", "Report a Bad Enemy",
         ):
             self.assertIn(f'text="{label}"', source)
@@ -1557,6 +1564,31 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         # the state root, and never touches the game.
         for method in ("_start_enemy_report", "_run_enemy_report", "write_report", "load_context"):
             self.assertIn(method, source)
+
+    def test_create_and_host_links_to_the_full_options_builder(self):
+        """bb-archipelago: the solo form only ever covered name + DLC; the
+        real option surface (goal, item pool, deathlink, ...) is the wizard
+        that already renders from the apworld's own metadata, not a second
+        hand-maintained catalog in Tk."""
+        source = (self.repo / "bb_launcher" / "local_session_ui.py").read_text(encoding="utf-8")
+        self.assertIn('WIZARD_URL = "https://peliarch.ca/bb/wizard.html"', source)
+        self.assertIn("webbrowser.open(WIZARD_URL)", source)
+        self.assertIn("Build a custom yaml", source)
+
+    def test_create_and_host_tab_uses_add_not_a_numeric_insert(self):
+        """A packaged release crashed on launch with 'Slave index 2 out of
+        bounds': the bundled Tcl/Tk there rejects a numeric
+        notebook.insert(2, ...) one past the last existing tab, where the dev
+        machine's newer Tk tolerated it as an append. notebook.add() has no
+        such version-dependent ambiguity and lands in the same place, since
+        this constructor runs after Play and Enemies are added and before
+        Advanced is."""
+        source = (self.repo / "bb_launcher" / "local_session_ui.py").read_text(encoding="utf-8")
+        self.assertIn('notebook.add(host_frame, text="Create & host")', source)
+        code = "\n".join(
+            line for line in source.splitlines() if not line.strip().startswith("#")
+        )
+        self.assertNotIn("notebook.insert(", code)
 
     def test_ui_contract_can_generate_the_launch_plan(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
@@ -1571,11 +1603,13 @@ class LauncherUiWorkflowTests(unittest.TestCase):
 
     def test_ui_contract_has_a_bloodborne_theme(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        theme = (self.repo / "bb_launcher" / "theme.py").read_text(encoding="utf-8")
         self.assertIn("_apply_theme", source)
-        self.assertIn('theme_use("clam")', source)
-        self.assertIn('#8f1d24', source)  # blood accent
-        self.assertIn('#c2a14d', source)  # lamp-light gold
-        self.assertIn('#0d1117', source)  # night background
+        self.assertIn("apply_theme(self.root, self.ttk)", source)
+        self.assertIn('theme_use("clam")', theme)
+        self.assertIn('THEME_BLOOD = "#8f1d24"', theme)  # blood accent
+        self.assertIn('THEME_GOLD = "#c9a95a"', theme)  # lamp-light gold
+        self.assertIn('THEME_BACKGROUND = "#0c0f15"', theme)  # night background
 
     def test_default_field_values_fill_only_verified_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -1643,8 +1677,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             selected_manifest = root / "selected.json"
             selected_binder.write_bytes(b"selected")
             selected_manifest.write_text("{}", encoding="utf-8")
-            self.assertEqual(
-                {},
+            self.assertFalse(
                 repair_stale_packaged_suppression_paths(
                     {
                         "suppression_binder": str(selected_binder),
@@ -2188,8 +2221,8 @@ class HiddenDetailsLayoutTests(unittest.TestCase):
         from unittest.mock import Mock
         app = Mock()
         LauncherApp._set_session_details_visible(app, False)
-        app.log_frame.master.rowconfigure.assert_called_once_with(3, weight=0, minsize=0)
+        app.log_frame.master.rowconfigure.assert_called_once_with(1, weight=0, minsize=0)
         app.log_frame.grid_remove.assert_called_once()
         LauncherApp._set_session_details_visible(app, True)
-        app.log_frame.master.rowconfigure.assert_called_with(3, weight=2, minsize=140)
+        app.log_frame.master.rowconfigure.assert_called_with(1, weight=2, minsize=120)
         app.log_frame.grid.assert_called_once()

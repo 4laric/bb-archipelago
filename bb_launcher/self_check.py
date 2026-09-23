@@ -4,8 +4,12 @@ Run from the frozen package (``BloodborneAPLauncher.exe --self-check report.json
 this proves what CI could not see before beta 2 shipped: that every apworld
 table the launcher imports is bundled, that the seed contract can be built,
 that every native tool the seed build calls is next to the executable, and
-that the bloodborne.apworld the launcher installs for players ships with it.
-It never touches game files or the network.
+that the bloodborne.apworld the launcher installs for players ships with it,
+and that the GUI itself actually constructs on the packaged build's bundled
+Tcl/Tk -- caught after a packaged release crashed on launch (bb-archipelago:
+"Slave index 2 out of bounds") with a bug no source-only or headless-Linux
+check could see, because nothing had ever built a real ``LauncherApp`` on a
+real Tk root. It never touches game files or the network.
 """
 
 from __future__ import annotations
@@ -28,6 +32,50 @@ BUNDLED_TOOLS = (
     "bb-ap-client.exe",
     "BBBossEncounterBuilder/BBBossEncounterBuilder.exe",
 )
+
+
+def _check_gui_boot() -> dict[str, Any]:
+    """Construct the real window on a real Tk root, then tear it down.
+
+    Never calls ``mainloop()``: reaching this point without an exception is
+    the whole check. A widget-construction bug (a bad ``notebook.insert``
+    index, a missing import) raises during ``LauncherApp.__init__`` -- the
+    class of bug the source-text/AST contract tests in ``tests/`` cannot see,
+    because none of them build a real widget tree.
+
+    Headless CI (this repo's Linux unit-test job) has no display at all,
+    which is an environment limitation, not a code defect: that failure mode
+    is reported as ``skipped``, not a problem, so it can never fail this
+    check or the tests that call it on Linux. The Windows packaging job's
+    frozen-exe smoke test has a real desktop session and is where this check
+    is actually load-bearing.
+    """
+    import tempfile
+    import traceback
+
+    try:
+        import tkinter as tk
+
+        from .ui import LauncherApp
+    except Exception as error:  # noqa: BLE001 - the report is the point
+        return {"ok": False, "skipped": False, "error": f"{error!r}", "traceback": traceback.format_exc()}
+    root = None
+    try:
+        root = tk.Tk()
+    except tk.TclError as error:
+        if "no display" in str(error).lower():
+            return {"ok": True, "skipped": True, "error": f"{error!r}", "traceback": None}
+        return {"ok": False, "skipped": False, "error": f"{error!r}", "traceback": traceback.format_exc()}
+    try:
+        root.withdraw()
+        settings_path = Path(tempfile.mkdtemp()) / "self-check-settings.json"
+        LauncherApp(root, repo_root=resource_root(), settings_path=settings_path)
+    except Exception as error:  # noqa: BLE001 - the report is the point
+        return {"ok": False, "skipped": False, "error": f"{error!r}", "traceback": traceback.format_exc()}
+    else:
+        return {"ok": True, "skipped": False, "error": None, "traceback": None}
+    finally:
+        root.destroy()
 
 
 def run_self_check(report: Path | None, *, require_bundled_tools: bool | None = None) -> int:
@@ -69,6 +117,7 @@ def run_self_check(report: Path | None, *, require_bundled_tools: bool | None = 
             "runtime_items": len(slot_data["runtime_items"]),
             "runtime_locations": len(slot_data["runtime_locations"]),
             "sustain_item": slot_data.get("sustain_item") is not None,
+            "sustain_items": len(slot_data.get("sustain_items", [])),
         }
         for name, count in result["world"].items():
             if count in (0, False):
@@ -112,6 +161,10 @@ def run_self_check(report: Path | None, *, require_bundled_tools: bool | None = 
     result["apworld"] = {"path": str(apworld), "present": apworld.is_file()}
     if require_bundled_tools and not apworld.is_file():
         result["problems"].append(f"bundled bloodborne.apworld missing: {apworld}")
+
+    result["gui"] = _check_gui_boot()
+    if not result["gui"]["ok"]:
+        result["problems"].append(f"GUI failed to construct: {result['gui']['error']}")
 
     result["ok"] = not result["problems"]
     text = json.dumps(result, indent=2, sort_keys=True) + "\n"

@@ -14,7 +14,7 @@ labels: ["needs-game"]
 
 **What happened instead:**
 
-**Diagnostics:** in the launcher, click **Open Diagnostics** and attach
+**Diagnostics:** in the launcher's **Advanced** page, click **Open Diagnostics** and attach
 `ledger.json` from the newest `sessions\<long-hash>` folder, plus the AP
 client console text if you can copy it.
 
