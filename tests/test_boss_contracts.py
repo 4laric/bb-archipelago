@@ -1,4 +1,6 @@
 import hashlib
+import shutil
+import subprocess
 import tempfile
 import unittest
 from dataclasses import replace
@@ -11,11 +13,13 @@ from tools.bb_enemizer.boss_contracts import (
     AMELIA_PACKAGE,
     AMYGDALA_ARENA,
     AMYGDALA_PACKAGE,
+    ARENAS,
     actor_addition_requirements,
     BSB_ARENA,
     BSB_PACKAGE,
     CLERIC_ARENA,
     CLERIC_PACKAGE,
+    contract_capability,
     EBRIETAS_ARENA,
     EBRIETAS_PACKAGE,
     COMPATIBILITY,
@@ -25,6 +29,7 @@ from tools.bb_enemizer.boss_contracts import (
     event_blocks,
     patch_contract_swap,
     plan_contract_shuffle,
+    primary_initialization_requirements,
     plan_contract_swap,
 )
 from tools.bb_enemizer.inventory import load_slots
@@ -171,7 +176,10 @@ class ClericArenaContractTests(unittest.TestCase):
         self.assertEqual({0, 12301702, 12304702, 12304703, 12304704, 12304707, 12304715}, changed)
         self.assertEqual(before[12301700], after[12301700])
         self.assertIn("ForceAnimationPlayback(2300810, 3028", after[12301702])
-        self.assertNotIn("SetCharacterInvincibility(2300810", after[12301702])
+        self.assertLess(after[12301702].index("SetCharacterInvincibility(2300810, Enabled);"),
+                        after[12301702].index("    WaitFor(\n"))
+        self.assertLess(after[12301702].index("    WaitFor(\n"),
+                        after[12301702].index("SetCharacterInvincibility(2300810, Disabled);"))
         self.assertIn("CharacterHasEventMessage(2300810, 100)", after[12304703])
         self.assertIn("SetLockcamSlotNumber(23, 0, 1)", after[12304704])
         self.assertIn("CreateNPCPart(2300810", after[12304919])
@@ -256,7 +264,10 @@ class ClericArenaContractTests(unittest.TestCase):
         changed = {event_id for event_id in before if before[event_id] != after[event_id]}
         self.assertEqual({0, 12301702, 12304702, 12304703, 12304704, 12304707, 12304715}, changed)
         self.assertEqual(before[12301700], after[12301700])
-        self.assertNotIn("SetCharacterInvincibility(2300810", after[12301702])
+        self.assertLess(after[12301702].index("SetCharacterInvincibility(2300810, Enabled);"),
+                        after[12301702].index("    WaitFor(\n"))
+        self.assertLess(after[12301702].index("    WaitFor(\n"),
+                        after[12301702].index("SetCharacterInvincibility(2300810, Disabled);"))
         self.assertIn("CreateNPCPart(2300810", after[12304919])
         self.assertIn("ForceAnimationPlayback(2300810, 3035", after[12304922])
 
@@ -353,7 +364,8 @@ class ClericArenaContractTests(unittest.TestCase):
         self.assertEqual(before[12421800], after[12421800])
         self.assertIn("HasDamageType(2420800, 10000, DamageType.Unspecified)", after[12421802])
         self.assertIn("ForceAnimationPlayback(2420800, 3028", after[12421802])
-        self.assertNotIn("SetCharacterImmortality(2420800", after[12421802])
+        self.assertIn("SetCharacterImmortality(2420800, Enabled)", after[12421802])
+        self.assertIn("SetCharacterImmortality(2420800, Disabled)", after[12421802])
         self.assertNotIn("SetSpEffect(2420800, 5647", after[12421802])
         self.assertIn("DisplayBossHealthBar(Enabled, 2420800, 0, 500000)", after[12424802])
         self.assertIn("SetLockcamSlotNumber(24, 2, 1)", after[12424804])
@@ -370,7 +382,9 @@ class ClericArenaContractTests(unittest.TestCase):
         self.assertEqual(before[12421800], after[12421800])
         self.assertIn("HasDamageType(2420800, 10000, DamageType.Unspecified)", after[12421802])
         self.assertIn("ForceAnimationPlayback(2420800, 7001, false", after[12421802])
-        self.assertNotIn("SetCharacterImmortality(2420800", after[12421802])
+        self.assertIn("SetCharacterImmortality(2420800, Enabled)", after[12421802])
+        self.assertIn("SetCharacterImmortality(2420800, Disabled)", after[12421802])
+        self.assertNotIn("SetSpEffect(2420800, 5647", after[12421802])
         self.assertIn("DisplayBossHealthBar(Enabled, 2420800, 0, 209000)", after[12424802])
         self.assertIn("CharacterHasEventMessage(2420800, 20)", after[12424803])
         self.assertIn("SetLockcamSlotNumber(24, 2, 1)", after[12424804])
@@ -414,17 +428,21 @@ class ContractPlanningTests(unittest.TestCase):
         self.assertEqual(508000, first["health_bar"]["label"])
         self.assertEqual(5, len(first["part_initializers"]))
 
-    def test_reviewed_registry_exposes_the_six_package_compatible_pool(self):
+    def test_capability_registry_exposes_the_six_package_pool(self):
         self.assertEqual({"blood-starved-beast", "darkbeast-paarl", "cleric-beast", "vicar-amelia", "amygdala", "ebrietas"},
                          {package.key for package in PACKAGES})
-        self.assertEqual(("darkbeast-paarl", "cleric-beast", "vicar-amelia"),
-                         COMPATIBILITY[BSB_ARENA.key])
-        self.assertEqual(("blood-starved-beast", "cleric-beast", "vicar-amelia", "amygdala", "ebrietas"),
-                         COMPATIBILITY[PAARL_ARENA.key])
-        self.assertEqual(("cleric-beast", "amygdala"), COMPATIBILITY[AMELIA_ARENA.key])
-        self.assertEqual(("vicar-amelia", "cleric-beast"), COMPATIBILITY[AMYGDALA_ARENA.key])
-        self.assertEqual(("amygdala", "cleric-beast", "blood-starved-beast"),
-                         COMPATIBILITY[EBRIETAS_ARENA.key])
+        self.assertEqual({"darkbeast-paarl", "cleric-beast", "vicar-amelia", "ebrietas"},
+                         set(COMPATIBILITY[BSB_ARENA.key]))
+        self.assertEqual({"blood-starved-beast", "cleric-beast", "vicar-amelia", "amygdala", "ebrietas"},
+                         set(COMPATIBILITY[PAARL_ARENA.key]))
+        self.assertEqual({"cleric-beast", "amygdala", "ebrietas"},
+                         set(COMPATIBILITY[AMELIA_ARENA.key]))
+        self.assertEqual({"vicar-amelia", "cleric-beast", "ebrietas"},
+                         set(COMPATIBILITY[AMYGDALA_ARENA.key]))
+        self.assertEqual({"blood-starved-beast", "darkbeast-paarl", "vicar-amelia", "ebrietas"},
+                         set(COMPATIBILITY[CLERIC_ARENA.key]))
+        self.assertEqual({"amygdala", "cleric-beast", "blood-starved-beast", "vicar-amelia"},
+                         set(COMPATIBILITY[EBRIETAS_ARENA.key]))
 
     def test_attached_plan_maps_only_declared_source_events(self):
         plan = plan_contract_shuffle("cleric", BSB_ARENA, (CLERIC_PACKAGE,))
@@ -443,20 +461,53 @@ class ContractPlanningTests(unittest.TestCase):
                           "12404830": 12304930}, plan["remap"]["added_events"])
         self.assertEqual(5, len(plan["attachments"]))
 
-    def test_ebrietas_plan_declares_the_virtual_bullet_owner_without_registering_an_unsafe_pair(self):
+    def test_ebrietas_plan_requires_its_materialized_virtual_bullet_owner(self):
         plan = plan_contract_shuffle("ebrietas", BSB_ARENA, (EBRIETAS_PACKAGE,))
         self.assertEqual({"2420801": 2300890}, plan["remap"]["virtual_entities"])
         self.assertEqual([{"source_entity": 2420801, "destination_entity": 2300890,
                            "initializer": "CreateBulletOwner", "requires_actor_addition": True}],
                          plan["virtual_entities"])
-        self.assertNotIn("ebrietas", COMPATIBILITY[BSB_ARENA.key])
         files = read_prefix(BUNDLE, "event/")
         old_yharnam = next(value.decode("utf-8-sig") for name, value in files.items()
                            if name.endswith(BSB_ARENA.event_file))
         ebrietas = next(value.decode("utf-8-sig") for name, value in files.items()
                         if name.endswith(EBRIETAS_PACKAGE.event_file))
-        with self.assertRaisesRegex(ValueError, "requires a materialized actor addition"):
+        capability = contract_capability(BSB_ARENA, EBRIETAS_PACKAGE)
+        self.assertIsNotNone(capability)
+        assert capability is not None
+        self.assertTrue(capability.requires_actor_additions)
+        with self.assertRaisesRegex(ValueError, "materialized actor addition"):
             patch_contract_swap(BSB_ARENA, EBRIETAS_PACKAGE, old_yharnam, ebrietas)
+        output = patch_contract_swap(BSB_ARENA, EBRIETAS_PACKAGE, old_yharnam, ebrietas,
+                                     allow_materialized_actor_additions=True)
+        self.assertIn("CreateBulletOwner(2300890);", event_blocks(output)[0])
+
+    def test_primary_initialization_requirements_bind_all_destination_states_without_suffix_inference(self):
+        slots = self._slots()
+        ebrietas = primary_initialization_requirements(CLERIC_ARENA, EBRIETAS_PACKAGE, slots)
+        amelia = primary_initialization_requirements(CLERIC_ARENA, AMELIA_PACKAGE, slots)
+        self.assertEqual({
+            ("m24_01_00_00", "m24_02_00_00"),
+            ("m24_01_00_01", "m24_02_00_01"),
+            ("m24_01_00_11", "m24_02_00_00"),
+        }, {(row["destination_map"], row["source_map"]) for row in ebrietas})
+        self.assertEqual({
+            ("m24_01_00_00", "m24_00_00_00"),
+            ("m24_01_00_01", "m24_00_00_01"),
+            ("m24_01_00_11", "m24_00_00_00"),
+        }, {(row["destination_map"], row["source_map"]) for row in amelia})
+        self.assertEqual({EBRIETAS_PACKAGE.actor}, {row["source_entity_id"] for row in ebrietas})
+        self.assertEqual({AMELIA_PACKAGE.actor}, {row["source_entity_id"] for row in amelia})
+
+    def test_primary_initialization_refuses_missing_or_ambiguous_state_bindings(self):
+        missing = replace(AMELIA_PACKAGE, primary_state_bindings=(("00", "00"), ("01", "01")))
+        duplicate = replace(AMELIA_PACKAGE, primary_state_bindings=(
+            ("00", "00"), ("01", "01"), ("11", "00"), ("11", "01"),
+        ))
+        with self.assertRaisesRegex(ValueError, "explicit source state binding"):
+            primary_initialization_requirements(CLERIC_ARENA, missing, self._slots())
+        with self.assertRaisesRegex(ValueError, "ambiguous source state bindings"):
+            primary_initialization_requirements(CLERIC_ARENA, duplicate, self._slots())
 
     def test_ebrietas_actor_requirements_pair_exact_source_and_destination_map_states(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -490,10 +541,100 @@ class ContractPlanningTests(unittest.TestCase):
             self.assertEqual(set(COMPATIBILITY), set(assignment))
             self.assertEqual(set(COMPATIBILITY), set(assignment.values()))
         self.assertNotEqual(first, second)
-        self.assertEqual("blood-starved-beast", first[EBRIETAS_ARENA.key])
-        self.assertEqual("cleric-beast", second[EBRIETAS_ARENA.key])
-        self.assertEqual("amygdala", first[AMELIA_ARENA.key])
-        self.assertEqual("amygdala", second[AMELIA_ARENA.key])
+        self.assertNotEqual(first[EBRIETAS_ARENA.key], EBRIETAS_ARENA.key)
+        self.assertNotEqual(second[AMELIA_ARENA.key], AMELIA_ARENA.key)
+
+    def _slots(self):
+        with tempfile.TemporaryDirectory() as temp:
+            inventory = Path(temp) / "slots.tsv"
+            inventory.write_bytes(read_blob(BUNDLE, "mined/msb_enemies.tsv"))
+            return load_slots(inventory)
+
+    def _sources(self):
+        return {
+            package.event_file: next(value.decode("utf-8-sig") for name, value in read_prefix(BUNDLE, "event/").items()
+                                     if name.endswith(package.event_file))
+            for package in PACKAGES
+        }
+
+    def test_ebrietas_explicit_source_state_binding_covers_cleric_extra_state(self):
+        requirements = actor_addition_requirements(CLERIC_ARENA, EBRIETAS_PACKAGE, self._slots())
+        self.assertEqual(3, len(requirements))
+        source_by_destination = {row["destination_map"]: row["source_map"] for row in requirements}
+        self.assertEqual({
+            "m24_01_00_00": "m24_02_00_00",
+            "m24_01_00_01": "m24_02_00_01",
+            "m24_01_00_11": "m24_02_00_00",
+        }, source_by_destination)
+        self.assertEqual({982400}, {row["destination_entity_id"] for row in requirements})
+
+    def test_ebrietas_helper_refuses_missing_or_ambiguous_state_selection(self):
+        binding = EBRIETAS_PACKAGE.virtual_entities[0]
+        missing = replace(binding, source_state_bindings=(("00", "00"), ("01", "01")))
+        duplicate = replace(binding, source_state_bindings=(
+            ("00", "00"), ("01", "01"), ("11", "00"), ("11", "01"),
+        ))
+        with self.assertRaisesRegex(ValueError, "explicit source state binding"):
+            actor_addition_requirements(
+                CLERIC_ARENA, replace(EBRIETAS_PACKAGE, virtual_entities=(missing,)), self._slots())
+        with self.assertRaisesRegex(ValueError, "ambiguous source state bindings"):
+            actor_addition_requirements(
+                CLERIC_ARENA, replace(EBRIETAS_PACKAGE, virtual_entities=(duplicate,)), self._slots())
+
+    def test_cleric_append_only_attachment_and_virtual_owner_ids_are_absent_from_input_corpus(self):
+        reserved = {*CLERIC_ARENA.attachment_event_ids, *CLERIC_ARENA.virtual_entity_ids}
+        corpus = read_prefix(BUNDLE, "")
+        witnesses = {
+            name for name, contents in corpus.items()
+            if any(str(identifier).encode("ascii") in contents for identifier in reserved)
+        }
+        self.assertGreater(len(corpus), 30)
+        self.assertFalse(witnesses)
+
+    def test_amelia_at_cleric_appends_declared_initializers_without_replacing_a_constructor_slot(self):
+        sources = self._sources()
+        before = event_blocks(sources[CLERIC_ARENA.event_file])
+        output = patch_contract_swap(
+            CLERIC_ARENA, AMELIA_PACKAGE, sources[CLERIC_ARENA.event_file],
+            sources[AMELIA_PACKAGE.event_file],
+        )
+        after = event_blocks(output)
+        self.assertEqual(before[CLERIC_ARENA.completion_event], after[CLERIC_ARENA.completion_event])
+        appended_initializers = sum(len(attachment.initializers)
+                                    for attachment in AMELIA_PACKAGE.attachments)
+        self.assertEqual(before[0].count("$InitializeEvent(") + appended_initializers,
+                         after[0].count("$InitializeEvent("))
+        self.assertIn("$InitializeEvent(0, 12994804", after[0])
+        self.assertIn("IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);",
+                      after[CLERIC_ARENA.activation_event])
+
+    def test_ebrietas_activation_keeps_each_destination_set_piece_and_uses_its_pinned_wake(self):
+        destination_witnesses = (
+            (CLERIC_ARENA, "IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);"),
+            (BSB_ARENA, "InArea(10000, 2302805)"),
+            (PAARL_ARENA, "EntityInRadiusOfEntity(2300810, 10000, 16)"),
+            (AMELIA_ARENA, "PlayCutsceneToPlayer(24000060"),
+            (AMYGDALA_ARENA, "SetCharacterMaphits(3300800, true);"),
+        )
+        sources = self._sources()
+        for arena, witness in destination_witnesses:
+            with self.subTest(arena=arena.key):
+                before = event_blocks(sources[arena.event_file])
+                output = patch_contract_swap(
+                    arena, EBRIETAS_PACKAGE, sources[arena.event_file],
+                    sources[EBRIETAS_PACKAGE.event_file],
+                    allow_materialized_actor_additions=True,
+                )
+                after = event_blocks(output)
+                self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+                self.assertIn(witness, after[arena.activation_event])
+                activation = after[arena.activation_event]
+                pre_guard = f"SetCharacterImmortality({arena.actor}, Enabled);"
+                damage_wait = f"WaitFor(HasDamageType({arena.actor}, 10000, DamageType.Unspecified));"
+                self.assertIn(damage_wait, activation)
+                self.assertLess(activation.index(pre_guard), activation.index("    WaitFor(\n"))
+                self.assertLess(activation.index("    WaitFor(\n"), activation.index(damage_wait))
+                self.assertIn("CreateBulletOwner", after[0])
 
     def test_paarl_contract_emits_the_existing_native_map_and_scaling_plan_shape(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -513,6 +654,147 @@ class ContractPlanningTests(unittest.TestCase):
         hidden = plan_contract_swap(EBRIETAS_ARENA, BSB_PACKAGE, slots, npcs, effects, "archipelago")
         self.assertEqual(1, hidden['scaling']['change_count'])
         self.assertEqual(11, hidden['scaling']['changes'][0]['destination_level'])
+
+
+class ContractCapabilityMatrixTests(unittest.TestCase):
+    """Exercise the declared base-contract capabilities against pinned sources."""
+
+    SUPPORTED = {
+        ("cleric-beast", "blood-starved-beast"),
+        ("cleric-beast", "darkbeast-paarl"),
+        ("cleric-beast", "vicar-amelia"),
+        ("cleric-beast", "ebrietas"),
+        ("blood-starved-beast", "darkbeast-paarl"),
+        ("blood-starved-beast", "cleric-beast"),
+        ("blood-starved-beast", "vicar-amelia"),
+        ("blood-starved-beast", "ebrietas"),
+        ("darkbeast-paarl", "blood-starved-beast"),
+        ("darkbeast-paarl", "cleric-beast"),
+        ("darkbeast-paarl", "vicar-amelia"),
+        ("darkbeast-paarl", "amygdala"),
+        ("darkbeast-paarl", "ebrietas"),
+        ("vicar-amelia", "cleric-beast"),
+        ("vicar-amelia", "amygdala"),
+        ("vicar-amelia", "ebrietas"),
+        ("amygdala", "vicar-amelia"),
+        ("amygdala", "cleric-beast"),
+        ("amygdala", "ebrietas"),
+        ("ebrietas", "blood-starved-beast"),
+        ("ebrietas", "cleric-beast"),
+        ("ebrietas", "vicar-amelia"),
+        ("ebrietas", "amygdala"),
+    }
+
+    @classmethod
+    def setUpClass(cls):
+        files = read_prefix(BUNDLE, "event/")
+        cls.sources = {
+            package.event_file: next(value.decode("utf-8-sig") for name, value in files.items()
+                                     if name.endswith(package.event_file))
+            for package in PACKAGES
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            inventory = Path(temp) / "slots.tsv"
+            inventory.write_bytes(read_blob(BUNDLE, "mined/msb_enemies.tsv"))
+            cls.slots = load_slots(inventory)
+        cls.npcs, cls.effects = load_params(BUNDLE)
+
+    def test_every_base_off_diagonal_pair_is_either_complete_or_refused(self):
+        self.assertEqual(6, len(PACKAGES))
+        self.assertEqual(5, len(self.sources))
+        supported: set[tuple[str, str]] = set()
+        examined = 0
+        for arena in ARENAS:
+            destination = self.sources[arena.event_file]
+            before = event_blocks(destination)
+            for donor in PACKAGES:
+                if donor.key == arena.key:
+                    continue
+                examined += 1
+                pair = (arena.key, donor.key)
+                capability = contract_capability(arena, donor)
+                with self.subTest(arena=arena.key, donor=donor.key):
+                    if pair not in self.SUPPORTED:
+                        self.assertIsNone(capability)
+                        with self.assertRaisesRegex(ValueError, "no complete contract capability"):
+                            patch_contract_swap(arena, donor, destination,
+                                                self.sources[donor.event_file])
+                        continue
+                    self.assertIsNotNone(capability)
+                    assert capability is not None
+                    output = patch_contract_swap(
+                        arena, donor, destination, self.sources[donor.event_file],
+                        allow_materialized_actor_additions=capability.requires_actor_additions,
+                    )
+                    self.assertEqual(before[arena.completion_event],
+                                     event_blocks(output)[arena.completion_event])
+                    plan = plan_contract_swap(arena, donor, self.slots, self.npcs, self.effects,
+                                              "base-contract-matrix")
+                    self.assertEqual(f"{arena.key}<-{donor.key}",
+                                     plan["options"]["experimental_boss_contract"])
+                    supported.add(pair)
+        self.assertEqual(30, examined)
+        self.assertEqual(self.SUPPORTED, supported)
+
+    def test_generic_donors_keep_destination_protection_through_all_entry_gates(self):
+        sources = self.sources
+        for arena, enabled, disabled in (
+            (PAARL_ARENA, "SetCharacterInvincibility(2300810, Enabled);",
+             "SetCharacterInvincibility(2300810, Disabled);"),
+            (AMYGDALA_ARENA, "SetCharacterInvincibility(3300800, Enabled);",
+             "SetCharacterInvincibility(3300800, Disabled);"),
+            (EBRIETAS_ARENA, "SetCharacterImmortality(2420800, Enabled);",
+             "SetCharacterImmortality(2420800, Disabled);"),
+        ):
+            for donor in (CLERIC_PACKAGE, AMELIA_PACKAGE):
+                with self.subTest(arena=arena.key, donor=donor.key):
+                    activation = event_blocks(patch_contract_swap(
+                        arena, donor, sources[arena.event_file], sources[donor.event_file],
+                    ))[arena.activation_event]
+                    self.assertLess(activation.index(enabled), activation.index("    WaitFor(\n"))
+                    self.assertLess(activation.index("    WaitFor(\n"), activation.index(disabled))
+                    self.assertIn(f"ForceAnimationPlayback({arena.actor}, {donor.entry_animation}", activation)
+                    if arena is EBRIETAS_ARENA:
+                        self.assertNotIn(f"ForceAnimationPlayback({arena.actor}, 7001, true", activation)
+                        self.assertNotIn(f"SetSpEffect({arena.actor}, 5647", activation)
+                        self.assertNotIn(f"ClearSpEffect({arena.actor}, 5647", activation)
+
+    def test_ebrietas_outputs_compile_with_the_pinned_darkscript_fixture_when_available(self):
+        compiler = ROOT / "work" / "DarkScript3" / "DarkScript3.exe"
+        events = ROOT / "work" / "boss-shuffle-validation" / "events"
+        destinations = tuple(arena for arena in ARENAS if arena is not EBRIETAS_ARENA)
+        required = ("common.emevd.dcx", *(arena.event_file.removesuffix(".js") for arena in destinations))
+        if not compiler.is_file() or any(not (events / name).is_file() for name in required):
+            self.skipTest("pinned DarkScript/original event fixture unavailable")
+        self.assertEqual("c86fd23ee28f7d39032a5bc792f9510bbd171ca72de1c547d956fe5e161d54de",
+                         hashlib.sha256(compiler.read_bytes()).hexdigest())
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            original, source, output = work / "original", work / "source", work / "output"
+            original.mkdir()
+            for name in required:
+                shutil.copyfile(events / name, original / name)
+            subprocess.run(
+                [str(compiler), "/cmd", "-decompile", "-game", "bb", "-indir", str(original),
+                 "-outdir", str(source), "-force", "-silent"],
+                check=True,
+            )
+            for arena in destinations:
+                (source / arena.event_file).write_text(
+                    patch_contract_swap(
+                        arena, EBRIETAS_PACKAGE, self.sources[arena.event_file],
+                        self.sources[EBRIETAS_PACKAGE.event_file],
+                        allow_materialized_actor_additions=True,
+                    ),
+                    encoding="utf-8-sig",
+                )
+            subprocess.run(
+                [str(compiler), "/cmd", "-compile", "-game", "bb", "-indir", str(source),
+                 "-outdir", str(output), "-force", "-silent"],
+                check=True,
+            )
+            self.assertEqual({arena.event_file.removesuffix(".js") for arena in destinations},
+                             {path.name for path in output.glob("m*.emevd.dcx")})
 
 
 if __name__ == "__main__":

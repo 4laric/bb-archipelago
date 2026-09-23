@@ -52,6 +52,7 @@ from tools.bb_enemizer.boss_pool import (
     assign_donors, combine_native_plans, compose_event_patches, validate_terminal_predicates,
     combine_ordinary_and_boss_plans,
 )
+from tools.bb_enemizer.encounter_recipes import reusable_recipes
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.gascoigne_contract import (
     ProjectOwnedIds, NativeActorPin, patch_gascoigne_at_cleric, native_plan_gascoigne_at_cleric,
@@ -237,7 +238,7 @@ LIVING_FAILURES_COMPATIBILITY = {'living-failures': ('blood-starved-beast', 'lad
 ROM_COMPATIBILITY = {'ebrietas': ('rom',), 'rom': ('ebrietas', 'celestial-emissary')}
 
 CELESTIAL_COMPATIBILITY = {'darkbeast-paarl': ('celestial-emissary',),
-                           'celestial-emissary': ('amygdala', 'shadows-of-yharnam')}
+                           'celestial-emissary': ('amygdala', 'shadows-of-yharnam', 'blood-starved-beast')}
 MICOLASH_COMPATIBILITY = {'moon-presence': ('micolash',),
                           'micolash': ('gehrman', 'moon-presence'),
                           'gehrman': ('micolash',)}
@@ -270,6 +271,8 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
     ):
         for arena, donors in section.items():
             graph[arena] = tuple(dict.fromkeys((*graph.get(arena, ()), *donors)))
+    for arena, donor in reusable_recipes():
+        graph[arena] = tuple(dict.fromkeys((*graph.get(arena, ()), donor)))
     return dict(sorted(graph.items()))
 
 
@@ -857,6 +860,7 @@ def build(args) -> dict:
         pairs = [(ARENAS[key], PACKAGES[value]) for key, value in mapping.items()]
     else:
         pairs = [(ARENAS[args.arena], PACKAGES[args.donor])]
+    recipes = reusable_recipes()
     if digest(args.darkscript) != DARKSCRIPT_SHA256:
         raise ValueError('requires pinned DarkScript 3.6.3')
     check_output(args.output, (args.maps, args.scripts, args.events, args.gameparam,
@@ -878,6 +882,12 @@ def build(args) -> dict:
         npcs, effects = load_params(args.bundle)
         materializations = {}
         for arena, package in pairs:
+            recipe = recipes.get((arena.key, package.key))
+            if recipe is not None:
+                requirements = recipe.actor_requirements(slots)
+                if requirements:
+                    materializations[arena.key] = pin_actor_requirements(args, requirements)
+                continue
             if (package is not None and arena.key not in FINAL_ARENAS
                     and not is_maria_pair(arena, package) and not is_gascoigne_pair(arena, package)
                     and not any(dlc_pair_flags(arena, package)) and package.key != 'orphan-of-kos'
@@ -929,7 +939,10 @@ def build(args) -> dict:
         terminals = {}
         for arena, package in pairs:
             ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
-            if is_orphan_gascoigne_pair(arena, package):
+            recipe = recipes.get((arena.key, package.key))
+            if recipe is not None:
+                patched = recipe.patch(texts[arena.event_file], texts[package.event_file])
+            elif is_orphan_gascoigne_pair(arena, package):
                 patched = patch_orphan_at_gascoigne(texts[arena.event_file], texts[package.event_file])
             elif package.key == 'orphan-of-kos':
                 patched = patch_orphan_at_cleric(texts[arena.event_file], texts[package.event_file], ORPHAN_ALLOCATION)
@@ -1096,7 +1109,17 @@ def build(args) -> dict:
         plans = []
         for arena, package in pairs:
             ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
-            if is_orphan_gascoigne_pair(arena, package):
+            recipe = recipes.get((arena.key, package.key))
+            if recipe is not None:
+                plan = recipe.native_plan(slots, npcs, effects, args.seed)
+                if arena.key in materializations:
+                    plan['boss_actor_additions'] = materializations[arena.key]
+                if plan.get('primary_init_source_bindings'):
+                    plan['boss_actor_initializations'] = pin_actor_requirements(
+                        args, plan['primary_init_source_bindings'])
+                if package.key == 'lady-maria':
+                    plan['boss_external_references'] = [maria_external_reference(args, plan, arena)]
+            elif is_orphan_gascoigne_pair(arena, package):
                 plan = native_plan_orphan_at_gascoigne(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])
                 plan['boss_actor_initializations'] = pin_actor_requirements(args, plan['primary_init_source_bindings'])

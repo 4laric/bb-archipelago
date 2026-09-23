@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle now composes reusable combat adapters with destination arenas,
+  expanding Maria and Ebrietas placements while preserving donor combat and
+  adapting arena set pieces. The implementation coverage report distinguishes
+  unfinished pairings from proven incompatibilities. Regenerating a seed with
+  the expanded pool can change its boss assignment; in-game validation remains
+  outstanding.
+
 - The launcher offers three experimental enemy-randomization tranches
   (all off by default): supported script contracts, script-spawn ambushes,
   and Chara-bound hunters. Together they raise coverage from 308 to up to
