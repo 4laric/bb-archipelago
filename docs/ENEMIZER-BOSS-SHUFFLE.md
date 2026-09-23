@@ -983,6 +983,12 @@ Generated-data and shipping preflight also passed. Those results do not cover
 the newer Ludwig destination, multi-TAE proof, or Moon limb correction in this
 worktree; these changes have separate focused and native checks.
 
+The later frozen 142-route commit also [passed both full regression runs and
+preflight](boss-142-regression-checkpoint.json): 1,884 tests and 57 optional
+skips each, in 970.750 and 989.448 seconds. That checkpoint covers the Ludwig
+destination, multi-TAE proof and Moon limb correction. It does not cover the
+subsequent expanded typed profile or reusable final-boss donors and arenas.
+
 Review of the next reusable donors found and corrected Moon Presence's third
 limb break animation from 8010 to the original 8030. The dedicated Gehrman
 route now derives every limb initializer from the shared package and verifies
