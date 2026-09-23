@@ -15,6 +15,7 @@ from tools.bb_enemizer.boss_contracts import (
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
 from tools.bb_enemizer.maria_arena_contract import MARIA_ARENA_CONTRACT
 from tools.bb_enemizer.laurence_arena_contract import LAURENCE_ARENA_CONTRACT
+from tools.bb_enemizer.gascoigne_arena_contract import GASCOIGNE_ARENA_CONTRACT
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.scaling import load_params
 
@@ -47,11 +48,16 @@ class EncounterRecipeTests(unittest.TestCase):
         maria_keys = {(arena.key, "lady-maria") for arena in (*ARENAS, LAURENCE_ARENA_CONTRACT)}
         laurence_keys = {(arena.key, "laurence") for arena in (*ARENAS, MARIA_ARENA_CONTRACT)}
         maria_arena_keys = {("lady-maria", donor.key) for donor in PACKAGES}
-        logarius_keys = {(arena.key, "martyr-logarius") for arena in ARENAS}
+        logarius_keys = {(arena.key, "martyr-logarius") for arena in
+                         (*ARENAS, MARIA_ARENA_CONTRACT, LAURENCE_ARENA_CONTRACT,
+                          GASCOIGNE_ARENA_CONTRACT)}
         laurence_arena_keys = {("laurence", donor.key) for donor in PACKAGES}
         gascoigne_arena_keys = {("father-gascoigne", donor.key) for donor in PACKAGES}
+        logarius_arena_keys = {("martyr-logarius", donor.key) for donor in PACKAGES}
+        orphan_keys = {(arena.key, "orphan-of-kos") for arena in ARENAS}
         groups = (base_keys, maria_keys, laurence_keys, maria_arena_keys, logarius_keys,
-                  laurence_arena_keys, gascoigne_arena_keys)
+                  laurence_arena_keys, gascoigne_arena_keys, logarius_arena_keys,
+                  orphan_keys)
         self.assertEqual(set.union(*groups), set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)
@@ -59,9 +65,11 @@ class EncounterRecipeTests(unittest.TestCase):
         self.assertEqual(7, len(maria_keys))
         self.assertEqual(7, len(laurence_keys))
         self.assertEqual(6, len(maria_arena_keys))
-        self.assertEqual(6, len(logarius_keys))
+        self.assertEqual(9, len(logarius_keys))
         self.assertEqual(6, len(laurence_arena_keys))
         self.assertEqual(6, len(gascoigne_arena_keys))
+        self.assertEqual(6, len(logarius_arena_keys))
+        self.assertEqual(6, len(orphan_keys))
         self.assertEqual(
             sum(map(len, groups)),
             len(self.recipes),
@@ -118,6 +126,7 @@ class EncounterRecipeTests(unittest.TestCase):
     def test_specialized_donor_recipes_use_real_sources_and_owned_allocations(self):
         from tools.bb_enemizer.maria_contract import MARIA_EVENT_FILE
         from tools.bb_enemizer.laurence_donor import LAURENCE_EVENT_FILE
+        from tools.bb_enemizer.orphan_donor import EVENT_FILE as ORPHAN_EVENT_FILE
 
         arena = next(arena for arena in ARENAS if arena.key == "cleric-beast")
         recipe = self.recipes[(arena.key, "lady-maria")]
@@ -168,6 +177,32 @@ class EncounterRecipeTests(unittest.TestCase):
         self.assertEqual("c4500", plan["swaps"][0]["target"]["model_name"])
         self.assertEqual(
             {3400850},
+            {
+                binding["source_entity_id"]
+                for binding in plan["primary_init_source_bindings"]
+            },
+        )
+
+        orphan = self.recipes[(arena.key, "orphan-of-kos")]
+        donor_source = read_blob(BUNDLE, "event/" + ORPHAN_EVENT_FILE).decode(
+            "utf-8-sig"
+        )
+        after = event_blocks(orphan.patch(destination, donor_source))
+        self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+        self.assertEqual(
+            {12995500, 12995501, 12995502, 12995503, 12995504},
+            set(after) - set(before),
+        )
+        plan = orphan.native_plan(
+            self.slots, self.npcs, self.effects, "recipe-orphan"
+        )
+        self.assertEqual("orphan-of-kos", plan["boss_contract"]["donor"])
+        self.assertEqual(arena.key, plan["boss_contract"]["arena"])
+        self.assertEqual(
+            2 * arena.destination_count, len(plan["boss_actor_additions"])
+        )
+        self.assertEqual(
+            {3600800},
             {
                 binding["source_entity_id"]
                 for binding in plan["primary_init_source_bindings"]

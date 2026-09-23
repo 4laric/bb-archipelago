@@ -809,7 +809,7 @@ This checkpoint implements 110 of 462 directed pairings, all feasible within
 complete one-of-each assignments. The remaining 352 are implementation gaps.
 It does not establish unrestricted or gameplay-validated boss shuffle.
 
-The [native matrix](boss-composition-native-matrix.json) records 20 full-roster
+The preceding [native matrix](https://github.com/4laric/bb-archipelago/blob/9c5aa4e/docs/boss-composition-native-matrix.json) records 20 full-roster
 builds covering all 110 implemented pairs, with 60 verified files per build.
 The source and frozen combined build includes 308 ordinary swaps, 22 boss
 encounters and the actual Cathedral AP override; all 60 file hashes and the
@@ -831,3 +831,63 @@ plan and extracted inputs: 332 composed swaps, 22 boss encounters across 15 even
 combined fixture. The matching native harness passes, including the new alias
 regressions and the existing event-only FFX checks. These checks still make no
 gameplay claim.
+
+## Orphan combat and reusable Cainhurst encounters
+
+Orphan's reusable donor package reaches all six base arenas with source-pinned
+core, phase and support actors. Both helper actors carry source initialization
+and destination scaling in every physical map state. The reviewed health,
+phase, support, player-effect and camera events remain connected, including
+saved-phase restoration. A death bridge preserves the destination terminal
+event and cleans up helpers on live completion and completed reload. No region,
+generator or FFX dependency is invented from an untyped integer reference;
+transitive character AI/TAE/behavior/bullet/FXR closure remains an explicit
+original-data investigation gap.
+
+The [original character-asset audit](boss-orphan-asset-audit.json) has now
+identified nine direct animation-effect dependencies present in m36 but absent
+from the base destination banks and global effect banks. Delivery is unfinished.
+A whole-m36-bank merge also encounters two different payloads under existing
+m33 effect names, so simply merging the entire bank is insufficient. The event
+and map build results below do not validate this missing asset delivery.
+
+The [broader character screening](boss-character-asset-screening.json) records
+original animation archive and TAE hashes for 30 declared actor models, with
+direct type-96/100 effect requests checked against the available original area
+and global banks. It exposes further delivery work, including Gascoigne
+effects absent from m23. This screening does not account for already generated
+donor-bank imports and is neither a full-roster asset census nor proof of
+transitive effect closure. Missing assets remain implementation gaps.
+
+Cainhurst accepts all six base combat packages. Its terminal, post-boss, fog
+and music-cleanup events remain exact. The original sword and projectile owner
+stay pinned and inert until destination completion, including completed reload.
+Source-pinned client restoration, donor readiness and destination notification,
+telemetry, music and camera adaptations replace the retired Logarius combat
+controllers.
+
+Logarius also reaches Maria, Laurence and Gascoigne. Maria's music moves to the
+final track at his single phase boundary while retaining reload recovery;
+Gascoigne's three physical states retain their original beast as an inert
+terminal witness. Laurence's replacement uses Logarius's authored entry pose
+and a readiness flag cleared before constructor initialization. Initial entry,
+client restoration and saved-intro reload set that flag only after actor warp
+and restoration; health waits for it even when its own event was completed on
+a previous attempt. Destination progression remains unchanged.
+
+This checkpoint implements 122 of 462 directed pairings, all feasible within
+complete one-of-each assignments. The remaining 340 are implementation gaps,
+not proven incompatibilities. Static and native checks do not establish live
+combat, arena fit or multiplayer timing.
+
+The [current native matrix](boss-composition-native-matrix.json) records 21
+full-roster builds covering all 122 constructed pairings with unchanged source
+and tool hashes. Each build verifies 60 files. The actual saved launcher plan
+for `31879326883593218814:1`, including its mixed map-name spellings and AP
+override, produces 330 composed swaps and all 22 boss contracts. Source and
+packaged builders produce identical receipts and all 60 file hashes match.
+This evidence covers the emitted event/map/parameter pipeline; the character
+asset audit above records a separate known gap that these checks do not cover.
+
+Both full test passes completed with 1,852 tests and 57 optional skips
+(865.676s and 807.476s). Generated-data and shipping preflight passed.

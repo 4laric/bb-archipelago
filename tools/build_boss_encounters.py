@@ -806,7 +806,8 @@ def build(args) -> dict:
         raise ValueError('Living Failures arena requires a reviewed BSB, Maria or Laurence donor adapter')
     if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] not in ('blood-starved-beast', 'martyr-logarius', 'darkbeast-paarl'):
         raise ValueError('Wet Nurse arena requires a reviewed BSB, Logarius or Paarl donor adapter')
-    if orphan and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne'):
+    if (orphan and direct_orphan not in recipes
+            and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne')):
         raise ValueError('Orphan requires a reviewed Cleric or Gascoigne arena adapter')
     reviewed_orphan_pairs = {
         ('orphan-of-kos', 'shadows-of-yharnam'),
@@ -816,7 +817,8 @@ def build(args) -> dict:
     if direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in reviewed_orphan_pairs:
         raise ValueError('Orphan arena requires a reviewed donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
-    if direct_logarius[0] == 'martyr-logarius' and direct_logarius[1] not in (*LOGARIUS_COMPATIBILITY['martyr-logarius'], 'mergos-wet-nurse'):
+    if (direct_logarius[0] == 'martyr-logarius' and direct_logarius not in recipes
+            and direct_logarius[1] not in (*LOGARIUS_COMPATIBILITY['martyr-logarius'], 'mergos-wet-nurse')):
         raise ValueError('Logarius arena requires a reviewed BSB, Paarl or Wet Nurse donor adapter')
     if (direct_logarius[1] == 'martyr-logarius' and direct_logarius not in recipes
             and direct_logarius[0] not in ('blood-starved-beast', 'mergos-wet-nurse')):

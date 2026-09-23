@@ -25,9 +25,10 @@ class EncounterBuildTests(unittest.TestCase):
     def test_reusable_specialized_donor_routes_reach_the_compiler_pin_gate(self):
         from tools.bb_enemizer.laurence_donor import SUPPORTED_LAURENCE_ARENAS
         from tools.bb_enemizer.logarius_donor import SUPPORTED_LOGARIUS_ARENAS
+        from tools.bb_enemizer.orphan_donor import ARENAS as SUPPORTED_ORPHAN_ARENAS
 
         self.assertEqual(7, len(SUPPORTED_LAURENCE_ARENAS))
-        self.assertEqual(6, len(SUPPORTED_LOGARIUS_ARENAS))
+        self.assertEqual(9, len(SUPPORTED_LOGARIUS_ARENAS))
         pairs = [(arena.key, donor)
                  for donor, arenas in (('laurence', SUPPORTED_LAURENCE_ARENAS),
                                        ('martyr-logarius', SUPPORTED_LOGARIUS_ARENAS))
@@ -36,7 +37,8 @@ class EncounterBuildTests(unittest.TestCase):
             'cleric-beast', 'blood-starved-beast', 'darkbeast-paarl',
             'vicar-amelia', 'amygdala', 'ebrietas'))
         pairs.append(('laurence', 'lady-maria'))
-        self.assertEqual(26, len(pairs))
+        pairs.extend((arena.key, 'orphan-of-kos') for arena in SUPPORTED_ORPHAN_ARENAS)
+        self.assertEqual(35, len(pairs))
         with tempfile.TemporaryDirectory() as temporary:
             compiler = Path(temporary) / 'untrusted-compiler.exe'
             compiler.write_bytes(b'not the pinned compiler')

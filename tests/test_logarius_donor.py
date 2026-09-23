@@ -9,7 +9,11 @@ from pathlib import Path
 from tools.bb_inputs import read_blob, read_prefix
 from tools.bb_enemizer.boss_canary import event_blocks
 from tools.bb_enemizer.boss_contracts import AMELIA_ARENA, AMYGDALA_ARENA, EBRIETAS_ARENA, PAARL_ARENA
+from tools.bb_enemizer.gascoigne_arena_contract import GASCOIGNE_ARENA_CONTRACT
+from tools.bb_enemizer.laurence_arena_contract import LAURENCE_ARENA_CONTRACT
+from tools.bb_enemizer.maria_arena_contract import MARIA_ARENA_CONTRACT
 from tools.bb_enemizer.inventory import load_slots
+from tools.bb_enemizer.logarius_contract import CORE_PIN, EFFECT_OWNER_PIN, SWORD_PIN
 from tools.bb_enemizer.logarius_donor import (
     DEFAULT_LOGARIUS_IDS,
     DESTINATION_CO_OP,
@@ -50,12 +54,13 @@ class LogariusDonorTests(unittest.TestCase):
     def test_all_allocations_are_absent_from_complete_original_corpus(self):
         joined = b"\n".join(data for prefix in ("event/", "mined/")
                             for data in read_prefix(BUNDLE, prefix).values()).decode("utf-8-sig")
-        self.assertEqual((982600, 982601, 12995100, 12995101, 12995102, 12995103, 12995104),
+        self.assertEqual((982600, 982601, 12995100, 12995101, 12995102,
+                          12995103, 12995104, 12995105),
                          IDS.numeric_ids())
         for value in IDS.numeric_ids():
             self.assertNotRegex(joined, rf"(?<![\w]){value}(?![\w])")
 
-    def test_all_six_arenas_receive_full_three_actor_combat_closure(self):
+    def test_all_nine_arenas_receive_full_three_actor_combat_closure(self):
         for arena in SUPPORTED_LOGARIUS_ARENAS:
             with self.subTest(arena=arena.key):
                 before = event_blocks(self.destinations[arena.key])
@@ -63,21 +68,35 @@ class LogariusDonorTests(unittest.TestCase):
                     arena, self.destinations[arena.key], self.donor, IDS))
                 self.assertEqual(before[arena.completion_event], after[arena.completion_event])
                 co_op_event, co_op_sha256 = DESTINATION_CO_OP[arena.key]
-                self.assertEqual(before[co_op_event], after[co_op_event])
                 self.assertEqual(
                     co_op_sha256,
-                    hashlib.sha256(after[co_op_event].encode()).hexdigest(),
+                    hashlib.sha256(before[co_op_event].encode()).hexdigest(),
                 )
+                if arena is not LAURENCE_ARENA_CONTRACT:
+                    self.assertEqual(before[co_op_event], after[co_op_event])
                 contract = logarius_donor_contract(arena, IDS)
-                self.assertIn(co_op_event, contract["preserved_destination_events"])
+                if arena is LAURENCE_ARENA_CONTRACT:
+                    self.assertIn(co_op_event, contract["adapted_destination_events"])
+                else:
+                    self.assertIn(co_op_event, contract["preserved_destination_events"])
                 self.assertEqual(co_op_event,
                                  contract["destination_co_op_restore"]["event"])
                 self.assertEqual(set(IDS.event_ids()), set(after) - set(before))
                 health = after[arena.health_bar_event]
                 self.assertIn(f"CreateBulletOwner({IDS.effect_owner_entity})", health)
                 self.assertIn(f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, 232000)", health)
-                self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))", health)
-                guard = 12404223 if arena is AMELIA_ARENA else IDS.notification_flag
+                readiness = (
+                    IDS.readiness_flag
+                    if arena is LAURENCE_ARENA_CONTRACT
+                    else arena.start_flag
+                )
+                self.assertIn(f"WaitFor(EventFlag({readiness}))", health)
+                guard = {
+                    "vicar-amelia": 12404223,
+                    "lady-maria": 13504810,
+                    "laurence": 13404860,
+                    "father-gascoigne": 12414223,
+                }.get(arena.key, IDS.notification_flag)
                 self.assertIn(f"if (!EventFlag({guard}))", health)
                 self.assertIn(f"SetEventFlag({guard}, ON)", health)
                 for instruction in ("CreatePlaylog", "StartTimeMeasurement"):
@@ -106,35 +125,89 @@ class LogariusDonorTests(unittest.TestCase):
                 self.assertEqual(1, blocks[0].count(f", {IDS.lifecycle_event})"))
                 retired = {event for event in (*arena.phase_slots, arena.part_routine_event,
                                                 arena.cloth_routine_event,
-                                                arena.attachment_anchor_event)
+                                                arena.attachment_anchor_event,
+                                                *arena.retired_combat_events)
                            if event is not None}
                 for event in retired:
                     self.assertIn("EndEvent();", blocks[event])
                     self.assertNotIn(str(arena.actor), blocks[event])
 
-    def test_entry_protection_and_destination_music_are_adapted_without_model_choreography(self):
-        outputs = {arena.key: event_blocks(patch_logarius_donor(
-            arena, self.destinations[arena.key], self.donor, IDS)) for arena in SUPPORTED_LOGARIUS_ARENAS}
+    def test_base_entry_adapters_and_new_arena_destination_lifecycles(self):
+        outputs = {
+            arena.key: event_blocks(patch_logarius_donor(
+                arena, self.destinations[arena.key], self.donor, IDS))
+            for arena in SUPPORTED_LOGARIUS_ARENAS
+        }
         for arena in SUPPORTED_LOGARIUS_ARENAS:
-            activation = outputs[arena.key][arena.activation_event]
-            self.assertEqual(1, activation.count(
-                f"ForceAnimationPlayback({arena.actor}, 7000, false, false, false)"), arena.key)
-            self.assertIn(f"CharacterHasSpEffect({arena.actor}, 5633)",
-                          outputs[arena.key][arena.music_event])
-        paarl = outputs[PAARL_ARENA.key][PAARL_ARENA.activation_event]
-        self.assertLess(paarl.index("Invincibility(2300810, Enabled)"), paarl.index("WaitFor("))
-        self.assertLess(paarl.index("WaitFor("), paarl.index("7000, false"))
-        self.assertLess(paarl.index("7000, false"), paarl.index("Invincibility(2300810, Disabled)"))
-        amygdala = outputs[AMYGDALA_ARENA.key][AMYGDALA_ARENA.activation_event]
-        self.assertLess(amygdala.index("Invincibility(3300800, Enabled)"), amygdala.index("WaitFor("))
-        for witness in ("SetCharacterGravity(3300800", "SetCharacterMaphits(3300800",
-                        "WaitFixedTimeFrames(30)", "WaitFixedTimeFrames(160)"):
-            self.assertNotIn(witness, amygdala)
-        ebrietas = outputs[EBRIETAS_ARENA.key][EBRIETAS_ARENA.activation_event]
-        self.assertLess(ebrietas.index("Immortality(2420800, Enabled)"),
-                        ebrietas.index("HasDamageType(2420800"))
-        self.assertLess(ebrietas.index("HasDamageType(2420800"), ebrietas.index("7000, false"))
-        self.assertNotIn("5647", ebrietas)
+            with self.subTest(arena=arena.key):
+                self.assertIn(
+                    f"CharacterHasSpEffect({arena.actor}, 5633)",
+                    outputs[arena.key][arena.music_event],
+                )
+        for arena in (MARIA_ARENA_CONTRACT, LAURENCE_ARENA_CONTRACT):
+            health = outputs[arena.key][arena.health_bar_event]
+            self.assertIn(
+                f"SetCharacterInvincibility({arena.actor}, Disabled);",
+                health,
+            )
+            self.assertLess(
+                health.index(f"SetCharacterInvincibility({arena.actor}, Disabled);"),
+                health.index(f"SetCharacterAIState({arena.actor}, Enabled);"),
+            )
+        laurence = outputs[LAURENCE_ARENA_CONTRACT.key]
+        zero = laurence[0]
+        pre = laurence[13404861]
+        host = laurence[13401851]
+        client = laurence[13401853]
+        self.assertNotIn("ForceAnimationPlayback(3400850, 7002", pre)
+        self.assertIn("ForceAnimationPlayback(3400850, 7000, false, false, false)", pre)
+        reset = f"SetEventFlag({IDS.readiness_flag}, OFF)"
+        self.assertEqual(1, zero.count(reset))
+        self.assertLess(zero.index(reset), zero.index("$InitializeEvent("))
+        saved = "if (EventFlag(13401851))"
+        self.assertLess(pre.index(saved), pre.index("IssueShortWarpRequest(3400850"))
+        saved_ready = f"SetEventFlag({IDS.readiness_flag}, ON)"
+        self.assertLess(pre.index("IssueShortWarpRequest(3400850"),
+                        pre.index("SetCharacterGravity(3400850, Enabled)"))
+        self.assertLess(pre.index("SetCharacterGravity(3400850, Enabled)"),
+                        pre.index("SetCharacterInvincibility(3400850, Disabled)"))
+        self.assertLess(pre.index("SetCharacterInvincibility(3400850, Disabled)"),
+                        pre.index("SetCharacterMaphits(3400850, false)"))
+        self.assertLess(pre.index("SetCharacterMaphits(3400850, false)"),
+                        pre.index(saved_ready))
+        self.assertLess(pre.index(saved_ready), pre.index("EndEvent();"))
+        self.assertNotIn("ForceAnimationPlayback(3400850, 3029", host)
+        host_ready = f"SetEventFlag({IDS.readiness_flag}, ON)"
+        self.assertLess(host.index("IssueShortWarpRequest(3400850"), host.index(host_ready))
+        self.assertLess(host.index("SetCharacterGravity(3400850, Enabled)"),
+                        host.index(host_ready))
+        self.assertLess(host.index("SetCharacterInvincibility(3400850, Disabled)"),
+                        host.index(host_ready))
+        self.assertLess(host.index("SetCharacterMaphits(3400850, false)"),
+                        host.index(host_ready))
+        self.assertLess(client.index("SetCharacterMaphits(3400850, false)"),
+                        client.index(host_ready))
+        health = laurence[LAURENCE_ARENA_CONTRACT.health_bar_event]
+        gate = f"WaitFor(EventFlag({IDS.readiness_flag}))"
+        self.assertEqual(2, health.count(gate))
+        self.assertLess(health.rindex(gate),
+                        health.index("SetCharacterAIState(3400850, Enabled)"))
+        maria_music = outputs[MARIA_ARENA_CONTRACT.key][MARIA_ARENA_CONTRACT.music_event]
+        self.assertIn("chrFlagArea2 &= EventFlag(13504811);", maria_music)
+        self.assertIn("L1:", maria_music)
+        self.assertIn("EnableBossMapSound(3503804, Enabled);", maria_music)
+        gas = outputs[GASCOIGNE_ARENA_CONTRACT.key]
+        gas_before = event_blocks(self.destinations[GASCOIGNE_ARENA_CONTRACT.key])
+        self.assertEqual(gas_before[12411800], gas[12411800])
+        self.assertEqual(gas_before[12411801], gas[12411801])
+        self.assertEqual(gas_before[12411802], gas[12411802])
+        self.assertEqual(gas_before[12411803], gas[12411803])
+        self.assertIn("EventFlag(12414800)", gas[12414802])
+        self.assertIn("SetCharacterInvincibility(2410811, Enabled);", gas[IDS.lifecycle_event])
+        self.assertIn("ForceCharacterDeath(2410811, false);", gas[IDS.lifecycle_event])
+        self.assertNotIn("12415238, 2412820, 2410810", gas[0])
+        self.assertNotIn("12415238, 2412820, 2410811", gas[0])
+
 
     def test_native_plans_pin_every_primary_and_distinct_helper_state(self):
         for arena in SUPPORTED_LOGARIUS_ARENAS:
@@ -150,12 +223,38 @@ class LogariusDonorTests(unittest.TestCase):
                                                    for row in plan["primary_init_source_bindings"]})
                 self.assertEqual({LOGARIUS_SWORD, LOGARIUS_EFFECT_OWNER},
                                  {row["source_entity_id"] for row in plan["boss_actor_additions"]})
+                self.assertEqual(
+                    {CORE_PIN.part_sha256},
+                    {row["source_provenance"]["part_sha256"]
+                     for row in plan["primary_init_source_bindings"]},
+                )
+                self.assertEqual(
+                    {SWORD_PIN.part_sha256, EFFECT_OWNER_PIN.part_sha256},
+                    {row["source_provenance"]["part_sha256"]
+                     for row in plan["boss_actor_additions"]},
+                )
                 self.assertEqual({IDS.sword_entity, IDS.effect_owner_entity},
                                  {row["destination_entity_id"] for row in plan["boss_actor_additions"]})
                 self.assertEqual(2 * arena.destination_count,
                                  len(helper_scaling_parents(plan)))
                 self.assertEqual({232000, 232100}, {row["source_npc_param_id"]
                                                     for row in plan["boss_actor_scaling_requirements"]})
+
+    def test_gascoigne_native_plan_pins_three_primary_states_and_terminal_proxies(self):
+        plan = native_plan_logarius_donor(
+            GASCOIGNE_ARENA_CONTRACT, self.slots, self.npcs, self.effects, "gascoigne-logarius", IDS)
+        primary = plan["primary_init_source_bindings"]
+        self.assertEqual(
+            {"m24_01_00_00", "m24_01_00_01", "m24_01_00_11"},
+            {row["destination_map"] for row in primary},
+        )
+        retained = plan["boss_contract"]["retained_destination_helpers"]
+        self.assertEqual(3, len(retained))
+        self.assertEqual({2410811}, {row["entity_id"] for row in retained})
+        self.assertEqual(
+            GASCOIGNE_ARENA_CONTRACT.event_file.removesuffix(".js"),
+            plan["boss_emevd_ffx_requirements"][0]["destination_event_file"],
+        )
 
     def test_each_native_plan_declares_pinned_event_effect_and_full_bank_union(self):
         area_banks = {
@@ -165,6 +264,9 @@ class LogariusDonorTests(unittest.TestCase):
             "vicar-amelia": "frpg_sfxbnd_m24.ffxbnd.dcx",
             "amygdala": "frpg_sfxbnd_m33.ffxbnd.dcx",
             "ebrietas": "frpg_sfxbnd_m24.ffxbnd.dcx",
+            "lady-maria": "frpg_sfxbnd_m35.ffxbnd.dcx",
+            "laurence": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "father-gascoigne": "frpg_sfxbnd_m24.ffxbnd.dcx",
         }
         for arena in SUPPORTED_LOGARIUS_ARENAS:
             with self.subTest(arena=arena.key):
@@ -217,13 +319,12 @@ class LogariusDonorTests(unittest.TestCase):
             subprocess.run([str(compiler), "/cmd", "-decompile", "-game", "bb",
                             "-indir", str(original), "-outdir", str(source), "-force", "-silent"],
                            check=True)
-            patched_files: dict[str, str] = {}
             for arena in SUPPORTED_LOGARIUS_ARENAS:
                 name = arena.event_file
-                current = patched_files.get(name, (source / name).read_text(encoding="utf-8-sig"))
+                current = (source / name).read_text(encoding="utf-8-sig")
                 # BSB and Paarl share m23; each standalone route compiles from
                 # the same original rather than composing two Logarius donors.
-                patched = patch_logarius_donor(arena, self.destinations[arena.key], self.donor, IDS)
+                patched = patch_logarius_donor(arena, current, self.donor, IDS)
                 with tempfile.TemporaryDirectory() as single:
                     single_source = Path(single) / "source"; single_out = Path(single) / "out"
                     shutil.copytree(source, single_source)

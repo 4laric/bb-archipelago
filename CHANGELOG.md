@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle adds reusable Orphan combat in the six base arenas and reusable
+  Cainhurst encounters for the six base donors. Logarius also reaches Maria,
+  Laurence and Gascoigne, with source-pinned helpers and destination entry
+  readiness preserved. Character-driven effect delivery and gameplay validation
+  remain unfinished.
+
 - Boss shuffle adds reusable Logarius combat placements, the six base donors
   in Laurence's and Gascoigne's arenas, and Maria in Laurence's arena.
   Gascoigne replacements retire his original navigation commands while keeping
