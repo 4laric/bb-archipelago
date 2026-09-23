@@ -15,6 +15,7 @@ from tools.bb_enemizer.boss_contracts import (
     PAARL_ARENA,
 )
 from tools.bb_enemizer.inventory import load_slots
+from tools.bb_enemizer.laurence_arena_contract import LAURENCE_ARENA_CONTRACT
 from tools.bb_enemizer.maria_amelia_contract import (
     MariaAmeliaAttachmentIds,
     patch_maria_at_amelia,
@@ -29,6 +30,8 @@ from tools.bb_enemizer.maria_contract import (
 )
 from tools.bb_enemizer.maria_donor import (
     SUPPORTED_MARIA_ARENAS,
+    MARIA_PRIMARY_INITIALIZATION,
+    MARIA_PRIMARY_PIN,
     MariaArenaAllocation,
     maria_donor_contract,
     native_plan_maria_donor,
@@ -74,7 +77,7 @@ class MariaDonorTests(unittest.TestCase):
         self.assertNotIn(str(ALLOCATION.phase_cleanup_event), joined)
         self.assertNotIn(str(ALLOCATION.health_initialized_flag), joined)
 
-    def test_all_six_arenas_receive_full_maria_health_camera_and_cleanup(self):
+    def test_all_supported_arenas_receive_full_maria_health_camera_and_cleanup(self):
         for arena in SUPPORTED_MARIA_ARENAS:
             with self.subTest(arena=arena.key):
                 before = event_blocks(self.destinations[arena.key])
@@ -95,8 +98,10 @@ class MariaDonorTests(unittest.TestCase):
                 health = after[arena.health_bar_event]
                 self.assertIn(f"$Event({arena.health_bar_event}, Default", health)
                 self.assertIn(f"EndIf(EventFlag({arena.completion_event}))", health)
-                self.assertIn(f"if (!EventFlag({ALLOCATION.health_initialized_flag}))", health)
-                self.assertIn(f"SetEventFlag({ALLOCATION.health_initialized_flag}, ON)", health)
+                health_flag = (13404860 if arena is LAURENCE_ARENA_CONTRACT
+                               else ALLOCATION.health_initialized_flag)
+                self.assertIn(f"if (!EventFlag({health_flag}))", health)
+                self.assertIn(f"SetEventFlag({health_flag}, ON)", health)
                 self.assertIn(
                     f"SetNetworkUpdateAuthority({arena.actor}, AuthorityLevel.Normal)", health
                 )
@@ -146,7 +151,8 @@ class MariaDonorTests(unittest.TestCase):
                 ))
                 retired = {
                     *arena.phase_slots,
-                    arena.part_routine_event,
+                    *arena.retired_combat_events,
+                    *(() if arena.part_routine_event is None else (arena.part_routine_event,)),
                     *(() if arena.cloth_routine_event is None else (arena.cloth_routine_event,)),
                     *(() if arena.attachment_anchor_event is None
                       else (arena.attachment_anchor_event,)),
@@ -160,6 +166,27 @@ class MariaDonorTests(unittest.TestCase):
                         f"$InitializeEvent(0, {ALLOCATION.phase_cleanup_event});"
                     ),
                 )
+
+    def test_laurence_reuses_its_room_notification_and_one_transition_without_touching_ludwig(self):
+        before = event_blocks(self.destinations[LAURENCE_ARENA_CONTRACT.key])
+        after = event_blocks(patch_maria_donor(
+            LAURENCE_ARENA_CONTRACT,
+            self.destinations[LAURENCE_ARENA_CONTRACT.key], self.maria, ALLOCATION,
+        ))
+        health = after[LAURENCE_ARENA_CONTRACT.health_bar_event]
+        self.assertIn("if (!EventFlag(13404860))", health)
+        self.assertIn("SetEventFlag(13404860, ON)", health)
+        self.assertNotIn(str(ALLOCATION.health_initialized_flag), health)
+        music = after[LAURENCE_ARENA_CONTRACT.music_event]
+        self.assertIn("CharacterHasEventMessage(3400850, 100)", music)
+        self.assertIn("L0:\n", music)
+        self.assertNotIn("CharacterHasEventMessage(3400850, 300)", music)
+        for event_id in (13401800, 13404803, 13404820, 13404821, 13404822, 13404823):
+            self.assertEqual(before[event_id], after[event_id])
+        self.assertNotIn("$InitializeEvent(0, 13404870", after[0])
+        self.assertNotIn("$InitializeEvent(0, 13404875);", after[0])
+        self.assertEqual("EndEvent();", after[13404870].splitlines()[1].strip())
+        self.assertEqual("EndEvent();", after[13404875].splitlines()[1].strip())
 
     def test_entry_protection_brackets_trigger_after_model_choreography_is_removed(self):
         paarl = event_blocks(patch_maria_donor(
@@ -342,6 +369,14 @@ class MariaDonorTests(unittest.TestCase):
                     {binding["source_entity_id"] for binding in bindings},
                 )
                 self.assertEqual(
+                    {MARIA_PRIMARY_PIN},
+                    {binding["source_provenance"]["part_sha256"] for binding in bindings},
+                )
+                self.assertEqual(
+                    {tuple(sorted(MARIA_PRIMARY_INITIALIZATION.items()))},
+                    {tuple(sorted(binding["source_initialization"].items())) for binding in bindings},
+                )
+                self.assertEqual(
                     {slot.map_name for slot in self.slots
                      if slot.entity_id == arena.actor and slot.archetype == arena.archetype},
                     {binding["destination_map"] for binding in bindings},
@@ -414,6 +449,43 @@ class MariaDonorTests(unittest.TestCase):
                 "-indir", str(source), "-outdir", str(output), "-force", "-silent",
             ], check=True)
             self.assertTrue((output / "m24_00_00_00.emevd.dcx").is_file())
+
+    def test_laurence_output_compiles_with_pinned_darkscript_when_available(self):
+        compiler = ROOT / "work" / "DarkScript3" / "DarkScript3.exe"
+        events = ROOT / "work" / "boss-shuffle-validation" / "events"
+        required = ("common.emevd.dcx", "m34_00_00_00.emevd.dcx", "m35_00_00_00.emevd.dcx")
+        if not compiler.is_file() or any(not (events / name).is_file() for name in required):
+            self.skipTest("pinned DarkScript/original event fixture unavailable")
+        self.assertEqual(
+            "c86fd23ee28f7d39032a5bc792f9510bbd171ca72de1c547d956fe5e161d54de",
+            hashlib.sha256(compiler.read_bytes()).hexdigest(),
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            original, source, output = work / "o", work / "s", work / "out"
+            original.mkdir()
+            for name in required:
+                shutil.copyfile(events / name, original / name)
+            subprocess.run([
+                str(compiler), "/cmd", "-decompile", "-game", "bb",
+                "-indir", str(original), "-outdir", str(source), "-force", "-silent",
+            ], check=True)
+            destination_path = source / LAURENCE_ARENA_CONTRACT.event_file
+            maria_path = source / MARIA_EVENT_FILE
+            destination_path.write_text(
+                patch_maria_donor(
+                    LAURENCE_ARENA_CONTRACT,
+                    destination_path.read_text(encoding="utf-8-sig"),
+                    maria_path.read_text(encoding="utf-8-sig"), ALLOCATION,
+                ), encoding="utf-8-sig",
+            )
+            subprocess.run([
+                str(compiler), "/cmd", "-compile", "-game", "bb",
+                "-indir", str(source), "-outdir", str(output), "-force", "-silent",
+            ], check=True)
+            compiled = output / "m34_00_00_00.emevd.dcx"
+            self.assertTrue(compiled.is_file())
+            self.assertGreater(compiled.stat().st_size, 0)
 
 
 if __name__ == "__main__":

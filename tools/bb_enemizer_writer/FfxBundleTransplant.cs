@@ -12,6 +12,9 @@ internal static class FfxBundleTransplant
     };
     internal sealed record Merge(string SourceFile, string SourceSha256, string DestinationFile,
         string DestinationSha256, List<int> RequiredEffectIds, string Policy);
+    internal sealed record EmevdRequirement(string Format, string SourceMap, string DestinationMap,
+        string SourceEventFile, string SourceEventSha256, long SourceEventId,
+        string DestinationEventFile, long DestinationEventId, int EffectId);
     internal sealed record Imported(string Name, int Id, string Sha256, int Size);
     internal sealed record Applied(string SourceFile, string DestinationFile, int SourceEntryCount,
         int RetainedEntryCount, List<Imported> ImportedEntries, string OutputSha256);
@@ -58,18 +61,104 @@ internal static class FfxBundleTransplant
         }
         return merges;
     }
+    static string EventFile(string map) {
+        Need(Regex.IsMatch(map, @"^m\d{2}_\d{2}_\d{2}_\d{2}$"), "invalid EMEVD FFX map");
+        return map + ".emevd.dcx";
+    }
+    static string Binder(string map) {
+        _ = EventFile(map);
+        return "frpg_sfxbnd_" + map[..3] + ".ffxbnd.dcx";
+    }
+    internal static List<EmevdRequirement> ReadEmevdRequirements(string planPath) {
+        using var doc = JsonDocument.Parse(File.ReadAllText(planPath));
+        if (!doc.RootElement.TryGetProperty("boss_emevd_ffx_requirements", out var node)) return [];
+        var rows = node.Deserialize<List<EmevdRequirement>>(Json)
+            ?? throw new InvalidDataException("invalid boss_emevd_ffx_requirements");
+        Need(rows.Count > 0, "boss_emevd_ffx_requirements must not be empty");
+        Need(rows.Select(row => (row.SourceEventFile, row.SourceEventId, row.DestinationEventFile,
+                    row.DestinationEventId, row.EffectId)).Distinct().Count() == rows.Count,
+            "duplicate EMEVD FFX requirement");
+        foreach (var row in rows) {
+            Need(row.Format == "bb-boss-emevd-ffx-requirement-v1", "unsupported EMEVD FFX requirement format");
+            Need(row.SourceEventFile == EventFile(row.SourceMap)
+                 && row.DestinationEventFile == EventFile(row.DestinationMap),
+                "EMEVD FFX event filename does not match map");
+            Need(row.SourceEventSha256 is { Length: 64 }
+                 && row.SourceEventSha256.All(c => char.IsAsciiHexDigit(c) && !char.IsUpper(c)),
+                "invalid EMEVD FFX source provenance hash");
+            Need(row.SourceEventId >= 0 && row.DestinationEventId >= 0 && row.EffectId > 0,
+                "invalid EMEVD FFX event or effect ID");
+        }
+        return rows;
+    }
+    static EMEVD.Event OneEvent(EMEVD file, long id, string role) {
+        var events = file.Events.Where(item => item.ID == id).ToList();
+        Need(events.Count == 1, $"missing or ambiguous {role} event {id}");
+        return events[0];
+    }
+    static int SpawnEffect(EMEVD.Instruction instruction) {
+        Need(instruction.ArgData.Length == 16, "malformed SpawnOneshotSFX instruction");
+        return BitConverter.ToInt32(instruction.ArgData, 12);
+    }
+    static void RequireOneEffect(EMEVD.Event item, int effectId, string role) {
+        var matches = item.Instructions.Select((instruction, index) => (instruction, index))
+            .Where(pair => pair.instruction.Bank == 2006 && pair.instruction.ID == 3)
+            .Where(pair => SpawnEffect(pair.instruction) == effectId).ToList();
+        Need(matches.Count == 1, $"{role} event must contain exactly one declared SpawnOneshotSFX effect");
+        int instructionIndex = matches[0].index;
+        Need(!item.Parameters.Any(parameter => parameter.InstructionIndex == instructionIndex
+                 && parameter.TargetStartByte < 16
+                 && parameter.TargetStartByte + parameter.ByteCount > 12),
+            $"{role} event parameterizes the declared SpawnOneshotSFX effect operand");
+    }
+    internal static List<EmevdRequirement> ValidateEmevdInputs(string planPath, string eventDirectory,
+        IEnumerable<BossEncounter.Encounter> encounters) {
+        var rows = ReadEmevdRequirements(planPath);
+        var encounterList = encounters.ToList();
+        foreach (var row in rows) {
+            string sourcePath = Path.Combine(eventDirectory, row.SourceEventFile);
+            Need(File.Exists(sourcePath) && Hash(File.ReadAllBytes(sourcePath)) == row.SourceEventSha256,
+                "EMEVD FFX source provenance drift: " + row.SourceEventFile);
+            var source = EMEVD.Read(sourcePath);
+            Need(source.Format == EMEVD.Game.Bloodborne, "EMEVD FFX source is not Bloodborne");
+            RequireOneEffect(OneEvent(source, row.SourceEventId, "EMEVD FFX source"), row.EffectId,
+                "EMEVD FFX source");
+            var bound = encounterList.Where(encounter =>
+                encounter.DestinationEventFile.Equals(row.DestinationEventFile, StringComparison.OrdinalIgnoreCase)
+                && encounter.ChangedEventIds.Concat(encounter.AddedEventIds ?? []).Contains(row.DestinationEventId)).ToList();
+            Need(bound.Count == 1, "EMEVD FFX destination event is not one reviewed encounter edit");
+        }
+        return rows;
+    }
+    internal static void ValidateEmevdFinal(IEnumerable<EmevdRequirement> requirements, string outputEventDirectory) {
+        foreach (var group in requirements.GroupBy(row => row.DestinationEventFile, StringComparer.OrdinalIgnoreCase)) {
+            string path = Path.Combine(outputEventDirectory, group.Key);
+            Need(File.Exists(path), "missing final EMEVD FFX destination event file");
+            var file = EMEVD.Read(path);
+            Need(file.Format == EMEVD.Game.Bloodborne, "EMEVD FFX destination is not Bloodborne");
+            foreach (var row in group)
+                RequireOneEffect(OneEvent(file, row.DestinationEventId, "EMEVD FFX destination"), row.EffectId,
+                    "EMEVD FFX destination");
+        }
+    }
     internal static void VerifyCoverage(string planPath, IEnumerable<BossSfxTransplant.Applied> effects) {
         var merges = Read(planPath);
-        static string Binder(string map) {
-            Need(Regex.IsMatch(map, @"^m\d{2}_\d{2}_\d{2}_\d{2}$"), "invalid SFX map for FFX coverage");
-            return "frpg_sfxbnd_" + map[..3] + ".ffxbnd.dcx";
+        var expected = new Dictionary<(string SourceFile, string DestinationFile), HashSet<int>>();
+        foreach (var effect in effects) {
+            var key = (Binder(effect.SourceMap), Binder(effect.DestinationMap));
+            if (!expected.TryGetValue(key, out var ids)) expected[key] = ids = [];
+            ids.Add(effect.EffectId);
         }
-        var expected = effects.GroupBy(effect => (SourceFile: Binder(effect.SourceMap), DestinationFile: Binder(effect.DestinationMap)))
-            .ToDictionary(group => group.Key, group => group.Select(effect => effect.EffectId).ToHashSet());
-        Need(merges.Count == expected.Count, "FFX merge manifest does not exactly cover added map SFX");
+        foreach (var requirement in ReadEmevdRequirements(planPath)) {
+            var key = (Binder(requirement.SourceMap), Binder(requirement.DestinationMap));
+            if (!expected.TryGetValue(key, out var ids)) expected[key] = ids = [];
+            ids.Add(requirement.EffectId);
+        }
+        Need(merges.Count == expected.Count, "FFX merge manifest does not exactly cover declared SFX dependencies");
         foreach (var row in merges) {
             Need(expected.TryGetValue((row.SourceFile, row.DestinationFile), out var required)
-                && required.SetEquals(row.RequiredEffectIds), "FFX merge required effects do not exactly cover added map SFX");
+                && required.SetEquals(row.RequiredEffectIds),
+                "FFX merge required effects do not exactly cover declared SFX dependencies");
         }
     }
     static object Header(BND4 bnd) => new { bnd.Version, bnd.Format, bnd.Unk04, bnd.Unk05,

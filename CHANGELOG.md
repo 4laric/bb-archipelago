@@ -6,6 +6,26 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle adds reusable Orphan combat in the six base arenas and reusable
+  Cainhurst encounters for the six base donors. Logarius also reaches Maria,
+  Laurence and Gascoigne, with source-pinned helpers and destination entry
+  readiness preserved. Character-driven effect delivery and gameplay validation
+  remain unfinished.
+
+- Boss shuffle adds reusable Logarius combat placements, the six base donors
+  in Laurence's and Gascoigne's arenas, and Maria in Laurence's arena.
+  Gascoigne replacements retire his original navigation commands while keeping
+  the arena's rewards and progression. In-game validation remains outstanding.
+- Boss shuffle can place the six base combat packages and Laurence in Maria's
+  arena, preserving their phases and adapting entry, music and progression to
+  the destination. Logarius replacements now include his sword-effect bank.
+  These additions still need in-game validation.
+- Boss shuffle adds the remaining placements among Cleric Beast, Blood-starved
+  Beast, Paarl, Amelia, Amygdala and Ebrietas, plus Laurence in all six arenas.
+  Replacement encounters skip character-specific entrance cinematics while
+  retaining entry triggers and progression, with explicit player relocation
+  where the original entrance warped the player. These changes still need
+  in-game validation.
 - Fixed combined enemy and boss seed generation losing swaps when ordinary and
   boss placements used different names for the same map. All placements now
   share one map write, preventing the primary boss archetype validation crash.

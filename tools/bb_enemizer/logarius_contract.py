@@ -39,6 +39,10 @@ BSB_ARCHETYPE = Archetype("c2090", 209000, 209000, 0)
 
 PROJECT_EVENT_MIN = 12990900
 PROJECT_EVENT_MAX = 12990999
+LOGARIUS_EVENT_FILE_SHA256 = "7bc431b417db7d9278ad95ff1230c26f1ee966d382e6f79c4d5e2cf5150c8bf8"
+LOGARIUS_FFX_SHA256 = "4e1cc0ffb8a47b369ceb4dc57b095d42b4b302bc61952b3b1fe3c3102fe57584"
+BSB_FFX_SHA256 = "b92037c5ae58ac81e5e59f7b9596966faf65ea56bf1b9ea9913045097213cfec"
+LOGARIUS_SWORD_EFFECT = 623206
 
 # Event bodies are hashed after UTF-8-sig decoding, matching event_blocks.
 SOURCE_HASHES = {
@@ -648,6 +652,29 @@ def native_plan_logarius_at_bsb(
             },
         },
         "boss_actor_additions": additions,
+        "boss_emevd_ffx_requirements": [
+            {
+                "format": "bb-boss-emevd-ffx-requirement-v1",
+                "source_map": "m25_00_00_00",
+                "destination_map": "m23_00_00_00",
+                "source_event_file": "m25_00_00_00.emevd.dcx",
+                "source_event_sha256": LOGARIUS_EVENT_FILE_SHA256,
+                "source_event_id": 12504806,
+                "destination_event_file": "m23_00_00_00.emevd.dcx",
+                "destination_event_id": ids.sword_event_id,
+                "effect_id": LOGARIUS_SWORD_EFFECT,
+            }
+        ],
+        "boss_ffx_merges": [
+            {
+                "source_file": "frpg_sfxbnd_m25.ffxbnd.dcx",
+                "source_sha256": LOGARIUS_FFX_SHA256,
+                "destination_file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+                "destination_sha256": BSB_FFX_SHA256,
+                "required_effect_ids": [LOGARIUS_SWORD_EFFECT],
+                "policy": "preserve_destination_union_source_v1",
+            }
+        ],
         "primary_init_source_bindings": primary,
         "boss_actor_scaling_requirements": [
             {

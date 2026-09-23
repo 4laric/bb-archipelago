@@ -81,8 +81,8 @@ refuses an incomplete matching instead of dropping encounters.
 Ebrietas, Maria, Laurence, Ludwig, Orphan, Logarius, Gascoigne, Rom, Living Failures,
 Wet Nurse, Witch of Hemwick, Celestial Emissary, Micolash, The One Reborn, Shadows,
 Gehrman and Moon Presence.
-The current twenty-two-boss graph has 560 complete one-to-one assignments and
-63 feasible directed arena/donor edges. Every arena has at least two feasible
+The historical `aeb5d81` twenty-two-boss graph had 560 complete one-to-one assignments and
+63 feasible directed arena/donor edges. Every arena had at least two feasible
 donors, and every donor can reach at least two feasible destinations. The graph
 remains deliberately restricted rather than all-to-all. All donors are used
 once and no boss stays in its own arena. Cleric and
@@ -635,6 +635,10 @@ The user-approved design is to preserve donor combat and adapt arena-specific
 traversal and set pieces to the destination. Reproducing Micolash's original
 chase outside Mensis, for example, is not a prerequisite for moving his combat.
 Boss combat phases and destination progression still need explicit handling.
+The user also chose to skip character-specific entrance cinematics when a
+replacement boss occupies the arena. Entry triggers, player relocation and
+progression remain required; this decision does not remove donor combat-phase
+transitions or destination ending sequences.
 The existing one-of-each, no-self-placement policy gives 462 candidate directed
 pairings across the 22 encounters. This is the work inventory, not a claim that
 all 462 are implemented or playable.
@@ -664,13 +668,13 @@ helper requirements. Special encounter adapters remain in place while their
 combat/lifecycle boundaries are extracted. Adding a registry entry does not
 substitute for implementing those boundaries.
 
-This checkpoint implements 78 of the 462 directed pairings; all 78 participate
+The first composition checkpoint implemented 78 of the 462 directed pairings; all 78 participate
 in complete assignments. The six base arena contracts expose 23 of their 30
 off-diagonal pairs. Ebrietas's combat package now reaches all five other base
 arenas, and Amelia also reaches Cleric and Ebrietas. Maria uses one donor adapter
 across all six base arenas. The existing Blood-starved Beast at Celestial
-Emissary adapter is now included in the assignment graph. The other 384 pairs
-remain implementation work.
+Emissary adapter was included in the assignment graph. At that checkpoint,
+the other 384 pairs remained implementation work.
 
 Reusable routes preserve entry protection independently of removed model
 animations. Native plans bind each physical primary and Ebrietas helper to an
@@ -680,7 +684,7 @@ the destination retains its progression and health telemetry. This is static
 construction evidence. Entry, combat, death, reload and arena fit still require
 gameplay acceptance.
 
-The [composition native matrix](boss-composition-native-matrix.json) records
+The first [composition native matrix](https://github.com/4laric/bb-archipelago/blob/4de3eb490b1f85625652dcda2797e4f275442509/docs/boss-composition-native-matrix.json) records
 21 full-roster builds covering all 78 implemented pairs, with 59 verified files
 per build. After correcting Maria's duplicate room-entry notification at Amelia,
 both affected seeds were rebuilt; full-source comparisons prove the other five
@@ -689,3 +693,201 @@ normalized ordinary swaps, all 22 boss encounters and an actual Cathedral AP
 event override. The frozen Windows builder reproduces all 59 output hashes and
 the receipt exactly. Source, graph, tool and receipt hashes are recorded in the
 matrix; these remain native construction results, not gameplay observations.
+
+## Base arena completion and entrance policy
+
+The next implementation step expands the graph to 90 directed pairings, all
+usable in complete assignments. The initial six arenas now accept all 30
+off-diagonal combinations of their six combat packages. Laurence's reusable
+donor reaches those six arenas as well. This leaves 372 implementation gaps
+in the full 462-pair inventory.
+
+Specialized BSB/Paarl placements retire Amelia's original healing controller
+and Amygdala's original head-part controller so they cannot manipulate the
+replacement boss. Laurence carries his health/network lifecycle, five limb
+bindings, phase hitmask and camera; the destination retains progression and
+health telemetry.
+
+`boss_entrances.py` inventories all 22 original entrance events and applies
+the approved cinematic policy after each donor adapter. Twelve entrances
+contain cinematics; the others retain their adapter output. Each cinematic
+instruction is replaced one-for-one, retaining relative branch offsets,
+entry conditions, control flags and encounter-start ordering. Maria, Laurence,
+Gehrman and Moon Presence use their original explicit warp regions for a
+same-map short-warp replacement. Laurence's original client branch remains
+non-relocating. Combat-phase cinematics and ending sequences are outside this
+policy.
+
+The short-warp instruction's player operand and Area destination form are
+separately witnessed in the original corpus. Their combination is an inferred
+implementation, not a live observation of equivalent cinematic relocation.
+Native compilation and receipt verification cannot establish its runtime
+positioning, orientation or multiplayer behavior.
+
+The preceding [native matrix](https://github.com/4laric/bb-archipelago/blob/692b57bc5cd969e9a3588895f835340d37c021c5/docs/boss-composition-native-matrix.json) records 27
+full-roster builds covering all 90 implemented pairs, with 59 verified files
+per build. The combined `composition-26` source and frozen builds include 308
+normalized ordinary swaps, 22 boss encounters and the Cathedral AP event
+override; all 59 output hashes and the receipt are identical. The entrance
+validator's aggregate-warp and newline-preservation changes leave all 90
+generated encounter scripts byte-identical on the builder's decoded inputs.
+These results establish native construction and packaging, not gameplay.
+
+A subsequent asset audit found a construction gap in the existing Logarius
+routes: his sword routine references one-shot effect `623206`, which is present
+in the original m25 effect bank but absent from the other inspected map banks.
+Those adapters previously copied his AI and actors without declaring that
+effect bank merge. Their earlier native receipts did not prove complete
+Logarius effect delivery; the gameplay consequence has not been observed.
+
+## Reusable Maria destination and Logarius effect delivery
+
+The Maria destination now accepts Cleric Beast, Blood-starved Beast, Paarl,
+Amelia, Amygdala, Ebrietas and Laurence. This raises implemented coverage to
+95 of 462 directed pairings, all usable in complete assignments, leaving 367
+implementation gaps. It does not establish unrestricted or gameplay-validated
+shuffle coverage.
+
+Donor health, cooperative scaling, combat phases and startup protections are
+preserved with destination-owned entry, notification, telemetry and completion
+flags. Donor wake sequences signal readiness before AI activation. Maria's
+entry and cooperative restoration remain intact before the shared cinematic
+normalizer applies the approved replacement policy. Ebrietas's projectile
+owner stays active during combat and is cleaned after destination completion.
+Single-boundary music uses Maria's opening/final tracks while retaining active
+fight reload recovery; two-boundary donors retain both transitions. These music
+and camera choices adapt destination presentation while retaining combat.
+
+Logarius's existing Blood-starved Beast and Wet Nurse routes now declare the
+EMEVD-only `623206` dependency and merge the pinned original m25 effect bank.
+The native writer checks the source event instruction, rejects parameterized
+effect operands, verifies the destination encounter owns the declared event,
+and checks the effect operand in the final compiled event. Binder merge
+coverage includes both map-linked and EMEVD-only effect requirements.
+
+The preceding [native matrix](https://github.com/4laric/bb-archipelago/blob/197ebf4a8d5dad6196102ff4b35e885baff501b8/docs/boss-composition-native-matrix.json) records 18
+full-roster builds covering all 95 implemented pairs, with 60 verified output
+files per build. Python and native writer sources, writer binary and compiler
+stayed unchanged throughout. The combined `composition-26` source and frozen
+builds contain 308 ordinary enemy swaps, all 22 boss encounters and the actual
+Cathedral AP override; all 60 output hashes and their receipts match exactly.
+These results validate native construction and packaging, not gameplay.
+
+## Logarius combat, Laurence and Gascoigne arenas
+
+Reusable Logarius combat now reaches all six base arenas. The package retains
+his primary, sword and projectile owner as distinct source-pinned actors,
+including cooperative scaling, both sword initializers, aura and cleanup.
+His event-only sword effect is delivered through the source-pinned area bank;
+all m24 subareas use the m24 bank. Source `ShootBullet` behavior `223200590`
+references BulletParam `232250`, whose recorded fields do not add an effect
+bank dependency. Destination terminal, notification and telemetry remain
+arena-owned. The actual Cleric client restoration event `12411703` is pinned
+separately from the retired cloth controller.
+
+Laurence and Gascoigne now accept all six base combat packages. Their adapters
+retain donor startup protections, readiness ordering and combat controllers,
+while preserving destination entry, cooperation, progression and neighboring
+Ludwig/Cleric events. Ebrietas retains a materialized projectile owner through
+combat. Gascoigne's three original beast states remain hidden, invincible
+terminal witnesses until destination completion. Both Gascoigne-specific
+initializers for generic navigation controller `12415238` are removed; the
+generic event body and unrelated callers remain intact. Authored per-state
+primary and proxy fingerprints reject source drift before writing.
+
+The two-track music adaptations preserve reload recovery. Laurence uses the
+donor's first declared combat boundary; Gascoigne uses the final boundary,
+matching its original final transformation presentation. These are presentation
+choices, not changes to combat phases or evidence of compatibility limits.
+
+Maria also reaches Laurence's arena, retaining both source combat phase signals
+and cleanup. Message 100 drives Laurence's single music transition; message
+300 remains part of combat. Maria native bindings now carry the authored
+original primary fingerprint and initialization fields across every route.
+
+This checkpoint implements 110 of 462 directed pairings, all feasible within
+complete one-of-each assignments. The remaining 352 are implementation gaps.
+It does not establish unrestricted or gameplay-validated boss shuffle.
+
+The preceding [native matrix](https://github.com/4laric/bb-archipelago/blob/9c5aa4e/docs/boss-composition-native-matrix.json) records 20 full-roster
+builds covering all 110 implemented pairs, with 60 verified files per build.
+The source and frozen combined build includes 308 ordinary swaps, 22 boss
+encounters and the actual Cathedral AP override; all 60 file hashes and the
+receipts match. Sources and tool binaries stayed unchanged throughout that
+matrix. Both full test passes ran 1,836 tests with 57 optional skips, and the
+generated-data and shipping checks passed.
+
+Composition permits a new constructor call at the boundary of an independently
+removed range while still rejecting insertions inside it. This preserves
+Orphan's Cleric completion bridge when Gascoigne's old navigation calls are
+removed from their shared event file; synthetic and real-source regressions
+cover the ordering.
+
+The matrix above records the sources at `9c5aa4e`, before the separate map-alias
+fix from PR #460. With that fix applied, the actual saved launcher seed
+`31879326883593218814:1` also builds successfully using its original ordinary
+plan and extracted inputs: 332 composed swaps, 22 boss encounters across 15 event files and
+60 verified files. That plan mixes bare and `.msb` map names, unlike the earlier
+combined fixture. The matching native harness passes, including the new alias
+regressions and the existing event-only FFX checks. These checks still make no
+gameplay claim.
+
+## Orphan combat and reusable Cainhurst encounters
+
+Orphan's reusable donor package reaches all six base arenas with source-pinned
+core, phase and support actors. Both helper actors carry source initialization
+and destination scaling in every physical map state. The reviewed health,
+phase, support, player-effect and camera events remain connected, including
+saved-phase restoration. A death bridge preserves the destination terminal
+event and cleans up helpers on live completion and completed reload. No region,
+generator or FFX dependency is invented from an untyped integer reference;
+transitive character AI/TAE/behavior/bullet/FXR closure remains an explicit
+original-data investigation gap.
+
+The [original character-asset audit](boss-orphan-asset-audit.json) has now
+identified nine direct animation-effect dependencies present in m36 but absent
+from the base destination banks and global effect banks. Delivery is unfinished.
+A whole-m36-bank merge also encounters two different payloads under existing
+m33 effect names, so simply merging the entire bank is insufficient. The event
+and map build results below do not validate this missing asset delivery.
+
+The [broader character screening](boss-character-asset-screening.json) records
+original animation archive and TAE hashes for 30 declared actor models, with
+direct type-96/100 effect requests checked against the available original area
+and global banks. It exposes further delivery work, including Gascoigne
+effects absent from m23. This screening does not account for already generated
+donor-bank imports and is neither a full-roster asset census nor proof of
+transitive effect closure. Missing assets remain implementation gaps.
+
+Cainhurst accepts all six base combat packages. Its terminal, post-boss, fog
+and music-cleanup events remain exact. The original sword and projectile owner
+stay pinned and inert until destination completion, including completed reload.
+Source-pinned client restoration, donor readiness and destination notification,
+telemetry, music and camera adaptations replace the retired Logarius combat
+controllers.
+
+Logarius also reaches Maria, Laurence and Gascoigne. Maria's music moves to the
+final track at his single phase boundary while retaining reload recovery;
+Gascoigne's three physical states retain their original beast as an inert
+terminal witness. Laurence's replacement uses Logarius's authored entry pose
+and a readiness flag cleared before constructor initialization. Initial entry,
+client restoration and saved-intro reload set that flag only after actor warp
+and restoration; health waits for it even when its own event was completed on
+a previous attempt. Destination progression remains unchanged.
+
+This checkpoint implements 122 of 462 directed pairings, all feasible within
+complete one-of-each assignments. The remaining 340 are implementation gaps,
+not proven incompatibilities. Static and native checks do not establish live
+combat, arena fit or multiplayer timing.
+
+The [current native matrix](boss-composition-native-matrix.json) records 21
+full-roster builds covering all 122 constructed pairings with unchanged source
+and tool hashes. Each build verifies 60 files. The actual saved launcher plan
+for `31879326883593218814:1`, including its mixed map-name spellings and AP
+override, produces 330 composed swaps and all 22 boss contracts. Source and
+packaged builders produce identical receipts and all 60 file hashes match.
+This evidence covers the emitted event/map/parameter pipeline; the character
+asset audit above records a separate known gap that these checks do not cover.
+
+Both full test passes completed with 1,852 tests and 57 optional skips
+(865.676s and 807.476s). Generated-data and shipping preflight passed.

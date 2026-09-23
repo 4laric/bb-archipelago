@@ -35,18 +35,31 @@ class BossPoolTests(unittest.TestCase):
                  'destination_file': 'frpg_sfxbnd_m34.ffxbnd.dcx',
                  'source_sha256': 'a' * 64, 'destination_sha256': 'b' * 64,
                  'policy': 'preserve_destination_union_source_v1', 'required_effect_ids': [640320]}
+        requirement = {
+            'format': 'bb-boss-emevd-ffx-requirement-v1',
+            'source_map': 'm35_00_00_00', 'destination_map': 'm34_00_00_00',
+            'source_event_file': 'm35_00_00_00.emevd.dcx',
+            'source_event_sha256': 'd' * 64, 'source_event_id': 13504820,
+            'destination_event_file': 'm34_00_00_00.emevd.dcx',
+            'destination_event_id': 12990020, 'effect_id': 640320,
+        }
         plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'effects', 'dry_run': True,
                 'swaps': [], 'scaling': {'enabled': False,
                     'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
                     'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
-                'boss_sfx_additions': [effect], 'boss_ffx_merges': [merge]}
+                'boss_sfx_additions': [effect], 'boss_ffx_merges': [merge],
+                'boss_emevd_ffx_requirements': [requirement]}
         second = copy.deepcopy(plan)
         second['boss_sfx_additions'][0].update(destination_event='meteor2',
             destination_event_id=980033, destination_entity_id=980028)
         second['boss_ffx_merges'][0]['required_effect_ids'] = [640321, 640320]
+        second['boss_emevd_ffx_requirements'][0].update(
+            destination_event_id=12990021, effect_id=640321)
         combined = combine_native_plans('effects', [plan, second])
         self.assertEqual([dict(merge, required_effect_ids=[640320, 640321])], combined['boss_ffx_merges'])
         self.assertEqual([effect, second['boss_sfx_additions'][0]], combined['boss_sfx_additions'])
+        self.assertEqual([requirement, second['boss_emevd_ffx_requirements'][0]],
+                         combined['boss_emevd_ffx_requirements'])
         self.assertEqual([640320], merge['required_effect_ids'])
         second['boss_ffx_merges'][0]['source_sha256'] = 'c' * 64
         with self.assertRaisesRegex(ValueError, 'FFX binder provenance'):
@@ -63,6 +76,12 @@ class BossPoolTests(unittest.TestCase):
         for plans in ([plan, other], [other, plan]):
             with self.assertRaisesRegex(ValueError, 'overlap an added'):
                 combine_native_plans('effects', plans)
+        duplicate_requirement = copy.deepcopy(second)
+        duplicate_requirement.pop('boss_sfx_additions')
+        duplicate_requirement.pop('boss_ffx_merges')
+        duplicate_requirement['boss_emevd_ffx_requirements'] = [copy.deepcopy(requirement)]
+        with self.assertRaisesRegex(ValueError, 'overlap an EMEVD FFX requirement'):
+            combine_native_plans('effects', [plan, duplicate_requirement])
 
     def test_auxiliary_actors_survive_pool_composition_and_collisions_fail(self):
         def pair(key, entity, map_name='m23_00_00_00'):
@@ -228,6 +247,45 @@ class BossPoolTests(unittest.TestCase):
             compose_event_patches(SOURCE, [first, second], [30])
         with self.assertRaisesRegex(ValueError, 'protected completion event 30'):
             compose_event_patches(SOURCE, [SOURCE.replace('HandleBossDefeat(100)', 'HandleBossDefeat(200)')], [30])
+
+    def test_constructor_range_boundary_is_adjacent_but_its_interior_conflicts(self):
+        first = '    $InitializeEvent(0, 10, 100);'
+        second = '    $InitializeEvent(0, 20, 200);'
+        removed = SOURCE.replace(first + '\n' + second + '\n', '')
+        inserted = SOURCE.replace(first, '    $InitializeEvent(0, 40, 400);\n' + first)
+        expected = removed.replace('$Event(0, Default, function() {',
+                                   '$Event(0, Default, function() {\n    $InitializeEvent(0, 40, 400);')
+        for variants in ([removed, inserted], [inserted, removed]):
+            self.assertEqual(expected, compose_event_patches(SOURCE, variants, [30]))
+        interior = SOURCE.replace(second, '    $InitializeEvent(0, 50, 500);\n' + second)
+        for variants in ([removed, interior], [interior, removed]):
+            with self.assertRaisesRegex(ValueError, 'overlapping boss constructor'):
+                compose_event_patches(SOURCE, variants, [30])
+
+    def test_gascoigne_navigation_retirement_composes_with_adjacent_orphan_initializers(self):
+        from tools.bb_inputs import read_blob
+        from tools.bb_enemizer.boss_canary import event_blocks
+        from tools.bb_enemizer.boss_contracts import PAARL_PACKAGE
+        from tools.bb_enemizer.gascoigne_arena_contract import patch_portable_donor_at_gascoigne
+        from tools.bb_enemizer.orphan_contract import patch_orphan_at_cleric
+        from tools.build_boss_encounters import ORPHAN_ALLOCATION
+        bundle = Path(__file__).resolve().parents[1] / 'research/bb_inputs.db'
+        def source(name):
+            return read_blob(bundle, 'event/' + name).decode('utf-8-sig')
+        original = source('m24_01_00_00.emevd.dcx.js')
+        gascoigne = patch_portable_donor_at_gascoigne(
+            original, PAARL_PACKAGE, source(PAARL_PACKAGE.event_file))
+        cleric = patch_orphan_at_cleric(
+            original, source('m36_00_00_00.emevd.dcx.js'), ORPHAN_ALLOCATION)
+        result = compose_event_patches(original, [gascoigne, cleric], [12411800])
+        self.assertEqual(result, compose_event_patches(original, [cleric, gascoigne], [12411800]))
+        before, after = event_blocks(original), event_blocks(result)
+        self.assertEqual(event_blocks(cleric)[12411700], after[12411700])
+        self.assertEqual(before[12411800], after[12411800])
+        self.assertNotIn('$InitializeEvent(0, 12415238,', after[0])
+        self.assertNotIn('$InitializeEvent(1, 12415238,', after[0])
+        for event in (12990601, 12990602, 12990603, 12990604, 12990605, 12995306, 12995307):
+            self.assertEqual(1, after[0].count(f'$InitializeEvent(0, {event});'))
 
     def test_reciprocal_real_bosses_share_map_without_losing_progression(self):
         from tools.bb_enemizer.boss_contracts import (

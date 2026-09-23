@@ -31,6 +31,10 @@ EFFECT_ARCHETYPE = Archetype("c9010", 232000, 232000, 0)
 WET_ARCHETYPE = Archetype("c5510", 551000, 551000, 0)
 
 PROJECT_MIN, PROJECT_MAX = 12992600, 12992699
+LOGARIUS_EVENT_FILE_SHA256 = "7bc431b417db7d9278ad95ff1230c26f1ee966d382e6f79c4d5e2cf5150c8bf8"
+LOGARIUS_FFX_SHA256 = "4e1cc0ffb8a47b369ceb4dc57b095d42b4b302bc61952b3b1fe3c3102fe57584"
+WET_NURSE_FFX_SHA256 = "3c6867267f838ed63d7071f95466ba90c3046b302d590ce2780161c32db70bfb"
+LOGARIUS_SWORD_EFFECT = 623206
 SOURCE_HASHES = {
     0: "f906cc00fd41625d4e479a9f0e261e6344708b7ea2728f850cb328efbf39a9ed",
     12501800: "8e7a5e07c7e871cbb44982c80436874fdf451d3c80c68af2969e15f78c6129bd",
@@ -542,6 +546,29 @@ def native_plan_logarius_at_wet_nurse(
         "swaps": [swap.json()],
         "options": {"experimental_boss_contract": "mergos-wet-nurse<-martyr-logarius"},
         "boss_actor_additions": additions,
+        "boss_emevd_ffx_requirements": [
+            {
+                "format": "bb-boss-emevd-ffx-requirement-v1",
+                "source_map": "m25_00_00_00",
+                "destination_map": "m26_00_00_00",
+                "source_event_file": "m25_00_00_00.emevd.dcx",
+                "source_event_sha256": LOGARIUS_EVENT_FILE_SHA256,
+                "source_event_id": 12504806,
+                "destination_event_file": "m26_00_00_00.emevd.dcx",
+                "destination_event_id": ids.sword_event,
+                "effect_id": LOGARIUS_SWORD_EFFECT,
+            }
+        ],
+        "boss_ffx_merges": [
+            {
+                "source_file": "frpg_sfxbnd_m25.ffxbnd.dcx",
+                "source_sha256": LOGARIUS_FFX_SHA256,
+                "destination_file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+                "destination_sha256": WET_NURSE_FFX_SHA256,
+                "required_effect_ids": [LOGARIUS_SWORD_EFFECT],
+                "policy": "preserve_destination_union_source_v1",
+            }
+        ],
         "primary_init_source_bindings": [primary],
         "boss_contract": {
             "format": "bb-logarius-wet-nurse-contract-v1",

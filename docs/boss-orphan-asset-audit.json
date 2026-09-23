@@ -1,0 +1,802 @@
+{
+  "format": "bb-orphan-character-asset-audit-v1",
+  "runtime_validated": false,
+  "status": "delivery-not-implemented",
+  "source_model_ids": [
+    "c4540",
+    "c4541",
+    "c4543"
+  ],
+  "source_map": "m36_00_00_00",
+  "typed_field_reference": {
+    "tool": "DSAnimStudio Bloodborne TAE template",
+    "revision": "f1bff06cd422de991b0a0fa8a2da81db43417318",
+    "url": "https://github.com/Meowmaritus/DSAnimStudio/blob/f1bff06cd422de991b0a0fa8a2da81db43417318/DSAnimStudioNETCore/Res/TAE.Template.BB.xml",
+    "sha256": "1377713659677b6320c615f7b6ddaaa81e71f4b0e5578daa4c91ec11950b1633"
+  },
+  "animation_archives": [
+    {
+      "file": "c4540.anibnd.dcx",
+      "sha256": "fc077ffe7b08e23fcc3e373a3fec6b956a6810e4d0850e8598d8897a3edf3fdf"
+    },
+    {
+      "file": "c4541.anibnd.dcx",
+      "sha256": "358ada6931411d0765d417857cafdf2c4bcaf4df20f9b1a4b4dde63faa95246c"
+    },
+    {
+      "file": "c4543.anibnd.dcx",
+      "sha256": "9a839bdeaa31b4dc0b0832b9462a44d538daaac4625e06dd8b5f76455da25665"
+    }
+  ],
+  "tae_witnesses": [
+    {
+      "file": "c4540.tae",
+      "sha256": "a085796cf0b475086b4374a24c6cbbed696aa8629e8a240b2aad45137a850d2b",
+      "animations": 82,
+      "event_types": {
+        "67": 62,
+        "16": 45,
+        "128": 590,
+        "100": 1,
+        "315": 49,
+        "112": 561,
+        "0": 261,
+        "5": 13,
+        "224": 185,
+        "66": 53,
+        "231": 7,
+        "226": 4,
+        "1": 32,
+        "129": 41,
+        "144": 79,
+        "96": 29,
+        "2": 5,
+        "193": 3
+      },
+      "direct_ffx": [
+        {
+          "animation": 0,
+          "event_index": 5,
+          "type": 100,
+          "param_offset": 6480,
+          "effect_id": 645400
+        },
+        {
+          "animation": 3000,
+          "event_index": 28,
+          "type": 96,
+          "param_offset": 72144,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3001,
+          "event_index": 29,
+          "type": 96,
+          "param_offset": 76720,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3002,
+          "event_index": 31,
+          "type": 96,
+          "param_offset": 81536,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3003,
+          "event_index": 45,
+          "type": 96,
+          "param_offset": 86768,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3004,
+          "event_index": 29,
+          "type": 96,
+          "param_offset": 91328,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3005,
+          "event_index": 5,
+          "type": 96,
+          "param_offset": 96016,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3006,
+          "event_index": 7,
+          "type": 96,
+          "param_offset": 101520,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3007,
+          "event_index": 17,
+          "type": 96,
+          "param_offset": 107216,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3008,
+          "event_index": 0,
+          "type": 96,
+          "param_offset": 111904,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3009,
+          "event_index": 34,
+          "type": 96,
+          "param_offset": 118464,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3010,
+          "event_index": 19,
+          "type": 96,
+          "param_offset": 123952,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3011,
+          "event_index": 32,
+          "type": 96,
+          "param_offset": 130864,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3012,
+          "event_index": 65,
+          "type": 96,
+          "param_offset": 139920,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3014,
+          "event_index": 33,
+          "type": 96,
+          "param_offset": 152448,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3014,
+          "event_index": 36,
+          "type": 96,
+          "param_offset": 152544,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3014,
+          "event_index": 39,
+          "type": 96,
+          "param_offset": 152640,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3015,
+          "event_index": 9,
+          "type": 96,
+          "param_offset": 158464,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3016,
+          "event_index": 7,
+          "type": 96,
+          "param_offset": 162976,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3017,
+          "event_index": 35,
+          "type": 96,
+          "param_offset": 167680,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3018,
+          "event_index": 31,
+          "type": 96,
+          "param_offset": 171840,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3020,
+          "event_index": 17,
+          "type": 96,
+          "param_offset": 177648,
+          "effect_id": 645404
+        },
+        {
+          "animation": 3021,
+          "event_index": 0,
+          "type": 96,
+          "param_offset": 180000,
+          "effect_id": 645405
+        },
+        {
+          "animation": 3023,
+          "event_index": 0,
+          "type": 96,
+          "param_offset": 182752,
+          "effect_id": 645405
+        },
+        {
+          "animation": 3024,
+          "event_index": 10,
+          "type": 96,
+          "param_offset": 186416,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3025,
+          "event_index": 6,
+          "type": 96,
+          "param_offset": 191184,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3026,
+          "event_index": 19,
+          "type": 96,
+          "param_offset": 196304,
+          "effect_id": 645405
+        },
+        {
+          "animation": 3027,
+          "event_index": 25,
+          "type": 96,
+          "param_offset": 199232,
+          "effect_id": 645420
+        },
+        {
+          "animation": 3028,
+          "event_index": 34,
+          "type": 96,
+          "param_offset": 203120,
+          "effect_id": 645410
+        },
+        {
+          "animation": 3031,
+          "event_index": 5,
+          "type": 96,
+          "param_offset": 207952,
+          "effect_id": 645430
+        }
+      ]
+    },
+    {
+      "file": "c4541.tae",
+      "sha256": "712478fb524532cae6bdf522fa5d44286f08cc9c4fb732f3c859fc9106930918",
+      "animations": 98,
+      "event_types": {
+        "100": 1,
+        "16": 43,
+        "128": 745,
+        "315": 50,
+        "112": 574,
+        "0": 340,
+        "5": 12,
+        "224": 216,
+        "66": 61,
+        "67": 88,
+        "226": 4,
+        "193": 14,
+        "96": 54,
+        "101": 3,
+        "1": 30,
+        "144": 50,
+        "2": 19,
+        "231": 2
+      },
+      "direct_ffx": [
+        {
+          "animation": 0,
+          "event_index": 0,
+          "type": 100,
+          "param_offset": 7480,
+          "effect_id": 645401
+        },
+        {
+          "animation": 2200,
+          "event_index": 8,
+          "type": 96,
+          "param_offset": 69136,
+          "effect_id": 650090
+        },
+        {
+          "animation": 2200,
+          "event_index": 9,
+          "type": 96,
+          "param_offset": 69168,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2200,
+          "event_index": 11,
+          "type": 96,
+          "param_offset": 69232,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2200,
+          "event_index": 14,
+          "type": 96,
+          "param_offset": 69328,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2200,
+          "event_index": 17,
+          "type": 96,
+          "param_offset": 69424,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2200,
+          "event_index": 19,
+          "type": 96,
+          "param_offset": 69488,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2200,
+          "event_index": 21,
+          "type": 96,
+          "param_offset": 69552,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2501,
+          "event_index": 8,
+          "type": 96,
+          "param_offset": 78592,
+          "effect_id": 650090
+        },
+        {
+          "animation": 2501,
+          "event_index": 10,
+          "type": 96,
+          "param_offset": 78656,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2501,
+          "event_index": 12,
+          "type": 96,
+          "param_offset": 78720,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2501,
+          "event_index": 13,
+          "type": 96,
+          "param_offset": 78752,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2501,
+          "event_index": 14,
+          "type": 96,
+          "param_offset": 78784,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2501,
+          "event_index": 17,
+          "type": 96,
+          "param_offset": 78880,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2501,
+          "event_index": 18,
+          "type": 96,
+          "param_offset": 78912,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2511,
+          "event_index": 8,
+          "type": 96,
+          "param_offset": 87024,
+          "effect_id": 650090
+        },
+        {
+          "animation": 2511,
+          "event_index": 10,
+          "type": 96,
+          "param_offset": 87088,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2511,
+          "event_index": 12,
+          "type": 96,
+          "param_offset": 87152,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2511,
+          "event_index": 15,
+          "type": 96,
+          "param_offset": 87248,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2511,
+          "event_index": 16,
+          "type": 96,
+          "param_offset": 87280,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2511,
+          "event_index": 17,
+          "type": 96,
+          "param_offset": 87312,
+          "effect_id": 650091
+        },
+        {
+          "animation": 2511,
+          "event_index": 18,
+          "type": 96,
+          "param_offset": 87344,
+          "effect_id": 650091
+        },
+        {
+          "animation": 3000,
+          "event_index": 17,
+          "type": 96,
+          "param_offset": 91504,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3001,
+          "event_index": 43,
+          "type": 96,
+          "param_offset": 98128,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3002,
+          "event_index": 14,
+          "type": 96,
+          "param_offset": 103184,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3002,
+          "event_index": 20,
+          "type": 96,
+          "param_offset": 103376,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3003,
+          "event_index": 18,
+          "type": 96,
+          "param_offset": 110544,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3004,
+          "event_index": 32,
+          "type": 96,
+          "param_offset": 117040,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3005,
+          "event_index": 15,
+          "type": 96,
+          "param_offset": 123632,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3006,
+          "event_index": 15,
+          "type": 96,
+          "param_offset": 129808,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3007,
+          "event_index": 14,
+          "type": 96,
+          "param_offset": 134336,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3008,
+          "event_index": 10,
+          "type": 96,
+          "param_offset": 138640,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3009,
+          "event_index": 21,
+          "type": 96,
+          "param_offset": 144256,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3009,
+          "event_index": 24,
+          "type": 96,
+          "param_offset": 144352,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3010,
+          "event_index": 8,
+          "type": 96,
+          "param_offset": 149616,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3011,
+          "event_index": 10,
+          "type": 96,
+          "param_offset": 154320,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3012,
+          "event_index": 15,
+          "type": 96,
+          "param_offset": 159184,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3013,
+          "event_index": 23,
+          "type": 96,
+          "param_offset": 164608,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3014,
+          "event_index": 17,
+          "type": 96,
+          "param_offset": 170448,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3014,
+          "event_index": 21,
+          "type": 96,
+          "param_offset": 170576,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3015,
+          "event_index": 15,
+          "type": 96,
+          "param_offset": 176624,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3016,
+          "event_index": 10,
+          "type": 96,
+          "param_offset": 182752,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3017,
+          "event_index": 2,
+          "type": 96,
+          "param_offset": 188240,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3018,
+          "event_index": 12,
+          "type": 96,
+          "param_offset": 194032,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3018,
+          "event_index": 14,
+          "type": 96,
+          "param_offset": 194096,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3018,
+          "event_index": 16,
+          "type": 96,
+          "param_offset": 194160,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3020,
+          "event_index": 23,
+          "type": 96,
+          "param_offset": 205184,
+          "effect_id": 645404
+        },
+        {
+          "animation": 3021,
+          "event_index": 51,
+          "type": 96,
+          "param_offset": 210528,
+          "effect_id": 645404
+        },
+        {
+          "animation": 3022,
+          "event_index": 64,
+          "type": 96,
+          "param_offset": 216720,
+          "effect_id": 645404
+        },
+        {
+          "animation": 3023,
+          "event_index": 55,
+          "type": 96,
+          "param_offset": 222912,
+          "effect_id": 645404
+        },
+        {
+          "animation": 3024,
+          "event_index": 1,
+          "type": 96,
+          "param_offset": 226608,
+          "effect_id": 645420
+        },
+        {
+          "animation": 3024,
+          "event_index": 43,
+          "type": 96,
+          "param_offset": 227952,
+          "effect_id": 645404
+        },
+        {
+          "animation": 3026,
+          "event_index": 29,
+          "type": 96,
+          "param_offset": 232128,
+          "effect_id": 645411
+        },
+        {
+          "animation": 3030,
+          "event_index": 3,
+          "type": 96,
+          "param_offset": 235440,
+          "effect_id": 650008
+        },
+        {
+          "animation": 3030,
+          "event_index": 5,
+          "type": 96,
+          "param_offset": 235504,
+          "effect_id": 640800
+        }
+      ]
+    },
+    {
+      "file": "c4543.tae",
+      "sha256": "bc189005ef3c5a0a0e162c05e225d9cb67d47a4a78619218aedb7f091190bcb7",
+      "animations": 20,
+      "event_types": {
+        "0": 25,
+        "224": 3,
+        "2": 4,
+        "231": 1
+      },
+      "direct_ffx": []
+    }
+  ],
+  "source_bank": {
+    "file": "frpg_sfxbnd_m36.ffxbnd.dcx",
+    "sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+    "direct_tae_effect_ids": [
+      640800,
+      645400,
+      645401,
+      645404,
+      645405,
+      645410,
+      645411,
+      645420,
+      645430
+    ]
+  },
+  "bank_evidence": [
+    {
+      "file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+      "sha256": "b92037c5ae58ac81e5e59f7b9596966faf65ea56bf1b9ea9913045097213cfec",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "sha256": "56103cdfe6b3f9298a32fc515be67c6117f555ae69cb87a8cbbb8bcba2abac99",
+      "direct_tae_effect_ids_present": [
+        650008
+      ],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_m33.ffxbnd.dcx",
+      "sha256": "850e8354601f85e59166aaeceb0dea48018fd21afbad005f78b7732fc3889a29",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": [
+        {
+          "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000625601.fxr",
+          "source_sha256": "ba885f6a5244ce38f7da7d7ad253978e1d81709712645facdbcef5ecc74dcdb5",
+          "destination_sha256": "5e916b0c27cf84f33d082fb3fad00e6ff5ba08679525a22cdf682800686e25f6"
+        },
+        {
+          "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000926023.fxr",
+          "source_sha256": "bc6222766030cb848589c000250f358d9367e1759cb8542950dbe16ae8856ae9",
+          "destination_sha256": "284830ab5f78b4c9b80093bcc52d2e0f885fce770731cfa18930a9f049bb1937"
+        }
+      ]
+    },
+    {
+      "file": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+      "sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+      "direct_tae_effect_ids_present": [
+        650090,
+        650091
+      ],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_dlceffects.ffxbnd.dcx",
+      "sha256": "7d96613eb456bbbb3563478a464ece5fbf1e531f02ef34a47a80da27f423b4db",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_patcheffects.ffxbnd.dcx",
+      "sha256": "3dbe37f2d2c07b8e52754e5c429aef4a8b88ec010806b83967f62e4c10b42e48",
+      "direct_tae_effect_ids_present": [
+        650008,
+        650090,
+        650091
+      ],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_m24_00.ffxbnd.dcx",
+      "sha256": "890086d51e303165812e005a9eb289435c067dec75369c90a338d0db2f1961a6",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_m24_01.ffxbnd.dcx",
+      "sha256": "8f918aa398655957eff8b12fc079dc9a1423d6f605bfadb25fcb35423f1154ee",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+      "sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_m23_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": []
+    },
+    {
+      "file": "frpg_sfxbnd_m33_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f",
+      "direct_tae_effect_ids_present": [],
+      "whole_source_bank_conflicts": []
+    }
+  ],
+  "limits": [
+    "Only selected explicit direct TAE FFX operand types were decoded; this is not complete combat asset closure.",
+    "Behavior/Bullet/SpEffect references and FXR2 transitive resource semantics still require source-backed audit.",
+    "Current native donor construction does not yet deliver these character-driven effects."
+  ]
+}

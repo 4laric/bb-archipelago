@@ -9,7 +9,7 @@ outside this registry until they expose the same reusable boundary.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Mapping
+from typing import Callable, Mapping, Protocol
 
 from .boss_contracts import (
     ARENAS,
@@ -28,6 +28,21 @@ NativePlan = Callable[[list, Mapping[int, dict], Mapping[int, dict], str], dict]
 ActorRequirements = Callable[[list], list[dict]]
 
 
+class EncounterDonor(Protocol):
+    """Identity shared by full combat packages and specialized donor sources."""
+
+    key: str
+    event_file: str
+
+
+@dataclass(frozen=True)
+class DonorIdentity:
+    """Minimal identity for a source-pinned adapter outside boss_contracts."""
+
+    key: str
+    event_file: str
+
+
 @dataclass(frozen=True)
 class EncounterRecipe:
     """One concrete binding of a reusable arena and donor implementation.
@@ -37,7 +52,7 @@ class EncounterRecipe:
     """
 
     arena: ArenaContract
-    donor: CombatPackage
+    donor: EncounterDonor
     adapter: str
     _patch: Patch = field(repr=False, compare=False)
     _native_plan: NativePlan = field(repr=False, compare=False)
@@ -106,13 +121,14 @@ def _maria_recipes() -> tuple[EncounterRecipe, ...]:
     from .maria_contract import MARIA_PACKAGE
     from .maria_donor import (
         MariaArenaAllocation,
+        SUPPORTED_MARIA_ARENAS,
         native_plan_maria_donor,
         patch_maria_donor,
     )
 
     allocation = MariaArenaAllocation(12994700, 12994701)
     recipes: list[EncounterRecipe] = []
-    for arena in ARENAS:
+    for arena in SUPPORTED_MARIA_ARENAS:
 
         def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
             return patch_maria_donor(_arena, destination, donor_source, allocation)
@@ -142,6 +158,242 @@ def _maria_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _laurence_recipes() -> tuple[EncounterRecipe, ...]:
+    from .laurence_donor import (
+        DEFAULT_LAURENCE_ALLOCATION,
+        LAURENCE_EVENT_FILE,
+        SUPPORTED_LAURENCE_ARENAS,
+        native_plan_laurence_donor,
+        patch_laurence_donor,
+    )
+
+    donor = DonorIdentity("laurence", LAURENCE_EVENT_FILE)
+    recipes: list[EncounterRecipe] = []
+    for arena in SUPPORTED_LAURENCE_ARENAS:
+
+        def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
+            return patch_laurence_donor(
+                _arena,
+                destination,
+                donor_source,
+                DEFAULT_LAURENCE_ALLOCATION,
+            )
+
+        def native_plan(
+            slots: list,
+            npcs: Mapping[int, dict],
+            effects: Mapping[int, dict],
+            seed: str,
+            *,
+            _arena=arena,
+        ) -> dict:
+            return native_plan_laurence_donor(
+                _arena,
+                slots,
+                npcs,
+                effects,
+                seed,
+                DEFAULT_LAURENCE_ALLOCATION,
+            )
+
+        recipes.append(
+            EncounterRecipe(
+                arena=arena,
+                donor=donor,
+                adapter="laurence-donor:portable-combat",
+                _patch=patch,
+                _native_plan=native_plan,
+                _actor_requirements=lambda slots: [],
+            )
+        )
+    return tuple(recipes)
+
+
+def _maria_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    from .maria_arena_contract import (
+        MARIA_ARENA_CONTRACT,
+        native_plan_portable_donor_at_maria,
+        patch_portable_donor_at_maria,
+        portable_maria_donors,
+    )
+
+    arena = MARIA_ARENA_CONTRACT
+    recipes: list[EncounterRecipe] = []
+    for donor in portable_maria_donors():
+        def patch(destination: str, donor_source: str, *, _donor=donor) -> str:
+            return patch_portable_donor_at_maria(destination, _donor, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _donor=donor,
+        ) -> dict:
+            return native_plan_portable_donor_at_maria(_donor, slots, npcs, effects, seed)
+
+        def requirements(slots: list, *, _donor=donor) -> list[dict]:
+            return actor_addition_requirements(arena, _donor, slots)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="maria-arena:portable-combat",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=requirements,
+        ))
+    return tuple(recipes)
+
+
+def _laurence_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    from .laurence_arena_contract import (
+        LAURENCE_ARENA_CONTRACT,
+        native_plan_portable_donor_at_laurence,
+        patch_portable_donor_at_laurence,
+        portable_laurence_donors,
+    )
+
+    arena = LAURENCE_ARENA_CONTRACT
+    recipes: list[EncounterRecipe] = []
+    for donor in portable_laurence_donors():
+        def patch(destination: str, donor_source: str, *, _donor=donor) -> str:
+            return patch_portable_donor_at_laurence(destination, _donor, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _donor=donor,
+        ) -> dict:
+            return native_plan_portable_donor_at_laurence(_donor, slots, npcs, effects, seed)
+
+        def requirements(slots: list, *, _donor=donor) -> list[dict]:
+            return actor_addition_requirements(arena, _donor, slots)
+
+        recipes.append(EncounterRecipe(
+            arena=arena, donor=donor, adapter="laurence-arena:portable-combat",
+            _patch=patch, _native_plan=native_plan, _actor_requirements=requirements,
+        ))
+    return tuple(recipes)
+
+
+def _gascoigne_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    from .gascoigne_arena_contract import (
+        GASCOIGNE_ARENA_CONTRACT,
+        native_plan_portable_donor_at_gascoigne,
+        patch_portable_donor_at_gascoigne,
+        portable_gascoigne_donors,
+    )
+
+    arena = GASCOIGNE_ARENA_CONTRACT
+    recipes: list[EncounterRecipe] = []
+    for donor in portable_gascoigne_donors():
+        def patch(destination: str, donor_source: str, *, _donor=donor) -> str:
+            return patch_portable_donor_at_gascoigne(destination, _donor, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _donor=donor,
+        ) -> dict:
+            return native_plan_portable_donor_at_gascoigne(_donor, slots, npcs, effects, seed)
+
+        def requirements(slots: list, *, _donor=donor) -> list[dict]:
+            return actor_addition_requirements(arena, _donor, slots)
+
+        recipes.append(EncounterRecipe(
+            arena=arena, donor=donor, adapter="gascoigne-arena:portable-combat",
+            _patch=patch, _native_plan=native_plan, _actor_requirements=requirements,
+        ))
+    return tuple(recipes)
+
+
+def _logarius_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    from .logarius_arena_contract import (
+        LOGARIUS_ARENA_CONTRACT,
+        native_plan_portable_donor_at_logarius,
+        patch_portable_donor_at_logarius,
+        portable_logarius_donors,
+    )
+
+    arena = LOGARIUS_ARENA_CONTRACT
+    recipes: list[EncounterRecipe] = []
+    for donor in portable_logarius_donors():
+        def patch(destination: str, donor_source: str, *, _donor=donor) -> str:
+            return patch_portable_donor_at_logarius(destination, _donor, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _donor=donor,
+        ) -> dict:
+            return native_plan_portable_donor_at_logarius(_donor, slots, npcs, effects, seed)
+
+        def requirements(slots: list, *, _donor=donor) -> list[dict]:
+            return actor_addition_requirements(arena, _donor, slots)
+
+        recipes.append(EncounterRecipe(
+            arena=arena, donor=donor, adapter="logarius-arena:portable-combat",
+            _patch=patch, _native_plan=native_plan, _actor_requirements=requirements,
+        ))
+    return tuple(recipes)
+
+
+def _logarius_recipes() -> tuple[EncounterRecipe, ...]:
+    from .logarius_donor import (
+        SUPPORTED_LOGARIUS_ARENAS,
+        native_plan_logarius_donor,
+        patch_logarius_donor,
+    )
+
+    donor = DonorIdentity("martyr-logarius", "m25_00_00_00.emevd.dcx.js")
+    recipes: list[EncounterRecipe] = []
+    for arena in SUPPORTED_LOGARIUS_ARENAS:
+        def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
+            return patch_logarius_donor(_arena, destination, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _arena=arena,
+        ) -> dict:
+            return native_plan_logarius_donor(_arena, slots, npcs, effects, seed)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="logarius-donor:portable-combat",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=lambda slots: [],
+        ))
+    return tuple(recipes)
+
+
+def _orphan_recipes() -> tuple[EncounterRecipe, ...]:
+    from .orphan_donor import (
+        ARENAS as SUPPORTED_ORPHAN_ARENAS,
+        EVENT_FILE,
+        native_plan_orphan_donor,
+        patch_orphan_donor,
+    )
+
+    donor = DonorIdentity("orphan-of-kos", EVENT_FILE)
+    recipes: list[EncounterRecipe] = []
+    for arena in SUPPORTED_ORPHAN_ARENAS:
+        def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
+            return patch_orphan_donor(_arena, destination, donor_source)
+
+        def native_plan(
+            slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+            seed: str, *, _arena=arena,
+        ) -> dict:
+            return native_plan_orphan_donor(_arena, slots, npcs, effects, seed)
+
+        recipes.append(EncounterRecipe(
+            arena=arena,
+            donor=donor,
+            adapter="orphan-donor:portable-combat",
+            _patch=patch,
+            _native_plan=native_plan,
+            _actor_requirements=lambda slots: [],
+        ))
+    return tuple(recipes)
+
+
 def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     """Return every route backed by a parameterized, source-pinned adapter."""
     arenas = {arena.key: arena for arena in ARENAS}
@@ -159,7 +411,9 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
                 raise ValueError(f"duplicate reusable encounter recipe {recipe.key}")
             recipes[recipe.key] = recipe
 
-    for recipe in _maria_recipes():
+    for recipe in (*_maria_recipes(), *_laurence_recipes(), *_maria_arena_recipes(),
+                   *_logarius_recipes(), *_laurence_arena_recipes(), *_gascoigne_arena_recipes(),
+                   *_logarius_arena_recipes(), *_orphan_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

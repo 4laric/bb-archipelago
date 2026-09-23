@@ -53,6 +53,7 @@ from tools.bb_enemizer.boss_pool import (
     combine_ordinary_and_boss_plans,
 )
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
+from tools.bb_enemizer.boss_entrances import skip_replacement_entrance
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.gascoigne_contract import (
     ProjectOwnedIds, NativeActorPin, patch_gascoigne_at_cleric, native_plan_gascoigne_at_cleric,
@@ -768,6 +769,7 @@ def verify_receipt(root: Path) -> dict:
 
 def build(args) -> dict:
     args._actor_pin_cache = {}
+    recipes = reusable_recipes()
     ludwig = getattr(args, 'donor', None) == 'ludwig'
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
@@ -804,7 +806,8 @@ def build(args) -> dict:
         raise ValueError('Living Failures arena requires a reviewed BSB, Maria or Laurence donor adapter')
     if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] not in ('blood-starved-beast', 'martyr-logarius', 'darkbeast-paarl'):
         raise ValueError('Wet Nurse arena requires a reviewed BSB, Logarius or Paarl donor adapter')
-    if orphan and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne'):
+    if (orphan and direct_orphan not in recipes
+            and getattr(args, 'arena', None) not in ('cleric-beast', 'father-gascoigne')):
         raise ValueError('Orphan requires a reviewed Cleric or Gascoigne arena adapter')
     reviewed_orphan_pairs = {
         ('orphan-of-kos', 'shadows-of-yharnam'),
@@ -814,16 +817,19 @@ def build(args) -> dict:
     if direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in reviewed_orphan_pairs:
         raise ValueError('Orphan arena requires a reviewed donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
-    if direct_logarius[0] == 'martyr-logarius' and direct_logarius[1] not in (*LOGARIUS_COMPATIBILITY['martyr-logarius'], 'mergos-wet-nurse'):
+    if (direct_logarius[0] == 'martyr-logarius' and direct_logarius not in recipes
+            and direct_logarius[1] not in (*LOGARIUS_COMPATIBILITY['martyr-logarius'], 'mergos-wet-nurse')):
         raise ValueError('Logarius arena requires a reviewed BSB, Paarl or Wet Nurse donor adapter')
-    if direct_logarius[1] == 'martyr-logarius' and direct_logarius[0] not in ('blood-starved-beast', 'mergos-wet-nurse'):
-        raise ValueError('Martyr Logarius requires a reviewed BSB or Wet Nurse arena adapter')
+    if (direct_logarius[1] == 'martyr-logarius' and direct_logarius not in recipes
+            and direct_logarius[0] not in ('blood-starved-beast', 'mergos-wet-nurse')):
+        raise ValueError('Martyr Logarius requires an implemented arena adapter')
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
     ludwig_arena = getattr(args, 'arena', None) == 'ludwig'
     reviewed_ludwig_donors = LUDWIG_COMPATIBILITY['ludwig']
     if ludwig_arena and getattr(args, 'donor', None) not in reviewed_ludwig_donors:
         raise ValueError('Ludwig arena requires a reviewed donor adapter')
-    if laurence_arena and getattr(args, 'donor', None) not in (*LAURENCE_COMPATIBILITY['laurence'], 'living-failures'):
+    if (laurence_arena and direct_orphan not in recipes
+            and getattr(args, 'donor', None) not in (*LAURENCE_COMPATIBILITY['laurence'], 'living-failures')):
         raise ValueError('Laurence arena requires a reviewed donor adapter')
     laurence_ids = LaurenceIds(12990300, 12990301)
     direct_gascoigne = (getattr(args, 'arena', None), getattr(args, 'donor', None))
@@ -834,11 +840,12 @@ def build(args) -> dict:
         ('father-gascoigne', 'orphan-of-kos'),
     }
     if direct_gascoigne[0] == 'father-gascoigne' or direct_gascoigne[1] == 'father-gascoigne':
-        if direct_gascoigne not in reviewed_gascoigne_pairs:
+        if direct_gascoigne not in reviewed_gascoigne_pairs and direct_gascoigne not in recipes:
             raise ValueError('Father Gascoigne is available only in the reviewed Cleric reciprocal adapters')
     if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam'):
         raise ValueError('Ludwig donor requires a reviewed Cleric, Orphan or Shadows arena adapter')
-    if laurence and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig', 'living-failures')):
+    if (laurence and direct_orphan not in recipes
+            and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig', 'living-failures'))):
         raise ValueError('Laurence donor requires a reviewed Cleric, Ludwig or Living Failures arena adapter')
     if getattr(args, 'pool', None):
         graph = {
@@ -860,7 +867,6 @@ def build(args) -> dict:
         pairs = [(ARENAS[key], PACKAGES[value]) for key, value in mapping.items()]
     else:
         pairs = [(ARENAS[args.arena], PACKAGES[args.donor])]
-    recipes = reusable_recipes()
     if digest(args.darkscript) != DARKSCRIPT_SHA256:
         raise ValueError('requires pinned DarkScript 3.6.3')
     check_output(args.output, (args.maps, args.scripts, args.events, args.gameparam,
@@ -1069,6 +1075,7 @@ def build(args) -> dict:
             else:
                 patched = patch_contract_swap(arena, package, texts[arena.event_file], texts[package.event_file],
                     allow_materialized_actor_additions=bool(materializations.get(arena.key)))
+            patched = skip_replacement_entrance(arena.key, texts[arena.event_file], patched)
             variants.setdefault(arena.event_file, []).append(patched)
         override_inputs = []
         if event_overrides is not None:
@@ -1114,11 +1121,14 @@ def build(args) -> dict:
                 plan = recipe.native_plan(slots, npcs, effects, args.seed)
                 if arena.key in materializations:
                     plan['boss_actor_additions'] = materializations[arena.key]
+                elif plan.get('boss_actor_additions'):
+                    plan['boss_actor_additions'] = pin_actor_requirements(
+                        args, plan['boss_actor_additions'])
                 if plan.get('primary_init_source_bindings'):
                     plan['boss_actor_initializations'] = pin_actor_requirements(
                         args, plan['primary_init_source_bindings'])
                 if package.key == 'lady-maria':
-                    plan['boss_external_references'] = [maria_external_reference(args, plan, arena)]
+                    plan['boss_external_references'] = [maria_external_reference(args, plan, recipe.arena)]
             elif is_orphan_gascoigne_pair(arena, package):
                 plan = native_plan_orphan_at_gascoigne(slots, npcs, effects, args.seed)
                 plan['boss_actor_additions'] = pin_actor_requirements(args, plan['boss_actor_additions'])

@@ -431,18 +431,10 @@ class ContractPlanningTests(unittest.TestCase):
     def test_capability_registry_exposes_the_six_package_pool(self):
         self.assertEqual({"blood-starved-beast", "darkbeast-paarl", "cleric-beast", "vicar-amelia", "amygdala", "ebrietas"},
                          {package.key for package in PACKAGES})
-        self.assertEqual({"darkbeast-paarl", "cleric-beast", "vicar-amelia", "ebrietas"},
-                         set(COMPATIBILITY[BSB_ARENA.key]))
-        self.assertEqual({"blood-starved-beast", "cleric-beast", "vicar-amelia", "amygdala", "ebrietas"},
-                         set(COMPATIBILITY[PAARL_ARENA.key]))
-        self.assertEqual({"cleric-beast", "amygdala", "ebrietas"},
-                         set(COMPATIBILITY[AMELIA_ARENA.key]))
-        self.assertEqual({"vicar-amelia", "cleric-beast", "ebrietas"},
-                         set(COMPATIBILITY[AMYGDALA_ARENA.key]))
-        self.assertEqual({"blood-starved-beast", "darkbeast-paarl", "vicar-amelia", "ebrietas"},
-                         set(COMPATIBILITY[CLERIC_ARENA.key]))
-        self.assertEqual({"amygdala", "cleric-beast", "blood-starved-beast", "vicar-amelia"},
-                         set(COMPATIBILITY[EBRIETAS_ARENA.key]))
+        for arena in ARENAS:
+            with self.subTest(arena=arena.key):
+                self.assertEqual({package.key for package in PACKAGES if package.key != arena.key},
+                                 set(COMPATIBILITY[arena.key]))
 
     def test_attached_plan_maps_only_declared_source_events(self):
         plan = plan_contract_shuffle("cleric", BSB_ARENA, (CLERIC_PACKAGE,))
@@ -660,29 +652,36 @@ class ContractCapabilityMatrixTests(unittest.TestCase):
     """Exercise the declared base-contract capabilities against pinned sources."""
 
     SUPPORTED = {
-        ("cleric-beast", "blood-starved-beast"),
-        ("cleric-beast", "darkbeast-paarl"),
-        ("cleric-beast", "vicar-amelia"),
-        ("cleric-beast", "ebrietas"),
-        ("blood-starved-beast", "darkbeast-paarl"),
-        ("blood-starved-beast", "cleric-beast"),
-        ("blood-starved-beast", "vicar-amelia"),
-        ("blood-starved-beast", "ebrietas"),
-        ("darkbeast-paarl", "blood-starved-beast"),
-        ("darkbeast-paarl", "cleric-beast"),
-        ("darkbeast-paarl", "vicar-amelia"),
-        ("darkbeast-paarl", "amygdala"),
-        ("darkbeast-paarl", "ebrietas"),
-        ("vicar-amelia", "cleric-beast"),
-        ("vicar-amelia", "amygdala"),
-        ("vicar-amelia", "ebrietas"),
-        ("amygdala", "vicar-amelia"),
-        ("amygdala", "cleric-beast"),
-        ("amygdala", "ebrietas"),
-        ("ebrietas", "blood-starved-beast"),
-        ("ebrietas", "cleric-beast"),
-        ("ebrietas", "vicar-amelia"),
-        ("ebrietas", "amygdala"),
+        ('cleric-beast', 'blood-starved-beast'),
+        ('cleric-beast', 'darkbeast-paarl'),
+        ('cleric-beast', 'vicar-amelia'),
+        ('cleric-beast', 'amygdala'),
+        ('cleric-beast', 'ebrietas'),
+        ('blood-starved-beast', 'cleric-beast'),
+        ('blood-starved-beast', 'darkbeast-paarl'),
+        ('blood-starved-beast', 'vicar-amelia'),
+        ('blood-starved-beast', 'amygdala'),
+        ('blood-starved-beast', 'ebrietas'),
+        ('darkbeast-paarl', 'cleric-beast'),
+        ('darkbeast-paarl', 'blood-starved-beast'),
+        ('darkbeast-paarl', 'vicar-amelia'),
+        ('darkbeast-paarl', 'amygdala'),
+        ('darkbeast-paarl', 'ebrietas'),
+        ('vicar-amelia', 'cleric-beast'),
+        ('vicar-amelia', 'blood-starved-beast'),
+        ('vicar-amelia', 'darkbeast-paarl'),
+        ('vicar-amelia', 'amygdala'),
+        ('vicar-amelia', 'ebrietas'),
+        ('amygdala', 'cleric-beast'),
+        ('amygdala', 'blood-starved-beast'),
+        ('amygdala', 'darkbeast-paarl'),
+        ('amygdala', 'vicar-amelia'),
+        ('amygdala', 'ebrietas'),
+        ('ebrietas', 'cleric-beast'),
+        ('ebrietas', 'blood-starved-beast'),
+        ('ebrietas', 'darkbeast-paarl'),
+        ('ebrietas', 'vicar-amelia'),
+        ('ebrietas', 'amygdala'),
     }
 
     @classmethod
@@ -758,6 +757,102 @@ class ContractCapabilityMatrixTests(unittest.TestCase):
                         self.assertNotIn(f"ForceAnimationPlayback({arena.actor}, 7001, true", activation)
                         self.assertNotIn(f"SetSpEffect({arena.actor}, 5647", activation)
                         self.assertNotIn(f"ClearSpEffect({arena.actor}, 5647", activation)
+
+    def test_new_base_routes_keep_terminal_and_witnessed_source_bodies(self):
+        routes = (
+            (CLERIC_ARENA, AMYGDALA_PACKAGE, "ForceAnimationPlayback(2410800, 7003, true"),
+            (BSB_ARENA, AMYGDALA_PACKAGE, "ForceAnimationPlayback(2300800, 7006, false"),
+            (AMELIA_ARENA, BSB_PACKAGE, "HPRatio(2400800) < 0.67"),
+            (AMELIA_ARENA, PAARL_PACKAGE, "WaitFixedTimeFrames(70);"),
+            (AMYGDALA_ARENA, BSB_PACKAGE, "HPRatio(3300800) < 0.33"),
+            (AMYGDALA_ARENA, PAARL_PACKAGE, "$Event(13304940"),
+            (EBRIETAS_ARENA, PAARL_PACKAGE, "$Event(12424940"),
+        )
+        for arena, donor, source_witness in routes:
+            with self.subTest(arena=arena.key, donor=donor.key):
+                before = event_blocks(self.sources[arena.event_file])
+                output = patch_contract_swap(
+                    arena, donor, self.sources[arena.event_file], self.sources[donor.event_file],
+                )
+                after = event_blocks(output)
+                self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+                self.assertIn(source_witness, output)
+        for arena, target in ((AMYGDALA_ARENA, 13304940), (EBRIETAS_ARENA, 12424940)):
+            with self.subTest(metadata=arena.key):
+                plan = plan_contract_shuffle("paarl-appended-body", arena, (PAARL_PACKAGE,))
+                self.assertEqual({"12304715": target}, plan["remap"]["part_routine"])
+                self.assertEqual({"12304715": target}, plan["remap"]["added_events"])
+
+    def test_new_base_routes_compile_with_the_pinned_darkscript_fixture_when_available(self):
+        compiler = ROOT / "work" / "DarkScript3" / "DarkScript3.exe"
+        events = ROOT / "work" / "boss-shuffle-validation" / "events"
+        routes = (
+            (CLERIC_ARENA, AMYGDALA_PACKAGE),
+            (BSB_ARENA, AMYGDALA_PACKAGE),
+            (AMELIA_ARENA, BSB_PACKAGE),
+            (AMELIA_ARENA, PAARL_PACKAGE),
+            (AMYGDALA_ARENA, BSB_PACKAGE),
+            (AMYGDALA_ARENA, PAARL_PACKAGE),
+            (EBRIETAS_ARENA, PAARL_PACKAGE),
+        )
+        required = {"common.emevd.dcx", *(arena.event_file.removesuffix(".js") for arena, _ in routes)}
+        if not compiler.is_file() or any(not (events / name).is_file() for name in required):
+            self.skipTest("pinned DarkScript/original event fixture unavailable")
+        self.assertEqual("c86fd23ee28f7d39032a5bc792f9510bbd171ca72de1c547d956fe5e161d54de",
+                         hashlib.sha256(compiler.read_bytes()).hexdigest())
+        for arena, donor in routes:
+            with self.subTest(arena=arena.key, donor=donor.key):
+                with tempfile.TemporaryDirectory() as directory:
+                    work = Path(directory)
+                    original, source, output = work / "original", work / "source", work / "output"
+                    original.mkdir()
+                    for name in ("common.emevd.dcx", arena.event_file.removesuffix(".js")):
+                        shutil.copyfile(events / name, original / name)
+                    subprocess.run(
+                        [str(compiler), "/cmd", "-decompile", "-game", "bb", "-indir", str(original),
+                         "-outdir", str(source), "-force", "-silent"],
+                        check=True,
+                    )
+                    (source / arena.event_file).write_text(
+                        patch_contract_swap(
+                            arena, donor, self.sources[arena.event_file], self.sources[donor.event_file],
+                            allow_materialized_actor_additions=contract_capability(
+                                arena, donor,
+                            ).requires_actor_additions,
+                        ),
+                        encoding="utf-8-sig",
+                    )
+                    subprocess.run(
+                        [str(compiler), "/cmd", "-compile", "-game", "bb", "-indir", str(source),
+                         "-outdir", str(output), "-force", "-silent"],
+                        check=True,
+                    )
+                    compiled = output / arena.event_file.removesuffix(".js")
+                    self.assertTrue(compiled.is_file())
+                    self.assertGreater(compiled.stat().st_size, 0)
+
+    def test_specialized_routes_retire_destination_attachment_controllers(self):
+        routes = (
+            (AMELIA_ARENA, BSB_PACKAGE, "ForceAnimationPlayback(2400800, 3035"),
+            (AMELIA_ARENA, PAARL_PACKAGE, "ForceAnimationPlayback(2400800, 3035"),
+            (AMYGDALA_ARENA, BSB_PACKAGE, "CreateNPCPart(3300800, 3300"),
+            (AMYGDALA_ARENA, PAARL_PACKAGE, "CreateNPCPart(3300800, 3300"),
+        )
+        for arena, donor, destination_controller in routes:
+            with self.subTest(arena=arena.key, donor=donor.key):
+                anchor = arena.attachment_anchor_event
+                self.assertIsNotNone(anchor)
+                assert anchor is not None
+                before = event_blocks(self.sources[arena.event_file])
+                after = event_blocks(patch_contract_swap(
+                    arena, donor, self.sources[arena.event_file], self.sources[donor.event_file],
+                ))
+                self.assertIn(destination_controller, before[anchor])
+                self.assertEqual(
+                    f"$Event({anchor}, Restart, function() {{\n    EndEvent();\n}});",
+                    after[anchor],
+                )
+                self.assertNotIn(destination_controller, after[anchor])
 
     def test_ebrietas_outputs_compile_with_the_pinned_darkscript_fixture_when_available(self):
         compiler = ROOT / "work" / "DarkScript3" / "DarkScript3.exe"
