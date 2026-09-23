@@ -864,5 +864,7 @@
     "native_matrix": "results recorded separately in PR #427",
     "runtime_gameplay": "unvalidated",
     "statement": "This durable schedule does not encode mutable native-run results and makes no native-build or runtime-gameplay claim. Native verification results are recorded separately in PR #427."
-  }
+  },
+  "source_revision": "aeb5d813536a72515dae8c83ce575e59e99c91c9",
+  "scope": "Historical construction checkpoint; regenerate mappings after changing the compatibility graph."
 }

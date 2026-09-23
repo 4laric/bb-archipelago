@@ -603,7 +603,7 @@ installed-source checks to skip. An unlisted skip or stale allowance fails.
 AP-dependent modules explicitly require zero skips; baseline module rows retain
 their executed-test floors. Five gate regressions cover these distinctions.
 
-The current reviewed graph extends that checkpoint to 560 complete assignments.
+The `aeb5d81` checkpoint graph extended that checkpoint to 560 complete assignments.
 Of its 67 declared directed edges, 63 occur in at least one complete assignment.
 Each of the 22 arenas has multiple feasible donors, and each donor has multiple
 feasible destinations, so no encounter is forced to one counterpart across all
@@ -628,3 +628,64 @@ arena's own generator IDs. Native matrix construction also exposed and fixed
 Orphan-at-Cleric primary provenance containing an inapplicable anchor field;
 anchored additions retain their anchor evidence and original fingerprints.
 These are construction and lifecycle fixes, not observations of game behavior.
+
+## Broader composition work (September 23)
+
+The user-approved design is to preserve donor combat and adapt arena-specific
+traversal and set pieces to the destination. Reproducing Micolash's original
+chase outside Mensis, for example, is not a prerequisite for moving his combat.
+Boss combat phases and destination progression still need explicit handling.
+The existing one-of-each, no-self-placement policy gives 462 candidate directed
+pairings across the 22 encounters. This is the work inventory, not a claim that
+all 462 are implemented or playable.
+
+A missing adapter is an implementation gap, not a finding of incompatibility.
+The previous 67 implemented / 63 globally feasible pairings were a construction
+checkpoint, not the intended final feature scope. Any proposed permanent
+exclusion needs a concrete reason and a separate design decision. Source pins,
+complete donor dependencies and protected destination progression remain
+construction requirements; neither those checks nor a wider compatibility graph
+establishes arena fit or live combat behavior.
+
+Run the current implementation inventory with:
+
+```powershell
+python -m tools.build_boss_coverage --output work/boss-coverage.json
+```
+
+It reports unimplemented pairs separately from implemented pairs that cannot
+participate in the current one-to-one assignment graph. It makes no native or
+gameplay validation claim. The tracked 13-seed native matrix above belongs to
+`aeb5d81`; changing the graph requires a new build schedule and new evidence.
+
+The first composition step registers reusable generic contracts and the Maria
+donor through one recipe lookup shared by event generation, native planning and
+helper requirements. Special encounter adapters remain in place while their
+combat/lifecycle boundaries are extracted. Adding a registry entry does not
+substitute for implementing those boundaries.
+
+This checkpoint implements 78 of the 462 directed pairings; all 78 participate
+in complete assignments. The six base arena contracts expose 23 of their 30
+off-diagonal pairs. Ebrietas's combat package now reaches all five other base
+arenas, and Amelia also reaches Cleric and Ebrietas. Maria uses one donor adapter
+across all six base arenas. The existing Blood-starved Beast at Celestial
+Emissary adapter is now included in the assignment graph. The other 384 pairs
+remain implementation work.
+
+Reusable routes preserve entry protection independently of removed model
+animations. Native plans bind each physical primary and Ebrietas helper to an
+explicit original source map state, including Cleric's extra state. Maria's
+health/network, co-op scaling, camera and phase cleanup travel with her combat;
+the destination retains its progression and health telemetry. This is static
+construction evidence. Entry, combat, death, reload and arena fit still require
+gameplay acceptance.
+
+The [composition native matrix](boss-composition-native-matrix.json) records
+21 full-roster builds covering all 78 implemented pairs, with 59 verified files
+per build. After correcting Maria's duplicate room-entry notification at Amelia,
+both affected seeds were rebuilt; full-source comparisons prove the other five
+Maria outputs unchanged. The combined `composition-26` build includes 308
+normalized ordinary swaps, all 22 boss encounters and an actual Cathedral AP
+event override. The frozen Windows builder reproduces all 59 output hashes and
+the receipt exactly. Source, graph, tool and receipt hashes are recorded in the
+matrix; these remain native construction results, not gameplay observations.
