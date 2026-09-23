@@ -9,7 +9,7 @@ import difflib
 import copy
 import random
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from .boss_canary import event_blocks
 from .bosses import parse_events
@@ -88,7 +88,26 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     initializations, initialized_parts = [], set()
     external_references, external_bindings = [], set()
     logical, physical = set(), set()
-    for plan in plans:
+    # Swaps, actor additions and primary initializations each place or modify
+    # an actor on a physical (map, part). Their own per-category sets above
+    # only reject a duplicate within the same category, so one pair's swap
+    # and a different pair's primary-initialization anchor could silently
+    # share a Part -- exactly what crashed BossActorTransplant with "primary
+    # actor initialization target does not match source combat archetype"
+    # (bb-archipelago#451). A pair's own swap and its own initialization of
+    # that same swap are the ordinary, legitimate case (re-stamping dialogue/
+    # animation IDs on the actor the pair already swapped), so occupancy is
+    # claimed per plan index and only rejected across different plans.
+    occupied_parts: dict[tuple[str, str], int] = {}
+
+    def _claim(parts: Iterable[tuple[str, str]], plan_index: int) -> None:
+        for part in parts:
+            owner = occupied_parts.get(part)
+            if owner is not None and owner != plan_index:
+                raise ValueError('boss pair plans overlap a physical actor placement')
+            occupied_parts[part] = plan_index
+
+    for plan_index, plan in enumerate(plans):
         if plan.get('format') != 'bb-enemizer-plan-v2' or plan.get('seed') != seed or plan.get('dry_run') is not True:
             raise ValueError('boss pair plan identity differs')
         plan_swaps = _plan_swaps(plan, 'boss pair plan')
@@ -98,6 +117,7 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
                 raise ValueError('boss pair plans overlap a destination')
             logical.add(swap['logical_key'])
             physical.update(swap['destination_keys'])
+            _claim((tuple(key.split(':', 1)) for key in swap['destination_keys']), plan_index)
             swaps.append(copy.deepcopy(swap))
         changes.extend(copy.deepcopy(plan_changes))
         skips.extend(copy.deepcopy(plan_skips))
@@ -117,6 +137,7 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
                 raise ValueError('boss pair plans overlap an added actor')
             added_parts.add(part)
             added_entities.add(entity)
+            _claim((part,), plan_index)
             additions.append(copy.deepcopy(addition))
         for addition in plan.get('boss_object_additions', []):
             map_name = addition['destination_map'].removesuffix('.dcx').removesuffix('.msb')
@@ -176,6 +197,7 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
             if part in initialized_parts:
                 raise ValueError('boss pair plans overlap a primary actor initialization')
             initialized_parts.add(part)
+            _claim((part,), plan_index)
             initializations.append(copy.deepcopy(initialization))
     changes.sort(key=lambda row: row['logical_key'])
     for index, change in enumerate(changes):
