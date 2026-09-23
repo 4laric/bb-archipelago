@@ -1,6 +1,6 @@
 # Spec: Bloodborne launcher with Archipelago built in
 
-Status: **proposed design; no fork implementation or gameplay acceptance claimed**.
+Status: **implementation in draft PRs; gameplay acceptance remains unverified**.
 Owner: 4laric. Date: 2026-09-22.
 
 ## Product decision
@@ -13,13 +13,18 @@ attachment and connection happen behind that action.
 
 Bloodborne already has a high setup hurdle outside our control. Every additional
 choice, handoff and recovery step we introduce must justify its existence.
-Correctness checks remain; the application does the work of satisfying them.
+Following [PR #446](https://github.com/4laric/bb-archipelago/pull/446), a
+launch-blocking check must address a concrete unrecoverable failure, rather than
+enforce an untested policy. Informational compatibility differences produce
+precise, nonblocking warnings. Fix the functional path and verify the packaged
+application before cosmetic work; a passing unit test is not a working launch.
 
 The existing companion stays available during migration and as an advanced
 fallback. This design replaces its ordinary two-launcher player journey.
-Ordinary users do not enable a development-candidate checkbox: distributed builds
-carry an explicitly accepted compatibility set, and unsupported builds explain
-the mismatch without offering a safety-check bypass.
+Ordinary users do not enable a development-candidate checkbox. Build provenance
+records which combinations have been tested; an unrecognized fork build shows
+an informational warning and remains usable. Actual file conflicts and uncertain
+process ownership must be resolved by the workflow before destructive changes.
 
 ## Player experience
 
@@ -116,7 +121,7 @@ the fork. Current acceptance status remains in [BBLAUNCHER.md](BBLAUNCHER.md).
 | [bblauncher.cpp](https://github.com/rainmakerv3/BB_Launcher/blob/ca12c2fc38b8ba485e508bde815e8ea8cb49ac10/modules/bblauncher.cpp) | Existing emulator IPC and RunGame/RestartEmulator paths need AP preflight on every startup route. Capture the actual spawned process identity. |
 | [main.cpp](https://github.com/rainmakerv3/BB_Launcher/blob/ca12c2fc38b8ba485e508bde815e8ea8cb49ac10/main.cpp) | Inspected CLI includes no-GUI mode, not an AP service contract. Add explicit integration APIs. |
 | [CheckUpdate.cpp](https://github.com/rainmakerv3/BB_Launcher/blob/ca12c2fc38b8ba485e508bde815e8ea8cb49ac10/settings/updater/CheckUpdate.cpp) | Hardcoded upstream release/compare endpoints must become the fork's channel; an update must not replace the fork with upstream BBLauncher. |
-| [external_workflow.py](../bb_launcher/external_workflow.py), [external.py](../bb_launcher/external.py) | Reuse immutable export, activation verification, fresh-boot proof and client-only connection. Add a separately validated fork identity path; never bypass existing exact-build checks. |
+| [external_workflow.py](../bb_launcher/external_workflow.py), [external.py](../bb_launcher/external.py) | Reuse immutable export, activation verification, fresh-boot proof and client-only connection. Record fork provenance; an unfamiliar build is informational. Preserve checks of actual files, seed identity and process ownership. |
 | [workflow.py](../bb_launcher/workflow.py), [client_config.py](../bb_launcher/client_config.py) | Reuse preparation, cache, runtime config and durable namespaces. Do not port gameplay rules or delivery into Qt. |
 
 ## Architecture and ownership
@@ -189,11 +194,10 @@ Resolve play IDs by validated receipt identity, never package name/path alone;
 slot-name normalization and identical byte caches can produce the same package
 name for different selected identities.
 
-The reused verifier currently accepts copy, symlink and mixed installations.
-The fork's first-release policy must additionally require every verified file's
-`installation` to be `copy`. Reject mixed/symlink activation before arming or
-connection, with fixtures proving that boundary. Reusing the verifier does not
-by itself enforce the narrower support policy.
+The reused verifier accepts copy, symlink and mixed installations when the
+installed bytes match the receipt and paths remain inside the expected roots.
+The fork creates copy activations, but does not add a second refusal based only
+on route classification. Record the route for diagnostics and acceptance evidence.
 
 ### Play state machine
 

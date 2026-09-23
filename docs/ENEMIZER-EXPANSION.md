@@ -3,15 +3,17 @@
 Status: implemented, statically tested, **in-game validation owed**.
 The conservative default (308 logical swaps) is unchanged. Three opt-in
 release tranches replace one blanket exclusion each with reviewed
-compatibility handling; they compose by union through the planner's
-`--release-file` and the launcher's venture options (all default off).
+compatibility handling; they compose through the planner's `--release-file`
+and the launcher's venture options (all default off). When any expanded
+tranche is selected, the launcher also includes the source-pinned wakeup
+fallback record; it is not a separate user option.
 
 Regenerate everything from committed inputs only:
 
 ```powershell
 python tools/build_quest_carriers.py
 python tools/build_emevd_entity_usage.py
-python tools/build_enemizer_catalog.py --release-contracts --release-script-spawns --release-chara-bound
+python tools/build_enemizer_catalog.py --release-contracts --release-script-spawns --release-chara-bound --release-wakeup-fallbacks
 python tools/audit_enemizer_protection.py
 $env:PYTHONPATH = (Get-Location).Path; python -m unittest tests.test_enemizer_releases tests.test_enemizer_coverage tests.test_enemizer_protection_audit -v
 ```
@@ -52,7 +54,8 @@ drop rewriter deliberately leaves vanilla
 | contracts (supported script contracts) | `release_contracts.json` | 750 | 827 (+519) | 94 |
 | spawns (hostile script-spawns) | `release_spawns.json` | 588 | 797 (+489) | 106 |
 | chara (hostile CharaInit-bound) | `release_chara.json` | 294 | 345 (+37) | 59 |
-| **all combined** | union (1,429 keys) | — | **1,546 (+1,238)** | **177 / 277 (64%)** |
+| wakeup helper (`release_wakeup.json`) | 10 keys (8 newly eligible) | — | 316 alone | 57 |
+| **all combined + helper** | union (1,437 keys) | — | **1,556 (+1,248)** | **187 / 277 (67%)** |
 
 Why chara alone converts little: most CharaInit hostiles are also
 EMEVD-protected; the tranche composes (union) rather than acting alone.
@@ -73,7 +76,8 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
   wrong-skeleton behavior unvalidated, playtest owed), and all
   spatial/object/presentation/item-lot families (preserved world data).
   Hard (stay protected): boss wiring (33 logicals), NPC-part/limb ops
-  (36), `SetCharacterAIId` (221+5), `RequestCharacterAICommand` (261 —
+  (36), `SetCharacterAIId` (221+5, except the exact wakeup placements
+  handled by the pinned fallback below), `RequestCharacterAICommand` (261 —
   per-command review owed), `RequestAnimationPlayback` (1, unproven),
   `SetSpEffectAndUnknown200455` (unknown semantics).
 - **Dummy gate → spawn handling**: entity ID, part name and spawn triggers
@@ -84,6 +88,13 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
 - **CharaInit gate → donor-init handling**: the donor's own CharaInit
   travels inside the swapped archetype tuple; talk-bound actors are never
   released by any tranche (talk corpus empty → quest ownership unprovable).
+- **Central Yharnam sleep-to-wake animation**: for the ten pinned `c1120`
+  placements, the writer suppresses only their `InitializeEvent` calls to
+  event 12415130 when those placements actually swap. That event assigns
+  special AI IDs 112499/112400 around sleep and wake animations 9000/9061;
+  those IDs cannot be carried onto donor AI. The event body has no AI-disable,
+  backread, or quest-flag writes; all other event calls and spawn handling
+  remain intact. The two dummy-spawn placements still need the spawn tranche.
 - **Never released by any tranche**: talk bindings, non-character models,
   missing NPC/Think rows, unapproved (non-hostile) archetypes, the
   Snatcher progression row, quest-drop carriers, boss/parts/AI-ID/AI-command/
@@ -113,7 +124,7 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
   plan `destinations`: "changed X of Y placements", never a global
   "randomized" percentage, never "activation failure" for ordinary
   exclusions. First-area expectation with all tranches: ~2 in 3 placements
-  changed in Central Yharnam (177/277); lamp approach, NPCs, quest actors
+  changed in Central Yharnam (187/277); lamp approach, NPCs, quest actors
   and hard-wired encounters stay vanilla by design.
 
 ## 6. Implemented vs in-game-validated ledger
@@ -121,6 +132,6 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
 | Item | Implemented + static tests | In-game validated |
 | --- | --- | --- |
 | Default 308-swap policy | yes | partial (prior playtests) |
-| contracts / spawns / chara tranches | yes (pins: 827/797/345/1546) | **no** — owed |
+| contracts / spawns / chara + wakeup fallback | yes (pins: 827/797/345/1556) | **no** — owed |
 | Boss reviewed pool (67 pairs) | yes (existing contract tests) | **no** — owed |
-| Central Yharnam visibility (177) | yes (plan-level) | **no** — owed |
+| Central Yharnam visibility (187) | yes (plan-level) | **no** — owed |

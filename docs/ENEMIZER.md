@@ -88,7 +88,9 @@ Optional JSON inputs:
 - `--release-file`: a `bb-enemizer-release-v1` record from
   `build_enemizer_catalog.py --release-contracts` /
   `--release-script-spawns` / `--release-chara-bound` (repeatable; tranches
-  compose by union). Replaces one blanket exclusion each with reviewed
+  compose by union). The launcher adds `release_wakeup.json` automatically
+  with expanded options; its source-pinned fallback is not a separate user
+  option. Replaces one blanket exclusion each with reviewed
   compatibility handling; see `docs/ENEMIZER-EXPANSION.md` for the
   implemented-vs-validated ledger. Default: conservative policy.
 

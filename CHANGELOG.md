@@ -6,6 +6,22 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- The integrated BBLauncher fork now sends enemy-randomization settings through
+  preparation and cache identity instead of forcing enemies off. Its Play page
+  enables randomization and expanded coverage by default and reports actual
+  changed placements. Expanded coverage adds an awake-enemy fallback for ten
+  Central Yharnam sleep-script placements: only randomized actors lose that
+  model-specific sleep routine, while spawn and quest logic remain intact.
+  At test seed 12345, combined coverage is 1,556 swaps, including 187 of 277
+  Central Yharnam placements. Native/static checks do not replace gameplay testing.
+
+- Fixed the integrated launcher's seed selection, package handoff and client-only
+  startup. Returning to a running game preserves its session; switching away
+  stops owned processes before changing mods. Interrupted mod changes retain
+  recovery information until restoration succeeds. Untested launcher build
+  provenance is now a warning rather than a blanket refusal to play. Added a
+  local fork bundle builder; these changes still need gameplay validation.
+
 - The launcher offers three experimental enemy-randomization tranches
   (all off by default): supported script contracts, script-spawn ambushes,
   and Chara-bound hunters. Together they raise coverage from 308 to up to
@@ -22,8 +38,8 @@ under `Unreleased` and move into a dated version section when released.
   cross-checks, and a fork-only update channel that cannot install
   upstream builds. The backend also freezes (`ap_backend/bb-ap-backend`)
   and the Qt client drives both source and frozen backends in tests.
-  Not player-usable yet: no signed bundle, no accepted fork build, no
-  in-game validation.
+  No signed public bundle or in-game validation is claimed.
+
 - **Create & host names an unsupported Python before Generate.py ever runs.**
   Selecting (or falling back to) a Python newer or older than Archipelago's
   own supported range (3.11.9 through 3.13.x) used to fail deep inside a

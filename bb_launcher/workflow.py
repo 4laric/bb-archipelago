@@ -829,6 +829,7 @@ class EnemizerToolchain:
         release_contracts: bool = False,
         release_spawns: bool = False,
         release_chara: bool = False,
+        release_wakeup: bool = True,
     ) -> EnemizerBuild:
         for path, label, kind in ((map_studio_source, "source MapStudio", "directory"),):
             exists = path.is_file() if kind == "file" else path.is_dir()
@@ -888,6 +889,12 @@ class EnemizerToolchain:
                 raise ValidationError(
                     f"enemy release tranche {name!r} requested but {record} is not packaged")
             planner.extend(["--release-file", str(record)])
+        if release_wakeup and (release_contracts or release_spawns or release_chara):
+            wakeup_record = self.repo_root / "research" / "enemizer" / "release_wakeup.json"
+            if not wakeup_record.is_file():
+                raise ValidationError(
+                    f"enemy release tranche 'wakeup' requested but {wakeup_record} is not packaged")
+            planner.extend(["--release-file", str(wakeup_record)])
         if normalize_scaling:
             planner.append("--normalize-scaling")
         if boss_canary:
@@ -948,6 +955,45 @@ class EnemizerToolchain:
             raise ValidationError("enemizer writer produced unexpected files: " + ", ".join(other))
         progress(f"Verified {len(outputs)} randomized map file(s).")
         return EnemizerBuild(map_output, plan, sha256_file(plan_path), plan_path)
+
+    def write_wakeup_fallback(
+        self, *, plan_path: Path, source_event: Path, output_event: Path,
+        report_path: Path, expected_fallbacks: Sequence[Mapping[str, Any]],
+        soulsformats_next: Path | None,
+        progress: Progress = lambda _message: None,
+    ) -> Mapping[str, Any]:
+        """Apply only the planner-recorded sleep fallbacks to m24_01's event."""
+
+        for path, label in ((plan_path, "wakeup fallback plan"),
+                            (source_event, "wakeup fallback source event")):
+            if not path.is_file() or path.is_symlink():
+                raise ValidationError(f"{label} is not a regular file: {path}")
+        output_event.parent.mkdir(parents=True, exist_ok=True)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        if self.writer_executable.is_file():
+            command = [str(self.writer_executable)]
+        else:
+            if soulsformats_next is None:
+                raise ValidationError("SoulsFormatsNEXT is required for the wakeup fallback writer")
+            command = [self.dotnet, "run", "--project",
+                       str(self.repo_root / "tools/bb_enemizer_writer/BBEnemizerWriter.csproj"),
+                       "-c", "Release", f"-p:SoulsFormatsNextRoot={soulsformats_next}", "--"]
+        command.extend(["--wakeup-fallback", str(plan_path), str(source_event),
+                        str(output_event), str(report_path)])
+        self.runner(
+            command,
+            self.repo_root, progress,
+        )
+        report = _read_object(report_path, "wakeup fallback report")
+        if (report.get("format") != "bb-enemizer-wakeup-fallback-v1"
+                or report.get("applied") is not True
+                or report.get("plan_sha256") != sha256_file(plan_path)
+                or report.get("source_event_sha256") != sha256_file(source_event)
+                or report.get("wakeup_fallbacks") != list(expected_fallbacks)
+                or not output_event.is_file() or output_event.is_symlink()
+                or report.get("output_event_sha256") != sha256_file(output_event)):
+            raise ValidationError("wakeup fallback writer produced an invalid report or event")
+        return report
 
     def build_experimental(self, *, options: EnemizerOptions, install: GameInstall,
                            input_binder: Path, **kwargs) -> EnemizerBuild:
@@ -1973,6 +2019,17 @@ class LauncherWorkflow:
                 sources.update({label: sha256_file(source)
                                 for label, source in identity_inputs(settings.enemy_inventory).items()})
                 sources["launcher-tools/DarkScript3.exe"] = sha256_file(boss_darkscript)
+        expanded_enemy_release = bool(options.enabled and (
+            options.release_contracts or options.release_spawns or options.release_chara))
+        wakeup_source_event: Path | None = None
+        if expanded_enemy_release and not (options.boss_canary or options.boss_pool):
+            try:
+                wakeup_source_event = install.resolve_file(
+                    BOSS_EVENT_PATH, include_mods=False)[1]
+            except ValidationError:
+                wakeup_source_event = None
+            if wakeup_source_event is not None:
+                sources[BOSS_EVENT_PATH] = sha256_file(wakeup_source_event)
         identity = SeedIdentity(
             seed=request["seed"],
             slot=request["slot"],
@@ -1990,7 +2047,9 @@ class LauncherWorkflow:
                     (("contracts", options.release_contracts),
                      ("spawns", options.release_spawns),
                      ("chara", options.release_chara))
-                    if enabled) if options.enabled else [],
+                    if enabled) + (["wakeup"] if expanded_enemy_release else [])
+                    if options.enabled else [],
+                "wakeup_fallback_version": 1 if expanded_enemy_release else None,
                 "normalize_scaling": bool(options.enabled and (options.normalize_scaling or options.boss_canary or options.boss_pool)),
                 "boss_canary": bool(options.enabled and options.boss_canary),
                 "boss_pool": options.boss_pool if options.enabled else None,
@@ -2040,6 +2099,8 @@ class LauncherWorkflow:
             common_output = None
             hemwick_output = None
             script_output = None
+            enemy_event_output: Path | None = None
+            enemy_event_report: Mapping[str, Any] | None = None
             boss_output = None
             boss_report = None
             scaling_report = None
@@ -2169,6 +2230,7 @@ class LauncherWorkflow:
                         release_contracts=options.release_contracts,
                         release_spawns=options.release_spawns,
                         release_chara=options.release_chara,
+                        release_wakeup=not (options.boss_canary or options.boss_pool),
                         progress=progress,
                     )
                     if options.boss_pool:
@@ -2213,6 +2275,24 @@ class LauncherWorkflow:
                         ai_report = _read_object(temporary / 'script.json', 'enemy AI report')
                     if boss_encounter_overlay is None:
                         map_output = enemizer.map_studio
+                    planned_wakeup = enemizer.manifest.get("wakeup_fallbacks", [])
+                    if not isinstance(planned_wakeup, list):
+                        raise ValidationError("enemizer plan wakeup_fallbacks must be a list")
+                    if planned_wakeup:
+                        if (not expanded_enemy_release or wakeup_source_event is None
+                                or options.boss_canary or options.boss_pool
+                                or enemizer.plan_path is None):
+                            raise ValidationError(
+                                "enemizer planned wakeup fallbacks without a compatible source event")
+                        assert temporary is not None
+                        enemy_event_output = temporary / "wakeup-fallback" / Path(BOSS_EVENT_PATH).name
+                        report_path = temporary / "wakeup-fallback" / "wakeup-fallback-report.json"
+                        enemy_event_report = self.toolchain.write_wakeup_fallback(
+                            plan_path=enemizer.plan_path, source_event=wakeup_source_event,
+                            output_event=enemy_event_output, report_path=report_path,
+                            expected_fallbacks=planned_wakeup,
+                            soulsformats_next=settings.soulsformats_next, progress=progress,
+                        )
                 progress("Composing and verifying the seed cache...")
                 result = cache.build(
                     identity, composed_binder, map_output, cathedral_output, common_output,
@@ -2233,7 +2313,10 @@ class LauncherWorkflow:
                     enemy_scripts=script_output,
                     enemy_ai_report=ai_report, boss_event=boss_output, boss_report=boss_report,
                     scaling_report=scaling_report, boss_encounter_overlay=boss_encounter_overlay,
-                    item_names=names_output)
+                    item_names=names_output,
+                    enemy_events=(None if enemy_event_output is None else
+                                  {BOSS_EVENT_PATH: enemy_event_output}),
+                    enemy_event_report=enemy_event_report)
                 build = result
                 reused = result.reused
                 completed = True

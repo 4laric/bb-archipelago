@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from dataclasses import dataclass
@@ -40,6 +42,19 @@ class FakeVerified:
 def request(op: str, params: dict | None = None, seq: int = 0, op_id: str = "op-1") -> dict:
     return {"protocol": PROTOCOL_VERSION, "op": op, "id": op_id, "seq": seq,
             "params": params or {}}
+
+
+def reap_fixture_process(child: subprocess.Popen) -> None:
+    """Terminate and reap only the harmless Python child started by tests."""
+    if child.poll() is None:
+        child.terminate()
+        try:
+            child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait(timeout=5)
+    else:
+        child.wait()
 
 
 def journey_backend(state: str, *, route: str = "copy",
@@ -102,7 +117,8 @@ class SimulatedJourneyTests(unittest.TestCase):
 
             status = backend.handle(request("session_status", {"play_id": play_id}))
             self.assertTrue(status["ok"], status)
-            self.assertEqual(status["result"]["state"], "playing")
+            self.assertEqual(status["result"]["state"], "recoverable")
+            self.assertIsNone(status["result"]["client_running"])
 
             # No receipt paths or handles leak into the wrong layer: arm
             # responses carry only the opaque arm handle.
@@ -127,7 +143,7 @@ class SimulatedJourneyTests(unittest.TestCase):
             self.assertEqual(first["result"]["session_id"], second["result"]["session_id"])
             self.assertEqual(backend.spawned["count"], 1)  # type: ignore[attr-defined]
 
-    def test_symlink_activation_is_refused_before_connection(self) -> None:
+    def test_symlink_activation_remains_usable_when_integrity_checks_pass(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             backend = journey_backend(state, route="symlink")
             play_id = backend.handle(
@@ -135,8 +151,7 @@ class SimulatedJourneyTests(unittest.TestCase):
             arm = backend.handle(request(
                 "verify_and_arm",
                 {"play_id": play_id, "game_root": state, "mods_root": state}, op_id="a1"))
-            self.assertFalse(arm["ok"])
-            self.assertEqual(arm["error"]["code"], "activation-route-refused")
+            self.assertTrue(arm["ok"], arm)
 
     def test_arming_while_the_game_runs_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as state:
@@ -179,6 +194,13 @@ class SimulatedJourneyTests(unittest.TestCase):
     def test_stop_client_releases_only_the_owned_client(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             backend = journey_backend(state)
+            child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+            self.addCleanup(reap_fixture_process, child)
+            backend.spawn_fn = lambda play, arm, params, verified: {
+                "executable": "C:\\games\\shadPS4.exe",
+                "executable_sha256": digest("shad-exe"), "pid": 4242,
+                "creation_time": 987654, "client_pid": child.pid, "_process": child,
+            }
             play_id = backend.handle(
                 request("prepare_play", {"game_root": state}, op_id="p1"))["result"]["play_id"]
             arm_id = backend.handle(request(
@@ -191,6 +213,38 @@ class SimulatedJourneyTests(unittest.TestCase):
                  "process_plan": "plan"}, op_id="c1"))["result"]["session_id"]
             stopped = backend.handle(request("stop_client", {"session_id": session_id}))
             self.assertTrue(stopped["ok"], stopped)
+            self.assertTrue(stopped["result"]["stopped"])
+            self.assertIsNotNone(child.poll())
+
+    def test_stop_refuses_to_clear_session_when_backend_lost_process_handle(self) -> None:
+        from bb_launcher.integrated.supervisor import existing_session_for_play
+
+        with tempfile.TemporaryDirectory() as state:
+            backend = journey_backend(state)
+            child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])
+            self.addCleanup(reap_fixture_process, child)
+            backend.spawn_fn = lambda play, arm, params, verified: {
+                "executable": "C:\\games\\shadPS4.exe",
+                "executable_sha256": digest("shad-exe"), "pid": 4242,
+                "creation_time": 987654, "client_pid": child.pid, "_process": child,
+            }
+            play_id = backend.handle(request("prepare_play", {"game_root": state}))[
+                "result"]["play_id"]
+            arm_id = backend.handle(request("verify_and_arm", {
+                "play_id": play_id, "game_root": state, "mods_root": state,
+            })) ["result"]["arm_id"]
+            session_id = backend.handle(request("connect_and_start_client", {
+                "arm_id": arm_id, "game_root": state, "mods_root": state,
+            })) ["result"]["session_id"]
+            backend.client_processes.pop(session_id)
+
+            stopped = backend.handle(request("stop_client", {"session_id": session_id}))
+            self.assertFalse(stopped["ok"])
+            self.assertEqual(stopped["error"]["code"], "stale-session")
+            session = existing_session_for_play(state, play_id)
+            self.assertIsNotNone(session)
+            self.assertEqual(session.client_pid, child.pid)
+            self.assertIsNone(child.poll())
 
     def test_cancel_lands_at_a_safe_boundary(self) -> None:
         with tempfile.TemporaryDirectory() as state:

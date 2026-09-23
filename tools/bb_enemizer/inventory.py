@@ -90,7 +90,7 @@ def classify_slot(
     """
     released = release.get(slot.logical_key, set()) if release else set()
     override = overrides.get(slot.key) or overrides.get(slot.logical_key)
-    if override is not None and "contracts" not in released:
+    if override is not None and not ({"contracts", "wakeup"} & released):
         return SlotPolicy(
             randomize=bool(override.get("randomize", False)),
             reason=str(override.get("reason", "explicit override")),
