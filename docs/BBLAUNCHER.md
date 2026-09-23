@@ -1,5 +1,10 @@
 # BBLauncher integration
 
+For the proposed single-application player experience, see the
+[integrated launcher fork specification](SPEC-bblauncher-integrated-ap.md).
+That document is a design proposal; the implementation and acceptance status
+below describe the current companion.
+
 Status, 2026-09-23: **supported**. Release 16.10 (build 2026-08-09-f092023)
 completed live acceptance in-game and is the pinned, fully supported build;
 no per-session opt-in is required to select it. Any OTHER BBLauncher build is

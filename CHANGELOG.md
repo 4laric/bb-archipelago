@@ -6,6 +6,17 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Integrated BBLauncher fork: real Qt implementation (still not a
+  release, no live acceptance).** The fork branch now builds: generic
+  `ModService`/`EmulatorService` extraction with the Mod Manager
+  delegating to it, a usable Archipelago page (choose seed, Play) with
+  conflict/regular-play/diagnostics flows, headless `--ap-seed` startup,
+  backend-driven preparation/arming/connection with process-identity
+  cross-checks, and a fork-only update channel that cannot install
+  upstream builds. The backend also freezes (`ap_backend/bb-ap-backend`)
+  and the Qt client drives both source and frozen backends in tests.
+  Not player-usable yet: no signed bundle, no accepted fork build, no
+  in-game validation.
 - **Create & host names an unsupported Python before Generate.py ever runs.**
   Selecting (or falling back to) a Python newer or older than Archipelago's
   own supported range (3.11.9 through 3.13.x) used to fail deep inside a
