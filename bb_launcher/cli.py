@@ -173,6 +173,13 @@ def build_parser() -> argparse.ArgumentParser:
     ui = commands.add_parser("ui", help="open the Bloodborne AP desktop launcher")
     ui.add_argument("--settings")
 
+    integrated = commands.add_parser(
+        "integrated-backend",
+        help="run the fork's machine-readable AP backend (JSON-lines on stdin/stdout)",
+    )
+    integrated.add_argument("--state-root", required=True,
+                            help="launcher state root for plays, arms, journal and supervisor")
+
     canary = commands.add_parser("pickup-name-canary", help="test one randomized pickup name on a throwaway save")
     canary.add_argument("--settings", required=True, help="launcher settings JSON")
     canary.add_argument("--player-name", default="")
@@ -196,6 +203,8 @@ def build_parser() -> argparse.ArgumentParser:
                               help="development only: exercise the pinned build before live acceptance is complete")
         if command == "bblauncher-export":
             external.add_argument("--no-enemizer", action="store_true")
+            external.add_argument("--replace-existing", action="store_true",
+                                  help="replace this companion's earlier inactive export of the same seed")
 
     return parser
 
@@ -222,7 +231,8 @@ def main(argv: list[str] | None = None) -> int:
                         release_contracts=bool(raw.get("release_contracts")),
                         release_spawns=bool(raw.get("release_spawns")),
                         release_chara=bool(raw.get("release_chara"))),
-                    player_name=args.player_name, progress=print, **kwargs)
+                    player_name=args.player_name, progress=print,
+                    replace_existing=args.replace_existing, **kwargs)
                 _print({"package": str(result.package_path), "receipt": str(result.receipt_path)})
             elif args.command == "bblauncher-verify":
                 result = verify_before_boot(
@@ -349,6 +359,23 @@ def main(argv: list[str] | None = None) -> int:
                 except ConflictError as exc:
                     status_value["overlay"] = {"conflict": str(exc)}
             _print(status_value)
+        elif args.command == "integrated-backend":
+            from .integrated.backend import Backend, serve
+            from .integrated.wiring import (
+                production_prepare,
+                production_process_check,
+                production_spawn,
+                production_verify,
+            )
+
+            backend = Backend(
+                Path(args.state_root).expanduser().resolve(),
+                prepare_fn=production_prepare,
+                verify_fn=production_verify,
+                spawn_fn=production_spawn,
+                process_check_fn=production_process_check,
+            )
+            return serve(backend)
         elif args.command == "run":
             install = _install(args.game_root)
             process_plan = load_process_plan(args.process_plan)

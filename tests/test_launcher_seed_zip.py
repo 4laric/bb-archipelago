@@ -301,10 +301,12 @@ class CandidateScanTests(unittest.TestCase):
 
 class FieldLabelTests(unittest.TestCase):
     def test_the_field_names_both_shapes_it_accepts(self):
+        from bb_launcher.ui import SEED_PROMPT
         labels = {name: label for name, label, _kind in FIELD_DEFINITIONS}
-        label = labels["ap_request"]
-        self.assertIn(".zip", label)
-        self.assertIn(".bbseed.json", label)
+        self.assertEqual(labels["ap_request"], "Seed file")
+        # The shapes moved from the label to the empty-state line beneath it.
+        self.assertIn(".zip", SEED_PROMPT)
+        self.assertIn(".bbseed.json", SEED_PROMPT)
 
 
 class DoctorZipTests(unittest.TestCase):

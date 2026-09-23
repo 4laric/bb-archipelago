@@ -13,6 +13,72 @@ under `Unreleased` and move into a dated version section when released.
   carriers, NPCs, talk-bound actors, boss wiring and model-specific
   encounters still vanilla. Every tranche is statically tested;
   in-game validation is still owed before any of it becomes default.
+- **Integrated BBLauncher fork: real Qt implementation (still not a
+  release, no live acceptance).** The fork branch now builds: generic
+  `ModService`/`EmulatorService` extraction with the Mod Manager
+  delegating to it, a usable Archipelago page (choose seed, Play) with
+  conflict/regular-play/diagnostics flows, headless `--ap-seed` startup,
+  backend-driven preparation/arming/connection with process-identity
+  cross-checks, and a fork-only update channel that cannot install
+  upstream builds. The backend also freezes (`ap_backend/bb-ap-backend`)
+  and the Qt client drives both source and frozen backends in tests.
+  Not player-usable yet: no signed bundle, no accepted fork build, no
+  in-game validation.
+- **Create & host names an unsupported Python before Generate.py ever runs.**
+  Selecting (or falling back to) a Python newer or older than Archipelago's
+  own supported range (3.11.9 through 3.13.x) used to fail deep inside a
+  `Generate.py` subprocess with a raw traceback in the progress log. The
+  launcher now checks the interpreter's version up front and names exactly
+  what's wrong and what to do about it.
+
+- **Named pickup placeholders now clean themselves up.** The common event
+  overlay removes the seed-owned popup goods from held inventory, notices boxed
+  copies for removal after withdrawal, and cleans leftovers acquired before the client connected. Each newly sent
+  suppressed check once again queues the default one Blood Vial and one
+  Quicksilver Bullet sustain bundle; the singular bullet field remains for
+  compatibility with older clients.
+
+- **The launcher has a new look.** A Bloodborne-styled sidebar replaces the
+  five tab strip: **Play**, **Enemies**, **Create & host** and **Advanced**
+  (recovery tools, BBLauncher mode, and operator paths). Pages are flat and
+  scroll on short displays, labels are shorter, the progress bar only appears
+  while something runs, and the live client status sits in the sidebar with a
+  colour dot. Progress and session status stay one click away under
+  **Show Details**. Error, warning and confirmation dialogs are themed to
+  match instead of popping up as a plain white OS window, and every window
+  (including dialogs) gets a dark title bar on Windows.
+
+- The **Enemies** page is down to two decisions: **Randomize enemies** and
+  **Boss shuffle**, both on by default. The single-boss BSB-at-Cleric-Beast
+  playtest mode is retired from the GUI (still reachable through a hand-edited
+  settings file for the CLI path). Seed override, tier mixing, locomotion
+  preservation and stat normalization moved to **Advanced**, and the page no
+  longer gates them behind their own "Advanced enemy options" disclosure --
+  that distinction never earned its keep.
+
+- The three **Session overrides** (suppression binder mismatch, research
+  captures, AP seed/slot mismatch) are retired from the Advanced page: they
+  were operator-only, never-saved escape hatches that had outlived their
+  usefulness as GUI controls. The CLI's `doctor` command keeps the real
+  escape hatch (`--allow-suppression-mismatch`, `--allow-seed-mismatch`).
+
+- **Create & host** links out to the [options builder](https://peliarch.ca/bb/wizard.html)
+  for players who want more than a name and a DLC checkbox -- goal, item
+  pool, deathlink, and everything else the apworld exposes -- instead of only
+  offering the bare solo form.
+
+- BBLauncher mode names its mandatory step **Verify activated mod**, the same
+  name the workflow's refusals use (the button said "Check activated mod").
+  Building a seed that was already exported now asks whether to replace the
+  earlier inactive package instead of stopping with an "already exists"
+  error; an activated copy is never replaced. The CLI gained
+  `bblauncher-export --replace-existing`.
+
+- **BBLauncher integration is supported, not experimental.** Release 16.10
+  (build 2026-08-09-f092023) completed live acceptance in-game; selecting it
+  no longer needs the "Enable experimental integration for this session"
+  checkbox, which is gone. Any other BBLauncher build still needs its own
+  live-acceptance run and the `--live-acceptance-candidate` CLI opt-in.
 
 - BBLauncher setup now detects the inactive mod library, explains invalid folders
   before a build, and offers a one-click correction. A guided prepare/activate/connect

@@ -1,0 +1,6 @@
+{
+  "application": "BBLauncher-AP",
+  "feed": "https://github.com/4laric/BB_Launcher-AP/releases/download/latest/fork-update.json",
+  "note": "Fork-only channel. The fork build must never query upstream rainmakerv3/BB_Launcher release endpoints and must refuse an update whose application identity is not BBLauncher-AP, so an update cannot self-replace the fork with upstream.",
+  "releases": []
+}

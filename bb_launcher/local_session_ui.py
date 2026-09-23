@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import threading
 import uuid
+import webbrowser
 from pathlib import Path
 
 from .core import ValidationError
@@ -19,6 +20,11 @@ from .local_session import (
 from .resources import resource_root
 from .seed_request import archive_slots
 from .workflow import _request_identity, check_seed_slot_identity
+
+# The full options wizard: renders from the apworld's own option surface (see
+# tools/build_wizard.py), so the launcher links to it instead of hand-
+# maintaining a second, second-hand options catalog in Tk.
+WIZARD_URL = "https://peliarch.ca/bb/wizard.html"
 
 
 def write_solo_player(root: Path, name: str, include_dlc: bool) -> Path:
@@ -45,7 +51,6 @@ class LocalSessionPanel:
         self.config_path = app.settings_path.parent / "local-session-settings.json"
         self.ap_root = tk.StringVar(value=str(Path.home() / "Archipelago"))
         self.python = tk.StringVar()
-        self.name = tk.StringVar(value="Hunter")
         self.players = tk.StringVar()
         self.use_folder = tk.BooleanVar(value=False)
         self.include_dlc = tk.BooleanVar(value=False)
@@ -58,59 +63,77 @@ class LocalSessionPanel:
         self.install_label = tk.StringVar(value="Install Bloodborne world")
         self._install_root = None
         self._load()
+        from .theme import field, option, page_header, scroll_page, section
         host_frame = ttk.Frame(notebook)
-        host_frame.columnconfigure(0, weight=1)
-        host_frame.rowconfigure(0, weight=1)
-        notebook.insert(1, host_frame, text="Create & host")
-        canvas = tk.Canvas(host_frame, highlightthickness=0, background="#0d1117")
-        canvas.grid(row=0, column=0, sticky="nsew")
-        scrollbar = ttk.Scrollbar(host_frame, orient="vertical", command=canvas.yview)
-        scrollbar.grid(row=0, column=1, sticky="ns")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        frame = ttk.Frame(canvas, padding=10)
-        window = canvas.create_window((0, 0), window=frame, anchor="nw")
-        frame.bind("<Configure>", lambda _event: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.bind("<Configure>", lambda event: canvas.itemconfigure(window, width=event.width))
-        frame.columnconfigure(1, weight=1)
-        ttk.Label(frame, text="Create a game on this PC", font=("Segoe UI", 12, "bold")).grid(
-            row=0, column=0, columnspan=3, sticky="w", pady=(0, 6))
-        self._field(frame, 1, "Archipelago installation", self.ap_root, self._browse_root)
-        self._field(frame, 2, "Python (source checkout only)", self.python, self._browse_python)
-        self._field(frame, 3, "Your player name", self.name)
-        ttk.Checkbutton(frame, text="Include The Old Hunters DLC", variable=self.include_dlc).grid(
-            row=4, column=1, sticky="w")
-        ttk.Checkbutton(frame, text="Use existing player YAML files instead", variable=self.use_folder).grid(
-            row=5, column=0, columnspan=3, sticky="w", pady=(6, 0))
-        self._field(frame, 6, "Player YAML folder", self.players, self._browse_players)
-        ttk.Checkbutton(frame, text="Start local server after generation", variable=self.auto_host).grid(
-            row=7, column=0, columnspan=3, sticky="w", pady=(6, 0))
-        self._field(frame, 8, "Local server port", self.port)
-        ttk.Label(frame, text="Local hosting accepts connections from this PC only. Use Play to join an online server.",
-                  wraplength=680).grid(row=9, column=0, columnspan=3, sticky="w", pady=4)
+        # Play and Enemies are what every normal launch touches; Create & host
+        # is occasional setup, so it sits after them, ahead of Advanced. This
+        # constructor runs after Play and Enemies are added and before
+        # Advanced is, so a plain append already lands in the right place --
+        # a numeric notebook.insert(2, ...) crashed the packaged build
+        # ("Slave index 2 out of bounds"): the bundled Tcl/Tk there rejects a
+        # numeric index one past the last existing tab, where a newer Tk
+        # tolerates it as an append. add() has no such ambiguity.
+        notebook.add(host_frame, text="Create & host")
+        frame = scroll_page(tk, ttk, host_frame)
+        row = page_header(ttk, frame, "Create & host", "Generate a seed on this PC and host it for yourself.")
+        row = section(ttk, frame, row, "Your game", first=True)
+        # Player name lives on Play now: it's the same concept whether it
+        # authors a new solo seed here or picks your slot in a seed you got
+        # some other way, so it isn't siloed to this page.
+        option(ttk, frame, row, "Include The Old Hunters DLC", self.include_dlc)
+        wizard_row = ttk.Frame(frame)
+        wizard_row.grid(row=row + 1, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+        ttk.Label(
+            wizard_row,
+            text="Want to choose your goal, item pool, deathlink, and everything else the "
+                 "apworld exposes? Build a custom yaml in your browser instead of just the "
+                 "DLC choice above.",
+            style="Dim.TLabel", wraplength=520,
+        ).grid(row=0, column=0, sticky="w")
+        ttk.Button(
+            wizard_row, text="Build a custom yaml…", style="Ghost.TButton",
+            command=self._open_wizard,
+        ).grid(row=0, column=1, sticky="e", padx=(12, 0))
+        wizard_row.columnconfigure(0, weight=1)
+        row = section(ttk, frame, row + 2, "Multiworld")
+        option(ttk, frame, row, "Use existing player YAML files", self.use_folder,
+               caption="Bring your own player files, including one from the yaml builder above.")
+        field(ttk, frame, row + 1, "YAML folder", self.players, browse=self._browse_players)
+        row = section(ttk, frame, row + 2, "Local server")
+        option(ttk, frame, row, "Start the server after generation", self.auto_host)
+        field(ttk, frame, row + 1, "Port", self.port, trailing="this PC only")
+        row = section(ttk, frame, row + 2, "Archipelago install")
+        field(ttk, frame, row, "Archipelago folder", self.ap_root, browse=self._browse_root)
+        field(ttk, frame, row + 1, "Python", self.python, browse=self._browse_python)
+        ttk.Label(frame, text="Only for a source checkout of Archipelago.", style="Dim.TLabel").grid(
+            row=row + 2, column=1, sticky="w", pady=(0, 4))
         actions = ttk.Frame(frame)
-        actions.grid(row=10, column=0, columnspan=3, sticky="ew", pady=6)
-        self.create = ttk.Button(actions, text="Create seed", command=self._generate)
+        actions.grid(row=row + 3, column=0, columnspan=3, sticky="ew", pady=(18, 6))
+        self.create = ttk.Button(actions, text="Create seed", command=self._generate, style="Accent.TButton")
         self.create.pack(side="left")
-        self.cancel_button = ttk.Button(actions, text="Cancel generation", command=self.cancel.set, state="disabled")
-        self.cancel_button.pack(side="left", padx=6)
         self.host_button = ttk.Button(actions, text="Host selected seed", command=self._host_selected)
-        self.host_button.pack(side="left", padx=6)
-        self.stop_button = ttk.Button(actions, text="Stop server", command=self._stop, state="disabled")
-        self.stop_button.pack(side="left")
+        self.host_button.pack(side="left", padx=(10, 0))
+        self.stop_button = ttk.Button(actions, text="Stop server", command=self._stop, state="disabled",
+                                      style="Ghost.TButton")
+        self.stop_button.pack(side="left", padx=(10, 0))
+        # Cancel and Install appear only while they can do something; a row of
+        # five buttons, three of them dead, overflowed a narrow window.
+        self.cancel_button = ttk.Button(actions, text="Cancel generation", command=self.cancel.set,
+                                        state="disabled", style="Ghost.TButton")
         self.install_button = ttk.Button(
             actions, textvariable=self.install_label, command=self._install_world, state="disabled")
-        self.install_button.pack(side="left", padx=6)
-        ttk.Label(frame, textvariable=self.status, wraplength=680).grid(
-            row=11, column=0, columnspan=3, sticky="w")
+        status = ttk.Label(frame, textvariable=self.status, style="Muted.TLabel", wraplength=640)
+        status.grid(row=row + 4, column=0, columnspan=3, sticky="w")
+        frame.bind("<Configure>", lambda e: status.configure(wraplength=max(300, e.width - 60)), add="+")
         app.root.protocol("WM_DELETE_WINDOW", self._close)
         app.root.after(1000, self._poll)
 
-    def _field(self, frame, row, label, variable, browse=None):
-        ttk = self.app.ttk
-        ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", padx=(0, 8), pady=3)
-        ttk.Entry(frame, textvariable=variable).grid(row=row, column=1, sticky="ew", pady=3)
-        if browse:
-            ttk.Button(frame, text="Browse…", command=browse).grid(row=row, column=2, padx=(8, 0))
+    def _open_wizard(self):
+        """Open the full options builder; never fails the app if it can't."""
+        try:
+            webbrowser.open(WIZARD_URL)
+        except Exception as exc:  # noqa: BLE001 - opening a browser is a convenience
+            self._error(f"Could not open the options builder: {exc}")
 
     def _browse_root(self):
         value = self.app.filedialog.askdirectory(title="Archipelago installation")
@@ -133,14 +156,16 @@ class LocalSessionPanel:
             values = json.loads(self.config_path.read_text(encoding="utf-8"))
             if not isinstance(values, dict):
                 return
-            for key in ("ap_root", "python", "name", "players", "port"):
+            for key in ("ap_root", "python", "players", "port"):
                 if isinstance(values.get(key), str):
                     getattr(self, key).set(values[key])
         except (OSError, ValueError, TypeError):
             pass
 
     def _save(self):
-        values = {key: getattr(self, key).get() for key in ("ap_root", "python", "name", "players", "port")}
+        # "name" moved to Play's player_name, which is already part of the
+        # main saved settings; nothing left here needs to persist it too.
+        values = {key: getattr(self, key).get() for key in ("ap_root", "python", "players", "port")}
         self.config_path.parent.mkdir(parents=True, exist_ok=True)
         self.config_path.write_text(json.dumps(values, indent=2), encoding="utf-8")
 
@@ -176,7 +201,7 @@ class LocalSessionPanel:
                     raise ValidationError("Choose the folder containing your player YAML files.")
                 players = Path(self.players.get().strip())
             else:
-                players = write_solo_player(state, self.name.get(), self.include_dlc.get())
+                players = write_solo_player(state, self.app.player_name.get(), self.include_dlc.get())
             self._save()
             auto_host = self.auto_host.get()
         except Exception as exc:
@@ -186,6 +211,7 @@ class LocalSessionPanel:
         self.generating = True
         self.app._set_busy(True)
         self.cancel_button.configure(state="normal")
+        self.cancel_button.pack(side="left", padx=(10, 0))
         self.status.set("Generating seed… Progress appears below.")
         def run():
             try:
@@ -212,12 +238,14 @@ class LocalSessionPanel:
             label = "Install Bloodborne world"
         self.install_label.set(label)
         self.install_button.configure(state="normal")
+        self.install_button.pack(side="left", padx=(10, 0))
         self.status.set(f"{error} Choose “{label}” to install it into {root}. {RESTART_NOTICE}")
         self.app._append_log(f"ERROR: {error}")
 
     def _clear_world_install(self):
         self._install_root = None
         self.install_button.configure(state="disabled")
+        self.install_button.pack_forget()
 
     def _install_world(self):
         if self.app._busy or self._install_root is None:
@@ -237,12 +265,14 @@ class LocalSessionPanel:
     def _generation_failed(self, message):
         self.generating = False
         self.cancel_button.configure(state="disabled")
+        self.cancel_button.pack_forget()
         self.app._set_busy(False)
         self._error(message)
 
     def _generated(self, archive, auto_host):
         self.generating = False
         self.cancel_button.configure(state="disabled")
+        self.cancel_button.pack_forget()
         self.app._set_busy(False)
         try:
             archive_slots(archive)

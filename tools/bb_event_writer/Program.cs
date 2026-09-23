@@ -427,8 +427,10 @@ internal static class Program
     // --------------------------------------------------------------- common
 
     private const long BridgeEvent = 98_000_000;
+    private const long ToastCleanupEvent = 98_001_000;
 
     private sealed record AwardRow(int token_goods_id, int item_lot_id, int ack_flag, string? item_key);
+    private sealed record ToastCleanupRow(int goods_id, int location_id, string? location_key);
 
     /// <summary>
     /// Rows from a request document's <c>category8_awards</c>: either the
@@ -452,6 +454,19 @@ internal static class Program
             row.TryGetProperty("item_key", out var key) ? key.GetString() : null)).ToList();
     }
 
+    private static List<ToastCleanupRow> ReadToastRows(string path)
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        if (!document.RootElement.TryGetProperty("toast_placeholders", out var element))
+            return [];
+        if (element.ValueKind != JsonValueKind.Array)
+            throw new InvalidDataException("toast_placeholders must be a list");
+        return element.EnumerateArray().Select(row => new ToastCleanupRow(
+            row.GetProperty("goods_id").GetInt32(),
+            row.GetProperty("location_id").GetInt32(),
+            row.TryGetProperty("location_key", out var key) ? key.GetString() : null)).ToList();
+    }
+
     private static int Common(string[] args)
     {
         var o = Options(args, "source", "request", "output", "manifest");
@@ -459,16 +474,21 @@ internal static class Program
         if (!Path.GetFileName(o["source"]).Equals("common.emevd.dcx", StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException("source must be named common.emevd.dcx");
         var rows = ReadRows(o["request"]);
+        var toastRows = ReadToastRows(o["request"]);
         if (rows.Count == 0) throw new InvalidDataException("request carries no category-8 rows");
         if (rows.Select(r => r.token_goods_id).Distinct().Count() != rows.Count
             || rows.Select(r => r.item_lot_id).Distinct().Count() != rows.Count
             || rows.Select(r => r.ack_flag).Distinct().Count() != rows.Count)
             throw new InvalidDataException("category-8 rows must have distinct tokens, lots, and ack flags");
+        if (toastRows.Select(r => r.goods_id).Distinct().Count() != toastRows.Count
+            || toastRows.Any(r => r.goods_id is < 900000 or > 900999))
+            throw new InvalidDataException("toast cleanup rows must have distinct reserved goods ids");
 
         var emevd = Load(o["source"]);
         var bridgeEventIds = rows.Select((_, index) => BridgeEvent + index).ToHashSet();
-        if (emevd.Events.Any(e => bridgeEventIds.Contains(e.ID)))
-            throw new InvalidDataException("category-8 award bridge is already present");
+        var cleanupEventIds = toastRows.Select((_, index) => ToastCleanupEvent + index).ToHashSet();
+        if (emevd.Events.Any(e => bridgeEventIds.Contains(e.ID) || cleanupEventIds.Contains(e.ID)))
+            throw new InvalidDataException("Archipelago common event bridge is already present");
         var constructor = EventById(emevd, 0);
         var untouched = emevd.Events.Where(e => e.ID != 0).Select(e => (e.ID, Fingerprint(e))).ToList();
         var constructorBefore = constructor.Instructions.ToList();
@@ -479,6 +499,8 @@ internal static class Program
         Template(emevd, 2000, 0, 12); // the game exercises InitializeEvent
         var initializers = rows.Select((row, index) =>
             new EMEVD.Instruction(2000, 0, Args(0, (int)(BridgeEvent + index), row.token_goods_id, row.item_lot_id, row.ack_flag))).ToList();
+        initializers.AddRange(toastRows.Select((row, index) =>
+            new EMEVD.Instruction(2000, 0, Args(0, (int)(ToastCleanupEvent + index), row.goods_id))));
         constructor.Instructions.InsertRange(0, initializers);
 
         foreach (var (row, index) in rows.Select((row, index) => (row, index)))
@@ -507,11 +529,28 @@ internal static class Program
             emevd.Events.Add(bridge);
         }
 
+        foreach (var (row, index) in toastRows.Select((row, index) => (row, index)))
+        {
+            var cleanup = new EMEVD.Event(ToastCleanupEvent + index, EMEVD.Event.RestBehaviorType.Restart);
+            cleanup.Instructions.Add(Clone(emevd, 2000, 2, Args((byte)0)));
+            cleanup.Instructions.Add(Clone(emevd, 3, 16, Args((byte)0, (byte)3, (byte)0, (byte)0, 0, (byte)1)));
+            cleanup.Instructions.Add(Clone(emevd, 2003, 2, Args(0, (byte)0)));
+            cleanup.Instructions.Add(Clone(emevd, 2003, 24, Args(3, 0, 1)));
+            cleanup.Instructions.Add(Clone(emevd, 1001, 0, Args(1.0f)));
+            cleanup.Instructions.Add(Clone(emevd, 3, 16, Args((byte)1, (byte)3, (byte)0, (byte)0, 0, (byte)1)));
+            cleanup.Instructions.Add(Clone(emevd, 1000, 101, Args((byte)0, (byte)1, (byte)1, (byte)0)));
+            cleanup.Instructions.Add(Clone(emevd, 1000, 4, Args((byte)1)));
+            cleanup.Parameters.Add(new EMEVD.Parameter(1, 4, 0, 4));
+            cleanup.Parameters.Add(new EMEVD.Parameter(3, 4, 0, 4));
+            cleanup.Parameters.Add(new EMEVD.Parameter(5, 4, 0, 4));
+            emevd.Events.Add(cleanup);
+        }
+
         // Verification: nothing else moved.
         foreach (var (id, fingerprint) in untouched)
             if (Fingerprint(EventById(emevd, id)) != fingerprint)
                 throw new InvalidDataException($"unrelated event {id} changed");
-        if (!constructor.Instructions.Skip(rows.Count).SequenceEqual(constructorBefore))
+        if (!constructor.Instructions.Skip(rows.Count + toastRows.Count).SequenceEqual(constructorBefore))
             throw new InvalidDataException("constructor lost a vanilla initializer");
 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(o["output"]))!);
@@ -526,6 +565,8 @@ internal static class Program
             @event = BridgeEvent,
             events = bridgeEventIds.Order().ToList(),
             rows,
+            toast_cleanup_events = cleanupEventIds.Order().ToList(),
+            toast_cleanup_rows = toastRows,
         });
         return 0;
     }
