@@ -60,7 +60,9 @@ class LocalSessionPanel:
         self._load()
         from .theme import field, option, page_header, scroll_page, section
         host_frame = ttk.Frame(notebook)
-        notebook.insert(1, host_frame, text="Create & host")
+        # Play and Enemies are what every normal launch touches; Create & host
+        # is occasional setup, so it sits after them, ahead of Advanced.
+        notebook.insert(2, host_frame, text="Create & host")
         frame = scroll_page(tk, ttk, host_frame)
         row = page_header(ttk, frame, "Create & host", "Generate a seed on this PC and host it for yourself.")
         row = section(ttk, frame, row, "Your game", first=True)

@@ -1152,34 +1152,31 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("tools.bb_enemizer.cli", (self.repo / "bb_launcher" / "workflow.py").read_text())
         self.assertIn("BBEnemizerWriter.csproj", (self.repo / "bb_launcher" / "workflow.py").read_text())
 
-    def test_ui_contract_offers_the_override_checkbox_and_never_persists_it(self):
-        """bb-archipelago#183: opt-in per session, and impossible to leave on.
-
-        The UI writes every other toggle into the saved setup; this one is
-        absent from both the save and the load on purpose, so an operator who
-        used it once cannot silently launch a player's seed unvalidated a week
-        later.
+    def test_session_override_checkboxes_are_retired_from_the_gui(self):
+        """These were operator-only, never-saved escape hatches (bb-archipelago
+        #183, #347) that had outlived their usefulness as GUI controls. The
+        vars stay (permanently False, since nothing sets them any more) so the
+        background-thread call signatures below them are untouched; only the
+        checkbox text goes. The CLI doctor command keeps the real escape hatch.
         """
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('"Allow suppression binder mismatch"', source)
+        for retired in ('"Allow suppression binder mismatch"', '"Enable research captures"',
+                        '"Allow AP seed/slot mismatch"'):
+            self.assertNotIn(retired, source)
         self.assertIn("allow_suppression_mismatch=allow_suppression_mismatch", source)
-        save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
-        load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
-        # The control: the neighbouring toggles ARE persisted, so this is a
-        # statement about this knob, not about an inert pair of blocks.
-        self.assertIn("allow_tier_mixing", save)
-        self.assertIn("allow_tier_mixing", load)
-        self.assertNotIn("allow_suppression_mismatch", save)
-        self.assertNotIn("allow_suppression_mismatch", load)
-
-    def test_ui_contract_offers_research_captures_and_never_persists_it(self):
-        source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('"Enable research captures"', source)
         self.assertIn("research_captures=research_captures", source)
         save = source.split("def _save_settings")[1].split("def _load_settings_if_present")[0]
         load = source.split("def _load_settings_if_present")[1].split("def _generate_plan")[0]
-        self.assertNotIn("research_captures", save)
-        self.assertNotIn("research_captures", load)
+        # The control: the neighbouring toggles ARE persisted, so this is a
+        # statement about these knobs, not about an inert pair of blocks.
+        self.assertIn("allow_tier_mixing", save)
+        self.assertIn("allow_tier_mixing", load)
+        for retired in ("allow_suppression_mismatch", "research_captures", "allow_seed_mismatch"):
+            self.assertNotIn(retired, save)
+            self.assertNotIn(retired, load)
+        cli = (self.repo / "bb_launcher" / "cli.py").read_text(encoding="utf-8")
+        self.assertIn("--allow-suppression-mismatch", cli)
+        self.assertIn("--allow-seed-mismatch", cli)
 
     def _build_widget_tree(self):
         """(parent-of-var, widgets-by-parent-var) read out of `_build` itself.
@@ -1284,9 +1281,8 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
         self.assertEqual(parent_of[troubleshooting_tab], "notebook")
         # The operator override is available without cluttering normal setup.
-        self.assertIn("Allow suppression binder mismatch", texts_under(troubleshooting_tab))
-        self.assertNotIn("Allow suppression binder mismatch", texts_under(enemy_tab))
-        self.assertNotIn("Allow suppression binder mismatch", texts_under(setup_tab))
+        for retired_tab in (troubleshooting_tab, enemy_tab, setup_tab):
+            self.assertNotIn("Allow suppression binder mismatch", texts_under(retired_tab))
 
     def test_ui_contract_keeps_the_log_and_status_out_of_the_notebook(self):
         """The progress log is launch progress, so no tab can hide it."""

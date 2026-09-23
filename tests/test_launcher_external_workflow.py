@@ -28,7 +28,10 @@ class ExternalWorkflowTests(unittest.TestCase):
         deactivate_overlay(self.install, process_is_running=lambda: False)
         self.mods = self.root / "BBLauncher" / "Mods"
         self.mods.mkdir(parents=True)
-        self.pin = BBLauncherBuildPin("2026-08-09-f092023", LOCAL_CANDIDATE_COMMIT, LOCAL_CANDIDATE_SHA, True)
+        # f092023 completed live acceptance in-game and is fully supported now,
+        # not a candidate: live_acceptance_candidate is False, matching what the
+        # real (unmocked) _pin() returns for this digest.
+        self.pin = BBLauncherBuildPin("2026-08-09-f092023", LOCAL_CANDIDATE_COMMIT, LOCAL_CANDIDATE_SHA, False)
         self.exported = export_external_package(self.build, SeedIdentity.from_dict(self.build.manifest["identity"]),
             mods_root=self.mods, state_root=self.root / "state", install=self.install, bblauncher=self.pin,
             client_version="sha256:" + sha256_file(self.root / "bb-ap-client.exe"),

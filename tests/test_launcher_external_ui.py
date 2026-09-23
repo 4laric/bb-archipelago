@@ -35,7 +35,6 @@ class CompanionPresentationTests(unittest.TestCase):
             ("ap_request", "game_root", "shad_executable")})
         for key in ("executable", "mods", "receipt", "guidance", "prepared"):
             setattr(self.panel, key, Value())
-        self.panel.candidate = Value(True)
         self.panel.buttons = {action: Button() for action in ("export", "verify", "connect")}
         self.validation = patch("bb_launcher.external_setup.setup_problem", return_value=None)
         self.validation.start()

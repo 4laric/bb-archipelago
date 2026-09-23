@@ -257,12 +257,14 @@ def settings_from_fields(fields: Mapping[str, str]) -> LauncherSettings:
 class LauncherApp:
     def __init__(self, root: Any, *, repo_root: Path, settings_path: Path):
         import tkinter as tk
-        from tkinter import filedialog, messagebox, ttk
+        from tkinter import filedialog, ttk
 
         self.tk = tk
         self.ttk = ttk
         self.filedialog = filedialog
-        self.messagebox = messagebox
+        # A themed drop-in for tkinter.messagebox: same call shape, no
+        # white OS-chrome popup flashing against the dark body.
+        self.messagebox = Dialogs(tk, ttk, self.root)
         self.root = root
         self.repo_root = repo_root.resolve()
         self.settings_path = settings_path.expanduser().resolve()
@@ -325,6 +327,7 @@ class LauncherApp:
         """Every colour, font and ttk style comes from ``theme``; nothing is
         configured ad hoc here, so the pages cannot drift from the palette."""
         apply_theme(self.root, self.ttk)
+        enable_dark_titlebar(self.root)
 
     def _apply_default_fields(self) -> None:
         """Fill derived fields and repair suppression paths from old packages."""
@@ -483,29 +486,12 @@ class LauncherApp:
         from .external_ui import BBLauncherPanel
         self.bblauncher_panel = BBLauncherPanel(self, bblauncher)
 
-        troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Session overrides")
-        ttk.Label(
-            troubleshooting, text="Operators only. Never saved: every override resets when the launcher closes.",
-            style="Dim.TLabel",
-        ).grid(row=troubleshooting_row, column=0, columnspan=3, sticky="w", pady=(0, 4))
-        troubleshooting_row += 1
-        # Outside the enemy-randomization widget group on purpose: it stays
-        # usable with Randomize Enemies off, and it is never saved.
-        option(
-            ttk, troubleshooting, troubleshooting_row, "Allow suppression binder mismatch",
-            self.allow_suppression_mismatch,
-        )
-        option(
-            ttk, troubleshooting, troubleshooting_row + 1, "Enable research captures",
-            self.research_captures, caption="Playtest diagnostics.",
-        )
-        option(
-            ttk, troubleshooting, troubleshooting_row + 2, "Allow AP seed/slot mismatch",
-            self.allow_seed_mismatch,
-            caption="The warning names the expected and connected identity.",
-        )
-        troubleshooting_row += 3
-
+        # Session overrides (suppression-binder mismatch, seed/slot mismatch,
+        # research captures) retired from the GUI: they were operator-only,
+        # never-saved escape hatches that had outlived their usefulness here.
+        # The vars stay permanently False now that nothing sets them; the CLI
+        # doctor command (--allow-suppression-mismatch, --allow-seed-mismatch)
+        # remains the way to invoke them when genuinely needed.
         troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Paths")
         paths = ttk.Frame(troubleshooting)
         paths.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
@@ -1203,11 +1189,15 @@ class LauncherApp:
 
         from .enemy_report import MAP_AREAS
 
+        from .theme import THEME_BACKGROUND, THEME_BORDER, THEME_FOREGROUND, THEME_PANEL
+
         tk = self.tk
         dialog = tk.Toplevel(self.root)
         dialog.title("Report a Bad Enemy")
         dialog.transient(self.root)
+        dialog.configure(bg=THEME_BACKGROUND)
         dialog.resizable(False, False)
+        enable_dark_titlebar(dialog)
         frame = ttk.Frame(dialog, padding=12)
         frame.grid(row=0, column=0, sticky="nsew")
         frame.columnconfigure(1, weight=1)
@@ -1221,7 +1211,11 @@ class LauncherApp:
         echoes_var = tk.StringVar()
         ttk.Entry(frame, textvariable=echoes_var, width=12).grid(row=1, column=1, sticky="w", pady=4)
         ttk.Label(frame, text="What did you see?").grid(row=2, column=0, sticky="nw", pady=4)
-        note = tk.Text(frame, height=4, width=44, wrap="word")
+        note = tk.Text(
+            frame, height=4, width=44, wrap="word", relief="flat", borderwidth=1,
+            highlightthickness=1, highlightbackground=THEME_BORDER, highlightcolor=THEME_BORDER,
+            bg=THEME_PANEL, fg=THEME_FOREGROUND, insertbackground=THEME_FOREGROUND,
+        )
         note.grid(row=2, column=1, sticky="ew", pady=4)
         result: dict[str, Any] = {}
 
