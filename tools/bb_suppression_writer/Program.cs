@@ -2,6 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using SoulsFormats;
 
+if (args.Length == 7 && args[0] == "--standalone-items" && args[6] == "--apply")
+{
+    StandaloneItems.Write(args[1], args[2], args[3], args[4], args[5]);
+    return 0;
+}
+
 if (args.Length == 3 && args[0] == "--inspect-starting-attire")
 {
     InspectStartingAttire(args[1], args[2]);
