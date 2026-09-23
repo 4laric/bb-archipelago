@@ -568,8 +568,14 @@ class LauncherPackageTests(unittest.TestCase):
             "--notes-file packaging/PACKAGE-README.txt --latest `", release
         )
         self.assertIn(
-            "--notes-file packaging/PACKAGE-README.txt --prerelease=false --latest",
+            "--notes-file packaging/PACKAGE-README.txt --draft=false --prerelease=false --latest",
             release,
+        )
+        # A re-dispatched tag that was drafted first must actually clear
+        # draft:true on publish/prerelease, not just set --prerelease and
+        # --latest -- see the release-publish-draft-clear fix.
+        self.assertIn(
+            "--notes-file packaging/PACKAGE-README.txt --draft=false --prerelease", release
         )
         # Splatting the flags from an array reached gh as a bare "-" and failed
         # the first v0.1.0.0 release. Each branch spells its command out.
