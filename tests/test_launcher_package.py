@@ -651,8 +651,23 @@ class LauncherPackageTests(unittest.TestCase):
         self.assertIn("--json isDraft", publish)
         self.assertIn("$isDraft -and -not $existingIsDraft", publish)
         self.assertIn("Refusing to upload draft artifacts", publish)
-        self.assertIn('--target "$env:GITHUB_SHA"', publish)
-        self.assertEqual(2, publish.count("--draft --latest=false"))
+        # GitHub's API rejects make_latest set to any value, even false,
+        # on a release that is also draft:true ("Latest release cannot be
+        # draft or prerelease", HTTP 422) -- --latest must never be passed
+        # for a draft, on the edit branch or the create branch.
+        self.assertNotIn("--latest=false", publish)
+        self.assertIn(
+            '--notes-file packaging/PACKAGE-README.txt --draft --target "$env:GITHUB_SHA"',
+            publish,
+        )
+        self.assertIn(
+            '--notes-file packaging/PACKAGE-README.txt --draft `',
+            publish,
+        )
+        # --target appears on the create branch (a brand-new release) and on
+        # the edit branch (so a moved tag corrects an existing draft's stored
+        # commit too, not only a freshly created one).
+        self.assertEqual(2, publish.count('--target "$env:GITHUB_SHA"'))
         self.assertLess(
             publish.index("$isDraft -and -not $existingIsDraft"),
             publish.index("gh release upload"),
