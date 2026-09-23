@@ -2340,6 +2340,7 @@ class LauncherWorkflow:
         force_rebuild: bool = False,
         allow_suppression_mismatch: bool = False,
         allow_seed_mismatch: bool = False,
+        adopt_foreign_overlay: bool = False,
         research_captures: bool = False,
         pickup_name_canary: str | None = None,
         pickup_name_language: str | None = None,
@@ -2386,6 +2387,7 @@ class LauncherWorkflow:
             process_is_running=process_is_running,
             suppression_override=suppression.bypassed,
             identity=identity,
+            adopt_foreign_overlay=adopt_foreign_overlay,
         )
         if owner["suppression"]["sha256"] != build.manifest["suppression"]["sha256"]:
             raise ValidationError("activated suppression witness does not match the seed build")
