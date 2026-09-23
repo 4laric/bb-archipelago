@@ -20,6 +20,10 @@ under `Unreleased` and move into a dated version section when released.
   retaining entry triggers and progression, with explicit player relocation
   where the original entrance warped the player. These changes still need
   in-game validation.
+- Fixed combined enemy and boss seed generation losing swaps when ordinary and
+  boss placements used different names for the same map. All placements now
+  share one map write, preventing the primary boss archetype validation crash.
+
 - Boss shuffle now composes reusable combat adapters with destination arenas,
   expanding Maria and Ebrietas placements while preserving donor combat and
   adapting arena set pieces. The implementation coverage report distinguishes
