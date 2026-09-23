@@ -202,6 +202,12 @@ def decide_recovery(entries: list[dict[str, Any]],
             detail="user changed file(s) since interruption; refusing to overwrite: "
                    + ", ".join(unexpected),
         )
+    if not committed:
+        # A journaled plan with no committed mutations and no user changes:
+        # nothing happened yet, so the operation resumes from the plan.
+        if not any(e.get("kind") == "plan" for e in entries):
+            return RecoveryDecision(action="resume", detail="no interrupted activation")
+        return RecoveryDecision(action="resume", detail="plan intact; resume activation")
     # Reverse-order restoration of committed mutations only.
     committed_paths = [str(item.get("relative")) for item in committed if item.get("relative")]
     if committed_paths and all(
