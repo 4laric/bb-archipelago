@@ -594,7 +594,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     config = _parse_args(argv)
     receipt = build(config)
     print(f"Verified standalone overlay built: {config.output}")
-    print(json.dumps(receipt, sort_keys=True))
+    print(f"Seed: {config.seed}; verified files: {len(receipt['files'])}")
+    print(f"Build receipt: {config.output / 'standalone-build-receipt.json'}")
     return 0
 
 

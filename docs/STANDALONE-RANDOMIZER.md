@@ -6,7 +6,46 @@ client. The existing launcher’s **Create & host** feature remains a localhost
 Archipelago session and does not satisfy this contract.
 
 The implemented path includes a local item planner, native item/enemy builder,
-and exporter for the existing BBLauncher. To generate an item plan:
+and exporter for the existing BBLauncher.
+
+## Windows package
+
+`packaging/build_standalone.ps1` produces `BloodborneStandaloneRandomizer`
+with `BloodborneRandomizer.exe` and self-contained native writers. Players need
+no installed Python, .NET, or Archipelago runtime. The package contains the
+pinned research metadata used by the planners; it reads the player's original
+game archives to generate a new seed locally.
+
+```powershell
+.\BloodborneRandomizer.exe build `
+  --game-root "D:\Games\CUSA03173\dvdroot_ps4" `
+  --seed "my-seed" --output "D:\Randomizer\my-seed" `
+  --randomize-enemies --normalize-enemy-scaling
+
+.\BloodborneRandomizer.exe export `
+  --overlay "D:\Randomizer\my-seed" `
+  --zip-root "D:\Randomizer\exports" `
+  --receipt-root "D:\Randomizer\receipts"
+```
+
+The overlay must be a new directory outside the game installation. Export and
+receipt directories must already exist. Extract the exported mod folder into
+the existing BBLauncher's `Mods` directory and activate it there with the game
+stopped. `build --help`, `export --help`, and `verify --help` describe the options.
+
+To build the Windows distribution from source, use Python 3.12 with
+`packaging/requirements-build.txt`, the .NET SDK, and the pinned SoulsFormatsNEXT
+checkout:
+
+```powershell
+.\packaging\build_standalone.ps1 `
+  -SoulsFormatsNextRoot "D:\Source\SoulsFormatsNEXT" `
+  -PythonExecutable "D:\Python312\python.exe"
+```
+
+## Planner development interface
+
+To generate an item plan directly from source:
 
 ```powershell
 python -m tools.bb_standalone `
