@@ -16,12 +16,12 @@ NUMBER = re.compile(r"(?<!\d)\d{6,9}(?!\d)")
 
 EVENT_REASON = "entity ID referenced by area EMEVD"
 
-# Boss model families that must never enter the ordinary enemy pool, even when
-# one of their NpcParam rows passes the hostile-actor gate below. Lady Maria's
-# c4520:452091 row reads as an ordinary elite (team 23, npcType 0) but her AI
-# does not work outside her own fight.
+# Boss and prop model families that must never enter the ordinary enemy pool,
+# even when one of their NpcParam rows passes the hostile-actor gate below
+# (team 23, npcType 0). Excluding a model also keeps its own placements vanilla.
 NON_TARGET_MODELS = {
     "c4520": "Lady Maria: boss AI broken as an ordinary enemy",
+    "c7110": "Cainhurst carriage (Hemwick): a stationary 1 HP prop, not an enemy",
 }
 
 

@@ -40,12 +40,12 @@ SEED = "12345"
 # determinism is pinned separately below).
 PINNED_COUNTS = {
     (): 308,
-    ("contracts",): 827,
+    ("contracts",): 826,
     ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1545,
+    ("chara", "contracts", "spawns"): 1544,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1555,
+    ("chara", "contracts", "spawns", "wakeup"): 1554,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -193,14 +193,16 @@ class ReleasePlanningTests(unittest.TestCase):
             swaps, _rejections, _release = self._plan(tranches)
             self.assertEqual(expected, len(swaps), f"tranches={tranches}")
 
-    def test_lady_maria_never_enters_the_ordinary_pool(self):
-        # Her AI is broken outside her own fight; boss shuffle owns c4520.
+    def test_excluded_models_never_enter_the_ordinary_pool(self):
+        # c4520 Lady Maria: AI broken outside her fight; boss shuffle owns her.
+        # c7110 Cainhurst carriage: a stationary prop, not an enemy.
+        excluded = {"c4520", "c7110"}
         self.assertFalse([key for key, tag in self.tags.items()
-                          if key.startswith("c4520:") and tag.target])
+                          if key.split(":", 1)[0] in excluded and tag.target])
         swaps, _rejections, _release = self._plan(
             ("chara", "contracts", "spawns", "wakeup"))
         self.assertFalse([swap.logical_key for swap in swaps
-                          if "c4520" in (swap.source.model_name, swap.target.model_name)])
+                          if excluded & {swap.source.model_name, swap.target.model_name}])
 
     def test_tranche_determinism(self):
         for tranches in [("contracts",), ("chara", "contracts", "spawns")]:

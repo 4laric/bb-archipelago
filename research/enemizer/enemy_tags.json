@@ -6977,7 +6977,7 @@
     "notes": "NpcParam 711000; hp=1; radius=0.5; height=1.8; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c7500:750100:750000:0": {
