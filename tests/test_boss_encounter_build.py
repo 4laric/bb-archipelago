@@ -34,6 +34,7 @@ class EncounterBuildTests(unittest.TestCase):
         from tools.bb_enemizer.wet_nurse_donor import portable_wet_nurse_arenas
         from tools.bb_enemizer.micolash_donor import portable_micolash_arenas
         from tools.bb_enemizer.celestial_donor import portable_celestial_arenas
+        from tools.bb_enemizer.one_reborn_donor import portable_one_reborn_arenas
 
         self.assertEqual(7, len(SUPPORTED_LAURENCE_ARENAS))
         self.assertEqual(9, len(SUPPORTED_LOGARIUS_ARENAS))
@@ -54,7 +55,8 @@ class EncounterBuildTests(unittest.TestCase):
         pairs.extend((arena.key, 'mergos-wet-nurse') for arena in portable_wet_nurse_arenas())
         pairs.extend((arena.key, 'micolash') for arena in portable_micolash_arenas())
         pairs.extend((arena.key, 'celestial-emissary') for arena in portable_celestial_arenas())
-        self.assertEqual(83, len(pairs))
+        pairs.extend((arena.key, 'the-one-reborn') for arena in portable_one_reborn_arenas())
+        self.assertEqual(89, len(pairs))
         with tempfile.TemporaryDirectory() as temporary:
             compiler = Path(temporary) / 'untrusted-compiler.exe'
             compiler.write_bytes(b'not the pinned compiler')
@@ -160,7 +162,10 @@ class EncounterBuildTests(unittest.TestCase):
             self.assertGreaterEqual(len({a[arena] for a in assignments}), 2, arena)
         for donor in graph:
             self.assertGreaterEqual(len({arena for a in assignments for arena, value in a.items() if value == donor}), 2, donor)
-        for arena, donor in (('martyr-logarius', 'mergos-wet-nurse'), ('mergos-wet-nurse', 'darkbeast-paarl'), ('rom', 'celestial-emissary')):
+        for arena, donor in (('martyr-logarius', 'mergos-wet-nurse'),
+                             ('mergos-wet-nurse', 'darkbeast-paarl'),
+                             ('rom', 'celestial-emissary'),
+                             ('cleric-beast', 'the-one-reborn')):
             self.assertTrue(any(assignment[arena] == donor for assignment in assignments))
 
     def test_allocated_event_cannot_alias_original_actor_or_operand_in_another_map(self):

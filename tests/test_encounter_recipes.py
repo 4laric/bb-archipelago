@@ -73,11 +73,13 @@ class EncounterRecipeTests(unittest.TestCase):
         wet_nurse_keys = {(arena.key, "mergos-wet-nurse") for arena in ARENAS}
         micolash_donor_keys = {(arena.key, "micolash") for arena in ARENAS}
         celestial_donor_keys = {(arena.key, "celestial-emissary") for arena in ARENAS}
+        one_reborn_donor_keys = {(arena.key, "the-one-reborn") for arena in ARENAS}
         groups = (base_keys, maria_keys, laurence_keys, maria_arena_keys, logarius_keys,
                   laurence_arena_keys, gascoigne_arena_keys, logarius_arena_keys,
                   orphan_keys, orphan_arena_keys, ludwig_keys, gascoigne_donor_keys,
                   ludwig_arena_keys, final_boss_donor_keys, final_arena_keys,
-                  micolash_arena_keys, wet_nurse_keys, micolash_donor_keys, celestial_donor_keys)
+                  micolash_arena_keys, wet_nurse_keys, micolash_donor_keys,
+                  celestial_donor_keys, one_reborn_donor_keys)
         self.assertEqual(set.union(*groups), set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)
@@ -99,6 +101,7 @@ class EncounterRecipeTests(unittest.TestCase):
         self.assertEqual(6, len(micolash_arena_keys))
         self.assertEqual(6, len(wet_nurse_keys))
         self.assertEqual(6, len(micolash_donor_keys))
+        self.assertEqual(6, len(one_reborn_donor_keys))
         self.assertEqual(
             sum(map(len, groups)),
             len(self.recipes),
@@ -351,6 +354,29 @@ class EncounterRecipeTests(unittest.TestCase):
                 self.assertEqual(2 * arena.destination_count, len(plan["boss_actor_additions"]))
                 self.assertEqual(6 * arena.destination_count, len(plan["boss_region_additions"]))
                 self.assertEqual(arena.destination_count, len(plan["boss_object_additions"]))
+
+        one_source = read_blob(BUNDLE, "event/m28_00_00_00.emevd.dcx.js").decode(
+            "utf-8-sig"
+        )
+        for arena in ARENAS:
+            with self.subTest(arena=arena.key, donor="the-one-reborn"):
+                recipe = self.recipes[(arena.key, "the-one-reborn")]
+                destination = self.sources[arena.event_file]
+                before = event_blocks(destination)
+                after = event_blocks(recipe.patch(destination, one_source))
+                self.assertEqual(
+                    before[arena.completion_event], after[arena.completion_event]
+                )
+                plan = recipe.native_plan(
+                    self.slots, self.npcs, self.effects, "recipe-one-reborn"
+                )
+                self.assertEqual(arena.key, plan["boss_contract"]["arena"])
+                self.assertEqual("the-one-reborn", plan["boss_contract"]["donor"])
+                self.assertEqual(
+                    9 * arena.destination_count, len(plan["boss_actor_additions"])
+                )
+                self.assertNotIn("boss_region_additions", plan)
+                self.assertNotIn("boss_generator_additions", plan)
 
         for arena, terminal, actor in (("gehrman", 12101800, 2100800),
                                        ("moon-presence", 12101850, 2100810),

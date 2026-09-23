@@ -780,7 +780,8 @@ def build(args) -> dict:
         raise ValueError('Shadows donor requires a reviewed Orphan or Celestial arena adapter')
     if direct_orphan[0] == 'the-one-reborn' and direct_orphan[1] not in ('rom', 'witch-of-hemwick'):
         raise ValueError('One Reborn arena requires a reviewed Rom or Witch donor adapter')
-    if direct_orphan[1] == 'the-one-reborn' and direct_orphan[0] not in ('ebrietas', 'shadows-of-yharnam'):
+    if (direct_orphan[1] == 'the-one-reborn' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('ebrietas', 'shadows-of-yharnam')):
         raise ValueError('One Reborn donor requires a reviewed Ebrietas or Shadows arena adapter')
     if (direct_orphan[1] == 'celestial-emissary' and direct_orphan not in reusable_recipes()
             and direct_orphan[0] not in ('darkbeast-paarl', 'rom')):

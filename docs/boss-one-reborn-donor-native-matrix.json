@@ -1,0 +1,126 @@
+{
+  "format": "bb-one-reborn-donor-native-v1",
+  "runtime_validated": false,
+  "delivery_scope": "typed 96/100/118 direct roots through pinned original m28 whole-bank union",
+  "recursive_fxr_dependencies": "not-validated",
+  "destination_bank_precedence": "not-runtime-validated",
+  "source_sha256": {
+    "tools/bb_enemizer/one_reborn_donor.py": "81b8d0f41b7146245646f4ac9d95280ddb4d493f30a08f5d4c8a41f057858e5b",
+    "tools/bb_enemizer/one_reborn_character_ffx.py": "0918bd35b345923238db2f0a57bffc1151778eb7ef785f1d7e8449b2c2a3e950",
+    "tools/bb_enemizer/one_reborn_character_ffx.json": "a7626146127e3e66345395c9841d86237c2bea221ba9a09828f318207bda6cbf",
+    "tools/bb_enemizer/boss_contracts.py": "e16124bab72a400957de927eeff6451bd348a21780342682fcf103158f79554a",
+    "tools/bb_enemizer/encounter_recipes.py": "dc1c2e09fc6531ae27fe1404b7e5db3827a770584257a763466176dbb3576b79",
+    "tools/build_boss_encounters.py": "144244bd48fa09036764f9726bb2e50cf9bb4ed7fff30e25981ac8d18f7d333e",
+    "writer": "62a5c289da174dfba30ba7b1c849eed6c5cc62e4ebcdbb872975240fc3020394"
+  },
+  "cases": [
+    {
+      "arena": "cleric-beast",
+      "donor": "the-one-reborn",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 11,
+      "receipt_sha256": "88d14e102407a987b8f10ad10b24fc2a6b374822f16a72579f9e42185e837199",
+      "character_proof_count": 18,
+      "direct_root_delivery_count": 186,
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m28.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m24_01.ffxbnd.dcx",
+        "source_entry_count": 362,
+        "retained_entry_count": 215,
+        "imported_entry_count": 353,
+        "output_sha256": "cae9455978152a73cc3a8f18c6dd099caa1420d64e135a529dff53a14f6f2bf6"
+      }
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "the-one-reborn",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "89f2a8c8f2a02514084dc8c42f8d1a897750cc6b194d7d1d203f2dcb1c524ba5",
+      "character_proof_count": 18,
+      "direct_root_delivery_count": 124,
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m28.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+        "source_entry_count": 362,
+        "retained_entry_count": 290,
+        "imported_entry_count": 288,
+        "output_sha256": "367ebd0acb8c2b1bba62a4e181e6646699c76ccde5347ce41b819b293cd44ba6"
+      }
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "the-one-reborn",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "b20472a8820a32e8fc7522870167308d71c8e92a70b5da3c365cc3808f845db7",
+      "character_proof_count": 18,
+      "direct_root_delivery_count": 124,
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m28.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+        "source_entry_count": 362,
+        "retained_entry_count": 290,
+        "imported_entry_count": 288,
+        "output_sha256": "367ebd0acb8c2b1bba62a4e181e6646699c76ccde5347ce41b819b293cd44ba6"
+      }
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "the-one-reborn",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "2d84c7456bbccb5454c3c8cbae2bd3edadbe9b5e270d1af2ea2df3ccca07909a",
+      "character_proof_count": 18,
+      "direct_root_delivery_count": 124,
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m28.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m24_00.ffxbnd.dcx",
+        "source_entry_count": 362,
+        "retained_entry_count": 94,
+        "imported_entry_count": 361,
+        "output_sha256": "07b297ddd4e7fdf13a8451c5cf1cfebb2dd7790190a43c503327d13ade359a49"
+      }
+    },
+    {
+      "arena": "amygdala",
+      "donor": "the-one-reborn",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "291d388b3d500c4cfc831f07b313da49d6af6737ef5953a809e021e6f0f5d818",
+      "character_proof_count": 9,
+      "direct_root_delivery_count": 62,
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m28.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m33.ffxbnd.dcx",
+        "source_entry_count": 362,
+        "retained_entry_count": 290,
+        "imported_entry_count": 341,
+        "output_sha256": "c18987b49a63f7ce71aba11afb3d97fd58663826d09cb821cf92932a3f6360ad"
+      }
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "the-one-reborn",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "ab2fb27a6e876ec0514ceeb4cdc2195516521ed5a25e54a80f5f89e24d92accf",
+      "character_proof_count": 18,
+      "direct_root_delivery_count": 124,
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m28.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+        "source_entry_count": 362,
+        "retained_entry_count": 159,
+        "imported_entry_count": 357,
+        "output_sha256": "651294ebd9899b4d5c26ff4598ddce14108e53fa184a0c8d5386b248a8014329"
+      }
+    }
+  ]
+}

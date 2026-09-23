@@ -1148,3 +1148,27 @@ unvalidated.
 The character-proof resource uses LF bytes in Git and its integrity pin. The
 native matrices captured the equivalent local CRLF serialization before it was
 normalized; the parsed proof and generated native payload are unchanged.
+
+## One Reborn donor and multipart character delivery
+
+The reusable One Reborn donor preserves its core, linked body, controller,
+shared HP proxy, six bell maidens, seven limb controllers, six caster counters
+and both combat phases. It adds no source regions or generators. The proxy's HP
+bridges to the destination primary only after combat ends, leaving the original
+destination terminal and progression event byte-identical. Entry, co-op restore,
+notification, telemetry, music and camera remain destination-owned.
+
+All [six direct native builds](boss-one-reborn-donor-native-matrix.json) and
+[six complete-roster builds](boss-one-reborn-donor-full22-matrix.json) pass.
+Each complete-roster build contains 22 contracts and 15 event files, with 62–63
+output files verified against its receipt. The native plans bind all ten actors
+in every physical state and scale the nine helpers independently. Exact typed
+96/100/118 witnesses bind the nine effect-bearing actors per state; the pinned
+original m28 bank union delivers all 20 witnessed direct roots. The launcher
+includes the integrity-pinned proof resource.
+
+The graph now has **193 of 462** directed construction routes, all feasible in
+complete one-of-each, no-self assignments; **269** implementation gaps remain.
+The evidence establishes source, compilation, native actor/scaling/AI and direct
+root delivery checks. Runtime combat, helper geometry and navigation, recursive
+FXR dependencies, and destination bank loading precedence remain unvalidated.
