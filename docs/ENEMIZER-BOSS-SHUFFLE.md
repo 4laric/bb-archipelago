@@ -1044,8 +1044,40 @@ all 166 implemented directed routes now participate in complete 22-boss,
 one-of-each, no-self assignments. The remaining 296 routes are implementation
 gaps. [Thirteen complete-roster native builds](boss-final-arena-full22-matrix.json)
 cover all 24 new outgoing and incoming final-boss routes, each with 22 contracts,
-15 event files and 60�61 verified output files. After the Moon protection fix,
+15 event files and 60–61 verified output files. After the Moon protection fix,
 all six affected seeds were rebuilt successfully. Fixture selection avoided
 the known Ludwig/m23 effect-bank collision without changing production planner
 policy. These builds do not prove complete character-effect delivery or
 gameplay behavior.
+
+## Micolash destination and Wet Nurse donor integration
+
+The reusable Micolash destination keeps replacement combat in the original
+initial encounter area, within the original fight and music volumes. Chase,
+mirror, cage and talk controllers remain inert without completing their event
+flags. The original terminal and post-boss progression remain unchanged; a
+bridge supplies the talk-owned death flag only after actual donor death.
+All [six base-donor native builds](boss-micolash-arena-native-matrix.json)
+pass with eight receipt-verified files each. Seven focused arena tests include
+compilation of all six variants. Runtime navigation and arena fit remain
+unobserved.
+
+The reusable Wet Nurse donor preserves its core, support apparition and damage
+proxy, six source warp regions, model-point object and nightmare combat
+controllers. The destination owns entry, camera, environmental audio and
+progression. All [six base-arena native builds](boss-wet-nurse-donor-native-matrix.json)
+pass with 9–11 verified files each. The writer retains the entire 281-entry
+source effect bank, including the original bytes of effect 655108. Its exact
+EMEVD dependency manifest covers effect 655105; character animation roots and
+recursive effect delivery remain separate unfinished work.
+
+The local construction graph has 177 directed routes, all feasible in complete
+one-of-each, no-self assignments. The other 285 routes remain implementation
+gaps. [Seven complete-roster native builds](boss-nightmare-adapters-full22-matrix.json)
+cover all twelve reusable bindings, with 22 contracts, 15 event files and
+60–62 verified outputs per build. One seed exposed conflicting leading readiness
+resets in the shared m34 constructor. After narrowly permitting independent
+literal OFF resets before initialization, that seed rebuilt successfully;
+all 19 composition tests pass, including rejection of mixed or late writes.
+The preceding 166-route commit passed its first full 1,906-test regression
+run (57 optional skips) and all CI checks; its second local pass remains active.

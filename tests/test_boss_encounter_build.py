@@ -30,6 +30,8 @@ class EncounterBuildTests(unittest.TestCase):
         from tools.bb_enemizer.gascoigne_donor import SUPPORTED_GASCOIGNE_ARENAS
         from tools.bb_enemizer.orphan_arena_contract import portable_orphan_donors
         from tools.bb_enemizer.ludwig_arena_contract import portable_ludwig_donors
+        from tools.bb_enemizer.micolash_arena_contract import portable_micolash_donors
+        from tools.bb_enemizer.wet_nurse_donor import portable_wet_nurse_arenas
 
         self.assertEqual(7, len(SUPPORTED_LAURENCE_ARENAS))
         self.assertEqual(9, len(SUPPORTED_LOGARIUS_ARENAS))
@@ -46,7 +48,9 @@ class EncounterBuildTests(unittest.TestCase):
         pairs.extend((arena.key, 'father-gascoigne') for arena in SUPPORTED_GASCOIGNE_ARENAS)
         pairs.extend(('orphan-of-kos', donor.key) for donor in portable_orphan_donors())
         pairs.extend(('ludwig', donor.key) for donor in portable_ludwig_donors())
-        self.assertEqual(59, len(pairs))
+        pairs.extend(('micolash', donor.key) for donor in portable_micolash_donors())
+        pairs.extend((arena.key, 'mergos-wet-nurse') for arena in portable_wet_nurse_arenas())
+        self.assertEqual(71, len(pairs))
         with tempfile.TemporaryDirectory() as temporary:
             compiler = Path(temporary) / 'untrusted-compiler.exe'
             compiler.write_bytes(b'not the pinned compiler')

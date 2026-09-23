@@ -360,6 +360,30 @@ class BossPoolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'literal initializers'):
             compose_event_patches(SOURCE, [first, arbitrary], [30])
 
+    def test_leading_readiness_resets_commute_but_mixed_or_late_writes_do_not(self):
+        header = '$Event(0, Default, function() {'
+        self.assertIn(header, SOURCE)
+        first = SOURCE.replace(header, header + '\n    SetEventFlag(12995105, OFF);')
+        second = SOURCE.replace(header, header + '\n    SetEventFlag(12995905, OFF);')
+        result = compose_event_patches(SOURCE, [first, second], [30])
+        self.assertEqual(result, compose_event_patches(SOURCE, [second, first], [30]))
+        for flag in (12995105, 12995905):
+            reset = f'SetEventFlag({flag}, OFF);'
+            self.assertEqual(1, result.count(reset))
+            self.assertLess(result.index(reset), result.index('$InitializeEvent('))
+        for invalid in (
+            second.replace('12995905, OFF', '12995905, ON'),
+            second.replace('SetEventFlag(12995905, OFF);',
+                           'SetEventFlag(12995905, OFF);\n    $InitializeEvent(0, 99);'),
+        ):
+            with self.assertRaisesRegex(ValueError, 'literal initializers'):
+                compose_event_patches(SOURCE, [first, invalid], [30])
+        anchor = '    $InitializeEvent(0, 20, 200);'
+        late = [SOURCE.replace(anchor, anchor + f'\n    SetEventFlag({flag}, OFF);')
+                for flag in (12995105, 12995905)]
+        with self.assertRaisesRegex(ValueError, 'literal initializers'):
+            compose_event_patches(SOURCE, late, [30])
+
     def test_conflicting_constructor_and_completion_changes_are_refused(self):
         first = SOURCE.replace('$InitializeEvent(0, 10, 100);', '$InitializeEvent(0, 10, 300);')
         second = SOURCE.replace('$InitializeEvent(0, 10, 100);', '$InitializeEvent(0, 10, 400);')

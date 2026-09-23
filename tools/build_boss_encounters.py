@@ -788,11 +788,13 @@ def build(args) -> dict:
         raise ValueError('Micolash donor requires a reviewed Moon Presence or Gehrman arena adapter')
     if direct_orphan[1] == 'witch-of-hemwick' and direct_orphan[0] not in ('amygdala', 'the-one-reborn'):
         raise ValueError('Witch donor requires a reviewed Amygdala or One Reborn arena adapter')
-    if direct_orphan[0] == 'micolash' and direct_orphan[1] not in ('gehrman', 'moon-presence'):
+    if (direct_orphan[0] == 'micolash' and direct_orphan not in recipes
+            and direct_orphan[1] not in ('gehrman', 'moon-presence')):
         raise ValueError('Micolash arena requires a reviewed Gehrman or Moon Presence donor adapter')
     if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] not in ('vicar-amelia', 'father-gascoigne'):
         raise ValueError('Witch arena requires a reviewed Amelia or Gascoigne donor adapter')
-    if direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan[0] not in ('blood-starved-beast', 'martyr-logarius'):
+    if (direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('blood-starved-beast', 'martyr-logarius')):
         raise ValueError('Wet Nurse donor requires a reviewed BSB or Logarius arena adapter')
     if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] not in ('blood-starved-beast', 'amygdala', 'shadows-of-yharnam'):
         raise ValueError('Celestial Emissary arena requires a reviewed BSB, Amygdala or Shadows donor adapter')

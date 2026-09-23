@@ -455,6 +455,17 @@ def _merge_constructor(original: str, variants: list[str]) -> str:
         if len(groups) == 1:
             edits[position, position] = next(iter(groups))
             continue
+        # Per-load readiness events must be reset before any constructor
+        # initializer. Independent literal OFF writes at that leading boundary
+        # commute; do not extend this rule to mixed statements or later sites.
+        resets = [re.fullmatch(r'\s*SetEventFlag\(\s*(\d+)\s*,\s*OFF\);\s*', line)
+                  for group in groups for line in group if line.strip()]
+        if position == 1 and resets and all(reset is not None for reset in resets):
+            flags = sorted({int(reset[1]) for reset in resets})
+            if any(flag <= 0 for flag in flags):
+                raise ValueError('constructor readiness reset requires positive flag IDs')
+            edits[position, position] = tuple(f'    SetEventFlag({flag}, OFF);' for flag in flags)
+            continue
         # Independent combat packages may append at the same constructor site.
         # Only literal initializer calls commute here; arbitrary statements may
         # have ordering dependencies and require an explicit shared contract.

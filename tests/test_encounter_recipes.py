@@ -69,10 +69,13 @@ class EncounterRecipeTests(unittest.TestCase):
                                  for donor in ("gehrman", "moon-presence")}
         final_arena_keys = {(arena, donor.key) for donor in PACKAGES
                             for arena in ("gehrman", "moon-presence")}
+        micolash_arena_keys = {("micolash", donor.key) for donor in PACKAGES}
+        wet_nurse_keys = {(arena.key, "mergos-wet-nurse") for arena in ARENAS}
         groups = (base_keys, maria_keys, laurence_keys, maria_arena_keys, logarius_keys,
                   laurence_arena_keys, gascoigne_arena_keys, logarius_arena_keys,
                   orphan_keys, orphan_arena_keys, ludwig_keys, gascoigne_donor_keys,
-                  ludwig_arena_keys, final_boss_donor_keys, final_arena_keys)
+                  ludwig_arena_keys, final_boss_donor_keys, final_arena_keys,
+                  micolash_arena_keys, wet_nurse_keys)
         self.assertEqual(set.union(*groups), set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)
@@ -91,6 +94,8 @@ class EncounterRecipeTests(unittest.TestCase):
         self.assertEqual(6, len(gascoigne_donor_keys))
         self.assertEqual(12, len(final_boss_donor_keys))
         self.assertEqual(12, len(final_arena_keys))
+        self.assertEqual(6, len(micolash_arena_keys))
+        self.assertEqual(6, len(wet_nurse_keys))
         self.assertEqual(
             sum(map(len, groups)),
             len(self.recipes),
@@ -314,13 +319,30 @@ class EncounterRecipeTests(unittest.TestCase):
                         self.assertEqual("c9010_0004", helper["source_part"])
                         self.assertEqual(2100801, helper["source_entity_id"])
 
+        wet_source = read_blob(BUNDLE, "event/m26_00_00_00.emevd.dcx.js").decode("utf-8-sig")
+        for arena in ARENAS:
+            with self.subTest(arena=arena.key, donor="mergos-wet-nurse"):
+                recipe = self.recipes[(arena.key, "mergos-wet-nurse")]
+                destination = self.sources[arena.event_file]
+                before = event_blocks(destination)
+                after = event_blocks(recipe.patch(destination, wet_source))
+                self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+                plan = recipe.native_plan(self.slots, self.npcs, self.effects, "recipe-wet-nurse")
+                self.assertEqual(arena.key, plan["boss_contract"]["arena"])
+                self.assertEqual("mergos-wet-nurse", plan["boss_contract"]["donor"])
+                self.assertEqual(2 * arena.destination_count, len(plan["boss_actor_additions"]))
+                self.assertEqual(6 * arena.destination_count, len(plan["boss_region_additions"]))
+                self.assertEqual(arena.destination_count, len(plan["boss_object_additions"]))
+
         for arena, terminal, actor in (("gehrman", 12101800, 2100800),
-                                       ("moon-presence", 12101850, 2100810)):
+                                       ("moon-presence", 12101850, 2100810),
+                                       ("micolash", 12601850, 2600850)):
             for donor in PACKAGES:
                 with self.subTest(arena=arena, donor=donor.key):
                     recipe = self.recipes[(arena, donor.key)]
-                    before = event_blocks(final_source)
-                    after = event_blocks(recipe.patch(final_source, self.sources[donor.event_file]))
+                    destination = read_blob(BUNDLE, "event/" + recipe.arena.event_file).decode("utf-8-sig")
+                    before = event_blocks(destination)
+                    after = event_blocks(recipe.patch(destination, self.sources[donor.event_file]))
                     self.assertEqual(before[terminal], after[terminal])
                     plan = recipe.native_plan(self.slots, self.npcs, self.effects, "recipe-final-arena")
                     self.assertEqual(arena, plan["boss_contract"]["arena"])
@@ -328,6 +350,8 @@ class EncounterRecipeTests(unittest.TestCase):
                     self.assertEqual({actor}, {
                         row["destination_entity_id"] for row in plan["primary_init_source_bindings"]
                     })
+                    self.assertEqual(recipe.actor_requirements(self.slots),
+                                     plan.get("boss_actor_addition_requirements", []))
 
 
 if __name__ == "__main__":

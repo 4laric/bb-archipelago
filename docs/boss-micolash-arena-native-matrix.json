@@ -1,0 +1,66 @@
+{
+  "format": "bb-micolash-arena-native-matrix-v1",
+  "runtime_validated": false,
+  "placement_policy": "original-initial-area-direct-fight",
+  "limits": [
+    "Character effect delivery and runtime geometry/navigation are unverified."
+  ],
+  "source_sha256": {
+    "tools/bb_enemizer/micolash_arena_contract.py": "8444bf9e2f54ba5348f0c44b3a192fac60c173441958c7778ce413c6adccd002",
+    "tools/bb_enemizer/encounter_recipes.py": "b49d861c68f2eb9ab6095dfbc099664b8e9205f75989feb4a86519f195b37d96",
+    "tools/build_boss_encounters.py": "473d20ed3d6c07b155dcd21d15a83fffca65ff5240fa0f4152468b99c2ec631c",
+    "tools/bb_enemizer/boss_pool.py": "134b21dd080970a344c5c8f9be0ca120fe2e21f67ea404758e6490be70fbb6c0",
+    "writer": "15bac4e6dda0eb0433c29bcc2920f7dde87c08069b06e9e00ef2bc2e4ca40661"
+  },
+  "cases": [
+    {
+      "arena": "micolash",
+      "donor": "cleric-beast",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "114a7bd9ebde3b87afc4b5b69b1ae4dfbf505289a8d05854c0e24319e07102be"
+    },
+    {
+      "arena": "micolash",
+      "donor": "blood-starved-beast",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "d7e2cdccd1644cb0af8cd233f1a6fe8313bb00a843634bf1b04869f4bd742831"
+    },
+    {
+      "arena": "micolash",
+      "donor": "darkbeast-paarl",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "292d6b237f7859c97adf6e477d1fe111e5c065e0118f1f7bf9b50136a54d6fe4"
+    },
+    {
+      "arena": "micolash",
+      "donor": "vicar-amelia",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "a9c138d88f14214ec2ac0d340fd69b0474ce5bfb23ab1f61969e37e2c02d4a53"
+    },
+    {
+      "arena": "micolash",
+      "donor": "amygdala",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "5f9b94da660b8de9eac407da1cc334f5480b29e4602faa695047e1b2d0ae803a"
+    },
+    {
+      "arena": "micolash",
+      "donor": "ebrietas",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "879d6d121bb5a5e6429605311b8699de274b1dfff51b05d47b2b468084dd53ed"
+    }
+  ],
+  "integration_failure_fixed": "The first six attempts stopped before native work because the legacy direct-build Micolash guard did not consult the reusable recipe registry. The guard now accepts registered recipes; the six integrated builds above pass."
+}
