@@ -5,7 +5,8 @@ This is a separate local randomizer path. It does not install Archipelago, run
 client. The existing launcher’s **Create & host** feature remains a localhost
 Archipelago session and does not satisfy this contract.
 
-The first implemented component is the dependency-free item planner:
+The implemented path includes a local item planner, native item/enemy builder,
+and exporter for the existing BBLauncher. To generate an item plan:
 
 ```powershell
 python -m tools.bb_standalone `
@@ -64,12 +65,10 @@ set. A separate sphere replay collects the completed plan and refuses it unless
 every placement and the selected ending are reachable. This is a local
 single-player fill policy; it does not reproduce Archipelago’s multiworld fill.
 
-The ordinary enemy planner already accepts a local `--seed`, and the boss
-encounter builder consumes local original-game inputs. They can be composed
-with this item plan without an AP request. Launcher and BBLauncher integration
-still need a standalone build identity and receipt: existing `SeedIdentity`,
-`.bb-ap-owner.json`, `Archipelago-*` exports, runtime config, client ledger, and
-process plans are AP session contracts and must not be relabeled.
+The ordinary enemy planner and guarded writers are composed by the standalone
+builder below. It emits its own seed identity and receipts. Existing AP
+`SeedIdentity`, `.bb-ap-owner.json`, runtime configuration, client ledger, and
+process plans are not used by the standalone build or export.
 
 The intended shipped package is a separate Bloodborne Randomizer artifact with
 the local planner and guarded writers. It may reuse the launcher's verified
@@ -108,3 +107,55 @@ targets. Both plans pass the independent progression replay and native writer.
 The generator also passes all 128 combinations of supported boolean options
 (excluding the explicitly unsupported opt-in Yurie check). A `python -S`
 subprocess verifies generation without installed Archipelago dependencies.
+
+
+## Combined item and enemy build
+
+`tools/build_standalone_randomizer.py` generates one standalone overlay. Supply
+original `--gameparam` and `--paramdef` files, `--item-writer`, `--seed`, a new
+`--output` directory, and `--apply`. Native DLLs also require `--dotnet`.
+Add `--randomize-enemies --maps <complete-original-MapStudio> --enemy-scripts
+<original-script-directory> --enemy-writer <writer>`; `--normalize-enemy-scaling`
+adds destination-based scaling. The default enemy inventory is materialized
+from the bundled original-data database; no AP request or installed AP world is
+required. `--include-dlc` includes DLC item locations.
+
+The item writer runs first. Enemy scaling consumes that item-modified archive,
+so the final parameter file contains both changes. Source hashes, exact native
+receipts and output inventories are verified before publication. The build emits
+`standalone-build-identity.json` and `standalone-build-receipt.json`; it does not
+activate the overlay.
+
+A [real combined build](standalone-composed-native-checkpoint.json) passes with
+503 item locations, 308 logical enemy replacements across 545 physical parts in
+22 maps, 14 AI bundles with zero unresolved goals, and 238 scaled NPCs. All 45
+receipt files were independently hash-checked. This is build validation, not live
+acceptance.
+
+
+## Install through the existing BBLauncher
+
+The exporter uses BBLauncher's existing data-mod layout, with native game paths
+under a single named package. It requires no launcher fork or Archipelago
+companion. Generate a ZIP with existing output directories:
+
+```powershell
+python tools/export_standalone_mod.py export `
+  --overlay <standalone-build> --zip-root <zip-directory> `
+  --receipt-root <receipt-directory>
+```
+
+Or use `--mods-root <BBLauncher/Mods>` in place of `--zip-root` to create an
+inactive package directly in its mod library. It refuses active mod directories,
+existing packages, altered build files, and paths outside the receipt. Verification
+metadata stays outside the package; only native game data is installed.
+
+Extract a ZIP's single package folder into BBLauncher's `Mods` directory, then
+activate that package using BBLauncher's Mod Manager with the game stopped.
+Starting Bloodborne through BBLauncher requires no AP client or server.
+
+`python tools/export_standalone_mod.py verify --package <folder-or-zip>
+--receipt <export-receipt.json> --overlay <standalone-build>` verifies the export
+against the original build. The [native export checkpoint](standalone-bblauncher-export-checkpoint.json)
+contains 38 game payload files from the combined item/enemy test seed. Export
+verification passed; in-game standalone acceptance remains untested.
