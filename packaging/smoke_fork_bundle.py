@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -17,6 +18,13 @@ def smoke(package: Path) -> None:
     for path in required:
         if not path.is_file():
             raise RuntimeError(f'Missing packaged file: {path}')
+    qt = subprocess.run(
+        [str((package / 'BBLauncher-AP.exe').resolve()), '--ap-package-smoke'],
+        env=dict(os.environ, QT_QPA_PLATFORM='offscreen'),
+        capture_output=True, text=True, timeout=30,
+    )
+    if qt.returncode:
+        raise RuntimeError(f'Packaged Qt launcher exited {qt.returncode}: {qt.stderr}')
     client = subprocess.run(
         [str((package / 'ap_backend/ap-client/bb-ap-client.exe').resolve()), '--version'],
         capture_output=True, text=True, timeout=15,
@@ -51,6 +59,7 @@ def smoke(package: Path) -> None:
         if responses[1]['result'].get('selected') != 'Package tester':
             raise RuntimeError('Frozen seed inspection did not select the sole player')
     print(f'Packaged client: {client.stdout.strip()}')
+    print('Packaged Qt launcher: startup passed (no installation opened).')
     print('Frozen fork backend: capabilities and seed inspection passed (no game touched).')
 
 
