@@ -23,14 +23,13 @@ under `Unreleased` and move into a dated version section when released.
   match instead of popping up as a plain white OS window, and every window
   (including dialogs) gets a dark title bar on Windows.
 
-- The **Enemies** page is down to two decisions: **Randomize enemies** and how
-  bosses are handled (unchanged, the BSB-at-Cleric-Beast playtest, or the full
-  reviewed shuffle), the last two now one choice instead of two independent
-  checkboxes that were already mutually exclusive underneath. Boss shuffle is
-  on by default alongside enemy randomization. Seed override, tier mixing,
-  locomotion preservation and stat normalization moved to **Advanced**, and
-  the page no longer gates them behind their own "Advanced enemy options"
-  disclosure -- that distinction never earned its keep.
+- The **Enemies** page is down to two decisions: **Randomize enemies** and
+  **Boss shuffle**, both on by default. The single-boss BSB-at-Cleric-Beast
+  playtest mode is retired from the GUI (still reachable through a hand-edited
+  settings file for the CLI path). Seed override, tier mixing, locomotion
+  preservation and stat normalization moved to **Advanced**, and the page no
+  longer gates them behind their own "Advanced enemy options" disclosure --
+  that distinction never earned its keep.
 
 - The three **Session overrides** (suppression binder mismatch, research
   captures, AP seed/slot mismatch) are retired from the Advanced page: they

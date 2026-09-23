@@ -1558,6 +1558,16 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         for method in ("_start_enemy_report", "_run_enemy_report", "write_report", "load_context"):
             self.assertIn(method, source)
 
+    def test_create_and_host_links_to_the_full_options_builder(self):
+        """bb-archipelago: the solo form only ever covered name + DLC; the
+        real option surface (goal, item pool, deathlink, ...) is the wizard
+        that already renders from the apworld's own metadata, not a second
+        hand-maintained catalog in Tk."""
+        source = (self.repo / "bb_launcher" / "local_session_ui.py").read_text(encoding="utf-8")
+        self.assertIn('WIZARD_URL = "https://peliarch.ca/bb/wizard.html"', source)
+        self.assertIn("webbrowser.open(WIZARD_URL)", source)
+        self.assertIn("Build a custom yaml", source)
+
     def test_ui_contract_can_generate_the_launch_plan(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
         self.assertNotIn('text="Generate Launch Plan"', source)
