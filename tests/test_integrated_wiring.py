@@ -244,6 +244,85 @@ class ProductionPrepareOptionsTests(unittest.TestCase):
         self.assertEqual(repeated.build.cache_key, changed_seed.build.cache_key)
         self.assertEqual(len(toolchain.calls), 3)
 
+    def test_wakeup_fallback_is_composed_only_for_planned_expanded_release_and_cached(self) -> None:
+        import json
+
+        import test_launcher_ui as fixtures
+        from bb_launcher.core import BOSS_EVENT_PATH, sha256_file
+        from bb_launcher.workflow import EnemizerOptions, LauncherWorkflow
+
+        fixture = fixtures.LauncherUiWorkflowTests()
+        fixture.setUp()
+        self.addCleanup(fixture.tearDown)
+        source_event = fixture.install.patch.joinpath(*BOSS_EVENT_PATH.split("/"))
+        source_event.parent.mkdir(parents=True, exist_ok=True)
+        source_event.write_bytes(b"vanilla-m24-event")
+
+        recipe = json.loads((fixture.repo / "research/enemizer/release_wakeup.json").read_text(
+            encoding="utf-8"))
+        initializer = recipe["awake_fallback"]["initializers"][0]
+        row = {
+            "logical_key": initializer["logical_key"],
+            "entity_id": initializer["entity_id"],
+            "map": "m24_01_00_00",
+            "event_id": recipe["awake_fallback"]["event_id"],
+        }
+
+        class PlannedWakeupToolchain(fixtures.FakeToolchain):
+            def __init__(self):
+                super().__init__()
+                self.wakeup_calls = 0
+
+            def build(self, **values):
+                built = super().build(**values)
+                if values.get("release_contracts") or values.get("release_spawns") or values.get("release_chara"):
+                    document = json.loads(built.plan_path.read_text(encoding="utf-8"))
+                    document["wakeup_fallbacks"] = [row]
+                    built.plan_path.write_text(json.dumps(document), encoding="utf-8")
+                    built = type(built)(built.map_studio, document, sha256_file(built.plan_path), built.plan_path)
+                return built
+
+            def write_wakeup_fallback(self, *, plan_path, source_event, output_event,
+                                      report_path, expected_fallbacks, soulsformats_next=None,
+                                      progress=lambda _message: None):
+                self.wakeup_calls += 1
+                output_event.parent.mkdir(parents=True, exist_ok=True)
+                output_event.write_bytes(source_event.read_bytes() + b"-awake")
+                report = {
+                    "format": "bb-enemizer-wakeup-fallback-v1", "applied": True,
+                    "plan_sha256": sha256_file(plan_path),
+                    "source_event_sha256": sha256_file(source_event),
+                    "output_event_sha256": sha256_file(output_event),
+                    "wakeup_fallbacks": list(expected_fallbacks),
+                }
+                report_path.parent.mkdir(parents=True, exist_ok=True)
+                report_path.write_text(json.dumps(report), encoding="utf-8")
+                return report
+
+        toolchain = PlannedWakeupToolchain()
+        workflow = LauncherWorkflow(fixture.repo, toolchain=toolchain)
+        base_options = EnemizerOptions(enabled=True, seed="wakeup-seed")
+        unexpanded = workflow.prepare_seed(fixture.settings(), base_options)
+        self.assertEqual(toolchain.wakeup_calls, 0)
+        self.assertNotIn("wakeup_fallback", unexpanded.build.manifest["enemizer"])
+
+        expanded_options = EnemizerOptions(
+            enabled=True, seed="wakeup-seed", release_contracts=True)
+        expanded = workflow.prepare_seed(fixture.settings(), expanded_options)
+        self.assertEqual(toolchain.wakeup_calls, 1)
+        self.assertEqual(expanded.identity.source_hashes[BOSS_EVENT_PATH], sha256_file(source_event))
+        self.assertEqual(expanded.identity.options["wakeup_fallback_version"], 1)
+        self.assertEqual(expanded.build.manifest["enemizer"]["wakeup_fallback"]["report"][
+            "wakeup_fallbacks"], [row])
+        event_file = next(record for record in expanded.build.manifest["files"]
+                          if record["path"] == BOSS_EVENT_PATH)
+        self.assertEqual(event_file["component"], "enemizer-wakeup-fallback")
+
+        again = workflow.prepare_seed(fixture.settings(), expanded_options)
+        self.assertTrue(again.reused)
+        self.assertEqual(again.build.cache_key, expanded.build.cache_key)
+        self.assertEqual(toolchain.wakeup_calls, 1)
+
 
 if __name__ == "__main__":
     unittest.main()
