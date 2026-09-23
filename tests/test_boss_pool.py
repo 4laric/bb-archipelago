@@ -360,6 +360,23 @@ class BossPoolTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'literal initializers'):
             compose_event_patches(SOURCE, [first, arbitrary], [30])
 
+    def test_distinct_bullet_owners_compose_preserving_package_order(self):
+        anchor = '    $InitializeEvent(0, 20, 200);'
+        first = SOURCE.replace(anchor, anchor + '\n    $InitializeEvent(0, 40);')
+        group = ('\n    $InitializeEvent(0, 50);\n    CreateBulletOwner(983700);'
+                 '\n    $InitializeEvent(0, 51);')
+        second = SOURCE.replace(anchor, anchor + group)
+        result = compose_event_patches(SOURCE, [first, second], [30])
+        self.assertEqual(result, compose_event_patches(SOURCE, [second, first], [30]))
+        self.assertIn(group, result)
+        duplicate = first.replace('$InitializeEvent(0, 40);',
+                                  'CreateBulletOwner(983700);\n    $InitializeEvent(0, 40);')
+        with self.assertRaisesRegex(ValueError, 'bullet owner'):
+            compose_event_patches(SOURCE, [duplicate, second], [30])
+        for expression in ('0', '-1', 'owner_id'):
+            with self.assertRaises(ValueError):
+                compose_event_patches(SOURCE, [first, second.replace('983700', expression)], [30])
+
     def test_leading_readiness_resets_commute_but_mixed_or_late_writes_do_not(self):
         header = '$Event(0, Default, function() {'
         self.assertIn(header, SOURCE)

@@ -467,13 +467,24 @@ def _merge_constructor(original: str, variants: list[str]) -> str:
             edits[position, position] = tuple(f'    SetEventFlag({flag}, OFF);' for flag in flags)
             continue
         # Independent combat packages may append at the same constructor site.
-        # Only literal initializer calls commute here; arbitrary statements may
-        # have ordering dependencies and require an explicit shared contract.
+        # Literal initializers and distinct virtual bullet-owner declarations
+        # can coexist. Preserve each package's instruction order; arbitrary
+        # statements still require an explicit shared contract.
         calls = {}
+        owners = set()
+        existing_owners = set(map(int, re.findall(r'CreateBulletOwner\(\s*(\d+)\s*\)', original)))
         lines = []
         for group in sorted(groups):
             for line in group:
                 if not line.strip():
+                    continue
+                owner = re.fullmatch(r'\s*CreateBulletOwner\(\s*(\d+)\s*\);\s*', line)
+                if owner is not None:
+                    entity = int(owner[1])
+                    if entity <= 0 or entity in owners or entity in existing_owners:
+                        raise ValueError('conflicting boss constructor bullet owner')
+                    owners.add(entity)
+                    lines.append(line)
                     continue
                 match = re.fullmatch(r'\s*\$InitializeEvent\(\s*(\d+)\s*,\s*(\d+)(?:\s*,[^;]*)?\);\s*', line)
                 if match is None:

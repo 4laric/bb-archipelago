@@ -1,0 +1,71 @@
+{
+  "format": "bb-micolash-donor-native-v1",
+  "scope": "Six base destinations; continuous full-health combat",
+  "runtime_validated": false,
+  "source_sha256": {
+    "tools/bb_enemizer/micolash_donor.py": "6d7cf78a870ac974298ad3d5d284ffa7612b3723cfcd5b3e443b7f0b6eb411c7",
+    "tools/bb_enemizer/boss_contracts.py": "e16124bab72a400957de927eeff6451bd348a21780342682fcf103158f79554a",
+    "tools/bb_enemizer/encounter_recipes.py": "24496da1bd840536d8b85bd7dca4604598c6b40b34b0b17f902639aedbca007f",
+    "tools/build_boss_encounters.py": "1d57087e966783e8dced2f37ade323a874aa3d90b7a50b54e669c63163131fa0",
+    "writer": "15bac4e6dda0eb0433c29bcc2920f7dde87c08069b06e9e00ef2bc2e4ca40661"
+  },
+  "cases": [
+    {
+      "arena": "cleric-beast",
+      "donor": "micolash",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "c4ad369ddb5d2c2a380a8f2b883b229907d97b0f1ca4765ec3d452ad0dc6d758",
+      "ffx_merges": []
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "micolash",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "d55a5b364d25ccd742fe235ca848acd55bc7d5558a5098959e1602c6f60791db",
+      "ffx_merges": []
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "micolash",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "bc0711d7fe5d2b5440c62175de37557c11bc9ecb1b9a667086f6a0bce89f382f",
+      "ffx_merges": []
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "micolash",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "1239f2f79f755d5abbe2675fc93b824af5efe20f01c6985ea933a585e4923204",
+      "ffx_merges": []
+    },
+    {
+      "arena": "amygdala",
+      "donor": "micolash",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "cd375bd620148c22a8d5066b67b014707f7d6d1f6374b539316f7cbc96868ef3",
+      "ffx_merges": []
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "micolash",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "1f0f9f467785f4f91de4b3db06c196b5faf71bd47ad9089c22a12f84c905cc30",
+      "ffx_merges": []
+    }
+  ],
+  "limits": [
+    "Native construction only; runtime navigation and complete character effect delivery unvalidated."
+  ]
+}

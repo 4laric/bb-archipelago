@@ -784,7 +784,8 @@ def build(args) -> dict:
         raise ValueError('One Reborn donor requires a reviewed Ebrietas or Shadows arena adapter')
     if direct_orphan[1] == 'celestial-emissary' and direct_orphan[0] not in ('darkbeast-paarl', 'rom'):
         raise ValueError('Celestial donor requires a reviewed Paarl or Rom arena adapter')
-    if direct_orphan[1] == 'micolash' and direct_orphan[0] not in ('moon-presence', 'gehrman'):
+    if (direct_orphan[1] == 'micolash' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('moon-presence', 'gehrman')):
         raise ValueError('Micolash donor requires a reviewed Moon Presence or Gehrman arena adapter')
     if direct_orphan[1] == 'witch-of-hemwick' and direct_orphan[0] not in ('amygdala', 'the-one-reborn'):
         raise ValueError('Witch donor requires a reviewed Amygdala or One Reborn arena adapter')

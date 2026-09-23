@@ -1100,3 +1100,25 @@ The prior broad-m24 collision was an incorrect source-bank inference for this
 character. Nineteen native assertions cover witness, actor, bank, coverage and
 output drift. This proves direct-root delivery to the selected bank; animation
 execution, recursive dependencies and runtime bank loading remain unvalidated.
+
+
+## Micolash donor: continuous combat
+
+Micolash now attaches to all six base destinations as continuous combat from
+full health. His original combat AI remains; chase, mirrors, cage and dialogue
+are omitted. Readiness and phase markers reset per map load, and the half-health
+AI replan waits until entry readiness and the destination health bar are active.
+Destination completion and progression remain unchanged.
+
+All [six native builds](boss-micolash-donor-native-matrix.json) and
+[six complete 22-boss seeds](boss-micolash-donor-full22-matrix.json) pass file
+verification. The full-roster run caught a shared final-map constructor conflict;
+distinct literal bullet-owner declarations now compose while preserving each
+package's instruction order. Duplicate owners and arbitrary statements remain
+rejected. Twenty composition tests pass, alongside 25 Micolash/registry/builder
+tests including six original-source compilations.
+
+The current local graph has **183 of 462** directed routes; each participates in
+a complete one-of-each, no-self assignment. The remaining **279** are
+implementation gaps, not declared incompatibilities. These results do not prove
+runtime combat behavior, navigation, or complete character-effect delivery.
