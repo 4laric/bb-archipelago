@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using SoulsFormats;
 
-// Verifies the explicitly decoded Bloodborne TAE 96, 100, and 118 effect roots.
+// Verifies one explicitly declared, supported set of Bloodborne typed TAE effect roots.
 // This is deliberately a partial typed witness set, not all TAE behavior or
 // combat closure. It does not deliver FXR resources: a separate, reviewed
 // closure manifest is required before character effects can enter boss plans.
@@ -18,11 +18,20 @@ internal static class CharacterFfxRequirements
 
     internal sealed record Witness(long AnimationId, int EventIndex, ulong EventType,
         long ParameterOffset, int EffectId);
+    sealed record RawTaeEntry(
+        int SourceTaeEntryId,
+        string SourceTaeEntry,
+        string SourceTaeSha256,
+        int SourceAnimationCount,
+        List<Witness> TypedEventWitnesses,
+        List<int> DirectEffectIds,
+        List<ulong>? DecodedEventTypes);
     internal sealed record TaeEntry(
         int SourceTaeEntryId,
         string SourceTaeEntry,
         string SourceTaeSha256,
         int SourceAnimationCount,
+        List<ulong> DecodedEventTypes,
         List<Witness> TypedEventWitnesses,
         List<int> DirectEffectIds);
     sealed record RawRequirement(
@@ -37,8 +46,9 @@ internal static class CharacterFfxRequirements
         string? SourceTaeEntry,
         string? SourceTaeSha256,
         int? SourceAnimationCount,
+        List<ulong>? DecodedEventTypes,
         List<Witness>? TypedEventWitnesses,
-        List<TaeEntry>? SourceTaeEntries,
+        List<RawTaeEntry>? SourceTaeEntries,
         List<int>? DirectEffectIds);
     internal sealed record Requirement(
         string Format,
@@ -73,13 +83,28 @@ internal static class CharacterFfxRequirements
         string SourceCharacter);
     internal sealed record ParsedTae(int AnimationCount, List<Witness> Witnesses);
 
-    static readonly List<ulong> DecodedEventTypes = [96, 100, 118];
+    static readonly List<ulong> LegacyDecodedEventTypes = [96, 100, 118];
+    static readonly List<ulong> ExpandedDecodedEventTypes = [96, 99, 100, 108, 109, 112, 118];
 
     static void Need(bool value, string why) { if (!value) throw new InvalidDataException(why); }
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     static void RequireHash(string value, string role) => Need(value is { Length: 64 }
         && value.All(c => char.IsAsciiHexDigit(c) && !char.IsUpper(c)), $"invalid {role} SHA256");
     static string Normalize(string value) => value.Replace('\\', '/').TrimStart('/');
+
+    static List<ulong> NormalizeDecodedEventTypes(List<ulong>? declared)
+    {
+        var result = declared is null ? [.. LegacyDecodedEventTypes] : declared;
+        Need(result.SequenceEqual(LegacyDecodedEventTypes)
+            || result.SequenceEqual(ExpandedDecodedEventTypes),
+            "unsupported character FFX decoded event type profile");
+        return [.. result];
+    }
+
+    static TaeEntry NormalizeEntry(RawTaeEntry entry) => new(entry.SourceTaeEntryId,
+        entry.SourceTaeEntry, entry.SourceTaeSha256, entry.SourceAnimationCount,
+        NormalizeDecodedEventTypes(entry.DecodedEventTypes), entry.TypedEventWitnesses,
+        entry.DirectEffectIds);
 
     static void ValidateEntry(TaeEntry entry, string character, bool legacy)
     {
@@ -102,7 +127,8 @@ internal static class CharacterFfxRequirements
         var effects = entry.DirectEffectIds
             ?? throw new InvalidDataException("missing character FFX typed witness data");
         Need(witnesses.All(witness => witness.EventIndex >= 0
-            && witness.EventType is 96 or 100 or 118 && witness.ParameterOffset >= 0 && witness.EffectId > 0),
+            && entry.DecodedEventTypes.Contains(witness.EventType)
+            && witness.ParameterOffset >= 0 && witness.EffectId > 0),
             "invalid character FFX typed witness");
         Need(witnesses.Distinct().Count() == witnesses.Count,
             "duplicate character FFX typed witness");
@@ -119,6 +145,7 @@ internal static class CharacterFfxRequirements
         && Normalize(left.SourceTaeEntry).Equals(Normalize(right.SourceTaeEntry), StringComparison.OrdinalIgnoreCase)
         && left.SourceTaeSha256 == right.SourceTaeSha256
         && left.SourceAnimationCount == right.SourceAnimationCount
+        && left.DecodedEventTypes.SequenceEqual(right.DecodedEventTypes)
         && left.TypedEventWitnesses.SequenceEqual(right.TypedEventWitnesses)
         && left.DirectEffectIds.SequenceEqual(right.DirectEffectIds);
 
@@ -161,15 +188,16 @@ internal static class CharacterFfxRequirements
                     "invalid v1 character FFX TAE proof shape");
                 entries = [new TaeEntry(raw.SourceTaeEntryId!.Value, raw.SourceTaeEntry!,
                     raw.SourceTaeSha256!, raw.SourceAnimationCount!.Value,
+                    NormalizeDecodedEventTypes(raw.DecodedEventTypes),
                     raw.TypedEventWitnesses!, raw.DirectEffectIds
                         ?? throw new InvalidDataException("missing character FFX typed witness data"))];
             } else {
                 Need(raw.SourceTaeEntryId is null && raw.SourceTaeEntry is null
                     && raw.SourceTaeSha256 is null && raw.SourceAnimationCount is null
-                    && raw.TypedEventWitnesses is null
+                    && raw.DecodedEventTypes is null && raw.TypedEventWitnesses is null
                     && raw.SourceTaeEntries is { Count: > 0 },
                     "invalid v2 character FFX TAE proof shape");
-                entries = raw.SourceTaeEntries!;
+                entries = raw.SourceTaeEntries!.Select(NormalizeEntry).ToList();
             }
             foreach (var entry in entries) ValidateEntry(entry, raw.SourceCharacter, legacy);
             Need(entries.Select(entry => entry.SourceTaeEntryId).Distinct().Count() == entries.Count
@@ -231,8 +259,13 @@ internal static class CharacterFfxRequirements
         return (int)offset;
     }
 
-    internal static ParsedTae ParseTae(byte[] bytes)
+    internal static ParsedTae ParseTae(byte[] bytes) => ParseTae(bytes, LegacyDecodedEventTypes);
+
+    internal static ParsedTae ParseTae(byte[] bytes, IReadOnlyCollection<ulong> decodedEventTypes)
     {
+        Need(decodedEventTypes.SequenceEqual(LegacyDecodedEventTypes)
+            || decodedEventTypes.SequenceEqual(ExpandedDecodedEventTypes),
+            "unsupported character FFX decoded event type profile");
         ReadOnlySpan<byte> magic = [0x54, 0x41, 0x45, 0x20, 0x00, 0x00, 0x00, 0xff];
         Need(bytes.Length >= 0x60 && bytes.AsSpan(0, 8).SequenceEqual(magic),
             "unsupported Bloodborne character TAE header");
@@ -263,7 +296,7 @@ internal static class CharacterFfxRequirements
                 long parameters = Int64(bytes, data + 8, "event parameters");
                 Need(parameters == checked(data + 16),
                     "unsupported Bloodborne character TAE parameter layout");
-                if (type is not (96 or 100 or 118)) continue;
+                if (!decodedEventTypes.Contains(type)) continue;
                 int effect = Int32(bytes, parameters, "FFX effect operand");
                 Need(effect > 0, "invalid Bloodborne character TAE FFX effect operand");
                 witnesses.Add(new Witness(animationId, eventIndex, type, parameters, effect));
@@ -340,7 +373,7 @@ internal static class CharacterFfxRequirements
                 byte[] taeBytes = entries[0].Bytes;
                 Need(Hash(taeBytes) == proof.SourceTaeSha256,
                     "character TAE provenance drift: " + proof.SourceTaeEntry);
-                var parsed = ParseTae(taeBytes);
+                var parsed = ParseTae(taeBytes, proof.DecodedEventTypes);
                 Need(parsed.AnimationCount == proof.SourceAnimationCount,
                     "character TAE animation count drift: " + proof.SourceTaeEntry);
                 Need(parsed.Witnesses.SequenceEqual(proof.TypedEventWitnesses),
@@ -349,7 +382,7 @@ internal static class CharacterFfxRequirements
                 Need(effects.SequenceEqual(proof.DirectEffectIds),
                     "character TAE direct FFX effect drift: " + proof.SourceTaeEntry);
                 verifiedEntries.Add(new VerifiedTaeEntry(proof.SourceTaeEntryId, taeKey,
-                    proof.SourceTaeSha256, parsed.AnimationCount, [.. DecodedEventTypes],
+                    proof.SourceTaeSha256, parsed.AnimationCount, [.. proof.DecodedEventTypes],
                     parsed.Witnesses, effects));
             }
             verified.Add(new Verified(row.SourceMap, row.SourcePart, row.SourceEntityId,

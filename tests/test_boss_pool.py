@@ -73,6 +73,7 @@ class BossPoolTests(unittest.TestCase):
         entries = [
             {'source_tae_entry_id': index, 'source_tae_entry': f'chr/c0000/tae/a{index:02}.tae',
              'source_tae_sha256': str(index + 1) * 64, 'source_animation_count': 1,
+             'decoded_event_types': [96, 100, 118],
              'typed_event_witnesses': [{'animation_id': 0, 'event_index': 0,
                  'event_type': 96, 'parameter_offset': 160, 'effect_id': 7000 + index}],
              'direct_effect_ids': [7000 + index]}
@@ -104,7 +105,8 @@ class BossPoolTests(unittest.TestCase):
         self.assertEqual(7001, entries[1]['typed_event_witnesses'][0]['effect_id'])
         for field, value in (('source_tae_entry_id', 3),
                              ('source_tae_entry', 'chr/c0000/tae/a03.tae'),
-                             ('source_tae_sha256', 'b' * 64)):
+                             ('source_tae_sha256', 'b' * 64),
+                             ('decoded_event_types', [96, 99, 100, 108, 109, 112, 118])):
             changed = copy.deepcopy(plan)
             changed['boss_character_ffx_requirements'][0]['source_tae_entries'][1][field] = value
             with self.subTest(field=field), self.assertRaisesRegex(

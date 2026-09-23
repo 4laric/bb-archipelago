@@ -933,7 +933,20 @@ checks Ludwig and Orphan against all 37 original effect banks. Every one of
 Ludwig's 39 and Orphan's 12 decoded direct roots has an original bank entry.
 This locates input assets; it does not establish destination availability,
 recursive effect closure, or engine load order. The typed animation decoder
-is partial: types other than 96, 100 and 118 remain outside its claim.
+is partial: the default profile covers only types 96, 100 and 118. An explicit
+expanded profile now covers 96, 99, 100, 108, 109, 112 and 118. Omitted profiles
+retain the legacy interpretation; arbitrary subsets and reordered profiles are
+rejected. Each TAE entry carries its profile into receipt and shared-archive
+comparison, so a proof cannot silently change its coverage during composition.
+
+The expanded native harness passes 86 character assertions, including an
+original corpus of 37 archives, 116 TAE entries and 44,641 ordered witnesses.
+A separate full native CLI build bound the original c0000 archive to Micolash's
+actual source actor (m26_00_00_00/c0000_0005/2600850): all 80 entries, 24,880
+witnesses and 248 direct roots matched the nested receipt exactly, and all 60
+output hashes and sizes verified. This is an archive census, not evidence of
+which animations Micolash selects. It does not deliver character FXRs or prove
+recursive effect closure, floor/material selection semantics or live combat.
 
 The [additional character archive census](boss-additional-character-archive-census.json)
 records seven more original archives: Gehrman, Moon Presence, Maria, Laurence,

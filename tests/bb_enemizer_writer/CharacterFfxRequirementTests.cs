@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -383,6 +384,10 @@ internal static class CharacterFfxRequirementTests
             Directory.CreateDirectory(characters);
 
             (byte[] Bytes, List<CharacterFfxRequirements.Witness> Witnesses) TAE(
+                params (long Animation, (ulong Type, int Effect)[] Events)[] animations) =>
+                TAEFor(new ulong[] {96, 100, 118}, animations);
+            (byte[] Bytes, List<CharacterFfxRequirements.Witness> Witnesses) TAEFor(
+                IReadOnlyCollection<ulong> decodedEventTypes,
                 params (long Animation, (ulong Type, int Effect)[] Events)[] animations)
             {
                 const int animationTable = 0x60, bodySize = 40, eventSize = 24, dataSize = 24;
@@ -414,7 +419,7 @@ internal static class CharacterFfxRequirementTests
                         BinaryPrimitives.WriteUInt64LittleEndian(bytes.AsSpan(data, 8), item.Type);
                         BinaryPrimitives.WriteInt64LittleEndian(bytes.AsSpan(data + 8, 8), data + 16);
                         BinaryPrimitives.WriteInt32LittleEndian(bytes.AsSpan(data + 16, 4), item.Effect);
-                        if (item.Type is 96 or 100 or 118)
+                        if (decodedEventTypes.Contains(item.Type))
                             witnesses.Add(new(animation.Animation, eventIndex, item.Type, data + 16, item.Effect));
                         dataBase++;
                     }
@@ -443,20 +448,23 @@ internal static class CharacterFfxRequirementTests
                 source_archetype = new { model_name = character },
             };
             object Requirement(string character, string part, int entity, int entryId, int animationCount,
-                byte[] tae, IEnumerable<CharacterFfxRequirements.Witness> witnesses, string binderPath) => new {
+                byte[] tae, IEnumerable<CharacterFfxRequirements.Witness> witnesses, string binderPath,
+                IEnumerable<ulong>? decodedEventTypes = null) => new {
                 format = "bb-boss-character-ffx-requirement-v1", source_map = "m99_00_00_00",
                 source_part = part, source_entity_id = entity, source_character = character,
                 source_anibnd_file = character + ".anibnd.dcx",
                 source_anibnd_sha256 = Hash(File.ReadAllBytes(binderPath)), source_tae_entry_id = entryId,
                 source_tae_entry = $"chr/{character}/tae/{character}.tae", source_tae_sha256 = Hash(tae),
-                source_animation_count = animationCount, typed_event_witnesses = witnesses,
+                source_animation_count = animationCount, decoded_event_types = decodedEventTypes,
+                typed_event_witnesses = witnesses,
                 direct_effect_ids = witnesses.Select(witness => witness.EffectId).Distinct().Order(),
             };
             object TaeEntry(string character, string name, int entryId, int animationCount,
-                byte[] tae, IEnumerable<CharacterFfxRequirements.Witness> witnesses) => new {
+                byte[] tae, IEnumerable<CharacterFfxRequirements.Witness> witnesses,
+                IEnumerable<ulong>? decodedEventTypes = null) => new {
                 source_tae_entry_id = entryId, source_tae_entry = $"chr/{character}/tae/{name}",
                 source_tae_sha256 = Hash(tae), source_animation_count = animationCount,
-                typed_event_witnesses = witnesses,
+                decoded_event_types = decodedEventTypes, typed_event_witnesses = witnesses,
                 direct_effect_ids = witnesses.Select(witness => witness.EffectId).Distinct().Order(),
             };
             object RequirementV2(string character, string part, int entity, string binderPath,
@@ -530,6 +538,13 @@ internal static class CharacterFfxRequirementTests
                         (5000100, "chr/c9002/tae/a100.tae"),
                     }) && multiVerified.DirectEffectIds.SequenceEqual(new[] {701, 702, 703}),
                 "v2 verifies deterministic exact identities and aggregate roots for multiple TAE entries");
+            var omittedV2Profile = (JsonObject)multiPlan.DeepClone();
+            foreach (var node in omittedV2Profile["boss_character_ffx_requirements"]![0]!
+                ["source_tae_entries"]!.AsArray()) node!.AsObject().Remove("decoded_event_types");
+            Save(omittedV2Profile);
+            Need(CharacterFfxRequirements.Validate(plan, characters).Single().SourceTaeEntries
+                .All(entry => entry.DecodedEventTypes.SequenceEqual(new ulong[] {96, 100, 118})),
+                "v2 entries that predate decoded_event_types retain the exact legacy profile");
             string multiReceipt = JsonSerializer.Serialize(multiVerified, json);
             Need(multiReceipt.Contains("source_tae_entry_id")
                 && multiReceipt.Contains("source_tae_entry")
@@ -537,6 +552,87 @@ internal static class CharacterFfxRequirementTests
                 && multiReceipt.Contains("partial-typed-witness")
                 && multiReceipt.Contains("not-validated"),
                 "v2 receipt preserves entry identity, decoded scope, and explicit non-delivery status");
+
+            ulong[] expandedProfile = [96, 99, 100, 108, 109, 112, 118];
+            var expanded = TAEFor(expandedProfile, (30, [
+                (96UL, 801), (99UL, 802), (100UL, 803), (108UL, 804),
+                (109UL, 805), (112UL, 806), (118UL, 807), (116UL, 808),
+            ]));
+            string expandedBinder = WriteMultiBinder("c9003",
+                (5000000, "a00.tae", expanded.Bytes));
+            var expandedPlan = (JsonObject)JsonSerializer.SerializeToNode(new {
+                boss_actor_additions = new[] {Actor("c9003", "c9003_0000", 9900804)},
+                boss_character_ffx_requirements = new[] {
+                    RequirementV2("c9003", "c9003_0000", 9900804, expandedBinder, [
+                        TaeEntry("c9003", "a00.tae", 5000000, 1, expanded.Bytes,
+                            expanded.Witnesses, expandedProfile),
+                    ], Enumerable.Range(801, 7)),
+                },
+            }, json)!;
+            Save(expandedPlan);
+            var expandedVerified = CharacterFfxRequirements.Validate(plan, characters).Single();
+            Need(expandedVerified.SourceTaeEntries.Single().DecodedEventTypes
+                    .SequenceEqual(expandedProfile)
+                && expandedVerified.SourceTaeEntries.Single().TypedEventWitnesses.Count == 7
+                && expandedVerified.DirectEffectIds.SequenceEqual(Enumerable.Range(801, 7)),
+                "expanded profile verifies exactly types 96/99/100/108/109/112/118 and still omits 116");
+
+            var partialProfile = (JsonObject)expandedPlan.DeepClone();
+            partialProfile["boss_character_ffx_requirements"]![0]!["source_tae_entries"]![0]!
+                ["decoded_event_types"] = JsonSerializer.SerializeToNode(new ulong[] {96, 100, 112, 118});
+            Save(partialProfile);
+            Refused(() => CharacterFfxRequirements.Read(plan, true),
+                "unsupported character FFX decoded event type profile");
+
+            var unsortedProfile = (JsonObject)expandedPlan.DeepClone();
+            unsortedProfile["boss_character_ffx_requirements"]![0]!["source_tae_entries"]![0]!
+                ["decoded_event_types"] = JsonSerializer.SerializeToNode(
+                    new ulong[] {99, 96, 100, 108, 109, 112, 118});
+            Save(unsortedProfile);
+            Refused(() => CharacterFfxRequirements.Read(plan, true),
+                "unsupported character FFX decoded event type profile");
+
+            var unknownProfile = (JsonObject)expandedPlan.DeepClone();
+            unknownProfile["boss_character_ffx_requirements"]![0]!["source_tae_entries"]![0]!
+                ["decoded_event_types"] = JsonSerializer.SerializeToNode(
+                    new ulong[] {96, 99, 100, 108, 109, 112, 118, 119});
+            Save(unknownProfile);
+            Refused(() => CharacterFfxRequirements.Read(plan, true),
+                "unsupported character FFX decoded event type profile");
+
+            var floorWitness = expanded.Witnesses.Single(row => row.EventType == 112);
+            byte[] floorOperandDrift = (byte[])expanded.Bytes.Clone();
+            BinaryPrimitives.WriteInt32LittleEndian(
+                floorOperandDrift.AsSpan(checked((int)floorWitness.ParameterOffset), 4), 899);
+            expandedBinder = WriteMultiBinder("c9003",
+                (5000000, "a00.tae", floorOperandDrift));
+            var floorDriftPlan = (JsonObject)JsonSerializer.SerializeToNode(new {
+                boss_actor_additions = new[] {Actor("c9003", "c9003_0000", 9900804)},
+                boss_character_ffx_requirements = new[] {
+                    RequirementV2("c9003", "c9003_0000", 9900804, expandedBinder, [
+                        TaeEntry("c9003", "a00.tae", 5000000, 1, floorOperandDrift,
+                            expanded.Witnesses, expandedProfile),
+                    ], Enumerable.Range(801, 7)),
+                },
+            }, json)!;
+            Save(floorDriftPlan);
+            Refused(() => CharacterFfxRequirements.Validate(plan, characters),
+                "typed FFX witness drift");
+            expandedBinder = WriteMultiBinder("c9003",
+                (5000000, "a00.tae", expanded.Bytes));
+
+            string expandedV1Binder = WriteBinder("c9004", 3000000, expanded.Bytes);
+            var expandedV1 = (JsonObject)JsonSerializer.SerializeToNode(new {
+                boss_actor_additions = new[] {Actor("c9004", "c9004_0000", 9900805)},
+                boss_character_ffx_requirements = new[] {
+                    Requirement("c9004", "c9004_0000", 9900805, 3000000, 1,
+                        expanded.Bytes, expanded.Witnesses, expandedV1Binder, expandedProfile),
+                },
+            }, json)!;
+            Save(expandedV1);
+            Need(CharacterFfxRequirements.Validate(plan, characters).Single()
+                    .SourceTaeEntries.Single().DecodedEventTypes.SequenceEqual(expandedProfile),
+                "v1 may explicitly opt into the expanded profile while omission remains legacy");
 
             var sharedMulti = (JsonObject)multiPlan.DeepClone();
             sharedMulti["boss_actor_additions"]!.AsArray().Add(JsonSerializer.SerializeToNode(
@@ -548,6 +644,12 @@ internal static class CharacterFfxRequirementTests
             Save(sharedMulti);
             Need(CharacterFfxRequirements.Read(plan, true).Count == 2,
                 "actors sharing a multi-TAE archive may declare the same complete proof set");
+            var conflictingProfile = (JsonObject)sharedMulti.DeepClone();
+            conflictingProfile["boss_character_ffx_requirements"]![1]!["source_tae_entries"]![0]!
+                ["decoded_event_types"] = JsonSerializer.SerializeToNode(expandedProfile);
+            Save(conflictingProfile);
+            Refused(() => CharacterFfxRequirements.Read(plan, true),
+                "conflicting character FFX animation binder declarations");
             sharedMulti["boss_character_ffx_requirements"]![1]!["source_tae_entries"]![1]!
                 ["source_tae_sha256"] = new string('1', 64);
             Save(sharedMulti);
@@ -821,6 +923,83 @@ internal static class CharacterFfxRequirementTests
                     && c0000.SourceTaeEntries.Sum(entry => entry.TypedEventWitnesses.Count) == 4742
                     && c0000.DirectEffectIds.Count == 229,
                     "original c0000 archive census verifies 80 exact TAE entries without claiming actor selection");
+
+                string[] expandedModels = [
+                    "c0000", "c1050", "c1400", "c2050", "c2090", "c2100", "c2120", "c2121",
+                    "c2320", "c2321", "c2500", "c2510", "c2570", "c2571", "c2710", "c2720",
+                    "c4030", "c4031", "c4500", "c4510", "c4520", "c4540", "c4541", "c4543",
+                    "c5000", "c5020", "c5033", "c5070", "c5071", "c5072", "c5080", "c5100",
+                    "c5120", "c5400", "c5510", "c8050", "c9010",
+                ];
+                var expandedActors = new List<object>();
+                var expandedRequirements = new List<object>();
+                var canonical = new StringBuilder();
+                var expandedCounts = new Dictionary<ulong, int>();
+                var floorRoots = new SortedSet<int>();
+                int expandedEntryCount = 0;
+                for (int modelIndex = 0; modelIndex < expandedModels.Length; modelIndex++) {
+                    string model = expandedModels[modelIndex];
+                    string binderPath = Path.Combine(originalCharacters, model + ".anibnd.dcx");
+                    var binder = BND4.Read(binderPath);
+                    string suffix = model == "c0000" ? @"a\d+\.tae" : model + @"\.tae";
+                    var taeFiles = binder.Files.Where(file => Regex.IsMatch(
+                            file.Name.Replace('\\', '/'),
+                            $@"/chr/{model}/tae/{suffix}$", RegexOptions.IgnoreCase))
+                        .OrderBy(file => file.ID).ToList();
+                    Need(taeFiles.Count == (model == "c0000" ? 80 : 1),
+                        "expanded original fixture has the pinned TAE-entry cardinality for " + model);
+                    var proofs = new List<object>();
+                    var modelEffects = new SortedSet<int>();
+                    foreach (var entry in taeFiles) {
+                        string entryName = entry.Name.Replace('\\', '/').Split('/').Last();
+                        string entryPath = $"chr/{model}/tae/{entryName}";
+                        string taeHash = Hash(entry.Bytes);
+                        var parsed = CharacterFfxRequirements.ParseTae(entry.Bytes, expandedProfile);
+                        proofs.Add(TaeEntry(model, entryName, entry.ID, parsed.AnimationCount,
+                            entry.Bytes, parsed.Witnesses, expandedProfile));
+                        expandedEntryCount++;
+                        canonical.Append(model).Append('|').Append(entry.ID).Append('|')
+                            .Append(entryPath).Append('|').Append(taeHash).Append('|')
+                            .Append(parsed.AnimationCount).Append('|')
+                            .AppendJoin(',', expandedProfile).Append('\n');
+                        foreach (var witness in parsed.Witnesses) {
+                            canonical.Append(witness.AnimationId).Append('|').Append(witness.EventIndex)
+                                .Append('|').Append(witness.EventType).Append('|')
+                                .Append(witness.ParameterOffset).Append('|').Append(witness.EffectId)
+                                .Append('\n');
+                            expandedCounts[witness.EventType] =
+                                expandedCounts.GetValueOrDefault(witness.EventType) + 1;
+                            modelEffects.Add(witness.EffectId);
+                            if (witness.EventType == 112) floorRoots.Add(witness.EffectId);
+                        }
+                    }
+                    int entity = 9910000 + modelIndex;
+                    string part = model + "_audit";
+                    expandedActors.Add(Actor(model, part, entity));
+                    expandedRequirements.Add(RequirementV2(model, part, entity, binderPath,
+                        proofs.ToArray(), modelEffects));
+                }
+                string expandedDigest = Hash(Encoding.UTF8.GetBytes(canonical.ToString()));
+                Need(expandedDigest == "36bea59efc74d89d8d7a15ca6cb0ed92f4cb6083054767629057c0ddbfe27405",
+                    "expanded original ordered witness digest drift: " + expandedDigest);
+                var expandedOriginalPlan = (JsonObject)JsonSerializer.SerializeToNode(new {
+                    boss_actor_additions = expandedActors,
+                    boss_character_ffx_requirements = expandedRequirements,
+                }, json)!;
+                Save(expandedOriginalPlan);
+                var expandedOriginal = CharacterFfxRequirements.Validate(plan, originalCharacters);
+                Need(expandedOriginal.Count == 37 && expandedEntryCount == 116
+                    && expandedOriginal.Sum(row => row.SourceTaeEntries.Count) == 116,
+                    "expanded original profile verifies all 37 archives and 116 exact TAE entries");
+                Need(expandedCounts.GetValueOrDefault(112UL) == 31957 && floorRoots.Count == 75,
+                    "expanded original profile proves all 31,957 type-112 witnesses and 75 positive operands");
+                Need(new ulong[] {96, 99, 100, 108, 109, 112, 118}
+                    .Select(type => expandedCounts.GetValueOrDefault(type))
+                    .SequenceEqual(new[] {11468, 3, 156, 20, 12, 31957, 1025}),
+                    "expanded original profile preserves the pinned ordered count for every decoded type");
+                Need(expandedOriginal.SelectMany(row => row.SourceTaeEntries)
+                    .All(entry => entry.DecodedEventTypes.SequenceEqual(expandedProfile)),
+                    "expanded original receipt retains the explicit partial decoded profile per entry");
             }
             Console.WriteLine($"PASS: {assertions} character TAE FFX requirement assertions"
                 + (originalCharacters is null ? " (original archive smoke not requested)" : " including original archives"));
