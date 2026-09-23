@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		1949
+total		1968
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	42
@@ -133,3 +133,6 @@ module	test_micolash_donor	6
 module	test_celestial_donor	7
 module	test_one_reborn_donor	6
 module	test_one_reborn_character_ffx	4
+module	test_maria_cross_arena	6
+module	test_logarius_gascoigne_cross_arena	3
+module	test_celestial_arena_contract	7
