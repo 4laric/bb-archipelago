@@ -20,7 +20,10 @@ def smoke(package: Path) -> None:
             raise RuntimeError(f'Missing packaged file: {path}')
     qt = subprocess.run(
         [str((package / 'BBLauncher-AP.exe').resolve()), '--ap-package-smoke'],
-        env=dict(os.environ, QT_QPA_PLATFORM='offscreen'),
+        # The smoke flag exits before constructing a window. Exercise the
+        # deployed Windows platform plugin; offscreen is a development plugin
+        # and is intentionally not part of the player bundle.
+        env=dict(os.environ, QT_QPA_PLATFORM='windows'),
         capture_output=True, text=True, timeout=30,
     )
     if qt.returncode:
