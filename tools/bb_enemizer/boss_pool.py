@@ -84,6 +84,7 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     region_names = set()
     sfx_additions, ffx_merges, emevd_ffx_requirements = [], {}, []
     emevd_ffx_bindings = set()
+    character_ffx_requirements = {}
     added_parts, added_entities = set(), set()
     generator_names, generator_events = set(), set()
     initializations, initialized_parts = [], set()
@@ -123,6 +124,17 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
         changes.extend(copy.deepcopy(plan_changes))
         skips.extend(copy.deepcopy(plan_skips))
         contracts.append(copy.deepcopy(plan['boss_contract']))
+        character_bindings = set()
+        for requirement in plan.get('boss_character_ffx_requirements', []):
+            binding = (requirement['source_map'], requirement['source_part'],
+                       requirement['source_entity_id'])
+            if binding in character_bindings:
+                raise ValueError('boss pair repeats a character FFX actor binding')
+            character_bindings.add(binding)
+            previous = character_ffx_requirements.get(binding)
+            if previous is not None and previous != requirement:
+                raise ValueError('boss pair plans disagree on character FFX provenance')
+            character_ffx_requirements[binding] = copy.deepcopy(requirement)
         for reference in plan.get('boss_external_references', []):
             binding = (reference['destination_event_file'], reference['destination_event_id'],
                        reference['destination_actor'], reference['entity_id'])
@@ -240,6 +252,9 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
             row['destination_map'], row['destination_event_id']))
     if ffx_merges:
         result['boss_ffx_merges'] = [ffx_merges[key] for key in sorted(ffx_merges)]
+    if character_ffx_requirements:
+        result['boss_character_ffx_requirements'] = [
+            character_ffx_requirements[key] for key in sorted(character_ffx_requirements)]
     if emevd_ffx_requirements:
         result['boss_emevd_ffx_requirements'] = sorted(emevd_ffx_requirements, key=lambda row: (
             row['source_event_file'], row['source_event_id'], row['destination_event_file'],
@@ -279,7 +294,7 @@ def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence
         'boss_adapter', 'boss_contract', 'boss_encounters', 'boss_actor_additions',
         'boss_actor_initializations', 'boss_generator_additions', 'boss_region_additions',
         'boss_object_additions', 'boss_sfx_additions', 'boss_ffx_merges',
-        'boss_emevd_ffx_requirements', 'boss_external_references',
+        'boss_emevd_ffx_requirements', 'boss_character_ffx_requirements', 'boss_external_references',
     }
     present = forbidden.intersection(ordinary_plan)
     if present:
@@ -333,7 +348,7 @@ def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence
     result['boss_contract'] = copy.deepcopy(bosses['boss_contract'])
     for field in ('boss_actor_additions', 'boss_generator_additions', 'boss_region_additions', 'boss_object_additions',
                   'boss_actor_initializations', 'boss_sfx_additions', 'boss_ffx_merges',
-                  'boss_emevd_ffx_requirements', 'boss_external_references'):
+                  'boss_emevd_ffx_requirements', 'boss_character_ffx_requirements', 'boss_external_references'):
         if field in bosses:
             result[field] = copy.deepcopy(bosses[field])
     return result
@@ -358,9 +373,32 @@ def assign_donors(seed: str, compatible: Mapping[str, Sequence[str]], *,
         choices[arena] = candidates
     result = {}
 
+    def can_complete(remaining: list[str], used: set[str]) -> bool:
+        # A donor can be reachable from every remaining arena yet still leave
+        # a subset with too few distinct donors. Detect that with an augmenting
+        # matching instead of enumerating every doomed seeded permutation.
+        # This only prunes impossible branches; search keeps its original RNG
+        # order and therefore its existing seed-to-assignment behavior.
+        owners: dict[str, str] = {}
+
+        def augment(arena: str, visited: set[str]) -> bool:
+            for donor in choices[arena]:
+                if donor in used or donor in visited:
+                    continue
+                visited.add(donor)
+                owner = owners.get(donor)
+                if owner is None or augment(owner, visited):
+                    owners[donor] = arena
+                    return True
+            return False
+
+        return all(augment(arena, set()) for arena in remaining)
+
     def search(remaining: list[str], used: set[str]) -> bool:
         if not remaining:
             return True
+        if not can_complete(remaining, used):
+            return False
         arena = min(remaining, key=lambda key: (sum(donor not in used for donor in choices[key]), key))
         for donor in choices[arena]:
             if donor in used:
@@ -416,6 +454,17 @@ def _merge_constructor(original: str, variants: list[str]) -> str:
             raise ValueError('overlapping boss constructor edits')
         if len(groups) == 1:
             edits[position, position] = next(iter(groups))
+            continue
+        # Per-load readiness events must be reset before any constructor
+        # initializer. Independent literal OFF writes at that leading boundary
+        # commute; do not extend this rule to mixed statements or later sites.
+        resets = [re.fullmatch(r'\s*SetEventFlag\(\s*(\d+)\s*,\s*OFF\);\s*', line)
+                  for group in groups for line in group if line.strip()]
+        if position == 1 and resets and all(reset is not None for reset in resets):
+            flags = sorted({int(reset[1]) for reset in resets})
+            if any(flag <= 0 for flag in flags):
+                raise ValueError('constructor readiness reset requires positive flag IDs')
+            edits[position, position] = tuple(f'    SetEventFlag({flag}, OFF);' for flag in flags)
             continue
         # Independent combat packages may append at the same constructor site.
         # Only literal initializer calls commute here; arbitrary statements may

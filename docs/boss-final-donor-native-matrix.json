@@ -1,0 +1,145 @@
+{
+  "format": "bb-final-donor-native-matrix-v1",
+  "status": "native-actor-event-builds-only",
+  "limits": [
+    "No live gameplay validation.",
+    "Character effect delivery remains incomplete.",
+    "These twelve routes cannot yet participate in full22 assignment; incoming final-arena adapters are required."
+  ],
+  "source_sha256": {
+    "tools/bb_enemizer/final_boss_donors.py": "4e6e5c6d5e871ca226a7446c9cb8a76ac59658ef636efcefc02d6b5aaaa1aa1c",
+    "tools/bb_enemizer/final_boss_contracts.py": "0179dea076a40de3089e24b4ac346b08ee4b38b80f00ba444bc71b05abc85c14",
+    "tools/bb_enemizer/encounter_recipes.py": "8124275638f99daf5cd4851330a15c44583b951eeabf5d54634b44ec755a18dc",
+    "tools/build_boss_encounters.py": "e92f2db1949416229c63903f16340a260820f0ed27fe5c86e007fd6ec19e3ba3",
+    "writer": "15bac4e6dda0eb0433c29bcc2920f7dde87c08069b06e9e00ef2bc2e4ca40661"
+  },
+  "cases": [
+    {
+      "arena": "cleric-beast",
+      "donor": "gehrman",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "ad4ab1e8d056702c6f22504a82c7d9d4622e9e667a4ad3d5463905cdf0dd9c95"
+    },
+    {
+      "arena": "cleric-beast",
+      "donor": "moon-presence",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "86a3a70e40d45492b8292e4da631b830a447648fd808980b6ec96fcb10b0b804"
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "gehrman",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "8a7d012b720c78d6b496cab91a0d5048f55285b65da02e6819a12b7bb73ea9b5"
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "moon-presence",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "0430bb82cb6bbe1248a724159af5752748e5277ac363c4bae304336427490e89"
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "gehrman",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "551fc55168e2c5911760595197eb1a42547ff9926030f843b463a1e73e8b1733"
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "moon-presence",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "c564632cc7d1fca075d44b6579e83e476a58b25b7a1a2a717a4a2bcaf9bf5c69"
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "gehrman",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "42b84c2018a9b031b525a55aab34bb0defc75ff4779a76f991665d852e7f16ac"
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "moon-presence",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "729944f23b377fb8c656920da65847f62257d8b56959ec7a9ba2322042603a92"
+    },
+    {
+      "arena": "amygdala",
+      "donor": "gehrman",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "5e87872652522799ef0bc792ff617228bb629a0b140b9bcc98182480f64db9e5"
+    },
+    {
+      "arena": "amygdala",
+      "donor": "moon-presence",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "29df7cd67c3416336c5f8f4cade69bb699a2d7baf04963189a84905ee1251f38"
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "gehrman",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "4377bba693ba59756501a4c992690b1ce342d3b8502fd4dd19defa0671619ef2"
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "moon-presence",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "c4c0e23b965892d0b944d8a7e6dcf2484242dc7b0f4ba7e164b630863dc00baa"
+    }
+  ],
+  "shared_map_probe": {
+    "format": "bb-final-donor-shared-map-probe-v1",
+    "assignment_overridden_for_isolated_composition": true,
+    "full_roster_validated": false,
+    "runtime_validated": false,
+    "limits": [
+      "Actor/event composition only; character-effect delivery unresolved."
+    ],
+    "cases": [
+      {
+        "mapping": {
+          "blood-starved-beast": "gehrman",
+          "darkbeast-paarl": "moon-presence"
+        },
+        "files_verified": 9,
+        "receipt_sha256": "d368bffb05a94042505638ce5b01914bc8a764ee1f93af9cb0fdd2f7e52b0ac4",
+        "actor_additions": 2,
+        "event_files": 1
+      },
+      {
+        "mapping": {
+          "blood-starved-beast": "moon-presence",
+          "darkbeast-paarl": "gehrman"
+        },
+        "files_verified": 9,
+        "receipt_sha256": "4ad2f6da21e5cfa80b219da2e813d717f306d7ae350f34acf60c11a25feb2f21",
+        "actor_additions": 2,
+        "event_files": 1
+      }
+    ]
+  }
+}

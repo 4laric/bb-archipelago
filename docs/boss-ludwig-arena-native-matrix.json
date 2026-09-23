@@ -1,0 +1,64 @@
+{
+  "format": "bb-ludwig-arena-native-validation-v1",
+  "source_files": {
+    "tools/bb_enemizer/ludwig_arena_contract.py": "b8f2c25151cd58cc16b36028190976b1ec828148c346b9dea8d9936f1b71e868",
+    "tools/bb_enemizer/encounter_recipes.py": "ab3c0803f3e163fcb4871ccce54703e08b888b725de365768e0ab1c909074440",
+    "tools/build_boss_encounters.py": "2725c4dc69134e439a0c0b156a2e07b8d2f1431f0e62294c8054ba46de769151",
+    "tests/test_ludwig_arena_contract.py": "dd51233ec0f6d07a910da55ea7563affb513cf691ec1ec2256095fa2902f2c13"
+  },
+  "runtime_validated": false,
+  "limits": [
+    "Event/map/AI/parameter pipeline only; no complete character effect delivery claim.",
+    "Cleric uses retained dedicated adapter; reusable Cleric variant is compile-tested separately."
+  ],
+  "builds": [
+    {
+      "donor": "cleric-beast",
+      "arena": "ludwig",
+      "adapter": "retained-dedicated",
+      "files_verified": 8,
+      "receipt_sha256": "fc408e60bca0136ca7f96b4db2c00646312c0785ece35b5374bc3d500e065254",
+      "plan_sha256": "f5363db66ae1f7c39094005a0ddc731092e385ef69f5143b42ba498d43b84d9e"
+    },
+    {
+      "donor": "blood-starved-beast",
+      "arena": "ludwig",
+      "adapter": "reusable",
+      "files_verified": 8,
+      "receipt_sha256": "15b5381ff7cf20395493fda1c91c9f31b5b62d85972dc334fdd9b46ccdfdf24b",
+      "plan_sha256": "b08ebc5db9d2bf22666bdb54f25e4827afce0d930841ab92c85feb1b1be51b19"
+    },
+    {
+      "donor": "darkbeast-paarl",
+      "arena": "ludwig",
+      "adapter": "reusable",
+      "files_verified": 8,
+      "receipt_sha256": "b4529f717bc6fbc88f4cc47591a7e18872658c141dd21e76df531ca2c1b79842",
+      "plan_sha256": "a0db8a7bf72037d50cfabaf2cd82d116235aa6310f416964ec49ccabbebf527a"
+    },
+    {
+      "donor": "vicar-amelia",
+      "arena": "ludwig",
+      "adapter": "reusable",
+      "files_verified": 8,
+      "receipt_sha256": "4bee81d0cb2ab1a45f3c5e04332dbf24f5cc964b6db81d525d887989ddf39d1b",
+      "plan_sha256": "ac58412e65d0b19d72c0fe43342c04f10feb66175393dd6240b9c8f84e89ce2a"
+    },
+    {
+      "donor": "amygdala",
+      "arena": "ludwig",
+      "adapter": "reusable",
+      "files_verified": 8,
+      "receipt_sha256": "9bd2048b09a2e148c2f9f6650c03df0fa3ed96cb931b3bcdc3a37355575a6afd",
+      "plan_sha256": "91e2efe8ab91fa5ff0201b0ad0a57aeba91841e3f86fca0184580e228d5e1061"
+    },
+    {
+      "donor": "ebrietas",
+      "arena": "ludwig",
+      "adapter": "reusable",
+      "files_verified": 8,
+      "receipt_sha256": "f11cd37041aad1494914b1543e42bb75bbfd19238f612186920f847c339e9a87",
+      "plan_sha256": "7ec341af63615024a57220ac4efda94de9e567907b893bcc6fd1788f43178610"
+    }
+  ]
+}

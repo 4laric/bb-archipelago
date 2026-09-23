@@ -1,0 +1,137 @@
+{
+  "format": "bb-final-arena-native-matrix-v1",
+  "limits": [
+    "Native actor/event construction only; gameplay and character effect delivery unverified."
+  ],
+  "source_sha256": {
+    "gehrman": {
+      "tools/bb_enemizer/gehrman_arena_contract.py": "026188107690bccbd828421fd7005b2d1004b07b62ea47ac98f5b77cb9367f36",
+      "tools/bb_enemizer/encounter_recipes.py": "ec9cab4737cbd1f8141be9bf94ce6277c18356a852376cb7a8290e72408dc704",
+      "tools/build_boss_encounters.py": "e92f2db1949416229c63903f16340a260820f0ed27fe5c86e007fd6ec19e3ba3",
+      "tools/bb_enemizer/boss_pool.py": "134b21dd080970a344c5c8f9be0ca120fe2e21f67ea404758e6490be70fbb6c0",
+      "writer": "15bac4e6dda0eb0433c29bcc2920f7dde87c08069b06e9e00ef2bc2e4ca40661"
+    },
+    "moon-presence": {
+      "tools/bb_enemizer/moon_arena_contract.py": "943254b023811668f90254b0565c433acc302ab0121d76140c71607cde4f0768",
+      "tools/bb_enemizer/encounter_recipes.py": "ec9cab4737cbd1f8141be9bf94ce6277c18356a852376cb7a8290e72408dc704",
+      "tools/build_boss_encounters.py": "e92f2db1949416229c63903f16340a260820f0ed27fe5c86e007fd6ec19e3ba3",
+      "tools/bb_enemizer/boss_pool.py": "134b21dd080970a344c5c8f9be0ca120fe2e21f67ea404758e6490be70fbb6c0",
+      "writer": "15bac4e6dda0eb0433c29bcc2920f7dde87c08069b06e9e00ef2bc2e4ca40661"
+    }
+  },
+  "cases": [
+    {
+      "arena": "gehrman",
+      "donor": "cleric-beast",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "a63db588922c5785fd4d0624f8e071c5f6ce14ab04ede51d3f506fba2f04ad98"
+    },
+    {
+      "arena": "gehrman",
+      "donor": "blood-starved-beast",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "43b98843c89c24ee83d7878c10b79730d19bcf4b2b0ec3d0e5abeea9ddd96977"
+    },
+    {
+      "arena": "gehrman",
+      "donor": "darkbeast-paarl",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "fcf0f8d0211df862e3071e8de4986da4c1fbbc7ca8a9e38372a0909caf6ab2a4"
+    },
+    {
+      "arena": "gehrman",
+      "donor": "vicar-amelia",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "e7095a0c1b71996fd7816e0dbb91abb6f9617b79cab5a4abe152a1d21836d6f2"
+    },
+    {
+      "arena": "gehrman",
+      "donor": "amygdala",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "5fbb68846440c6b8651226038f41011176752bbf58a3418a972d81e541ba98fb"
+    },
+    {
+      "arena": "gehrman",
+      "donor": "ebrietas",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "656600439908b46737fb38924e328e7e98172d643cef28e9d46d9dcbe5fc8281"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "cleric-beast",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "6c8bdb4feecd2e300b0b26af16bb6b87c5baa21293783f34768b818d77539cff"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "blood-starved-beast",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "e82b7fbcc91a29116e3aaecb0e1d2d68911f157c1aaf58cca451fa9e3ed240ef"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "darkbeast-paarl",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "725d6cbce5af9c4f9b0350ee97c2663f7e3e84712d5bfa45aecdb4d1221b77a8"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "vicar-amelia",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "85ecc713545ad663101794c3d7ce6ae7dbe33783f1aa2e8c1df1c3162836e03f"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "amygdala",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "435ef640aae48242dffe544016ff4561ad386e6eaf8f741abb64d4051bc1e945"
+    },
+    {
+      "arena": "moon-presence",
+      "donor": "ebrietas",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 8,
+      "receipt_sha256": "491ef5ec1854c9bb7fc28d536500319554e3741e849a165801e914bfce4e6c83"
+    }
+  ],
+  "retried_attempts": [
+    {
+      "arena": "moon-presence",
+      "donor": "ebrietas",
+      "first_exit_code": 1,
+      "failure": "Windows IOException during Directory.Move of staged overlay; unchanged source passed serial retry in fresh output path.",
+      "stage": "Earlier Moon implementation, before pre-activation protection fix; all six final protected cases passed without retry."
+    }
+  ],
+  "post_validation_formatting": [
+    {
+      "path": "tools/bb_enemizer/gehrman_arena_contract.py",
+      "change": "Removed trailing blank lines only after native validation; executable source unchanged.",
+      "validated_sha256": "026188107690bccbd828421fd7005b2d1004b07b62ea47ac98f5b77cb9367f36",
+      "normalized_sha256": "3742254619ca19d714a355b2e847ac1e9d2dcbb27d6c46539065823476ba6db0"
+    }
+  ]
+}

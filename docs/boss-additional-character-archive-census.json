@@ -1,0 +1,1615 @@
+{
+  "format": "bb-original-character-archive-census-v1",
+  "status": "partial-typed-archive-evidence",
+  "limits": [
+    "Types 96, 100 and 118 only. No AI, behavior, parameter, or recursive FXR closure claim.",
+    "All 80 c0000 TAE entries are inventoried; the subset used by Micolash has not been resolved.",
+    "This extends the earlier 30-model screening with seven additional original archives. It is not a complete combat actor census.",
+    "Multiple TAE entries require explicit entry identity in character manifests and receipts. Archive availability does not establish asset delivery."
+  ],
+  "archives": [
+    {
+      "model": "c8050",
+      "scope": "gehrman",
+      "archive_file": "c8050.anibnd.dcx",
+      "archive_sha256": "1d1cfe8f213e52002691db1f59c185bf1fae1b39cfb2b4696a23c13f7b16a844",
+      "tae_entries": [
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c8050\\tae\\c8050.tae",
+          "entry_id": 3000000,
+          "sha256": "c27efc0f8c6ee4ae0155c35d39093bec2fd4ace4216bfd261f822fb17f71389d",
+          "animation_count": 203,
+          "typed_witness_count": 339,
+          "direct_type96_100_118_effect_ids": [
+            251,
+            7100,
+            7659,
+            7759,
+            650093,
+            650094,
+            680500,
+            680510,
+            680523,
+            680530,
+            680533,
+            680536,
+            680537,
+            680540,
+            680541,
+            680550,
+            1030000,
+            1032000,
+            1032002,
+            1032003,
+            1040200,
+            1040202,
+            1040203,
+            1040204,
+            1040205,
+            1040206,
+            1040207,
+            1805100
+          ]
+        }
+      ]
+    },
+    {
+      "model": "c5400",
+      "scope": "moon-presence",
+      "archive_file": "c5400.anibnd.dcx",
+      "archive_sha256": "8ba2769dc3dcae263f2c3703fe83ed798d5833eeabc1b008e6e55be1065cafcf",
+      "tae_entries": [
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c5400\\tae\\c5400.tae",
+          "entry_id": 3000000,
+          "sha256": "a2c627ec91a83cdee61d10667923027f8b12ff5b0df445d1af8828647600a1e9",
+          "animation_count": 102,
+          "typed_witness_count": 108,
+          "direct_type96_100_118_effect_ids": [
+            650090,
+            650091,
+            654005,
+            654030,
+            654031,
+            654050,
+            654060,
+            1031003,
+            1032000,
+            1036002,
+            1040300,
+            1040303,
+            1040307,
+            1540300
+          ]
+        }
+      ]
+    },
+    {
+      "model": "c4520",
+      "scope": "lady-maria",
+      "archive_file": "c4520.anibnd.dcx",
+      "archive_sha256": "261a44c3078f4418ad776a4baa4415cb23b353b95cb5f1cb82c3c16c6d9743ae",
+      "tae_entries": [
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c4520\\tae\\c4520.tae",
+          "entry_id": 3000000,
+          "sha256": "e121181e7f5306c9dbf57ee3128ed1584633a7b8ac9d5d365aca183342ff80c8",
+          "animation_count": 184,
+          "typed_witness_count": 1460,
+          "direct_type96_100_118_effect_ids": [
+            251,
+            204006,
+            645200,
+            645201,
+            645202,
+            645203,
+            645204,
+            645205,
+            645206,
+            645207,
+            645210,
+            645215,
+            645216,
+            645220,
+            645221,
+            645222,
+            645223,
+            645225,
+            645226,
+            645231,
+            645233,
+            645240,
+            645241,
+            645242,
+            645243,
+            645244,
+            645246,
+            645247,
+            645250,
+            645251,
+            645254,
+            645256,
+            645257,
+            645258,
+            645259,
+            645260,
+            645261,
+            645262,
+            645263,
+            645264,
+            645270,
+            645285,
+            645286,
+            645290,
+            645291,
+            645292,
+            645293,
+            645294,
+            650093,
+            650094,
+            1032000,
+            1040200,
+            1040203,
+            1040204,
+            1040206,
+            1040207
+          ]
+        }
+      ]
+    },
+    {
+      "model": "c4500",
+      "scope": "laurence",
+      "archive_file": "c4500.anibnd.dcx",
+      "archive_sha256": "4eb712d3395fefec905cfe7dcd06f7a34a4f85b81d5206fc85ba6649f8269175",
+      "tae_entries": [
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c4500\\tae\\c4500.tae",
+          "entry_id": 3000000,
+          "sha256": "b080b0d8d50eb3ee154d5f9e6b243def667e56e5e23d178fb6fa6bfdd2be515d",
+          "animation_count": 237,
+          "typed_witness_count": 416,
+          "direct_type96_100_118_effect_ids": [
+            610,
+            630,
+            7000,
+            7001,
+            7003,
+            645000,
+            645001,
+            645002,
+            645003,
+            645004,
+            645005,
+            645006,
+            645007,
+            645008,
+            645009,
+            645012,
+            645015,
+            645020,
+            645021,
+            645025,
+            645030,
+            645035,
+            650000,
+            650010,
+            650011,
+            650012,
+            650013,
+            650015,
+            650016,
+            650017,
+            650020,
+            650021,
+            650091,
+            650125,
+            650195,
+            1000601,
+            1031000,
+            1031001,
+            1031003,
+            1040300,
+            1040303,
+            1040304,
+            1040307,
+            1040308
+          ]
+        }
+      ]
+    },
+    {
+      "model": "c5100",
+      "scope": "rom",
+      "archive_file": "c5100.anibnd.dcx",
+      "archive_sha256": "45bf188ddf1c58b28cd62972f8e6d47088babd2ee720f6e565b0877b1ec13315",
+      "tae_entries": [
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c5100\\tae\\c5100.tae",
+          "entry_id": 3000000,
+          "sha256": "39a850495a52e8495707c385e550075df44251f3cb6e03f1b92cf3c2125caf54",
+          "animation_count": 71,
+          "typed_witness_count": 91,
+          "direct_type96_100_118_effect_ids": [
+            625190,
+            650091,
+            651000,
+            651001,
+            651002,
+            651010,
+            651011,
+            651015,
+            651016,
+            651017,
+            651030,
+            651034,
+            1031000,
+            1031002,
+            1031003
+          ]
+        }
+      ]
+    },
+    {
+      "model": "c1400",
+      "scope": "rom-spider-support",
+      "archive_file": "c1400.anibnd.dcx",
+      "archive_sha256": "c75f789b3aa099e21c871530e70c28c7db2f84529bdfc20c8878f608234f1c90",
+      "tae_entries": [
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c1400\\tae\\c1400.tae",
+          "entry_id": 3000000,
+          "sha256": "84a1eb72a8e98bd7a587e98945ca05392dbced77b613dee682323136933c7f53",
+          "animation_count": 112,
+          "typed_witness_count": 120,
+          "direct_type96_100_118_effect_ids": [
+            610090,
+            614004,
+            1030002,
+            1036000,
+            1036002
+          ]
+        }
+      ]
+    },
+    {
+      "model": "c0000",
+      "scope": "shared-human-model-including-micolash",
+      "archive_file": "c0000.anibnd.dcx",
+      "archive_sha256": "2ef1b29323c635dca1828b823a957dc7770967d7642b458bad7365375bcd32cb",
+      "tae_entries": [
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a00.tae",
+          "entry_id": 5000000,
+          "sha256": "6c6d1ce7e4a4023ba14e20815ebf24ae3d1f4751a0afe4c82111acc6d4ce2160",
+          "animation_count": 1118,
+          "typed_witness_count": 702,
+          "direct_type96_100_118_effect_ids": [
+            60,
+            110,
+            117,
+            118,
+            119,
+            130,
+            131,
+            132,
+            139,
+            140,
+            173,
+            174,
+            175,
+            179,
+            180,
+            192,
+            195,
+            250,
+            268,
+            310,
+            311,
+            340,
+            342,
+            360,
+            361,
+            362,
+            363,
+            364,
+            7100,
+            7101,
+            7102,
+            7103,
+            7104,
+            7105,
+            7106,
+            7107,
+            7108,
+            7109,
+            7110,
+            7112,
+            7114,
+            7116,
+            7117,
+            7118,
+            7120,
+            7121,
+            7122,
+            7123,
+            7125,
+            7126,
+            7127,
+            7128,
+            7129,
+            7130,
+            7131,
+            20056,
+            20063,
+            20097,
+            20156,
+            20162,
+            20180,
+            20197,
+            20198,
+            20256,
+            20262,
+            20297,
+            20359,
+            20398,
+            88900,
+            100300,
+            100324,
+            200000,
+            200001,
+            200002,
+            200005,
+            200006,
+            200007,
+            200008,
+            200009,
+            200013,
+            200050,
+            200051,
+            200052,
+            201051,
+            202002,
+            202005,
+            202006,
+            204006,
+            250110,
+            625110,
+            627121,
+            630622,
+            640700,
+            640701,
+            650016,
+            650460,
+            651212,
+            820000,
+            928025,
+            928027,
+            928200,
+            929216,
+            929270,
+            935220,
+            1030000,
+            1030012,
+            1030021,
+            1030040,
+            1037000,
+            1037001,
+            1101001
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a02.tae",
+          "entry_id": 5000002,
+          "sha256": "32702010939c704e0850f353a1853962039653912cb59fc1846c77dfa24385d5",
+          "animation_count": 245,
+          "typed_witness_count": 161,
+          "direct_type96_100_118_effect_ids": [
+            623,
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a03.tae",
+          "entry_id": 5000003,
+          "sha256": "9a5d5c5b84799b24e5d5f344e4c18ea188c46683140db33b5a3cc33a3e98b35c",
+          "animation_count": 222,
+          "typed_witness_count": 143,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a04.tae",
+          "entry_id": 5000004,
+          "sha256": "d4eb6eb16e8ecd3f37f4f23088f035bd115e0b9c8a0e0bc4cb75591758f3e451",
+          "animation_count": 10,
+          "typed_witness_count": 11,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a05.tae",
+          "entry_id": 5000005,
+          "sha256": "556c91f928b0bdd50edb3e9ac386cedab9e8c17f405fa5916915f48e7e0769fb",
+          "animation_count": 245,
+          "typed_witness_count": 164,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a06.tae",
+          "entry_id": 5000006,
+          "sha256": "0f7f8d260e361c471dba371b7a42e71fba1fee4d96bc269a4f8fc5f815dbba52",
+          "animation_count": 10,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a10.tae",
+          "entry_id": 5000010,
+          "sha256": "ce40b3a09ac6fe4446718885a3a164d1b7043521745df8e0a17bfe21d2c78c82",
+          "animation_count": 1,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a21.tae",
+          "entry_id": 5000021,
+          "sha256": "7b855c8c3187a0b7f20a061b06185993fa72f02dd448b56eb1521936f7440eaf",
+          "animation_count": 143,
+          "typed_witness_count": 43,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a22.tae",
+          "entry_id": 5000022,
+          "sha256": "78409287fa23a8315324604e8d223dc0d8b0b8b5e30fcc4fbfbeec8ba7c17550",
+          "animation_count": 143,
+          "typed_witness_count": 43,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a23.tae",
+          "entry_id": 5000023,
+          "sha256": "07d65552e5fd9065afe2cfffbe0dd6dcf55177dd1c233b57e943e0d12920bcbe",
+          "animation_count": 143,
+          "typed_witness_count": 153,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a25.tae",
+          "entry_id": 5000025,
+          "sha256": "b8ae5b141c714768b3f3bf39177e9d63725d9f3d66f34e91787143f3d362144e",
+          "animation_count": 143,
+          "typed_witness_count": 43,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a26.tae",
+          "entry_id": 5000026,
+          "sha256": "0c67a03fb67487c0c6ac83a8cc47bbf02bf7a0ba193147190003555d7b452e13",
+          "animation_count": 21,
+          "typed_witness_count": 18,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a27.tae",
+          "entry_id": 5000027,
+          "sha256": "ed6f2136451b4a287745a4a64d105a89a1a9596f1140a11ef5ce25129037fb33",
+          "animation_count": 145,
+          "typed_witness_count": 45,
+          "direct_type96_100_118_effect_ids": [
+            260,
+            261,
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a31.tae",
+          "entry_id": 5000031,
+          "sha256": "d46cdca7cb3900e5cfe8b8d75b9da58693a98b6980be226a77355d282a1be6a7",
+          "animation_count": 10,
+          "typed_witness_count": 11,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a32.tae",
+          "entry_id": 5000032,
+          "sha256": "5b6a911c2831766fccba54740bbed89ca16068cd570b68d4ad1703ea5eefc483",
+          "animation_count": 10,
+          "typed_witness_count": 11,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a33.tae",
+          "entry_id": 5000033,
+          "sha256": "b97d4045a3ff3a61ff792ff3283e4ee21c9ad22a82b8364e775d2e1578679398",
+          "animation_count": 20,
+          "typed_witness_count": 20,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a40.tae",
+          "entry_id": 5000040,
+          "sha256": "fda54b3be0897a0be4d342a54b3a29c99245cf491404eb6d56fd231647a4f3b7",
+          "animation_count": 1,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a50.tae",
+          "entry_id": 5000050,
+          "sha256": "ac7bb84711385d756d5a2e99d0c6ac1d6b0d1fdcd833ef2153f03564aa5ef08e",
+          "animation_count": 1,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a60.tae",
+          "entry_id": 5000060,
+          "sha256": "98a0e1b19af3d7cc49746fdf74264dcf688eed1b05012dc939108afc861f4d89",
+          "animation_count": 1,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a70.tae",
+          "entry_id": 5000070,
+          "sha256": "43aac25c2d9c2c9375f76a6636f6be8921afc9001d7e8a73807dcb7201d087d0",
+          "animation_count": 1,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a80.tae",
+          "entry_id": 5000080,
+          "sha256": "02adc10a0e94c9d0d57832f21f65ff979c6c7624d3bcccdf031b8c7f743e1715",
+          "animation_count": 1,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a100.tae",
+          "entry_id": 5000100,
+          "sha256": "b8f0b2d503f71fd25e23ca59f7191b7ef58ad14e7f0be4b2e38214cd8bc7b103",
+          "animation_count": 48,
+          "typed_witness_count": 119,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030011
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a101.tae",
+          "entry_id": 5000101,
+          "sha256": "4f0ef91072609fa94ed57ce6fdc27c68fc4ecbbfc6c27b8beeee2eae0284264d",
+          "animation_count": 6,
+          "typed_witness_count": 7,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a102.tae",
+          "entry_id": 5000102,
+          "sha256": "f99d41c8a9e789757c1f9c102023c6f24b86b72eaceb93b89eff5d23161b830a",
+          "animation_count": 36,
+          "typed_witness_count": 32,
+          "direct_type96_100_118_effect_ids": [
+            6302,
+            6303
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a103.tae",
+          "entry_id": 5000103,
+          "sha256": "2a6625022a9e23e0d2b739af756d03287e51db7d3173a1a35c33fb04ee009477",
+          "animation_count": 61,
+          "typed_witness_count": 86,
+          "direct_type96_100_118_effect_ids": [
+            251,
+            257,
+            7100,
+            7500,
+            1030000,
+            1030002,
+            1040100,
+            1040101,
+            1040102,
+            1040103,
+            1040104,
+            1040105,
+            1040106,
+            1040107
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a104.tae",
+          "entry_id": 5000104,
+          "sha256": "0e2e22b117258e200ea952ec0db0270e74f15b83c0a56ddd6ac7fd3bb0c906a2",
+          "animation_count": 65,
+          "typed_witness_count": 62,
+          "direct_type96_100_118_effect_ids": [
+            253,
+            6002,
+            7105,
+            7501,
+            1030000,
+            1030002,
+            1040100,
+            1040102,
+            1040103,
+            1040104,
+            1040106,
+            1040107
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a105.tae",
+          "entry_id": 5000105,
+          "sha256": "1a03d9b2acf07d8dfeaab1d5f669cb18c631855d9389ff036432936ee1e43d60",
+          "animation_count": 71,
+          "typed_witness_count": 72,
+          "direct_type96_100_118_effect_ids": [
+            253,
+            7101,
+            7500,
+            1030000,
+            1030002,
+            1032002,
+            1040100,
+            1040101,
+            1040103,
+            1040105,
+            1040106,
+            1040107,
+            1040200,
+            1040207
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a106.tae",
+          "entry_id": 5000106,
+          "sha256": "ec2f69a6576fbdad004f96e0a2ef0b503548714902cf35293abc5ec09fb3132b",
+          "animation_count": 63,
+          "typed_witness_count": 97,
+          "direct_type96_100_118_effect_ids": [
+            262,
+            263,
+            7103,
+            7500,
+            1030000,
+            1030012,
+            1032002,
+            1040000,
+            1040001,
+            1040002,
+            1040003,
+            1040004,
+            1040005,
+            1040006,
+            1040007,
+            1040008
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a107.tae",
+          "entry_id": 5000107,
+          "sha256": "61981f4b7434ec155aa863e717ababffa1012688b877b7af3dac209eef1ffb9a",
+          "animation_count": 24,
+          "typed_witness_count": 8,
+          "direct_type96_100_118_effect_ids": [
+            1040000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a108.tae",
+          "entry_id": 5000108,
+          "sha256": "0bc02a101821821561dcf3e79a2cc19aa1e5044d7b06b08c627f84fa8a19b885",
+          "animation_count": 90,
+          "typed_witness_count": 90,
+          "direct_type96_100_118_effect_ids": [
+            7500,
+            1030000,
+            1030012,
+            1030021,
+            1040000,
+            1040001,
+            1040003,
+            1040004,
+            1040005,
+            1040006,
+            1040007
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a109.tae",
+          "entry_id": 5000109,
+          "sha256": "acf42d64b1a4824890116ec8101185b84c1aaf1fdb7b5a374ee540c3ab3b783e",
+          "animation_count": 29,
+          "typed_witness_count": 36,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            7106,
+            7500,
+            1030000,
+            1030002,
+            1040100,
+            1040103,
+            1040104,
+            1040106,
+            1040107
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a110.tae",
+          "entry_id": 5000110,
+          "sha256": "b96571835b33772a7f1ac3f0461528c5854c47dc7b12a45bf7b417e6c4ab6def",
+          "animation_count": 61,
+          "typed_witness_count": 58,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            7104,
+            7113,
+            7502,
+            252011,
+            253010,
+            1030000,
+            1032002,
+            1040200,
+            1040203,
+            1040207
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a112.tae",
+          "entry_id": 5000112,
+          "sha256": "b8ec965bdce70bacbd159060c4087e4bf122e95233e42111657ae022912c5f2a",
+          "animation_count": 62,
+          "typed_witness_count": 90,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            7100,
+            7500,
+            7501,
+            1030000,
+            1030002,
+            1030012,
+            1040101,
+            1040102,
+            1040103,
+            1040104,
+            1040105,
+            1040106,
+            1040107
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a113.tae",
+          "entry_id": 5000113,
+          "sha256": "b3a7c7ab8516aad134cb9e85691e9b9a0c78929dc2d3623c43db13f257f44de1",
+          "animation_count": 59,
+          "typed_witness_count": 124,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            253,
+            258,
+            259,
+            7102,
+            7501,
+            1030000,
+            1030002,
+            1040000,
+            1040002,
+            1040003,
+            1040004,
+            1040005,
+            1040006,
+            1040007,
+            1040008
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a114.tae",
+          "entry_id": 5000114,
+          "sha256": "c745964e4e5c29098395d7d982b912af6021af3a756010682d75a4efa1832dbe",
+          "animation_count": 65,
+          "typed_witness_count": 120,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            279,
+            280,
+            7107,
+            7108,
+            7111,
+            7500,
+            7501,
+            1030000,
+            1030002,
+            1040100,
+            1040101,
+            1040102,
+            1040103,
+            1040104,
+            1040105,
+            1040106,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a116.tae",
+          "entry_id": 5000116,
+          "sha256": "ab4146d59c3ec26c74939ce52ec1d3b790214ce660199ae5c016cec34403c5d1",
+          "animation_count": 57,
+          "typed_witness_count": 73,
+          "direct_type96_100_118_effect_ids": [
+            60,
+            251,
+            253,
+            7501,
+            7503,
+            252020,
+            252021,
+            252022,
+            1030000,
+            1030002,
+            1032003,
+            1040000,
+            1040001,
+            1040003,
+            1040004,
+            1040005,
+            1040006,
+            1040007,
+            1040008
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a117.tae",
+          "entry_id": 5000117,
+          "sha256": "751ff25ead2aa81c150790e2109dcebfd2bfdb098032707e6f27f965514cfcac",
+          "animation_count": 36,
+          "typed_witness_count": 32,
+          "direct_type96_100_118_effect_ids": [
+            6102,
+            6103
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a118.tae",
+          "entry_id": 5000118,
+          "sha256": "dc8b8bc950d5a9c30d046909b87b0963a24d3767ace2285db861baed30ce9fb6",
+          "animation_count": 36,
+          "typed_witness_count": 112,
+          "direct_type96_100_118_effect_ids": [
+            6202,
+            6203,
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a120.tae",
+          "entry_id": 5000120,
+          "sha256": "991e1a0c3f8361d09211d13545b0e564412c68ee8ddc00d18ae9bca40dec6dad",
+          "animation_count": 69,
+          "typed_witness_count": 54,
+          "direct_type96_100_118_effect_ids": [
+            252,
+            7101,
+            7501,
+            1032002,
+            1040200,
+            1040203,
+            1040204,
+            1040207,
+            1040208
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a121.tae",
+          "entry_id": 5000121,
+          "sha256": "717c9b7f6700f04ac66a51c6a4adf2ec4c914e75a423c0de9bff3bcd126769d6",
+          "animation_count": 62,
+          "typed_witness_count": 87,
+          "direct_type96_100_118_effect_ids": [
+            60,
+            250,
+            253,
+            264,
+            265,
+            7100,
+            7501,
+            1030002,
+            1040100,
+            1040101,
+            1040102,
+            1040103,
+            1040104,
+            1040105,
+            1040106,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a122.tae",
+          "entry_id": 5000122,
+          "sha256": "83ecff62da39abdd28cbb875d1da066dea6ed7e3ba5c1c140c25a9f96b015b13",
+          "animation_count": 58,
+          "typed_witness_count": 33,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            7501,
+            1030000,
+            1030002,
+            1032002,
+            1040100,
+            1040102,
+            1040103,
+            1040105,
+            1040107
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a123.tae",
+          "entry_id": 5000123,
+          "sha256": "f813e242a8c277de3ded04366783700e16864f74e6b8fa15639536d9b2bccd3e",
+          "animation_count": 20,
+          "typed_witness_count": 20,
+          "direct_type96_100_118_effect_ids": [
+            6502,
+            6503,
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a124.tae",
+          "entry_id": 5000124,
+          "sha256": "f679280ae72e8e729fdabc6fd4c698fe648f96f2bab06f63824bd4cf25d2c97f",
+          "animation_count": 58,
+          "typed_witness_count": 62,
+          "direct_type96_100_118_effect_ids": [
+            253,
+            6001,
+            7105,
+            7501,
+            1030000,
+            1030002,
+            1040100,
+            1040102,
+            1040103,
+            1040105,
+            1040106,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a127.tae",
+          "entry_id": 5000127,
+          "sha256": "ab7801ff1cf46bea7a892a843c9cf611cb6c7655ac4f1f2e6c2c912fed2cd227",
+          "animation_count": 52,
+          "typed_witness_count": 69,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            7109,
+            7501,
+            1030000,
+            1030011,
+            1030012,
+            1040100,
+            1040102,
+            1040103,
+            1040105,
+            1040106,
+            1040107
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a128.tae",
+          "entry_id": 5000128,
+          "sha256": "a2250e4cdf3b75ba27f1b1c2d253060e2c73623d0b4e842307a5561595afed9b",
+          "animation_count": 36,
+          "typed_witness_count": 36,
+          "direct_type96_100_118_effect_ids": [
+            6102,
+            6103,
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a129.tae",
+          "entry_id": 5000129,
+          "sha256": "51e49387e033fa20cd0090821557b541893e6adf302489c22efe90555e363bf9",
+          "animation_count": 36,
+          "typed_witness_count": 32,
+          "direct_type96_100_118_effect_ids": [
+            6102,
+            6103
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a130.tae",
+          "entry_id": 5000130,
+          "sha256": "484db959cb19d5d940ae80796b13fb5aa699ac8d1399984b03d67a80153b102d",
+          "animation_count": 36,
+          "typed_witness_count": 32,
+          "direct_type96_100_118_effect_ids": [
+            6302,
+            6303
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a131.tae",
+          "entry_id": 5000131,
+          "sha256": "465da5496728a86972517d5d74717f6bac4e38803347afa04a9919633d1da50c",
+          "animation_count": 1,
+          "typed_witness_count": 2,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            1040105
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a132.tae",
+          "entry_id": 5000132,
+          "sha256": "e4c0eb2d28d9d1b099078bf507435edb096bb8b90dcdc7fa8793eceb95095e74",
+          "animation_count": 20,
+          "typed_witness_count": 12,
+          "direct_type96_100_118_effect_ids": [
+            6402,
+            6403
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a140.tae",
+          "entry_id": 5000140,
+          "sha256": "073522502097038fb4fefd2dd85fa90ffb1651658ccffc17fe327e69f5735775",
+          "animation_count": 56,
+          "typed_witness_count": 86,
+          "direct_type96_100_118_effect_ids": [
+            251,
+            271,
+            7100,
+            7500,
+            1030000,
+            1032002,
+            1040100,
+            1040102,
+            1040103,
+            1040106,
+            1040107,
+            1040108,
+            1040202,
+            1040203,
+            1040206,
+            1040207,
+            1040208
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a141.tae",
+          "entry_id": 5000141,
+          "sha256": "9cd550fd30c5054024eaa68f204dfbb5fd75a7644add6f86afc975e3831fb5d4",
+          "animation_count": 55,
+          "typed_witness_count": 186,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            274,
+            7126,
+            7500,
+            250110,
+            250111,
+            252110,
+            1030000,
+            1032002,
+            1040100,
+            1040103,
+            1040104,
+            1040106,
+            1040107,
+            1040108,
+            1040200,
+            1040202,
+            1040203,
+            1040207
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a142.tae",
+          "entry_id": 5000142,
+          "sha256": "0162c0268f76764512ae31594fdf379c562ea99905f427e071265a704eab7949",
+          "animation_count": 57,
+          "typed_witness_count": 75,
+          "direct_type96_100_118_effect_ids": [
+            273,
+            7101,
+            7501,
+            250050,
+            1030000,
+            1032002,
+            1040200,
+            1040201,
+            1040203,
+            1040204,
+            1040206,
+            1040207
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a143.tae",
+          "entry_id": 5000143,
+          "sha256": "7db7299903e86276c8e22a7709682f71e7c6121290ea20782d4d6611e09a64e8",
+          "animation_count": 69,
+          "typed_witness_count": 117,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            266,
+            7117,
+            7118,
+            7500,
+            7503,
+            250030,
+            252033,
+            253033,
+            1030000,
+            1030002,
+            1032002,
+            1040100,
+            1040101,
+            1040103,
+            1040104,
+            1040106,
+            1040107,
+            1040108,
+            1040200,
+            1040202,
+            1040203,
+            1040205,
+            1040206,
+            1040207,
+            1040208
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a144.tae",
+          "entry_id": 5000144,
+          "sha256": "152a69c538853db9b5bc92f8be5fa165de185313d86068fd4fbba5944f99746f",
+          "animation_count": 59,
+          "typed_witness_count": 106,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            7114,
+            7500,
+            1030000,
+            1030002,
+            1040000,
+            1040002,
+            1040003,
+            1040007,
+            1040100,
+            1040101,
+            1040102,
+            1040103,
+            1040104,
+            1040106,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a145.tae",
+          "entry_id": 5000145,
+          "sha256": "e12eb6c974f1d0ed60351df953ebfbc4a293e4b0b3771b14f2550396268a9cd9",
+          "animation_count": 52,
+          "typed_witness_count": 115,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            267,
+            7115,
+            7131,
+            7500,
+            7503,
+            250041,
+            250042,
+            252040,
+            252041,
+            252042,
+            252043,
+            1030000,
+            1030002,
+            1032002,
+            1040100,
+            1040101,
+            1040103,
+            1040107,
+            1040108,
+            1040200,
+            100000001
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a146.tae",
+          "entry_id": 5000146,
+          "sha256": "68e11d851d87d47e51191f06d5a6513a762b3fe0bf5dea8b9adbe25a6995161e",
+          "animation_count": 58,
+          "typed_witness_count": 83,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            252,
+            7119,
+            7122,
+            7123,
+            7124,
+            7500,
+            7503,
+            250061,
+            252060,
+            252062,
+            1030000,
+            1030002,
+            1040100,
+            1040103,
+            1040104,
+            1040105,
+            1040106,
+            1040107
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a147.tae",
+          "entry_id": 5000147,
+          "sha256": "a8cc9c780a6f3b8bf2352052a4546bd9627e9ddd1d3a901c2886cd1ade086093",
+          "animation_count": 58,
+          "typed_witness_count": 93,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            251,
+            254,
+            7100,
+            7500,
+            250042,
+            1030000,
+            1030002,
+            1040100,
+            1040101,
+            1040102,
+            1040103,
+            1040104,
+            1040105,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a148.tae",
+          "entry_id": 5000148,
+          "sha256": "eae2761790d354cf3f86117fe8aad0ed3a2b50ce8f84bb49349388e40bbfb7da",
+          "animation_count": 59,
+          "typed_witness_count": 118,
+          "direct_type96_100_118_effect_ids": [
+            250,
+            269,
+            7100,
+            7125,
+            7500,
+            250042,
+            250070,
+            252070,
+            252071,
+            253070,
+            1030000,
+            1030002,
+            1032002,
+            1040100,
+            1040102,
+            1040103,
+            1040104,
+            1040106,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a149.tae",
+          "entry_id": 5000149,
+          "sha256": "1bbe59539d0344189986ee0d0ca3038740b13e7a7e686983684af82e3fd8e018",
+          "animation_count": 47,
+          "typed_witness_count": 50,
+          "direct_type96_100_118_effect_ids": [
+            256,
+            272,
+            7100,
+            7500,
+            1030000,
+            1030002,
+            1040100,
+            1040101,
+            1040102,
+            1040103,
+            1040104,
+            1040106
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a150.tae",
+          "entry_id": 5000150,
+          "sha256": "4061ce8aa8f07b0648ef97e68c5749fc5f6f5ada1aa8c43ca9c2ed9979b8e47f",
+          "animation_count": 20,
+          "typed_witness_count": 12,
+          "direct_type96_100_118_effect_ids": [
+            6602,
+            6603,
+            6604
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a151.tae",
+          "entry_id": 5000151,
+          "sha256": "e63e703f54da079e16eb2bdb4f438edeccaf9156d75cd9faa7b0d87e58285a3a",
+          "animation_count": 28,
+          "typed_witness_count": 32,
+          "direct_type96_100_118_effect_ids": [
+            270,
+            1040000,
+            1040001,
+            1040002
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a152.tae",
+          "entry_id": 5000152,
+          "sha256": "1fb51160318746e9cfcea3030217dd32cad27daf029cc6319d2001eaab83ce63",
+          "animation_count": 36,
+          "typed_witness_count": 104,
+          "direct_type96_100_118_effect_ids": [
+            6702,
+            6703,
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a153.tae",
+          "entry_id": 5000153,
+          "sha256": "087d033554a9e9ce68ef889cf05f81796e1bac0d62b8d44cf9bf77556d9ad8dc",
+          "animation_count": 36,
+          "typed_witness_count": 32,
+          "direct_type96_100_118_effect_ids": [
+            6802,
+            6803
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a155.tae",
+          "entry_id": 5000155,
+          "sha256": "88dc450339ca1fcb69b537405d934c21e8a5b1599997741fae0705f441010f2d",
+          "animation_count": 58,
+          "typed_witness_count": 114,
+          "direct_type96_100_118_effect_ids": [
+            275,
+            276,
+            7103,
+            7500,
+            250042,
+            250082,
+            252080,
+            1030000,
+            1030002,
+            1032002,
+            1040100,
+            1040102,
+            1040103,
+            1040104,
+            1040105,
+            1040106,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a156.tae",
+          "entry_id": 5000156,
+          "sha256": "c18656147e7e13fbdc5e86be9e6e545d57ae42c57729f01b750fe27ffd499728",
+          "animation_count": 54,
+          "typed_witness_count": 84,
+          "direct_type96_100_118_effect_ids": [
+            277,
+            278,
+            7127,
+            7128,
+            7129,
+            7130,
+            7500,
+            250102,
+            250103,
+            252104,
+            1030000,
+            1030012,
+            1040100,
+            1040104,
+            1040105,
+            1040106,
+            1040107,
+            1040108
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a200.tae",
+          "entry_id": 5000200,
+          "sha256": "f6f5f3fe7674a2761292e28fdc0133e216261ea0bbefd596a4f00eba968dfdee",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a202.tae",
+          "entry_id": 5000202,
+          "sha256": "f7d6efa7094ff5f00d92585d032f0bdd9d0a0c558e2b8d1211d3ea2bb7f5a0ba",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a203.tae",
+          "entry_id": 5000203,
+          "sha256": "94efc29dab00de760623d3510a056a389f3cb0cd6275dfc95e5b85c8621afe22",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a204.tae",
+          "entry_id": 5000204,
+          "sha256": "206978882d6f0e34d70f6320cbb8663a4a4607931cf2db91ef951b4997a78286",
+          "animation_count": 12,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a205.tae",
+          "entry_id": 5000205,
+          "sha256": "8322cdc651f17aab13570a3d9cdf911f55fedaff3ba524f6b15ef82f9e619b7f",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a206.tae",
+          "entry_id": 5000206,
+          "sha256": "3425e18babe4634a79b9605fc29987b1ff8c83321b5ef7291fc7a3c718265243",
+          "animation_count": 12,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a221.tae",
+          "entry_id": 5000221,
+          "sha256": "92f18461781ea2ebde098115e9ef97134532c362bf860e20ae5799d602f42c69",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a222.tae",
+          "entry_id": 5000222,
+          "sha256": "05017f8277ad0c240149a9504b98b4edd74357e5fc9ba90431f2e027f13611e9",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a223.tae",
+          "entry_id": 5000223,
+          "sha256": "fbd20f240c1b84b10cb2af792201935d8cb6ddb079faf6b0ee2ad3c76c7385e2",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a225.tae",
+          "entry_id": 5000225,
+          "sha256": "cfed48857aa618ad8a95411a0fa58b3ffb494c5f24772f296c052b568b087cb6",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a226.tae",
+          "entry_id": 5000226,
+          "sha256": "dd1e1c5a52efa250ac5a7e557e7594c1d074f71d9ce03feb39cc8476f85b8924",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a227.tae",
+          "entry_id": 5000227,
+          "sha256": "017cd5422cd039917014df6103246b4803013823e56a179c67a5d60f328c772a",
+          "animation_count": 12,
+          "typed_witness_count": 9,
+          "direct_type96_100_118_effect_ids": [
+            1030000
+          ]
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a231.tae",
+          "entry_id": 5000231,
+          "sha256": "b301f76641a06b84ac25d750bfb425e1407fd8b90f3aaf194e0ebb443dc41218",
+          "animation_count": 12,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a232.tae",
+          "entry_id": 5000232,
+          "sha256": "d063f59c91b13dc4b388583f1b3b75a7267972c18b007a23081fed0097adc0cb",
+          "animation_count": 12,
+          "typed_witness_count": 0,
+          "direct_type96_100_118_effect_ids": []
+        },
+        {
+          "entry": "N:\\SPRJ\\data\\INTERROOT_ps4\\chr\\c0000\\tae\\a233.tae",
+          "entry_id": 5000233,
+          "sha256": "82bc6a02945b95256a35b882c0a88903fc9840bfa77002dd64feb5602f217de7",
+          "animation_count": 20,
+          "typed_witness_count": 20,
+          "direct_type96_100_118_effect_ids": [
+            1030000,
+            1030012
+          ]
+        }
+      ]
+    }
+  ]
+}

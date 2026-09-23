@@ -1,4 +1,5 @@
 import unittest
+import re
 from pathlib import Path
 from tools.bb_inputs import read_blob
 from tools.bb_enemizer.boss_canary import event_blocks
@@ -22,6 +23,13 @@ class FinalBossContractTests(unittest.TestCase):
   self.assertEqual(before[12101800],after[12101800]); self.assertEqual(before[12101802],after[12101802])
   self.assertIn('DisplayBossHealthBar(Enabled, 2100800, 0, 540000)',after[12104802]); self.assertIn('CharacterHasEventMessage(2100800, 500)',after[12104803])
   self.assertEqual(5,after[0].count('12104917'))
+  source_limbs = re.findall(r"(?m)^    \$InitializeEvent\((\d+), 12104860, (.+)\);$", before[0])
+  target_limbs = re.findall(r"(?m)^    \$InitializeEvent\((\d+), 12104917, (.+)\);$", after[0])
+  self.assertEqual(5, len(source_limbs)); self.assertEqual(source_limbs, target_limbs)
+  self.assertIn(('2', '7, 7, NPCPartType.Part3, 150, 482, 492, 8030'), source_limbs)
+  expected_bindings = [(str(binding.slot), ', '.join(binding.arguments)) for binding in MOON_PACKAGE.part_bindings]
+  self.assertEqual(source_limbs, expected_bindings)
+  self.assertEqual(MOON_PACKAGE.part_bindings, MOON_PACKAGE.attachments[0].initializers)
   self.assertIn('CreateNPCPart(2100800',after[12104917]); self.assertIn('CharacterHasEventMessage(2100800, 10)',after[12104918])
   self.assertEqual('$Event(12104807, Default, function() {\n    EndEvent();\n});',after[12104807])
 

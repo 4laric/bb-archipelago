@@ -256,7 +256,8 @@ internal static class BossEncounter
     }
 
     public static int Run(string planPath, string gamePath, string defsPath, string mapsPath, string scriptsPath,
-        string eventInputDirectory, string compiledEventDirectory, string outputPath, string? sfxPath = null)
+        string eventInputDirectory, string compiledEventDirectory, string outputPath, string? sfxPath = null,
+        string? charactersPath = null)
     {
         using var document = JsonDocument.Parse(File.ReadAllText(planPath));
         var root = document.RootElement;
@@ -279,6 +280,7 @@ internal static class BossEncounter
         BossActorTransplant.ValidatePlan(planPath, required: false);
         BossRegionTransplant.ValidatePlan(planPath, required: false);
         BossSfxTransplant.ValidatePlan(planPath, required: false);
+        var characterFfxRequirements = CharacterFfxRequirements.Validate(planPath, charactersPath);
         var ffxMerges = FfxBundleTransplant.Read(planPath);
         var emevdFfxRequirements = FfxBundleTransplant.ValidateEmevdInputs(
             planPath, eventInputDirectory, encounterList);
@@ -290,7 +292,8 @@ internal static class BossEncounter
         string output = Path.GetFullPath(outputPath), parent = Path.GetDirectoryName(output)!;
         Need(!Directory.Exists(output) && !File.Exists(output), "boss encounter output must not exist");
         foreach (string input in new[] {planPath, gamePath, defsPath, mapsPath, scriptsPath, eventInputDirectory, compiledEventDirectory}
-            .Concat(sfxPath is null ? Array.Empty<string>() : new[] {sfxPath})) {
+            .Concat(sfxPath is null ? Array.Empty<string>() : new[] {sfxPath})
+            .Concat(charactersPath is null ? Array.Empty<string>() : new[] {charactersPath})) {
             string directory = Directory.Exists(input) ? Path.GetFullPath(input) : Path.GetDirectoryName(Path.GetFullPath(input))!;
             string relative = Path.GetRelativePath(directory, output);
             Need(relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) || Path.IsPathRooted(relative),
@@ -359,6 +362,7 @@ internal static class BossEncounter
                     compiled_event_fingerprints = item.Encounter.CompiledEventFingerprints,
                 }), external_references = externalReferences, region_additions = regionAdditions, object_additions = objectAdditions,
                 sfx_additions = sfxAdditions, emevd_ffx_requirements = emevdFfxRequirements,
+                character_ffx_requirements = characterFfxRequirements,
                 ffx_merges = ffxAdditions, files,
                 warning = "Experimental encounter edits require live validation of entrance, combat, arena fit and AP completion.",
             }, Json));

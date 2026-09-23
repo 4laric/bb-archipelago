@@ -1,0 +1,150 @@
+{
+  "format": "bb-wet-nurse-donor-native-v1",
+  "scope": "All six base destinations; native construction only",
+  "runtime_validated": false,
+  "limits": [
+    "Full source effect bank bytes are preserved. Typed character roots and recursive/runtime effect closure remain unverified."
+  ],
+  "source_sha256": {
+    "tools/bb_enemizer/wet_nurse_donor.py": "bb2ee66d115e3aca61c4eb7c5d815075305b0f62ce5de1c92bbe2e10903ba076",
+    "tools/bb_enemizer/boss_contracts.py": "e16124bab72a400957de927eeff6451bd348a21780342682fcf103158f79554a",
+    "tools/bb_enemizer/encounter_recipes.py": "bd4004c96833a5d1af43a6a1cdab5dabeb4c7951da421a372ecb8706331e4a66",
+    "tools/build_boss_encounters.py": "8b8c7f509d0594484fdc7c970f271ef831f6827cd0aa72e643d2e2d136ac974f",
+    "writer": "15bac4e6dda0eb0433c29bcc2920f7dde87c08069b06e9e00ef2bc2e4ca40661"
+  },
+  "cases": [
+    {
+      "arena": "cleric-beast",
+      "donor": "mergos-wet-nurse",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 11,
+      "receipt_sha256": "dd168a2f249ca5b367f564607c676563f6488c8166acabea9ae118e0472798e2",
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m24.ffxbnd.dcx",
+        "source_entry_count": 281,
+        "retained_entry_count": 382,
+        "output_sha256": "8b552398c24d5d862463c0809a8bdb41e5b91b8ddef8bafbeaf75cb9e58d1ffa",
+        "imported_entry_count": 274,
+        "effect_655108_import": {
+          "name": "effect/f000655108.fxr",
+          "id": 200131,
+          "sha256": "a060c1db1b42d2a3b3319324f59b9e680a4368e18ea7223dd71bc704adb00e7d",
+          "size": 10512
+        }
+      }
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "mergos-wet-nurse",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "fa62379af6b100d4859d5ba9db24414e47f7ec85cf3cf8a064e4edd07875b7e0",
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+        "source_entry_count": 281,
+        "retained_entry_count": 290,
+        "output_sha256": "065d55367d46f9a4f31db46fae7f8bf74ecbec9ad0e5119bbf93620e861a32f8",
+        "imported_entry_count": 279,
+        "effect_655108_import": {
+          "name": "effect/f000655108.fxr",
+          "id": 200129,
+          "sha256": "a060c1db1b42d2a3b3319324f59b9e680a4368e18ea7223dd71bc704adb00e7d",
+          "size": 10512
+        }
+      }
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "mergos-wet-nurse",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "5bb6f2bbec134ce0c11c19000a65cdee7dce1ead5cc05b1027ffec4221a861a5",
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+        "source_entry_count": 281,
+        "retained_entry_count": 290,
+        "output_sha256": "065d55367d46f9a4f31db46fae7f8bf74ecbec9ad0e5119bbf93620e861a32f8",
+        "imported_entry_count": 279,
+        "effect_655108_import": {
+          "name": "effect/f000655108.fxr",
+          "id": 200129,
+          "sha256": "a060c1db1b42d2a3b3319324f59b9e680a4368e18ea7223dd71bc704adb00e7d",
+          "size": 10512
+        }
+      }
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "mergos-wet-nurse",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "c99c7ddb8fc4b636c405ba3e4b8d2cfff5052dd8cdbe6e55255a42d56f6a1d47",
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m24.ffxbnd.dcx",
+        "source_entry_count": 281,
+        "retained_entry_count": 382,
+        "output_sha256": "8b552398c24d5d862463c0809a8bdb41e5b91b8ddef8bafbeaf75cb9e58d1ffa",
+        "imported_entry_count": 274,
+        "effect_655108_import": {
+          "name": "effect/f000655108.fxr",
+          "id": 200131,
+          "sha256": "a060c1db1b42d2a3b3319324f59b9e680a4368e18ea7223dd71bc704adb00e7d",
+          "size": 10512
+        }
+      }
+    },
+    {
+      "arena": "amygdala",
+      "donor": "mergos-wet-nurse",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "a3d82e07cd80746d9397ba65078a99ff04d07d9836e9ed75542f25da6aceae3b",
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m33.ffxbnd.dcx",
+        "source_entry_count": 281,
+        "retained_entry_count": 290,
+        "output_sha256": "e2f06ae77265540f4749045cc6126371fa6570fb9dcd8a9d87bc78fbd6aa207b",
+        "imported_entry_count": 237,
+        "effect_655108_import": {
+          "name": "effect/f000655108.fxr",
+          "id": 300100,
+          "sha256": "a060c1db1b42d2a3b3319324f59b9e680a4368e18ea7223dd71bc704adb00e7d",
+          "size": 10512
+        }
+      }
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "mergos-wet-nurse",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "fa2c5d143ddba18cbd188d4e8cc425b4fe7e73769e9864c5b9fabafcc6069600",
+      "ffx_bank_union": {
+        "source_file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+        "destination_file": "frpg_sfxbnd_m24.ffxbnd.dcx",
+        "source_entry_count": 281,
+        "retained_entry_count": 382,
+        "output_sha256": "8b552398c24d5d862463c0809a8bdb41e5b91b8ddef8bafbeaf75cb9e58d1ffa",
+        "imported_entry_count": 274,
+        "effect_655108_import": {
+          "name": "effect/f000655108.fxr",
+          "id": 200131,
+          "sha256": "a060c1db1b42d2a3b3319324f59b9e680a4368e18ea7223dd71bc704adb00e7d",
+          "size": 10512
+        }
+      }
+    }
+  ],
+  "integration_failure_fixed": "Initial attempts failed the exact EMEVD-effect coverage check because required_effect_ids also listed the separately observed TAE root655108. The declared EMEVD requirement is now exactly655105; complete source-bank union is unchanged and each successful receipt above proves655108 was imported with its original hash."
+}

@@ -1,0 +1,1016 @@
+{
+  "status": "original-file-availability-only-not-load-order-proof",
+  "bank_count": 37,
+  "characters": {
+    "c4510": [
+      {
+        "effect_id": 645100,
+        "witness_types": [
+          100
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645100.fxr",
+              "id": 139,
+              "size": 26856,
+              "sha256": "e2863293071ca3b1de8979b70a4b66ab35dda7bb5570194d5c0e08c6fbc2937e"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645101,
+        "witness_types": [
+          100
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645101.fxr",
+              "id": 140,
+              "size": 26856,
+              "sha256": "264d7e622f98ee195429e21481f7bc4ee2772256c0b28be075759b556da4723d"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645102,
+        "witness_types": [
+          100
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645102.fxr",
+              "id": 141,
+              "size": 54056,
+              "sha256": "cba59e72e0c467d449d34f16229b0c182a0f43def11aca09247c0837d75c738c"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645104,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645104.fxr",
+              "id": 142,
+              "size": 50936,
+              "sha256": "5c2df579025424c76f0966d08432983c487286e5ab76ce38f75631d0d0a8c47a"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645105,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645105.fxr",
+              "id": 143,
+              "size": 36392,
+              "sha256": "ded04eb520a73c51f811e84ecfd3d0d1f1f73a822e97653fe82cd9bf74decf9f"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645108,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645108.fxr",
+              "id": 146,
+              "size": 24584,
+              "sha256": "162de32700dd8026ce2f0089997ee3d78f67416825dd5629e873e64bead95864"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645111,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645111.fxr",
+              "id": 147,
+              "size": 94104,
+              "sha256": "8f996c2caa1005cd976fef37a09a987e5f9e30f0586cf84d26e3c1a63184a1bb"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645112,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645112.fxr",
+              "id": 148,
+              "size": 87552,
+              "sha256": "52583808835720789c868a708eb7514d397862c96cae6de3bbe5e8a07e3a3831"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645115,
+        "witness_types": [
+          118
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645115.fxr",
+              "id": 150,
+              "size": 43072,
+              "sha256": "d4475afce14005dd71e6558f886418ed9cb3e855fdf202422d2d225cf458d036"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645116,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645116.fxr",
+              "id": 151,
+              "size": 37192,
+              "sha256": "853493597538d8835605ed1e0bc3042fe66ff7dd8193059c19be98734c393a5a"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645117,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645117.fxr",
+              "id": 152,
+              "size": 37192,
+              "sha256": "ccb05fbcb8c50a9c82d3baec4a84cab35e9631115778a09feafcd2f097db82f2"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645118,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645118.fxr",
+              "id": 153,
+              "size": 46504,
+              "sha256": "5d0061334673f8e2e465adcfecc5334a177e373dd54b0f6940bdddabbf019d85"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645119,
+        "witness_types": [
+          118
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645119.fxr",
+              "id": 154,
+              "size": 43072,
+              "sha256": "d4d6d69607d604cf6b3dcc586170b53d79e572389d8018cf2a9c754440cf5fd1"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645120,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645120.fxr",
+              "id": 155,
+              "size": 54200,
+              "sha256": "7b34f8cb15eebb469fca15017828c19725d8aef4e1735de63e49a52a17c889e9"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645127,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645127.fxr",
+              "id": 159,
+              "size": 105232,
+              "sha256": "f759f1628abac0bd29090a1900fd2c09f1f7a3bafd559c5d2976a2badc3d2d81"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645130,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645130.fxr",
+              "id": 161,
+              "size": 129008,
+              "sha256": "795bce447640d9ac4215d9f99f4f5defbc8c646888fa2287b2a5f2a5874359fe"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645141,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645141.fxr",
+              "id": 165,
+              "size": 14480,
+              "sha256": "7d759034770e89a5dd67f390d6a628cdebdbe964c0f5a4ed39095f4f4f0af57b"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645142,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645142.fxr",
+              "id": 166,
+              "size": 6752,
+              "sha256": "bffcee53560504ddf838776a8f6ee67a86340e0b233a54e8a53bf723243550a7"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645143,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645143.fxr",
+              "id": 167,
+              "size": 14480,
+              "sha256": "56a5e82aa1e23257771ea9a79e7bee20ecd4462d8720d3c9d9bf1f5df5eddc05"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645144,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645144.fxr",
+              "id": 168,
+              "size": 102552,
+              "sha256": "e237bb3c5c7145723aacb5fd73c78ffe4202aa05f905c155ab35582cabe040e0"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645145,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645145.fxr",
+              "id": 169,
+              "size": 14480,
+              "sha256": "9df87c854a9296cd51a625aa0bb917af43e961b62405abd2e9cdef2d868e9daa"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645146,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645146.fxr",
+              "id": 170,
+              "size": 14480,
+              "sha256": "84fbbb3fd104e228edfc982256329536119872ee7e41811c65bf167bdf3ccc77"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645150,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645150.fxr",
+              "id": 171,
+              "size": 24888,
+              "sha256": "23c8c7685df17a4a6bf5f72ead097955ee7c00f072d5c0dcebfb22f44c699175"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645160,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645160.fxr",
+              "id": 174,
+              "size": 52432,
+              "sha256": "294edaab06374bff11868b6252c8d036ce4a4a9009165bafa7093e692dfefcf7"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645161,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645161.fxr",
+              "id": 175,
+              "size": 52432,
+              "sha256": "e4f521c563d1492a9d444a889f62c459b6876e06a376c3a5b7aaa768acf1ec30"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645162,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645162.fxr",
+              "id": 176,
+              "size": 16352,
+              "sha256": "2835b5a15b62eb9764e109d28069a7ecbc0389aa9c70925081a867619c23a787"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645179,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645179.fxr",
+              "id": 177,
+              "size": 35432,
+              "sha256": "0003adf608583bf33936414c037b5051c9f88b2ed568596927d40582f2f5f128"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645180,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m34.ffxbnd.dcx",
+            "bank_sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645180.fxr",
+              "id": 178,
+              "size": 35448,
+              "sha256": "02cd7ebf88e1e00d7fe79517a4ee27795e0f9a15732b1eb5268d3c32a6affed6"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 650090,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650090.fxr",
+              "id": 634,
+              "size": 136072,
+              "sha256": "c324797fdcf57eb1fc2be4e6c22129e4047a57b3cb8714f3dd5e128e1785f180"
+            }
+          },
+          {
+            "bank": "frpg_sfxbnd_patcheffects.ffxbnd.dcx",
+            "bank_sha256": "3dbe37f2d2c07b8e52754e5c429aef4a8b88ec010806b83967f62e4c10b42e48",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650090.fxr",
+              "id": 489,
+              "size": 136072,
+              "sha256": "c324797fdcf57eb1fc2be4e6c22129e4047a57b3cb8714f3dd5e128e1785f180"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 650091,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650091.fxr",
+              "id": 635,
+              "size": 35824,
+              "sha256": "e216f5139309a230ec1fb6dbdaa0c995751241cfc7494721d9364409aba0e248"
+            }
+          },
+          {
+            "bank": "frpg_sfxbnd_patcheffects.ffxbnd.dcx",
+            "bank_sha256": "3dbe37f2d2c07b8e52754e5c429aef4a8b88ec010806b83967f62e4c10b42e48",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650091.fxr",
+              "id": 490,
+              "size": 35824,
+              "sha256": "e216f5139309a230ec1fb6dbdaa0c995751241cfc7494721d9364409aba0e248"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1031000,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001031000.fxr",
+              "id": 881,
+              "size": 10824,
+              "sha256": "73ad1f207387be9497713f4703078124fb22e235ad11d11d9d5b392ce2731c16"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1031002,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001031002.fxr",
+              "id": 883,
+              "size": 11272,
+              "sha256": "6f70eed3dee59d0e10df9a4db1fbe87f6dc577de2b80e8680718f507d35dcc14"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1040300,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001040300.fxr",
+              "id": 928,
+              "size": 10512,
+              "sha256": "3b3d8b6c8517dbabb1ad51f2d21866220901cb5cd05fb28ad73cf78ed823d345"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1040301,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001040301.fxr",
+              "id": 929,
+              "size": 8136,
+              "sha256": "5518f1c1581d7dc1059f930bb14a023ba2ab5af26b3ce0ec8f53da12cc510401"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1040302,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001040302.fxr",
+              "id": 930,
+              "size": 8136,
+              "sha256": "9959df77c47a8a1b22ec332992ae315f15e199961b0117748f057334663cd052"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1040303,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001040303.fxr",
+              "id": 931,
+              "size": 8136,
+              "sha256": "ea33970a4ff6530fb42bdf8cbd286817282dd8f3a817fc42a4fae965492bf9dc"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1040304,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001040304.fxr",
+              "id": 932,
+              "size": 8136,
+              "sha256": "a9e660644180b6249a847aa322b8c9cd9c1b925576784d58b927cf11dd4b2953"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1040307,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001040307.fxr",
+              "id": 935,
+              "size": 8136,
+              "sha256": "acceebfc49eeae1dc1c112cb00126cd53ca372fe623677d0828b78d3552a8689"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 1040308,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f001040308.fxr",
+              "id": 936,
+              "size": 8136,
+              "sha256": "b07a1767f01b1872d349cf32cfca5b1cde4bf99259b019a0af651aecd577e44d"
+            }
+          }
+        ]
+      }
+    ],
+    "c4540": [
+      {
+        "effect_id": 645400,
+        "witness_types": [
+          100
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645400.fxr",
+              "id": 73,
+              "size": 76520,
+              "sha256": "6988ee18c06bfbf380f1663927ff3e67b2ba0903d64df00652385c7ff63dbe19"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645404,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645404.fxr",
+              "id": 75,
+              "size": 51160,
+              "sha256": "38285c0c880b4262a77b749327be85229f7fd5a85af1731e186a6907c6eaf924"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645405,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645405.fxr",
+              "id": 76,
+              "size": 17088,
+              "sha256": "c6f04e9f955cf299b7229ce90a71bc3ee1cf0a06c4aae28986cfcd30db123bea"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645410,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645410.fxr",
+              "id": 81,
+              "size": 24360,
+              "sha256": "87d17ab84a8b500c6a9ef2773cedd88fda0d4895bb41e1f07aa6e0054c2a6104"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645420,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645420.fxr",
+              "id": 83,
+              "size": 43488,
+              "sha256": "1b7de4fe5fcd0cf1d940e3e794b1556df0240e7d3cac310240d01cbc70561f47"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645430,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645430.fxr",
+              "id": 90,
+              "size": 113056,
+              "sha256": "2aa8b554e5a7fd1cc6fa9f7f317b077fd3ecfcdde7036769c4f5ac4341ff9242"
+            }
+          }
+        ]
+      }
+    ],
+    "c4541": [
+      {
+        "effect_id": 640800,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000640800.fxr",
+              "id": 72,
+              "size": 53920,
+              "sha256": "31df3f86a65a293245b6b7cfe7aea190e19b848958d2bfa4172a850455d8e466"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645401,
+        "witness_types": [
+          100
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645401.fxr",
+              "id": 74,
+              "size": 76520,
+              "sha256": "4b85a0ccf43914c49b124ff1d2d2931596668a4b2f2632ef6e3fffd2499ba224"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645404,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645404.fxr",
+              "id": 75,
+              "size": 51160,
+              "sha256": "38285c0c880b4262a77b749327be85229f7fd5a85af1731e186a6907c6eaf924"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645411,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645411.fxr",
+              "id": 82,
+              "size": 6752,
+              "sha256": "dab74a4489675aa12ff58bdc27e2c9b3dc18dab71172dd522af651c8db68f287"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 645420,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m36.ffxbnd.dcx",
+            "bank_sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000645420.fxr",
+              "id": 83,
+              "size": 43488,
+              "sha256": "1b7de4fe5fcd0cf1d940e3e794b1556df0240e7d3cac310240d01cbc70561f47"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 650008,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_m24.ffxbnd.dcx",
+            "bank_sha256": "56103cdfe6b3f9298a32fc515be67c6117f555ae69cb87a8cbbb8bcba2abac99",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650008.fxr",
+              "id": 77,
+              "size": 45680,
+              "sha256": "d5a320b0c020a021a01fba61ac1a049c302b030dbb3e47f4ecfb7a15b5ad3e95"
+            }
+          },
+          {
+            "bank": "frpg_sfxbnd_patcheffects.ffxbnd.dcx",
+            "bank_sha256": "3dbe37f2d2c07b8e52754e5c429aef4a8b88ec010806b83967f62e4c10b42e48",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650008.fxr",
+              "id": 484,
+              "size": 45680,
+              "sha256": "d5a320b0c020a021a01fba61ac1a049c302b030dbb3e47f4ecfb7a15b5ad3e95"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 650090,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650090.fxr",
+              "id": 634,
+              "size": 136072,
+              "sha256": "c324797fdcf57eb1fc2be4e6c22129e4047a57b3cb8714f3dd5e128e1785f180"
+            }
+          },
+          {
+            "bank": "frpg_sfxbnd_patcheffects.ffxbnd.dcx",
+            "bank_sha256": "3dbe37f2d2c07b8e52754e5c429aef4a8b88ec010806b83967f62e4c10b42e48",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650090.fxr",
+              "id": 489,
+              "size": 136072,
+              "sha256": "c324797fdcf57eb1fc2be4e6c22129e4047a57b3cb8714f3dd5e128e1785f180"
+            }
+          }
+        ]
+      },
+      {
+        "effect_id": 650091,
+        "witness_types": [
+          96
+        ],
+        "available": [
+          {
+            "bank": "frpg_sfxbnd_commoneffects.ffxbnd.dcx",
+            "bank_sha256": "d7a08853690cd47a1d843127a9de0028eb518d2e45efb26afee19ced1669919c",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650091.fxr",
+              "id": 635,
+              "size": 35824,
+              "sha256": "e216f5139309a230ec1fb6dbdaa0c995751241cfc7494721d9364409aba0e248"
+            }
+          },
+          {
+            "bank": "frpg_sfxbnd_patcheffects.ffxbnd.dcx",
+            "bank_sha256": "3dbe37f2d2c07b8e52754e5c429aef4a8b88ec010806b83967f62e4c10b42e48",
+            "entry": {
+              "name": "N:\\SPRJ\\data\\INTERROOT_ps4\\sfx\\effect\\f000650091.fxr",
+              "id": 490,
+              "size": 35824,
+              "sha256": "e216f5139309a230ec1fb6dbdaa0c995751241cfc7494721d9364409aba0e248"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

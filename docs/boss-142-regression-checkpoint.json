@@ -1,0 +1,18 @@
+{
+  "format": "bb-boss-regression-checkpoint-v1",
+  "source_commit": "a1c5e2baba162299d474a89129b290a4317cd746",
+  "tracked_worktree_clean_after_completion": true,
+  "command": ".\\build.ps1 -Test -Preflight",
+  "exit_code": 0,
+  "log_sha256": "c01260e567094856803d7ea209cdaf7e380545bab2820fd7bcf90bdfe511c17a",
+  "runs": [
+    {"tests": 1884, "skipped": 57, "seconds": 970.750, "result": "PASS"},
+    {"tests": 1884, "skipped": 57, "seconds": 989.448, "result": "PASS"}
+  ],
+  "preflight": "PASS: model/tests, generated tables, and shipping boundary",
+  "limits": [
+    "Scoped to the specified 142-route source commit.",
+    "Does not cover later expanded effect profiles, final-boss donors, or final-arena adapters.",
+    "Does not establish gameplay behavior or complete character-effect delivery."
+  ]
+}

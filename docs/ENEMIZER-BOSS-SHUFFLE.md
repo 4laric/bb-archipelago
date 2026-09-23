@@ -891,3 +891,193 @@ asset audit above records a separate known gap that these checks do not cover.
 
 Both full test passes completed with 1,852 tests and 57 optional skips
 (865.676s and 807.476s). Generated-data and shipping preflight passed.
+
+
+## Character effect evidence and asset conflicts
+
+The native encounter writer and Python builder accept an input-only
+`--characters` directory for plans declaring `boss_character_ffx_requirements`.
+Each requirement binds an exact source map/part/entity to its model, animation
+archive, embedded TAE hash, animation count and ordered type-96/100/118 effect
+witnesses. The verifier reads the original archives; it does not write a
+character overlay or assert complete combat-asset closure. Shared models can
+serve multiple source actors only when their archive evidence agrees.
+Composition retains these requirements and rejects conflicting declarations
+before calling the native writer.
+
+A real Orphan-to-Cleric native CLI smoke verifies all three source bindings
+and their 30/55/0 typed witnesses in the output receipt. The native harness
+passes 36 character checks including installed-original Orphan, Ludwig and
+shared-human archives. Ludwig has 265 ordered witnesses, including 30 type-118 blade
+effects. These add roots 645115 and 645119 to the earlier 37-root set. Both
+source Ludwig actors verify against the same pinned archive; changing a
+type-118 operand is rejected even when the archive hashes are updated.
+The separate event-effect validator now accepts a declared positive occurrence
+count and checks that exact count in source and final events, including every
+matched effect operand. This preserves Ludwig's sixteen original spawns of
+645114 instead of collapsing his visual sequence; omitted counts retain the
+previous single-occurrence behavior. Its 39 native FFX checks pass.
+
+The [original area-bank conflict survey](boss-area-bank-conflicts.json) records
+all 13 fixed-boss area bank hashes and the different-byte intersections. Thirteen
+unordered bank pairs contain 82 conflicting entries, all FXRs; no non-FXR
+resource conflicts occur in this pinned set. This supports retaining all
+source textures/models/animation resources while developing selective FXR
+delivery. It does not prove an FXR can safely be omitted or establish runtime
+bank precedence. Indexed effect and action-resource references still need
+resolution before the conflicting Ludwig and Orphan routes have complete
+asset delivery. Character proofs are not yet enabled by production donors.
+
+The [direct-root availability audit](boss-character-direct-root-availability.json)
+checks Ludwig and Orphan against all 37 original effect banks. Every one of
+Ludwig's 39 and Orphan's 12 decoded direct roots has an original bank entry.
+This locates input assets; it does not establish destination availability,
+recursive effect closure, or engine load order. The typed animation decoder
+is partial: the default profile covers only types 96, 100 and 118. An explicit
+expanded profile now covers 96, 99, 100, 108, 109, 112 and 118. Omitted profiles
+retain the legacy interpretation; arbitrary subsets and reordered profiles are
+rejected. Each TAE entry carries its profile into receipt and shared-archive
+comparison, so a proof cannot silently change its coverage during composition.
+
+The expanded native harness passes 86 character assertions, including an
+original corpus of 37 archives, 116 TAE entries and 44,641 ordered witnesses.
+A separate full native CLI build bound the original c0000 archive to Micolash's
+actual source actor (m26_00_00_00/c0000_0005/2600850): all 80 entries, 24,880
+witnesses and 248 direct roots matched the nested receipt exactly, and all 60
+output hashes and sizes verified. This is an archive census, not evidence of
+which animations Micolash selects. It does not deliver character FXRs or prove
+recursive effect closure, floor/material selection semantics or live combat.
+
+The [additional character archive census](boss-additional-character-archive-census.json)
+records seven more original archives: Gehrman, Moon Presence, Maria, Laurence,
+Rom, his spider model and the shared human model used by Micolash. The last
+archive contains 80 separate TAE entries. Its inventory does not identify
+which entries Micolash uses. The v2 character-proof format now supports an
+ordered `source_tae_entries` list per source actor/archive, and v1 normalizes
+to a one-entry proof. Receipts retain each entry ID/path/hash, decoded event
+types, `coverage_scope: partial-typed-witness`, and
+`fxr_delivery_status: not-validated`. A full native CLI smoke verifies all
+80 entries and 4,742 selected witnesses on the materialized Micolash source
+binding, with 60 output files verified. This is archive evidence only, not
+proof that Micolash executes every listed animation.
+
+## Ludwig destination integration in progress
+
+The reusable Ludwig destination is wired for five additional base donors;
+the existing Cleric and Laurence destination routes retain their dedicated
+implementations. That checkpoint's graph has 142 directed routes and 105
+reusable recipe bindings. Every graph edge can participate in a complete
+22-boss, one-of-each, no-self assignment. This is graph feasibility evidence,
+not native-build or gameplay validation, and the [six direct native builds](boss-ludwig-arena-native-matrix.json) now
+pass against original inputs, with eight receipt-verified files per build.
+The reusable module also passes all seven focused checks, including compilation
+of all six donor variants. [Five complete-roster composition builds](boss-ludwig-arena-full22-matrix.json)
+cover all five new destination routes, with 22 boss contracts, 15 event files,
+and 60–61 receipt-verified files per build. No gameplay or complete
+character-effect delivery is claimed. The other 320 directed
+pairings remain implementation work, not established incompatibilities.
+
+The frozen preceding 137-route worktree passed both full regression passes:
+1,876 tests and 57 optional skips each, in 963.692 and 972.727 seconds.
+Generated-data and shipping preflight also passed. Those results do not cover
+the newer Ludwig destination, multi-TAE proof, or Moon limb correction in this
+worktree; these changes have separate focused and native checks.
+
+The later frozen 142-route commit also [passed both full regression runs and
+preflight](boss-142-regression-checkpoint.json): 1,884 tests and 57 optional
+skips each, in 970.750 and 989.448 seconds. That checkpoint covers the Ludwig
+destination, multi-TAE proof and Moon limb correction. It does not cover the
+subsequent expanded typed profile or reusable final-boss donors and arenas.
+
+Review of the next reusable donors found and corrected Moon Presence's third
+limb break animation from 8010 to the original 8030. The dedicated Gehrman
+route now derives every limb initializer from the shared package and verifies
+each exact original initializer before emission. Its source-comparison tests
+and original-input native build pass.
+
+## Final-boss donors in progress
+
+Gehrman and Moon Presence now expose reusable combat packages at all six base
+arenas. Their source combat phases, Moon's five limb routines and player-effect
+controller, and Gehrman's physical event-target actor are transplanted with
+original-source pins. Destination progression and co-op entry remain owned by
+the arena. Gehrman's transplanted combat actor receives TalkID 0; the separate
+Hunter's Dream quest NPC is not imported.
+
+All [twelve direct native builds](boss-final-donor-native-matrix.json) pass
+against original inputs, with 8–10 receipt-verified files each. Eight focused
+tests include compilation of all twelve variants. Registry integration checks
+also exercise each donor/arena binding rather than only counting entries.
+Two isolated shared-map native probes place Gehrman and Moon Presence together
+at BSB/Paarl in both orders. Each combines both encounters into one event file,
+materializes the helper in both physical map states, and verifies nine output
+files. These probes explicitly override assignment selection to test shared-map
+composition; they are not full-roster seeds or evidence of planner feasibility.
+
+This brings the local adapter registry to 154 directed routes, but the twelve
+new routes cannot yet occur in a full22 one-of-each assignment. The Gehrman,
+Moon Presence and Micolash arenas still accept only those three donors, so
+moving one outside that group leaves a destination unfilled. Incoming reusable
+arena adapters are the missing implementation; this is not evidence that the
+outgoing pairings are incompatible. The prior 142 graph edges remain feasible.
+Character-effect delivery and live combat remain unverified for these donors.
+
+## Reusable final arenas in progress
+
+Gehrman and Moon Presence now accept all six base combat packages through
+source-pinned arena adapters. The Gehrman adapter retains the separate dialogue
+NPC, original entry trigger and warp, endings and progression; it replaces only
+the combat actor. Both arenas preserve first-entry and saved-fight readiness,
+client restoration and destination completion. Central replacement-entrance
+handling skips the boss cinematics while retaining the required warps.
+
+All [twelve direct original-input native builds](boss-final-arena-native-matrix.json)
+pass with eight receipt-verified output files each. Each arena has seven focused
+tests, including compilation of every base donor. Both adapters protect donors
+until their source-authored wake sequence permits damage. An earlier
+Moon/Ebrietas build hit a Windows staging-directory move error and passed a
+serial retry; after the protection correction all six Moon variants passed
+without retry. The evidence distinguishes these stages.
+
+These incoming routes resolve the preceding final-group assignment restriction:
+all 166 implemented directed routes now participate in complete 22-boss,
+one-of-each, no-self assignments. The remaining 296 routes are implementation
+gaps. [Thirteen complete-roster native builds](boss-final-arena-full22-matrix.json)
+cover all 24 new outgoing and incoming final-boss routes, each with 22 contracts,
+15 event files and 60–61 verified output files. After the Moon protection fix,
+all six affected seeds were rebuilt successfully. Fixture selection avoided
+the known Ludwig/m23 effect-bank collision without changing production planner
+policy. These builds do not prove complete character-effect delivery or
+gameplay behavior.
+
+## Micolash destination and Wet Nurse donor integration
+
+The reusable Micolash destination keeps replacement combat in the original
+initial encounter area, within the original fight and music volumes. Chase,
+mirror, cage and talk controllers remain inert without completing their event
+flags. The original terminal and post-boss progression remain unchanged; a
+bridge supplies the talk-owned death flag only after actual donor death.
+All [six base-donor native builds](boss-micolash-arena-native-matrix.json)
+pass with eight receipt-verified files each. Seven focused arena tests include
+compilation of all six variants. Runtime navigation and arena fit remain
+unobserved.
+
+The reusable Wet Nurse donor preserves its core, support apparition and damage
+proxy, six source warp regions, model-point object and nightmare combat
+controllers. The destination owns entry, camera, environmental audio and
+progression. All [six base-arena native builds](boss-wet-nurse-donor-native-matrix.json)
+pass with 9–11 verified files each. The writer retains the entire 281-entry
+source effect bank, including the original bytes of effect 655108. Its exact
+EMEVD dependency manifest covers effect 655105; character animation roots and
+recursive effect delivery remain separate unfinished work.
+
+The local construction graph has 177 directed routes, all feasible in complete
+one-of-each, no-self assignments. The other 285 routes remain implementation
+gaps. [Seven complete-roster native builds](boss-nightmare-adapters-full22-matrix.json)
+cover all twelve reusable bindings, with 22 contracts, 15 event files and
+60–62 verified outputs per build. One seed exposed conflicting leading readiness
+resets in the shared m34 constructor. After narrowly permitting independent
+literal OFF resets before initialization, that seed rebuilt successfully;
+all 19 composition tests pass, including rejection of mixed or late writes.
+The preceding 166-route commit passed its first full 1,906-test regression
+run (57 optional skips) and all CI checks; its second local pass remains active.

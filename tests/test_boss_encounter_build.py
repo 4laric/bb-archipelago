@@ -26,6 +26,12 @@ class EncounterBuildTests(unittest.TestCase):
         from tools.bb_enemizer.laurence_donor import SUPPORTED_LAURENCE_ARENAS
         from tools.bb_enemizer.logarius_donor import SUPPORTED_LOGARIUS_ARENAS
         from tools.bb_enemizer.orphan_donor import ARENAS as SUPPORTED_ORPHAN_ARENAS
+        from tools.bb_enemizer.ludwig_donor import ARENAS as SUPPORTED_LUDWIG_ARENAS
+        from tools.bb_enemizer.gascoigne_donor import SUPPORTED_GASCOIGNE_ARENAS
+        from tools.bb_enemizer.orphan_arena_contract import portable_orphan_donors
+        from tools.bb_enemizer.ludwig_arena_contract import portable_ludwig_donors
+        from tools.bb_enemizer.micolash_arena_contract import portable_micolash_donors
+        from tools.bb_enemizer.wet_nurse_donor import portable_wet_nurse_arenas
 
         self.assertEqual(7, len(SUPPORTED_LAURENCE_ARENAS))
         self.assertEqual(9, len(SUPPORTED_LOGARIUS_ARENAS))
@@ -38,7 +44,13 @@ class EncounterBuildTests(unittest.TestCase):
             'vicar-amelia', 'amygdala', 'ebrietas'))
         pairs.append(('laurence', 'lady-maria'))
         pairs.extend((arena.key, 'orphan-of-kos') for arena in SUPPORTED_ORPHAN_ARENAS)
-        self.assertEqual(35, len(pairs))
+        pairs.extend((arena.key, 'ludwig') for arena in SUPPORTED_LUDWIG_ARENAS)
+        pairs.extend((arena.key, 'father-gascoigne') for arena in SUPPORTED_GASCOIGNE_ARENAS)
+        pairs.extend(('orphan-of-kos', donor.key) for donor in portable_orphan_donors())
+        pairs.extend(('ludwig', donor.key) for donor in portable_ludwig_donors())
+        pairs.extend(('micolash', donor.key) for donor in portable_micolash_donors())
+        pairs.extend((arena.key, 'mergos-wet-nurse') for arena in portable_wet_nurse_arenas())
+        self.assertEqual(71, len(pairs))
         with tempfile.TemporaryDirectory() as temporary:
             compiler = Path(temporary) / 'untrusted-compiler.exe'
             compiler.write_bytes(b'not the pinned compiler')
@@ -134,7 +146,7 @@ class EncounterBuildTests(unittest.TestCase):
             assignments.append(assignment)
             self.assertEqual(set(graph), set(assignment))
             self.assertEqual(set(graph), set(assignment.values()))
-            self.assertIn(assignment['ludwig'], ('cleric-beast', 'laurence'))
+            self.assertIn(assignment['ludwig'], graph['ludwig'])
             self.assertIn(assignment['living-failures'], ('blood-starved-beast', 'lady-maria', 'laurence'))
             for arena, donor in assignment.items():
                 self.assertNotEqual(arena, donor)
