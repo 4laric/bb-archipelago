@@ -115,6 +115,12 @@ before it merges. A client-commit dispatch or a manual `client_ref` builds
 against another ref without changing what a release ships. Never point the
 file at a branch name.
 
+The pin used to only get checked reactively, at tag time, which stalled more
+than one release. `.github/workflows/client-pin-check.yaml` now runs daily
+and opens this same bump pull request automatically as soon as the pin drifts
+behind clients main, so it is caught and reviewed well before release day.
+It still only opens the PR; packaging smoke and review are unchanged.
+
 ## Cutting a release
 
 `v0.1.0-beta.6` shipped the `beta.5` client because the pin was never bumped and
