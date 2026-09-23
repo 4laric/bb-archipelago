@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		1892
+total		1906
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	42
@@ -123,3 +123,5 @@ module	test_one_reborn_shadows_contract	6
 # compiler test; those tests still count toward the collected total above.
 module	test_ludwig_arena_contract	6
 module	test_final_boss_donors	7
+module	test_gehrman_arena_contract	6
+module	test_moon_arena_contract	6

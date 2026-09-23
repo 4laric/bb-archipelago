@@ -328,9 +328,10 @@ class BossPoolTests(unittest.TestCase):
                            for assignment in candidates)
             if possible:
                 assignment = assign_donors('exhaustive', graph)
+                self.assertEqual(set(roster), set(assignment))
                 self.assertEqual(set(roster), set(assignment.values()))
-                self.assertTrue(all(donor in graph[arena]
-                                    for arena, donor in assignment.items()))
+                for arena in roster:
+                    self.assertIn(assignment[arena], graph[arena])
             else:
                 with self.assertRaisesRegex(ValueError, 'no complete'):
                     assign_donors('exhaustive', graph)

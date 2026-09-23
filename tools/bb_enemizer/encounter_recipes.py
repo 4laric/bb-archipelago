@@ -577,6 +577,50 @@ def _final_boss_donor_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _final_arena_recipes() -> tuple[EncounterRecipe, ...]:
+    """Bind portable combat to final arenas without importing their endings."""
+    from .gehrman_arena_contract import (
+        GEHRMAN_ARENA_CONTRACT,
+        native_plan_portable_donor_at_gehrman,
+        patch_portable_donor_at_gehrman,
+        portable_gehrman_donors,
+    )
+    from .moon_arena_contract import (
+        MOON_ARENA_CONTRACT,
+        native_plan_portable_donor_at_moon,
+        patch_portable_donor_at_moon,
+        portable_moon_donors,
+    )
+
+    adapters = (
+        (GEHRMAN_ARENA_CONTRACT, portable_gehrman_donors,
+         patch_portable_donor_at_gehrman, native_plan_portable_donor_at_gehrman),
+        (MOON_ARENA_CONTRACT, portable_moon_donors,
+         patch_portable_donor_at_moon, native_plan_portable_donor_at_moon),
+    )
+    recipes: list[EncounterRecipe] = []
+    for arena, donors, patcher, planner in adapters:
+        for donor in donors():
+            def patch(destination: str, donor_source: str, *,
+                      _donor=donor, _patcher=patcher) -> str:
+                return _patcher(destination, _donor, donor_source)
+
+            def native_plan(slots: list, npcs: Mapping[int, dict],
+                            effects: Mapping[int, dict], seed: str, *,
+                            _donor=donor, _planner=planner) -> dict:
+                return _planner(_donor, slots, npcs, effects, seed)
+
+            def requirements(slots: list, *, _arena=arena, _donor=donor) -> list[dict]:
+                return actor_addition_requirements(_arena, _donor, slots)
+
+            recipes.append(EncounterRecipe(
+                arena=arena, donor=donor, adapter=f"{arena.key}-arena:portable-combat",
+                _patch=patch, _native_plan=native_plan,
+                _actor_requirements=requirements,
+            ))
+    return tuple(recipes)
+
+
 def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     """Return every route backed by a parameterized, source-pinned adapter."""
     arenas = {arena.key: arena for arena in ARENAS}
@@ -599,7 +643,7 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
                    *_logarius_arena_recipes(), *_orphan_recipes(), *_orphan_arena_recipes(),
                    *_ludwig_recipes(),
                    *_gascoigne_donor_recipes(), *_ludwig_arena_recipes(),
-                   *_final_boss_donor_recipes()):
+                   *_final_boss_donor_recipes(), *_final_arena_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

@@ -1021,3 +1021,31 @@ moving one outside that group leaves a destination unfilled. Incoming reusable
 arena adapters are the missing implementation; this is not evidence that the
 outgoing pairings are incompatible. The prior 142 graph edges remain feasible.
 Character-effect delivery and live combat remain unverified for these donors.
+
+## Reusable final arenas in progress
+
+Gehrman and Moon Presence now accept all six base combat packages through
+source-pinned arena adapters. The Gehrman adapter retains the separate dialogue
+NPC, original entry trigger and warp, endings and progression; it replaces only
+the combat actor. Both arenas preserve first-entry and saved-fight readiness,
+client restoration and destination completion. Central replacement-entrance
+handling skips the boss cinematics while retaining the required warps.
+
+All [twelve direct original-input native builds](boss-final-arena-native-matrix.json)
+pass with eight receipt-verified output files each. Each arena has seven focused
+tests, including compilation of every base donor. Both adapters protect donors
+until their source-authored wake sequence permits damage. An earlier
+Moon/Ebrietas build hit a Windows staging-directory move error and passed a
+serial retry; after the protection correction all six Moon variants passed
+without retry. The evidence distinguishes these stages.
+
+These incoming routes resolve the preceding final-group assignment restriction:
+all 166 implemented directed routes now participate in complete 22-boss,
+one-of-each, no-self assignments. The remaining 296 routes are implementation
+gaps. [Thirteen complete-roster native builds](boss-final-arena-full22-matrix.json)
+cover all 24 new outgoing and incoming final-boss routes, each with 22 contracts,
+15 event files and 60–61 verified output files. After the Moon protection fix,
+all six affected seeds were rebuilt successfully. Fixture selection avoided
+the known Ludwig/m23 effect-bank collision without changing production planner
+policy. These builds do not prove complete character-effect delivery or
+gameplay behavior.
