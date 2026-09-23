@@ -1,0 +1,946 @@
+{
+  "bank": {
+    "required_effect_id": 625700,
+    "required_effect_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+    "selected_witness": {
+      "animation_id": 3000,
+      "effect_id": 625700,
+      "event_index": 3,
+      "event_type": 96,
+      "parameter_offset": 133600
+    },
+    "source_file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+    "source_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015"
+  },
+  "evidence": "original c2570.anibnd/c2570.tae decoded by pinned Bloodborne TAE template; availability proof only",
+  "format": "bb-celestial-character-ffx-source-proof-v1",
+  "requirement_template": {
+    "decoded_event_types": [
+      96,
+      100,
+      118
+    ],
+    "direct_effect_ids": [
+      625190,
+      625700,
+      625705,
+      625706,
+      625710,
+      625715,
+      625716,
+      625720,
+      625721,
+      650090,
+      650091,
+      1033000,
+      1033002,
+      1034001
+    ],
+    "format": "bb-boss-character-ffx-requirement-v1",
+    "source_anibnd_file": "c2570.anibnd.dcx",
+    "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+    "source_animation_count": 126,
+    "source_character": "c2570",
+    "source_tae_entry": "chr/c2570/tae/c2570.tae",
+    "source_tae_entry_id": 3000000,
+    "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+    "typed_event_witnesses": [
+      {
+        "animation_id": 200,
+        "effect_id": 1033000,
+        "event_index": 2,
+        "event_type": 96,
+        "parameter_offset": 10432
+      },
+      {
+        "animation_id": 201,
+        "effect_id": 1033000,
+        "event_index": 7,
+        "event_type": 96,
+        "parameter_offset": 11792
+      },
+      {
+        "animation_id": 202,
+        "effect_id": 1033000,
+        "event_index": 7,
+        "event_type": 96,
+        "parameter_offset": 12976
+      },
+      {
+        "animation_id": 203,
+        "effect_id": 1033000,
+        "event_index": 7,
+        "event_type": 96,
+        "parameter_offset": 14160
+      },
+      {
+        "animation_id": 500,
+        "effect_id": 1033000,
+        "event_index": 12,
+        "event_type": 96,
+        "parameter_offset": 15616
+      },
+      {
+        "animation_id": 602,
+        "effect_id": 1033000,
+        "event_index": 11,
+        "event_type": 96,
+        "parameter_offset": 17056
+      },
+      {
+        "animation_id": 603,
+        "effect_id": 1033000,
+        "event_index": 11,
+        "event_type": 96,
+        "parameter_offset": 18592
+      },
+      {
+        "animation_id": 604,
+        "effect_id": 1033000,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 20368
+      },
+      {
+        "animation_id": 605,
+        "effect_id": 1033000,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 22160
+      },
+      {
+        "animation_id": 1500,
+        "effect_id": 1033000,
+        "event_index": 1,
+        "event_type": 96,
+        "parameter_offset": 23280
+      },
+      {
+        "animation_id": 1510,
+        "effect_id": 1033000,
+        "event_index": 1,
+        "event_type": 96,
+        "parameter_offset": 24464
+      },
+      {
+        "animation_id": 1520,
+        "effect_id": 1033000,
+        "event_index": 1,
+        "event_type": 96,
+        "parameter_offset": 25520
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 1033000,
+        "event_index": 6,
+        "event_type": 96,
+        "parameter_offset": 27344
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 625190,
+        "event_index": 20,
+        "event_type": 96,
+        "parameter_offset": 27792
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 650091,
+        "event_index": 21,
+        "event_type": 96,
+        "parameter_offset": 27824
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 650091,
+        "event_index": 22,
+        "event_type": 96,
+        "parameter_offset": 27856
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 650091,
+        "event_index": 23,
+        "event_type": 96,
+        "parameter_offset": 27888
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 650091,
+        "event_index": 24,
+        "event_type": 96,
+        "parameter_offset": 27920
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 650091,
+        "event_index": 25,
+        "event_type": 96,
+        "parameter_offset": 27952
+      },
+      {
+        "animation_id": 1610,
+        "effect_id": 650091,
+        "event_index": 26,
+        "event_type": 96,
+        "parameter_offset": 27984
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 1033000,
+        "event_index": 6,
+        "event_type": 96,
+        "parameter_offset": 30608
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 625190,
+        "event_index": 19,
+        "event_type": 96,
+        "parameter_offset": 31024
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 650091,
+        "event_index": 20,
+        "event_type": 96,
+        "parameter_offset": 31056
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 650091,
+        "event_index": 21,
+        "event_type": 96,
+        "parameter_offset": 31088
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 650091,
+        "event_index": 22,
+        "event_type": 96,
+        "parameter_offset": 31120
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 650091,
+        "event_index": 23,
+        "event_type": 96,
+        "parameter_offset": 31152
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 650091,
+        "event_index": 24,
+        "event_type": 96,
+        "parameter_offset": 31184
+      },
+      {
+        "animation_id": 1620,
+        "effect_id": 650091,
+        "event_index": 25,
+        "event_type": 96,
+        "parameter_offset": 31216
+      },
+      {
+        "animation_id": 1750,
+        "effect_id": 1033000,
+        "event_index": 10,
+        "event_type": 96,
+        "parameter_offset": 33616
+      },
+      {
+        "animation_id": 1750,
+        "effect_id": 1033002,
+        "event_index": 13,
+        "event_type": 96,
+        "parameter_offset": 33712
+      },
+      {
+        "animation_id": 1751,
+        "effect_id": 1033000,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 35856
+      },
+      {
+        "animation_id": 1751,
+        "effect_id": 1033002,
+        "event_index": 17,
+        "event_type": 96,
+        "parameter_offset": 35888
+      },
+      {
+        "animation_id": 2004,
+        "effect_id": 1033000,
+        "event_index": 12,
+        "event_type": 96,
+        "parameter_offset": 51552
+      },
+      {
+        "animation_id": 2005,
+        "effect_id": 1033000,
+        "event_index": 13,
+        "event_type": 96,
+        "parameter_offset": 53888
+      },
+      {
+        "animation_id": 2006,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 56208
+      },
+      {
+        "animation_id": 2007,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 58544
+      },
+      {
+        "animation_id": 2010,
+        "effect_id": 1033000,
+        "event_index": 17,
+        "event_type": 96,
+        "parameter_offset": 61024
+      },
+      {
+        "animation_id": 2011,
+        "effect_id": 1033000,
+        "event_index": 17,
+        "event_type": 96,
+        "parameter_offset": 63328
+      },
+      {
+        "animation_id": 2012,
+        "effect_id": 1033000,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 65568
+      },
+      {
+        "animation_id": 2013,
+        "effect_id": 1033000,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 67744
+      },
+      {
+        "animation_id": 2050,
+        "effect_id": 1033000,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 79792
+      },
+      {
+        "animation_id": 2051,
+        "effect_id": 1033000,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 82032
+      },
+      {
+        "animation_id": 2052,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 84144
+      },
+      {
+        "animation_id": 2053,
+        "effect_id": 1033000,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 86240
+      },
+      {
+        "animation_id": 2080,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 90432
+      },
+      {
+        "animation_id": 2081,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 92544
+      },
+      {
+        "animation_id": 2082,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 94656
+      },
+      {
+        "animation_id": 2083,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 96768
+      },
+      {
+        "animation_id": 2200,
+        "effect_id": 625190,
+        "event_index": 6,
+        "event_type": 96,
+        "parameter_offset": 98512
+      },
+      {
+        "animation_id": 2200,
+        "effect_id": 650091,
+        "event_index": 7,
+        "event_type": 96,
+        "parameter_offset": 98544
+      },
+      {
+        "animation_id": 2200,
+        "effect_id": 650091,
+        "event_index": 8,
+        "event_type": 96,
+        "parameter_offset": 98576
+      },
+      {
+        "animation_id": 2200,
+        "effect_id": 650091,
+        "event_index": 9,
+        "event_type": 96,
+        "parameter_offset": 98608
+      },
+      {
+        "animation_id": 2200,
+        "effect_id": 650091,
+        "event_index": 10,
+        "event_type": 96,
+        "parameter_offset": 98640
+      },
+      {
+        "animation_id": 2200,
+        "effect_id": 650091,
+        "event_index": 11,
+        "event_type": 96,
+        "parameter_offset": 98672
+      },
+      {
+        "animation_id": 2200,
+        "effect_id": 650091,
+        "event_index": 12,
+        "event_type": 96,
+        "parameter_offset": 98704
+      },
+      {
+        "animation_id": 2610,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 116288
+      },
+      {
+        "animation_id": 2611,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 118576
+      },
+      {
+        "animation_id": 2612,
+        "effect_id": 1033000,
+        "event_index": 13,
+        "event_type": 96,
+        "parameter_offset": 120832
+      },
+      {
+        "animation_id": 2613,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 123152
+      },
+      {
+        "animation_id": 2620,
+        "effect_id": 1033000,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 125344
+      },
+      {
+        "animation_id": 2621,
+        "effect_id": 1033000,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 127376
+      },
+      {
+        "animation_id": 2622,
+        "effect_id": 1033000,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 129472
+      },
+      {
+        "animation_id": 2623,
+        "effect_id": 1033000,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 131568
+      },
+      {
+        "animation_id": 3000,
+        "effect_id": 625700,
+        "event_index": 3,
+        "event_type": 96,
+        "parameter_offset": 133600
+      },
+      {
+        "animation_id": 3000,
+        "effect_id": 1033000,
+        "event_index": 19,
+        "event_type": 96,
+        "parameter_offset": 134176
+      },
+      {
+        "animation_id": 3000,
+        "effect_id": 1034001,
+        "event_index": 21,
+        "event_type": 96,
+        "parameter_offset": 134240
+      },
+      {
+        "animation_id": 3000,
+        "effect_id": 625706,
+        "event_index": 28,
+        "event_type": 96,
+        "parameter_offset": 134464
+      },
+      {
+        "animation_id": 3001,
+        "effect_id": 1033000,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 137552
+      },
+      {
+        "animation_id": 3001,
+        "effect_id": 1034001,
+        "event_index": 19,
+        "event_type": 96,
+        "parameter_offset": 137648
+      },
+      {
+        "animation_id": 3001,
+        "effect_id": 625700,
+        "event_index": 23,
+        "event_type": 96,
+        "parameter_offset": 137776
+      },
+      {
+        "animation_id": 3002,
+        "effect_id": 1033000,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 140784
+      },
+      {
+        "animation_id": 3002,
+        "effect_id": 1034001,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 140816
+      },
+      {
+        "animation_id": 3002,
+        "effect_id": 625700,
+        "event_index": 17,
+        "event_type": 96,
+        "parameter_offset": 140848
+      },
+      {
+        "animation_id": 3003,
+        "effect_id": 1033000,
+        "event_index": 20,
+        "event_type": 96,
+        "parameter_offset": 144576
+      },
+      {
+        "animation_id": 3003,
+        "effect_id": 1034001,
+        "event_index": 22,
+        "event_type": 96,
+        "parameter_offset": 144640
+      },
+      {
+        "animation_id": 3003,
+        "effect_id": 1034001,
+        "event_index": 25,
+        "event_type": 96,
+        "parameter_offset": 144736
+      },
+      {
+        "animation_id": 3003,
+        "effect_id": 625700,
+        "event_index": 27,
+        "event_type": 96,
+        "parameter_offset": 144800
+      },
+      {
+        "animation_id": 3003,
+        "effect_id": 625700,
+        "event_index": 28,
+        "event_type": 96,
+        "parameter_offset": 144832
+      },
+      {
+        "animation_id": 3003,
+        "effect_id": 625706,
+        "event_index": 37,
+        "event_type": 96,
+        "parameter_offset": 145120
+      },
+      {
+        "animation_id": 3004,
+        "effect_id": 625700,
+        "event_index": 17,
+        "event_type": 96,
+        "parameter_offset": 148576
+      },
+      {
+        "animation_id": 3004,
+        "effect_id": 625700,
+        "event_index": 20,
+        "event_type": 96,
+        "parameter_offset": 148672
+      },
+      {
+        "animation_id": 3004,
+        "effect_id": 1033000,
+        "event_index": 22,
+        "event_type": 96,
+        "parameter_offset": 148736
+      },
+      {
+        "animation_id": 3004,
+        "effect_id": 1034001,
+        "event_index": 23,
+        "event_type": 96,
+        "parameter_offset": 148768
+      },
+      {
+        "animation_id": 3004,
+        "effect_id": 1034001,
+        "event_index": 24,
+        "event_type": 96,
+        "parameter_offset": 148800
+      },
+      {
+        "animation_id": 3004,
+        "effect_id": 625706,
+        "event_index": 25,
+        "event_type": 96,
+        "parameter_offset": 148832
+      },
+      {
+        "animation_id": 3010,
+        "effect_id": 625710,
+        "event_index": 21,
+        "event_type": 96,
+        "parameter_offset": 152480
+      },
+      {
+        "animation_id": 3010,
+        "effect_id": 625710,
+        "event_index": 23,
+        "event_type": 96,
+        "parameter_offset": 152544
+      },
+      {
+        "animation_id": 3011,
+        "effect_id": 625715,
+        "event_index": 20,
+        "event_type": 96,
+        "parameter_offset": 155488
+      },
+      {
+        "animation_id": 3011,
+        "effect_id": 625715,
+        "event_index": 26,
+        "event_type": 96,
+        "parameter_offset": 155680
+      },
+      {
+        "animation_id": 3011,
+        "effect_id": 625716,
+        "event_index": 30,
+        "event_type": 96,
+        "parameter_offset": 155808
+      },
+      {
+        "animation_id": 3012,
+        "effect_id": 625720,
+        "event_index": 11,
+        "event_type": 96,
+        "parameter_offset": 158384
+      },
+      {
+        "animation_id": 3012,
+        "effect_id": 625721,
+        "event_index": 13,
+        "event_type": 96,
+        "parameter_offset": 158448
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 1033000,
+        "event_index": 46,
+        "event_type": 96,
+        "parameter_offset": 163440
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 1034001,
+        "event_index": 51,
+        "event_type": 96,
+        "parameter_offset": 163600
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 1034001,
+        "event_index": 52,
+        "event_type": 96,
+        "parameter_offset": 163632
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 1034001,
+        "event_index": 53,
+        "event_type": 96,
+        "parameter_offset": 163664
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 1034001,
+        "event_index": 54,
+        "event_type": 96,
+        "parameter_offset": 163696
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 1034001,
+        "event_index": 55,
+        "event_type": 96,
+        "parameter_offset": 163728
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625700,
+        "event_index": 64,
+        "event_type": 96,
+        "parameter_offset": 164016
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625700,
+        "event_index": 65,
+        "event_type": 96,
+        "parameter_offset": 164048
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625700,
+        "event_index": 66,
+        "event_type": 96,
+        "parameter_offset": 164080
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625700,
+        "event_index": 67,
+        "event_type": 96,
+        "parameter_offset": 164112
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625700,
+        "event_index": 68,
+        "event_type": 96,
+        "parameter_offset": 164144
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625706,
+        "event_index": 69,
+        "event_type": 96,
+        "parameter_offset": 164176
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625706,
+        "event_index": 70,
+        "event_type": 96,
+        "parameter_offset": 164208
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625706,
+        "event_index": 71,
+        "event_type": 96,
+        "parameter_offset": 164240
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625706,
+        "event_index": 72,
+        "event_type": 96,
+        "parameter_offset": 164272
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625706,
+        "event_index": 73,
+        "event_type": 96,
+        "parameter_offset": 164304
+      },
+      {
+        "animation_id": 3014,
+        "effect_id": 625706,
+        "event_index": 74,
+        "event_type": 96,
+        "parameter_offset": 164336
+      },
+      {
+        "animation_id": 3015,
+        "effect_id": 625705,
+        "event_index": 43,
+        "event_type": 96,
+        "parameter_offset": 169088
+      },
+      {
+        "animation_id": 3015,
+        "effect_id": 625705,
+        "event_index": 44,
+        "event_type": 96,
+        "parameter_offset": 169120
+      },
+      {
+        "animation_id": 3015,
+        "effect_id": 625705,
+        "event_index": 45,
+        "event_type": 96,
+        "parameter_offset": 169152
+      },
+      {
+        "animation_id": 3015,
+        "effect_id": 625705,
+        "event_index": 46,
+        "event_type": 96,
+        "parameter_offset": 169184
+      },
+      {
+        "animation_id": 1000200,
+        "effect_id": 1033000,
+        "event_index": 12,
+        "event_type": 96,
+        "parameter_offset": 180176
+      },
+      {
+        "animation_id": 1000201,
+        "effect_id": 1033000,
+        "event_index": 12,
+        "event_type": 96,
+        "parameter_offset": 181776
+      },
+      {
+        "animation_id": 1000202,
+        "effect_id": 1033000,
+        "event_index": 12,
+        "event_type": 96,
+        "parameter_offset": 183376
+      },
+      {
+        "animation_id": 1000203,
+        "effect_id": 1033000,
+        "event_index": 12,
+        "event_type": 96,
+        "parameter_offset": 184976
+      },
+      {
+        "animation_id": 1000602,
+        "effect_id": 1033000,
+        "event_index": 9,
+        "event_type": 96,
+        "parameter_offset": 186384
+      },
+      {
+        "animation_id": 1000603,
+        "effect_id": 1033000,
+        "event_index": 9,
+        "event_type": 96,
+        "parameter_offset": 187920
+      },
+      {
+        "animation_id": 1000604,
+        "effect_id": 1033000,
+        "event_index": 13,
+        "event_type": 96,
+        "parameter_offset": 189712
+      },
+      {
+        "animation_id": 1000605,
+        "effect_id": 1033000,
+        "event_index": 13,
+        "event_type": 96,
+        "parameter_offset": 191520
+      },
+      {
+        "animation_id": 2002200,
+        "effect_id": 650090,
+        "event_index": 6,
+        "event_type": 96,
+        "parameter_offset": 198192
+      },
+      {
+        "animation_id": 2002200,
+        "effect_id": 650091,
+        "event_index": 8,
+        "event_type": 96,
+        "parameter_offset": 198256
+      },
+      {
+        "animation_id": 2002200,
+        "effect_id": 650091,
+        "event_index": 11,
+        "event_type": 96,
+        "parameter_offset": 198352
+      },
+      {
+        "animation_id": 2002200,
+        "effect_id": 650091,
+        "event_index": 13,
+        "event_type": 96,
+        "parameter_offset": 198416
+      },
+      {
+        "animation_id": 2002200,
+        "effect_id": 650091,
+        "event_index": 14,
+        "event_type": 96,
+        "parameter_offset": 198448
+      },
+      {
+        "animation_id": 2002200,
+        "effect_id": 650091,
+        "event_index": 15,
+        "event_type": 96,
+        "parameter_offset": 198480
+      },
+      {
+        "animation_id": 2002200,
+        "effect_id": 650091,
+        "event_index": 16,
+        "event_type": 96,
+        "parameter_offset": 198512
+      }
+    ]
+  }
+}

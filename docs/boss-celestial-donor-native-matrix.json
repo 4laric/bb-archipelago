@@ -1,0 +1,419 @@
+{
+  "format": "bb-celestial-donor-native-v1",
+  "runtime_validated": false,
+  "source_sha256": {
+    "tools/bb_enemizer/celestial_donor.py": "88d440f1dd2c8efb221280e6d2eca92ba805c1c9c0b2c4771aed91510910e93b",
+    "tools/bb_enemizer/boss_contracts.py": "e16124bab72a400957de927eeff6451bd348a21780342682fcf103158f79554a",
+    "tools/bb_enemizer/celestial_character_ffx.json": "ef6f29f5633155268153819de438e4279cd88cea32d63e507243995aab499b21",
+    "tools/bb_enemizer/encounter_recipes.py": "2bad6ceb688751a38f68533d45734bb080c499d6545dd4887e3b28f6cecfd8c9",
+    "tools/build_boss_encounters.py": "e59df96322f12fd9eea647ab6f13d45b0ed87e0ab79118421a3cd8e630ba1e85",
+    "writer": "62a5c289da174dfba30ba7b1c849eed6c5cc62e4ebcdbb872975240fc3020394"
+  },
+  "cases": [
+    {
+      "arena": "cleric-beast",
+      "donor": "celestial-emissary",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 11,
+      "receipt_sha256": "80463a134adffbcb7edea5c9c842c7ed02bf29686046e683ec71a39d6159dfd7",
+      "ffx_bank_unions": [
+        {
+          "source_file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "destination_file": "frpg_sfxbnd_m24_01.ffxbnd.dcx",
+          "source_entry_count": 159,
+          "retained_entry_count": 215,
+          "output_sha256": "9c69a2a92be160f4c6a514978ce7b710a2fde15788e0b61873ed6f5cad7cb685",
+          "imported_entry_count": 136
+        }
+      ],
+      "character_root_deliveries": [
+        {
+          "source_map": "m24_02_00_00",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m24_01_00_00",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m24_01.ffxbnd.dcx",
+          "destination_bank_sha256": "9c69a2a92be160f4c6a514978ce7b710a2fde15788e0b61873ed6f5cad7cb685",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        },
+        {
+          "source_map": "m24_02_00_01",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m24_01_00_01",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m24_01.ffxbnd.dcx",
+          "destination_bank_sha256": "9c69a2a92be160f4c6a514978ce7b710a2fde15788e0b61873ed6f5cad7cb685",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        },
+        {
+          "source_map": "m24_02_00_00",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m24_01_00_11",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m24_01.ffxbnd.dcx",
+          "destination_bank_sha256": "9c69a2a92be160f4c6a514978ce7b710a2fde15788e0b61873ed6f5cad7cb685",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        }
+      ]
+    },
+    {
+      "arena": "blood-starved-beast",
+      "donor": "celestial-emissary",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "3569dc8f4782ccba3b443b9d2293f8c105685dc21c617275bd049883aad38b94",
+      "ffx_bank_unions": [
+        {
+          "source_file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "destination_file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+          "source_entry_count": 159,
+          "retained_entry_count": 290,
+          "output_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+          "imported_entry_count": 154
+        }
+      ],
+      "character_root_deliveries": [
+        {
+          "source_map": "m24_02_00_00",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m23_00_00_00",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m23.ffxbnd.dcx",
+          "destination_bank_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        },
+        {
+          "source_map": "m24_02_00_01",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m23_00_00_01",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m23.ffxbnd.dcx",
+          "destination_bank_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        }
+      ]
+    },
+    {
+      "arena": "darkbeast-paarl",
+      "donor": "celestial-emissary",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "d79438167b2537637a5074707e5d0ab2bd5bdc0c7112b54ef0f612fd5385913b",
+      "ffx_bank_unions": [
+        {
+          "source_file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "destination_file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+          "source_entry_count": 159,
+          "retained_entry_count": 290,
+          "output_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+          "imported_entry_count": 154
+        }
+      ],
+      "character_root_deliveries": [
+        {
+          "source_map": "m24_02_00_00",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m23_00_00_00",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m23.ffxbnd.dcx",
+          "destination_bank_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        },
+        {
+          "source_map": "m24_02_00_01",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m23_00_00_01",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m23.ffxbnd.dcx",
+          "destination_bank_sha256": "b36798b9efdcac390d2fc84efc1ffd455a0dcbdc755bf995a35dd0601fbf7d3c",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        }
+      ]
+    },
+    {
+      "arena": "vicar-amelia",
+      "donor": "celestial-emissary",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 10,
+      "receipt_sha256": "1441651781f3c19399d91f6fe19c3a0cef8fd4e3eebe6dc78466c254fef70aa4",
+      "ffx_bank_unions": [
+        {
+          "source_file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "destination_file": "frpg_sfxbnd_m24_00.ffxbnd.dcx",
+          "source_entry_count": 159,
+          "retained_entry_count": 94,
+          "output_sha256": "415285734c7a3e491af25e6052c19471bd814b84202b48dbf260d8541b7900e6",
+          "imported_entry_count": 159
+        }
+      ],
+      "character_root_deliveries": [
+        {
+          "source_map": "m24_02_00_00",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m24_00_00_00",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m24_00.ffxbnd.dcx",
+          "destination_bank_sha256": "415285734c7a3e491af25e6052c19471bd814b84202b48dbf260d8541b7900e6",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        },
+        {
+          "source_map": "m24_02_00_01",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m24_00_00_01",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m24_00.ffxbnd.dcx",
+          "destination_bank_sha256": "415285734c7a3e491af25e6052c19471bd814b84202b48dbf260d8541b7900e6",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        }
+      ]
+    },
+    {
+      "arena": "amygdala",
+      "donor": "celestial-emissary",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "976625af83249245b05ccf9c3ef556ab656c9067b755aa4937b33ac866a1efbd",
+      "ffx_bank_unions": [
+        {
+          "source_file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "destination_file": "frpg_sfxbnd_m33.ffxbnd.dcx",
+          "source_entry_count": 159,
+          "retained_entry_count": 290,
+          "output_sha256": "c7b2dfd36bde5e867104652b560dd702084707a63eaf037fcb186f5ccccc39ac",
+          "imported_entry_count": 159
+        }
+      ],
+      "character_root_deliveries": [
+        {
+          "source_map": "m24_02_00_00",
+          "source_part": "c2570_0001",
+          "source_entity_id": 2420811,
+          "source_character": "c2570",
+          "destination_map": "m33_00_00_00",
+          "destination_part": "ap_ce_giant",
+          "destination_entity_id": 984000,
+          "source_anibnd_file": "c2570.anibnd.dcx",
+          "source_anibnd_sha256": "9ad62f44094ef550c9c219cbcfa70d648c111920fa57598044f7899a82f5a488",
+          "source_tae_entry_id": 3000000,
+          "source_tae_entry": "chr/c2570/tae/c2570.tae",
+          "source_tae_sha256": "8b1c49fb2444c82a3feacf2ac9aec1c5c32359667a8ce32fd2707d689cfe1797",
+          "witness": {
+            "animation_id": 3000,
+            "event_index": 3,
+            "event_type": 96,
+            "parameter_offset": 133600,
+            "effect_id": 625700
+          },
+          "source_bank": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+          "source_bank_sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015",
+          "destination_bank": "frpg_sfxbnd_m33.ffxbnd.dcx",
+          "destination_bank_sha256": "c7b2dfd36bde5e867104652b560dd702084707a63eaf037fcb186f5ccccc39ac",
+          "root_fxr_sha256": "e62c82ede93c0b38ddb3509af309cc4ae5131eb4b113860e128f207ddab89f55",
+          "delivery_scope": "explicit-typed-tae-direct-root-bank-delivery",
+          "recursive_fxr_dependencies": "not-validated",
+          "runtime_validated": false
+        }
+      ]
+    },
+    {
+      "arena": "ebrietas",
+      "donor": "celestial-emissary",
+      "exit_code": 0,
+      "runtime_validated": false,
+      "files_verified": 9,
+      "receipt_sha256": "de9279df7f10ba9fb1be40c18705eed9c1914795883661762f62369e1bb5ef00",
+      "ffx_bank_unions": [],
+      "character_root_deliveries": []
+    }
+  ],
+  "limits": [
+    "Typed direct-root deliveries verified; recursive FXR and runtime loading remain unvalidated.",
+    "Ebrietas retains the original source subarea bank without a redundant merge.",
+    "Original combat topology preserved; runtime arena fit and navigation unobserved."
+  ]
+}

@@ -126,6 +126,7 @@ if ($LASTEXITCODE -ne 0) { throw "PyInstaller planner build failed." }
     --distpath (Join-Path $work "boss-dist") `
     --version-file (Join-Path $versionRoot "planner-version.txt") `
     --add-data "$(Join-Path $repo 'research\bb_inputs.db');research" `
+    --add-data "$(Join-Path $repo 'tools\bb_enemizer\celestial_character_ffx.json');tools\bb_enemizer" `
     @worldData `
     (Join-Path $repo "packaging\boss_encounter_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller boss encounter builder failed." }

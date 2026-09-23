@@ -1122,3 +1122,25 @@ The current local graph has **183 of 462** directed routes; each participates in
 a complete one-of-each, no-self assignment. The remaining **279** are
 implementation gaps, not declared incompatibilities. These results do not prove
 runtime combat behavior, navigation, or complete character-effect delivery.
+
+
+## Celestial Emissary donor and typed root delivery
+
+The reusable Celestial donor preserves eleven actors, eleven regions, seven
+generators and the original group/giant combat phases. The giant's AlwaysUpdate
+instruction is pinned to the original constructor. Entry notification, camera,
+music and terminal progression remain destination-owned.
+
+All [six direct native builds](boss-celestial-donor-native-matrix.json) and
+[six complete-roster builds](boss-celestial-donor-full22-matrix.json) pass. The
+latter each contain 22 contracts, 15 event files and 61–62 verified outputs.
+Exact typed c2570 witnesses now drive whole-bank delivery in production plans;
+Ebrietas retains its original bank. Character bank bindings survive both boss
+pool and ordinary-enemy composition, with duplicate destinations rejected.
+The frozen launcher includes the pinned witness JSON resource.
+
+The graph now has **188 of 462** directed construction routes, all feasible in
+complete one-of-each, no-self assignments; **274** implementation gaps remain.
+Forty-seven focused donor, registry, builder and composition tests pass. Combat
+geometry, navigation, recursive FXR dependencies and runtime behavior remain
+unvalidated.

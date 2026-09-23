@@ -543,6 +543,33 @@ def _gascoigne_donor_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _celestial_donor_recipes() -> tuple[EncounterRecipe, ...]:
+    """Bind Celestial Emissary's complete group combat to destination-owned progression."""
+    from .celestial_donor import (
+        EVENT_FILE,
+        native_plan_celestial_donor,
+        patch_celestial_donor,
+        portable_celestial_arenas,
+    )
+
+    donor = DonorIdentity("celestial-emissary", EVENT_FILE)
+    recipes: list[EncounterRecipe] = []
+    for arena in portable_celestial_arenas():
+        def patch(destination: str, donor_source: str, *, _arena=arena) -> str:
+            return patch_celestial_donor(_arena, destination, donor_source)
+
+        def native_plan(slots: list, npcs: Mapping[int, dict],
+                        effects: Mapping[int, dict], seed: str, *, _arena=arena) -> dict:
+            return native_plan_celestial_donor(_arena, slots, npcs, effects, seed)
+
+        recipes.append(EncounterRecipe(
+            arena=arena, donor=donor, adapter="celestial-donor:group-combat",
+            _patch=patch, _native_plan=native_plan,
+            _actor_requirements=lambda slots: [],
+        ))
+    return tuple(recipes)
+
+
 def _micolash_donor_recipes() -> tuple[EncounterRecipe, ...]:
     """Bind Micolash's continuous combat to destination-owned progression."""
     from .micolash_donor import (
@@ -706,7 +733,8 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
                    *_ludwig_recipes(),
                    *_gascoigne_donor_recipes(), *_ludwig_arena_recipes(),
                    *_final_boss_donor_recipes(), *_late_arena_recipes(),
-                   *_wet_nurse_donor_recipes(), *_micolash_donor_recipes()):
+                   *_wet_nurse_donor_recipes(), *_micolash_donor_recipes(),
+                   *_celestial_donor_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

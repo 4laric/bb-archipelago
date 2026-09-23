@@ -29,6 +29,34 @@ $Event(30, Default, function() {
 
 
 class BossPoolTests(unittest.TestCase):
+    def test_character_bank_bindings_survive_composition_and_reject_destination_overlap(self):
+        row = {'source_map': 'm24_02_00_00', 'source_part': 'c2570_0001',
+               'source_entity_id': 2420811, 'source_character': 'c2570',
+               'destination_map': 'm23_00_00_00', 'destination_part': 'giant',
+               'destination_entity_id': 984000, 'source_ffx_file': 'frpg_sfxbnd_m24_02.ffxbnd.dcx',
+               'destination_ffx_file': 'frpg_sfxbnd_m23.ffxbnd.dcx',
+               'roots': [{'source_tae_entry_id': 3000000, 'witness': {'effect_id': 625700}}]}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'bank', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_character_ffx_bank_requirements': [row]}
+        self.assertEqual([row], combine_native_plans('bank', [plan])[
+            'boss_character_ffx_bank_requirements'])
+        with self.assertRaisesRegex(ValueError, 'character FFX bank destination'):
+            combine_native_plans('bank', [plan, copy.deepcopy(plan)])
+        ordinary = {**copy.deepcopy(plan), 'options': {},
+                    'swaps': [{'logical_key': 'ordinary', 'destination_keys': ['m24_00_00_00:ordinary']}]}
+        ordinary['scaling'].update(skip_count=1, skips=[{'logical_key': 'ordinary'}])
+        ordinary.pop('boss_contract')
+        with self.assertRaisesRegex(ValueError, 'already carries boss metadata'):
+            combine_ordinary_and_boss_plans(ordinary, [plan])
+        ordinary.pop('boss_character_ffx_bank_requirements')
+        combined = combine_ordinary_and_boss_plans(ordinary, [plan])
+        self.assertEqual([row], combined['boss_character_ffx_bank_requirements'])
+        combined['boss_character_ffx_bank_requirements'][0]['roots'][0]['witness']['effect_id'] = 123
+        self.assertEqual(625700, row['roots'][0]['witness']['effect_id'])
+
     def test_character_effect_witnesses_survive_both_compositions_and_refuse_disagreement(self):
         row = {'source_map': 'm36_00_00_00', 'source_part': 'c4540_0000',
                'source_entity_id': 3600800, 'source_character': 'c4540',
