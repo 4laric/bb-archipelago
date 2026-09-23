@@ -1396,9 +1396,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn('widget.configure(state=state)', toggle)
         # The page row can never be starved to nothing again, and the details
         # drawer only takes weight while it is shown.
-        self.assertIn("outer.rowconfigure(0, weight=1, minsize=", build)
+        self.assertIn("outer.rowconfigure(0, weight=3, minsize=", build)
         details = source.split("def _set_session_details_visible")[1].split("def _toggle_session_details")[0]
-        self.assertIn("rowconfigure(1, weight=2 if visible else 0, minsize=", details)
+        self.assertIn("rowconfigure(1, weight=1 if visible else 0, minsize=", details)
 
     def test_ui_contract_exposes_a_session_status_panel(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
@@ -2217,5 +2217,5 @@ class HiddenDetailsLayoutTests(unittest.TestCase):
         app.log_frame.master.rowconfigure.assert_called_once_with(1, weight=0, minsize=0)
         app.log_frame.grid_remove.assert_called_once()
         LauncherApp._set_session_details_visible(app, True)
-        app.log_frame.master.rowconfigure.assert_called_with(1, weight=2, minsize=120)
+        app.log_frame.master.rowconfigure.assert_called_with(1, weight=1, minsize=120)
         app.log_frame.grid.assert_called_once()
