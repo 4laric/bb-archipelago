@@ -1002,6 +1002,11 @@ All [twelve direct native builds](boss-final-donor-native-matrix.json) pass
 against original inputs, with 8–10 receipt-verified files each. Eight focused
 tests include compilation of all twelve variants. Registry integration checks
 also exercise each donor/arena binding rather than only counting entries.
+Two isolated shared-map native probes place Gehrman and Moon Presence together
+at BSB/Paarl in both orders. Each combines both encounters into one event file,
+materializes the helper in both physical map states, and verifies nine output
+files. These probes explicitly override assignment selection to test shared-map
+composition; they are not full-roster seeds or evidence of planner feasibility.
 
 This brings the local adapter registry to 154 directed routes, but the twelve
 new routes cannot yet occur in a full22 one-of-each assignment. The Gehrman,

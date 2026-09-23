@@ -110,5 +110,36 @@
       "files_verified": 9,
       "receipt_sha256": "c4c0e23b965892d0b944d8a7e6dcf2484242dc7b0f4ba7e164b630863dc00baa"
     }
-  ]
+  ],
+  "shared_map_probe": {
+    "format": "bb-final-donor-shared-map-probe-v1",
+    "assignment_overridden_for_isolated_composition": true,
+    "full_roster_validated": false,
+    "runtime_validated": false,
+    "limits": [
+      "Actor/event composition only; character-effect delivery unresolved."
+    ],
+    "cases": [
+      {
+        "mapping": {
+          "blood-starved-beast": "gehrman",
+          "darkbeast-paarl": "moon-presence"
+        },
+        "files_verified": 9,
+        "receipt_sha256": "d368bffb05a94042505638ce5b01914bc8a764ee1f93af9cb0fdd2f7e52b0ac4",
+        "actor_additions": 2,
+        "event_files": 1
+      },
+      {
+        "mapping": {
+          "blood-starved-beast": "moon-presence",
+          "darkbeast-paarl": "gehrman"
+        },
+        "files_verified": 9,
+        "receipt_sha256": "4ad2f6da21e5cfa80b219da2e813d717f306d7ae350f34acf60c11a25feb2f21",
+        "actor_additions": 2,
+        "event_files": 1
+      }
+    ]
+  }
 }
