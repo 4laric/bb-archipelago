@@ -1426,8 +1426,12 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         # of behind a second nested toggle.
         self.assertNotIn('"Advanced enemy options"', source)
         self.assertNotIn("_enemy_advanced_widgets", source)
-        self.assertIn("self._show_player_choice(len(names) > 1)", source)
-        self.assertIn("self._show_player_choice(False)", source)
+        # Hidden only for the unambiguous single-slot case: visible and
+        # free-typed with no seed loaded (Create & host's solo generation
+        # needs somewhere to type a name), visible and locked to the real
+        # slots when there is more than one.
+        self.assertIn("self._show_player_choice(len(names) != 1)", source)
+        self.assertIn("self._show_player_choice(True)", source)
 
     def test_launch_gate_names_missing_setup_instead_of_failing_late(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
@@ -1514,9 +1518,12 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         app._path_field_changed("ap_request")
 
         app._accept_ap_request.assert_not_called()
-        app.player_combo.configure.assert_called_once_with(values=())
-        app._show_player_choice.assert_called_once_with(False)
-        self.assertEqual("", app.player_name.get())
+        app.player_combo.configure.assert_called_once_with(values=(), state="normal")
+        app._show_player_choice.assert_called_once_with(True)
+        # Player name is preserved, not wiped: with no seed loaded it may be
+        # a name typed in for a solo generation on Create & host, not stale
+        # identity from the cleared seed.
+        self.assertEqual("Hunter", app.player_name.get())
         self.assertEqual("", app.enemy_seed.get())
         self.assertEqual("Choose a seed (.zip or .bbseed.json) to see its player and build.", app.seed_summary.get())
         app._refresh_launch_gate.assert_called_once_with()

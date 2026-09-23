@@ -274,7 +274,11 @@ class LauncherApp:
         self.randomize_enemies = tk.BooleanVar(value=True)
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
-        self.player_name = tk.StringVar()
+        # Shared: the slot you pick when a seed has more than one Bloodborne
+        # player, and the name a new solo seed is generated under on Create &
+        # host -- one field either way, since it's the same concept whether
+        # or not this launcher did the generating.
+        self.player_name = tk.StringVar(value="Hunter")
         self.seed_summary = tk.StringVar(value=SEED_PROMPT)
         self.launch_hint = tk.StringVar(value="Choose a seed and shadPS4 to continue.")
         self.allow_tier_mixing = tk.BooleanVar(value=False)
@@ -313,7 +317,10 @@ class LauncherApp:
         root.rowconfigure(0, weight=1)
         self._apply_theme()
         self._build()
-        self._show_player_choice(False)
+        # Visible by default: nothing is known yet, so this is the free-typed
+        # name a solo generation on Create & host would use. Loading a seed
+        # (just below) narrows or hides it once real slots are known.
+        self._show_player_choice(True)
         self._load_settings_if_present()
         self._apply_default_fields()
         remembered_seed = self.fields["ap_request"].get().strip()
@@ -538,12 +545,15 @@ class LauncherApp:
         server_entry.bind("<Return>", self._setup_changed)
         self.player_label = ttk.Label(play, text="Player", style="Field.TLabel")
         self.player_label.grid(row=name_row, column=0, sticky="w", padx=(0, 14), pady=4)
-        self.player_combo = ttk.Combobox(
-            play, textvariable=self.player_name, state="readonly", values=()
-        )
+        # Editable, not locked to "readonly": with no seed chosen yet this is
+        # a free-typed name (what Create & host generates a solo seed under);
+        # once a multi-slot seed is loaded, _accept_ap_request locks it to a
+        # dropdown of that seed's real slots so a typo can't select a slot
+        # that doesn't exist.
+        self.player_combo = ttk.Combobox(play, textvariable=self.player_name, values=())
         self.player_combo.grid(row=name_row, column=1, sticky="ew", pady=4)
         self.player_combo.bind("<<ComboboxSelected>>", self._player_selected)
-        self.player_help = ttk.Label(play, text="from the seed", style="Dim.TLabel")
+        self.player_help = ttk.Label(play, text="also used for a new seed", style="Dim.TLabel")
         self.player_help.grid(row=name_row, column=2, sticky="w", padx=(10, 0))
         ttk.Label(play, textvariable=self.seed_summary, style="Muted.TLabel").grid(
             row=summary_row, column=0, columnspan=3, sticky="w", pady=(6, 0)
@@ -700,10 +710,17 @@ class LauncherApp:
             detected = _request_player_name(chosen)
             names = () if detected is None else (detected,)
         self.player_combo.configure(values=names)
-        self._show_player_choice(len(names) > 1)
+        # Hidden only for the unambiguous single-slot case (auto-filled
+        # below). Visible and free-typed with no seed chosen at all, so
+        # Create & host's solo generation still has somewhere to type a
+        # name; visible and locked to the seed's real slots when there is
+        # more than one, so a typo can never select a slot that doesn't
+        # exist in that seed.
+        self._show_player_choice(len(names) != 1)
+        self.player_combo.configure(state="readonly" if len(names) > 1 else "normal")
         if len(names) == 1:
             self.player_name.set(names[0])
-        elif self.player_name.get().strip() not in names:
+        elif names and self.player_name.get().strip() not in names:
             self.player_name.set("")
         if len(names) > 1 and not self.player_name.get().strip():
             self.seed_summary.set("Choose which Bloodborne player you are.")
@@ -756,9 +773,11 @@ class LauncherApp:
             if selected:
                 self._accept_ap_request(selected, show_error=False)
             else:
-                self.player_combo.configure(values=())
-                self._show_player_choice(False)
-                self.player_name.set("")
+                # The seed field was cleared, not the player name: keep
+                # whatever was typed there free-typed and visible, since it
+                # may be the name for a solo seed about to be generated.
+                self.player_combo.configure(values=(), state="normal")
+                self._show_player_choice(True)
                 self.enemy_seed.set("")
                 self.seed_summary.set(SEED_PROMPT)
             # _accept_ap_request can return early for an unreadable archive.
