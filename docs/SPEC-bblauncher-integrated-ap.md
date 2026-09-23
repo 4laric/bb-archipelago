@@ -1,6 +1,6 @@
 # Spec: Bloodborne launcher with Archipelago built in
 
-Status: **proposed design; no fork implementation or gameplay acceptance claimed**.
+Status: **implementation in draft PRs; gameplay acceptance remains unverified**.
 Owner: 4laric. Date: 2026-09-22.
 
 ## Product decision
@@ -13,13 +13,18 @@ attachment and connection happen behind that action.
 
 Bloodborne already has a high setup hurdle outside our control. Every additional
 choice, handoff and recovery step we introduce must justify its existence.
-Correctness checks remain; the application does the work of satisfying them.
+Following [PR #446](https://github.com/4laric/bb-archipelago/pull/446), a
+launch-blocking check must address a concrete unrecoverable failure, rather than
+enforce an untested policy. Informational compatibility differences produce
+precise, nonblocking warnings. Fix the functional path and verify the packaged
+application before cosmetic work; a passing unit test is not a working launch.
 
 The existing companion stays available during migration and as an advanced
 fallback. This design replaces its ordinary two-launcher player journey.
-Ordinary users do not enable a development-candidate checkbox: distributed builds
-carry an explicitly accepted compatibility set, and unsupported builds explain
-the mismatch without offering a safety-check bypass.
+Ordinary users do not enable a development-candidate checkbox. Build provenance
+records which combinations have been tested; an unrecognized fork build shows
+an informational warning and remains usable. Actual file conflicts and uncertain
+process ownership must be resolved by the workflow before destructive changes.
 
 ## Player experience
 

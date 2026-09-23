@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Fixed the integrated launcher's seed selection, package handoff and client-only
+  startup. Returning to a running game preserves its session; switching away
+  stops owned processes before changing mods. Interrupted mod changes retain
+  recovery information until restoration succeeds. Untested launcher build
+  provenance is now a warning rather than a blanket refusal to play. Added a
+  local fork bundle builder; these changes still need gameplay validation.
+
 - **Integrated BBLauncher fork: real Qt implementation (still not a
   release, no live acceptance).** The fork branch now builds: generic
   `ModService`/`EmulatorService` extraction with the Mod Manager
@@ -15,8 +22,7 @@ under `Unreleased` and move into a dated version section when released.
   cross-checks, and a fork-only update channel that cannot install
   upstream builds. The backend also freezes (`ap_backend/bb-ap-backend`)
   and the Qt client drives both source and frozen backends in tests.
-  Not player-usable yet: no signed bundle, no accepted fork build, no
-  in-game validation.
+  No signed public bundle or in-game validation is claimed.
 
 - BBLauncher setup now detects the inactive mod library, explains invalid folders
   before a build, and offers a one-click correction. A guided prepare/activate/connect
