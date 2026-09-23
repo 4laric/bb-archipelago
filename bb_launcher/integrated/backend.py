@@ -37,8 +37,9 @@ from ..core import ValidationError
 from . import fork_identity
 from .import_state import detect_installations, import_companion_state
 from .journal import append_entry, decide_recovery, plan_activation, read_journal
-from .policy import require_copy_activation, require_fork_provenance
+from .policy import fork_build_warning
 from .protocol import PROTOCOL_VERSION, ProtocolError, check_request, error_response, ok_response
+from .enemizer import enemizer_options_record, parse_enemizer_options
 from .sessions import (
     arms_dir,
     find_play_by_receipt,
@@ -50,6 +51,7 @@ from .sessions import (
     mint_play,
     plays_dir,
     remember_session,
+    update_play_launch_config,
 )
 from .supervisor import (
     claim_client,
@@ -77,6 +79,10 @@ class Backend:
     spawn_fn: SpawnFn | None = None
     process_check_fn: ProcessCheckFn | None = None
     cancelled: set[str] = field(default_factory=set)
+    # Server passwords live only for this backend process lifetime. They are
+    # keyed by opaque play handle and never written into the play record.
+    launch_secrets: dict[str, dict[str, str]] = field(default_factory=dict)
+    client_processes: dict[str, Any] = field(default_factory=dict)
 
     # -- operation entry point -------------------------------------------------
 
@@ -131,6 +137,9 @@ class Backend:
             "world_build": _world_build(),
             "runtime_build": _runtime_build(),
             "fork": fork_identity.fork_provenance_record(),
+            "build_warning": fork_build_warning(
+                str(params.get("fork_build", {}).get("commit", "")),
+                str(params.get("fork_build", {}).get("executable_sha256", ""))),
             "serial": SERIAL,
             "app_version": APP_VERSION,
         }
@@ -157,14 +166,30 @@ class Backend:
         return {"install": installed, "remembered": remembered}
 
     def _inspect_seed(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
-        from ..seed_request import resolve_request_source
+        from ..seed_request import archive_slots, looks_like_archive, resolve_request_source
 
         seed_path = params.get("seed_path")
         if not seed_path:
             raise ProtocolError("bad-request", "inspect_seed requires seed_path")
+        player_name = str(params.get("player_name", ""))
+        resolved_player = player_name
+        if looks_like_archive(Path(str(seed_path))):
+            archive_entries = archive_slots(Path(str(seed_path)))
+            archive_names = [name for _member, name in archive_entries]
+            if not archive_entries:
+                raise ProtocolError("bad-request", "seed zip carries no Bloodborne player slots")
+            remembered = load_remembered(self.state_root)
+            chosen = (player_name or (remembered or {}).get("slot")) if len(archive_entries) > 1 else archive_names[0]
+            if len(archive_entries) > 1 and not chosen:
+                return {"slots": archive_names, "selected": None, "needs_choice": True,
+                        "server": "", "seed": ""}
+            if chosen and chosen not in archive_names:
+                return {"slots": archive_names, "selected": None, "needs_choice": True,
+                        "server": "", "seed": ""}
+            resolved_player = str(chosen or "")
         try:
             resolved = resolve_request_source(
-                Path(str(seed_path)), player_name=str(params.get("player_name", "")),
+                Path(str(seed_path)), player_name=resolved_player,
                 state_root=self.state_root,
             )
             raw = json.loads(resolved.path.read_text(encoding="utf-8-sig"))
@@ -181,10 +206,8 @@ class Backend:
         if chosen in slots:
             return {"slots": slots, "selected": chosen, "needs_choice": True,
                     "server": raw.get("server", ""), "seed": raw.get("seed", "")}
-        raise ProtocolError("ambiguous-player",
-                            f"seed has {len(slots)} Bloodborne slots; choose a player",
-                            recovery=("choose-player",),
-                            ids={"seed": str(raw.get("seed", ""))})
+        return {"slots": slots, "selected": None, "needs_choice": True,
+                "server": raw.get("server", ""), "seed": raw.get("seed", "")}
 
     # -- prepare ----------------------------------------------------------------
 
@@ -193,7 +216,13 @@ class Backend:
             raise ProtocolError("cancelled", "operation was cancelled")
         if self.prepare_fn is None:
             raise ProtocolError("internal-error", "backend has no prepare function wired")
-        prepared = self.prepare_fn(params, op_id)  # real: workflow.prepare_seed + export
+        options = parse_enemizer_options(params)
+        prepare_params = {
+            **params,
+            "state_root": str(self.state_root),
+            "enemizer": enemizer_options_record(options),
+        }
+        prepared = self.prepare_fn(prepare_params, op_id)  # real: workflow.prepare_seed + export
         receipt_id = str(prepared["receipt_id"])
         existing = find_play_by_receipt(self.state_root, receipt_id)
         if existing is not None:
@@ -202,26 +231,47 @@ class Backend:
             if existing.seed != prepared["seed"] or existing.slot != prepared["slot"]:
                 raise ProtocolError("seed-identity-mismatch",
                                     "existing play for this receipt names a different seed/slot")
-            return {"play_id": existing.play_id, "reused": True,
+            launch_config = {
+                **dict(prepared.get("launch_config", {})),
+                "enemizer": enemizer_options_record(options),
+            }
+            existing = update_play_launch_config(
+                self.state_root, existing.play_id, launch_config)
+            if params.get("password"):
+                self.launch_secrets[existing.play_id] = {
+                    "password": str(params["password"])}
+            return {"play_id": existing.play_id, "package_name": existing.package_name,
+                    "reused": True, "build_warning": prepared.get("build_warning"),
+                    "enemizer": prepared.get("enemizer"),
                     "display": _display(prepared)}
+        launch_config = {
+            **dict(prepared.get("launch_config", {})),
+            "enemizer": enemizer_options_record(options),
+        }
         record = mint_play(
             self.state_root, receipt_id=receipt_id,
             receipt_digest=str(prepared["receipt_digest"]), seed=str(prepared["seed"]),
             slot=str(prepared["slot"]), cache_key=str(prepared["cache_key"]),
             package_name=str(prepared["package_name"]),
+            launch_config=launch_config,
         )
+        if params.get("password"):
+            self.launch_secrets[record.play_id] = {"password": str(params["password"])}
         append_entry(self.state_root, params.get("game_root", "."), "plan",
                      record.play_id, {"package": record.package_name})
-        return {"play_id": record.play_id, "reused": False, "display": _display(prepared)}
+        return {"play_id": record.play_id, "package_name": record.package_name,
+                "reused": False, "build_warning": prepared.get("build_warning"),
+                "enemizer": prepared.get("enemizer"),
+                "display": _display(prepared)}
 
     # -- verify/arm ---------------------------------------------------------------
 
     def _verify_and_arm(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
         play_id = str(params.get("play_id", ""))
         play = load_play(self.state_root, play_id)
-        self.preflight(params, stage="arm")
-        verified = self._verify(play, params)
-        require_copy_activation(verified.files, stage="arming")
+        launch_params = {**play.launch_config, **params}
+        self.preflight(launch_params, stage="arm")
+        verified = self._verify(play, launch_params)
         arm = mint_arm(
             self.state_root, play_id=play.play_id, receipt_id=play.receipt_id,
             activation_fingerprint=verified.activation_fingerprint,
@@ -229,9 +279,9 @@ class Backend:
         append_entry(self.state_root, params.get("game_root", "."), "commit",
                      play.play_id, {"arm_id": arm.arm_id,
                                     "fingerprint": verified.activation_fingerprint})
-        remember_session(self.state_root, game_root=str(params.get("game_root", "")),
+        remember_session(self.state_root, game_root=str(launch_params.get("game_root", "")),
                          seed=play.seed, slot=play.slot,
-                         server=str(params.get("server", "")), play_id=play.play_id)
+                         server=str(launch_params.get("server", "")), play_id=play.play_id)
         return {"arm_id": arm.arm_id, "display": {"seed": play.seed, "slot": play.slot}}
 
     def _verify(self, play: Any, params: Mapping[str, Any]) -> Any:
@@ -248,10 +298,6 @@ class Backend:
         if stage in ("arm",) and game_stopped.get("game_running"):
             raise ProtocolError("conflict", "stop the game before arming",
                                 recovery=("stop-game",))
-        fork = params.get("fork_build") or {}
-        if fork:
-            require_fork_provenance(str(fork.get("commit", "")),
-                                    str(fork.get("executable_sha256", "")))
 
     def _check_claimed_process(self, claimed: Mapping[str, Any],
                                  live: Mapping[str, Any]) -> None:
@@ -265,11 +311,18 @@ class Backend:
         if not live.get("game_running"):
             raise ProtocolError("stale-session", "the game is no longer running",
                                 retryable=False, recovery=("fresh-boot",))
-        if live.get("ambiguous") and int(claimed.get("pid", -1)) < 0:
-            raise ProtocolError("stale-session",
-                                "several game processes are running; the session "
-                                "cannot be identified",
-                                retryable=False, recovery=("fresh-boot",))
+        if live.get("ambiguous"):
+            try:
+                claimed_pid = int(claimed.get("pid", -1))
+            except (TypeError, ValueError):
+                claimed_pid = -1
+            matching = [item for item in live.get("processes", [])
+                        if isinstance(item, Mapping) and item.get("pid") == claimed_pid]
+            if len(matching) != 1:
+                raise ProtocolError("stale-session",
+                                    "the claimed emulator process is not present",
+                                    retryable=False, recovery=("fresh-boot",))
+            live = {**live, **matching[0]}
         claimed_exe = str(claimed.get("executable", ""))
         live_exe = str(live.get("executable", ""))
         if claimed_exe and live_exe and claimed_exe.casefold() != live_exe.casefold():
@@ -298,10 +351,11 @@ class Backend:
         arm_id = str(params.get("arm_id", ""))
         arm = load_arm(self.state_root, arm_id)
         play = load_play(self.state_root, arm.play_id)
-        self.preflight(params, stage="connect")
+        launch_params = {**play.launch_config, **params}
+        launch_params.update(self.launch_secrets.get(play.play_id, {}))
+        self.preflight(launch_params, stage="connect")
         # Late checks: installed bytes + fresh game process, never PID alone.
-        verified = self._verify(play, params)
-        require_copy_activation(verified.files, stage="connection")
+        verified = self._verify(play, launch_params)
         if verified.activation_fingerprint != arm.activation_fingerprint:
             raise ProtocolError("verification-failed", "activation drifted since arming",
                                 recovery=("prepare-again",))
@@ -315,7 +369,12 @@ class Backend:
             live = {**live, **{k: claimed[k] for k in
                                ("pid", "creation_time", "executable",
                                 "executable_sha256") if k in claimed},
-                    "alive": live.get("alive", True)}
+                     "alive": live.get("alive", True)}
+        if live.get("game_running") and live.get("pid") is not None:
+            launch_params["process_identity"] = {
+                key: live[key] for key in ("pid", "creation_time", "executable",
+                                           "executable_sha256") if key in live
+            }
         prior = existing_session_for_play(self.state_root, play.play_id)
         if prior is not None and live.get("pid") == prior.pid:
             # Duplicate Play reuses the live session instead of spawning again.
@@ -328,7 +387,7 @@ class Backend:
                     "client_pid": reattached.client_pid}
         if self.spawn_fn is None:
             raise ProtocolError("internal-error", "backend has no spawn function wired")
-        spawned = self.spawn_fn(play, arm, params, verified)
+        spawned = self.spawn_fn(play, arm, launch_params, verified)
         session = SupervisorSession(
             session_id=f"session_{play.play_id[5:13]}",
             play_id=play.play_id, arm_id=arm.arm_id,
@@ -339,11 +398,15 @@ class Backend:
             created_at=time.time(),
         )
         register_session(self.state_root, session)
+        process_handle = spawned.get("_process")
+        if process_handle is not None:
+            self.client_processes[session.session_id] = process_handle
         if session.client_pid is not None:
             try:
                 claim_client(self.state_root, session.session_id, session.client_pid)
             except ProtocolError:
-                pass  # first registration already owns it
+                release_client(self.state_root, session.session_id)
+                raise
         return {"session_id": session.session_id, "reused": False,
                 "client_pid": session.client_pid}
 
@@ -355,15 +418,61 @@ class Backend:
         if session is None:
             return {"state": "idle", "play_id": play_id}
         live = self.process_check_fn() if self.process_check_fn else {}
-        alive = live.get("pid") == session.pid and bool(live.get("alive", True))
-        return {"state": "playing" if alive else "recoverable",
+        if live.get("ambiguous"):
+            matching = [item for item in live.get("processes", [])
+                        if isinstance(item, Mapping) and item.get("pid") == session.pid]
+            if len(matching) == 1:
+                live = {**live, **matching[0]}
+        same_process = live.get("pid") == session.pid
+        if same_process and session.creation_time is not None and live.get("creation_time") is not None:
+            same_process = str(session.creation_time) == str(live.get("creation_time"))
+        if same_process and session.executable and live.get("executable"):
+            same_process = session.executable.casefold() == str(live["executable"]).casefold()
+        if same_process and session.executable_sha256 and live.get("executable_sha256"):
+            same_process = session.executable_sha256.lower() == str(
+                live["executable_sha256"]).lower()
+        alive = same_process and bool(live.get("alive", True))
+        client = self.client_processes.get(session.session_id)
+        client_running: bool | None = None
+        if client is not None:
+            poll = getattr(client, "poll", None)
+            if callable(poll):
+                client_running = poll() is None
+        return {"state": "playing" if alive and client_running is True else "recoverable",
                 "session_id": session.session_id, "client_pid": session.client_pid,
-                "play_id": play_id}
+                "client_running": client_running, "play_id": play_id}
 
     def _stop_client(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
         session_id = str(params.get("session_id", ""))
+        process = self.client_processes.get(session_id)
+        if process is None:
+            raise ProtocolError(
+                "stale-session",
+                "this backend does not own the client process; session ownership was preserved",
+                retryable=False,
+                recovery=("return-to-game",),
+                ids={"session_id": session_id},
+            )
+        poll = getattr(process, "poll", None)
+        if not callable(poll):
+            raise ProtocolError("stale-session", "owned client handle cannot verify process state",
+                                retryable=False, recovery=("return-to-game",),
+                                ids={"session_id": session_id})
+        if poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except Exception:
+                process.kill()
+                process.wait(timeout=5)
+        if poll() is None:
+            raise ProtocolError("stale-session", "owned client is still running after stop",
+                                retryable=True, recovery=("return-to-game",),
+                                ids={"session_id": session_id})
+        self.client_processes.pop(session_id, None)
         release_client(self.state_root, session_id)
-        return {"stopped": True, "session_id": session_id}
+        return {"stopped": True, "session_id": session_id,
+                "detail": "owned client stopped or already exited"}
 
     def _cancel_operation(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
         target = str(params.get("target_id", op_id))

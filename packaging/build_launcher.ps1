@@ -110,6 +110,7 @@ if ($worldData.Count -lt 2) { throw "No apworld data files found to bundle." }
     --add-data "$(Join-Path $repo 'research\enemizer\release_contracts.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\release_spawns.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\release_chara.json');research\enemizer" `
+    --add-data "$(Join-Path $repo 'research\enemizer\release_wakeup.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\bb_inputs.db');research" `
     @worldData `
     (Join-Path $repo "packaging\launcher_entry.py")

@@ -67,9 +67,22 @@ Write down, before the run:
 - what it looks like if **the probe is broken**, and how that is
   distinguishable from "false".
 
-If the third case is not distinguishable from the second, the probe cannot
-support an absence claim and the request must say so. A result that matches
-none of the three is a probe defect and voids the session.
+Turn those predictions into an outcome table before requesting a session:
+
+| Possible result | Evidence that distinguishes it | Conclusion and next action |
+| --- | --- | --- |
+| Hypothesis supported | Expected observation plus passing controls | State exactly what is established and proceed with the decided change |
+| Hypothesis rejected | Alternative observation plus passing controls | Reject the hypothesis and follow the specified alternative |
+| No visible change or partial result | Activation, coverage and capture evidence that separates the competing causes | Resolve the stated question, or identify the specific failed prerequisite and stop |
+| Control failure, timeout or unexpected result | Explicit failure marker or bounded deadline | Stop; preserve the bundle and repair or redesign offline |
+
+Replace the generic cells with concrete observations for this probe. Account
+for each plausible result, not just the hoped-for one. A valid run should answer
+the stated question whichever substantive result occurs. If "patch inactive",
+"wrong item path" and "capture failed" all look like silence, the design is
+not ready. Add controls or change the experiment before asking the player.
+An unforeseen result is still possible; classify it as invalid, not evidence
+for either hypothesis, and stop rather than extending the playtest ad hoc.
 
 ### 3. A labeled-acquisition script for the operator
 
@@ -88,6 +101,33 @@ on either side has been enough to separate events so far.
 One line each: how many minutes of operator time, how many restarts, whether a
 throwaway save is required, and what decision the result will settle. If the
 result would not change what gets built next, do not run it.
+
+**Optimize total playtest time, not just probe implementation time.** Count
+setup, loading, travel, combat, waits, restarts, capture and restoration. Give
+the operator the shortest action that distinguishes the outcomes, a time limit,
+and explicit stop conditions for both success and failure. Automate preparation,
+capture and analysis where possible. Explain why an existing save, nearby
+interaction or broader canary cannot answer the same question more cheaply.
+
+The maintainer's 2026-09-23 example: changing only Saw Spear and asking the
+player to go find it wastes time if the question is merely whether the item
+patch is active. In a disposable test overlay, change every applicable item to
+an unmistakable canary so the next convenient pickup exposes the result.
+Verify the generated coverage and active artifact, identify the path the chosen
+interaction exercises, and provide cleanup/restoration. A passing canary on one
+path does not validate every item type or delivery mechanism. A specific-item
+trip is justified only when that item's identity or behavior is under test.
+
+Broad coverage of one controlled variable is compatible with "one change per
+rebuild" below. Do not combine unrelated hypotheses or modify the player's
+normal seed as a side effect of a canary. The experiment should be easy to enter,
+unmissable to observe and easy to leave.
+
+An inconclusive run does not automatically justify another playtest. Analyze
+its bundle first, name the failed design assumption, and demonstrate how the
+revised controls distinguish the previously ambiguous outcomes. Repeat only
+with new evidence or a corrected instrument and a renewed outcome table and
+time budget; never ask the operator to keep trying essentially the same probe.
 
 ### 5. Why existing data cannot answer it
 
@@ -209,10 +249,14 @@ Copy this into the request comment and tick it:
 ```
 - [ ] positive control passed on build <hash>; record: <paste>
 - [ ] prediction written: true / false / probe-broken all distinguishable
+- [ ] outcome table covers no change, partial result, timeout and unexpected result; conclusions and next actions stated
 - [ ] labeled script with in-stream markers; waits stated
 - [ ] cost: <minutes>, restarts: <n>, throwaway save: yes/no
+- [ ] cheapest decisive action chosen; why a nearby action or broad canary is insufficient: <reason, or used>
+- [ ] time limit, stop conditions and restoration steps supplied
 - [ ] decision this settles: <one line>
 - [ ] existing bundles checked: <list>; why insufficient: <one line>
+- [ ] (repeat request) previous ambiguity explained; revised design distinguishes it
 - [ ] install gating and origin classification present in the build
 - [ ] (direct calls only) static ABI writeup linked; construct-only stage first
 ```

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -61,7 +62,7 @@ class SeedInspectionTests(unittest.TestCase):
             self.assertFalse(response["result"]["needs_choice"])
             self.assertEqual(response["result"]["selected"], "Alaric")
 
-    def test_multi_slot_seed_without_choice_reports_ambiguity(self) -> None:
+    def test_multi_slot_seed_without_choice_returns_available_slots(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             backend = Backend(Path(state))
             seed = self._seed_file(state, {
@@ -70,12 +71,31 @@ class SeedInspectionTests(unittest.TestCase):
                 "slots": ["A", "B"],
             })
             missing = backend.handle(request("inspect_seed", {"seed_path": seed}))
-            self.assertFalse(missing["ok"])
-            self.assertEqual(missing["error"]["code"], "ambiguous-player")
+            self.assertTrue(missing["ok"], missing)
+            self.assertTrue(missing["result"]["needs_choice"])
+            self.assertIsNone(missing["result"]["selected"])
+            self.assertEqual(missing["result"]["slots"], ["A", "B"])
             chosen = backend.handle(
                 request("inspect_seed", {"seed_path": seed, "player_name": "B"}))
             self.assertTrue(chosen["ok"], chosen)
             self.assertEqual(chosen["result"]["selected"], "B")
+
+    def test_multi_slot_zip_returns_slots_before_extracting_a_member(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            archive = Path(state) / "AP_seed.zip"
+            with zipfile.ZipFile(archive, "w") as bundle:
+                for slot in ("A", "B"):
+                    bundle.writestr(f"{slot}.bbseed.json", json.dumps({
+                        "format": "bb-seed-request-v1", "seed": "Hunt",
+                        "player": 1, "player_name": slot, "runtime_build": "r",
+                        "world_version": "w", "server": "archipelago.gg:9",
+                    }))
+            backend = Backend(Path(state))
+            response = backend.handle(request("inspect_seed", {"seed_path": str(archive)}))
+            self.assertTrue(response["ok"], response)
+            self.assertEqual(response["result"]["slots"], ["A", "B"])
+            self.assertTrue(response["result"]["needs_choice"])
+            self.assertFalse((Path(state) / "seed-requests").exists())
 
 
 class CompanionImportTests(unittest.TestCase):

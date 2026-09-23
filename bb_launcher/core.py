@@ -718,6 +718,8 @@ class SeedCache:
         boss_encounter_overlay: Path | str | None = None,
         item_names: Path | str | Mapping[str, Path | str] | None = None,
         item_names_path: str = ITEM_NAMES_PATH,
+        enemy_events: Mapping[str, Path | str] | None = None,
+        enemy_event_report: Mapping[str, Any] | None = None,
     ) -> BuildResult:
         key = identity.cache_key
         destination = self.path_for(key)
@@ -821,6 +823,50 @@ class SeedCache:
                 raise ValidationError("enemizer plan carries no swap list")
         elif maps:
             raise ValidationError("MapStudio outputs require the enemizer plan that produced them")
+        enemy_events = dict(enemy_events or {})
+        if enemy_events and set(enemy_events) != {BOSS_EVENT_PATH}:
+            raise ValidationError("wakeup fallback may only supply the managed m24_01 event")
+        wakeup_fallbacks = [] if plan_document is None else plan_document.get("wakeup_fallbacks", [])
+        wakeup_output_hash: str | None = None
+        if not isinstance(wakeup_fallbacks, list):
+            raise ValidationError("enemizer plan wakeup_fallbacks must be a list")
+        if wakeup_fallbacks:
+            for row in wakeup_fallbacks:
+                if (not isinstance(row, dict)
+                        or set(row) != {"logical_key", "entity_id", "map", "event_id"}
+                        or not isinstance(row.get("logical_key"), str)
+                        or not row["logical_key"]
+                        or not isinstance(row.get("entity_id"), int)
+                        or isinstance(row.get("entity_id"), bool)
+                        or row.get("map") != "m24_01_00_00"
+                        or row.get("event_id") != 12415130):
+                    raise ValidationError("enemizer plan carries an invalid wakeup fallback row")
+            if encounter is not None or boss_event is not None:
+                raise ValidationError("wakeup fallback cannot be combined with a boss event overlay")
+            if set(enemy_events) != {BOSS_EVENT_PATH} or enemy_event_report is None:
+                raise ValidationError("enemizer plan wakeup fallbacks require the composed event and receipt")
+            if identity.options.get("wakeup_fallback_version") != 1:
+                raise ValidationError("wakeup fallback requires its versioned cache identity")
+            if plan_source is None:
+                raise ValidationError("wakeup fallback requires its retained enemizer plan")
+            report = dict(enemy_event_report)
+            if (report.get("format") != "bb-enemizer-wakeup-fallback-v1"
+                    or report.get("applied") is not True
+                    or report.get("plan_sha256") != sha256_file(plan_source)
+                    or report.get("wakeup_fallbacks") != wakeup_fallbacks):
+                raise ValidationError("wakeup fallback receipt does not match its plan")
+            source_hash = _require_sha256(
+                str(report.get("source_event_sha256", "")), "wakeup source event")
+            if identity.source_hashes.get(BOSS_EVENT_PATH) != source_hash:
+                raise ValidationError("wakeup fallback source event differs from the cache identity")
+            wakeup_output_hash = _require_sha256(
+                str(report.get("output_event_sha256", "")), "wakeup output event")
+            event_source = Path(enemy_events[BOSS_EVENT_PATH]).expanduser().resolve()
+            if (not event_source.is_file() or event_source.is_symlink()
+                    or sha256_file(event_source) != wakeup_output_hash):
+                raise ValidationError("wakeup fallback output differs from its receipt")
+        elif enemy_events or enemy_event_report is not None:
+            raise ValidationError("wakeup fallback output was supplied without planned fallback rows")
         scripts: list[Path] = []
         if encounter is not None:
             scripts = sorted(
@@ -878,6 +924,8 @@ class SeedCache:
                     if not names.is_file() or names.is_symlink():
                         raise ValidationError("item names archive is not a regular file")
                     inputs.append((relative, names, "pickup-names"))
+            if wakeup_fallbacks:
+                inputs.append((BOSS_EVENT_PATH, event_source, "enemizer-wakeup-fallback"))
             if boss_event is not None:
                 event = Path(boss_event).expanduser().resolve()
                 if not event.is_file() or event.is_symlink():
@@ -1048,6 +1096,14 @@ class SeedCache:
                     "scaling": scaling_report,
                 },
             }
+            if wakeup_fallbacks:
+                report_hash = hashlib.sha256(canonical_json(report)).hexdigest()
+                manifest["enemizer"]["wakeup_fallback"] = {
+                    "path": BOSS_EVENT_PATH,
+                    "sha256": wakeup_output_hash,
+                    "report": report,
+                    "report_sha256": report_hash,
+                }
             _write_json_atomic(stage / SEED_MANIFEST_NAME, manifest)
             self.verify(stage, expected_key=key)
             try:
@@ -1129,6 +1185,41 @@ class SeedCache:
                 raise ValidationError("retained enemizer plan hash changed")
         elif retained_plan.exists():
             raise ValidationError("seed build carries an enemizer plan its manifest does not record")
+        enemizer_manifest = manifest.get("enemizer")
+        if not isinstance(enemizer_manifest, dict):
+            raise ValidationError("seed manifest enemizer record is malformed")
+        retained_plan_document = (
+            _read_json(retained_plan, "enemizer plan") if plan_record is not None else None
+        )
+        planned_wakeup = ([] if retained_plan_document is None
+                          else retained_plan_document.get("wakeup_fallbacks", []))
+        if not isinstance(planned_wakeup, list):
+            raise ValidationError("retained enemizer wakeup_fallbacks must be a list")
+        wakeup_record = enemizer_manifest.get("wakeup_fallback")
+        wakeup_event_record = expected.get(BOSS_EVENT_PATH)
+        if wakeup_record is None:
+            if planned_wakeup or (wakeup_event_record is not None
+                                  and wakeup_event_record.get("component") == "enemizer-wakeup-fallback"):
+                raise ValidationError("planned wakeup fallback has no manifest receipt")
+        else:
+            if (not isinstance(wakeup_record, dict)
+                    or wakeup_record.get("path") != BOSS_EVENT_PATH
+                    or identity.options.get("wakeup_fallback_version") != 1
+                    or not planned_wakeup
+                    or wakeup_event_record is None
+                    or wakeup_event_record.get("component") != "enemizer-wakeup-fallback"):
+                raise ValidationError("wakeup fallback manifest record is invalid")
+            report = wakeup_record.get("report")
+            if (not isinstance(report, dict)
+                    or report.get("format") != "bb-enemizer-wakeup-fallback-v1"
+                    or report.get("applied") is not True
+                    or report.get("wakeup_fallbacks") != planned_wakeup
+                    or report.get("plan_sha256") != plan_record.get("sha256")
+                    or report.get("output_event_sha256") != wakeup_record.get("sha256")
+                    or identity.source_hashes.get(BOSS_EVENT_PATH) != report.get("source_event_sha256")
+                    or wakeup_event_record.get("sha256") != wakeup_record.get("sha256")
+                    or wakeup_record.get("report_sha256") != hashlib.sha256(canonical_json(report)).hexdigest()):
+                raise ValidationError("wakeup fallback receipt does not match the retained build")
         suppression = manifest.get("suppression")
         if not isinstance(suppression, dict):
             raise ValidationError("seed manifest is missing its suppression witness")
@@ -1198,9 +1289,11 @@ class SeedCache:
                     or hemwick.get("object") != 2201999
                     or hemwick.get("sfx") != 2203999):
                 raise ValidationError("Hemwick gate event witness is invalid")
-        boss = manifest.get('enemizer', {}).get('boss')
+        boss = enemizer_manifest.get('boss')
         boss_encounters = manifest.get('enemizer', {}).get('boss_encounters')
-        boss_record = expected.get(BOSS_EVENT_PATH)
+        boss_file_record = expected.get(BOSS_EVENT_PATH)
+        boss_record = (boss_file_record if boss_file_record is not None
+                       and boss_file_record.get("component") == "boss-event" else None)
         boss_enabled = bool(identity.options.get('boss_canary'))
         boss_encounters_enabled = bool(identity.options.get('boss_encounters'))
         if boss_enabled and boss_encounters_enabled:

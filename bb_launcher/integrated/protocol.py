@@ -40,7 +40,6 @@ ERROR_CODES = (
     "ambiguous-install",
     "ambiguous-player",
     "seed-identity-mismatch",
-    "activation-route-refused",
     "verification-failed",
     "conflict",
     "interrupted",

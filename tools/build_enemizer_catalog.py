@@ -204,6 +204,10 @@ def main() -> int:
               "CharaInit-bound placements with no talk binding. The donor's "
               "own CharaInit travels with the archetype tuple. Consumed via "
               "--release-file; default policy unchanged."))
+    parser.add_argument(
+        "--release-wakeup-fallbacks", action="store_true",
+        help=("Emit the source-pinned Central Yharnam sleep-to-wake fallback "
+              "record; consumed automatically with expanded release options."))
     parser.add_argument("--output", type=Path, default=Path("research/enemizer"))
     args = parser.parse_args()
 
@@ -304,6 +308,12 @@ def main() -> int:
     args.output.mkdir(parents=True, exist_ok=True)
     if args.release_contracts or args.release_script_spawns or args.release_chara_bound:
         _write_release_records(args, slots, tags, slot_policy)
+    if args.release_wakeup_fallbacks:
+        from bb_enemizer.wakeup_fallback import build_release
+        wakeup = build_release(args.events)
+        (args.output / "release_wakeup.json").write_text(
+            json.dumps(wakeup, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8", newline="\n")
     (args.output / "enemy_tags.json").write_text(
         json.dumps(tags, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
     (args.output / "slot_policy.json").write_text(

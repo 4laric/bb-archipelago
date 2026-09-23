@@ -1,0 +1,246 @@
+{
+  "awake_fallback": {
+    "event_id": 12415130,
+    "initializers": [
+      {
+        "arguments": [
+          2410148,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          1
+        ],
+        "entity_id": 2410148,
+        "event_slot": 8,
+        "logical_key": "m24_01_00_00:c1120_0009"
+      },
+      {
+        "arguments": [
+          2410149,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          1
+        ],
+        "entity_id": 2410149,
+        "event_slot": 9,
+        "logical_key": "m24_01_00_00:c1120_0010"
+      },
+      {
+        "arguments": [
+          2410150,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          0
+        ],
+        "entity_id": 2410150,
+        "event_slot": 10,
+        "logical_key": "m24_01_00_00:c1120_0011"
+      },
+      {
+        "arguments": [
+          2410154,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          1
+        ],
+        "entity_id": 2410154,
+        "event_slot": 14,
+        "logical_key": "m24_01_00_00:c1120_0015"
+      },
+      {
+        "arguments": [
+          2410140,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          1
+        ],
+        "entity_id": 2410140,
+        "event_slot": 0,
+        "logical_key": "m24_01_00_00:c1120_0016"
+      },
+      {
+        "arguments": [
+          2410141,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          0
+        ],
+        "entity_id": 2410141,
+        "event_slot": 1,
+        "logical_key": "m24_01_00_00:c1120_0017"
+      },
+      {
+        "arguments": [
+          2410143,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          0
+        ],
+        "entity_id": 2410143,
+        "event_slot": 3,
+        "logical_key": "m24_01_00_00:c1120_0019"
+      },
+      {
+        "arguments": [
+          2410144,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          1
+        ],
+        "entity_id": 2410144,
+        "event_slot": 4,
+        "logical_key": "m24_01_00_00:c1120_0020"
+      },
+      {
+        "arguments": [
+          2410146,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          0
+        ],
+        "entity_id": 2410146,
+        "event_slot": 6,
+        "logical_key": "m24_01_00_00:c1120_0022"
+      },
+      {
+        "arguments": [
+          2410147,
+          9000,
+          9061,
+          52410270,
+          112499,
+          112400,
+          0
+        ],
+        "entity_id": 2410147,
+        "event_slot": 7,
+        "logical_key": "m24_01_00_00:c1120_0023"
+      }
+    ],
+    "map": "m24_01_00_00",
+    "operation": "suppress_initializer_for_swapped_entity",
+    "preserve": "All other EMEVD events and calls; the destination MSB entity, transforms, flags, quest events, and all non-wakeup script behavior.",
+    "source_event_file": "m24_01_00_00.emevd.dcx.js",
+    "source_sha256": "6d58b164e95233201e1490db0a443ac2fae99000de045840c6be0344a8c8d888"
+  },
+  "format": "bb-enemizer-release-v1",
+  "releases": {
+    "m24_01_00_00:c1120_0009": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410148
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0010": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410149
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0011": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410150
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0015": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410154
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0016": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410140
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0017": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410141
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0019": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410143
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0020": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410144
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0022": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410146
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    },
+    "m24_01_00_00:c1120_0023": {
+      "contract_class": "scripted_wakeup_fallback",
+      "entity_ids": [
+        2410147
+      ],
+      "initialization_event_id": 12415130,
+      "physical_copies": 3,
+      "reason": "wakeup initializer uses c1120-specific AI IDs 112499 (sleep) and 112400 (wake); suppress only this initializer when this placement is randomized"
+    }
+  },
+  "tranche": "wakeup"
+}
