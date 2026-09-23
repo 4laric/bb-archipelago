@@ -209,7 +209,10 @@ class ExternalIntegrityAgainstRealVerificationTests(unittest.TestCase):
         self.assertTrue(verified.files, "verification must cover at least one file")
         for item in verified.files:
             self.assertEqual(item.installation, "copy")
-        self.assertTrue(all(item.sha256 for item in verified.files))
+        self.assertEqual(
+            {item.path: item.sha256 for item in verified.files},
+            {record.path: record.sha256 for record in self.exported.receipt.files},
+        )
 
     def test_real_symlink_activation_passes_integrity_verification(self) -> None:
         self._activate(symlink=True)
@@ -217,7 +220,10 @@ class ExternalIntegrityAgainstRealVerificationTests(unittest.TestCase):
             self.exported.receipt, install=self.install, mods_root=self.mods_root,
             allow_live_acceptance_candidate=True)
         self.assertTrue(any(item.installation == "symlink" for item in verified.files))
-        self.assertTrue(all(item.sha256 for item in verified.files))
+        self.assertEqual(
+            {item.path: item.sha256 for item in verified.files},
+            {record.path: record.sha256 for record in self.exported.receipt.files},
+        )
     def test_second_holder_times_out(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             game = Path(state) / "game"
