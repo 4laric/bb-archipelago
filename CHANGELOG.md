@@ -8,6 +8,8 @@ under `Unreleased` and move into a dated version section when released.
 
 - Enemy randomization no longer turns ordinary enemies into the Cainhurst
   carriage, and the carriage in Hemwick Charnel Lane stays in place.
+- Enemy randomization no longer spawns the 1 HP cutscene Clocktower patient or
+  the mummified Fishing Hamlet fishmen as enemies, and leaves those props in place.
 - Enemy randomization no longer places Lady Maria as an ordinary enemy (her AI
   breaks outside her own fight), and her Astral Clocktower spawn stays vanilla.
 - Boss shuffle adds reusable Orphan combat in the six base arenas and reusable

@@ -40,12 +40,12 @@ SEED = "12345"
 # determinism is pinned separately below).
 PINNED_COUNTS = {
     (): 308,
-    ("contracts",): 826,
+    ("contracts",): 822,
     ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1544,
+    ("chara", "contracts", "spawns"): 1540,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1554,
+    ("chara", "contracts", "spawns", "wakeup"): 1550,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -196,13 +196,24 @@ class ReleasePlanningTests(unittest.TestCase):
     def test_excluded_models_never_enter_the_ordinary_pool(self):
         # c4520 Lady Maria: AI broken outside her fight; boss shuffle owns her.
         # c7110 Cainhurst carriage: a stationary prop, not an enemy.
+        # NpcParam 402021 / 405020: 1 HP cutscene patient and mummified fishman;
+        # the rest of c4020 / c4050 stays in the pool.
         excluded = {"c4520", "c7110"}
+        excluded_npcs = {402021, 405020}
+
+        def banned(archetype):
+            return (archetype.model_name in excluded
+                    or archetype.npc_param_id in excluded_npcs)
+
         self.assertFalse([key for key, tag in self.tags.items()
-                          if key.split(":", 1)[0] in excluded and tag.target])
+                          if tag.target and (key.split(":", 1)[0] in excluded
+                                             or int(key.split(":")[1]) in excluded_npcs)])
+        self.assertTrue(self.tags["c4020:402020:402020:0"].target)
+        self.assertTrue(self.tags["c4050:405000:405000:0"].target)
         swaps, _rejections, _release = self._plan(
             ("chara", "contracts", "spawns", "wakeup"))
         self.assertFalse([swap.logical_key for swap in swaps
-                          if excluded & {swap.source.model_name, swap.target.model_name}])
+                          if banned(swap.source) or banned(swap.target)])
 
     def test_tranche_determinism(self):
         for tranches in [("contracts",), ("chara", "contracts", "spawns")]:

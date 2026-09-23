@@ -24,6 +24,13 @@ NON_TARGET_MODELS = {
     "c7110": "Cainhurst carriage (Hemwick): a stationary 1 HP prop, not an enemy",
 }
 
+# Single NpcParam rows to exclude where the rest of the model family is an
+# ordinary enemy that should stay in the pool.
+NON_TARGET_NPC_PARAMS = {
+    402021: "Clocktower patient, cutscene-only 1 HP actor",
+    405020: "Mummified fishman, a 1 HP decoration",
+}
+
 
 def rows(path: Path):
     with path.open(encoding="utf-8-sig", newline="") as stream:
@@ -240,7 +247,8 @@ def main() -> int:
         team = int(row.get("teamType") or 0)
         npc_type = int(row.get("npcType") or 0)
         approved = (team == 23 and npc_type == 0 and radius > 0 and height > 0
-                    and archetype.model_name not in NON_TARGET_MODELS)
+                    and archetype.model_name not in NON_TARGET_MODELS
+                    and archetype.npc_param_id not in NON_TARGET_NPC_PARAMS)
         scaling_rows = []
         for index in range(8):
             effect_id = int(row.get(f"spEffectID{index}") or 0)
