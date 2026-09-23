@@ -120,7 +120,7 @@ foreach (Swap swap in manifest.Swaps)
         int split = destination.IndexOf(':');
         if (split <= 0 || split == destination.Length - 1)
             throw new InvalidDataException($"invalid destination key {destination}");
-        string map = destination[..split];
+        string map = BareMap(destination[..split]);
         string part = destination[(split + 1)..];
         if (!swap.DestinationSources.TryGetValue(destination, out Archetype? physicalSource))
             throw new InvalidDataException($"{destination}: missing physical source provenance");
@@ -137,6 +137,8 @@ var loadedMaps = new Dictionary<string, (
     HashSet<string> OriginalModels)>(StringComparer.Ordinal);
 foreach ((string map, List<Change> changes) in changesByMap.OrderBy(entry => entry.Key))
 {
+    if (changes.Select(change => change.PartName).Distinct(StringComparer.Ordinal).Count() != changes.Count)
+        throw new InvalidDataException($"{map}: duplicate physical destination Part alias");
     string input = ResolveMap(inputRoot, map);
     MSBB msb = MSBB.Read(input);
     var parts = PartsByName(msb);
@@ -191,16 +193,21 @@ Console.WriteLine(
 return 0;
 }
 
+static string BareMap(string map)
+{
+    if (map.EndsWith(".msb.dcx", StringComparison.OrdinalIgnoreCase))
+        map = map[..^".msb.dcx".Length];
+    if (map.EndsWith(".msb", StringComparison.OrdinalIgnoreCase))
+        map = map[..^".msb".Length];
+    return map.ToLowerInvariant();
+}
+
 static string ResolveMap(string root, string map)
 {
     // Miner-derived plan keys retain the ".msb" extension because
     // Path.GetFileNameWithoutExtension strips only ".dcx"; accept bare map
     // ids and the miner-suffixed form alike.
-    string bare = map;
-    if (bare.EndsWith(".msb.dcx", StringComparison.OrdinalIgnoreCase))
-        bare = bare[..^".msb.dcx".Length];
-    else if (bare.EndsWith(".msb", StringComparison.OrdinalIgnoreCase))
-        bare = bare[..^".msb".Length];
+    string bare = BareMap(map);
     string compressed = Path.Combine(root, bare + ".msb.dcx");
     if (File.Exists(compressed)) return compressed;
     string plain = Path.Combine(root, bare + ".msb");

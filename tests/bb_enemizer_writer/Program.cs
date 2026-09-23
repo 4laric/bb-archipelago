@@ -224,6 +224,7 @@ try
     }
     Plan();
     BossTests.Run();
+    MapTransplantTests.Run();
     BossEncounterTests.Run();
     BossActorTests.Run();
     BossRegionTests.Run();

@@ -337,7 +337,12 @@ internal static class BossActorTransplant
                 Need(targetArchetype.ModelName == item.SourceArchetype.ModelName
                     && targetArchetype.ThinkParamId == item.SourceArchetype.ThinkParamId
                     && targetArchetype.CharaInitId == item.SourceArchetype.CharaInitId,
-                    "primary actor initialization target does not match source combat archetype");
+                    $"{item.DestinationMap}:{item.DestinationPart}:{item.DestinationEntityId}: "
+                    + "primary actor initialization target does not match source combat archetype; "
+                    + $"expected {item.SourceArchetype.ModelName}/{item.SourceArchetype.NpcParamId}/"
+                    + $"{item.SourceArchetype.ThinkParamId}/{item.SourceArchetype.CharaInitId}, "
+                    + $"file has {targetArchetype.ModelName}/{targetArchetype.NpcParamId}/"
+                    + $"{targetArchetype.ThinkParamId}/{targetArchetype.CharaInitId}");
                 RequireReviewedNormalizedClone(planPath, outputMaps, item, targetArchetype.NpcParamId);
             }
             var before = PartInvariant.Capture(targetEnemy);
