@@ -41,11 +41,11 @@ SEED = "12345"
 PINNED_COUNTS = {
     (): 308,
     ("contracts",): 827,
-    ("spawns",): 797,
+    ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1546,
+    ("chara", "contracts", "spawns"): 1545,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1556,
+    ("chara", "contracts", "spawns", "wakeup"): 1555,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -192,6 +192,15 @@ class ReleasePlanningTests(unittest.TestCase):
         for tranches, expected in PINNED_COUNTS.items():
             swaps, _rejections, _release = self._plan(tranches)
             self.assertEqual(expected, len(swaps), f"tranches={tranches}")
+
+    def test_lady_maria_never_enters_the_ordinary_pool(self):
+        # Her AI is broken outside her own fight; boss shuffle owns c4520.
+        self.assertFalse([key for key, tag in self.tags.items()
+                          if key.startswith("c4520:") and tag.target])
+        swaps, _rejections, _release = self._plan(
+            ("chara", "contracts", "spawns", "wakeup"))
+        self.assertFalse([swap.logical_key for swap in swaps
+                          if "c4520" in (swap.source.model_name, swap.target.model_name)])
 
     def test_tranche_determinism(self):
         for tranches in [("contracts",), ("chara", "contracts", "spawns")]:

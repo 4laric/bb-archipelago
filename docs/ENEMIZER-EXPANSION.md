@@ -132,6 +132,6 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
 | Item | Implemented + static tests | In-game validated |
 | --- | --- | --- |
 | Default 308-swap policy | yes | partial (prior playtests) |
-| contracts / spawns / chara + wakeup fallback | yes (pins: 827/797/345/1556) | **no** — owed |
+| contracts / spawns / chara + wakeup fallback | yes (pins: 827/796/345/1555) | **no** — owed |
 | Boss reviewed pool (67 pairs) | yes (existing contract tests) | **no** — owed |
 | Central Yharnam visibility (187) | yes (plan-level) | **no** — owed |
