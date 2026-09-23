@@ -1,0 +1,89 @@
+name: client pin check
+
+# packaging/client-ref.txt only gets checked reactively, at tag time (release.yaml's
+# "client pin is current" step): a release fails if the pin has drifted behind
+# from-software-archipelago-clients main, but nothing catches that drift before
+# someone is already trying to cut a release. That has stalled more than one
+# retag. Check on a schedule instead, and open the ordinary bump PR -- the one
+# CONTRIBUTING.md's "The client pin" section already describes -- as soon as the
+# pin goes stale, so it is caught and reviewed well before release day.
+
+on:
+  schedule:
+    - cron: "17 13 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    name: check the client pin against clients main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare the pin to from-software-archipelago-clients main
+        id: compare
+        run: |
+          pin=$(tr -d '[:space:]' < packaging/client-ref.txt)
+          if [[ ! "$pin" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::packaging/client-ref.txt must hold one full commit SHA"
+            exit 1
+          fi
+          head=$(git ls-remote https://github.com/4laric/from-software-archipelago-clients.git main | cut -f1)
+          if [[ -z "$head" ]]; then
+            echo "::error::could not read from-software-archipelago-clients main"
+            exit 1
+          fi
+          echo "pin=$pin" >> "$GITHUB_OUTPUT"
+          echo "head=$head" >> "$GITHUB_OUTPUT"
+          if [[ "$pin" == "$head" ]]; then
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip if a bump is already open
+        if: steps.compare.outputs.stale == 'true'
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          count=$(gh pr list --repo "$GITHUB_REPOSITORY" --head chore/bump-client-pin \
+            --state open --json number --jq 'length')
+          echo "open=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Open the bump pull request
+        if: steps.compare.outputs.stale == 'true' && steps.existing.outputs.open == '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PIN: ${{ steps.compare.outputs.pin }}
+          HEAD: ${{ steps.compare.outputs.head }}
+        run: |
+          git config user.name "bb-archipelago-bot"
+          git config user.email "actions@github.com"
+          git switch -c chore/bump-client-pin
+          echo "$HEAD" > packaging/client-ref.txt
+          git add packaging/client-ref.txt
+          git commit -F - <<COMMIT
+          chore: bump the pinned client to from-software-archipelago-clients main
+
+          from-software-archipelago-clients main moved to $HEAD; the pin was
+          still at $PIN. Opened automatically by the client pin check workflow
+          so this is caught before release day rather than during one -- see
+          CONTRIBUTING.md's "The client pin".
+          COMMIT
+          git push -u origin chore/bump-client-pin --force
+          gh pr create --repo "$GITHUB_REPOSITORY" \
+            --title "chore: bump the pinned client to from-software-archipelago-clients main" \
+            --body "$(cat <<BODY
+          Opened automatically: \`packaging/client-ref.txt\` was behind \`from-software-archipelago-clients\` main.
+
+          - old pin: \`$PIN\`
+          - new pin (clients main): \`$HEAD\`
+
+          Per CONTRIBUTING.md's *The client pin*, this merges once the packaging smoke (the frozen launcher's \`--self-check\` and the built client's \`--check-contract\`) proves the pair. Review the commits between the old and new pin in the clients repo before merging.
+          BODY
+          )"
