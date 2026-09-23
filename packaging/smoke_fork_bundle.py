@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import zlib
 
 
 def smoke(package: Path) -> None:
@@ -61,9 +63,41 @@ def smoke(package: Path) -> None:
             raise RuntimeError('Frozen response IDs do not match requests')
         if responses[1]['result'].get('selected') != 'Package tester':
             raise RuntimeError('Frozen seed inspection did not select the sole player')
+        # Run the shipped planner, with shipped catalogs, from outside the
+        # checkout. This catches stale executables or missing expansion data.
+        data = package / 'ap_backend/_internal/research'
+        planner = package / 'ap_backend/tools/BBEnemizerPlanner/BBEnemizerPlanner.exe'
+        with sqlite3.connect(data / 'bb_inputs.db') as database:
+            row = database.execute(
+                "SELECT blob FROM files WHERE path = 'mined/msb_enemies.tsv'"
+            ).fetchone()
+        if row is None:
+            raise RuntimeError('Packaged inputs lack the enemy inventory')
+        inventory = Path(temp) / 'enemies.tsv'
+        inventory.write_bytes(zlib.decompress(row[0]))
+        counts = []
+        for expanded in (False, True):
+            output = Path(temp) / f'enemies-{expanded}.json'
+            command = [str(planner), '--inventory', str(inventory), '--seed', '12345',
+                       '--output', str(output), '--tags', str(data / 'enemizer/enemy_tags.json'),
+                       '--slot-policy', str(data / 'enemizer/slot_policy.json'),
+                       '--facts', str(data / 'enemizer/archetype_facts.json')]
+            if expanded:
+                for name in ('contracts', 'spawns', 'chara'):
+                    command += ['--release-file', str(data / f'enemizer/release_{name}.json')]
+            result = subprocess.run(command, capture_output=True, text=True, timeout=90, cwd=temp)
+            if result.returncode:
+                raise RuntimeError(f'Packaged enemy planner failed: {result.stderr}')
+            plan = json.loads(output.read_text(encoding='utf-8'))
+            counts.append(plan['swap_count'])
+            if expanded and plan['options']['release_tranches'] != ['chara', 'contracts', 'spawns']:
+                raise RuntimeError('Packaged planner did not apply expanded coverage')
+        if not 0 < counts[0] < counts[1]:
+            raise RuntimeError(f'Expanded coverage did not increase enemy swaps: {counts}')
     print(f'Packaged client: {client.stdout.strip()}')
     print('Packaged Qt launcher: startup passed (no installation opened).')
     print('Frozen fork backend: capabilities and seed inspection passed (no game touched).')
+    print(f'Packaged enemy planner: {counts[0]} normal / {counts[1]} expanded swaps (seed 12345).')
 
 
 if __name__ == '__main__':

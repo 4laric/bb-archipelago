@@ -27,7 +27,8 @@ foreach ($path in @($ForkExecutable, $deployQt, $ClientPath,
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing bundle input: $path" }
 }
 foreach ($tool in @('BBSuppressionWriter.exe', 'BBEventWriter.exe', 'BBToastWriter.exe',
-                    'BBEnemizerWriter.exe', 'MSBBMiner.exe')) {
+                    'BBEnemizerWriter.exe', 'MSBBMiner.exe',
+                    'BBEnemizerPlanner/BBEnemizerPlanner.exe')) {
     if (-not (Test-Path -LiteralPath (Join-Path $ToolsDirectory $tool))) { throw "Missing build tool: $tool" }
 }
 New-Item -ItemType Directory -Path $output | Out-Null
