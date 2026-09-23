@@ -600,7 +600,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         )
         self.assertLessEqual({"token_goods_id", "item_lot_id", "ack_flag"}, set(rows[0]))
         cleanup = common["rows"]["toast_placeholders"]
-        self.assertEqual([], cleanup)
+        self.assertFalse(cleanup)
 
     def test_cathedral_build_failure_preserves_diagnostics_and_does_not_activate(self):
         toolchain = FakeToolchain()
@@ -1655,8 +1655,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             selected_manifest = root / "selected.json"
             selected_binder.write_bytes(b"selected")
             selected_manifest.write_text("{}", encoding="utf-8")
-            self.assertEqual(
-                {},
+            self.assertFalse(
                 repair_stale_packaged_suppression_paths(
                     {
                         "suppression_binder": str(selected_binder),
