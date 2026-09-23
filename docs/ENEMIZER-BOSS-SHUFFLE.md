@@ -822,3 +822,12 @@ removed range while still rejecting insertions inside it. This preserves
 Orphan's Cleric completion bridge when Gascoigne's old navigation calls are
 removed from their shared event file; synthetic and real-source regressions
 cover the ordering.
+
+The matrix above records the sources at `9c5aa4e`, before the separate map-alias
+fix from PR #460. With that fix applied, the actual saved launcher seed
+`31879326883593218814:1` also builds successfully using its original ordinary
+plan and extracted inputs: 332 composed swaps, 15 replacement encounters and
+60 verified files. That plan mixes bare and `.msb` map names, unlike the earlier
+combined fixture. The matching native harness passes, including the new alias
+regressions and the existing event-only FFX checks. These checks still make no
+gameplay claim.
