@@ -1268,16 +1268,22 @@ class LauncherUiWorkflowTests(unittest.TestCase):
                 found |= texts_by_parent.get(frame, set())
             return found
 
+        # Enemies is down to two decisions; the BSB single-boss playtest mode
+        # and every fine-tuning knob (seed, tier mixing, locomotion, stat
+        # normalization) live on Advanced instead, per player, not behind a
+        # second disclosure toggle nested inside this tab.
+        enemy_texts = texts_under(enemy_tab)
         self.assertLessEqual(
-            {
-                "Randomize enemies",
-                "Allow tier mixing",
-                "Normalize enemy stats",
-                "Boss playtest: BSB at Cleric Beast",
-                "Preserve locomotion",
-                "Enemy seed",
-            },
-            texts_under(enemy_tab),
+            {"Randomize enemies", "Boss shuffle (reviewed encounters)"}, enemy_texts,
+        )
+        for retired in ("Allow tier mixing", "Normalize enemy stats", "Preserve locomotion",
+                        "Enemy seed", "Boss playtest: BSB at Cleric Beast",
+                        "BSB at Cleric Beast (playtest)"):
+            self.assertNotIn(retired, enemy_texts)
+        troubleshooting_texts = texts_under(troubleshooting_tab)
+        self.assertLessEqual(
+            {"Allow tier mixing", "Normalize enemy stats", "Preserve locomotion", "Enemy seed"},
+            troubleshooting_texts,
         )
         self.assertEqual(parent_of[troubleshooting_tab], "notebook")
         # The operator override is available without cluttering normal setup.
@@ -1384,7 +1390,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             ENEMY_FIELDS, {"map_studio_source", "enemy_inventory", "soulsformats_next"}
         )
         self.assertIn("self._enemy_widgets.extend((entry, button))", build)
-        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion))", build)
+        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))", build)
         toggle = source.split("def _toggle_enemy_fields")[1].split("def _state_root")[0]
         self.assertIn("for widget in self._enemy_widgets", toggle)
         self.assertIn('widget.configure(state=state)', toggle)
@@ -1415,9 +1421,11 @@ class LauncherUiWorkflowTests(unittest.TestCase):
 
     def test_everyday_launch_controls_disclose_only_when_needed(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
-        self.assertIn('"Advanced enemy options"', source)
-        self.assertIn("self._enemy_advanced_widgets", source)
-        self.assertIn("widget.grid_remove()", source)
+        # The Enemies page's own "Advanced enemy options" disclosure toggle is
+        # retired: fine-tuning lives permanently on the Advanced page instead
+        # of behind a second nested toggle.
+        self.assertNotIn('"Advanced enemy options"', source)
+        self.assertNotIn("_enemy_advanced_widgets", source)
         self.assertIn("self._show_player_choice(len(names) > 1)", source)
         self.assertIn("self._show_player_choice(False)", source)
 

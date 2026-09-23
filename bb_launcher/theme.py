@@ -177,6 +177,20 @@ def apply_theme(root: Any, ttk: Any) -> None:
     style.configure("Heading.TCheckbutton", font=("Segoe UI", 11, "bold"))
 
     style.configure(
+        "TRadiobutton", background=THEME_BACKGROUND, foreground=THEME_FOREGROUND,
+        indicatorbackground=THEME_PANEL, indicatorforeground=THEME_FOREGROUND,
+        indicatormargin=(0, 2, 8, 2), focuscolor=THEME_BACKGROUND, padding=(0, 2),
+    )
+    style.map(
+        "TRadiobutton",
+        background=[("active", THEME_BACKGROUND)],
+        indicatorbackground=[("disabled", THEME_BACKGROUND), ("selected", THEME_BLOOD),
+                             ("active", THEME_PANEL_HOVER)],
+        indicatorforeground=[("disabled", THEME_DIM), ("selected", THEME_ON_BLOOD)],
+        foreground=[("disabled", THEME_DIM)],
+    )
+
+    style.configure(
         "Horizontal.TProgressbar", background=THEME_BLOOD, troughcolor=THEME_PANEL,
         bordercolor=THEME_PANEL, lightcolor=THEME_BLOOD, darkcolor=THEME_BLOOD, thickness=3,
     )
@@ -302,6 +316,28 @@ def option(ttk: Any, parent: Any, row: int, text: str, variable: Any, *,
             row=1, column=0, sticky="w", padx=(26, 0), pady=(0, 2)
         )
     return box, holder
+
+
+def radio_option(ttk: Any, parent: Any, row: int, text: str, variable: Any, value: str, *,
+                  caption: str | None = None, command: Callable[[], None] | None = None,
+                  columnspan: int = 3, indent: int = 0):
+    """One choice in a mutually-exclusive group, same shape as ``option``.
+
+    Use this instead of two independent checkboxes whenever a control only
+    lets one of several states be true at once -- the exclusivity should be
+    visible in the control, not left for the backend validation to enforce
+    silently. Returns ``(radiobutton, row_frame)``.
+    """
+    holder = ttk.Frame(parent)
+    holder.grid(row=row, column=0, columnspan=columnspan, sticky="ew", padx=(indent, 0), pady=(2, 2))
+    holder.columnconfigure(0, weight=1)
+    button = ttk.Radiobutton(holder, text=text, variable=variable, value=value, command=command)
+    button.grid(row=0, column=0, sticky="w")
+    if caption:
+        ttk.Label(holder, text=caption, style="Dim.TLabel").grid(
+            row=1, column=0, sticky="w", padx=(26, 0), pady=(0, 2)
+        )
+    return button, holder
 
 
 def scroll_page(tk: Any, ttk: Any, host: Any, *, padding: tuple[int, int, int, int] = (28, 22, 28, 22)) -> Any:
