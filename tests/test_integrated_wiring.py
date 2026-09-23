@@ -127,5 +127,123 @@ class ProductionSpawnTests(unittest.TestCase):
             self.assertNotIn("receipt_id", serialized["external_activation"])
 
 
+class ProductionPrepareOptionsTests(unittest.TestCase):
+    def test_prepare_forwards_enemy_options_and_reports_cached_build_counts(self) -> None:
+        from bb_launcher.workflow import EnemizerOptions
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            seed = root / "seed.json"
+            seed.write_text("{}", encoding="utf-8")
+            binder = root / "gameparam.parambnd.dcx"
+            binder.write_bytes(b"binder")
+            manifest = root / "build-manifest.json"
+            manifest.write_text("{}", encoding="utf-8")
+            plan_path = root / "plan.json"
+            client = root / "bb-ap-client.exe"
+            client.write_bytes(b"client")
+            options_payload = {
+                "enabled": True, "seed": "enemy-seed", "allow_tier_mixing": True,
+                "preserve_locomotion": True, "normalize_scaling": True,
+                "boss_canary": False, "boss_pool": "reviewed",
+                "release_contracts": True, "release_spawns": True,
+                "release_chara": False,
+            }
+            built = SimpleNamespace(
+                cache_key="c" * 64,
+                manifest={"enemizer": {
+                    "enabled": True, "seed": "enemy-seed", "file_count": 18,
+                    "plan": {"swap_count": 72}, "ai_file_count": 18,
+                    "ai": {"status": "verified"},
+                }},
+            )
+            identity = SimpleNamespace(seed="Seed", slot="Hunter")
+            prepared = SimpleNamespace(
+                build=built, reused=True, identity=identity,
+                plan=SimpleNamespace(processes=(ProcessSpec("AP client", client, ()),)),
+            )
+            captured: dict[str, object] = {}
+
+            class FakeWorkflow:
+                def __init__(self, *args, **kwargs):
+                    pass
+
+                def prepare_seed(self, settings, options, **kwargs):
+                    captured["settings"] = settings
+                    captured["options"] = options
+                    return prepared
+
+            receipt = SimpleNamespace(
+                receipt_id="r" * 64, cache_key=built.cache_key, package_name="Archipelago-Hunter-c",
+                identity=identity,
+                as_dict=lambda: {"receipt_id": "r" * 64, "package_name": "Archipelago-Hunter-c"},
+            )
+            params = {
+                "game_root": str(root), "state_root": str(root / "state"),
+                "mods_root": str(root / "mods"), "seed_path": str(seed),
+                "cache_root": str(root / "cache"), "server": "archipelago.gg:1",
+                "player_name": "Hunter", "suppression_binder": str(binder),
+                "suppression_manifest": str(manifest), "process_plan": str(plan_path),
+                "fork_build": {"build": "fixture", "commit": "a" * 40,
+                               "executable_sha256": "b" * 64},
+                "enemizer": options_payload,
+            }
+            export_result = SimpleNamespace(receipt=receipt)
+            game_install = SimpleNamespace(root=root)
+            with (
+                patch("bb_launcher.integrated.wiring.GameInstall.from_root", return_value=game_install),
+                patch("bb_launcher.integrated.wiring._process_plan", return_value=plan_path),
+                patch("bb_launcher.workflow.LauncherWorkflow", FakeWorkflow),
+                patch("bb_launcher.workflow.EnemizerToolchain"),
+                patch("bb_launcher.integrated.wiring._suppression_file",
+                      side_effect=lambda p, s, kind: binder if kind == "binder" else manifest),
+                patch("bb_launcher.external.export_external_package", return_value=export_result),
+                patch("bb_launcher.core.sha256_file", return_value="d" * 64),
+            ):
+                result = wiring.production_prepare(params, "op")
+
+            self.assertEqual(captured["options"], EnemizerOptions(**options_payload))
+            self.assertEqual(result["launch_config"]["enemizer"], options_payload)
+            self.assertEqual(result["enemizer"]["swap_count"], 72)
+            self.assertEqual(result["enemizer"]["map_file_count"], 18)
+            self.assertEqual(result["enemizer"]["ai_file_count"], 18)
+            self.assertTrue(result["enemizer"]["reused"])
+            self.assertEqual(result["enemizer"]["ai"], {"status": "verified"})
+
+    def test_workflow_cache_identity_tracks_enemy_seed_and_release_flags(self) -> None:
+        import test_launcher_ui as fixtures
+        from bb_launcher.workflow import EnemizerOptions, LauncherWorkflow
+
+        fixture = fixtures.LauncherUiWorkflowTests()
+        fixture.setUp()
+        self.addCleanup(fixture.tearDown)
+        toolchain = fixtures.FakeToolchain()
+        workflow = LauncherWorkflow(fixture.repo, toolchain=toolchain)
+
+        vanilla = workflow.prepare_seed(fixture.settings(), EnemizerOptions(enabled=False))
+        randomized = workflow.prepare_seed(
+            fixture.settings(), EnemizerOptions(enabled=True, seed="integrated-seed"))
+        release = workflow.prepare_seed(
+            fixture.settings(), EnemizerOptions(
+                enabled=True, seed="integrated-seed", release_contracts=True,
+                release_spawns=True, release_chara=True))
+        changed_seed = workflow.prepare_seed(
+            fixture.settings(), EnemizerOptions(
+                enabled=True, seed="different-enemy-seed", release_contracts=True,
+                release_spawns=True, release_chara=True))
+        repeated = workflow.prepare_seed(
+            fixture.settings(), EnemizerOptions(
+                enabled=True, seed="different-enemy-seed", release_contracts=True,
+                release_spawns=True, release_chara=True))
+
+        self.assertEqual(len({vanilla.build.cache_key, randomized.build.cache_key,
+                              release.build.cache_key, changed_seed.build.cache_key}), 4)
+        self.assertFalse(vanilla.build.manifest["enemizer"]["enabled"])
+        self.assertTrue(randomized.build.manifest["enemizer"]["enabled"])
+        self.assertTrue(repeated.reused)
+        self.assertEqual(repeated.build.cache_key, changed_seed.build.cache_key)
+        self.assertEqual(len(toolchain.calls), 3)
+
+
 if __name__ == "__main__":
     unittest.main()

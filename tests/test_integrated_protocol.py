@@ -93,7 +93,9 @@ class OpaqueHandleTests(unittest.TestCase):
             counter["n"] += 1
             return {"receipt_id": digest("receipt-1"), "receipt_digest": digest("payload-1"),
                     "seed": "Evening hunt", "slot": "Alaric", "cache_key": digest("cache-1"),
-                    "package_name": "Archipelago-Alaric-abc123", "server": "archipelago.gg:1"}
+                    "package_name": "Archipelago-Alaric-abc123", "server": "archipelago.gg:1",
+                    "enemizer": {"enabled": True, "swap_count": 42,
+                                 "map_file_count": 17, "reused": True}}
 
         return Backend(Path(state), prepare_fn=prepare)
 
@@ -153,6 +155,7 @@ class OpaqueHandleTests(unittest.TestCase):
             self.assertEqual(response["result"]["package_name"],
                              "Archipelago-Alaric-abc123")
             self.assertTrue(response["result"]["reused"] is False)
+            self.assertEqual(response["result"]["enemizer"]["swap_count"], 42)
 
     def test_launch_settings_are_saved_by_opaque_handle_without_password(self) -> None:
         with tempfile.TemporaryDirectory() as state:
@@ -167,8 +170,21 @@ class OpaqueHandleTests(unittest.TestCase):
             play_id = response["result"]["play_id"]
             record = load_play(state, play_id)
             self.assertEqual(record.launch_config["process_plan"], "p.json")
+            self.assertFalse(record.launch_config["enemizer"]["enabled"])
             self.assertNotIn("secret", json.dumps(record.as_dict()))
             self.assertEqual(backend.launch_secrets[play_id]["password"], "secret")
+
+    def test_invalid_enemizer_option_type_is_rejected_before_preparation(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            calls = []
+            backend = Backend(Path(state), prepare_fn=lambda *_: calls.append(True))
+            response = backend.handle(request("prepare_play", {
+                "game_root": state,
+                "enemizer": {"enabled": "true"},
+            }))
+            self.assertFalse(response["ok"])
+            self.assertEqual(response["error"]["code"], "bad-request")
+            self.assertEqual(len(calls), 0)
 
 
 if __name__ == "__main__":

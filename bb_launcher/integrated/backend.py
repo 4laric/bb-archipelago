@@ -39,6 +39,7 @@ from .import_state import detect_installations, import_companion_state
 from .journal import append_entry, decide_recovery, plan_activation, read_journal
 from .policy import fork_build_warning
 from .protocol import PROTOCOL_VERSION, ProtocolError, check_request, error_response, ok_response
+from .enemizer import enemizer_options_record, parse_enemizer_options
 from .sessions import (
     arms_dir,
     find_play_by_receipt,
@@ -215,7 +216,12 @@ class Backend:
             raise ProtocolError("cancelled", "operation was cancelled")
         if self.prepare_fn is None:
             raise ProtocolError("internal-error", "backend has no prepare function wired")
-        prepare_params = {**params, "state_root": str(self.state_root)}
+        options = parse_enemizer_options(params)
+        prepare_params = {
+            **params,
+            "state_root": str(self.state_root),
+            "enemizer": enemizer_options_record(options),
+        }
         prepared = self.prepare_fn(prepare_params, op_id)  # real: workflow.prepare_seed + export
         receipt_id = str(prepared["receipt_id"])
         existing = find_play_by_receipt(self.state_root, receipt_id)
@@ -225,7 +231,10 @@ class Backend:
             if existing.seed != prepared["seed"] or existing.slot != prepared["slot"]:
                 raise ProtocolError("seed-identity-mismatch",
                                     "existing play for this receipt names a different seed/slot")
-            launch_config = dict(prepared.get("launch_config", {}))
+            launch_config = {
+                **dict(prepared.get("launch_config", {})),
+                "enemizer": enemizer_options_record(options),
+            }
             existing = update_play_launch_config(
                 self.state_root, existing.play_id, launch_config)
             if params.get("password"):
@@ -233,8 +242,12 @@ class Backend:
                     "password": str(params["password"])}
             return {"play_id": existing.play_id, "package_name": existing.package_name,
                     "reused": True, "build_warning": prepared.get("build_warning"),
+                    "enemizer": prepared.get("enemizer"),
                     "display": _display(prepared)}
-        launch_config = dict(prepared.get("launch_config", {}))
+        launch_config = {
+            **dict(prepared.get("launch_config", {})),
+            "enemizer": enemizer_options_record(options),
+        }
         record = mint_play(
             self.state_root, receipt_id=receipt_id,
             receipt_digest=str(prepared["receipt_digest"]), seed=str(prepared["seed"]),
@@ -248,6 +261,7 @@ class Backend:
                      record.play_id, {"package": record.package_name})
         return {"play_id": record.play_id, "package_name": record.package_name,
                 "reused": False, "build_warning": prepared.get("build_warning"),
+                "enemizer": prepared.get("enemizer"),
                 "display": _display(prepared)}
 
     # -- verify/arm ---------------------------------------------------------------

@@ -130,7 +130,8 @@ def _process_plan(params: Mapping[str, Any], state_root: Path) -> Path:
 def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, Any]:
     from ..external import ExternalNamespace, export_external_package
     from ..resources import application_root, resource_root
-    from ..workflow import EnemizerOptions, EnemizerToolchain, LauncherSettings, LauncherWorkflow
+    from ..workflow import EnemizerToolchain, LauncherSettings, LauncherWorkflow
+    from .enemizer import enemizer_options_record, parse_enemizer_options
     from .policy import fork_build_warning
 
     game_root = Path(str(params["game_root"])).expanduser().resolve()
@@ -138,6 +139,7 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
     mods_root = Path(str(params["mods_root"])).expanduser().resolve()
     seed_path = Path(str(params["seed_path"])).expanduser().resolve()
     fork = params.get("fork_build") or {}
+    enemizer_options = parse_enemizer_options(params)
     plan_path = _process_plan(params, state_root)
 
     settings = LauncherSettings(
@@ -155,7 +157,7 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
         toolchain=EnemizerToolchain(resource_root(), app_root=application_root()),
     )
     prepared = workflow.prepare_seed(
-        settings, EnemizerOptions(enabled=False),
+        settings, enemizer_options,
         player_name=str(params.get("player_name", "")), progress=lambda _: None,
     )
     install = GameInstall.from_root(game_root)
@@ -185,6 +187,29 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
 
     receipt_payload = dict(export.receipt.as_dict())
     receipt_payload.pop("receipt_id")
+    enemy_record = prepared.build.manifest.get("enemizer", {})
+    if not isinstance(enemy_record, Mapping):
+        enemy_record = {}
+    enemy_plan = enemy_record.get("plan") or {}
+    if not isinstance(enemy_plan, Mapping):
+        enemy_plan = {}
+    raw_swap_count = enemy_plan.get("swap_count")
+    swap_count = raw_swap_count if isinstance(raw_swap_count, int) and not isinstance(raw_swap_count, bool) else None
+    raw_map_count = enemy_record.get("file_count", 0)
+    map_file_count = raw_map_count if isinstance(raw_map_count, int) and not isinstance(raw_map_count, bool) else 0
+    raw_ai_count = enemy_record.get("ai_file_count", 0)
+    ai_file_count = raw_ai_count if isinstance(raw_ai_count, int) and not isinstance(raw_ai_count, bool) else 0
+    enemy_summary = {
+        "enabled": bool(enemy_record.get("enabled", False)),
+        "seed": enemy_record.get("seed"),
+        "swap_count": swap_count,
+        "map_file_count": map_file_count,
+        "ai_file_count": ai_file_count,
+        "reused": bool(prepared.reused),
+    }
+    for name in ("ai", "boss", "boss_encounters"):
+        if enemy_record.get(name) is not None:
+            enemy_summary[name] = enemy_record[name]
     return {
         "receipt_id": export.receipt.receipt_id,
         "receipt_digest": hashlib.sha256(canonical_json(receipt_payload)).hexdigest(),
@@ -194,6 +219,7 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
         "package_name": export.receipt.package_name,
         "server": str(params.get("server", "")),
         "title": f"{export.receipt.identity.seed} ({export.receipt.identity.slot})",
+        "enemizer": enemy_summary,
         "build_warning": fork_build_warning(
             str(fork.get("commit", "")), str(fork.get("executable_sha256", ""))),
         # Persist non-secret settings alongside the opaque play handle so the
@@ -212,6 +238,7 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
             "cache_root": str(settings.cache_root),
             "suppression_binder": str(settings.suppression_binder),
             "suppression_manifest": str(settings.suppression_manifest),
+            "enemizer": enemizer_options_record(enemizer_options),
         },
     }
 
