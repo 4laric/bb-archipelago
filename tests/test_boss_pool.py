@@ -284,7 +284,7 @@ class BossPoolTests(unittest.TestCase):
         self.assertEqual(before[12411800], after[12411800])
         self.assertNotIn('$InitializeEvent(0, 12415238,', after[0])
         self.assertNotIn('$InitializeEvent(1, 12415238,', after[0])
-        for event in (12990601, 12990602, 12990603, 12990604, 12990605, 12995306, 12995307):
+        for event in (12990601, 12990602, 12990603, 12990604, 12990605, 12414886, 12414887):
             self.assertEqual(1, after[0].count(f'$InitializeEvent(0, {event});'))
 
     def test_reciprocal_real_bosses_share_map_without_losing_progression(self):
