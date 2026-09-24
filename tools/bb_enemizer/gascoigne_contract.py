@@ -351,6 +351,25 @@ def _replace_events(source: str, edits: Mapping[int, str]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def grounded_cleric_entry(original: str) -> str:
+    """Keep the replacement at Cleric's native combat placement, not its leap origin.
+
+    Region 2412831 belongs to the c5000 entrance leap. Removing that model's
+    root-motion animation while retaining its warp strands a replacement away
+    from the native c5000 MSB combat position. Entry conditions and progression
+    stay destination-owned; no replacement animation is guessed here.
+    """
+    result = _replace_once(
+        original,
+        "    IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);\n",
+        "", "Cleric leap-origin warp")
+    result = _replace_once(
+        result, "    ForceAnimationPlayback(2410800, 3028, false, false, false);\n",
+        "", "Cleric leap animation")
+    return _replace_once(result, "    WaitFixedTimeFrames(110);",
+                         "    WaitFixedTimeFrames(1);", "Cleric leap duration")
+
+
 def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> str:
     """Produce the reviewed source patch for Gascoigne's two-actor graph.
 
@@ -394,9 +413,7 @@ def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> 
     edits[12414704] = _remap(donor[12414804], remap)
     for event in (12414707, 12414708, 12414710, 12414720):
         edits[event] = _end_event(original[event])
-    edits[12411702] = _replace_once(
-        original[12411702], "ForceAnimationPlayback(2410800, 3028,",
-        "ForceAnimationPlayback(2410800, 7001,", "Gascoigne entry animation")
+    edits[12411702] = grounded_cleric_entry(original[12411702])
     old_wait = "    WaitFor(CharacterDead(2410800));\n"
     new_wait = f"    WaitFor(EventFlag({allocation.terminal_bridge_event_id}));\n"
     edits[12411700] = _replace_once(original[12411700], old_wait, new_wait, "destination terminal death predicate")

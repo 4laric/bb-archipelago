@@ -74,6 +74,23 @@ class GascoigneContractTests(unittest.TestCase):
         self.assertIn("$InitializeEvent(0, 12990004);", after[0])
         self.assertEqual(set(before) | {12990001, 12990002, 12990003, 12990004}, set(after))
 
+    def test_entry_uses_native_combat_placement_without_cleric_leap_warp(self):
+        original = read_blob(BUNDLE, "event/m24_01_00_00.emevd.dcx.js").decode("utf-8-sig")
+        before = event_blocks(original)[12411702]
+        entry = event_blocks(patch_gascoigne_at_cleric(original, self.allocation()))[12411702]
+        self.assertNotIn("2412831", entry)
+        self.assertNotIn("ForceAnimationPlayback", entry)
+        expected = before.replace(
+            "    IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);\n", ""
+        ).replace(
+            "    ForceAnimationPlayback(2410800, 3028, false, false, false);\n", ""
+        ).replace("WaitFixedTimeFrames(110)", "WaitFixedTimeFrames(1)")
+        self.assertEqual(expected, entry)
+        self.assertLess(entry.index("InArea(10000, 2412805)"),
+                        entry.index("ChangeCharacterEnableState(2410800, Enabled)"))
+        self.assertLess(entry.index("SetCharacterGravity(2410800, Enabled)"),
+                        entry.index("SetEventFlag(12414700, ON)"))
+
     def test_builder_fragment_exposes_only_typed_actor_and_terminal_inputs(self):
         plan = plan_gascoigne_at_cleric(self.slots, self.allocation(), self.native_pins())
         self.assertEqual("father-gascoigne", plan["donor"])
