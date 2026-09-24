@@ -267,7 +267,7 @@ class ReleasePlanningTests(unittest.TestCase):
         # parts: not standalone enemies (Old Yharnam crash, 2026-09-24).
         excluded_npcs = {402021, 405020, 902000, 902010, 902020, 902032, 902035, 902040,
                          904000, 905000, 360, 251001, 256100, 256610, 256910, 403050,
-                         403100, 212750, 212751, 257100, 257101}
+                         403100, 212750, 257100, 257101}
 
         def banned(archetype):
             return (archetype.model_name in excluded

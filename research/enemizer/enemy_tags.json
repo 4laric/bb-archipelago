@@ -2794,7 +2794,7 @@
     "notes": "NpcParam 212751; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=0; scalingEffect=7010; scalingHp=2.558; placements=4",
     "scaling_hp": 2.558,
     "size_class": "XS",
-    "target": false,
+    "target": true,
     "tier": "elite"
   },
   "c2130:213500:213500:0": {

@@ -9,7 +9,8 @@ under `Unreleased` and move into a dated version section when released.
 - Enemy randomization no longer places non-enemy actors as enemies: the Hunter's
   Dream Messengers and weapon racks, invisible projectile emitters (Winter
   Lantern, Moon offspring, Patient B's meteors), and attachment parts such as
-  the Brigade's snakes and the Celestial Emissary's tentacles. One of these is
+  the Brigade's head snake and the Celestial Emissary's tentacles (the
+  Brigade's chest snake stays in: it works on its own). One of these is
   the likely cause of a crash in Old Yharnam. Those actors' own placements,
   including the Hunter's Dream Messengers, now always stay vanilla.
 - Randomize all enemies (experimental) now also randomizes script-spawned

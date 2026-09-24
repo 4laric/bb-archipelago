@@ -48,7 +48,6 @@ NON_TARGET_NPC_PARAMS = {
     403050: "Patient B HP-management helper",
     403100: "Patient B meteor-firing dummy",
     212750: "Brigade snake, head attachment",
-    212751: "Brigade snake, chest attachment",
     257100: "Celestial Emissary lower tentacle helper",
     257101: "Celestial Emissary upper tentacle helper",
 }
