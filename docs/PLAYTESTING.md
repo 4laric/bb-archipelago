@@ -73,7 +73,9 @@ private vulnerability reporting, see [SECURITY.md](../SECURITY.md).
 
 ## Playing
 
-1. Click **Randomize & Launch**. The launcher builds the seed overlay, swaps it
+1. Under **Enemies** on the Play page, keep **Randomize enemies** (or pick
+   **Randomize all enemies (experimental)** / **Vanilla**), then
+   click **Launch**. The launcher builds the seed overlay, swaps it
    in, and starts shadPS4 and the AP client for you — two windows, no Cheat
    Engine.
 2. **Start a brand-new character** for the seed, unless your host tells you

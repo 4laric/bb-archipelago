@@ -830,6 +830,7 @@ class EnemizerToolchain:
         release_spawns: bool = False,
         release_chara: bool = False,
         release_wakeup: bool = True,
+        release_scripted: bool = False,
     ) -> EnemizerBuild:
         for path, label, kind in ((map_studio_source, "source MapStudio", "directory"),):
             exists = path.is_file() if kind == "file" else path.is_dir()
@@ -895,6 +896,13 @@ class EnemizerToolchain:
                 raise ValidationError(
                     f"enemy release tranche 'wakeup' requested but {wakeup_record} is not packaged")
             planner.extend(["--release-file", str(wakeup_record)])
+        if release_scripted and (release_contracts or release_spawns or release_chara):
+            # Boss-pool only: the reviewed boss builder applies these fallbacks.
+            scripted_record = self.repo_root / "research" / "enemizer" / "release_scripted.json"
+            if not scripted_record.is_file():
+                raise ValidationError(
+                    f"enemy release tranche 'scripted' requested but {scripted_record} is not packaged")
+            planner.extend(["--release-file", str(scripted_record)])
         if normalize_scaling:
             planner.append("--normalize-scaling")
         if boss_canary:
@@ -2047,9 +2055,13 @@ class LauncherWorkflow:
                     (("contracts", options.release_contracts),
                      ("spawns", options.release_spawns),
                      ("chara", options.release_chara))
-                    if enabled) + (["wakeup"] if expanded_enemy_release else [])
+                    if enabled)
+                    + (["wakeup"] if expanded_enemy_release and not options.boss_canary else [])
+                    + (["scripted"] if expanded_enemy_release and options.boss_pool else [])
                     if options.enabled else [],
                 "wakeup_fallback_version": 1 if expanded_enemy_release else None,
+                "scripted_fallback_version": (
+                    1 if expanded_enemy_release and options.enabled and options.boss_pool else None),
                 "normalize_scaling": bool(options.enabled and (options.normalize_scaling or options.boss_canary or options.boss_pool)),
                 "boss_canary": bool(options.enabled and options.boss_canary),
                 "boss_pool": options.boss_pool if options.enabled else None,
@@ -2230,7 +2242,10 @@ class LauncherWorkflow:
                         release_contracts=options.release_contracts,
                         release_spawns=options.release_spawns,
                         release_chara=options.release_chara,
-                        release_wakeup=not (options.boss_canary or options.boss_pool),
+                        # The reviewed boss builder applies scripted-AI
+                        # fallbacks at the JS level; the canary path has none.
+                        release_wakeup=not options.boss_canary,
+                        release_scripted=bool(options.boss_pool),
                         progress=progress,
                     )
                     if options.boss_pool:
@@ -2340,6 +2355,7 @@ class LauncherWorkflow:
         force_rebuild: bool = False,
         allow_suppression_mismatch: bool = False,
         allow_seed_mismatch: bool = False,
+        adopt_foreign_overlay: bool = False,
         research_captures: bool = False,
         pickup_name_canary: str | None = None,
         pickup_name_language: str | None = None,
@@ -2386,6 +2402,7 @@ class LauncherWorkflow:
             process_is_running=process_is_running,
             suppression_override=suppression.bypassed,
             identity=identity,
+            adopt_foreign_overlay=adopt_foreign_overlay,
         )
         if owner["suppression"]["sha256"] != build.manifest["suppression"]["sha256"]:
             raise ValidationError("activated suppression witness does not match the seed build")

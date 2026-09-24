@@ -212,3 +212,16 @@ Set `BB_STANDALONE_WRITER_INPUTS` to a JSON manifest containing `writer`,
 --require test_standalone_item_writer=5`. This requires all five native
 round-trip and refusal tests to execute. Hosted CI lacks those original inputs
 and permits their exact skips; it still collects the tests.
+
+## Shared pool curation
+
+Standalone builds invoke the same `tools.bb_enemizer.cli` planner and bundle the
+same `enemy_tags.json`, `slot_policy.json`, and `archetype_facts.json` as the AP
+path. Changes to these shared rules are included when the standalone package is
+rebuilt. Existing ZIPs and already-generated seeds do not update themselves.
+
+The standalone entry point currently uses the default enemy pool. It does not
+expose the AP launcher's experimental release tranches or boss-shuffle encounter
+builder; changes to those opt-in pools do not automatically enable them here.
+The local item planner is separate from AP item generation, so AP-only item-pool
+changes need an explicit standalone integration.

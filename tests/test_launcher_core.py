@@ -1493,6 +1493,31 @@ class ForeignOverlayHealingTests(unittest.TestCase):
         self.assertEqual(mine.read_bytes(), b"hand made")
         self.assertEqual(foreign_overlays(self.install), [decoy])
 
+    def test_a_directory_without_any_ownership_manifest_is_adopted_when_confirmed(self):
+        """bb-archipelago's foreign-overlay refusal used to be a dead end: the
+        only remedy was renaming the folder outside the app. A caller that has
+        gotten the player's explicit confirmation may pass
+        ``adopt_foreign_overlay=True`` to have it moved aside instead, the same
+        way a damaged owned overlay is healed -- never deleted.
+        """
+        self.install.mods.mkdir(parents=True)
+        mine = self.install.mods / "dvdroot_ps4" / "chr" / "mine.bnd.dcx"
+        mine.parent.mkdir(parents=True)
+        mine.write_bytes(b"hand made")
+        owner = activate_build(
+            self.install, self.build, process_is_running=lambda: False,
+            adopt_foreign_overlay=True,
+        )
+        aside = foreign_overlays(self.install)
+        self.assertEqual(len(aside), 1)
+        self.assertEqual(
+            aside[0].joinpath("dvdroot_ps4", "chr", "mine.bnd.dcx").read_bytes(),
+            b"hand made",
+        )
+        note = owner["healed_from"][0]
+        self.assertIn("without a Bloodborne AP ownership manifest", note["reason"])
+        self.assertEqual(note["moved_to"], aside[0].name)
+
     def test_another_launchers_manifest_is_still_refused(self):
         decoy = self.sentinel_aside()
         self.install.mods.mkdir(parents=True)

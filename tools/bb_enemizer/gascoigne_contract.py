@@ -48,6 +48,7 @@ SOURCE_HASHES = {
 }
 PHASE_EVENTS = (12414807, 12414808, 12414809)
 REPLACED_EVENTS = {12414802: 12414702, 12414803: 12414703, 12414804: 12414704}
+BACKED_EVENT_FLAG_GROUP = 12414
 DESTINATION_HASHES = {
     12411700: "32fd5783fae1fcd587800a13729ad608926b9f59b958a29992393b0c486780c9",
     12411702: "702380b92bd2632ce4ff9527009f8c7209fffff89297bc38d8fb8d108655eaff",
@@ -167,6 +168,19 @@ def _globally_used_numbers() -> tuple[set[int], set[int]]:
     return events, actors
 
 
+def _validate_event_allocation(all_event_ids: Sequence[int], role: str) -> None:
+    """Require the runtime-probed m24_01 flag group for persistent helpers.
+
+    Event IDs can compile even when their flag group has no backing storage.
+    Gascoigne's phase routines use ``ThisEvent`` and the terminal adapter waits
+    on its helper event flag, so a collision-free number alone is insufficient.
+    Group 12414 is destination-native and 12414780--12414783 were read as
+    backed and clear in a live client probe before being selected.
+    """
+    if any(event_id // 1000 != BACKED_EVENT_FLAG_GROUP for event_id in all_event_ids):
+        raise ValueError(f"Gascoigne {role} event IDs require backed event-flag group 12414")
+
+
 def _slots_by_entity(slots: Sequence[Slot], entity: int) -> list[Slot]:
     return sorted((slot for slot in slots if slot.map_name.startswith(MAP_PREFIX) and slot.entity_id == entity),
                   key=lambda slot: slot.key)
@@ -205,12 +219,14 @@ def construction_request(slots: Sequence[Slot], allocation: ProjectOwnedIds,
     all_event_ids = phase_ids + (allocation.terminal_bridge_event_id,)
     if any(not isinstance(event, int) or event < 0 for event in all_event_ids) or len(set(all_event_ids)) != len(all_event_ids):
         raise ValueError("Gascoigne phase event IDs must be unique non-negative integers")
+    _validate_event_allocation(all_event_ids, "construction")
     if event_operands.union(msb_actor_ids).intersection(all_event_ids):
         raise ValueError("Gascoigne added event ID collides with a bundled EMEVD operand")
 
     # All alternate states carry the same logical placement. The primary swap
-    # changes Cleric's existing actor into the human form; the native addition
-    # clones the proven beast Part relative to the proven human anchor.
+    # changes Cleric's existing actor into the human form. The beast is dormant
+    # until its phase event warps it onto the human, so it must begin at the
+    # destination anchor instead of preserving its unsafe source-map offset.
     clerics_by_map = {slot.map_name: slot for slot in clerics}
     humans_by_map = {slot.map_name: slot for slot in humans}
     beasts_by_map = {slot.map_name: slot for slot in beasts}
@@ -229,6 +245,7 @@ def construction_request(slots: Sequence[Slot], allocation: ProjectOwnedIds,
             "destination_anchor_part": clerics_by_map[map_name].part_name,
             "destination_part": allocation.destination_part,
             "destination_entity_id": allocation.beast_entity_id,
+            "placement_policy": "destination-anchor",
             "allocation_evidence": allocation.evidence,
         }
         addition.update(_native_pin(native_pins[map_name]))
@@ -351,6 +368,25 @@ def _replace_events(source: str, edits: Mapping[int, str]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def grounded_cleric_entry(original: str) -> str:
+    """Keep the replacement at Cleric's native combat placement, not its leap origin.
+
+    Region 2412831 belongs to the c5000 entrance leap. Removing that model's
+    root-motion animation while retaining its warp strands a replacement away
+    from the native c5000 MSB combat position. Entry conditions and progression
+    stay destination-owned; no replacement animation is guessed here.
+    """
+    result = _replace_once(
+        original,
+        "    IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);\n",
+        "", "Cleric leap-origin warp")
+    result = _replace_once(
+        result, "    ForceAnimationPlayback(2410800, 3028, false, false, false);\n",
+        "", "Cleric leap animation")
+    return _replace_once(result, "    WaitFixedTimeFrames(110);",
+                         "    WaitFixedTimeFrames(1);", "Cleric leap duration")
+
+
 def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> str:
     """Produce the reviewed source patch for Gascoigne's two-actor graph.
 
@@ -366,6 +402,7 @@ def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> 
         raise ValueError("Gascoigne patch requires unique explicit phase and bridge event IDs")
     if set(original).intersection(all_added) or any(event < 0 for event in all_added):
         raise ValueError("Gascoigne patch added event ID collides with destination EMEVD")
+    _validate_event_allocation(all_added, "patch")
     if allocation.beast_entity_id <= 0:
         raise ValueError("Gascoigne patch requires a positive beast entity ID")
     remap = {GASCOIGNE_HUMAN: CLERIC_ENTITY, GASCOIGNE_BEAST: allocation.beast_entity_id,
@@ -385,6 +422,13 @@ def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> 
                            "Gascoigne notification flag")
     health = _replace_once(health, "    SetEventFlag(12414223, ON);\n", "",
                            "Gascoigne start notification flag")
+    health = _replace_once(
+        health,
+        f"L4:\n    CreateReferredDamagePair({CLERIC_ENTITY}, {allocation.beast_entity_id});",
+        f"L4:\n    SetCharacterInvincibility({allocation.beast_entity_id}, Disabled);\n"
+        f"    CreateReferredDamagePair({CLERIC_ENTITY}, {allocation.beast_entity_id});",
+        "pre-link beast vulnerability",
+    )
     edits[12414702] = health
     # Keep Cleric's arena-owned music regions/sounds; its phase trigger becomes
     # the declared Gascoigne transformation event.
@@ -394,9 +438,7 @@ def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> 
     edits[12414704] = _remap(donor[12414804], remap)
     for event in (12414707, 12414708, 12414710, 12414720):
         edits[event] = _end_event(original[event])
-    edits[12411702] = _replace_once(
-        original[12411702], "ForceAnimationPlayback(2410800, 3028,",
-        "ForceAnimationPlayback(2410800, 7001,", "Gascoigne entry animation")
+    edits[12411702] = grounded_cleric_entry(original[12411702])
     old_wait = "    WaitFor(CharacterDead(2410800));\n"
     new_wait = f"    WaitFor(EventFlag({allocation.terminal_bridge_event_id}));\n"
     edits[12411700] = _replace_once(original[12411700], old_wait, new_wait, "destination terminal death predicate")
@@ -408,6 +450,41 @@ def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> 
     for source_event, destination_event in allocation.phase_event_ids.items():
         phase = _remap(donor[source_event], remap)
         if source_event == 12414807:
+            phase = _replace_once(
+                phase,
+                f"        ChangeCharacterEnableState({CLERIC_ENTITY}, Disabled);\n"
+                "        EndEvent();\n",
+                f"        ChangeCharacterEnableState({CLERIC_ENTITY}, Disabled);\n"
+                f"        ChangeCharacterEnableState({allocation.beast_entity_id}, Enabled);\n"
+                f"        SetCharacterInvincibility({allocation.beast_entity_id}, Disabled);\n"
+                f"        SetCharacterGravity({allocation.beast_entity_id}, Enabled);\n"
+                "        EndEvent();\n",
+                "completed-phase beast restoration",
+            )
+            phase = _replace_once(
+                phase,
+                f"    SetCharacterGravity({allocation.beast_entity_id}, Disabled);\n",
+                f"    ChangeCharacterEnableState({allocation.beast_entity_id}, Disabled);\n"
+                f"    SetCharacterInvincibility({allocation.beast_entity_id}, Enabled);\n"
+                f"    SetCharacterAIState({allocation.beast_entity_id}, Disabled);\n"
+                f"    SetCharacterHPBarDisplay({allocation.beast_entity_id}, Disabled);\n"
+                f"    SetCharacterGravity({allocation.beast_entity_id}, Disabled);\n",
+                "pre-phase beast isolation",
+            )
+            phase = _replace_once(
+                phase,
+                f"    SetCharacterGravity({allocation.beast_entity_id}, Enabled);\n"
+                f"    SetNetworkUpdateRate({allocation.beast_entity_id}, true, CharacterUpdateFrequency.AlwaysUpdate);\n"
+                f"    WarpCharacterAndCopyFloor({allocation.beast_entity_id}, TargetEntityType.Character, "
+                f"{CLERIC_ENTITY}, 203, {CLERIC_ENTITY});\n",
+                f"    WarpCharacterAndCopyFloor({allocation.beast_entity_id}, TargetEntityType.Character, "
+                f"{CLERIC_ENTITY}, 203, {CLERIC_ENTITY});\n"
+                f"    ChangeCharacterEnableState({allocation.beast_entity_id}, Enabled);\n"
+                f"    SetCharacterInvincibility({allocation.beast_entity_id}, Disabled);\n"
+                f"    SetCharacterGravity({allocation.beast_entity_id}, Enabled);\n"
+                f"    SetNetworkUpdateRate({allocation.beast_entity_id}, true, CharacterUpdateFrequency.AlwaysUpdate);\n",
+                "post-warp beast activation",
+            )
             phase = _replace_once(phase,
                                   "    EndIf(EventFlag(9337));\n    $InitializeEvent(0, 9350, 1);\n    SetEventFlag(9337, ON);\n",
                                   "", "Gascoigne phase insight/progression tail")
@@ -420,8 +497,9 @@ def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> 
         EndEvent();
     }}
     humanDead = CharacterDead({CLERIC_ENTITY});
+    beastPhase = EventFlag({allocation.phase_event_ids[12414807]});
     beastDead = CharacterDead({allocation.beast_entity_id});
-    WaitFor(humanDead || beastDead);
+    WaitFor(humanDead || (beastPhase && beastDead));
     SetEventFlag({bridge}, ON);
     WaitFor(EventFlag(12411700));
     ChangeCharacterEnableState({allocation.beast_entity_id}, Disabled);

@@ -18,7 +18,8 @@ internal static class BossActorTransplant
         Archetype SourceArchetype, string DestinationMap, string DestinationAnchorPart,
         string DestinationPart, int DestinationEntityId,
         string? SourcePartKind = null, string? MaterializeAs = null,
-        SourceProvenance? SourceProvenance = null, SourceInitialization? SourceInitialization = null);
+        SourceProvenance? SourceProvenance = null, SourceInitialization? SourceInitialization = null,
+        string? PlacementPolicy = null);
     internal sealed record SourceProvenance(string Format, string PartSha256, string AnchorSha256);
     internal sealed record SourceInitialization(int TalkId, int UnkT18, int InitAnimId, int DamageAnimId);
     internal sealed record PrimaryProvenance(string Format, string PartSha256);
@@ -276,8 +277,12 @@ internal static class BossActorTransplant
             var spawned = (MSBB.Part.Enemy)destinationAnchor!.DeepCopy();
             float yaw = destinationAnchor.Rotation.Y - donorAnchor.Rotation.Y;
             spawned.Name = add.DestinationPart; spawned.EntityID = add.DestinationEntityId;
-            spawned.Position = destinationAnchor.Position + RotateOffset(donor!.Position - donorAnchor.Position, yaw);
-            spawned.Rotation = donor.Rotation + new Vector3(0, yaw, 0);
+            spawned.Position = add.PlacementPolicy switch {
+                null or "source-relative" => destinationAnchor.Position + RotateOffset(donor!.Position - donorAnchor.Position, yaw),
+                "destination-anchor" => destinationAnchor.Position,
+                _ => throw new InvalidDataException("unsupported actor placement policy"),
+            };
+            spawned.Rotation = donor!.Rotation + new Vector3(0, yaw, 0);
             helpers.TryGetValue((Bare(add.DestinationMap), add.DestinationPart), out var helper);
             if (helper is not null) RequireReviewedHelperClone(planPath, outputMaps, helper);
             spawned.ModelName = donor.ModelName; spawned.NPCParamID = helper?.ClonedNpcParamId ?? donor.NPCParamID;

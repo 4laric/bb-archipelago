@@ -6,6 +6,49 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Enemy randomization no longer places non-enemy actors as enemies: the Hunter's
+  Dream Messengers and weapon racks, invisible projectile emitters (Winter
+  Lantern, Moon offspring, Patient B's meteors), and attachment parts such as
+  the Brigade's head snake and the Celestial Emissary's tentacles (the
+  Brigade's chest snake stays in: it works on its own). One of these is
+  the likely cause of a crash in Old Yharnam. Those actors' own placements,
+  including the Hunter's Dream Messengers, now always stay vanilla.
+- Randomize all enemies (experimental) now also randomizes script-spawned
+  enemies that carry a starting pose, such as the face-down crawlers in the
+  Central Yharnam sewer and Dry Dock (78 placements game-wide).
+- Central Yharnam no longer names checks `(sewer side)`. The developers' lot tag
+  behind it only means "past the Great Bridge", and half of those pickups are
+  nowhere near the sewer. Eleven now name a wiki-backed landmark (for example
+  `Coldblood Dew (3) (Dog Kennels side path)`, `Bold Hunter's Mark x2 (statue
+  before Tomb of Oedon)`); `Coldblood Dew (1) #8` drops the hint until its spot
+  is pinned down. Location IDs are unchanged.
+- Enemy randomization no longer turns ordinary enemies into the Cainhurst
+  carriage, and the carriage in Hemwick Charnel Lane stays in place.
+- Enemy randomization no longer spawns the 1 HP cutscene Clocktower patient or
+  the mummified Fishing Hamlet fishmen as enemies, and leaves those props in place.
+- With boss shuffle and Randomize all enemies (experimental), scripted enemies
+  that kept their vanilla setup now randomize: the face-down sleepers and the
+  sewer rat pack in Central Yharnam, and the lantern-carrying servants and the
+  Church Giants in Cathedral Ward. Their replacements skip the original
+  enemy's model-specific script (sleep poses, lanterns, breakable limbs) and
+  behave normally in place.
+- Launcher: **Randomize** and **Launch** are now separate buttons. Randomize
+  builds and verifies the seed without starting the game and reports the swap
+  count; Launch reuses that build (or builds first). The enemy choice moved
+  onto the Play page as one pick: **Randomize enemies**, **Randomize all
+  enemies (experimental)** (turns on scripted enemies, ambush spawns and
+  chara-bound hunters together), or **Vanilla**. The separate Enemies page and
+  the three per-tranche checkboxes are gone; boss shuffle and the other tuning
+  options live under Advanced. The enemy seed is shown on Play, filled from
+  the AP seed and editable. "Connect to running game" is now "Reconnect
+  client".
+- Create & host: the three checkboxes are gone. Pick **Just me** or **A folder
+  of player YAML files** (only that option's fields show), pick **Base game**
+  or **Base game + The Old Hunters**, then press **Create & host** or
+  **Create only**.
+
+- Enemy randomization no longer places Lady Maria as an ordinary enemy (her AI
+  breaks outside her own fight), and her Astral Clocktower spawn stays vanilla.
 - Boss shuffle adds reusable Orphan combat in the six base arenas and reusable
   Cainhurst encounters for the six base donors. Logarius also reaches Maria,
   Laurence and Gascoigne, with source-pinned helpers and destination entry

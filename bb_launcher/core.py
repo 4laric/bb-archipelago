@@ -61,6 +61,9 @@ CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
 BOSS_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_01_00_00.emevd.dcx"
+# Central Yharnam scripted-AI initializer events the wakeup fallback may
+# suppress: 12415130 sleep-to-wake, 12410340 sewer rat ambush.
+WAKEUP_FALLBACK_EVENTS = frozenset({12415130, 12410340})
 BOSS_ENCOUNTER_REPORT_NAME = "boss-encounters-report.json"
 # Native encounter outputs include plans and diagnostic receipts alongside
 # loose game files.  They are retained under this cache-only path, never
@@ -147,7 +150,7 @@ FOREIGN_OVERLAY_ADVICE = (
 )
 # Every strict caller guards what shadPS4 is about to load, so it must not
 # heal -- but it can say which button rebuilds the overlay.
-REBUILD_OVERLAY_HINT = " Run Randomize & Launch again to rebuild the overlay."
+REBUILD_OVERLAY_HINT = " Press Launch again to rebuild the overlay."
 
 
 class LauncherError(RuntimeError):
@@ -839,7 +842,7 @@ class SeedCache:
                         or not isinstance(row.get("entity_id"), int)
                         or isinstance(row.get("entity_id"), bool)
                         or row.get("map") != "m24_01_00_00"
-                        or row.get("event_id") != 12415130):
+                        or row.get("event_id") not in WAKEUP_FALLBACK_EVENTS):
                     raise ValidationError("enemizer plan carries an invalid wakeup fallback row")
             if encounter is not None or boss_event is not None:
                 raise ValidationError("wakeup fallback cannot be combined with a boss event overlay")
@@ -2256,6 +2259,7 @@ def activate_build(
     failpoint: Callable[[str], None] | None = None,
     suppression_override: Sequence[str] | None = None,
     identity: SeedIdentity | None = None,
+    adopt_foreign_overlay: bool = False,
 ) -> dict[str, Any]:
     """Atomically activate a verified build, preserving any owned predecessor.
 
@@ -2268,7 +2272,12 @@ def activate_build(
     modified is moved aside and rebuilt, and the resulting owner dict carries a
     ``healed_from`` note for the caller to report (bb-archipelago#408).  A
     directory with no ownership manifest, or one from another launcher, is
-    still refused -- it may be the player's own work.
+    still refused by default -- it may be the player's own work, and moving it
+    is a bigger decision than the launcher gets to make on its own.  A caller
+    that has gotten the player's explicit confirmation that the folder is not
+    theirs to keep may pass ``adopt_foreign_overlay=True`` to have it moved
+    aside (never deleted), the same way a damaged owned overlay is healed,
+    instead of leaving the player to rename it outside the app.
     """
 
     _require_shad_stopped(process_is_running)
@@ -2292,12 +2301,15 @@ def activate_build(
             heal_notes.append(_move_overlay_aside(install, str(exc)))
         except ConflictError as exc:
             # No manifest at all, or another launcher's: possibly the player's
-            # own mod folder.  Moving it is not the launcher's call.  A
-            # symlinked or non-directory path is a different problem and keeps
-            # its own message.
+            # own mod folder.  Moving it is not the launcher's call, unless the
+            # player has explicitly said otherwise via adopt_foreign_overlay.
+            # A symlinked or non-directory path is a different problem and
+            # keeps its own message regardless.
             if not install.mods.is_dir() or install.mods.is_symlink():
                 raise
-            raise ConflictError(f"{exc} {FOREIGN_OVERLAY_ADVICE}") from exc
+            if not adopt_foreign_overlay:
+                raise ConflictError(f"{exc} {FOREIGN_OVERLAY_ADVICE}") from exc
+            heal_notes.append(_move_overlay_aside(install, str(exc)))
     if previous_owner is not None:
         active_fingerprint = ""
         section = previous_owner.get("user_merge")

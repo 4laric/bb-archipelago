@@ -71,6 +71,36 @@ SEED_PROMPT = "Choose a seed (.zip or .bbseed.json) to see its player and build.
 PRIMARY_FIELDS = {"ap_request", "game_root", "shad_executable"}
 ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 
+# The Play page's single enemy choice. Each mode is a preset over the saved
+# booleans (randomize_enemies plus the three release tranches), so settings
+# files, the BBLauncher export and the CLI keep one vocabulary.
+ENEMY_MODE_STANDARD = "standard"
+ENEMY_MODE_ALL = "all"
+ENEMY_MODE_VANILLA = "vanilla"
+ENEMY_MODES = (
+    (ENEMY_MODE_STANDARD, "Randomize enemies",
+     "Reviewed enemy and boss swaps. The recommended way to play."),
+    (ENEMY_MODE_ALL, "Randomize all enemies (experimental)",
+     "Also scripted enemies, ambush spawns and NPC hunters. Gameplay untested: "
+     "an encounter may break."),
+    (ENEMY_MODE_VANILLA, "Vanilla",
+     "Enemies stay where they are; only items are randomized."),
+)
+
+
+def enemy_mode_for(randomize: bool, release_tranches: Iterable[bool]) -> str:
+    """The Play-page mode a saved set of enemy booleans corresponds to."""
+    if not randomize:
+        return ENEMY_MODE_VANILLA
+    return ENEMY_MODE_ALL if any(release_tranches) else ENEMY_MODE_STANDARD
+
+
+def enemy_mode_flags(mode: str) -> tuple[bool, bool]:
+    """``(randomize_enemies, every_release_tranche)`` for a Play-page mode."""
+    if mode == ENEMY_MODE_VANILLA:
+        return False, False
+    return True, mode == ENEMY_MODE_ALL
+
 # The palette and every ttk style live in ``theme``; this module only lays
 # widgets out.
 from .theme import (  # noqa: E402
@@ -272,6 +302,15 @@ class LauncherApp:
         self.packaged_toolchain = self.workflow.toolchain.is_bundled
         self.fields = {name: tk.StringVar() for name, _label, _kind in FIELD_DEFINITIONS}
         self.randomize_enemies = tk.BooleanVar(value=True)
+        # The one enemy decision a player makes, on Play: vanilla, the
+        # reviewed pool, or everything reviewed-but-untested. It drives
+        # randomize_enemies and the three release tranches below, which stay
+        # the saved (and BBLauncher-exported) truth.
+        self.enemy_mode = tk.StringVar(value=ENEMY_MODE_STANDARD)
+        self.enemy_mode_caption = tk.StringVar()
+        self.enemy_mode.trace_add("write", lambda *_args: self.enemy_mode_caption.set(
+            dict((mode, caption) for mode, _label, caption in ENEMY_MODES).get(self.enemy_mode.get(), "")
+        ))
         self.enemy_seed = tk.StringVar()
         self.ap_server = tk.StringVar()
         # Shared: the slot you pick when a seed has more than one Bloodborne
@@ -281,6 +320,9 @@ class LauncherApp:
         self.player_name = tk.StringVar(value="Hunter")
         self.seed_summary = tk.StringVar(value=SEED_PROMPT)
         self.launch_hint = tk.StringVar(value="Choose a seed and shadPS4 to continue.")
+        # Cache key of the last successful Randomize, so the hint can say the
+        # build is ready and Launch will reuse it.
+        self._randomized_key: str | None = None
         self.allow_tier_mixing = tk.BooleanVar(value=False)
         self.preserve_locomotion = tk.BooleanVar(value=False)
         self.normalize_scaling = tk.BooleanVar(value=False)
@@ -293,8 +335,9 @@ class LauncherApp:
         # gameplay-untested, boss shuffle is the intended normal experience.
         self.boss_pool = tk.BooleanVar(value=True)
         # Release tranches replace one blanket exclusion each with reviewed
-        # compatibility handling (docs/ENEMIZER-EXPANSION.md). All default
-        # off; they persist like the other enemy options.
+        # compatibility handling (docs/ENEMIZER-EXPANSION.md). The GUI sets
+        # all three together through "Randomize all enemies (experimental)";
+        # they persist like the other enemy options.
         self.release_contracts = tk.BooleanVar(value=False)
         self.release_spawns = tk.BooleanVar(value=False)
         self.release_chara = tk.BooleanVar(value=False)
@@ -317,8 +360,8 @@ class LauncherApp:
         self._busy = False
 
         root.title("Bloodborne Archipelago")
-        root.minsize(960, 680)
-        root.geometry("1080x760")
+        root.minsize(1000, 680)
+        root.geometry("1080x860")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
         self._apply_theme()
@@ -335,9 +378,26 @@ class LauncherApp:
         self._last_path_field_values = {
             name: self.fields[name].get().strip() for name in PRIMARY_FIELDS
         }
+        self.enemy_mode.set(enemy_mode_for(
+            self.randomize_enemies.get(),
+            (self.release_contracts.get(), self.release_spawns.get(), self.release_chara.get()),
+        ))
         self._toggle_enemy_fields()
+        # Anything that feeds the build makes an earlier Randomize stale.
+        for variable in (
+            *self.fields.values(), self.player_name, self.enemy_seed, self.randomize_enemies,
+            self.boss_pool, self.allow_tier_mixing, self.preserve_locomotion,
+            self.normalize_scaling, self.release_contracts, self.release_spawns,
+            self.release_chara,
+        ):
+            variable.trace_add("write", self._forget_randomized)
         self._refresh_launch_gate()
         self.root.after(0, self._refresh_status)
+
+    def _forget_randomized(self, *_args: Any) -> None:
+        if self._randomized_key is not None:
+            self._randomized_key = None
+            self._refresh_launch_gate()
 
     def _apply_theme(self) -> None:
         """Every colour, font and ttk style comes from ``theme``; nothing is
@@ -392,7 +452,9 @@ class LauncherApp:
         notebook.add(setup, text="Play")
         self.play_tab = setup
         play = scroll_page(tk, ttk, setup)
-        play_row = page_header(ttk, play, "Play", "Choose your seed and your shadPS4 install, then launch.")
+        play_row = page_header(
+            ttk, play, "Play", "Choose your seed, your game and how enemies are shuffled, then Launch.",
+        )
         play_row = section(ttk, play, play_row, "Seed", first=True)
         seed_row, play_row = play_row, play_row + 1
         name_row, play_row = play_row, play_row + 1
@@ -401,31 +463,33 @@ class LauncherApp:
         play_row = section(ttk, play, play_row, "Game")
         game_rows = {"game_root": play_row, "shad_executable": play_row + 1}
         primary_rows = {"ap_request": seed_row, **game_rows}
+        play_row += 2
 
-        # --- Enemies ------------------------------------------------------
-        # Two decisions, not a checklist: whether enemies are randomized at
-        # all, and how bosses are handled -- the three ways bosses can be
-        # handled were already mutually exclusive at the workflow layer, so
-        # a radio group shows that instead of two checkboxes that looked
-        # independent but were not. Everything else here is fine-tuning
-        # almost nobody touches; it lives on Advanced instead.
-        options_host = ttk.Frame(notebook)
-        notebook.add(options_host, text="Enemies")
-        options = scroll_page(tk, ttk, options_host)
-        enemy_row = page_header(
-            ttk, options, "Enemies", "Applied on the next build. Changing these rebuilds the seed.",
+        # --- Enemies: one choice, on Play ---------------------------------
+        # A new player makes exactly one enemy decision, next to the seed it
+        # applies to. Each radio is a preset over the saved booleans; every
+        # fine-tuning knob lives on Advanced. One row of radios with a single
+        # caption for the chosen mode keeps the page above the action bar.
+        play_row = section(ttk, play, play_row, "Enemies")
+        modes = ttk.Frame(play)
+        modes.grid(row=play_row, column=0, columnspan=3, sticky="w")
+        for column, (mode, label, _caption) in enumerate(ENEMY_MODES):
+            ttk.Radiobutton(
+                modes, text=label, variable=self.enemy_mode, value=mode,
+                command=self._enemy_mode_changed,
+            ).grid(row=0, column=column, sticky="w", padx=(0, 24))
+        ttk.Label(play, textvariable=self.enemy_mode_caption, style="Dim.TLabel").grid(
+            row=play_row + 1, column=0, columnspan=3, sticky="w", pady=(2, 0)
         )
-        randomize, _randomize_row = option(
-            ttk, options, enemy_row, "Randomize enemies", self.randomize_enemies,
-            caption="Every enemy is redrawn from the seed. Off keeps vanilla placement.",
-            command=self._toggle_enemy_fields,
+        play_row += 2
+        # Shown, not buried: filled from the AP seed whenever one is chosen,
+        # so two players on the same seed can compare it, and editable for a
+        # different shuffle.
+        seed_label, seed_entry, _ = field(
+            ttk, play, play_row, "Enemy seed", self.enemy_seed,
+            trailing="edit to reshuffle",
         )
-        enemy_row += 1
-        boss_pool_box, _ = option(
-            ttk, options, enemy_row, "Boss shuffle (reviewed encounters)", self.boss_pool,
-            caption="Every boss reassigned. Off keeps vanilla boss placement. Gameplay untested.",
-        )
-        self._boss_mode_widgets = (boss_pool_box,)
+        play_row += 1
 
         # --- Create & host (inserts itself at index 1) --------------------
         from .local_session_ui import LocalSessionPanel
@@ -469,14 +533,14 @@ class LauncherApp:
         ).grid(row=troubleshooting_row, column=0, columnspan=3, sticky="w")
         troubleshooting_row += 1
 
-        # Seed override, tier mixing, locomotion preservation and stat
+        # Boss shuffle, tier mixing, locomotion preservation and stat
         # normalization: real knobs, but ones almost nobody needs for a
-        # normal launch, so they live here rather than behind their own
-        # disclosure toggle on the Enemies page.
+        # normal launch. The release tranches have no boxes of their own:
+        # Play's "Randomize all enemies (experimental)" sets them.
         troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Enemy tuning")
-        seed_label, seed_entry, _ = field(
-            ttk, troubleshooting, troubleshooting_row, "Enemy seed", self.enemy_seed,
-            trailing="from the AP seed when blank",
+        boss_pool_box, _boss_row = option(
+            ttk, troubleshooting, troubleshooting_row, "Shuffle bosses", self.boss_pool,
+            caption="Reviewed boss encounters are reassigned. Off keeps vanilla bosses.",
         )
         troubleshooting_row += 1
         tier, _tier_row = option(
@@ -489,25 +553,9 @@ class LauncherApp:
         )
         scaling, _scaling_row = option(
             ttk, troubleshooting, troubleshooting_row + 2, "Normalize enemy stats", self.normalize_scaling,
-            caption="Scale replacements to the slot they fill. Always on for the BSB "
-                    "playtest, regardless of this box.",
+            caption="Scale replacements to the slot they fill.",
         )
-        contracts, _contracts_row = option(
-            ttk, troubleshooting, troubleshooting_row + 3, "Scripted enemies: supported contracts",
-            self.release_contracts,
-            caption="Extends randomization to reviewed contract-safe script-driven enemies. Gameplay untested.",
-        )
-        spawns, _spawns_row = option(
-            ttk, troubleshooting, troubleshooting_row + 4, "Script-spawn ambushes",
-            self.release_spawns,
-            caption="Includes reviewed script-spawn ambush slots. Gameplay untested.",
-        )
-        chara, _chara_row = option(
-            ttk, troubleshooting, troubleshooting_row + 5, "Chara-bound hunters",
-            self.release_chara,
-            caption="Includes reviewed CharaInit-bound hunter placements. Gameplay untested.",
-        )
-        troubleshooting_row += 6
+        troubleshooting_row += 3
         enemy_inputs = ttk.Frame(troubleshooting)
         enemy_inputs.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
         enemy_inputs.columnconfigure(1, weight=1)
@@ -585,8 +633,7 @@ class LauncherApp:
         )
 
         self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))
-        self._enemy_widgets.extend(self._boss_mode_widgets)
-        self._enemy_widgets.extend((contracts, spawns, chara))
+        self._enemy_widgets.append(boss_pool_box)
 
         # --- Details drawer: launch progress and session status ------------
         # Outside the notebook so no page can hide it (bb-archipelago#190).
@@ -642,14 +689,21 @@ class LauncherApp:
         self.details_button = ttk.Button(
             controls, text="Show Details", command=self._toggle_session_details, style="Link.TButton"
         )
-        self.details_button.grid(row=2, column=1, sticky="e", padx=(12, 12), pady=(14, 0))
+        self.details_button.grid(row=2, column=0, sticky="w", pady=(14, 0))
+        # Two steps a player can see: Randomize builds and verifies the seed
+        # without touching the game; Launch activates it and starts
+        # everything (building first if Randomize was skipped).
         self.connect_button = ttk.Button(
-            controls, text="Connect to running game", command=self._start_connect, style="Ghost.TButton",
+            controls, text="Reconnect client", command=self._start_connect, style="Link.TButton",
         )
-        self.connect_button.grid(row=2, column=2, sticky="e", padx=(0, 10), pady=(14, 0))
+        self.connect_button.grid(row=2, column=1, sticky="e", padx=(0, 12), pady=(14, 0))
+        self.randomize_button = ttk.Button(
+            controls, text="Randomize", command=self._start_randomize, style="Ghost.TButton",
+        )
+        self.randomize_button.grid(row=2, column=2, sticky="e", padx=(0, 10), pady=(14, 0))
         self.launch_button = ttk.Button(
             controls,
-            text="Randomize & Launch",
+            text="Launch",
             command=self._start,
             style="Accent.TButton",
         )
@@ -667,6 +721,7 @@ class LauncherApp:
         controls.bind("<Configure>", _fit_action_bar, add="+")
         self._action_buttons = (
             self.connect_button,
+            self.randomize_button,
             self.vanilla_button,
             self.restore_button,
             self.rebuild_button,
@@ -840,13 +895,19 @@ class LauncherApp:
         if derived is not None:
             self.fields["map_studio_source"].set(str(derived))
 
+    def _enemy_mode_changed(self) -> None:
+        """Apply a Play-page enemy preset to the saved booleans."""
+        randomize, every_tranche = enemy_mode_flags(self.enemy_mode.get())
+        self.randomize_enemies.set(randomize)
+        for tranche in (self.release_contracts, self.release_spawns, self.release_chara):
+            tranche.set(every_tranche)
+        self._toggle_enemy_fields()
+        self._refresh_launch_gate()
+
     def _toggle_enemy_fields(self) -> None:
         state = "normal" if self.randomize_enemies.get() else "disabled"
         for widget in self._enemy_widgets:
             widget.configure(state=state)
-        self.launch_button.configure(
-            text="Randomize & Launch" if self.randomize_enemies.get() else "Build & Launch"
-        )
 
 
     def _show_player_choice(self, visible: bool) -> None:
@@ -861,6 +922,7 @@ class LauncherApp:
         if panel and panel.enabled.get():
             self.launch_hint.set("BBLauncher mode: use the BBLauncher tab to export, verify, and connect.")
             self.launch_button.configure(state="disabled")
+            self.randomize_button.configure(state="disabled")
             return
         required = (
             ("AP seed", self.fields["ap_request"].get().strip()),
@@ -878,10 +940,19 @@ class LauncherApp:
         if missing:
             self.launch_hint.set("Needed: " + ", ".join(missing) + ".")
             self.launch_button.configure(state="disabled")
+            self.randomize_button.configure(state="disabled")
         else:
-            self.launch_hint.set("Ready to validate and launch.")
+            if self._randomized_key:
+                self.launch_hint.set(
+                    f"Seed randomized and verified ({self._randomized_key[:12]}). Launch to play."
+                )
+            else:
+                self.launch_hint.set(
+                    "Ready. Randomize to build the seed now, or Launch to build and play in one go."
+                )
             if not self._busy:
                 self.launch_button.configure(state="normal")
+                self.randomize_button.configure(state="normal")
 
     def _state_root(self) -> Path:
         """The launcher-owned state directory, whether or not it is typed in."""
@@ -1092,6 +1163,84 @@ class LauncherApp:
             self.progress.grid_remove()
             self._refresh_launch_gate()
 
+    def _enemizer_options(self, settings: LauncherSettings) -> EnemizerOptions:
+        """The enemizer options the current controls describe.
+
+        Fills a blank enemy seed from the AP request first, so Randomize,
+        Launch and Rebuild all build the same shuffle for the same seed.
+        """
+        if not self.enemy_seed.get().strip():
+            self.enemy_seed.set(
+                request_enemy_seed(
+                    settings.ap_request,
+                    player_name=self.player_name.get().strip(),
+                    state_root=settings.state_root or default_state_root(),
+                )
+            )
+        return EnemizerOptions(
+            enabled=self.randomize_enemies.get(),
+            seed=self.enemy_seed.get().strip() or None,
+            allow_tier_mixing=self.allow_tier_mixing.get(),
+            preserve_locomotion=self.preserve_locomotion.get(),
+            normalize_scaling=self.normalize_scaling.get(),
+            boss_canary=self.boss_canary.get(),
+            boss_pool="reviewed" if self.boss_pool.get() else None,
+            release_contracts=self.release_contracts.get(),
+            release_spawns=self.release_spawns.get(),
+            release_chara=self.release_chara.get(),
+        )
+
+    def _start_randomize(self) -> None:
+        """Build and verify the seed into the cache without launching.
+
+        Nothing is activated and no process starts, so this is safe while
+        the game is closed or open. Launch afterwards reuses the verified
+        build instead of building again.
+        """
+        if self._busy or not self._generate_plan():
+            return
+        try:
+            settings = self._settings()
+            options = self._enemizer_options(settings)
+            override = self.allow_suppression_mismatch.get()
+            self._save_settings()
+        except LauncherError as exc:
+            self.messagebox.showerror("Setup incomplete", str(exc), parent=self.root)
+            return
+        self._set_busy(True)
+        self._append_log("Randomizing the seed...")
+        player = self.player_name.get().strip()
+
+        def randomize() -> None:
+            try:
+                prepared = self.workflow.prepare_seed(
+                    settings, options, allow_suppression_mismatch=override,
+                    player_name=player, progress=self._progress_message,
+                )
+            except Exception as exc:
+                self.root.after(0, self._action_failed, "Randomize", exc)
+            else:
+                self.root.after(0, self._randomized, prepared, options)
+
+        threading.Thread(target=randomize, daemon=True, name="bloodborne-randomize").start()
+
+    def _randomized(self, prepared: Any, options: EnemizerOptions) -> None:
+        self._randomized_key = prepared.build.cache_key
+        if prepared.enemizer is not None:
+            swaps = len(prepared.enemizer.manifest["swaps"])
+        else:
+            cached = prepared.build.manifest.get("enemizer", {})
+            swaps = int((cached.get("plan") or {}).get("swap_count", cached.get("file_count", 0)))
+        if not options.enabled:
+            enemies = "enemies unchanged"
+        else:
+            enemies = f"{swaps} enemy swaps" if swaps else "enemies randomized"
+        source = "already built, verified from cache" if prepared.reused else "built and verified"
+        message = f"Seed randomized ({enemies}); {source}. Press Launch to play."
+        self._set_busy(False)
+        self._append_log(message)
+        self.status.set(message)
+
     def _start(self) -> None:
         if self._busy:
             return
@@ -1099,26 +1248,7 @@ class LauncherApp:
             return
         try:
             settings = self._settings()
-            if not self.enemy_seed.get().strip():
-                self.enemy_seed.set(
-                    request_enemy_seed(
-                        settings.ap_request,
-                        player_name=self.player_name.get().strip(),
-                        state_root=settings.state_root or default_state_root(),
-                    )
-                )
-            options = EnemizerOptions(
-                enabled=self.randomize_enemies.get(),
-                seed=self.enemy_seed.get().strip() or None,
-                allow_tier_mixing=self.allow_tier_mixing.get(),
-                preserve_locomotion=self.preserve_locomotion.get(),
-                normalize_scaling=self.normalize_scaling.get(),
-                boss_canary=self.boss_canary.get(),
-                boss_pool="reviewed" if self.boss_pool.get() else None,
-                release_contracts=self.release_contracts.get(),
-                release_spawns=self.release_spawns.get(),
-                release_chara=self.release_chara.get(),
-            )
+            options = self._enemizer_options(settings)
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()
             research_captures = self.research_captures.get()
@@ -1129,7 +1259,7 @@ class LauncherApp:
         if not self._confirm_elevation():
             return
         self._set_busy(True)
-        self._append_log("Starting Randomize & Launch...")
+        self._append_log("Starting Launch...")
         threading.Thread(
             target=self._run,
             args=(settings, options, override, research_captures, seed_mismatch_override),
@@ -1162,7 +1292,7 @@ class LauncherApp:
                     progress=self._progress_message,
                 )
             except Exception as exc:
-                self.root.after(0, self._action_failed, "Connect to running game", exc)
+                self.root.after(0, self._action_failed, "Reconnect client", exc)
             else:
                 self.root.after(0, lambda: self._finished(result, action="Client connection"))
         threading.Thread(target=connect, daemon=True, name="bloodborne-client-connect").start()
@@ -1451,26 +1581,7 @@ class LauncherApp:
             return
         try:
             settings = self._settings()
-            if not self.enemy_seed.get().strip():
-                self.enemy_seed.set(
-                    request_enemy_seed(
-                        settings.ap_request,
-                        player_name=self.player_name.get().strip(),
-                        state_root=settings.state_root or default_state_root(),
-                    )
-                )
-            options = EnemizerOptions(
-                enabled=self.randomize_enemies.get(),
-                seed=self.enemy_seed.get().strip() or None,
-                allow_tier_mixing=self.allow_tier_mixing.get(),
-                preserve_locomotion=self.preserve_locomotion.get(),
-                normalize_scaling=self.normalize_scaling.get(),
-                boss_canary=self.boss_canary.get(),
-                boss_pool="reviewed" if self.boss_pool.get() else None,
-                release_contracts=self.release_contracts.get(),
-                release_spawns=self.release_spawns.get(),
-                release_chara=self.release_chara.get(),
-            )
+            options = self._enemizer_options(settings)
             override = self.allow_suppression_mismatch.get()
             seed_mismatch_override = self.allow_seed_mismatch.get()
             research_captures = self.research_captures.get()
@@ -1551,7 +1662,7 @@ class LauncherApp:
     def _failed(self, exc: Exception) -> None:
         self._set_busy(False)
         self._append_log(f"REFUSED: {exc}")
-        self.messagebox.showerror("Randomize & Launch refused", str(exc), parent=self.root)
+        self.messagebox.showerror("Launch refused", str(exc), parent=self.root)
 
     def _finished(self, result: Any, *, action: str = "Launch") -> None:
         self._set_busy(False)

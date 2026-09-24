@@ -16,6 +16,42 @@ NUMBER = re.compile(r"(?<!\d)\d{6,9}(?!\d)")
 
 EVENT_REASON = "entity ID referenced by area EMEVD"
 
+# Boss and prop model families that must never enter the ordinary enemy pool,
+# even when one of their NpcParam rows passes the hostile-actor gate below
+# (team 23, npcType 0). Excluding a model also keeps its own placements vanilla.
+NON_TARGET_MODELS = {
+    "c4520": "Lady Maria: boss AI broken as an ordinary enemy",
+    "c7110": "Cainhurst carriage (Hemwick): a stationary 1 HP prop, not an enemy",
+}
+
+# Single NpcParam rows to exclude where the rest of the model family is an
+# ordinary enemy that should stay in the pool.
+NON_TARGET_NPC_PARAMS = {
+    402021: "Clocktower patient, cutscene-only 1 HP actor",
+    405020: "Mummified fishman, a 1 HP decoration",
+    # Hunter's Dream actors, invisible emitters/dummies and attachment parts
+    # pass the hostile gate but are not standalone enemies; placed alone they
+    # break or crash (Old Yharnam, 2026-09-24).
+    902000: "Hunter's Dream Messenger (costume change)",
+    902010: "Hunter's Dream Messenger (gravestone)",
+    902020: "Hunter's Dream Messenger (chalice)",
+    902032: "Hunter's Dream Messenger (shop 3)",
+    902035: "Hunter's Dream Messenger (Insight shop)",
+    902040: "Hunter's Dream Messenger (weapon choice/item gift)",
+    904000: "Hunter's Dream right-hand weapon rack",
+    905000: "Hunter's Dream left-hand weapon rack",
+    360: "invisible no-hit dummy character",
+    251001: "Moon offspring bullet-firing dummy",
+    256100: "Winter Lantern bullet-firing dummy",
+    256610: "Winter Lantern bullet-firing dummy",
+    256910: "Winter Lantern bullet-firing dummy",
+    403050: "Patient B HP-management helper",
+    403100: "Patient B meteor-firing dummy",
+    212750: "Brigade snake, head attachment",
+    257100: "Celestial Emissary lower tentacle helper",
+    257101: "Celestial Emissary upper tentacle helper",
+}
+
 
 def rows(path: Path):
     with path.open(encoding="utf-8-sig", newline="") as stream:
@@ -140,7 +176,9 @@ def _write_release_records(args, slots, tags, slot_policy) -> None:
             detail["reason"] = ("EMEVD-protected placement whose script contracts "
                                 "are all supported operations")
             releases["contracts"][logical_key] = detail
-        if args.release_script_spawns and dummy and not talk and not chara and not broken_model:
+        # A CharaInit-bound spawn Part also needs the chara tranche; the two
+        # gates compose, so neither tranche alone releases it.
+        if args.release_script_spawns and dummy and not talk and not broken_model:
             detail["reason"] = ("hostile script-spawn placement; entity ID, part name "
                                 "and spawn triggers preserved; size gate bounds overflow")
             releases["spawns"][logical_key] = detail
@@ -231,7 +269,9 @@ def main() -> int:
         height = float(row.get("hitHeight") or 0)
         team = int(row.get("teamType") or 0)
         npc_type = int(row.get("npcType") or 0)
-        approved = team == 23 and npc_type == 0 and radius > 0 and height > 0
+        approved = (team == 23 and npc_type == 0 and radius > 0 and height > 0
+                    and archetype.model_name not in NON_TARGET_MODELS
+                    and archetype.npc_param_id not in NON_TARGET_NPC_PARAMS)
         scaling_rows = []
         for index in range(8):
             effect_id = int(row.get(f"spEffectID{index}") or 0)
