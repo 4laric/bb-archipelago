@@ -48,6 +48,7 @@ SOURCE_HASHES = {
 }
 PHASE_EVENTS = (12414807, 12414808, 12414809)
 REPLACED_EVENTS = {12414802: 12414702, 12414803: 12414703, 12414804: 12414704}
+BACKED_EVENT_FLAG_GROUP = 12414
 DESTINATION_HASHES = {
     12411700: "32fd5783fae1fcd587800a13729ad608926b9f59b958a29992393b0c486780c9",
     12411702: "702380b92bd2632ce4ff9527009f8c7209fffff89297bc38d8fb8d108655eaff",
@@ -167,6 +168,19 @@ def _globally_used_numbers() -> tuple[set[int], set[int]]:
     return events, actors
 
 
+def _validate_event_allocation(all_event_ids: Sequence[int], role: str) -> None:
+    """Require the runtime-probed m24_01 flag group for persistent helpers.
+
+    Event IDs can compile even when their flag group has no backing storage.
+    Gascoigne's phase routines use ``ThisEvent`` and the terminal adapter waits
+    on its helper event flag, so a collision-free number alone is insufficient.
+    Group 12414 is destination-native and 12414780--12414783 were read as
+    backed and clear in a live client probe before being selected.
+    """
+    if any(event_id // 1000 != BACKED_EVENT_FLAG_GROUP for event_id in all_event_ids):
+        raise ValueError(f"Gascoigne {role} event IDs require backed event-flag group 12414")
+
+
 def _slots_by_entity(slots: Sequence[Slot], entity: int) -> list[Slot]:
     return sorted((slot for slot in slots if slot.map_name.startswith(MAP_PREFIX) and slot.entity_id == entity),
                   key=lambda slot: slot.key)
@@ -205,6 +219,7 @@ def construction_request(slots: Sequence[Slot], allocation: ProjectOwnedIds,
     all_event_ids = phase_ids + (allocation.terminal_bridge_event_id,)
     if any(not isinstance(event, int) or event < 0 for event in all_event_ids) or len(set(all_event_ids)) != len(all_event_ids):
         raise ValueError("Gascoigne phase event IDs must be unique non-negative integers")
+    _validate_event_allocation(all_event_ids, "construction")
     if event_operands.union(msb_actor_ids).intersection(all_event_ids):
         raise ValueError("Gascoigne added event ID collides with a bundled EMEVD operand")
 
@@ -387,6 +402,7 @@ def patch_gascoigne_at_cleric(destination: str, allocation: ProjectOwnedIds) -> 
         raise ValueError("Gascoigne patch requires unique explicit phase and bridge event IDs")
     if set(original).intersection(all_added) or any(event < 0 for event in all_added):
         raise ValueError("Gascoigne patch added event ID collides with destination EMEVD")
+    _validate_event_allocation(all_added, "patch")
     if allocation.beast_entity_id <= 0:
         raise ValueError("Gascoigne patch requires a positive beast entity ID")
     remap = {GASCOIGNE_HUMAN: CLERIC_ENTITY, GASCOIGNE_BEAST: allocation.beast_entity_id,

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from tools.bb_inputs import read_blob
 from tools.bb_enemizer.gascoigne_contract import (
-    BUNDLE, GASCOIGNE_BEAST, PHASE_EVENTS, NativeActorPin, ProjectOwnedIds,
+    BACKED_EVENT_FLAG_GROUP, BUNDLE, GASCOIGNE_BEAST, PHASE_EVENTS, NativeActorPin, ProjectOwnedIds,
     construction_request, native_plan_gascoigne_at_cleric, patch_gascoigne_at_cleric, plan_gascoigne_at_cleric,
 )
 from tools.bb_enemizer.boss_canary import event_blocks
@@ -21,8 +21,10 @@ class GascoigneContractTests(unittest.TestCase):
             cls.slots = load_slots(inventory)
 
     def allocation(self, **changes):
-        values = dict(beast_entity_id=980001, phase_event_ids={12414807: 12990001, 12414808: 12990002, 12414809: 12990003}, terminal_bridge_event_id=12990004,
-                      destination_part="ap_gascoigne_beast", evidence="test-owned explicit IDs; checked against bundled m24_01 corpus")
+        values = dict(beast_entity_id=980001,
+                      phase_event_ids={12414807: 12414780, 12414808: 12414781, 12414809: 12414782},
+                      terminal_bridge_event_id=12414783, destination_part="ap_gascoigne_beast",
+                      evidence="production IDs; original corpus clear and live 12414 group probe backed")
         values.update(changes)
         return ProjectOwnedIds(**values)
 
@@ -62,10 +64,10 @@ class GascoigneContractTests(unittest.TestCase):
         patched = patch_gascoigne_at_cleric(original, self.allocation())
         before, after = event_blocks(original), event_blocks(patched)
         self.assertEqual(before[12411700].replace("    WaitFor(CharacterDead(2410800));\n",
-                                                   "    WaitFor(EventFlag(12990004));\n"), after[12411700])
-        self.assertIn("WaitFor(humanDead || (beastPhase && beastDead));", after[12990004])
-        self.assertIn("beastPhase = EventFlag(12990001);", after[12990004])
-        self.assertIn("ChangeCharacterEnableState(980001, Disabled);", after[12990004])
+                                                   "    WaitFor(EventFlag(12414783));\n"), after[12411700])
+        self.assertIn("WaitFor(humanDead || (beastPhase && beastDead));", after[12414783])
+        self.assertIn("beastPhase = EventFlag(12414780);", after[12414783])
+        self.assertIn("ChangeCharacterEnableState(980001, Disabled);", after[12414783])
         self.assertIn("CreateReferredDamagePair(2410800, 980001);", after[12414702])
         link = after[12414702].index("CreateReferredDamagePair(2410800, 980001);")
         self.assertLess(after[12414702].index(
@@ -74,15 +76,15 @@ class GascoigneContractTests(unittest.TestCase):
         self.assertIn("WaitFor(EventFlag(12414700) || EventFlag(12415400));", after[12414702])
         self.assertIn("IssueBossRoomEntryNotification(0);", after[12414702])
         self.assertNotIn("12414223", after[12414702])
-        self.assertIn("WarpCharacterAndCopyFloor(980001", after[12990001])
-        self.assertNotIn("9350", after[12990001])
-        self.assertNotIn("9337", after[12990001])
-        self.assertIn("$InitializeEvent(0, 12990004);", after[0])
-        self.assertEqual(set(before) | {12990001, 12990002, 12990003, 12990004}, set(after))
+        self.assertIn("WarpCharacterAndCopyFloor(980001", after[12414780])
+        self.assertNotIn("9350", after[12414780])
+        self.assertNotIn("9337", after[12414780])
+        self.assertIn("$InitializeEvent(0, 12414783);", after[0])
+        self.assertEqual(set(before) | {12414780, 12414781, 12414782, 12414783}, set(after))
 
     def test_beast_is_isolated_until_post_warp_phase_activation_and_restored_on_reload(self):
         original = read_blob(BUNDLE, "event/m24_01_00_00.emevd.dcx.js").decode("utf-8-sig")
-        phase = event_blocks(patch_gascoigne_at_cleric(original, self.allocation()))[12990001]
+        phase = event_blocks(patch_gascoigne_at_cleric(original, self.allocation()))[12414780]
         pre_phase = (
             "    ChangeCharacterEnableState(980001, Disabled);\n"
             "    SetCharacterInvincibility(980001, Enabled);\n"
@@ -126,7 +128,7 @@ class GascoigneContractTests(unittest.TestCase):
         plan = plan_gascoigne_at_cleric(self.slots, self.allocation(), self.native_pins())
         self.assertEqual("father-gascoigne", plan["donor"])
         self.assertEqual(3, len(plan["boss_actor_additions"]))
-        self.assertEqual([{"event_id": 12411700, "original_actor": 2410800, "bridge_event_id": 12990004}],
+        self.assertEqual([{"event_id": 12411700, "original_actor": 2410800, "bridge_event_id": 12414783}],
                          plan["event_patch"]["terminal_predicates"])
 
     def test_native_plan_swaps_only_primary_human_and_declares_scaling_outcome(self):
@@ -141,15 +143,34 @@ class GascoigneContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "collides with the bundled MSB"):
             construction_request(self.slots, self.allocation(beast_entity_id=2410811), self.native_pins())
         with self.assertRaisesRegex(ValueError, "collides with a bundled EMEVD operand"):
-            construction_request(self.slots, self.allocation(phase_event_ids={12414807: 12414807, 12414808: 12990002, 12414809: 12990003}), self.native_pins())
+            construction_request(self.slots, self.allocation(
+                phase_event_ids={12414807: 12414807, 12414808: 12414781, 12414809: 12414782}),
+                self.native_pins())
         with self.assertRaisesRegex(ValueError, "every declared phase"):
-            construction_request(self.slots, self.allocation(phase_event_ids={12414807: 12990001}), self.native_pins())
+            construction_request(self.slots, self.allocation(phase_event_ids={12414807: 12414780}), self.native_pins())
         with self.assertRaisesRegex(ValueError, "collides with a bundled EMEVD operand"):
-            construction_request(self.slots, self.allocation(terminal_bridge_event_id=12411800), self.native_pins())
+            construction_request(self.slots, self.allocation(terminal_bridge_event_id=12414720), self.native_pins())
         with self.assertRaisesRegex(ValueError, "lowercase SHA256"):
             construction_request(self.slots, self.allocation(), self.native_pins(part_sha256="A" * 64))
         with self.assertRaisesRegex(ValueError, "every destination map state"):
             construction_request(self.slots, self.allocation(), {"m24_01_00_00": self.native_pin()})
+
+    def test_all_persistent_helpers_use_live_probed_backed_flag_group(self):
+        allocation = self.allocation()
+        event_ids = (*allocation.phase_event_ids.values(), allocation.terminal_bridge_event_id)
+        self.assertEqual({BACKED_EVENT_FLAG_GROUP}, {event_id // 1000 for event_id in event_ids})
+        old_unbacked = ProjectOwnedIds(
+            beast_entity_id=allocation.beast_entity_id,
+            phase_event_ids={12414807: 12990001, 12414808: 12990002, 12414809: 12990003},
+            terminal_bridge_event_id=12990004,
+            destination_part=allocation.destination_part,
+            evidence="obsolete collision-free allocation in an absent runtime flag group",
+        )
+        with self.assertRaisesRegex(ValueError, "backed event-flag group 12414"):
+            construction_request(self.slots, old_unbacked, self.native_pins())
+        original = read_blob(BUNDLE, "event/m24_01_00_00.emevd.dcx.js").decode("utf-8-sig")
+        with self.assertRaisesRegex(ValueError, "backed event-flag group 12414"):
+            patch_gascoigne_at_cleric(original, old_unbacked)
 
 if __name__ == "__main__":
     unittest.main()
