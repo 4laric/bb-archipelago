@@ -745,7 +745,10 @@ def verify_external_activation(
     overlay = _regular_directory(install.mods, "BBLauncher game overlay")
     if any(entry.name.casefold() == ".bb-ap-owner.json" for entry in overlay.iterdir()):
         raise ValidationError(
-            "BBLauncher-managed overlay contains a standalone Archipelago owner manifest"
+            "The game's Mods folder still holds a seed from standalone mode "
+            f"({overlay}). Switch the integration mode to Standalone and use "
+            "Launch Vanilla to remove it, then switch back to BBLauncher mode, "
+            "re-activate the package in BBLauncher, and verify again."
         )
     packages = [entry for entry in active_root.iterdir() if entry.is_dir() and not _is_reparse(entry)]
     invalid = [entry for entry in active_root.iterdir() if not entry.is_dir() or _is_reparse(entry)]
