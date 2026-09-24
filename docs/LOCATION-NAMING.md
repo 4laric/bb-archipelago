@@ -150,8 +150,13 @@ translated.
 | tag | hint | confidence | calibration |
 | --- | --- | --- | --- |
 | `前半` | `bridge side` | calibrated | 2410520 Torch is tagged 前半 and is the street corpse on the way to the Great Bridge |
-| `後半` | `sewer side` | calibrated | 2410100 Saw Spear is tagged 後半 and is the sewer-channel corpse |
 | `裏` | `clinic backstreets` | calibrated | 2410140 is tagged 裏 and is already named under Iosefka's Clinic |
+
+`後半` ("latter half") is deliberately not translated. It covers everything past
+the Great Bridge -- Dry Dock, the canal, the Kennels, the Tomb of Oedon approach --
+so the old `sewer side` hint sent players into the sewer for pickups that were
+not there. Its rows carry wiki-backed landmarks from
+`docs/location_landmark_evidence.tsv` instead, or no hint when unresolved.
 
 #### m24_00_00_00 -- Cathedral Ward
 
