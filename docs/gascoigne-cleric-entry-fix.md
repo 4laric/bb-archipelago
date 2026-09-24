@@ -1,5 +1,19 @@
 # Gascoigne at Cleric Beast: grounded entry
 
+## Paarl in Gascoigne's arena
+
+The same seed also placed Paarl in Gascoigne's arena. The player observed no AI
+or health bar, but killing Paarl produced the defeat banner and lamp. The emitted
+health controller waits on readiness flag 12995306 before enabling AI and the
+health bar. A read-only probe confirmed that group 12995 is absent, while the
+destination completion flag 12411800 is set: defeat registered, activation did
+not. The arena adapter now allocates 12414880--12414887 in the backed group
+12414. Every new flag resolved clear, and the range is disjoint from the
+Gascoigne donor's 12414780--12414786 range. All six base donor packages use this
+corrected arena allocation. See `paarl-gascoigne-flag-bank-readback.json`.
+The original-input Paarl-at-Gascoigne native build verifies ten output files
+across all three map states; gameplay after the allocation fix is unobserved.
+
 ## Defeat acknowledgement follow-up
 
 The player subsequently reported killing the transformed beast with no defeat
@@ -53,8 +67,8 @@ Validation:
 - The native writer harness passes, including 41 actor-transplant assertions.
   Destination-anchor placement is explicit; existing source-relative behavior
   remains the default, and unknown placement policies are rejected.
-- The updated staged repair changes nine event bodies/IDs and
-  the beast position in three map states. All other 249 binary event fingerprints
+- The combined staged repair changes fourteen event bodies/IDs and
+  the beast position in three map states. All other 244 binary event fingerprints
   and 6,172 other part fingerprints per map remain exact. The repair is not
   activated, and no save or running-game files were changed.
 
@@ -62,7 +76,7 @@ Installed input EMEVD SHA-256:
 `5c2d08ae940c9571438bbb9ded6f9668570e1d23cc416d5b03f3e6c5ba6d3923`
 
 Staged repaired EMEVD SHA-256:
-`9ed97f11d78bff80534d788b9c8debf605224b8ee77df09b95dc8f3a1a7a452d`
+`426db0990a17ecc2b7069ee7146d382dfe319939d6d0d2fedc1ee830f0f9b365`
 
 An in-game retest is still required. The installed launcher package reports
 revision dcd0ef36f170662d34edeab45847281fbcc129a3 with a dirty worktree; the

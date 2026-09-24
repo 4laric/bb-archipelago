@@ -1,0 +1,59 @@
+{
+  "format": "bb-event-flag-bank-readback-v1",
+  "time_utc": "2026-09-24T00:29:18.321281+00:00",
+  "target": "CUSA03173 01.09",
+  "eboot_base": "0x05630000",
+  "probe": "existing bb-flag-probe LiveEventFlags reader; no writes",
+  "observations": [
+    {
+      "flag": 12995306,
+      "exit_code": 1,
+      "result": "Error: event-flag group 12995 is absent"
+    },
+    {
+      "flag": 12411800,
+      "exit_code": 0,
+      "result": "event_flag=12411800 set=true"
+    },
+    {
+      "flag": 12414880,
+      "exit_code": 0,
+      "result": "event_flag=12414880 set=false"
+    },
+    {
+      "flag": 12414881,
+      "exit_code": 0,
+      "result": "event_flag=12414881 set=false"
+    },
+    {
+      "flag": 12414882,
+      "exit_code": 0,
+      "result": "event_flag=12414882 set=false"
+    },
+    {
+      "flag": 12414883,
+      "exit_code": 0,
+      "result": "event_flag=12414883 set=false"
+    },
+    {
+      "flag": 12414884,
+      "exit_code": 0,
+      "result": "event_flag=12414884 set=false"
+    },
+    {
+      "flag": 12414885,
+      "exit_code": 0,
+      "result": "event_flag=12414885 set=false"
+    },
+    {
+      "flag": 12414886,
+      "exit_code": 0,
+      "result": "event_flag=12414886 set=false"
+    },
+    {
+      "flag": 12414887,
+      "exit_code": 0,
+      "result": "event_flag=12414887 set=false"
+    }
+  ]
+}

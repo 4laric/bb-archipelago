@@ -34,12 +34,16 @@ BEAST_PROXY = 2410811
 HUMAN_ARCHETYPE = Archetype("c2710", 271000, 271000, 0)
 BEAST_ARCHETYPE = Archetype("c2720", 272000, 272000, 0)
 
-# Proven absent from the complete bundled original EMEVD/MSB corpus.  The
-# composition builder independently scans the selected project allocations.
-ATTACHMENT_EVENTS = (12995300, 12995301, 12995302, 12995303, 12995304)
-OWNER_CLEANUP_EVENT = 12995305
-ACTIVATION_EVENT = 12995306
-PROXY_CLEANUP_EVENT = 12995307
+# Proven absent from the complete bundled original EMEVD/MSB corpus. The exact
+# range is in destination-native flag group 12414; 12414880 was also read as
+# backed and clear by the live client probe. The composition builder scans the
+# selected project allocations independently.
+ATTACHMENT_EVENTS = (12414880, 12414881, 12414882, 12414883, 12414884)
+OWNER_CLEANUP_EVENT = 12414885
+ACTIVATION_EVENT = 12414886
+PROXY_CLEANUP_EVENT = 12414887
+BACKED_EVENT_RANGE = (*ATTACHMENT_EVENTS, OWNER_CLEANUP_EVENT,
+                      ACTIVATION_EVENT, PROXY_CLEANUP_EVENT)
 BULLET_OWNER_ENTITY = 982800
 BEAST_PINS = {
     "m24_01_00_00": "19098d7da3476516f7a30723313e69c6cb21a54e035ea9623ac473bf42ebbb41",
@@ -140,6 +144,10 @@ def _validate_ids(ids: GascoigneArenaIds, destination: str) -> None:
     values = ids.values()
     if len(values) != len(set(values)) or any(value <= 0 for value in values):
         raise ValueError("Gascoigne arena IDs must be unique positive project IDs")
+    event_values = (*ids.attachment_events, ids.owner_cleanup_event,
+                    ids.activation_event, ids.proxy_cleanup_event)
+    if event_values != BACKED_EVENT_RANGE:
+        raise ValueError("Gascoigne arena events require live-backed range 12414880-12414887")
     collisions = set(values) & (_original_literals() | _numbers(destination))
     if collisions:
         raise ValueError(f"Gascoigne arena IDs collide with original inputs: {sorted(collisions)}")
@@ -341,6 +349,7 @@ def _owner_cleanup(ids: GascoigneArenaIds) -> str:
 }});"""
 
 def gascoigne_arena_contract(donor: CombatPackage, ids: GascoigneArenaIds = DEFAULT_IDS) -> dict:
+    _validate_ids(ids, "")
     attachments = _portable_attachments(donor)
     return {
         "format": "bb-gascoigne-arena-contract-v1", "status": "experimental",
