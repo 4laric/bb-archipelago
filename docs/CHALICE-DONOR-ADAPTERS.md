@@ -77,8 +77,8 @@ the emulator.
 
 Development validation includes Python adapter/integration tests, the native
 writer suite, original-file builds of all nine variants at Cleric, individual
-expanded Maria/Gehrman/Ebrietas/Rom builds, and a complete 22-family native build.
-The full build verifies 68 output files and resolves all missing AI scripts.
+expanded Maria/Gehrman/Ebrietas/Rom builds, and two complete 22-family native builds covering normal and headless Bloodletting.
+The builds verify 68 and 67 output files and resolve all missing AI scripts.
 See [full-roster native evidence](good-boss-native-smoke.json) for the exact seed,
 assignment, and event hashes. Assignment tests cover both Bloodletting variants
 across multiple seeds. The receipt always reports `runtime_validated: false`.

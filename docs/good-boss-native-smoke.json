@@ -133,5 +133,132 @@
     "Chalice scaling retains original stats: source tiers unknown",
     "Loran Darkbeast unavailable; Paarl supplies the family",
     "Direct effect roots verified, recursive effect closure not established"
-  ]
+  ],
+  "headless_variant_build": {
+    "runtime_validated": false,
+    "assignment": {
+      "arena_to_donor": {
+        "amygdala": "undead-giant",
+        "blood-starved-beast": "headless-bloodletting-beast",
+        "celestial-emissary": "amygdala",
+        "cleric-beast": "abhorrent-beast",
+        "darkbeast-paarl": "moon-presence",
+        "ebrietas": "orphan-of-kos",
+        "father-gascoigne": "vicar-amelia",
+        "gehrman": "watchdog-of-the-old-lords",
+        "lady-maria": "pthumerian-descendant",
+        "laurence": "martyr-logarius",
+        "living-failures": "lady-maria",
+        "ludwig": "blood-starved-beast",
+        "martyr-logarius": "mergos-wet-nurse",
+        "mergos-wet-nurse": "darkbeast-paarl",
+        "micolash": "cleric-beast",
+        "moon-presence": "gehrman",
+        "orphan-of-kos": "shadows-of-yharnam",
+        "rom": "pthumerian-elder",
+        "shadows-of-yharnam": "ludwig",
+        "the-one-reborn": "beast-possessed-soul",
+        "vicar-amelia": "keeper-of-old-lords",
+        "witch-of-hemwick": "father-gascoigne"
+      },
+      "arena_to_family": {
+        "amygdala": "undead-giant",
+        "blood-starved-beast": "bloodletting-beast",
+        "celestial-emissary": "amygdala",
+        "cleric-beast": "abhorrent-beast",
+        "darkbeast-paarl": "moon-presence",
+        "ebrietas": "orphan-of-kos",
+        "father-gascoigne": "vicar-amelia",
+        "gehrman": "watchdog-of-the-old-lords",
+        "lady-maria": "pthumerian-descendant",
+        "laurence": "martyr-logarius",
+        "living-failures": "lady-maria",
+        "ludwig": "blood-starved-beast",
+        "martyr-logarius": "mergos-wet-nurse",
+        "mergos-wet-nurse": "darkbeast-paarl",
+        "micolash": "cleric-beast",
+        "moon-presence": "gehrman",
+        "orphan-of-kos": "shadows-of-yharnam",
+        "rom": "pthumerian-elder",
+        "shadows-of-yharnam": "ludwig",
+        "the-one-reborn": "beast-possessed-soul",
+        "vicar-amelia": "keeper-of-old-lords",
+        "witch-of-hemwick": "father-gascoigne"
+      },
+      "family_count": 22,
+      "format": "bb-good-boss-assignment-v1",
+      "seed": "good-headless-2",
+      "selected_variants": {
+        "bloodletting-beast": "headless-bloodletting-beast",
+        "darkbeast-paarl": "darkbeast-paarl"
+      },
+      "self_pairs": [],
+      "unavailable_variants": [
+        "loran-darkbeast"
+      ]
+    },
+    "files_verified": 67,
+    "event_files": [
+      {
+        "path": "m21_00_00_00.emevd.dcx",
+        "sha256": "b34efdca78e4cf34189ae332f32e1c630dea905e54fd0d27969d3f5b580414cc"
+      },
+      {
+        "path": "m22_00_00_00.emevd.dcx",
+        "sha256": "d7fbdee2bc7827245bc04c5ab31e0f8ba06a76af7030cfeedfa676b3ad646b96"
+      },
+      {
+        "path": "m23_00_00_00.emevd.dcx",
+        "sha256": "9e244b1b3283d3891a7b75932cd08218b85a6c76b68abb4ad28f07931e272385"
+      },
+      {
+        "path": "m24_00_00_00.emevd.dcx",
+        "sha256": "0cc3f54ded988c7f6f8978a36c5da819cbc94e7b7558fc6ee54250e300ede6e3"
+      },
+      {
+        "path": "m24_01_00_00.emevd.dcx",
+        "sha256": "8c91c5fbb6096585a069f966546a3aa0ac65290054cba1d5d99c1987227d3b6d"
+      },
+      {
+        "path": "m24_02_00_00.emevd.dcx",
+        "sha256": "380f86eff3605a274da045adc102511eacd55d855b251744a351df9d83d51f70"
+      },
+      {
+        "path": "m25_00_00_00.emevd.dcx",
+        "sha256": "685f18c4acbf637bfb50c43d8c6c07c4e00051450496a5e7e85522f03bf0fda6"
+      },
+      {
+        "path": "m26_00_00_00.emevd.dcx",
+        "sha256": "79674d1ab574177343ef81cb751220186054c1aec9c1e9b42a58550a20a5e5e8"
+      },
+      {
+        "path": "m27_00_00_00.emevd.dcx",
+        "sha256": "568f5a08d5f08a55a111eef50512ca2cee5b3b0c42383cb18e64e547934f0afc"
+      },
+      {
+        "path": "m28_00_00_00.emevd.dcx",
+        "sha256": "fe5855140b26d29d9583c3bbeec7bafd5d1d5589020bc976793280bde06b2fb5"
+      },
+      {
+        "path": "m32_00_00_00.emevd.dcx",
+        "sha256": "3147a1202462ae5e16acfca81498a8218b487e1eb4fb38ff9b04f0001d7a512d"
+      },
+      {
+        "path": "m33_00_00_00.emevd.dcx",
+        "sha256": "254913dcac0d225e2b986e323dd6ce38386a6721bb1953e520234831d4d03a45"
+      },
+      {
+        "path": "m34_00_00_00.emevd.dcx",
+        "sha256": "57c56c738f8cea0f5670108b18862513700c43f3b6f9ac4490e1bc068c9599e4"
+      },
+      {
+        "path": "m35_00_00_00.emevd.dcx",
+        "sha256": "39be6b2466949b968ebc31a776205b1d9ba5f42e6d429a9dc4b40c9b8a5980d3"
+      },
+      {
+        "path": "m36_00_00_00.emevd.dcx",
+        "sha256": "727ab59e2e1a26e9dd1c252fe8d95ec1afcb212a56e42630f051f19121634c97"
+      }
+    ]
+  }
 }
