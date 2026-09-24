@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 PROOF_FILE = Path(__file__).with_suffix('.json')
-PROOF_SHA256 = '0c3c5e473c843a0fb4f2bac569b155a6f9a8ee22fda1fc01648ec9643a862770'
+PROOF_SHA256 = 'e1c5d7b4320f4e874a929c65312c2dbbb91d39af20cad7aedb8bf60c59084874'
 
 
 def character_ffx_plan(actor: dict, arena_key: str) -> dict:

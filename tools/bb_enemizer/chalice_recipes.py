@@ -13,7 +13,7 @@ from .chalice_character_ffx import character_ffx_plan
 
 def source_manifest(donor: str) -> dict:
     raw = Path(__file__).with_name('chalice_source_manifest.json').read_bytes()
-    if hashlib.sha256(raw).hexdigest() != '3b77802bd2df6088937fe68a24a02bebfdb7068f131e22a6320a7bce13ebf91c':
+    if hashlib.sha256(raw).hexdigest() != 'b6d993c4648886d5caadb3ecea71637478ca94f291985edac11abc6956a0755e':
         raise ValueError('chalice source manifest changed')
     return json.loads(raw)['donors'][donor]
 
