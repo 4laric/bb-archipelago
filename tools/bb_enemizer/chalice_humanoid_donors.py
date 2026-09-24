@@ -1,4 +1,4 @@
-"""Source-pinned Chalice humanoid donors for the Cleric arena canary.
+"""Source-pinned Chalice humanoid donors for six base arenas and Lady Maria.
 
 The three selected m29 maps initialize the same generic boss routines from
 ``m29.emevd``. Their map-specific Event(0) calls are pinned below, while the
@@ -14,8 +14,11 @@ from dataclasses import asdict, dataclass
 from typing import Mapping, Sequence
 
 from .boss_canary import event_blocks
-from .boss_contracts import ArenaContract, CLERIC_ARENA
+from .boss_contracts import ARENAS, ArenaContract, CLERIC_ARENA
 from .boss_entrances import skip_replacement_entrance
+from .gascoigne_donor import CO_OP_RESTORE_EVENTS, _retired
+from .maria_donor import _activation_without_destination_animations
+from .maria_contract import MARIA_ARENA, MARIA_PACKAGE
 from .model import Archetype, Slot, Swap
 from .scaling import plan_scaling
 
@@ -29,6 +32,30 @@ COMMON_EVENT_PINS = {
 SOURCE_INITIALIZATION = {
     "talk_id": 0, "unk_t18": 0, "init_anim_id": -1, "damage_anim_id": -1,
 }
+MARIA_HUMANOID_ARENA = ArenaContract(
+    key=MARIA_PACKAGE.key, event_file=MARIA_PACKAGE.event_file,
+    map_prefix=MARIA_PACKAGE.map_prefix, actor=MARIA_PACKAGE.actor,
+    archetype=MARIA_PACKAGE.archetype, destination_count=1,
+    completion_event=MARIA_ARENA.completion_event,
+    start_flag=MARIA_ARENA.encounter_start_flag,
+    health_bar_event=MARIA_ARENA.health_event,
+    health_bar_label=MARIA_PACKAGE.health_bar_label,
+    activation_event=MARIA_ARENA.cutscene_entry_event,
+    music_event=MARIA_ARENA.music_event,
+    phase_music_message=100,
+    lockcam_event=MARIA_ARENA.lockcam_event,
+    lockcam_map=35, lockcam_subarea=0,
+    phase_slots=(MARIA_ARENA.phase_cleanup_event,),
+    co_op_entry_event=MARIA_ARENA.co_op_restore_event,
+    part_routine_event=None, cloth_routine_event=None,
+    part_slots=(), attachment_event_ids=(), virtual_entity_ids=(),
+    attachment_anchor_slot=None, attachment_anchor_event=None,
+    expected=MARIA_PACKAGE.expected,
+    music_phase_messages=(100, 300),
+)
+SUPPORTED_BASE_ARENAS = ARENAS
+SUPPORTED_SPECIAL_ARENAS = (MARIA_HUMANOID_ARENA,)
+SUPPORTED_HUMANOID_ARENAS = (*SUPPORTED_BASE_ARENAS, *SUPPORTED_SPECIAL_ARENAS)
 
 
 @dataclass(frozen=True)
@@ -103,8 +130,8 @@ def validate_source_map_witness(donor: ChaliceHumanoidDonor, map_source: str) ->
 
 
 def _verify(arena: ArenaContract, destination: str, donor_source: str) -> tuple[dict[int, str], dict[int, str]]:
-    if arena != CLERIC_ARENA:
-        raise ValueError("Chalice humanoid donor currently supports Cleric arena only")
+    if arena not in SUPPORTED_HUMANOID_ARENAS:
+        raise ValueError("Chalice humanoid donor requires a reviewed base arena")
     original, common = event_blocks(destination), event_blocks(donor_source)
     for event_id, expected in arena.expected.items():
         if event_id not in original or hashlib.sha256(original[event_id].encode()).hexdigest() != expected:
@@ -160,53 +187,101 @@ def _health(arena: ArenaContract, donor: ChaliceHumanoidDonor, generic: str,
     for line in ("            SetEventFlag(12907230, OFF);\n",
                  "            SetEventFlag(12907231, OFF);\n"):
         block = _replace_once(block, line, "", "dungeon-only flag")
+    telemetry = [line for line in destination.splitlines()
+                 if line.strip().startswith(("CreatePlaylog(", "StartTimeMeasurement("))]
+    if (len(telemetry) != 2 or not telemetry[0].strip().startswith("CreatePlaylog(")
+            or not telemetry[1].strip().startswith("StartTimeMeasurement(")):
+        raise ValueError(f"{arena.key} health telemetry drifted")
     block, count = re.subn(
         r"    CreatePlaylog\(1260\);\n(?:    if \(\d+ == 1290180[0-3]\) \{\n"
         r"        StartTimeMeasurement\([^\n]+\);\n    \}\n){4}",
-        "    CreatePlaylog(80);\n    StartTimeMeasurement(2410010, 96, Enabled);\n", block,
+        "\n".join(telemetry) + "\n", block,
     )
     if count != 1:
         raise ValueError("m29 health telemetry drifted")
-    if "CreatePlaylog(80);" not in destination or "StartTimeMeasurement(2410010, 96, Enabled);" not in destination:
-        raise ValueError("Cleric health telemetry drifted")
     return block
+
+
+def _activation(arena: ArenaContract, donor: ChaliceHumanoidDonor, original: str) -> str:
+    if arena == CLERIC_ARENA:
+        result = original
+        for instruction in (
+            f"    SetCharacterGravity({arena.actor}, Disabled);\n",
+            f"    SetCharacterMaphits({arena.actor}, true);\n",
+            f"    ForceAnimationPlayback({arena.actor}, 3028, false, false, false);\n",
+            "    WaitFixedTimeFrames(110);\n",
+            f"    SetCharacterGravity({arena.actor}, Enabled);\n",
+            f"    SetCharacterMaphits({arena.actor}, false);\n",
+        ):
+            result = _replace_once(result, instruction, "", "Cleric-only entrance state")
+    elif arena == MARIA_HUMANOID_ARENA:
+        # Maria's first entry is a cutscene-triggered warp, with no native
+        # c4520 animation in this event. The separate entrance policy removes
+        # the cinematic while retaining its warp and arena-start flag.
+        result = original
+    else:
+        result = _activation_without_destination_animations(arena, original)
+    if donor.wake_animation is not None:
+        result = _replace_once(
+            result, f"    SetEventFlag({arena.start_flag}, ON);\n",
+            f"    ForceAnimationPlayback({arena.actor}, {donor.wake_animation}, false, false, false);\n"
+            f"    SetEventFlag({arena.start_flag}, ON);\n",
+            "donor wake animation before arena start",
+        )
+    return result
+
+
+def _music(arena: ArenaContract, original: str, generic: str) -> str:
+    if arena == MARIA_HUMANOID_ARENA:
+        # Maria owns three sound tracks and two c4520-specific phase messages.
+        # The m29 map scripts witness one actor message-500 transition; reuse
+        # the common m29 two-track body at Maria's pinned map sounds/room area.
+        # The third track remains disabled and Maria's completion cleanup stays.
+        block = generic.replace(
+            "$Event(12906810, Default, function(chrEntityId, areaEntityId, entityId, entityId2, eventFlagId, eventFlagId2, eventFlagId3) {",
+            f"$Event({arena.music_event}, Default, function() {{", 1,
+        )
+        block = _replace_once(block, "ThisEventSlot()", "ThisEvent()", "m29 music slot")
+        for source, target in (
+            ("chrEntityId", arena.actor), ("areaEntityId", 3502802),
+            ("entityId2", 3503803), ("entityId", 3503802),
+            ("eventFlagId3", MARIA_ARENA.co_op_entered_flag),
+            ("eventFlagId2", arena.health_bar_event),
+            ("eventFlagId", arena.completion_event),
+        ):
+            block = re.sub(rf"\b{source}\b", str(target), block)
+        block = _replace_once(block,
+            "    SetMapSoundState(3503803, Disabled);\n",
+            "    SetMapSoundState(3503803, Disabled);\n"
+            "    SetMapSoundState(3503804, Disabled);\n"
+            "    DeleteMapSFX(3503501, false);\n",
+            "Maria third track and phase effect shutdown")
+        if (original.count("CharacterHasEventMessage(3500800, 100)") != 1
+                or original.count("CharacterHasEventMessage(3500800, 300)") != 1):
+            raise ValueError("Maria two-phase music witness drifted")
+        return block
+    if arena.phase_music_event_flag is not None:
+        witness = f"EventFlag({arena.phase_music_event_flag})"
+    elif arena.phase_music_message is not None:
+        witness = f"CharacterHasEventMessage({arena.actor}, {arena.phase_music_message})"
+    else:
+        raise ValueError(f"{arena.key} has no reviewed phase-music boundary")
+    return _replace_once(original, witness,
+                         f"CharacterHasEventMessage({arena.actor}, 500)",
+                         "actor-owned phase music message")
 
 
 def patch_chalice_humanoid_donor(arena: ArenaContract, donor: ChaliceHumanoidDonor,
                                  destination: str, donor_source: str) -> str:
     """Retain destination progression; install m29 health and native-AI phase."""
     original, common = _verify(arena, destination, donor_source)
-    activation = original[arena.activation_event]
-    for instruction in (
-        f"    SetCharacterGravity({arena.actor}, Disabled);\n",
-        f"    SetCharacterMaphits({arena.actor}, true);\n",
-        f"    ForceAnimationPlayback({arena.actor}, 3028, false, false, false);\n",
-        "    WaitFixedTimeFrames(110);\n",
-        f"    SetCharacterGravity({arena.actor}, Enabled);\n",
-        f"    SetCharacterMaphits({arena.actor}, false);\n",
-    ):
-        activation = _replace_once(activation, instruction, "", "Cleric-only entrance state")
-    if donor.wake_animation is not None:
-        activation = _replace_once(
-            activation, f"    ChangeCharacterEnableState({arena.actor}, Enabled);\n",
-            f"    ChangeCharacterEnableState({arena.actor}, Enabled);\n"
-            f"    ForceAnimationPlayback({arena.actor}, {donor.wake_animation}, false, false, false);\n",
-            "donor wake animation",
-        )
-    music = _replace_once(
-        original[arena.music_event],
-        f"CharacterHasEventMessage({arena.actor}, 100)",
-        f"CharacterHasEventMessage({arena.actor}, 500)",
-        "actor-owned phase music message",
-    )
-    retired = {
-        *arena.phase_slots, arena.part_routine_event, arena.cloth_routine_event,
-    }
+    retired = ({MARIA_ARENA.phase_cleanup_event} if arena == MARIA_HUMANOID_ARENA
+               else _retired(arena))
     edits = {event_id: _noop(original[event_id]) for event_id in retired}
     edits.update({
-        arena.activation_event: activation,
+        arena.activation_event: _activation(arena, donor, original[arena.activation_event]),
         arena.health_bar_event: _health(arena, donor, common[12906806], original[arena.health_bar_event]),
-        arena.music_event: music,
+        arena.music_event: _music(arena, original[arena.music_event], common[12906810]),
     })
     result = skip_replacement_entrance(
         arena.key, destination, _replace_events(destination, edits)
@@ -219,6 +294,10 @@ def patch_chalice_humanoid_donor(arena: ArenaContract, donor: ChaliceHumanoidDon
             raise ValueError(f"Chalice donor changed unrelated event {event_id}")
     if output[arena.completion_event] != original[arena.completion_event]:
         raise ValueError("Chalice donor changed arena progression")
+    co_op = (MARIA_ARENA.co_op_restore_event if arena == MARIA_HUMANOID_ARENA
+             else CO_OP_RESTORE_EVENTS[arena.key])
+    if output[co_op] != original[co_op]:
+        raise ValueError("Chalice donor changed destination guest entry")
     return result
 
 
@@ -226,9 +305,9 @@ def native_plan_chalice_humanoid_donor(
     arena: ArenaContract, donor: ChaliceHumanoidDonor, slots: Sequence[Slot],
     npcs: Mapping[int, dict], effects: Mapping[int, dict], seed: str,
 ) -> dict:
-    """Bind every Cleric map state to one exact source actor/initialization."""
-    if arena != CLERIC_ARENA:
-        raise ValueError("Chalice humanoid donor currently supports Cleric arena only")
+    """Bind every destination map state to one exact source actor/initialization."""
+    if arena not in SUPPORTED_HUMANOID_ARENAS:
+        raise ValueError("Chalice humanoid donor requires a reviewed base arena")
     destinations = [slot for slot in slots if slot.entity_id == arena.actor
                     and slot.archetype == arena.archetype]
     sources = [slot for slot in slots if slot.map_name == donor.map_name
@@ -238,7 +317,7 @@ def native_plan_chalice_humanoid_donor(
             or len({slot.map_name for slot in destinations}) != arena.destination_count
             or sources[0].talk_id != 0
             or any(slot.talk_id or slot.archetype.chara_init_id for slot in destinations)):
-        raise ValueError("Chalice plan requires every Cleric state and one exact m29 source actor")
+        raise ValueError("Chalice plan requires every arena state and one exact m29 source actor")
     source, target = sources[0], destinations[0]
     swap = Swap(
         target.logical_key, [slot.key for slot in destinations],
@@ -262,11 +341,14 @@ def native_plan_chalice_humanoid_donor(
             "phase_music_message": 500,
             "phase_owner": "source-native-ai-tae",
             "entry_animation": donor.wake_animation,
-            "preserved_destination_events": [arena.completion_event, 12411703,
+            "preserved_destination_events": [arena.completion_event,
+                                             (MARIA_ARENA.co_op_restore_event
+                                              if arena == MARIA_HUMANOID_ARENA
+                                              else CO_OP_RESTORE_EVENTS[arena.key]),
                                              arena.lockcam_event],
-            "retired_destination_controllers": sorted({*arena.phase_slots,
-                                                        arena.part_routine_event,
-                                                        arena.cloth_routine_event}),
+            "retired_destination_controllers": sorted(
+                {MARIA_ARENA.phase_cleanup_event} if arena == MARIA_HUMANOID_ARENA
+                else _retired(arena)),
         },
         "primary_init_source_bindings": [{
             "source_event_file": "event/" + donor.event_file,

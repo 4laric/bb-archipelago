@@ -9,12 +9,14 @@ from pathlib import Path
 
 from tools.bb_inputs import read_blob
 from tools.bb_enemizer.boss_canary import event_blocks
-from tools.bb_enemizer.boss_contracts import BSB_ARENA, CLERIC_ARENA
+from tools.bb_enemizer.boss_contracts import CLERIC_ARENA
 from tools.bb_enemizer.chalice_humanoid_donors import (
-    COMMON_EVENT_PINS, DONORS, SOURCE_INITIALIZATION,
+    COMMON_EVENT_PINS, DONORS, MARIA_HUMANOID_ARENA,
+    SOURCE_INITIALIZATION, SUPPORTED_BASE_ARENAS, SUPPORTED_HUMANOID_ARENAS,
     native_plan_chalice_humanoid_donor, patch_chalice_humanoid_donor,
     validate_source_map_witness,
 )
+from tools.bb_enemizer.gascoigne_donor import CO_OP_RESTORE_EVENTS
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.model import Slot
 from tools.bb_enemizer.scaling import load_params
@@ -26,7 +28,10 @@ BUNDLE = ROOT / "research/bb_inputs.db"
 class ChaliceHumanoidDonorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.destination = read_blob(BUNDLE, "event/" + CLERIC_ARENA.event_file).decode("utf-8-sig")
+        cls.destinations = {
+            arena.key: read_blob(BUNDLE, "event/" + arena.event_file).decode("utf-8-sig")
+            for arena in SUPPORTED_HUMANOID_ARENAS
+        }
         cls.common = read_blob(BUNDLE, "event/m29.emevd.dcx.js").decode("utf-8-sig")
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "slots.tsv"
@@ -49,87 +54,96 @@ class ChaliceHumanoidDonorTests(unittest.TestCase):
                 self.assertIn(str(donor.actor), donor.music_initializer)
                 self.assertEqual(64, len(donor.map_event_zero_sha256))
 
-    def test_cleric_adapter_keeps_progression_and_uses_native_phase_message(self):
-        before = event_blocks(self.destination)
-        for donor in DONORS.values():
-            with self.subTest(donor=donor.key):
-                patched = patch_chalice_humanoid_donor(
-                    CLERIC_ARENA, donor, self.destination, self.common
-                )
-                after = event_blocks(patched)
-                self.assertEqual(set(before), set(after))
-                self.assertEqual(before[CLERIC_ARENA.completion_event],
-                                 after[CLERIC_ARENA.completion_event])
-                # The generic CLERIC_ARENA field aliases a model-specific
-                # cloth phase; the actual Cleric guest entry is 12411703.
-                self.assertEqual(before[12411703], after[12411703])
-                self.assertIn(f"DisplayBossHealthBar(Enabled, {CLERIC_ARENA.actor}, 0, "
-                              f"{donor.health_name_id})", after[CLERIC_ARENA.health_bar_event])
-                self.assertIn("CreatePlaylog(80)", after[CLERIC_ARENA.health_bar_event])
-                self.assertIn("StartTimeMeasurement(2410010, 96, Enabled)",
-                              after[CLERIC_ARENA.health_bar_event])
-                self.assertNotIn("12907230", after[CLERIC_ARENA.health_bar_event])
-                self.assertIn("CharacterHasEventMessage(2410800, 500)",
-                              after[CLERIC_ARENA.music_event])
-                if donor.wake_animation is not None:
-                    self.assertIn("ForceAnimationPlayback(2410800, 7001",
-                                  after[CLERIC_ARENA.activation_event])
-                else:
-                    self.assertNotIn("ForceAnimationPlayback(2410800, 7001",
-                                     after[CLERIC_ARENA.activation_event])
-                self.assertNotIn("ForceAnimationPlayback(2410800, 3028",
-                                 after[CLERIC_ARENA.activation_event])
-                for event in (CLERIC_ARENA.phase_slots +
-                              (CLERIC_ARENA.part_routine_event,
-                               CLERIC_ARENA.cloth_routine_event)):
-                    self.assertIn("EndEvent();", after[event])
-                    self.assertNotIn("RequestCharacterAICommand", after[event])
-                self.assertNotIn("12904888", patched)
+    def test_base_and_maria_adapters_preserve_lifecycle_and_native_phase(self):
+        self.assertEqual(6, len(SUPPORTED_BASE_ARENAS))
+        self.assertEqual(7, len(SUPPORTED_HUMANOID_ARENAS))
+        for arena in SUPPORTED_HUMANOID_ARENAS:
+            before = event_blocks(self.destinations[arena.key])
+            for donor in DONORS.values():
+                with self.subTest(arena=arena.key, donor=donor.key):
+                    patched = patch_chalice_humanoid_donor(
+                        arena, donor, self.destinations[arena.key], self.common
+                    )
+                    after = event_blocks(patched)
+                    self.assertEqual(set(before), set(after))
+                    self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+                    co_op = (arena.co_op_entry_event if arena == MARIA_HUMANOID_ARENA
+                             else CO_OP_RESTORE_EVENTS[arena.key])
+                    self.assertEqual(before[co_op], after[co_op])
+                    self.assertEqual(before[arena.lockcam_event], after[arena.lockcam_event])
+                    self.assertIn(f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, "
+                                  f"{donor.health_name_id})", after[arena.health_bar_event])
+                    self.assertNotIn("12907230", after[arena.health_bar_event])
+                    self.assertIn(f"CharacterHasEventMessage({arena.actor}, 500)",
+                                  after[arena.music_event])
+                    if arena == MARIA_HUMANOID_ARENA:
+                        self.assertNotIn("CharacterHasEventMessage(3500800, 300)",
+                                         after[arena.music_event])
+                        self.assertIn("SetMapSoundState(3503804, Disabled)",
+                                      after[arena.music_event])
+                    if donor.wake_animation is not None:
+                        self.assertIn(f"ForceAnimationPlayback({arena.actor}, 7001",
+                                      after[arena.activation_event])
+                    else:
+                        self.assertNotIn(f"ForceAnimationPlayback({arena.actor}, 7001",
+                                         after[arena.activation_event])
+                    self.assertNotIn("PlayCutscene", after[arena.activation_event])
+                    retired = [event for event in (*arena.phase_slots, arena.part_routine_event,
+                                                   arena.cloth_routine_event, arena.attachment_anchor_event,
+                                                   *arena.retired_combat_events)
+                               if event is not None and event != co_op]
+                    for event in retired:
+                        self.assertIn("EndEvent();", after[event])
+                        self.assertNotIn("RequestCharacterAICommand", after[event])
+                    self.assertNotIn("12904888", patched)
 
     def test_native_plan_copies_exact_npc_think_and_initialization(self):
-        destinations = [slot for slot in self.slots if slot.entity_id == CLERIC_ARENA.actor
-                        and slot.archetype == CLERIC_ARENA.archetype]
-        self.assertEqual(CLERIC_ARENA.destination_count, len(destinations))
-        for donor in DONORS.values():
-            with self.subTest(donor=donor.key):
-                prototype = destinations[0]
-                source = replace(prototype, map_name=donor.map_name,
-                                 part_name=donor.part_name, entity_id=donor.actor,
-                                 archetype=donor.archetype)
-                plan = native_plan_chalice_humanoid_donor(
-                    CLERIC_ARENA, donor, [*destinations, source],
-                    self.npcs, self.effects, donor.key,
-                )
-                self.assertEqual("bb-enemizer-plan-v2", plan["format"])
-                self.assertEqual(1, plan["swap_count"])
-                self.assertEqual(500, plan["boss_contract"]["phase_music_message"])
-                self.assertEqual("source-native-ai-tae", plan["boss_contract"]["phase_owner"])
-                self.assertEqual(donor.wake_animation, plan["boss_contract"]["entry_animation"])
-                self.assertEqual(CLERIC_ARENA.destination_count,
-                                 len(plan["primary_init_source_bindings"]))
-                for binding in plan["primary_init_source_bindings"]:
-                    self.assertEqual(donor.map_name, binding["source_map"])
-                    self.assertEqual(donor.part_sha256,
-                                     binding["source_provenance"]["part_sha256"])
-                    self.assertEqual(donor.archetype.npc_param_id,
-                                     binding["source_archetype"]["npc_param_id"])
-                    self.assertEqual(donor.archetype.think_param_id,
-                                     binding["source_archetype"]["think_param_id"])
-                    self.assertEqual(SOURCE_INITIALIZATION, binding["source_initialization"])
+        for arena in SUPPORTED_HUMANOID_ARENAS:
+            destinations = [slot for slot in self.slots if slot.entity_id == arena.actor
+                            and slot.archetype == arena.archetype]
+            self.assertEqual(arena.destination_count, len(destinations))
+            for donor in DONORS.values():
+                with self.subTest(arena=arena.key, donor=donor.key):
+                    prototype = destinations[0]
+                    source = replace(prototype, map_name=donor.map_name,
+                                     part_name=donor.part_name, entity_id=donor.actor,
+                                     archetype=donor.archetype)
+                    plan = native_plan_chalice_humanoid_donor(
+                        arena, donor, [*destinations, source],
+                        self.npcs, self.effects, donor.key,
+                    )
+                    self.assertEqual("bb-enemizer-plan-v2", plan["format"])
+                    self.assertEqual(1, plan["swap_count"])
+                    self.assertEqual(500, plan["boss_contract"]["phase_music_message"])
+                    self.assertEqual("source-native-ai-tae", plan["boss_contract"]["phase_owner"])
+                    self.assertEqual(donor.wake_animation, plan["boss_contract"]["entry_animation"])
+                    self.assertEqual(arena.destination_count,
+                                     len(plan["primary_init_source_bindings"]))
+                    for binding in plan["primary_init_source_bindings"]:
+                        self.assertEqual(donor.map_name, binding["source_map"])
+                        self.assertEqual(donor.part_sha256,
+                                         binding["source_provenance"]["part_sha256"])
+                        self.assertEqual(donor.archetype.npc_param_id,
+                                         binding["source_archetype"]["npc_param_id"])
+                        self.assertEqual(donor.archetype.think_param_id,
+                                         binding["source_archetype"]["think_param_id"])
+                        self.assertEqual(SOURCE_INITIALIZATION, binding["source_initialization"])
 
     def test_rejects_drift_missing_map_state_and_unreviewed_arena(self):
         donor = DONORS["pthumerian-elder"]
         with self.assertRaisesRegex(ValueError, "m29 donor event"):
             patch_chalice_humanoid_donor(
-                CLERIC_ARENA, donor, self.destination,
+                CLERIC_ARENA, donor, self.destinations[CLERIC_ARENA.key],
                 self.common.replace("SetCharacterInvincibility(chrEntityId, Enabled)",
                                     "SetCharacterInvincibility(chrEntityId, Disabled)"),
             )
-        with self.assertRaisesRegex(ValueError, "Cleric arena only"):
-            patch_chalice_humanoid_donor(BSB_ARENA, donor, self.destination, self.common)
+        with self.assertRaisesRegex(ValueError, "reviewed base arena"):
+            patch_chalice_humanoid_donor(
+                replace(CLERIC_ARENA, key="unsupported"), donor,
+                self.destinations[CLERIC_ARENA.key], self.common)
         destinations = [slot for slot in self.slots if slot.entity_id == CLERIC_ARENA.actor
                         and slot.archetype == CLERIC_ARENA.archetype]
-        with self.assertRaisesRegex(ValueError, "every Cleric state"):
+        with self.assertRaisesRegex(ValueError, "every arena state"):
             native_plan_chalice_humanoid_donor(
                 CLERIC_ARENA, donor, destinations[:-1], self.npcs, self.effects, "missing"
             )
