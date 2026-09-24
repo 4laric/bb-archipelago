@@ -106,9 +106,7 @@ class ScriptedFallbackTests(unittest.TestCase):
         wake = {"logical_key": "m24_01_00_00:c1120_0009"}
         row = {"logical_key": "m24_00_00_00:c2700_0000"}
         plan = retire_applied_fallbacks({"wakeup_fallbacks": [wake], "scripted_fallbacks": [row]})
-        self.assertEqual([], plan["wakeup_fallbacks"])
-        self.assertNotIn("scripted_fallbacks", plan)
-        self.assertEqual([row, wake], plan["boss_scripted_fallbacks"])
+        self.assertEqual({"wakeup_fallbacks": [], "boss_scripted_fallbacks": [row, wake]}, plan)
         self.assertEqual({"wakeup_fallbacks": []}, retire_applied_fallbacks({"wakeup_fallbacks": []}))
 
     def test_planner_swaps_and_reports_the_released_placements(self):

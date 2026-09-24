@@ -190,7 +190,8 @@ class ExperimentalLauncherTests(unittest.TestCase):
             plain = workflow.prepare_seed(self.fixture.settings(), EnemizerOptions(boss_pool='reviewed'))
         self.assertFalse(tools.calls[-1]['release_contracts'])
         self.assertIsNone(plain.identity.options['scripted_fallback_version'])
-        self.assertEqual([], plain.identity.options['release_tranches'])
+        self.assertEqual({'boss_pool': 'reviewed', 'release_tranches': []},
+                         {key: plain.identity.options[key] for key in ('boss_pool', 'release_tranches')})
 
     def test_reviewed_pool_rejects_legacy_canary_mix(self):
         with self.assertRaisesRegex(ValidationError, 'cannot be combined'):
