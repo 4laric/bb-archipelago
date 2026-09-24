@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Enemy randomization no longer turns ordinary enemies into the Cainhurst
+  carriage, and the carriage in Hemwick Charnel Lane stays in place.
+- Enemy randomization no longer spawns the 1 HP cutscene Clocktower patient or
+  the mummified Fishing Hamlet fishmen as enemies, and leaves those props in place.
 - With boss shuffle and Randomize all enemies (experimental), scripted enemies
   that kept their vanilla setup now randomize: the face-down sleepers and the
   sewer rat pack in Central Yharnam, and the lantern-carrying servants and the
