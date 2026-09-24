@@ -61,6 +61,9 @@ foreach ($name in @('gameparam.parambnd.dcx', 'build-manifest.json')) {
 }
 $exe = Join-Path $package 'BBLauncher-AP.exe'
 Copy-Item -LiteralPath $ForkExecutable -Destination $exe
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'FORK-README.txt') -Destination (Join-Path $package 'README.txt')
+New-Item -ItemType Directory -Path (Join-Path $package 'docs') | Out-Null
+Copy-Item -LiteralPath (Join-Path $repo 'docs/BBLAUNCHER-NEXT-RUN.md') -Destination (Join-Path $package 'docs/BBLAUNCHER-NEXT-RUN.md')
 $qtMode = if ($DebugBuild) { '--debug' } else { '--release' }
 & $deployQt $qtMode --compiler-runtime --dir $package $exe
 if ($LASTEXITCODE -ne 0) { throw 'Qt dependency deployment failed.' }
