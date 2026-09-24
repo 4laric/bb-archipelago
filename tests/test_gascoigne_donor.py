@@ -49,8 +49,8 @@ class GascoigneDonorTests(unittest.TestCase):
         corpus = b"\n".join(
             body for prefix in ("event/", "mined/") for body in read_prefix(BUNDLE, prefix).values()
         ).decode("utf-8-sig")
-        self.assertEqual((983100, 12995600, 12995601, 12995602, 12995603,
-                          12995604, 12995605, 12995606),
+        self.assertEqual((983100, 12414780, 12414781, 12414782, 12414783,
+                          12414784, 12414785, 12414786),
                          IDS.numeric_ids())
         for value in IDS.numeric_ids():
             self.assertNotRegex(corpus, rf"(?<![\w]){value}(?![\w])")
@@ -58,7 +58,7 @@ class GascoigneDonorTests(unittest.TestCase):
         if next_root.is_dir():
             declared = "\n".join(path.read_text(encoding="utf-8", errors="ignore")
                                  for path in next_root.rglob("*.py"))
-            self.assertNotRegex(declared, r"(?<![\w])1299560[0-6](?![\w])")
+            self.assertNotRegex(declared, r"(?<![\w])1241478[0-6](?![\w])")
 
     def test_all_six_preserve_destination_terminal_and_coop_while_importing_two_actor_graph(self):
         for arena in SUPPORTED_GASCOIGNE_ARENAS:

@@ -268,7 +268,7 @@ class EncounterRecipeTests(unittest.TestCase):
         after = event_blocks(gascoigne.patch(destination, donor_source))
         self.assertEqual(before[arena.completion_event], after[arena.completion_event])
         self.assertEqual(
-            {12995600, 12995601, 12995602, 12995603, 12995604, 12995606},
+            {12414780, 12414781, 12414782, 12414783, 12414784, 12414786},
             set(after) - set(before),
         )
         plan = gascoigne.native_plan(self.slots, self.npcs, self.effects, "recipe-gascoigne")

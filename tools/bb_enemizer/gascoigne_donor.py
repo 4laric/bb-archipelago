@@ -82,15 +82,15 @@ GASCOIGNE_STATE_BINDINGS = {
 @dataclass(frozen=True)
 class GascoigneDonorIds:
     beast_entity: int = 983100
-    phase_event: int = 12995600
-    human_special_event: int = 12995601
-    beast_special_event: int = 12995602
-    terminal_bridge_event: int = 12995603
-    cleanup_event: int = 12995604
-    notification_flag: int = 12995605
-    readiness_event: int = 12995606
+    phase_event: int = 12414780
+    human_special_event: int = 12414781
+    beast_special_event: int = 12414782
+    terminal_bridge_event: int = 12414783
+    cleanup_event: int = 12414784
+    notification_flag: int = 12414785
+    readiness_event: int = 12414786
     beast_part: str = "ap_gascoigne_beast"
-    evidence: str = ("reserved 12995600-12995699 / 983100-983199; absent from "
+    evidence: str = ("runtime-backed group 12414, reserved 12414780-12414786 / 983100-983199; absent from "
                      "original event+mined corpus and reviewed NEXT allocations")
 
     def event_ids(self) -> tuple[int, ...]:
@@ -166,8 +166,8 @@ def _validate_ids(ids: GascoigneDonorIds, destination: str = "") -> None:
     project = ids.numeric_ids()
     local = {int(value) for value in re.findall(r"(?<![\w])-?\d+(?![\w])", destination)}
     if (len(project) != len(set(project))
-            or not all(12995600 <= event <= 12995699 for event in ids.event_ids())
-            or not 12995600 <= ids.notification_flag <= 12995699
+            or not all(12414780 <= event <= 12414786 for event in ids.event_ids())
+            or not 12414780 <= ids.notification_flag <= 12414786
             or not 983100 <= ids.beast_entity <= 983199
             or set(project) & (_original_ids() | local)
             or not ids.beast_part.strip() or not ids.evidence.strip()):
