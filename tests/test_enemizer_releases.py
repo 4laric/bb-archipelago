@@ -43,9 +43,9 @@ PINNED_COUNTS = {
     ("contracts",): 822,
     ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1623,
+    ("chara", "contracts", "spawns"): 1617,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1633,
+    ("chara", "contracts", "spawns", "wakeup"): 1627,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -98,7 +98,8 @@ class ReleaseRecordTests(unittest.TestCase):
 
     def test_record_counts(self):
         counts = {tranche: len(record["releases"]) for tranche, record in self.records.items()}
-        self.assertEqual({"contracts": 750, "spawns": 666, "chara": 294, "wakeup": 10}, counts)
+        self.assertEqual({"contracts": 750, "spawns": 666, "chara": 294, "wakeup": 10,
+                          "scripted": 21}, counts)
 
     def test_central_wakeup_fallback_is_source_pinned(self):
         record = self.records["wakeup"]
