@@ -325,7 +325,7 @@ class LauncherApp:
         self._randomized_key: str | None = None
         self.allow_tier_mixing = tk.BooleanVar(value=True)
         self.preserve_locomotion = tk.BooleanVar(value=False)
-        self.normalize_scaling = tk.BooleanVar(value=False)
+        self.normalize_scaling = tk.BooleanVar(value=True)
         # The BSB-at-Cleric-Beast single-boss playtest mode is retired from the
         # GUI (kept in the settings schema and workflow for a hand-edited
         # settings.json); the var stays, permanently False, so nothing else
@@ -538,17 +538,8 @@ class LauncherApp:
         # normal launch. The release tranches have no boxes of their own:
         # Play's "Randomize all enemies (experimental)" sets them.
         troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Enemy tuning")
-        boss_pool_box, _boss_row = option(
-            ttk, troubleshooting, troubleshooting_row, "Shuffle bosses", self.boss_pool,
-            caption="Reviewed boss encounters are reassigned. Off keeps vanilla bosses.",
-        )
-        troubleshooting_row += 1
-        locomotion, _locomotion_row = option(
-            ttk, troubleshooting, troubleshooting_row, "Preserve locomotion", self.preserve_locomotion,
-            caption="Keep each slot's movement class. Tags are incomplete.",
-        )
         scaling, _scaling_row = option(
-            ttk, troubleshooting, troubleshooting_row + 1, "Normalize enemy stats", self.normalize_scaling,
+            ttk, troubleshooting, troubleshooting_row, "Scaling", self.normalize_scaling,
             caption="Scale replacements to the slot they fill.",
         )
         troubleshooting_row += 3
@@ -628,8 +619,7 @@ class LauncherApp:
             row=summary_row, column=0, columnspan=3, sticky="w", pady=(6, 0)
         )
 
-        self._enemy_widgets.extend((seed_entry, locomotion, scaling))
-        self._enemy_widgets.append(boss_pool_box)
+        self._enemy_widgets.extend((seed_entry, scaling))
 
         # --- Details drawer: launch progress and session status ------------
         # Outside the notebook so no page can hide it (bb-archipelago#190).
@@ -1008,10 +998,10 @@ class LauncherApp:
             self.ap_server.set(str(value.get("ap_server", "")))
             self.player_name.set(str(value.get("player_name", "")))
             self.allow_tier_mixing.set(True)
-            self.preserve_locomotion.set(bool(value.get("preserve_locomotion", False)))
-            self.normalize_scaling.set(bool(value.get("normalize_scaling", False)))
+            self.preserve_locomotion.set(False)
+            self.normalize_scaling.set(bool(value.get("normalize_scaling", True)))
             self.boss_canary.set(bool(value.get("boss_canary", False)))
-            self.boss_pool.set(bool(value.get("boss_pool", False)))
+            self.boss_pool.set(True)
             self.release_contracts.set(bool(value.get("release_contracts", False)))
             self.release_spawns.set(bool(value.get("release_spawns", False)))
             self.release_chara.set(bool(value.get("release_chara", False)))
@@ -1177,10 +1167,10 @@ class LauncherApp:
             enabled=self.randomize_enemies.get(),
             seed=self.enemy_seed.get().strip() or None,
             allow_tier_mixing=self.allow_tier_mixing.get(),
-            preserve_locomotion=self.preserve_locomotion.get(),
+            preserve_locomotion=False,
             normalize_scaling=self.normalize_scaling.get(),
             boss_canary=self.boss_canary.get(),
-            boss_pool="reviewed" if self.boss_pool.get() else None,
+            boss_pool="reviewed" if self.randomize_enemies.get() and not self.boss_canary.get() else None,
             release_contracts=self.release_contracts.get(),
             release_spawns=self.release_spawns.get(),
             release_chara=self.release_chara.get(),

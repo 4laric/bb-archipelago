@@ -202,8 +202,9 @@ class ProductionPrepareOptionsTests(unittest.TestCase):
             ):
                 result = wiring.production_prepare(params, "op")
 
-            self.assertEqual(captured["options"], EnemizerOptions(**options_payload))
-            self.assertEqual(result["launch_config"]["enemizer"], options_payload)
+            normalized = {**options_payload, "preserve_locomotion": False}
+            self.assertEqual(captured["options"], EnemizerOptions(**normalized))
+            self.assertEqual(result["launch_config"]["enemizer"], normalized)
             self.assertEqual(result["enemizer"]["swap_count"], 72)
             self.assertEqual(result["enemizer"]["map_file_count"], 18)
             self.assertEqual(result["enemizer"]["ai_file_count"], 18)
