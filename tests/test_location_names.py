@@ -152,8 +152,8 @@ LANDMARK_UNRESOLVED = ROOT / "docs" / "location_landmark_unresolved.tsv"
 # Witnessed populations, not targets, exactly like the counts above. The pass
 # deliberately leaves rows bare: a name with no landmark yet is honest, and
 # raising this number means new evidence, not new invention.
-HINTED_ROWS = 188
-BARE_ROWS = 502
+HINTED_ROWS = 187
+BARE_ROWS = 503
 
 # The three rows oz hunted with a video guide open and still needed operator
 # support to find (#222). Each must publish a hint naming the area, not an
@@ -352,7 +352,7 @@ class LandmarkHintTests(unittest.TestCase):
         ordinal_rows = [name for name in table.values() if re.search(r"#\d+", name)]
         self.assertEqual(407, len(ordinal_rows))
         hinted_ordinals = [name for name in ordinal_rows if place_hint(name)]
-        self.assertEqual(99, len(hinted_ordinals))
+        self.assertEqual(98, len(hinted_ordinals))
         for name in hinted_ordinals:
             # the ordinal stays ahead of the hint, never replaced by it
             self.assertRegex(name, r"#\d+ \([^()]+\)$")

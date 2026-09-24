@@ -6,6 +6,12 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Central Yharnam no longer names checks `(sewer side)`. The developers' lot tag
+  behind it only means "past the Great Bridge", and half of those pickups are
+  nowhere near the sewer. Eleven now name a wiki-backed landmark (for example
+  `Coldblood Dew (3) (Dog Kennels side path)`, `Bold Hunter's Mark x2 (statue
+  before Tomb of Oedon)`); `Coldblood Dew (1) #8` drops the hint until its spot
+  is pinned down. Location IDs are unchanged.
 - Launcher: **Randomize** and **Launch** are now separate buttons. Randomize
   builds and verifies the seed without starting the game and reports the swap
   count; Launch reuses that build (or builds first). The enemy choice moved
