@@ -125,7 +125,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Central Yharnam - Blood Stone Shard #1 (bridge side)
 - Central Yharnam - Blood Stone Shard #2 (bridge side)
 - Central Yharnam - Blood Stone Shard #3 (bridge side)
-- Central Yharnam - Blood Stone Shard #4 (bridge side)
+- Central Yharnam - Blood Stone Shard #4 (final canal beam) — final canal beam.
 - Central Yharnam - Blood Stone Shard #5 (bridge side)
 - Central Yharnam - Blood Stone Shard #6 (alcove before Boar Tunnel) — alcove before Boar Tunnel.
 - Central Yharnam - Blood Stone Shard #7 (bridge side)
@@ -152,7 +152,7 @@ Landmarks are added only after the item lot, acquisition flag, map placement, an
 - Central Yharnam - Hunter Set (Aqueduct drop near Large Huntsman) — Aqueduct drop near Large Huntsman.
 - Central Yharnam - Iosefka Courtyard Quicksilver Bullets x10 (bridge side)
 - Central Yharnam - Kin Coldblood (12) (chest)
-- Central Yharnam - Madman's Knowledge #1 (bridge side)
+- Central Yharnam - Madman's Knowledge #1 (Dry Dock lower canal dead end) — Dry Dock lower canal dead end.
 - Central Yharnam - Madman's Knowledge #2 (dead end behind four crows) — dead end behind four crows.
 - Central Yharnam - Molotov Cocktail x4 #1 (Plaza gate) — Plaza gate.
 - Central Yharnam - Molotov Cocktail x4 #2 (bridge side)
