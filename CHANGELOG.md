@@ -6,6 +6,13 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Enemy randomization no longer places non-enemy actors as enemies: the Hunter's
+  Dream Messengers and weapon racks, invisible projectile emitters (Winter
+  Lantern, Moon offspring, Patient B's meteors), and attachment parts such as
+  the Brigade's head snake and the Celestial Emissary's tentacles (the
+  Brigade's chest snake stays in: it works on its own). One of these is
+  the likely cause of a crash in Old Yharnam. Those actors' own placements,
+  including the Hunter's Dream Messengers, now always stay vanilla.
 - Randomize all enemies (experimental) now also randomizes script-spawned
   enemies that carry a starting pose, such as the face-down crawlers in the
   Central Yharnam sewer and Dry Dock (78 placements game-wide).

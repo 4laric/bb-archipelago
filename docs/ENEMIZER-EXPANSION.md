@@ -51,11 +51,11 @@ drop rewriter deliberately leaves vanilla
 | Tranche | Record | Keys | Swaps (alone) | Central m24_01 |
 | --- | --- | ---: | ---: | ---: |
 | default | — | — | 308 | 49 / 277 |
-| contracts (supported script contracts) | `release_contracts.json` | 750 | 822 (+514) | 94 |
+| contracts (supported script contracts) | `release_contracts.json` | 750 | 800 (+492) | 94 |
 | spawns (hostile script-spawns, incl. CharaInit-bound) | `release_spawns.json` | 666 | 796 (+488) | 106 |
 | chara (hostile CharaInit-bound) | `release_chara.json` | 294 | 345 (+37) | 59 |
 | wakeup helper (`release_wakeup.json`) | 10 keys (8 newly eligible) | — | 316 alone | 57 |
-| **all combined + helper** | union (1,437 keys) | — | **1,627 (+1,319)** | **199 / 277 (72%)** |
+| **all combined + helper** | union (1,437 keys) | — | **1,599 (+1,291)** | **199 / 277 (72%)** |
 
 Why chara alone converts little: most CharaInit hostiles are also
 EMEVD-protected; the tranche composes (union) rather than acting alone.
@@ -168,6 +168,6 @@ both tranches are on.
 | Item | Implemented + static tests | In-game validated |
 | --- | --- | --- |
 | Default 308-swap policy | yes | partial (prior playtests) |
-| contracts / spawns / chara + wakeup fallback | yes (pins: 822/796/345/1627) | **no** — owed |
+| contracts / spawns / chara + wakeup fallback | yes (pins: 800/796/345/1599) | **no** — owed |
 | Boss reviewed pool (67 pairs) | yes (existing contract tests) | **no** — owed |
 | Central Yharnam visibility (187) | yes (plan-level) | **no** — owed |
