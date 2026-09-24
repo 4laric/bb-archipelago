@@ -22,6 +22,8 @@ OPERATIONS = (
     "inspect_install",
     "inspect_seed",
     "prepare_play",
+    "prepare_standalone",
+    "verify_standalone",
     "verify_and_arm",
     "connect_and_start_client",
     "session_status",

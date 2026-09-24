@@ -1,0 +1,31 @@
+{
+  "format": "bblauncher-next-run-offline-evidence-v1",
+  "backend_revision": "b772bd1baf29adbe36a18416fbb20aa1a83daae0",
+  "target": {
+    "serial": "CUSA03173",
+    "app_version": "01.09"
+  },
+  "status": "offline-only; no game activation, launch or save writes",
+  "archipelago": {
+    "protocol_stdout_lines": 1,
+    "prepare_ok": true,
+    "expanded_enemies": true,
+    "boss_pool": "reviewed",
+    "ordinary_enemy_swaps": 1642,
+    "boss_encounters": 15,
+    "cache_files": 57,
+    "package_name": "Archipelago-Tester-1472e24f920a"
+  },
+  "standalone": {
+    "protocol_stdout_lines": 1,
+    "prepare_ok": true,
+    "original_sources_and_export_verified": true,
+    "wrong_seed_refused": true,
+    "ordinary_enemy_swaps": 308,
+    "map_files": 22,
+    "physical_parts": 545,
+    "missing_ai_goals": 0,
+    "package_name": "Bloodborne-Standalone-bblauncher-next-run-smoke-3c3337141658"
+  },
+  "gameplay_accepted": false
+}

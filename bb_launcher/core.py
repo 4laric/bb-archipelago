@@ -1233,6 +1233,12 @@ class SeedCache:
         cathedral = manifest.get("cathedral_event")
         cathedral_record = expected.get(CATHEDRAL_EVENT_PATH)
         hemwick_record = expected.get(HEMWICK_EVENT_PATH)
+        # Reviewed boss encounters may emit the Hemwick map event for a boss
+        # without enabling our AP Hemwick access gate. Only the AP-owned
+        # component is evidence that the Cathedral gate event was installed.
+        hemwick_gate_record = (hemwick_record if hemwick_record is not None
+                               and hemwick_record.get("component") == "hemwick-event"
+                               else None)
         if (cathedral is None) != (cathedral_record is None):
             raise ValidationError(
                 "Cathedral event file and witness metadata must either both be present or both be absent"
@@ -1248,7 +1254,7 @@ class SeedCache:
             if cathedral.get("sha256") != cathedral_record.get("sha256"):
                 raise ValidationError("Cathedral event witness hash does not match its record")
             expected_cathedral_events = ([12400760, 12401803, 12405710, 12409990]
-                                         if hemwick_record is not None
+                                         if hemwick_gate_record is not None
                                          else [12400760, 12401803, 12405710])
             if cathedral.get("events") != expected_cathedral_events:
                 raise ValidationError("Cathedral event witness has unexpected owned events")
@@ -1260,7 +1266,7 @@ class SeedCache:
                 raise ValidationError("Cathedral event witness has the wrong Laurence flag")
             if cathedral.get("suppressed_password_flag") != 12401803:
                 raise ValidationError("Cathedral event witness has the wrong password flag")
-            expected_gate = (None if hemwick_record is None else {
+            expected_gate = (None if hemwick_gate_record is None else {
                 "event": 12409990, "access_flag": 12201898,
                 "object": 2401995, "sfx": 2403995,
             })
@@ -1279,14 +1285,13 @@ class SeedCache:
                     or common.get("event") != 98000000):
                 raise ValidationError("Common category-8 event witness is invalid")
         hemwick = manifest.get("hemwick_event")
-        if (hemwick is None) != (hemwick_record is None):
+        if (hemwick is None) != (hemwick_gate_record is None):
             raise ValidationError("Hemwick event file and witness must both be present or absent")
         if hemwick is not None:
             if not isinstance(hemwick, dict) or hemwick.get("path") != HEMWICK_EVENT_PATH:
                 raise ValidationError("Hemwick event witness points outside the managed event")
-            assert hemwick_record is not None
-            if (hemwick_record.get("component") != "hemwick-event"
-                    or hemwick.get("sha256") != hemwick_record.get("sha256")
+            assert hemwick_gate_record is not None
+            if (hemwick.get("sha256") != hemwick_gate_record.get("sha256")
                     or hemwick.get("event") != 12209990
                     or hemwick.get("access_flag") != 12201898
                     or hemwick.get("object") != 2201999

@@ -170,6 +170,7 @@ def sample_plan(seed: str) -> dict:
 
 def write_boss_encounter_overlay(
     root: Path, *, source_binder: Path, seed: str, cathedral_input: bytes | None = None,
+    hemwick_boss_event: bool = False,
 ) -> Path:
     """A closed native-output fixture with two encounter events and audit files."""
     overlay = root / "boss-encounter-output"
@@ -193,6 +194,8 @@ def write_boss_encounter_overlay(
     }
     if cathedral_input is not None:
         outputs[core.CATHEDRAL_EVENT_PATH] = b"native-composed-cathedral-plus-boss"
+    if hemwick_boss_event:
+        outputs[core.HEMWICK_EVENT_PATH] = b"boss-encounter-hemwick-event"
     for relative, content in outputs.items():
         path = overlay.joinpath(*relative.split("/"))
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -325,6 +328,30 @@ class LauncherCoreTests(unittest.TestCase):
             SeedCache(self.root / "cache-two").build(
                 seed, binder, cathedral_event=cathedral, boss_encounter_overlay=overlay,
             )
+
+    def test_generic_hemwick_boss_event_does_not_claim_ap_access_gate(self):
+        binder = self.root / "binder.dcx"
+        binder.write_bytes(b"suppressed")
+        cathedral = self.root / "cathedral.emevd.dcx"
+        cathedral.write_bytes(b"AP cathedral without Hemwick gate")
+        overlay = write_boss_encounter_overlay(
+            self.root, source_binder=binder, seed="seed:boss",
+            cathedral_input=cathedral.read_bytes(), hemwick_boss_event=True,
+        )
+        seed = identity(
+            "seed", b"suppressed", enemizer_seed="seed:boss",
+            options={"enemy_randomizer": True, "boss_encounters": True},
+        )
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(seed, binder, cathedral_event=cathedral,
+                            boss_encounter_overlay=overlay)
+        self.assertEqual([12400760, 12401803, 12405710],
+                         build.manifest["cathedral_event"]["events"])
+        self.assertIsNone(build.manifest["hemwick_event"])
+        event = next(row for row in build.manifest["files"]
+                     if row["path"] == core.HEMWICK_EVENT_PATH)
+        self.assertEqual("boss-encounter-event", event["component"])
+        cache.verify(build.path)
 
     def test_generic_boss_receipt_refuses_unlisted_output_and_retained_receipt_tampering(self):
         source_binder = self.root / "composed-ap-gameparam.parambnd.dcx"

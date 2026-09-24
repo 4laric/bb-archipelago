@@ -96,6 +96,8 @@ class Backend:
             "inspect_install": self._inspect_install,
             "inspect_seed": self._inspect_seed,
             "prepare_play": self._prepare_play,
+            "prepare_standalone": self._prepare_standalone,
+            "verify_standalone": self._verify_standalone,
             "verify_and_arm": self._verify_and_arm,
             "connect_and_start_client": self._connect_and_start_client,
             "session_status": self._session_status,
@@ -127,6 +129,7 @@ class Backend:
             "protocol": PROTOCOL_VERSION,
             "operations": [
                 "capabilities", "inspect_install", "inspect_seed", "prepare_play",
+                "prepare_standalone", "verify_standalone",
                 "verify_and_arm", "connect_and_start_client", "session_status",
                 "stop_client", "cancel_operation",
             ],
@@ -210,6 +213,18 @@ class Backend:
                 "server": raw.get("server", ""), "seed": raw.get("seed", "")}
 
     # -- prepare ----------------------------------------------------------------
+
+    def _prepare_standalone(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
+        from .standalone import prepare_standalone
+
+        if op_id in self.cancelled:
+            raise ProtocolError("cancelled", "operation was cancelled")
+        return prepare_standalone(params, state_root=self.state_root)
+
+    def _verify_standalone(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
+        from .standalone import verify_standalone
+
+        return verify_standalone(params, state_root=self.state_root)
 
     def _prepare_play(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
         if op_id in self.cancelled:

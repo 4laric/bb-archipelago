@@ -3,8 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 
 from tools.bb_standalone.schema import GAMEPARAM_PATH, PARAMDEF_PATH
@@ -13,6 +15,7 @@ from tools.build_standalone_randomizer import (
     RECEIPT_FORMAT,
     BuildConfig,
     EnemyOptions,
+    _run,
     build,
 )
 
@@ -340,6 +343,19 @@ class StandaloneBuildTests(unittest.TestCase):
             build(self.config(), runner=self.toolchain, planner=self.plan)
         self.assertFalse(self.output.exists())
         self.assertFalse(list(self.output.parent.glob(".bb-standalone-*")))
+
+
+class SubprocessOutputTests(unittest.TestCase):
+    def test_child_progress_goes_to_stderr_and_receipt_remains_captured(self):
+        command = [sys.executable, "-c", "print('native progress')"]
+        with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as log:
+            with redirect_stderr(log):
+                uncaptured = _run(command, subprocess.run)
+            log.seek(0)
+            self.assertIn("native progress", log.read())
+        self.assertIsNone(uncaptured.stdout)
+        captured = _run(command, subprocess.run, capture=True)
+        self.assertEqual("native progress\n", captured.stdout)
 
 
 if __name__ == "__main__":

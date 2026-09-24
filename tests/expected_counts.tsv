@@ -4,7 +4,7 @@
 # A green run proves nothing on its own: a gate that collects zero tests exits
 # exactly as successfully as one that ran everything.
 
-total		1893
+total		1901
 
 module	test_bb_enemizer	8
 module	test_bloodborne_model	42
@@ -27,7 +27,7 @@ module	test_storage_probe	62
 module	test_fixed_location_catalog	7
 module	test_ce_table_inventory	3
 module	test_launcher_client_config	6
-module	test_launcher_core	61
+module	test_launcher_core	62
 module	test_launcher_readiness	7
 module	test_launcher_ui	72
 module	test_launcher_seed_zip	23
@@ -122,8 +122,10 @@ module	test_standalone_randomizer	8
 # --require test_standalone_item_writer=5 with BB_STANDALONE_WRITER_INPUTS.
 # Their collection still contributes five tests to the total floor.
 
-module	test_standalone_build	7
+module	test_standalone_build	8
 
 module	test_standalone_mod_export	10
 
 module	test_standalone_package	7
+
+module	test_integrated_standalone	6

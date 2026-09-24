@@ -30,6 +30,7 @@ Example from the AP checkout (replace input paths with your actual builds):
   -ToolsDirectory C:/build/BloodborneAPLauncher/tools `
   -SuppressionDirectory C:/build/BloodborneAPLauncher/work/vanilla-suppression-build `
   -ClientRef <client-source-commit> `
+  -ForkSourceRoot C:/source/BB_Launcher-AP `
   -OutputRoot ./build/fork-candidate
 ```
 
@@ -38,24 +39,35 @@ runtime installed. Use `-PythonExecutable` to select the build environment
 with PyInstaller installed. The player does not need Python. A separate
 `-ClientPath` can override the client executable in the tools directory.
 
-The script runs `smoke_fork_bundle.py` against the actual packaged Qt executable,
+The backend also bundles the standalone item award catalog. The script runs
+`smoke_fork_bundle.py` against the actual packaged Qt executable,
 frozen backend and enemy planner from a temporary working directory. It checks
 startup, seed inspection, and increased coverage with the shipped expansion data.
 Qt widget/coordinator tests and the repository gate remain separate checks;
 none of these replaces the live game test. The manifest records source and
-client provenance, executable hashes, and that gameplay has not been tested.
+client provenance, executable/tool/catalog hashes, optional fork source revision,
+and that gameplay has not been tested. The frozen standalone enemy planner must
+produce the same default curated swaps as the packaged AP planner.
 
 Open the candidate from its own folder. Keep the working original launcher
 available. Select the existing game and emulator through the fork's settings,
-then open Archipelago, choose a seed and press Play. Unknown fork provenance
+then open the randomizer page and choose Archipelago or Standalone. In AP mode,
+choose a seed file and player; in standalone, enter a seed string and select
+base-game or DLC content. **Randomize** prepares an inactive mod; **Launch**
+verifies and activates it before starting the game. Standalone starts no AP
+client. Unknown fork provenance
 is an informational warning, not a build-approval gate or an extra checkbox.
 The game and AP client must stop before switching seeds or removing AP mods.
 
-Enemy randomization and expanded coverage start enabled in the fork. Uncheck
-Randomize enemies for a vanilla enemy layout, or narrow the scripted-enemy,
-ambush and hunter options. Advanced options include an optional enemy seed;
-leaving it blank uses the seed file. Changing these settings produces a different
-cached mod. The prepared result reports actual changed placements.
+The enemy choice is reviewed randomization, expanded experimental coverage, or
+vanilla. Expanded coverage and boss shuffle belong to AP mode; standalone offers
+the default ordinary-enemy pool. Advanced tuning stays collapsed. AP's enemy
+seed is editable; leaving it blank uses the seed file. Changing build inputs
+invalidates the prepared selection. Preparation reports the generated result.
+
+The short next-run acceptance procedure is in
+[BBLAUNCHER-NEXT-RUN.md](../docs/BBLAUNCHER-NEXT-RUN.md). Fixture tests and offline
+exports do not substitute for that live acceptance.
 
 For the reviewed Central Yharnam sleep routine, randomized replacements start
 awake with their own AI. The fallback removes only that placement's sleep-routine
@@ -70,4 +82,3 @@ For development, backend discovery checks the adjacent frozen bundle first,
 then `BB_AP_BACKEND`, then `BB_AP_SOURCE_ROOT` with `BB_AP_PYTHON` or Python
 discovered on PATH. Remove the adjacent development backend copy if testing
 source changes; otherwise it takes precedence.
-
