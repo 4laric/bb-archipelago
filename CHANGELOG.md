@@ -6,6 +6,9 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Randomize all enemies (experimental) now also randomizes script-spawned
+  enemies that carry a starting pose, such as the face-down crawlers in the
+  Central Yharnam sewer and Dry Dock (78 placements game-wide).
 - Central Yharnam no longer names checks `(sewer side)`. The developers' lot tag
   behind it only means "past the Great Bridge", and half of those pickups are
   nowhere near the sewer. Eleven now name a wiki-backed landmark (for example
