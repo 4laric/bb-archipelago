@@ -8,14 +8,30 @@ internal static class WakeupFallback
     const string BodyFingerprint = "09c87b885de52154056dd891cd1331edc5c07b124660756d6600ed6d9b1dc86b";
     const string Format = "bb-enemizer-wakeup-fallback-v1";
     const long EventId = 12415130;
+    // Sewer rat ambush: c1100 AI command 10 toward a pinned home region. Its
+    // native body fingerprint must come from the real m24_01_00_00.emevd.dcx
+    // (--event-fingerprint); until it is pinned, ambush rows are refused.
+    // Must equal wakeup_fallback.AMBUSH_BODY_FINGERPRINT.
+    internal const long AmbushEventId = 12410340;
+    internal const string? AmbushBodyFingerprint = null;
     static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true, WriteIndented = true };
     internal sealed record Row(string logical_key, int entity_id, string map, long event_id);
-    static readonly IReadOnlyDictionary<string, (int Entity, int Slot, int Flag)> Allowed = new Dictionary<string, (int, int, int)>(StringComparer.Ordinal) {
-        ["m24_01_00_00:c1120_0009"] = (2410148, 8, 1), ["m24_01_00_00:c1120_0010"] = (2410149, 9, 1),
-        ["m24_01_00_00:c1120_0011"] = (2410150, 10, 0), ["m24_01_00_00:c1120_0015"] = (2410154, 14, 1),
-        ["m24_01_00_00:c1120_0016"] = (2410140, 0, 1), ["m24_01_00_00:c1120_0017"] = (2410141, 1, 0),
-        ["m24_01_00_00:c1120_0019"] = (2410143, 3, 0), ["m24_01_00_00:c1120_0020"] = (2410144, 4, 1),
-        ["m24_01_00_00:c1120_0022"] = (2410146, 6, 0), ["m24_01_00_00:c1120_0023"] = (2410147, 7, 0),
+    // Each pin: initializer event, entity, InitializeEvent slot, and the
+    // exact arguments after the entity.
+    internal sealed record Pin(long Event, int Entity, int Slot, int[] Tail);
+    static Pin Wake(int entity, int slot, int flag) => new(EventId, entity, slot, [9000, 9061, 52410270, 112499, 112400, flag]);
+    static Pin Ambush(int entity, int slot, int home) => new(AmbushEventId, entity, slot, [home, 10, 2412220]);
+    static readonly IReadOnlyDictionary<string, Pin> Allowed = new Dictionary<string, Pin>(StringComparer.Ordinal) {
+        ["m24_01_00_00:c1120_0009"] = Wake(2410148, 8, 1), ["m24_01_00_00:c1120_0010"] = Wake(2410149, 9, 1),
+        ["m24_01_00_00:c1120_0011"] = Wake(2410150, 10, 0), ["m24_01_00_00:c1120_0015"] = Wake(2410154, 14, 1),
+        ["m24_01_00_00:c1120_0016"] = Wake(2410140, 0, 1), ["m24_01_00_00:c1120_0017"] = Wake(2410141, 1, 0),
+        ["m24_01_00_00:c1120_0019"] = Wake(2410143, 3, 0), ["m24_01_00_00:c1120_0020"] = Wake(2410144, 4, 1),
+        ["m24_01_00_00:c1120_0022"] = Wake(2410146, 6, 0), ["m24_01_00_00:c1120_0023"] = Wake(2410147, 7, 0),
+        ["m24_01_00_00:c1100_0008"] = Ambush(2410220, 0, 2412230), ["m24_01_00_00:c1100_0007"] = Ambush(2410221, 1, 2412231),
+        ["m24_01_00_00:c1100_0003"] = Ambush(2410222, 2, 2412232), ["m24_01_00_00:c1100_0002"] = Ambush(2410223, 3, 2412233),
+        ["m24_01_00_00:c1100_0006"] = Ambush(2410224, 4, 2412234), ["m24_01_00_00:c1100_0001"] = Ambush(2410225, 5, 2412235),
+        ["m24_01_00_00:c1100_0000"] = Ambush(2410226, 6, 2412236), ["m24_01_00_00:c1100_0005"] = Ambush(2410227, 7, 2412237),
+        ["m24_01_00_00:c1100_0004"] = Ambush(2410228, 8, 2412238),
     };
     static void Need(bool ok, string message) { if (!ok) throw new InvalidDataException(message); }
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
@@ -38,17 +54,22 @@ internal static class WakeupFallback
         Need(rows.Select(r => r.logical_key).Distinct(StringComparer.Ordinal).Count() == rows.Count, "duplicate wakeup fallback key");
         foreach (var row in rows) {
             Need(Allowed.TryGetValue(row.logical_key, out var expected), $"unsupported wakeup fallback key {row.logical_key}");
-            Need(row.map == "m24_01_00_00" && row.event_id == EventId && row.entity_id == expected.Entity, $"wakeup fallback witness differs for {row.logical_key}");
+            Need(row.map == "m24_01_00_00" && row.event_id == expected!.Event && row.entity_id == expected.Entity, $"wakeup fallback witness differs for {row.logical_key}");
             Need(swapKeys.Contains(row.logical_key), $"wakeup fallback has no actual swap witness: {row.logical_key}");
         }
         return rows;
     }
 
-    internal static void Apply(EMEVD original, IReadOnlyList<Row> rows, string expectedBody = BodyFingerprint)
+    internal static void Apply(EMEVD original, IReadOnlyList<Row> rows, string expectedBody = BodyFingerprint,
+        string? expectedAmbushBody = AmbushBodyFingerprint)
     {
         Need(original.Format == EMEVD.Game.Bloodborne, "wakeup fallback requires Bloodborne EMEVD");
         var callee = GetEvent(original, EventId);
         Need(BossCanary.Fingerprint(callee) == expectedBody, "unsupported wakeup initializer body");
+        if (rows.Any(r => r.event_id == AmbushEventId)) {
+            Need(expectedAmbushBody is not null, "rat ambush body fingerprint is not pinned");
+            Need(BossCanary.Fingerprint(GetEvent(original, AmbushEventId)) == expectedAmbushBody, "unsupported rat ambush initializer body");
+        }
         Need(callee.Instructions.Count > 9, "wakeup initializer wait template is missing");
         var wait = callee.Instructions[9];
         Need(wait.Bank == 1001 && wait.ID == 3 && wait.ArgData.SequenceEqual(new byte[] { 0,0,0,0,60,0,0,0 }), "wakeup initializer wait template differs");
@@ -59,15 +80,15 @@ internal static class WakeupFallback
         var matched = new Dictionary<int, int>();
         for (int i = 0; i < constructor.Instructions.Count; i++) {
             var ins = constructor.Instructions[i];
-            if (ins.Bank != 2000 || ins.ID != 0 || ins.ArgData.Length != 36) continue;
+            if (ins.Bank != 2000 || ins.ID != 0 || ins.ArgData.Length < 12) continue;
             int entity = Arg(ins.ArgData, 2);
             if (!planned.ContainsKey(entity)) continue;
-            Need(Arg(ins.ArgData, 1) == EventId, $"initializer event differs for planned entity {entity}");
             var row = planned[entity];
             var expected = Allowed[row.logical_key];
-            Need(Arg(ins.ArgData, 0) == expected.Slot && Arg(ins.ArgData, 3) == 9000 && Arg(ins.ArgData, 4) == 9061
-                && Arg(ins.ArgData, 5) == 52410270 && Arg(ins.ArgData, 6) == 112499 && Arg(ins.ArgData, 7) == 112400
-                && Arg(ins.ArgData, 8) == expected.Flag, $"initializer witness differs for {row.logical_key}");
+            Need(Arg(ins.ArgData, 1) == expected.Event, $"initializer event differs for planned entity {entity}");
+            Need(ins.ArgData.Length == 4 * (3 + expected.Tail.Length) && Arg(ins.ArgData, 0) == expected.Slot
+                && expected.Tail.Select((value, index) => Arg(ins.ArgData, 3 + index) == value).All(ok => ok),
+                $"initializer witness differs for {row.logical_key}");
             Need(!constructor.Parameters.Any(p => p.InstructionIndex == i), $"initializer has event-parameter bindings: {row.logical_key}");
             matched[entity] = matched.GetValueOrDefault(entity) + 1;
             constructor.Instructions[i] = new EMEVD.Instruction(zeroWait.Bank, zeroWait.ID, zeroWait.ArgData.ToArray()) { Layer = ins.Layer };
@@ -101,12 +122,14 @@ internal static class WakeupFallback
             if (e.ID != 0) Need(BossCanary.Fingerprint(e) == fingerprintsBefore[e.ID], $"unrelated event changed: {e.ID}");
         }
         Need(BossCanary.Fingerprint(GetEvent(verified, EventId)) == fingerprintsBefore[EventId], "wakeup callee changed");
+        if (rows.Any(r => r.event_id == AmbushEventId))
+            Need(BossCanary.Fingerprint(GetEvent(verified, AmbushEventId)) == fingerprintsBefore[AmbushEventId], "rat ambush callee changed");
         var verifiedConstructor = GetEvent(verified, 0);
         Need(verifiedConstructor.Instructions.Count == beforeConstructor.Length, "constructor instruction count changed");
         for (int i = 0; i < beforeConstructor.Length; i++) {
             var was = beforeConstructor[i]; var now = verifiedConstructor.Instructions[i];
-            bool targeted = was.Bank == 2000 && was.ID == 0 && was.ArgData.Length == 36
-                && Arg(was.ArgData, 1) == EventId && plannedEntity(rows, Arg(was.ArgData, 2));
+            bool targeted = was.Bank == 2000 && was.ID == 0 && was.ArgData.Length >= 12
+                && plannedInitializer(rows, Arg(was.ArgData, 1), Arg(was.ArgData, 2));
             if (targeted) Need(now.Bank == 1001 && now.ID == 3 && now.ArgData.SequenceEqual(new byte[8]) && now.Layer == was.Layer, "wakeup initializer rewrite differs");
             else Need(now.Bank == was.Bank && now.ID == was.ID && now.ArgData.SequenceEqual(was.ArgData) && now.Layer == was.Layer, $"unrelated constructor instruction changed at {i}");
         }
@@ -119,5 +142,14 @@ internal static class WakeupFallback
         Console.WriteLine(JsonSerializer.Serialize(report, Json));
         return 0;
     }
-    static bool plannedEntity(IEnumerable<Row> rows, int entity) => rows.Any(r => r.entity_id == entity);
+    static bool plannedInitializer(IEnumerable<Row> rows, int eventId, int entity) => rows.Any(r => r.entity_id == entity && r.event_id == eventId);
+
+    // Prints the native body fingerprint a fallback pins, e.g. for 12410340.
+    internal static int PrintFingerprint(string path, long eventId)
+    {
+        byte[] bytes = File.ReadAllBytes(path);
+        var file = EMEVD.Read(bytes);
+        Console.WriteLine(JsonSerializer.Serialize(new { event_id = eventId, body_fingerprint = BossCanary.Fingerprint(GetEvent(file, eventId)), source_event_sha256 = Hash(bytes) }, Json));
+        return 0;
+    }
 }

@@ -1,0 +1,383 @@
+{
+  "format": "bb-enemizer-release-v1",
+  "releases": {
+    "m24_00_00_00:c2700_0000": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400116
+      ],
+      "initialization_event_ids": [
+        12405210
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(1, 12405210, 2400116, 5696);"
+      ]
+    },
+    "m24_00_00_00:c2700_0004": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400125
+      ],
+      "initialization_event_ids": [
+        12405210
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(4, 12405210, 2400125, 5696);"
+      ]
+    },
+    "m24_00_00_00:c2700_0008": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400114
+      ],
+      "initialization_event_ids": [
+        12405400,
+        12405430,
+        12405460
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(0, 12405430, 2490, 2490, NPCPartType.Part7, 40, 12405500, 2400114);",
+        "$InitializeEvent(1, 12405430, 2491, 2491, NPCPartType.Part8, 40, 12405500, 2400114);",
+        "$InitializeEvent(0, 12405400, 2490, 2490, NPCPartType.Part7, 7003, 5907, 12405500, 12405530, 2400114);",
+        "$InitializeEvent(1, 12405400, 2491, 2491, NPCPartType.Part8, 7000, 5907, 12405500, 12405560, 2400114);",
+        "$InitializeEvent(0, 12405460, 10, 40, 12405530, 2400114, 0, 10);",
+        "$InitializeEvent(1, 12405460, 30, 40, 12405560, 2400114, 1, 11);"
+      ]
+    },
+    "m24_00_00_00:c2700_0009": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400127
+      ],
+      "initialization_event_ids": [
+        12405210
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(5, 12405210, 2400127, 5696);"
+      ]
+    },
+    "m24_00_00_00:c2700_0013": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400122
+      ],
+      "initialization_event_ids": [
+        12405210
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(2, 12405210, 2400122, 5696);"
+      ]
+    },
+    "m24_00_00_00:c2700_0029": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400161
+      ],
+      "initialization_event_ids": [
+        12405210
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(7, 12405210, 2400161, 5696);"
+      ]
+    },
+    "m24_00_00_00:c2730_0002": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400207
+      ],
+      "initialization_event_ids": [
+        12405020,
+        12405030,
+        12405400,
+        12405430,
+        12405460
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(0, 12405020, 2400207, 7010, 7013, 273120, 273110);",
+        "$InitializeEvent(0, 12405030, 2400207, 7012, 0, 273100);",
+        "$InitializeEvent(14, 12405430, 2490, 2490, NPCPartType.Part7, 40, 12405507, 2400207);",
+        "$InitializeEvent(15, 12405430, 2491, 2491, NPCPartType.Part8, 40, 12405507, 2400207);",
+        "$InitializeEvent(14, 12405400, 2490, 2490, NPCPartType.Part7, 7003, 5907, 12405507, 12405537, 2400207);",
+        "$InitializeEvent(15, 12405400, 2491, 2491, NPCPartType.Part8, 7000, 5907, 12405507, 12405567, 2400207);",
+        "$InitializeEvent(14, 12405460, 10, 40, 12405537, 2400207, 0, 10);",
+        "$InitializeEvent(15, 12405460, 30, 40, 12405567, 2400207, 1, 11);"
+      ]
+    },
+    "m24_00_00_00:c2730_0003": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400126
+      ],
+      "initialization_event_ids": [
+        12405020,
+        12405030,
+        12405400,
+        12405430,
+        12405460
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(1, 12405020, 2400126, 7010, 7013, 273120, 273110);",
+        "$InitializeEvent(1, 12405030, 2400126, 7012, 1, 273100);",
+        "$InitializeEvent(2, 12405430, 2490, 2490, NPCPartType.Part7, 40, 12405501, 2400126);",
+        "$InitializeEvent(3, 12405430, 2491, 2491, NPCPartType.Part8, 40, 12405501, 2400126);",
+        "$InitializeEvent(2, 12405400, 2490, 2490, NPCPartType.Part7, 7003, 5907, 12405501, 12405531, 2400126);",
+        "$InitializeEvent(3, 12405400, 2491, 2491, NPCPartType.Part8, 7000, 5907, 12405501, 12405561, 2400126);",
+        "$InitializeEvent(2, 12405460, 10, 40, 12405531, 2400126, 0, 10);",
+        "$InitializeEvent(3, 12405460, 30, 40, 12405561, 2400126, 1, 11);"
+      ]
+    },
+    "m24_00_00_00:c2730_0005": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400205
+      ],
+      "initialization_event_ids": [
+        12405000,
+        12405010,
+        12405400,
+        12405430,
+        12405460
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(0, 12405000, 2400205, 7010, 7013, 273150, 273140);",
+        "$InitializeEvent(0, 12405010, 2400205, 7012, 0, 273130);",
+        "$InitializeEvent(10, 12405430, 2490, 2490, NPCPartType.Part7, 40, 12405505, 2400205);",
+        "$InitializeEvent(11, 12405430, 2491, 2491, NPCPartType.Part8, 40, 12405505, 2400205);",
+        "$InitializeEvent(10, 12405400, 2490, 2490, NPCPartType.Part7, 7003, 5907, 12405505, 12405535, 2400205);",
+        "$InitializeEvent(11, 12405400, 2491, 2491, NPCPartType.Part8, 7000, 5907, 12405505, 12405565, 2400205);",
+        "$InitializeEvent(10, 12405460, 10, 40, 12405535, 2400205, 0, 10);",
+        "$InitializeEvent(11, 12405460, 30, 40, 12405565, 2400205, 1, 11);"
+      ]
+    },
+    "m24_00_00_00:c2730_0009": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400203
+      ],
+      "initialization_event_ids": [
+        12405020,
+        12405030,
+        12405400,
+        12405430,
+        12405460
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(2, 12405020, 2400203, 7010, 7013, 273120, 273110);",
+        "$InitializeEvent(2, 12405030, 2400203, 7012, 2, 273100);",
+        "$InitializeEvent(8, 12405430, 2490, 2490, NPCPartType.Part7, 40, 12405504, 2400203);",
+        "$InitializeEvent(9, 12405430, 2491, 2491, NPCPartType.Part8, 40, 12405504, 2400203);",
+        "$InitializeEvent(8, 12405400, 2490, 2490, NPCPartType.Part7, 7003, 5907, 12405504, 12405534, 2400203);",
+        "$InitializeEvent(9, 12405400, 2491, 2491, NPCPartType.Part8, 7000, 5907, 12405504, 12405564, 2400203);",
+        "$InitializeEvent(8, 12405460, 10, 40, 12405534, 2400203, 0, 10);",
+        "$InitializeEvent(9, 12405460, 30, 40, 12405564, 2400203, 1, 11);"
+      ]
+    },
+    "m24_00_00_00:c2730_0010": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400119
+      ],
+      "initialization_event_ids": [
+        12405020,
+        12405030
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(4, 12405020, 2400119, 7010, 7013, 273120, 273110);",
+        "$InitializeEvent(4, 12405030, 2400119, 7012, 4, 273100);"
+      ]
+    },
+    "m24_00_00_00:c2730_0011": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2400133
+      ],
+      "initialization_event_ids": [
+        12405400,
+        12405430,
+        12405460
+      ],
+      "physical_copies": 1,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(6, 12405430, 2490, 2490, NPCPartType.Part7, 40, 12405503, 2400133);",
+        "$InitializeEvent(7, 12405430, 2491, 2491, NPCPartType.Part8, 40, 12405503, 2400133);",
+        "$InitializeEvent(6, 12405400, 2490, 2490, NPCPartType.Part7, 7003, 5907, 12405503, 12405533, 2400133);",
+        "$InitializeEvent(7, 12405400, 2491, 2491, NPCPartType.Part8, 7000, 5907, 12405503, 12405563, 2400133);",
+        "$InitializeEvent(6, 12405460, 10, 40, 12405533, 2400133, 0, 10);",
+        "$InitializeEvent(7, 12405460, 30, 40, 12405563, 2400133, 1, 11);"
+      ]
+    },
+    "m24_01_00_00:c1100_0000": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410226
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(6, 12410340, 2410226, 2412236, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0001": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410225
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(5, 12410340, 2410225, 2412235, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0002": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410223
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(3, 12410340, 2410223, 2412233, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0003": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410222
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(2, 12410340, 2410222, 2412232, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0004": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410228
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(8, 12410340, 2410228, 2412238, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0005": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410227
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(7, 12410340, 2410227, 2412237, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0006": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410224
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(4, 12410340, 2410224, 2412234, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0007": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410221
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(1, 12410340, 2410221, 2412231, 10, 2412220);"
+      ]
+    },
+    "m24_01_00_00:c1100_0008": {
+      "contract_class": "scripted_initializer_fallback",
+      "entity_ids": [
+        2410220
+      ],
+      "initialization_event_ids": [
+        12410340
+      ],
+      "physical_copies": 3,
+      "reason": "boss-pool only: the reviewed boss builder removes this placement's pinned model-specific initializers when it swaps",
+      "removed_initializers": [
+        "$InitializeEvent(0, 12410340, 2410220, 2412230, 10, 2412220);"
+      ]
+    }
+  },
+  "scripted_fallback": {
+    "applies_in": "reviewed boss pool (build_boss_encounters) only",
+    "callee_body_sha256": {
+      "m24_00_00_00": {
+        "12405000": "9768941aa60a54a1ee3283797956c631f4b49c31695f26efbfa9a543231ab563",
+        "12405010": "9bfb35f1309349566f692402b823d2b3dceb17da6bdcb0707e05abd4d26bd151",
+        "12405020": "c147e74c4519f2634f6dfab052dfa283e820d97e13c67f735f2b89a9cfb9ef08",
+        "12405030": "c045399907d8df0d8e9dd5d7ad6ddfce33792b86bc796e0e8cfc59feb0417500",
+        "12405210": "df494a86aa40f98d2fe3857c53d2fb6974b63ea9b06a88f479ffdb1899cc0a87",
+        "12405400": "38b202c540783b3a54b82db928276917b41e58af64fdf1a8ab33eafc7272c581",
+        "12405430": "2f4f7b157af01890962e8f92cbb4b58b86db0763ce5f1329b876073b6130453c",
+        "12405460": "3de7683a4a67e2045a50fae46fb14738c4a33b140daa8a12853cbd599d97f2f3"
+      },
+      "m24_01_00_00": {
+        "12410340": "dc5741a67f69a2e5d5710eba18c8da4bfc78b40d991cac669a5e108a3cdb80ff",
+        "12415130": "da8216c084ed51b6baf036f67cb9360599d62d51fb0146c65f8bbd55385969da"
+      }
+    },
+    "source_sha256": {
+      "m24_00_00_00": "092fc23411eebb286df20401346b715d8110acbf3b7ca5b79ad494da65144d5c",
+      "m24_01_00_00": "6d58b164e95233201e1490db0a443ac2fae99000de045840c6be0344a8c8d888"
+    }
+  },
+  "tranche": "scripted"
+}
