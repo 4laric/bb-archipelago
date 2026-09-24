@@ -24,6 +24,7 @@ OPERATIONS = (
     "prepare_play",
     "prepare_standalone",
     "verify_standalone",
+    "migrate_legacy_overlay",
     "verify_and_arm",
     "connect_and_start_client",
     "session_status",

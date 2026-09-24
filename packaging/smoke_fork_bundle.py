@@ -14,6 +14,8 @@ import zlib
 def smoke(package: Path) -> None:
     backend = package / 'ap_backend' / 'bb-ap-backend.exe'
     required = [package / 'BBLauncher-AP.exe', backend,
+                package / 'qml/QtQuick/qmldir',
+                package / 'qml/QtWebView/qmldir',
                 package / 'ap_backend/ap-client/bb-ap-client.exe',
                 package / 'ap_backend/suppression/gameparam.parambnd.dcx',
                 package / 'ap_backend/suppression/build-manifest.json']
@@ -30,6 +32,13 @@ def smoke(package: Path) -> None:
     )
     if qt.returncode:
         raise RuntimeError(f'Packaged Qt launcher exited {qt.returncode}: {qt.stderr}')
+    webview = subprocess.run(
+        [str((package / 'BBLauncher-AP.exe').resolve()), '--ap-webview-smoke'],
+        env=dict(os.environ, QT_QPA_PLATFORM='windows'),
+        capture_output=True, text=True, timeout=30,
+    )
+    if webview.returncode:
+        raise RuntimeError(f'Packaged Mod Downloader browser failed to load: {webview.stderr}')
     client = subprocess.run(
         [str((package / 'ap_backend/ap-client/bb-ap-client.exe').resolve()), '--version'],
         capture_output=True, text=True, timeout=15,
@@ -64,8 +73,8 @@ def smoke(package: Path) -> None:
         if responses[1]['result'].get('selected') != 'Package tester':
             raise RuntimeError('Frozen seed inspection did not select the sole player')
         operations = responses[0]['result'].get('operations', [])
-        if not {'prepare_standalone', 'verify_standalone'} <= set(operations):
-            raise RuntimeError('Frozen backend lacks the standalone protocol operations')
+        if not {'prepare_standalone', 'verify_standalone', 'migrate_legacy_overlay'} <= set(operations):
+            raise RuntimeError('Frozen backend lacks the standalone or legacy migration operations')
         catalog = package / 'ap_backend/_internal/tools/bb_standalone/award_targets.json'
         if not catalog.is_file():
             raise RuntimeError('Frozen backend lacks the standalone item award catalog')

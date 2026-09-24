@@ -10,6 +10,11 @@ Open the Archipelago page:
 
 Randomize prepares an inactive mod. Launch verifies and activates the selected
 run, then starts the game. Changed generation inputs invalidate preparation.
+If a prepared AP mod already exists, Rerandomize enemies chooses a fresh enemy
+and boss seed while keeping the AP world and item placements.
+Enemy randomization includes boss shuffle in AP mode. Scaling defaults on.
+On Launch, a verified mod from the previous AP launcher is retired automatically
+before the new mod is activated; unrelated merged files are preserved.
 Regular play removes the randomizer package owned by this launcher while
 preserving unrelated mods. Stop the game before changing active mods or modes.
 

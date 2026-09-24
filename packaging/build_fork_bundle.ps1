@@ -22,6 +22,9 @@ if (-not ($output + [IO.Path]::DirectorySeparatorChar).StartsWith($buildPrefix, 
 if (Test-Path -LiteralPath $output) { throw "Output already exists: $output. Choose a fresh OutputRoot." }
 if (-not $ClientPath) { $ClientPath = Join-Path $ToolsDirectory 'bb-ap-client.exe' }
 $deployQt = Join-Path $QtBin 'windeployqt.exe'
+if (-not $ForkSourceRoot -or -not (Test-Path -LiteralPath (Join-Path $ForkSourceRoot 'dist/web.qml'))) {
+    throw 'ForkSourceRoot must contain dist/web.qml so the Mod Downloader browser dependencies can be bundled.'
+}
 foreach ($path in @($ForkExecutable, $deployQt, $ClientPath,
         (Join-Path $SuppressionDirectory 'gameparam.parambnd.dcx'),
         (Join-Path $SuppressionDirectory 'build-manifest.json'))) {
@@ -65,7 +68,7 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'FORK-README.txt') -Destination 
 New-Item -ItemType Directory -Path (Join-Path $package 'docs') | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo 'docs/BBLAUNCHER-NEXT-RUN.md') -Destination (Join-Path $package 'docs/BBLAUNCHER-NEXT-RUN.md')
 $qtMode = if ($DebugBuild) { '--debug' } else { '--release' }
-& $deployQt $qtMode --compiler-runtime --dir $package $exe
+& $deployQt $qtMode --compiler-runtime --qmldir (Join-Path $ForkSourceRoot 'dist') --dir $package $exe
 if ($LASTEXITCODE -ne 0) { throw 'Qt dependency deployment failed.' }
 & $PythonExecutable (Join-Path $PSScriptRoot 'smoke_fork_bundle.py') $package
 if ($LASTEXITCODE -ne 0) { throw 'Frozen fork bundle smoke failed.' }

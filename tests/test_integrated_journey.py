@@ -93,6 +93,30 @@ def journey_backend(state: str, *, route: str = "copy",
 
 
 class SimulatedJourneyTests(unittest.TestCase):
+    def test_legacy_migration_uses_backend_process_guard_and_state_lock(self) -> None:
+        from unittest.mock import patch
+        from bb_launcher.core import ConflictError
+
+        with tempfile.TemporaryDirectory() as temp:
+            backend = Backend(Path(temp), process_check_fn=lambda: {"game_running": False})
+            seen = {}
+
+            def migrate(game_root, *, process_is_running, state_root):
+                seen.update(game_root=game_root, state_root=state_root)
+                self.assertFalse(process_is_running())
+                return {"status": "no_legacy"}
+
+            params = {"game_root": "selected-install"}
+            with patch("bb_launcher.integrated.migration.migrate_legacy_overlay", side_effect=migrate):
+                reply = backend.handle(request("migrate_legacy_overlay", params))
+            self.assertTrue(reply["ok"])
+            self.assertEqual({"game_root": "selected-install", "state_root": Path(temp)}, seen)
+            with patch("bb_launcher.integrated.migration.migrate_legacy_overlay",
+                       side_effect=ConflictError("Close the game before switching mods.")):
+                reply = backend.handle(request("migrate_legacy_overlay", params))
+            self.assertEqual("conflict", reply["error"]["code"])
+            self.assertIn("Close the game", reply["error"]["detail"])
+
     def test_existing_inactive_package_offers_typed_rerandomization(self) -> None:
         from bb_launcher.external import ExternalPackageExists
 
