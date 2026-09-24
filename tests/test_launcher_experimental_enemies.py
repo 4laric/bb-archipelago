@@ -81,6 +81,7 @@ class ReviewedBossToolchain(fixtures.FakeToolchain):
         overlay = write_boss_encounter_overlay(
             values['output_root'], source_binder=input_binder, seed=values['seed'],
             cathedral_input=b'verified-cathedral-overlay',
+            scaled=values['options'].normalize_scaling,
         )
         plan = json.loads((overlay / 'bb-enemizer-plan.json').read_text())
         return EnemizerBuild(
@@ -150,6 +151,8 @@ class ExperimentalLauncherTests(unittest.TestCase):
         identity = result.build_path.joinpath('seed-manifest.json').read_text()
         self.assertIn('"boss_encounters": true', identity)
         self.assertEqual('reviewed', json.loads(identity)['identity']['options']['boss_pool'])
+        self.assertFalse(json.loads(identity)['identity']['options']['normalize_scaling'])
+        self.assertFalse(json.loads(identity)['enemizer']['scaling']['applied'])
         self.assertEqual(b'cleric-event', (self.fixture.install.mods / BOSS_EVENT_PATH).read_bytes())
         # The generic receipt binds the original AP Cathedral hash, and the
         # active file is the native-composed replacement rather than a second

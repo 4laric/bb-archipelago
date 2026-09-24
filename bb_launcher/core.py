@@ -401,6 +401,17 @@ def _read_boss_encounter_ingress(overlay: Path | str, source_binder: Path) -> Bo
     ai = _read_json(auxiliary_files[f"{DVDROOT_PREFIX}script.json"], "boss encounter AI report")
     if scaling.get("format") != "bb-enemizer-scaling-v1":
         raise ValidationError("boss encounter scaling report has an unsupported format")
+    plan_scaling = plan_document.get("scaling")
+    if (not isinstance(plan_scaling, dict)
+            or not isinstance(plan_scaling.get("enabled"), bool)
+            or not isinstance(scaling.get("applied"), bool)
+            or plan_scaling["enabled"] != scaling["applied"]):
+        raise ValidationError("boss encounter scaling plan and receipt disagree")
+    if not scaling["applied"]:
+        if (plan_document.get("options", {}).get("normalize_scaling") is not False
+                or "boss_actor_scaling" in plan_document
+                or sha256_file(overlay_files[SUPPRESSION_PATH]) != sha256_file(source_binder)):
+            raise ValidationError("unscaled boss encounter changed parameter input")
     if scaling.get("source_gameparam_sha256") != sha256_file(source_binder):
         raise ValidationError("boss encounter scaling report does not start from the composed AP binder")
     if scaling.get("output_gameparam_sha256") != sha256_file(overlay_files[SUPPRESSION_PATH]):
@@ -1473,6 +1484,18 @@ class SeedCache:
                     or scaling.get('output_plan_sha256') != plan_record.get('sha256')
                     or scaling.get('output_gameparam_sha256') != expected[SUPPRESSION_PATH].get('sha256')):
                 raise ValidationError('boss encounter scaling receipt mismatch')
+            expected_scaled = identity.options.get('normalize_scaling', True) is True
+            if scaling.get('applied') is not expected_scaled:
+                raise ValidationError('boss encounter scaling choice and receipt disagree')
+            plan_scaling = adjusted.get('scaling')
+            if (not isinstance(plan_scaling, dict)
+                    or plan_scaling.get('enabled') is not expected_scaled):
+                raise ValidationError('boss encounter scaling choice and plan disagree')
+            if not expected_scaled:
+                if (adjusted.get('options', {}).get('normalize_scaling') is not False
+                        or 'boss_actor_scaling' in adjusted
+                        or scaling.get('source_gameparam_sha256') != scaling.get('output_gameparam_sha256')):
+                    raise ValidationError('unscaled boss encounter retained parameter changes')
             if (not isinstance(ai, dict) or ai != _read_json(ai_path, 'retained boss AI report')
                     or ai.get('format') != 'bb-enemizer-ai-v1'
                     or ai.get('plan_sha256') != plan_record.get('sha256')):

@@ -214,7 +214,11 @@ internal static class BossEncounter
             string? key = item?["logical_key"]?.GetValue<string>();
             string? reason = item?["reason"]?.GetValue<string>();
             Need(key != null && swapKeys.Contains(key) && accounted.Add(key), "scaling skip does not uniquely match a swap");
-            Need(reason is "unknown source or destination tier" or "no free spEffectID slot",
+            bool playerDisabled = reason == "disabled by player"
+                && !enabled && plan["options"] is JsonObject options
+                && options["normalize_scaling"]?.GetValue<bool>() is false;
+            Need(reason is "unknown source or destination tier" or "no free spEffectID slot"
+                 || playerDisabled,
                 "unsupported scaling skip reason");
         }
         Need(accounted.SetEquals(swapKeys), "scaling changes and skips do not account for every swap");
@@ -225,7 +229,7 @@ internal static class BossEncounter
         return false;
     }
 
-    static void RunUnscaled(string planPath, JsonObject plan, string gamePath, string defsPath,
+    internal static void RunUnscaled(string planPath, JsonObject plan, string gamePath, string defsPath,
         string mapsPath, string scriptsPath, string overlay)
     {
         var scaling = (JsonObject)plan["scaling"]!;

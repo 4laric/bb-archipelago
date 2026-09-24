@@ -709,6 +709,35 @@ def retire_applied_fallbacks(plan: dict) -> dict:
     return plan
 
 
+def disable_player_scaling(plan: dict) -> dict:
+    """Retain reviewed placements while explicitly declining every parameter clone."""
+    swaps = plan.get('swaps')
+    scaling = plan.get('scaling')
+    if not isinstance(swaps, list) or not swaps or not isinstance(scaling, dict):
+        raise ValueError('unscaled boss plan has no placements or scaling ledger')
+    keys = [row.get('logical_key') for row in swaps if isinstance(row, dict)]
+    if len(keys) != len(swaps) or any(not isinstance(key, str) or not key for key in keys):
+        raise ValueError('unscaled boss plan has invalid placement keys')
+    changes, skips = scaling.get('changes'), scaling.get('skips')
+    if not isinstance(changes, list) or not isinstance(skips, list):
+        raise ValueError('unscaled boss plan has an invalid scaling ledger')
+    accounted = [row.get('logical_key') for row in changes + skips if isinstance(row, dict)]
+    if (len(accounted) != len(changes) + len(skips)
+            or any(not isinstance(key, str) or not key for key in accounted)
+            or len(set(keys)) != len(keys) or sorted(accounted) != sorted(keys)):
+        raise ValueError('unscaled boss plan scaling ledger does not cover every placement')
+    plan['scaling'] = {
+        'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+        'change_count': 0, 'changes': [], 'skip_count': len(keys),
+        'skips': [{'logical_key': key, 'reason': 'disabled by player'} for key in sorted(keys)],
+    }
+    if not isinstance(plan.get('options'), dict):
+        raise ValueError('unscaled boss plan has invalid options')
+    plan['options']['normalize_scaling'] = False
+    plan.pop('boss_actor_scaling', None)
+    return plan
+
+
 def validate_allocations(bundle: Path, slots, records: list[dict], plan: dict) -> None:
     """Check project-owned identifiers against the entire original corpus."""
     used = {slot.entity_id for slot in slots}
@@ -1396,8 +1425,10 @@ def build(args) -> dict:
                 if existing is not None and existing != parent:
                     raise ValueError('combat helper has conflicting parent declarations')
                 helper_parents[helper] = parent
-        if helper_parents:
+        if helper_parents and not getattr(args, 'no_scaling', False):
             plan['boss_actor_scaling'] = allocate_actor_scaling(plan, npcs, helper_parents)
+        if getattr(args, 'no_scaling', False):
+            disable_player_scaling(plan)
         validate_allocations(args.bundle, slots, records, plan)
         plan['boss_encounters'] = {'format': 'bb-boss-encounters-v1', 'encounters': records}
         if override_inputs:
@@ -1434,6 +1465,8 @@ def main(argv=None) -> int:
     selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'logarius-bsb', 'ludwig-cleric', 'laurence-cleric', 'finals', 'reviewed'))
     parser.add_argument('--donor', choices=sorted(PACKAGES))
     parser.add_argument('--seed', required=True)
+    parser.add_argument('--no-scaling', action='store_true',
+                        help='retain original enemy parameters for every ordinary and boss placement')
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args(argv)
     if bool(args.arena) != bool(args.donor):

@@ -1137,6 +1137,8 @@ class EnemizerToolchain:
             "--bundle", str(self.repo_root / "research" / "bb_inputs.db"),
             "--seed", kwargs["seed"], "--output", str(output), "--apply",
         ]
+        if not options.normalize_scaling:
+            command.append("--no-scaling")
         kwargs["progress"]("Building experimental reviewed boss encounters...")
         self.runner(command, self.repo_root, kwargs["progress"])
         receipt = _read_object(output / "boss-encounters-report.json", "boss encounter receipt")
@@ -2067,7 +2069,7 @@ class LauncherWorkflow:
                 "wakeup_fallback_version": 1 if expanded_enemy_release else None,
                 "scripted_fallback_version": (
                     1 if expanded_enemy_release and options.enabled and options.boss_pool else None),
-                "normalize_scaling": bool(options.enabled and (options.normalize_scaling or options.boss_canary or options.boss_pool)),
+                "normalize_scaling": bool(options.enabled and (options.normalize_scaling or options.boss_canary)),
                 "boss_canary": bool(options.enabled and options.boss_canary),
                 "boss_pool": options.boss_pool if options.enabled else None,
                 "boss_encounters": bool(options.enabled and options.boss_pool),
