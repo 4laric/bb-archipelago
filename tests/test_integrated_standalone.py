@@ -91,6 +91,8 @@ class IntegratedStandaloneTests(unittest.TestCase):
                     "dvdroot_ps4/event/m24_01_00_00.emevd.dcx"] = (
                     hashlib.sha256(config.wakeup_event.read_bytes()).hexdigest())
             identity["options"]["enemies"]["enabled"] = config.enemy_options.enabled
+            identity["options"]["enemies"]["allow_tier_mixing"] = (
+                config.enemy_options.allow_tier_mixing)
             identity["options"]["enemies"]["expanded_coverage"] = (
                 config.enemy_options.expanded_coverage)
             write_json(identity_path, identity)
@@ -224,6 +226,7 @@ class IntegratedStandaloneTests(unittest.TestCase):
         prepared = self._prepare()
         self.assertTrue(prepared["ok"], prepared)
         self.assertTrue(prepared["result"]["options"]["enemies"]["expanded_coverage"])
+        self.assertTrue(prepared["result"]["options"]["enemies"]["allow_tier_mixing"])
         valid = self.backend.handle(request(
             "verify_standalone", self._verify_params(prepared["result"]), 9))
         self.assertTrue(valid["ok"], valid)

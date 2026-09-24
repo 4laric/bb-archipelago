@@ -165,6 +165,8 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
         if (overlay.identity["seed"] != seed
                 or overlay.identity["options"]["items"].get("include_dlc") != include_dlc
                 or overlay.identity["options"]["enemies"].get("enabled") != randomize_enemies
+                or (randomize_enemies and overlay.identity["options"]["enemies"].get(
+                    "allow_tier_mixing") is not True)
                 or overlay.identity["options"]["enemies"].get(
                     "expanded_coverage", False) != expanded_coverage):
             raise ValueError("standalone build identity differs from requested seed or options")
@@ -236,6 +238,9 @@ def verify_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[st
     )
     if not identity_matches:
         raise ProtocolError("verification-failed", "standalone selection differs from prepared export")
+    if params["randomize_enemies"] and record.get("options", {}).get(
+            "enemies", {}).get("allow_tier_mixing") is not True:
+        raise ProtocolError("verification-failed", "standalone enemy build lacks mixed-tier policy")
     expected_receipts = (state_root.expanduser().resolve() / "standalone" / "receipts")
     if receipt_path.parent != expected_receipts or package.parent.name.casefold() != "mods":
         raise ProtocolError("verification-failed", "standalone paths are outside the inactive export")

@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from contextlib import redirect_stderr
 from pathlib import Path
 
@@ -296,6 +297,7 @@ class StandaloneBuildTests(unittest.TestCase):
         build(self.config(enemies=True), runner=self.toolchain, planner=self.plan)
         planner, maps, ai = self.toolchain.commands[1:]
         self.assertIn("tools.bb_enemizer.cli", planner)
+        self.assertIn("--allow-tier-mixing", planner)
         self.assertEqual("local-enemies", planner[planner.index("--seed") + 1])
         self.assertEqual(str(self.maps), maps[-3])
         self.assertIn("--ai", ai)
@@ -324,6 +326,7 @@ class StandaloneBuildTests(unittest.TestCase):
             ["release_contracts.json", "release_spawns.json",
              "release_chara.json", "release_wakeup.json"], release_files)
         self.assertFalse(any(flag.startswith("--boss") for flag in planner))
+        self.assertIn("--allow-tier-mixing", planner)
         event = self.output / "dvdroot_ps4/event/m24_01_00_00.emevd.dcx"
         self.assertEqual(b"wakeup:original wakeup", event.read_bytes())
         identity = json.loads((self.output / "standalone-build-identity.json").read_text())
@@ -336,6 +339,13 @@ class StandaloneBuildTests(unittest.TestCase):
     def test_expanded_enemy_release_requires_enemies_and_event_before_writer(self):
         with self.assertRaisesRegex(ValueError, "requires enemy randomization"):
             build(self.config(expanded=True), runner=self.toolchain, planner=self.plan)
+        self.assertFalse(self.toolchain.commands)
+        without_mixing = replace(
+            self.config(enemies=True),
+            enemy_options=EnemyOptions(enabled=True, allow_tier_mixing=False),
+        )
+        with self.assertRaisesRegex(ValueError, "requires mixed tiers"):
+            build(without_mixing, runner=self.toolchain, planner=self.plan)
         self.assertFalse(self.toolchain.commands)
         config = self.config(enemies=True, expanded=True)
         self.wakeup_event.unlink()

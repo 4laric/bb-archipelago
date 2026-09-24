@@ -36,7 +36,6 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--randomize-enemies", action="store_true")
     parser.add_argument("--enemy-seed")
-    parser.add_argument("--allow-tier-mixing", action="store_true")
     parser.add_argument("--preserve-locomotion", action="store_true")
     parser.add_argument("--normalize-enemy-scaling", action="store_true")
     parser.add_argument("--expanded-coverage", action="store_true")
@@ -115,7 +114,6 @@ def build_arguments(args: argparse.Namespace, package_root: Path) -> list[str]:
         event = args.wakeup_event or game / "event/m24_01_00_00.emevd.dcx"
         command.extend(("--wakeup-event", str(event.expanduser().resolve())))
     for enabled, flag in (
-        (args.allow_tier_mixing, "--allow-tier-mixing"),
         (args.preserve_locomotion, "--preserve-locomotion"),
         (args.normalize_enemy_scaling, "--normalize-enemy-scaling"),
         (args.expanded_coverage, "--expanded-coverage"),

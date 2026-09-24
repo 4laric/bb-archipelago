@@ -46,7 +46,7 @@ Runner = Callable[..., subprocess.CompletedProcess[str]]
 class EnemyOptions:
     enabled: bool = False
     seed: str | None = None
-    allow_tier_mixing: bool = False
+    allow_tier_mixing: bool = True
     preserve_locomotion: bool = False
     normalize_scaling: bool = False
     expanded_coverage: bool = False
@@ -237,6 +237,8 @@ def _validate(config: BuildConfig) -> None:
     if enemy.expanded_coverage and not enemy.enabled:
         raise ValueError("expanded enemy coverage requires enemy randomization")
     if enemy.enabled:
+        if enemy.allow_tier_mixing is not True:
+            raise ValueError("standalone enemy randomization requires mixed tiers")
         if enemy.expanded_coverage:
             if config.wakeup_event is None:
                 raise ValueError("expanded enemy coverage requires the original wakeup event")
@@ -446,8 +448,7 @@ def build(
                 "--output",
                 str(enemy_plan_path),
             ]
-            if config.enemy_options.allow_tier_mixing:
-                planner_command.append("--allow-tier-mixing")
+            planner_command.append("--allow-tier-mixing")
             if config.enemy_options.preserve_locomotion:
                 planner_command.append("--preserve-locomotion")
             if config.enemy_options.expanded_coverage:
@@ -643,7 +644,6 @@ def _parse_args(argv: Sequence[str] | None) -> BuildConfig:
         "--enemy-inventory", type=Path,
     )
     parser.add_argument("--wakeup-event", type=Path)
-    parser.add_argument("--allow-tier-mixing", action="store_true")
     parser.add_argument("--preserve-locomotion", action="store_true")
     parser.add_argument("--normalize-enemy-scaling", action="store_true")
     parser.add_argument("--expanded-coverage", action="store_true")
@@ -673,7 +673,7 @@ def _parse_args(argv: Sequence[str] | None) -> BuildConfig:
         enemy_options=EnemyOptions(
             enabled=args.randomize_enemies,
             seed=args.enemy_seed,
-            allow_tier_mixing=args.allow_tier_mixing,
+            allow_tier_mixing=True,
             preserve_locomotion=args.preserve_locomotion,
             normalize_scaling=args.normalize_enemy_scaling,
             expanded_coverage=args.expanded_coverage,
