@@ -95,6 +95,21 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
   those IDs cannot be carried onto donor AI. The event body has no AI-disable,
   backread, or quest-flag writes; all other event calls and spawn handling
   remain intact. The two dummy-spawn placements still need the spawn tranche.
+- **Central Yharnam sewer rat ambush** (built, not yet released): the nine
+  pinned `c1100` rats in the Dry Dock channel are initialized by event
+  12410340, which on entering region 2412220 gives each rat a pinned home
+  region and c1100 AI command 10 (run there), cleared on arrival or on
+  recognition. Donor AI cannot interpret that command, so the same writer
+  suppresses only a swapped rat's `InitializeEvent` call; the donor waits at
+  the rat's spawn. The pins are checked against the bundled JS, but the
+  writer's native body fingerprint needs the real event file, which the
+  bundled inputs do not carry. Until `AMBUSH_BODY_FINGERPRINT`
+  (`tools/bb_enemizer/wakeup_fallback.py`) and `AmbushBodyFingerprint`
+  (`WakeupFallback.cs`) are pinned, the rats stay out of
+  `release_wakeup.json` and the writer refuses ambush rows. To pin, run
+  `BBEnemizerWriter --event-fingerprint <dvdroot>/event/m24_01_00_00.emevd.dcx 12410340`
+  on an installed game, set both constants to its `body_fingerprint`, and
+  regenerate `release_wakeup.json` with `build_release`.
 - **Never released by any tranche**: talk bindings, non-character models,
   missing NPC/Think rows, unapproved (non-hostile) archetypes, the
   Snatcher progression row, quest-drop carriers, boss/parts/AI-ID/AI-command/

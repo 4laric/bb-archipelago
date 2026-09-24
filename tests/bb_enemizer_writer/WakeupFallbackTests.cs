@@ -65,6 +65,35 @@ internal static class WakeupFallbackTests
         parameterized.Events.Single(e => e.ID == 0).Parameters.Add(new EMEVD.Parameter(1, 0, 0, 4));
         validBody = BossCanary.Fingerprint(parameterized.Events.Single(e => e.ID == 12415130));
         Refused(() => WakeupFallback.Apply(parameterized, [row], validBody));
+
+        // Sewer rat ambush 12410340: same suppression, its own pins and body.
+        EMEVD Ambush(int home = 2412236) {
+            var file = Fixture();
+            var constructor = file.Events.Single(e => e.ID == 0);
+            constructor.Instructions.Add(new EMEVD.Instruction(2000, 0, Args(6,12410340,2410226,home,10,2412220)) { Layer = 0x10 });
+            constructor.Instructions.Add(new EMEVD.Instruction(2000, 0, Args(7,12410340,2410227,2412237,10,2412220)));
+            var rat = new EMEVD.Event(12410340);
+            rat.Instructions.Add(new EMEVD.Instruction(2004, 5, Args(0,10,0)));
+            file.Events.Add(rat);
+            return EMEVD.Read(file.Write());
+        }
+        var ratRow = new WakeupFallback.Row("m24_01_00_00:c1100_0000", 2410226, "m24_01_00_00", 12410340);
+        var ratPlan = WakeupFallback.ValidatePlan("{\"swaps\":[{\"logical_key\":\"m24_01_00_00:c1100_0000\"}],\"wakeup_fallbacks\":[{\"logical_key\":\"m24_01_00_00:c1100_0000\",\"entity_id\":2410226,\"map\":\"m24_01_00_00\",\"event_id\":12410340}]}");
+        Need(ratPlan.Count == 1 && ratPlan[0] == ratRow, "ambush plan row not parsed exactly");
+        Refused(() => WakeupFallback.ValidatePlan("{\"swaps\":[{\"logical_key\":\"m24_01_00_00:c1100_0000\"}],\"wakeup_fallbacks\":[{\"logical_key\":\"m24_01_00_00:c1100_0000\",\"entity_id\":2410226,\"map\":\"m24_01_00_00\",\"event_id\":12415130}]}"));
+        var ambush = Ambush();
+        string wakeBody = BossCanary.Fingerprint(ambush.Events.Single(e => e.ID == 12415130));
+        string ratBody = BossCanary.Fingerprint(ambush.Events.Single(e => e.ID == 12410340));
+        Refused(() => WakeupFallback.Apply(Ambush(), [ratRow], wakeBody, null));
+        Refused(() => WakeupFallback.Apply(Ambush(), [ratRow], wakeBody, "wrong"));
+        Refused(() => WakeupFallback.Apply(Ambush(home: 2412230), [ratRow], wakeBody, ratBody));
+        WakeupFallback.Apply(ambush, [ratRow, row], wakeBody, ratBody);
+        var ratResult = EMEVD.Read(ambush.Write()).Events.Single(e => e.ID == 0).Instructions;
+        Need(ratResult.Count == 5);
+        Need(ratResult[1].Bank == 1001 && ratResult[1].ID == 3 && ratResult[1].ArgData.SequenceEqual(new byte[8]), "wakeup row not suppressed alongside ambush");
+        Need(ratResult[3].Bank == 1001 && ratResult[3].ID == 3 && ratResult[3].ArgData.SequenceEqual(new byte[8]) && ratResult[3].Layer == 0x10, "ambush initializer not suppressed");
+        Need(ratResult[4].Bank == 2000 && ratResult[4].ArgData.SequenceEqual(Args(7,12410340,2410227,2412237,10,2412220)), "unplanned ambush initializer changed");
+        Need(WakeupFallback.AmbushBodyFingerprint is null || WakeupFallback.AmbushBodyFingerprint.Length == 64, "pinned ambush fingerprint is malformed");
         Console.WriteLine($"PASS: {assertions} native wakeup fallback assertions");
     }
 }

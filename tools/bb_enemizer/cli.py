@@ -15,6 +15,7 @@ from .inventory import (
 )
 from .planner import EnemizerConfig, StressProfile, plan_swaps
 from .scaling import load_params, plan_scaling
+from .wakeup_fallback import event_for
 
 
 def parser() -> argparse.ArgumentParser:
@@ -109,7 +110,7 @@ def wakeup_fallbacks(swaps, slots, release: dict[str, set[str]]) -> list[dict]:
             "logical_key": logical_key,
             "entity_id": ids.pop(),
             "map": "m24_01_00_00",
-            "event_id": 12415130,
+            "event_id": event_for(logical_key),
         })
     return records
 
