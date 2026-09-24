@@ -340,7 +340,7 @@ class StandaloneBuildTests(unittest.TestCase):
         self.assertEqual(
             ["release_contracts.json", "release_spawns.json",
              "release_chara.json", "release_wakeup.json"], release_files)
-        self.assertFalse(any(flag.startswith("--boss") for flag in planner))
+        self.assertEqual(planner, [flag for flag in planner if not flag.startswith("--boss")])
         self.assertIn("--allow-tier-mixing", planner)
         event = self.output / "dvdroot_ps4/event/m24_01_00_00.emevd.dcx"
         self.assertEqual(b"wakeup:original wakeup", event.read_bytes())

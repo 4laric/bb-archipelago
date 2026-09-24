@@ -32,7 +32,9 @@ class EncounterBuildTests(unittest.TestCase):
         }
         disabled = disable_player_scaling(plan)
         self.assertIs(disabled, plan)
-        self.assertEqual([], disabled['scaling']['changes'])
+        self.assertEqual({'enabled': False, 'change_count': 0, 'changes': []},
+                         {key: disabled['scaling'][key]
+                          for key in ('enabled', 'change_count', 'changes')})
         self.assertEqual([
             {'logical_key': key, 'reason': 'disabled by player'}
             for key in ('boss', 'ordinary')], disabled['scaling']['skips'])
