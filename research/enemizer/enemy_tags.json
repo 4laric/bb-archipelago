@@ -6737,7 +6737,7 @@
     "notes": "NpcParam 452091; hp=800; radius=0.3; height=2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c4540:454000:454000:0": {

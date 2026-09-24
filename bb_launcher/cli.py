@@ -85,6 +85,11 @@ def build_parser() -> argparse.ArgumentParser:
     activate = commands.add_parser("activate", help="transactionally activate a cached build")
     activate.add_argument("--game-root", required=True)
     activate.add_argument("--build", required=True)
+    activate.add_argument(
+        "--adopt-foreign-overlay",
+        action="store_true",
+        help="move aside an unmanifested mods directory instead of refusing (confirm it is not your own mod folder first)",
+    )
 
     recover = commands.add_parser("recover", help="finish or roll back an interrupted transaction")
     recover.add_argument("--game-root", required=True)
@@ -114,6 +119,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="build-manifest.json of the seed's suppression binder (recorded in the client config)",
     )
     run.add_argument("--shad-log", help="shadPS4 log path recorded in the client config")
+    run.add_argument(
+        "--adopt-foreign-overlay",
+        action="store_true",
+        help="move aside an unmanifested mods directory instead of refusing (confirm it is not your own mod folder first)",
+    )
 
     plan = commands.add_parser("plan", help="generate a hash-pinned process plan (#65)")
     plan.add_argument("--output", required=True, help="where to write the process plan JSON")
@@ -322,7 +332,11 @@ def main(argv: list[str] | None = None) -> int:
                 }
             )
         elif args.command == "activate":
-            owner = activate_build(_install(args.game_root), args.build)
+            owner = activate_build(
+                _install(args.game_root),
+                args.build,
+                adopt_foreign_overlay=args.adopt_foreign_overlay,
+            )
             _print(owner)
         elif args.command == "recover":
             result = recover_activation(_install(args.game_root))
@@ -398,7 +412,9 @@ def main(argv: list[str] | None = None) -> int:
                         f"seed requires runtime {build_identity['runtime_build']}, "
                         f"process plan supplies {process_plan.runtime_build}"
                     )
-                owner = activate_build(install, args.build)
+                owner = activate_build(
+                    install, args.build, adopt_foreign_overlay=args.adopt_foreign_overlay
+                )
                 paths = write_client_runtime_config(
                     args.state_root or default_state_root(),
                     seed=build_identity["seed"],

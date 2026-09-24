@@ -21,6 +21,8 @@ under `Unreleased` and move into a dated version section when released.
   or **Base game + The Old Hunters**, then press **Create & host** or
   **Create only**.
 
+- Enemy randomization no longer places Lady Maria as an ordinary enemy (her AI
+  breaks outside her own fight), and her Astral Clocktower spawn stays vanilla.
 - Boss shuffle adds reusable Orphan combat in the six base arenas and reusable
   Cainhurst encounters for the six base donors. Logarius also reaches Maria,
   Laurence and Gascoigne, with source-pinned helpers and destination entry

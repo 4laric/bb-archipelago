@@ -305,3 +305,18 @@ cost, not just against the failure mode it prevents:
 - When in doubt, remove a check rather than add one. If a guard has not
   caught a real problem in practice, or exists to police a state that the
   workflow already can't reach, delete it instead of tuning it.
+
+One instance of applying this: `activate_build`'s refusal of a
+`CUSA03173-mods` directory with no ownership manifest (it may be the
+player's own work, so moving it isn't the launcher's call) used to have no
+remedy inside the app -- the player had to go rename the folder in Windows
+Explorer and retry. The refusal itself is correct (the alternative is
+silently overwriting content the launcher can't prove is safe to touch), but
+its dead end wasn't. `activate_build` now takes `adopt_foreign_overlay=True`
+(`--adopt-foreign-overlay` on the `activate`/`run` CLI commands) to move the
+directory aside -- never delete it -- once the player has confirmed it isn't
+theirs, the same way a damaged owned overlay is already healed
+(bb-archipelago#408). Like `--allow-seed-mismatch` and
+`--allow-suppression-mismatch`, it stays CLI/operator-only rather than a GUI
+checkbox, per the "session overrides retired from the GUI" note in
+`bb_launcher/ui.py`.
