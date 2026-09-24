@@ -28,7 +28,7 @@ from .arena_port import (
 from .bosses import parse_events
 from .gascoigne_contract import (
     BEAST_ARCHETYPE, BEAST_PART, GASCOIGNE_BEAST, GASCOIGNE_HUMAN,
-    HUMAN_ARCHETYPE, HUMAN_PART, SOURCE_HASHES,
+    HUMAN_ARCHETYPE, HUMAN_PART, SOURCE_HASHES, grounded_cleric_entry,
 )
 from .model import Archetype, Slot, Swap
 from .scaling import plan_scaling
@@ -227,7 +227,16 @@ def _retired(arena: ArenaContract) -> set[int]:
     return retired
 
 
+def _linked_damage_health(body: str, arena: ArenaContract, ids: GascoigneDonorIds) -> str:
+    link = f"    CreateReferredDamagePair({arena.actor}, {ids.beast_entity});"
+    return _replace_once(body, link,
+        f"    SetCharacterInvincibility({ids.beast_entity}, Disabled);\n" + link,
+        "hidden beast must receive linked human damage")
+
+
 def _adapt_activation(arena: ArenaContract, body: str) -> str:
+    if arena.key == "cleric-beast":
+        return grounded_cleric_entry(body)
     # Destination fog/start and its pre-entry protection remain source-backed
     # arena behavior.  The destination model animation is the only nonportable
     # choreography; Gascoigne's transition has no standalone equivalent here.
@@ -413,6 +422,7 @@ def _patch_gascoigne_at_port(port: ArenaPort, destination: str, donor_source: st
     health = _destination_telemetry(
         _remap(donor[12414802], mapping), original[arena.health_bar_event]
     )
+    health = _linked_damage_health(health, arena, ids)
     health = _replace_once(
         health,
         f"L0:\n    SetEventFlag({_notification_flag(arena, ids)}, ON);",
@@ -452,7 +462,7 @@ def _patch_gascoigne_at_port(port: ArenaPort, destination: str, donor_source: st
     bridge = f"""$Event({ids.terminal_bridge_event}, Default, function() {{
     EndIf(EventFlag({arena.completion_event}));
     humanDead = CharacterDead({arena.actor});
-    beastDead = CharacterDead({ids.beast_entity});
+    beastDead = EventFlag({ids.phase_event}) && CharacterDead({ids.beast_entity});
     WaitFor(humanDead || beastDead);
     ForceCharacterDeath({arena.actor}, false);
 }});"""
@@ -525,6 +535,7 @@ def patch_gascoigne_donor(arena: ArenaContract | ArenaPort, destination: str, do
     mapping = _mapping(arena, ids)
     health = _destination_telemetry(_remap(donor[12414802], mapping),
                                     original[arena.health_bar_event])
+    health = _linked_damage_health(health, arena, ids)
     health = _replace_once(
         health,
         f"L0:\n    SetEventFlag({_notification_flag(arena, ids)}, ON);",
@@ -555,7 +566,7 @@ def patch_gascoigne_donor(arena: ArenaContract | ArenaPort, destination: str, do
     bridge = f'''$Event({ids.terminal_bridge_event}, Default, function() {{
     EndIf(EventFlag({arena.completion_event}));
     humanDead = CharacterDead({arena.actor});
-    beastDead = CharacterDead({ids.beast_entity});
+    beastDead = EventFlag({ids.phase_event}) && CharacterDead({ids.beast_entity});
     WaitFor(humanDead || beastDead);
     ForceCharacterDeath({arena.actor}, false);
 }});'''
@@ -661,7 +672,7 @@ def _native_plan_gascoigne_at_port(port: ArenaPort, slots: Sequence[Slot],
     )
     addition = {
         "source_map": beast.map_name, "source_part": BEAST_PART,
-        "source_anchor_part": HUMAN_PART,
+        "source_anchor_part": HUMAN_PART, "placement_policy": "destination-anchor",
         "source_entity_id": GASCOIGNE_BEAST,
         "source_archetype": asdict(BEAST_ARCHETYPE), "source_part_kind": "enemy",
         "destination_map": target.map_name,
@@ -762,6 +773,7 @@ def native_plan_gascoigne_donor(arena: ArenaContract | ArenaPort, slots: Sequenc
             raise ValueError("Gascoigne source initialization drift")
         addition = {"source_map": beast.map_name, "source_part": BEAST_PART,
                     "source_anchor_part": HUMAN_PART, "source_entity_id": GASCOIGNE_BEAST,
+                    "placement_policy": "destination-anchor",
                     "source_archetype": asdict(BEAST_ARCHETYPE), "source_part_kind": "enemy",
                     "destination_map": target.map_name, "destination_anchor_part": target.part_name,
                     "destination_part": ids.beast_part, "destination_entity_id": ids.beast_entity,

@@ -111,7 +111,7 @@ class LogariusGascoigneCrossArenaTests(unittest.TestCase):
                 self.assertIn(str(ids.beast_entity), after[ids.beast_special_event])
                 terminal = after[ids.terminal_bridge_event]
                 self.assertIn(f"humanDead = CharacterDead({arena.actor})", terminal)
-                self.assertIn(f"beastDead = CharacterDead({ids.beast_entity})", terminal)
+                self.assertIn(f"beastDead = EventFlag({ids.phase_event}) && CharacterDead({ids.beast_entity})", terminal)
                 self.assertIn(f"ForceCharacterDeath({arena.actor}, false)", terminal)
                 self.assertIn(f"EventFlag({ids.phase_event})", after[arena.music_event])
                 if port is MICOLASH_PORT:

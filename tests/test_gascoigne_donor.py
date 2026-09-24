@@ -105,7 +105,7 @@ class GascoigneDonorTests(unittest.TestCase):
                 self.assertIn(f"ForceCharacterDeath({IDS.beast_entity}, false)", cleanup)
                 bridge = blocks[IDS.terminal_bridge_event]
                 self.assertIn(f"humanDead = CharacterDead({arena.actor})", bridge)
-                self.assertIn(f"beastDead = CharacterDead({IDS.beast_entity})", bridge)
+                self.assertIn(f"beastDead = EventFlag({IDS.phase_event}) && CharacterDead({IDS.beast_entity})", bridge)
                 self.assertLess(bridge.index("WaitFor(humanDead || beastDead)"),
                                 bridge.index(f"ForceCharacterDeath({arena.actor}, false)"))
                 retired = set(arena.phase_slots) - {CO_OP_RESTORE_EVENTS[arena.key]}
@@ -125,6 +125,9 @@ class GascoigneDonorTests(unittest.TestCase):
                 ready = blocks[IDS.readiness_event]
                 self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))", ready)
                 health = blocks[arena.health_bar_event]
+                self.assertLess(
+                    health.index(f"SetCharacterInvincibility({IDS.beast_entity}, Disabled)"),
+                    health.index(f"CreateReferredDamagePair({arena.actor}, {IDS.beast_entity})"))
                 gate = f"WaitFor(EventFlag({IDS.readiness_event}))"
                 self.assertEqual(2, health.count(gate))
                 self.assertLess(health.rindex(gate),
@@ -140,6 +143,8 @@ class GascoigneDonorTests(unittest.TestCase):
                     self.assertLess(activation.index(f"SetEventFlag({arena.start_flag}, ON)"),
                                     activation.index(
                                         f"SetCharacterInvincibility({arena.actor}, Disabled)"))
+                if arena.key == "cleric-beast":
+                    self.assertNotIn("2412831", blocks[arena.activation_event])
 
     def test_music_camera_and_authored_state_bindings_are_destination_specific(self):
         for arena in SUPPORTED_GASCOIGNE_ARENAS:
@@ -164,6 +169,7 @@ class GascoigneDonorTests(unittest.TestCase):
                                                     "gascoigne-reusable")
                 primary = plan["primary_init_source_bindings"]
                 additions = plan["boss_actor_additions"]
+                self.assertTrue(all(row["placement_policy"] == "destination-anchor" for row in additions))
                 self.assertEqual(arena.destination_count, len(primary))
                 self.assertEqual(arena.destination_count, len(additions))
                 self.assertEqual({GASCOIGNE_HUMAN}, {row["source_entity_id"] for row in primary})
