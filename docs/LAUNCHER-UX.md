@@ -7,7 +7,7 @@ those answers rather than be the primary navigation.
 ## Implemented first slice
 
 - **Play** accepts an existing seed and server address. The current build/launch
-  action remains available, with **Connect to running game** beside it. Connect
+  action is split into **Randomize** and **Launch**, with **Reconnect client** beside them. Connect
   starts only the AP client against the verified, previously installed seed;
   changing seed requires returning to the stopped-game build/launch flow.
 - **Create & host** wraps the installed Archipelago generator and local server.

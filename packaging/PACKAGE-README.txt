@@ -26,7 +26,7 @@ offline build checks but have not been live-validated. See the boss canary guide
    Everything else fills itself in. Save Setup.
 3. Click Generate Launch Plan once, then Doctor -- every line should say
    PASS before you play.
-4. Randomize & Launch.
+4. Pick an Enemies option on Play, then Launch.
 
 One character per session, never switch characters while connected, and if
 something looks wrong, stop and report it (see the PLAYTESTING guide).
@@ -54,7 +54,7 @@ exactly what this public CI built from this public source:
 bloodborne.apworld ships INSIDE this package, at worlds\bloodborne.apworld,
 and is also attached alongside the zip. Only the person GENERATING seeds
 needs it. You do not have to place it yourself: on Create & host, pick your
-Archipelago installation and press Create seed -- if the Bloodborne world is
+Archipelago installation and press Create & host -- if the Bloodborne world is
 missing or is a different version, the launcher says so and offers one button
 that installs or updates it in that installation's custom_worlds. Nothing is
 installed until you press it. Archipelago reads its worlds at start, so close

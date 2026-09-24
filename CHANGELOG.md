@@ -6,6 +6,21 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Launcher: **Randomize** and **Launch** are now separate buttons. Randomize
+  builds and verifies the seed without starting the game and reports the swap
+  count; Launch reuses that build (or builds first). The enemy choice moved
+  onto the Play page as one pick: **Randomize enemies**, **Randomize all
+  enemies (experimental)** (turns on scripted enemies, ambush spawns and
+  chara-bound hunters together), or **Vanilla**. The separate Enemies page and
+  the three per-tranche checkboxes are gone; boss shuffle and the other tuning
+  options live under Advanced. The enemy seed is shown on Play, filled from
+  the AP seed and editable. "Connect to running game" is now "Reconnect
+  client".
+- Create & host: the three checkboxes are gone. Pick **Just me** or **A folder
+  of player YAML files** (only that option's fields show), pick **Base game**
+  or **Base game + The Old Hunters**, then press **Create & host** or
+  **Create only**.
+
 - Enemy randomization no longer places Lady Maria as an ordinary enemy (her AI
   breaks outside her own fight), and her Astral Clocktower spawn stays vanilla.
 - Boss shuffle adds reusable Orphan combat in the six base arenas and reusable

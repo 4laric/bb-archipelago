@@ -1,7 +1,7 @@
 # Bloodborne AP launcher core
 
 Status: the repository carries both the UI-independent cache/activation core
-and a desktop **Randomize & Launch** surface. The Windows package bundles the
+and a desktop **Randomize** / **Launch** surface. The Windows package bundles the
 deterministic planner, compressed-map miner, and guarded native writers before
 it activates the verified overlay. At launch the launcher also writes the
 native client's runtime configuration and names its per-session ledger, so no
@@ -10,7 +10,7 @@ package time; live overlay canaries remain a follow-up slice.
 
 ## Play, reconnect, and create a local seed
 
-**Play → Connect to running game** starts only the native AP client. Select the
+**Play → Reconnect client** starts only the native AP client. Select the
 same seed and server as usual, then connect while shadPS4 is already running.
 The launcher checks the running executable/game path and the previously
 activated, launcher-owned overlay. It does not rebuild files, replace mods, or
@@ -20,8 +20,10 @@ fail-closed development-candidate workflow; see
 steps, limitations, and incomplete live-acceptance matrix.
 
 **Create & host** uses an existing Archipelago installation. Select that
-installation, enter a solo player name and DLC choice, then choose **Create
-seed**. For a multiworld or custom settings, select a folder of player YAMLs
+installation, pick **Just me** (the player name comes from Play) and the
+content (**Base game** or **Base game + The Old Hunters**), then choose
+**Create & host** to generate and start a local server, or **Create only**.
+For a multiworld or custom settings, pick **A folder of player YAML files**
 instead. Source checkouts can use an explicit Python executable; packaged
 Archipelago installations need no Python selection. World metadata checks are
 compatibility checks, not proof of exact apworld source identity; the generated
@@ -29,7 +31,7 @@ request still passes normal validation.
 
 The package carries the matching `worlds\bloodborne.apworld`, and the launcher
 can install it. When the selected installation has no Bloodborne world, or has
-one of a different version, **Create seed** stops, says which of the two it is,
+one of a different version, creating a seed stops, says which of the two it is,
 and offers a single button -- **Install Bloodborne world**, or **Update
 Bloodborne world to \<version\>** -- that copies the bundled apworld into that
 installation's `custom_worlds` and then re-validates and continues. Nothing is
@@ -112,7 +114,7 @@ update trees for writing.
 ## If you put files in `CUSA03173-mods`
 
 Don't -- that directory belongs to the launcher and is rebuilt on every
-activation -- but if you already have, **Randomize & Launch** now recovers on
+activation -- but if you already have, **Launch** now recovers on
 its own. When the overlay still carries the Archipelago ownership manifest and
 the files under it no longer match (one was overwritten, edited, added, or
 removed), activation moves the whole tree aside to
@@ -133,8 +135,8 @@ launcher's to move:
 - **A symlinked or non-directory `CUSA03173-mods` path.**
 
 The check that runs at *launch* time -- against the overlay shadPS4 is about to
-load, or has already loaded, for `Connect to running game` -- never heals; it
-refuses, and tells you to run **Randomize & Launch** again to rebuild.
+load, or has already loaded, for **Reconnect client** -- never heals; it
+refuses, and tells you to press **Launch** again to rebuild.
 
 ## Player mods: `CUSA03173-mods-user`
 
@@ -143,7 +145,7 @@ refuses, and tells you to run **Randomize & Launch** again to rebuild.
 BB_Launcher (rainmakerv3) uses its own managed `dvdroot_ps4/MODS` layout and
 may write activated files into `CUSA03173-mods`. Archipelago owns that latter
 directory transactionally in **standalone mode**, so do not leave BBLauncher
-mod activation enabled when using **Randomize & Launch**. The Doctor recognizes
+mod activation enabled when using **Launch**. The Doctor recognizes
 the managed `MODS` signature and names BBLauncher directly instead of presenting
 the resulting files as an unknown ownership failure. The separate external
 adapter deliberately leaves ownership with BBLauncher; use
@@ -280,7 +282,7 @@ python -m bb_launcher enemy-report --settings launcher-settings.json `
   --area m24_01 --echoes 4700 --note "kept dying off-screen"
 ```
 
-## Desktop Randomize & Launch
+## Desktop Randomize and Launch
 
 Open the player-facing surface from a checkout with:
 
@@ -313,9 +315,20 @@ that discovery is unambiguous. The normal **Setup** tab asks for only:
   it actually contains. The setup shows the resolved player, seed, and
   required runtime before launch.
 
-MapStudio and the guarded enemy options live under **Enemies**;
-the uncommon seed and tier controls stay collapsed until **Advanced enemy
-options** is selected.
+The Play page makes one enemy choice: **Randomize enemies** (the reviewed
+pool plus boss shuffle; the default), **Randomize all enemies
+(experimental)** (also turns on the three reviewed-but-untested release
+tranches: supported script contracts, script-spawn ambushes and chara-bound
+hunters), or **Vanilla**. The **Enemy seed** below it is filled from the AP
+seed whenever one is chosen; edit it for a different shuffle. Boss shuffle,
+tier mixing, locomotion and stat normalization live under **Advanced → Enemy
+tuning**.
+
+The action bar has two steps. **Randomize** builds and verifies the seed
+into the cache without activating anything or starting a process, and
+reports the swap count. **Launch** activates the verified build and starts
+shadPS4 and the client; it reuses the Randomize build, or builds first when
+Randomize was skipped. **Reconnect client** starts only the AP client.
 Suppression, cache, state, log, and explicit process-plan overrides live under
 **Advanced**; packaged players do not need to touch them. Setup is saved
 automatically whenever an action starts.
@@ -357,7 +370,7 @@ subsequent builds verify its local cached executable and resources. Full boss
 coverage and gameplay validation remain in progress; see
 [the boss shuffle implementation](ENEMIZER-BOSS-SHUFFLE.md).
 
-When the player chooses **Randomize & Launch**, the workflow:
+When the player chooses **Launch**, the workflow:
 
 1. validates CUSA03173 `01.09`, the AP request's world/runtime builds,
    suppression source/plan/output hashes, shad build, and every process

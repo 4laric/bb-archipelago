@@ -214,7 +214,7 @@ class EnemyReportContextTests(unittest.TestCase):
         self.assertIn("- Enemy seed: seed:enemizer", text)
 
     def test_names_the_remedy_when_no_overlay_or_no_enemizer_or_no_plan(self):
-        with self.assertRaisesRegex(ValidationError, "Randomize & Launch first"):
+        with self.assertRaisesRegex(ValidationError, "press Launch first"):
             load_context(self.settings())
         cache, build_path = make_build(self.root, "plain", b"content")
         activate_build(self.install, build_path, process_is_running=lambda: False)
