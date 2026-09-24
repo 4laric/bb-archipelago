@@ -16,6 +16,7 @@ from tools.build_standalone_randomizer import (
     RECEIPT_FORMAT,
     BuildConfig,
     EnemyOptions,
+    _parse_args,
     _run,
     build,
 )
@@ -23,6 +24,20 @@ from tools.build_standalone_randomizer import (
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+class ScalingDefaultsTests(unittest.TestCase):
+    def test_builder_and_cli_default_scaling_on_with_explicit_off_override(self):
+        self.assertTrue(EnemyOptions().normalize_scaling)
+        required = [
+            "--seed", "sample", "--gameparam", "gameparam.dcx",
+            "--paramdef", "paramdef.dcx", "--item-writer", "writer.exe",
+            "--output", "overlay", "--apply",
+        ]
+        self.assertTrue(_parse_args(required).enemy_options.normalize_scaling)
+        self.assertFalse(_parse_args(required + [
+            "--no-normalize-enemy-scaling",
+        ]).enemy_options.normalize_scaling)
 
 
 class FakeToolchain:

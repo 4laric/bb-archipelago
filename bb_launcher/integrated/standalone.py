@@ -28,16 +28,18 @@ def _required_path(params: Mapping[str, Any], name: str) -> Path:
     return Path(value).expanduser().absolute()
 
 
-def _choices(params: Mapping[str, Any]) -> tuple[str, bool, bool, bool]:
+def _choices(params: Mapping[str, Any]) -> tuple[str, bool, bool, bool, bool]:
     seed = params.get("seed")
     if not isinstance(seed, str) or not seed.strip():
         raise ProtocolError("bad-request", "standalone seed must be non-empty text")
-    for name in ("include_dlc", "randomize_enemies", "expanded_coverage"):
+    for name in ("include_dlc", "randomize_enemies", "expanded_coverage",
+                 "normalize_scaling"):
         if name in params and not isinstance(params[name], bool):
             raise ProtocolError("bad-request", f"standalone {name} must be a boolean")
     # Keep standalone choices separate from AP-only boss settings.
     unsupported = sorted(set(params) - {
         "seed", "include_dlc", "randomize_enemies", "expanded_coverage",
+        "normalize_scaling",
         "game_root", "mods_root",
         "state_root",
     })
@@ -48,7 +50,7 @@ def _choices(params: Mapping[str, Any]) -> tuple[str, bool, bool, bool]:
     expanded = params.get("expanded_coverage", False)
     if expanded and not enemies:
         raise ProtocolError("bad-request", "expanded coverage requires enemy randomization")
-    return seed, params.get("include_dlc", False), enemies, expanded
+    return seed, params.get("include_dlc", False), enemies, expanded, params.get("normalize_scaling", True)
 
 
 def _source_directory(install: GameInstall, relative: str, destination: Path,
@@ -117,7 +119,7 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
         export_directory, package_name, validate_overlay, verify_export,
     )
 
-    seed, include_dlc, randomize_enemies, expanded_coverage = _choices(params)
+    seed, include_dlc, randomize_enemies, expanded_coverage, normalize_scaling = _choices(params)
     game_root = _required_path(params, "game_root")
     mods_root = _required_path(params, "mods_root")
     if mods_root.name.casefold() != "mods" or not mods_root.is_dir() or mods_root.is_symlink():
@@ -157,7 +159,8 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
                 item_writer=item_writer, output=output,
                 item_options=StandaloneOptions(include_dlc=include_dlc),
                 enemy_options=EnemyOptions(
-                    enabled=randomize_enemies, expanded_coverage=expanded_coverage),
+                    enabled=randomize_enemies, expanded_coverage=expanded_coverage,
+                    normalize_scaling=normalize_scaling),
                 maps=maps, scripts=scripts, enemy_writer=enemy_writer,
                 wakeup_event=wakeup_event,
             ))
@@ -168,7 +171,9 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
                 or (randomize_enemies and overlay.identity["options"]["enemies"].get(
                     "allow_tier_mixing") is not True)
                 or overlay.identity["options"]["enemies"].get(
-                    "expanded_coverage", False) != expanded_coverage):
+                    "expanded_coverage", False) != expanded_coverage
+                or overlay.identity["options"]["enemies"].get(
+                    "normalize_scaling") != normalize_scaling):
             raise ValueError("standalone build identity differs from requested seed or options")
         name = package_name(overlay)
         existing_package = mods_root / name
@@ -218,11 +223,14 @@ def verify_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[st
     if not isinstance(record, dict) or record.get("format") != "bb-integrated-standalone-prepared-v1":
         raise ProtocolError("verification-failed", "standalone prepared record is invalid")
     required = ("package_name", "seed", "game_root", "mods_root",
-                "include_dlc", "randomize_enemies", "expanded_coverage")
+                "include_dlc", "randomize_enemies", "expanded_coverage",
+                "normalize_scaling")
     if any(name not in params for name in required):
         raise ProtocolError("bad-request", "standalone verification identity is incomplete")
     if not isinstance(params["expanded_coverage"], bool):
         raise ProtocolError("bad-request", "standalone expanded_coverage must be a boolean")
+    if not isinstance(params["normalize_scaling"], bool):
+        raise ProtocolError("bad-request", "standalone normalize_scaling must be a boolean")
     identity_matches = (
         record.get("receipt_id") == receipt_id
         and record.get("package_path") == str(package)
@@ -235,6 +243,8 @@ def verify_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[st
         and record.get("options", {}).get("enemies", {}).get("enabled") == params["randomize_enemies"]
         and record.get("options", {}).get("enemies", {}).get(
             "expanded_coverage", False) == params["expanded_coverage"]
+        and record.get("options", {}).get("enemies", {}).get(
+            "normalize_scaling") == params["normalize_scaling"]
     )
     if not identity_matches:
         raise ProtocolError("verification-failed", "standalone selection differs from prepared export")

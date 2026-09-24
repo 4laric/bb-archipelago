@@ -48,7 +48,7 @@ class EnemyOptions:
     seed: str | None = None
     allow_tier_mixing: bool = True
     preserve_locomotion: bool = False
-    normalize_scaling: bool = False
+    normalize_scaling: bool = True
     expanded_coverage: bool = False
 
 
@@ -645,7 +645,10 @@ def _parse_args(argv: Sequence[str] | None) -> BuildConfig:
     )
     parser.add_argument("--wakeup-event", type=Path)
     parser.add_argument("--preserve-locomotion", action="store_true")
-    parser.add_argument("--normalize-enemy-scaling", action="store_true")
+    parser.add_argument("--normalize-enemy-scaling", dest="normalize_enemy_scaling",
+                        action="store_true", default=True)
+    parser.add_argument("--no-normalize-enemy-scaling", dest="normalize_enemy_scaling",
+                        action="store_false")
     parser.add_argument("--expanded-coverage", action="store_true")
     parser.add_argument(
         "--apply", action="store_true", help="write a new verified overlay directory"

@@ -58,6 +58,7 @@ class IntegratedStandaloneTests(unittest.TestCase):
         self.params = {
             "seed": "Moonlight-101", "include_dlc": False,
             "randomize_enemies": False, "expanded_coverage": False,
+            "normalize_scaling": True,
             "game_root": str(self.root / "game"),
             "mods_root": str(self.mods),
         }
@@ -95,6 +96,8 @@ class IntegratedStandaloneTests(unittest.TestCase):
                 config.enemy_options.allow_tier_mixing)
             identity["options"]["enemies"]["expanded_coverage"] = (
                 config.enemy_options.expanded_coverage)
+            identity["options"]["enemies"]["normalize_scaling"] = (
+                config.enemy_options.normalize_scaling)
             write_json(identity_path, identity)
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
             receipt["source_hashes"] = identity["source_hashes"]
@@ -233,6 +236,44 @@ class IntegratedStandaloneTests(unittest.TestCase):
         wrong = self.backend.handle(request("verify_standalone", {
             **self._verify_params(prepared["result"]), "expanded_coverage": False,
         }, 10))
+        self.assertFalse(wrong["ok"])
+        self.assertEqual("verification-failed", wrong["error"]["code"])
+
+    def test_scaling_defaults_on_and_is_bound_to_prepared_receipt(self):
+        self.params["randomize_enemies"] = True
+        self.params.pop("normalize_scaling")
+        (self.tools / "BBEnemizerWriter.exe").write_bytes(b"enemy writer")
+        for relative in (
+            "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx",
+            "dvdroot_ps4/script/m21_00_00_00.luabnd.dcx",
+        ):
+            source = self.install.root / relative
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_bytes(b"original enemy source")
+        prepared = self._prepare()
+        self.assertTrue(prepared["ok"], prepared)
+        self.assertTrue(prepared["result"]["options"]["enemies"]["normalize_scaling"])
+        verified = self.backend.handle(request("verify_standalone", {
+            **self._verify_params(prepared["result"]), "normalize_scaling": True,
+        }, 11))
+        self.assertTrue(verified["ok"], verified)
+        wrong = self.backend.handle(request("verify_standalone", {
+            **self._verify_params(prepared["result"]), "normalize_scaling": False,
+        }, 12))
+        self.assertFalse(wrong["ok"])
+        self.assertEqual("verification-failed", wrong["error"]["code"])
+
+    def test_scaling_off_override_is_receipted_and_verified(self):
+        self.params["normalize_scaling"] = False
+        prepared = self._prepare()
+        self.assertTrue(prepared["ok"], prepared)
+        self.assertFalse(prepared["result"]["options"]["enemies"]["normalize_scaling"])
+        verified = self.backend.handle(request(
+            "verify_standalone", self._verify_params(prepared["result"]), 13))
+        self.assertTrue(verified["ok"], verified)
+        wrong = self.backend.handle(request("verify_standalone", {
+            **self._verify_params(prepared["result"]), "normalize_scaling": True,
+        }, 14))
         self.assertFalse(wrong["ok"])
         self.assertEqual("verification-failed", wrong["error"]["code"])
 
