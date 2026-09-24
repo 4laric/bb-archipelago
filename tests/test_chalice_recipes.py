@@ -6,14 +6,29 @@ from unittest.mock import patch
 
 from tools.bb_enemizer.chalice_recipes import chalice_recipes, source_manifest, validate_original_source
 from tools.bb_enemizer.chalice_character_ffx import character_ffx_plan
-from tools.build_boss_encounters import CHALICE_PACKAGES, reviewed_compatibility
+from tools.build_boss_encounters import CHALICE_PACKAGES, reviewed_compatibility, good_boss_routes
+from tools.bb_enemizer.good_boss_pool import assign_good_bosses, GOOD_FAMILIES
 
 
 class ChaliceIntegrationTests(unittest.TestCase):
+    def test_actual_routes_place_every_family_once_for_both_bloodletting_variants(self):
+        routes = good_boss_routes()
+        for variant in ('bloodletting-beast', 'headless-bloodletting-beast'):
+            for seed in range(25):
+                assignment = assign_good_bosses(str(seed), routes, allow_self=False,
+                    required_variants={'bloodletting-beast': variant})
+                self.assertEqual(set(assignment.arena_to_family.values()), set(GOOD_FAMILIES))
+                self.assertEqual(len(assignment.arena_to_donor), 22)
+                self.assertEqual(len(set(assignment.arena_to_donor.values())), 22)
+                self.assertFalse(assignment.self_pairs)
+                self.assertIn(variant, assignment.arena_to_donor.values())
+                self.assertTrue(set(assignment.arena_to_donor.items()).issubset(routes))
+                self.assertEqual(assignment.unavailable_variants, ('loran-darkbeast',))
+
     def test_nine_explicit_variants_do_not_expand_reviewed_pool(self):
         routes = chalice_recipes()
-        self.assertEqual(len(routes), 9)
-        self.assertEqual({arena for arena, donor in routes}, {'cleric-beast'})
+        self.assertGreater(len(routes), 9)
+        self.assertEqual(len({donor for arena, donor in routes}), 9)
         self.assertEqual({donor for arena, donor in routes}, set(CHALICE_PACKAGES))
         reviewed = reviewed_compatibility()
         self.assertEqual(len(reviewed), 22)
@@ -52,7 +67,7 @@ class ChaliceIntegrationTests(unittest.TestCase):
             self.assertEqual(len(declared), len(set(declared)))
             self.assertEqual(plan['chalice_character_effect_limits']['runtime_bank_precedence'],
                              'not-validated')
-            with self.assertRaisesRegex(ValueError, 'pinned to Cleric'):
+            with self.assertRaisesRegex(ValueError, 'destination map mismatch'):
                 character_ffx_plan(actor, 'lady-maria')
 
     def test_character_proof_cannot_be_silently_replaced(self):

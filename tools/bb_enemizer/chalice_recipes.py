@@ -8,7 +8,7 @@ from pathlib import Path
 
 from .boss_contracts import CLERIC_ARENA
 from .encounter_recipes import EncounterRecipe
-from .chalice_character_ffx import character_ffx_plan
+from .chalice_character_ffx import character_ffx_plan, supports_character
 
 
 def source_manifest(donor: str) -> dict:
@@ -28,27 +28,31 @@ def validate_original_source(events: Path, donor: str) -> dict:
 
 def _humanoid_recipes():
     from .chalice_humanoid_donors import (
-        DONORS, patch_chalice_humanoid_donor, native_plan_chalice_humanoid_donor,
+        DONORS, SUPPORTED_HUMANOID_ARENAS, patch_chalice_humanoid_donor, native_plan_chalice_humanoid_donor,
     )
-    for donor in DONORS.values():
-        yield EncounterRecipe(
-            arena=CLERIC_ARENA, donor=donor, adapter='chalice-humanoid:source-combat',
-            _patch=lambda destination, source, d=donor:
-                patch_chalice_humanoid_donor(CLERIC_ARENA, d, destination, source),
-            _native_plan=lambda slots, npcs, effects, seed, d=donor:
-                native_plan_chalice_humanoid_donor(CLERIC_ARENA, d, slots, npcs, effects, seed),
-            _actor_requirements=lambda slots: [],
-        )
+    for arena in SUPPORTED_HUMANOID_ARENAS:
+        for donor in DONORS.values():
+            yield EncounterRecipe(
+                arena=arena, donor=donor, adapter='chalice-humanoid:source-combat',
+                _patch=lambda destination, source, d=donor, a=arena:
+                    patch_chalice_humanoid_donor(a, d, destination, source),
+                _native_plan=lambda slots, npcs, effects, seed, d=donor, a=arena:
+                    native_plan_chalice_humanoid_donor(a, d, slots, npcs, effects, seed),
+                _actor_requirements=lambda slots: [],
+            )
 
 
 def chalice_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     from .chalice_beast_donors import chalice_beast_recipes
     from .chalice_giant_bloodletting_donors import chalice_recipes as giant_recipes
+    from .chalice_rom import recipes as rom_recipes
+    from .chalice_one_reborn import recipes as one_reborn_recipes
 
     result = {}
-    for recipe in (*_humanoid_recipes(), *chalice_beast_recipes(), *giant_recipes()):
-        # Other arena contracts must acquire their own asset delivery proof.
-        if recipe.arena.key != 'cleric-beast':
+    for recipe in (*_humanoid_recipes(), *chalice_beast_recipes(), *giant_recipes(),
+                   *rom_recipes(), *one_reborn_recipes()):
+        character = getattr(recipe.donor, 'archetype', None) or recipe.donor.source_archetype
+        if not supports_character(recipe.arena.key, character.model_name):
             continue
         def plan(slots, npcs, effects, seed, r=recipe):
             output = r.native_plan(slots, npcs, effects, seed)

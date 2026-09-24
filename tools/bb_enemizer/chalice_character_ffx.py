@@ -11,22 +11,34 @@ import json
 from pathlib import Path
 
 PROOF_FILE = Path(__file__).with_suffix('.json')
-PROOF_SHA256 = 'e1c5d7b4320f4e874a929c65312c2dbbb91d39af20cad7aedb8bf60c59084874'
+PROOF_SHA256 = 'cf79f4be62ccd5f6f4b66973d6141e1b060f30cf9b2f890f836507538107a754'
 
 
-def character_ffx_plan(actor: dict, arena_key: str) -> dict:
-    if arena_key != 'cleric-beast' or not actor['destination_map'].startswith('m24_01_'):
-        raise ValueError('chalice character bank delivery is currently pinned to Cleric')
+def _proof() -> dict:
     raw = PROOF_FILE.read_bytes()
     if hashlib.sha256(raw).hexdigest() != PROOF_SHA256:
         raise ValueError('chalice character effect proof resource changed')
-    proof = json.loads(raw)
+    return json.loads(raw)
+
+
+def supports_character(arena_key: str, character: str) -> bool:
+    destination = _proof()['destinations'].get(arena_key)
+    return destination is not None and character in destination['characters']
+
+
+def character_ffx_plan(actor: dict, arena_key: str) -> dict:
+    proof = _proof()
     character = actor['source_archetype']['model_name']
+    target = proof['destinations'].get(arena_key)
+    if target is None or character not in target['characters']:
+        raise ValueError('chalice character bank delivery lacks a conflict-free arena proof')
+    if not actor['destination_map'].startswith(target['bank'] + '_'):
+        raise ValueError('chalice character bank destination map mismatch')
     template = proof['characters'][character]
     requirement = copy.deepcopy(template['requirement_template'])
     requirement.update({key: actor[key] for key in
                         ('source_map', 'source_part', 'source_entity_id')})
-    destination = proof['banks']['m24_01']
+    destination = proof['banks'][target['bank']]
     deliveries, merges = [], []
     for bank, roots in template['bank_roots'].items():
         source = proof['banks'][bank]

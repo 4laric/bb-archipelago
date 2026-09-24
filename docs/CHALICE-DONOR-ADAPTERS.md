@@ -2,8 +2,11 @@
 
 Eight new boss families have direct encounter adapters. Bloodletting has two
 separate variants, giving nine explicit donor choices. The public experimental
-registry currently permits **Cleric Beast's arena only**. These adapters are not
-added to the normal reviewed shuffle or presented as a completed good-boss mode.
+registry permits **52 directed routes across 10 arenas**. These routes support
+the experimental `good` pool: all 22 main/DLC arenas receive the 22 requested
+families exactly once, with no self-pairs or repeated families. The normal
+reviewed pool remains separate. Selection uses a deterministic matching of
+registered routes and fails explicitly if a complete assignment is impossible.
 
 | Family | CLI donor | Combat carried over |
 | --- | --- | --- |
@@ -17,7 +20,7 @@ added to the normal reviewed shuffle or presented as a completed good-boss mode.
 | Bloodletting Beast | `bloodletting-beast` | Normal variant's limbs, recovery masks, roar, and cloth controllers |
 | Bloodletting Beast | `headless-bloodletting-beast` | Separate original NPC/AI; does not inherit another actor's limb scripts |
 
-Every route replaces all three Cleric map states and retains the destination's
+Every route replaces the destination's pinned map states and retains its
 fog, victory, rewards, lamp progression, and co-op lifecycle. Imported combat
 event IDs are checked against the original event corpus. Source map constructors,
 actor fingerprints, initialization fields, animation binders, and effect banks
@@ -45,42 +48,44 @@ inside their original group directory, for example
 `m29_05_00_00/m29_05_00_11.msb.dcx`. The source constructor manifest also checks
 the nested EMEVD before work begins.
 
+To build the complete roster, replace `--arena ... --donor ...` with
+`--pool good`. One normal or headless Bloodletting variant is selected per seed.
+Paarl currently supplies the Darkbeast family; Loran Darkbeast has no adapter
+and is explicitly reported unavailable.
+
 ## Asset delivery and known limits
 
 Chalice effects live in `m29a`, `m29b`, and `m29c`, not the empty `m29` bank.
-The adapters merge the complete required source banks into Cleric's `m24_01`
+The adapters merge the complete required source banks into the selected destination
 subarea bank, retaining existing destination entries. Conflicting bytes fail
 the build. Multiple source banks can supply distinct roots for the same actor;
 duplicate root declarations across banks are rejected. Native receipts check
 the typed animation witnesses and the final delivered root bytes.
 
 This proves direct-root delivery, not recursive FXR dependencies or runtime
-precedence over the shared `m24` bank. Global-bank roots and unresolved typed
+precedence over shared map banks. Global-bank roots and unresolved typed
 roots are recorded separately in `boss_contract.chalice_character_effect_limits`.
 They must not be described as complete effect closure.
 
 The selected chalice NPC rows have no source tier understood by the current
 scaler. Builds explicitly report a scaling skip and retain the source stats.
 Chalice depth effects and arena balance therefore still need work. Tests do
-not establish that a fight fits the bridge or that all attacks/phases work in
+not establish that a fight fits its destination or that all attacks/phases work in
 the emulator.
 
 ## Validation and next steps
 
 Development validation includes Python adapter/integration tests, the native
-writer suite, and original-file builds of all nine variants at Cleric. The
-receipt always reports `runtime_validated: false`. No gameplay validation has
-been performed for these routes.
+writer suite, original-file builds of all nine variants at Cleric, individual
+expanded Maria/Gehrman/Ebrietas/Rom builds, and a complete 22-family native build.
+The full build verifies 68 output files and resolves all missing AI scripts.
+See [full-roster native evidence](good-boss-native-smoke.json) for the exact seed,
+assignment, and event hashes. Assignment tests cover both Bloodletting variants
+across multiple seeds. The receipt always reports `runtime_validated: false`.
 
-Before enabling the complete good-boss preset:
-
-1. Playtest entry, AI, health bar, each phase/limb response, death, fog removal,
-   lamp, save/reload, and effects for these donor packages.
-2. Add reviewed scaling for chalice source stats and depth effects.
-3. Expand destination entry/arena and effect-bank proofs beyond Cleric.
-4. Complete the 22-family assignment policy: each family once, one chosen
-   Bloodletting variant and one chosen Paarl/Loran variant, with no repeats.
-   Loran Darkbeast remains separate work from these eight missing families.
+The remaining validation is in-game: entry, AI, health bars, phases/limbs, death,
+fog removal, lamps, save/reload, and effects. Chalice scaling and Loran's adapter
+remain follow-up work. This is an experimental pool, not gameplay certification.
 
 See [Giant and Bloodletting source evidence](CHALICE-GIANT-BLOODLETTING-EVIDENCE.md)
 for the distinction between the two Bloodletting actors and their controllers.

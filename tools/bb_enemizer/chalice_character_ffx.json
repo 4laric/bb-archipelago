@@ -50123,6 +50123,167 @@
     "m24_01": {
       "file": "frpg_sfxbnd_m24_01.ffxbnd.dcx",
       "sha256": "8f918aa398655957eff8b12fc079dc9a1423d6f605bfadb25fcb35423f1154ee"
+    },
+    "m23_00": {
+      "file": "frpg_sfxbnd_m23_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m24_00": {
+      "file": "frpg_sfxbnd_m24_00.ffxbnd.dcx",
+      "sha256": "890086d51e303165812e005a9eb289435c067dec75369c90a338d0db2f1961a6"
+    },
+    "m24_02": {
+      "file": "frpg_sfxbnd_m24_02.ffxbnd.dcx",
+      "sha256": "6cab7031c5fafba95ed71c4ddb86e590b77b2d669988e8b53bed159e1dbc1015"
+    },
+    "m33_00": {
+      "file": "frpg_sfxbnd_m33_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m35_00": {
+      "file": "frpg_sfxbnd_m35_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m36_00": {
+      "file": "frpg_sfxbnd_m36_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m32_00": {
+      "file": "frpg_sfxbnd_m32_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m28_00": {
+      "file": "frpg_sfxbnd_m28_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m21_00": {
+      "file": "frpg_sfxbnd_m21_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    }
+  },
+  "destinations": {
+    "cleric-beast": {
+      "bank": "m24_01",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "blood-starved-beast": {
+      "bank": "m23_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "darkbeast-paarl": {
+      "bank": "m23_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "vicar-amelia": {
+      "bank": "m24_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c7500"
+      ]
+    },
+    "ebrietas": {
+      "bank": "m24_02",
+      "characters": [
+        "c2160",
+        "c7500"
+      ]
+    },
+    "amygdala": {
+      "bank": "m33_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "lady-maria": {
+      "bank": "m35_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "orphan-of-kos": {
+      "bank": "m36_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "rom": {
+      "bank": "m32_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "the-one-reborn": {
+      "bank": "m28_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "gehrman": {
+      "bank": "m21_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
     }
   }
 }
