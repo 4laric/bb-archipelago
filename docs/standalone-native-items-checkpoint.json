@@ -1,0 +1,38 @@
+{
+  "format": "bb-standalone-native-items-checkpoint-v1",
+  "source_sha256": {
+    "tools/bb_suppression_writer/StandaloneItems.cs": "1f6d8d06e27c353c4489b8fe7ef011dbc536558447a8da4afc28e379c72023aa",
+    "tools/bb_suppression_writer/Program.cs": "e114745de245cc1977ffa7dc538c0ff58f3e905d8a70bcf2a0032efd6c9089ec",
+    "tools/bb_standalone/award_targets.json": "8cf1c60fbebc734dfcccd02d2d2fb98b8b5c386cc3a0d4722b9b9e9fc22486be",
+    "tools/bb_standalone/generate.py": "711cc31fc2b1c8006accbbf397426ecb05aefe46b543e5903baab40afdce17e5",
+    "tools/bb_standalone/schema.py": "ad81e6af7238f7d41b8ab14ee7c65bd6a7269611faa2ad29afbe90ff8dabb729",
+    "work/standalone-writer-bin/BBSuppressionWriter.dll": "c293064d777f95fabdae299b7babb16514c62a8cfe6f0903923651ed84612e40"
+  },
+  "cases": [
+    {
+      "format": "bb-standalone-item-receipt-v1",
+      "seed": "standalone-native-1",
+      "plan_sha256": "3cc60d2921c028bd0e4304e677d38b11cd2bc4447e1d0b17cd7dae40d5201975",
+      "source_sha256": "974a2c13dda54d65e90d981dcd0406095737a0f0d715e88c7bc6639ab7d24fe9",
+      "output_sha256": "30f1d0195db345f23b6cbf22ccbd988860ba44bf0a785ee190ebfc167dc28129",
+      "locations": 503,
+      "award_targets": 552,
+      "runtime_validated": false
+    },
+    {
+      "format": "bb-standalone-item-receipt-v1",
+      "seed": "standalone-dlc-native-1",
+      "plan_sha256": "6c7174642267322d18dca3eb70a034e55a55b25b32ac812403970b8bce801cbc",
+      "source_sha256": "974a2c13dda54d65e90d981dcd0406095737a0f0d715e88c7bc6639ab7d24fe9",
+      "output_sha256": "8aba8b252eeced913de53f0b78068fa130e0f0ed7998da9d1ec37f98f579497d",
+      "locations": 654,
+      "award_targets": 712,
+      "runtime_validated": false
+    }
+  ],
+  "limits": [
+    "Native construction and complete table round-trip checks only; no game or save touched.",
+    "Item plan source was the original installed archive; the AP-suppressed candidate was correctly refused on source witness drift.",
+    "Item-plus-enemy build composition and packaged player experience are separate work."
+  ]
+}
