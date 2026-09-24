@@ -323,7 +323,7 @@ class LauncherApp:
         # Cache key of the last successful Randomize, so the hint can say the
         # build is ready and Launch will reuse it.
         self._randomized_key: str | None = None
-        self.allow_tier_mixing = tk.BooleanVar(value=False)
+        self.allow_tier_mixing = tk.BooleanVar(value=True)
         self.preserve_locomotion = tk.BooleanVar(value=False)
         self.normalize_scaling = tk.BooleanVar(value=False)
         # The BSB-at-Cleric-Beast single-boss playtest mode is retired from the
@@ -533,7 +533,7 @@ class LauncherApp:
         ).grid(row=troubleshooting_row, column=0, columnspan=3, sticky="w")
         troubleshooting_row += 1
 
-        # Boss shuffle, tier mixing, locomotion preservation and stat
+        # Boss shuffle, locomotion preservation and stat
         # normalization: real knobs, but ones almost nobody needs for a
         # normal launch. The release tranches have no boxes of their own:
         # Play's "Randomize all enemies (experimental)" sets them.
@@ -543,16 +543,12 @@ class LauncherApp:
             caption="Reviewed boss encounters are reassigned. Off keeps vanilla bosses.",
         )
         troubleshooting_row += 1
-        tier, _tier_row = option(
-            ttk, troubleshooting, troubleshooting_row, "Allow tier mixing", self.allow_tier_mixing,
-            caption="Replacements may come from a different difficulty tier.",
-        )
         locomotion, _locomotion_row = option(
-            ttk, troubleshooting, troubleshooting_row + 1, "Preserve locomotion", self.preserve_locomotion,
+            ttk, troubleshooting, troubleshooting_row, "Preserve locomotion", self.preserve_locomotion,
             caption="Keep each slot's movement class. Tags are incomplete.",
         )
         scaling, _scaling_row = option(
-            ttk, troubleshooting, troubleshooting_row + 2, "Normalize enemy stats", self.normalize_scaling,
+            ttk, troubleshooting, troubleshooting_row + 1, "Normalize enemy stats", self.normalize_scaling,
             caption="Scale replacements to the slot they fill.",
         )
         troubleshooting_row += 3
@@ -632,7 +628,7 @@ class LauncherApp:
             row=summary_row, column=0, columnspan=3, sticky="w", pady=(6, 0)
         )
 
-        self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))
+        self._enemy_widgets.extend((seed_entry, locomotion, scaling))
         self._enemy_widgets.append(boss_pool_box)
 
         # --- Details drawer: launch progress and session status ------------
@@ -1011,7 +1007,7 @@ class LauncherApp:
             self.enemy_seed.set(str(value.get("enemy_seed", "")))
             self.ap_server.set(str(value.get("ap_server", "")))
             self.player_name.set(str(value.get("player_name", "")))
-            self.allow_tier_mixing.set(bool(value.get("allow_tier_mixing", False)))
+            self.allow_tier_mixing.set(True)
             self.preserve_locomotion.set(bool(value.get("preserve_locomotion", False)))
             self.normalize_scaling.set(bool(value.get("normalize_scaling", False)))
             self.boss_canary.set(bool(value.get("boss_canary", False)))

@@ -338,7 +338,7 @@ class SuppressionValidation:
 class EnemizerOptions:
     enabled: bool = True
     seed: str | None = None
-    allow_tier_mixing: bool = False
+    allow_tier_mixing: bool = True
     preserve_locomotion: bool = False
     normalize_scaling: bool = False
     boss_canary: bool = False
@@ -352,6 +352,11 @@ class EnemizerOptions:
     release_contracts: bool = False
     release_spawns: bool = False
     release_chara: bool = False
+
+    def __post_init__(self) -> None:
+        # Normalize legacy callers/settings so cache identities describe the
+        # engine policy actually used, including an explicit old False value.
+        object.__setattr__(self, "allow_tier_mixing", True)
 
 
 @dataclass(frozen=True)

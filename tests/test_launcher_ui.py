@@ -1308,11 +1308,11 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         # The enemy seed is shown on Play, beside the choice it seeds.
         self.assertIn("Enemy seed", play_texts)
         self.assertNotIn("Enemy seed", troubleshooting_texts)
-        for tuning in ("Allow tier mixing", "Normalize enemy stats", "Preserve locomotion",
+        for tuning in ("Normalize enemy stats", "Preserve locomotion",
                        "Shuffle bosses"):
             self.assertIn(tuning, troubleshooting_texts)
             self.assertNotIn(tuning, play_texts)
-        for retired in ("Scripted enemies: supported contracts", "Script-spawn ambushes",
+        for retired in ("Allow tier mixing", "Scripted enemies: supported contracts", "Script-spawn ambushes",
                         "Chara-bound hunters", "Boss shuffle (reviewed encounters)",
                         "BSB at Cleric Beast (playtest)"):
             self.assertNotIn(retired, troubleshooting_texts | play_texts)
@@ -1421,7 +1421,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
             ENEMY_FIELDS, {"map_studio_source", "enemy_inventory", "soulsformats_next"}
         )
         self.assertIn("self._enemy_widgets.extend((entry, button))", build)
-        self.assertIn("self._enemy_widgets.extend((seed_entry, tier, locomotion, scaling))", build)
+        self.assertIn("self._enemy_widgets.extend((seed_entry, locomotion, scaling))", build)
         self.assertIn("self._enemy_widgets.append(boss_pool_box)", build)
         toggle = source.split("def _toggle_enemy_fields")[1].split("def _state_root")[0]
         self.assertIn("for widget in self._enemy_widgets", toggle)

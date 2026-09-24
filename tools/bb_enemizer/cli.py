@@ -36,7 +36,9 @@ def parser() -> argparse.ArgumentParser:
                         help="per-NpcParam name/echo/HP facts stamped into every swap "
                              "for the player-facing enemy report (default: generated table)")
     result.add_argument("--output", required=True, help="manifest JSON path")
-    result.add_argument("--allow-tier-mixing", action="store_true")
+    # Retain the old affirmative flag for existing callers; tier mixing is
+    # intrinsic to ordinary enemy planning, not a selectable policy.
+    result.add_argument("--allow-tier-mixing", action="store_true", help=argparse.SUPPRESS)
     result.add_argument("--preserve-locomotion", action="store_true")
     result.add_argument(
         "--release-file", action="append", default=[],
@@ -182,7 +184,6 @@ def main(argv: list[str] | None = None) -> int:
     }
     config = EnemizerConfig(
         seed=args.seed,
-        preserve_tier=not args.allow_tier_mixing,
         preserve_locomotion=args.preserve_locomotion,
     )
     swaps, rejections = plan_swaps(slots, policies, tags, config, facts)
@@ -196,7 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         "dry_run": True,
         "inventory": inventory_summary(slots, policies),
         "options": {
-            "allow_tier_mixing": bool(args.allow_tier_mixing),
+            "allow_tier_mixing": True,
             "preserve_locomotion": bool(args.preserve_locomotion),
             "release_tranches": sorted({tranche for tranches in release.values()
                                         for tranche in tranches}),
