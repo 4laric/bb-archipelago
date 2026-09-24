@@ -16,12 +16,19 @@ NUMBER = re.compile(r"(?<!\d)\d{6,9}(?!\d)")
 
 EVENT_REASON = "entity ID referenced by area EMEVD"
 
-# Boss model families that must never enter the ordinary enemy pool, even when
-# one of their NpcParam rows passes the hostile-actor gate below. Lady Maria's
-# c4520:452091 row reads as an ordinary elite (team 23, npcType 0) but her AI
-# does not work outside her own fight.
+# Boss and prop model families that must never enter the ordinary enemy pool,
+# even when one of their NpcParam rows passes the hostile-actor gate below
+# (team 23, npcType 0). Excluding a model also keeps its own placements vanilla.
 NON_TARGET_MODELS = {
     "c4520": "Lady Maria: boss AI broken as an ordinary enemy",
+    "c7110": "Cainhurst carriage (Hemwick): a stationary 1 HP prop, not an enemy",
+}
+
+# Single NpcParam rows to exclude where the rest of the model family is an
+# ordinary enemy that should stay in the pool.
+NON_TARGET_NPC_PARAMS = {
+    402021: "Clocktower patient, cutscene-only 1 HP actor",
+    405020: "Mummified fishman, a 1 HP decoration",
 }
 
 
@@ -242,7 +249,8 @@ def main() -> int:
         team = int(row.get("teamType") or 0)
         npc_type = int(row.get("npcType") or 0)
         approved = (team == 23 and npc_type == 0 and radius > 0 and height > 0
-                    and archetype.model_name not in NON_TARGET_MODELS)
+                    and archetype.model_name not in NON_TARGET_MODELS
+                    and archetype.npc_param_id not in NON_TARGET_NPC_PARAMS)
         scaling_rows = []
         for index in range(8):
             effect_id = int(row.get(f"spEffectID{index}") or 0)

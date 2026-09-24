@@ -4,6 +4,8 @@ using SoulsFormats;
 
 if (args.Length == 2 && args[0] == "--boss-event-recipe")
     return BossCanary.ExportRecipe(args[1]);
+if (args.Length == 3 && args[0] == "--event-fingerprint")
+    return WakeupFallback.PrintFingerprint(args[1], long.Parse(args[2], System.Globalization.CultureInfo.InvariantCulture));
 if (args.Length == 5 && args[0] == "--wakeup-fallback")
     return WakeupFallback.Run(args[1], args[2], args[3], args[4]);
 if (args.Length == 9 && args[0] == "--boss-native" && args[8] == "--apply")

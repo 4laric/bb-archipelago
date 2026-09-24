@@ -1,6 +1,5 @@
 canonical_map	tag	hint	confidence	calibration
 m24_01_00_00	前半	bridge side	calibrated	2410520 Torch is tagged 前半 and is the street corpse on the way to the Great Bridge
-m24_01_00_00	後半	sewer side	calibrated	2410100 Saw Spear is tagged 後半 and is the sewer-channel corpse
 m24_01_00_00	裏	clinic backstreets	calibrated	2410140 is tagged 裏 and is already named under Iosefka's Clinic
 m24_00_00_00	聖C前	Grand Cathedral approach	calibrated	2400480 Radiant Sword Hunter Badge is tagged 聖C前 and is the chest by the Grand Cathedral
 m28_00_00_00	ミイラ	mummified corpse	literal	ミイラ is 'mummy'; the tag names the corpse, not an area
