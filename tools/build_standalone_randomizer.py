@@ -71,6 +71,21 @@ def _hash_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _planner_hash(package: str) -> str:
+    """Pin the code that made the plan in source and frozen installations."""
+    if getattr(sys, "frozen", False):
+        return _hash_file(Path(sys.executable))
+    directory = ROOT / "tools" / package
+    sources = sorted(directory.rglob("*.py"))
+    if not sources:
+        raise ValueError(f"standalone planner sources are missing: {directory}")
+    digest = hashlib.sha256()
+    for path in sources:
+        digest.update(path.relative_to(ROOT).as_posix().encode("utf-8"))
+        digest.update(bytes.fromhex(_hash_file(path)))
+    return digest.hexdigest()
+
+
 def _write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -128,13 +143,15 @@ def _native_command(dotnet: Path | None, writer: Path) -> list[str]:
 def _run(
     command: Sequence[str], runner: Runner, *, capture: bool = False
 ) -> subprocess.CompletedProcess[str]:
-    return runner(
-        list(command),
-        cwd=ROOT,
-        check=True,
-        text=True,
-        capture_output=capture,
-    )
+    options: dict[str, Any] = {"cwd": ROOT, "check": True, "text": True}
+    if capture:
+        options["capture_output"] = True
+    else:
+        # The frozen backend reserves stdout for JSON-lines protocol records.
+        # Native writers and the enemy planner may print progress directly to
+        # their OS stdout handles, so Python redirect_stdout is insufficient.
+        options.update(stdout=sys.stderr, stderr=sys.stderr)
+    return runner(list(command), **options)
 
 
 def _parse_writer_receipt(stdout: str) -> dict[str, Any]:
@@ -474,6 +491,7 @@ def build(
         tool_hashes = {
             "award_catalog": _hash_file(CATALOG_PATH),
             "item_writer": _hash_file(config.item_writer),
+            "item_planner": _planner_hash("bb_standalone"),
         }
         if config.enemy_options.enabled:
             assert config.enemy_writer is not None
@@ -481,6 +499,10 @@ def build(
                 {
                     "enemy_writer": _hash_file(config.enemy_writer),
                     "enemy_inventory": enemy_inventory_sha256,
+                    "enemy_planner": _planner_hash("bb_enemizer"),
+                    "enemy_tags": _hash_file(ROOT / "research/enemizer/enemy_tags.json"),
+                    "enemy_slot_policy": _hash_file(ROOT / "research/enemizer/slot_policy.json"),
+                    "enemy_facts": _hash_file(ROOT / "research/enemizer/archetype_facts.json"),
                 }
             )
             if config.enemy_inventory is None:
