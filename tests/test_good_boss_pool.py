@@ -34,13 +34,14 @@ def planned_routes() -> set[tuple[str, str]]:
 
 
 class GoodBossPoolTests(unittest.TestCase):
-    def test_current_graph_reports_incomplete_coverage_and_loran_absence(self):
+    def test_current_implemented_graph_covers_all_families_but_reports_loran_absence(self):
         report = coverage_report(reviewed_routes())
-        self.assertIn("the-one-reborn", report["arenas_without_good_routes"])
+        self.assertEqual(report["arenas_without_good_routes"], [])
+        self.assertEqual(report["families_without_routes"], [])
         self.assertIn("loran-darkbeast", report["unavailable_variants"])
-        with self.assertRaises(CoverageError) as caught:
-            assign_good_bosses("current", reviewed_routes())
-        self.assertLess(caught.exception.report["maximum_matching_size"], 22)
+        assignment = assign_good_bosses("current", reviewed_routes())
+        self.assertEqual(len(assignment.arena_to_donor), 22)
+        self.assertEqual(assignment.self_pairs, ())
 
     def test_planned_specialist_routes_admit_complete_no_self_matching(self):
         assignment = assign_good_bosses("feasibility", planned_routes())
