@@ -12,6 +12,16 @@ under `Unreleased` and move into a dated version section when released.
   `Coldblood Dew (3) (Dog Kennels side path)`, `Bold Hunter's Mark x2 (statue
   before Tomb of Oedon)`); `Coldblood Dew (1) #8` drops the hint until its spot
   is pinned down. Location IDs are unchanged.
+- Enemy randomization no longer turns ordinary enemies into the Cainhurst
+  carriage, and the carriage in Hemwick Charnel Lane stays in place.
+- Enemy randomization no longer spawns the 1 HP cutscene Clocktower patient or
+  the mummified Fishing Hamlet fishmen as enemies, and leaves those props in place.
+- With boss shuffle and Randomize all enemies (experimental), scripted enemies
+  that kept their vanilla setup now randomize: the face-down sleepers and the
+  sewer rat pack in Central Yharnam, and the lantern-carrying servants and the
+  Church Giants in Cathedral Ward. Their replacements skip the original
+  enemy's model-specific script (sleep poses, lanterns, breakable limbs) and
+  behave normally in place.
 - Launcher: **Randomize** and **Launch** are now separate buttons. Randomize
   builds and verifies the seed without starting the game and reports the swap
   count; Launch reuses that build (or builds first). The enemy choice moved

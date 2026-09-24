@@ -95,6 +95,39 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
   those IDs cannot be carried onto donor AI. The event body has no AI-disable,
   backread, or quest-flag writes; all other event calls and spawn handling
   remain intact. The two dummy-spawn placements still need the spawn tranche.
+- **Central Yharnam sewer rat ambush** (built, not yet released): the nine
+  pinned `c1100` rats in the Dry Dock channel are initialized by event
+  12410340, which on entering region 2412220 gives each rat a pinned home
+  region and c1100 AI command 10 (run there), cleared on arrival or on
+  recognition. Donor AI cannot interpret that command, so the same writer
+  suppresses only a swapped rat's `InitializeEvent` call; the donor waits at
+  the rat's spawn. The pins are checked against the bundled JS, but the
+  writer's native body fingerprint needs the real event file, which the
+  bundled inputs do not carry. Until `AMBUSH_BODY_FINGERPRINT`
+  (`tools/bb_enemizer/wakeup_fallback.py`) and `AmbushBodyFingerprint`
+  (`WakeupFallback.cs`) are pinned, the rats stay out of
+  `release_wakeup.json` and the writer refuses ambush rows. To pin, run
+  `BBEnemizerWriter --event-fingerprint <dvdroot>/event/m24_01_00_00.emevd.dcx 12410340`
+  on an installed game, set both constants to its `body_fingerprint`, and
+  regenerate `release_wakeup.json` with `build_release`.
+- **Scripted-AI initializer fallbacks in the reviewed boss pool**
+  (`release_scripted.json`, `tools/bb_enemizer/scripted_fallbacks.py`):
+  with expanded options and the reviewed boss pool, the boss builder already
+  decompiles, patches and recompiles map events with the pinned DarkScript.
+  For every swapped pinned placement it removes only that placement's
+  `$InitializeEvent` lines, as one more constructor variant composed with the
+  boss adapters and AP overrides, so the donor behaves normally in place.
+  Covered: the ten Central Yharnam sleep-to-wake `c1120` (event 12415130),
+  the nine sewer rat ambush `c1100` (12410340), five Cathedral Ward lantern
+  servants `c2700` (display mask, 12405210) and the Church Giants `c2730`
+  plus `c2700_0008` (AI IDs and poses 12405000-12405030; breakable parts and
+  hitmask 12405430/12405400/12405460). Each removed line is pinned verbatim
+  and each callee by the SHA-256 of its decompiled block; the giants'
+  part/break flags are only read by their own suppressed initializers.
+  Patrol (12405670), wake-on-proximity (12405600) and SpEffect (12405120)
+  initializers stay. The builder records applied rows as
+  `boss_scripted_fallbacks` and leaves `wakeup_fallbacks` empty. Outside the
+  boss pool the Cathedral keys are not released (no native m24_00 path).
 - **Never released by any tranche**: talk bindings, non-character models,
   missing NPC/Think rows, unapproved (non-hostile) archetypes, the
   Snatcher progression row, quest-drop carriers, boss/parts/AI-ID/AI-command/
@@ -132,6 +165,6 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
 | Item | Implemented + static tests | In-game validated |
 | --- | --- | --- |
 | Default 308-swap policy | yes | partial (prior playtests) |
-| contracts / spawns / chara + wakeup fallback | yes (pins: 827/796/345/1555) | **no** — owed |
+| contracts / spawns / chara + wakeup fallback | yes (pins: 822/796/345/1550) | **no** — owed |
 | Boss reviewed pool (67 pairs) | yes (existing contract tests) | **no** — owed |
 | Central Yharnam visibility (187) | yes (plan-level) | **no** — owed |

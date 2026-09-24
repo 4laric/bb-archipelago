@@ -235,11 +235,11 @@ class EncounterBuildTests(unittest.TestCase):
                                          [12411700, 12411800], terminal)
         original, output = event_blocks(self.before), event_blocks(combined)
         self.assertEqual(original[12411800], output[12411800])
-        self.assertIn('WaitFor(EventFlag(12990004));', output[12411700])
-        self.assertIn('$InitializeEvent(0, 12990001);', output[0])
+        self.assertIn('WaitFor(EventFlag(12414783));', output[12411700])
+        self.assertIn('$InitializeEvent(0, 12414780);', output[0])
         self.assertIn('$InitializeEvent(0, 12990400);', output[0])
         self.assertSetEqual(
-            {12990001, 12990002, 12990003, 12990004,
+            {12414780, 12414781, 12414782, 12414783,
              *GASCOIGNE_ARENA_ATTACHMENTS.values()},
             set(output).difference(original),
         )

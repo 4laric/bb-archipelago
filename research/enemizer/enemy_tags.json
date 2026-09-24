@@ -5657,7 +5657,7 @@
     "notes": "NpcParam 402021; hp=1; radius=0.3; height=1.8; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4020:402021:402020:6": {
@@ -5665,7 +5665,7 @@
     "notes": "NpcParam 402021; hp=1; radius=0.3; height=1.8; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4020:402024:402024:0": {
@@ -6281,7 +6281,7 @@
     "notes": "NpcParam 405020; hp=1; radius=0.4; height=1.2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4050:405020:405021:0": {
@@ -6289,7 +6289,7 @@
     "notes": "NpcParam 405020; hp=1; radius=0.4; height=1.2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4050:405020:405022:0": {
@@ -6297,7 +6297,7 @@
     "notes": "NpcParam 405020; hp=1; radius=0.4; height=1.2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4051:405100:405100:0": {
@@ -6977,7 +6977,7 @@
     "notes": "NpcParam 711000; hp=1; radius=0.5; height=1.8; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c7500:750100:750000:0": {
