@@ -68,7 +68,8 @@ class IntegratedStandaloneTests(unittest.TestCase):
 
     def _prepare(self):
         def fake_build(config):
-            fixture = make_overlay(config.output.parent, seed=config.seed, enemies=False)
+            fixture = make_overlay(config.output.parent, seed=config.seed,
+                                   enemies=config.enemy_options.enabled)
             identity_path = fixture / BUILD_IDENTITY_NAME
             receipt_path = fixture / BUILD_RECEIPT_NAME
             identity = json.loads(identity_path.read_text(encoding="utf-8"))
@@ -76,6 +77,15 @@ class IntegratedStandaloneTests(unittest.TestCase):
                 GAMEPARAM_PATH: hashlib.sha256(config.gameparam.read_bytes()).hexdigest(),
                 PARAMDEF_PATH: hashlib.sha256(config.paramdef.read_bytes()).hexdigest(),
             }
+            if config.enemy_options.enabled:
+                for source_root, logical_root in (
+                    (config.maps, "dvdroot_ps4/map/MapStudio"),
+                    (config.scripts, "dvdroot_ps4/script"),
+                ):
+                    for source in source_root.iterdir():
+                        identity["source_hashes"][f"{logical_root}/{source.name}"] = (
+                            hashlib.sha256(source.read_bytes()).hexdigest())
+            identity["options"]["enemies"]["enabled"] = config.enemy_options.enabled
             write_json(identity_path, identity)
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
             receipt["source_hashes"] = identity["source_hashes"]
@@ -169,6 +179,25 @@ class IntegratedStandaloneTests(unittest.TestCase):
             "verify_standalone", self._verify_params(prepared["result"]), 6))
         self.assertFalse(verified["ok"])
         self.assertEqual("verification-failed", verified["error"]["code"])
+
+    def test_enemy_script_source_drift_blocks_launch_verification(self):
+        self.params["randomize_enemies"] = True
+        (self.tools / "BBEnemizerWriter.exe").write_bytes(b"enemy writer")
+        map_file = self.install.root / "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx"
+        script_file = self.install.root / "dvdroot_ps4/script/m21_00_00_00.luabnd.dcx"
+        for path in (map_file, script_file):
+            path.parent.mkdir(parents=True)
+            path.write_bytes(b"original enemy source")
+        prepared = self._prepare()
+        self.assertTrue(prepared["ok"], prepared)
+        first = self.backend.handle(request(
+            "verify_standalone", self._verify_params(prepared["result"]), 7))
+        self.assertTrue(first["ok"], first)
+        script_file.write_bytes(b"game AI updated")
+        changed = self.backend.handle(request(
+            "verify_standalone", self._verify_params(prepared["result"]), 8))
+        self.assertFalse(changed["ok"])
+        self.assertEqual("verification-failed", changed["error"]["code"])
 
 
 if __name__ == "__main__":
