@@ -1,0 +1,48 @@
+{
+  "format": "bb-event-flag-bank-readback-v1",
+  "time_utc": "2026-09-24T00:21:57.076954+00:00",
+  "target": "CUSA03173 01.09",
+  "probe": "existing bb-flag-probe LiveEventFlags reader; no writes",
+  "observations": [
+    {
+      "flag": 12411702,
+      "exit_code": 0,
+      "result": "event_flag=12411702 set=true"
+    },
+    {
+      "flag": 12411700,
+      "exit_code": 0,
+      "result": "event_flag=12411700 set=false"
+    },
+    {
+      "flag": 12990001,
+      "exit_code": 1,
+      "result": "Error: event-flag group 12990 is absent"
+    },
+    {
+      "flag": 12990004,
+      "exit_code": 1,
+      "result": "Error: event-flag group 12990 is absent"
+    },
+    {
+      "flag": 12414780,
+      "exit_code": 0,
+      "result": "event_flag=12414780 set=false"
+    },
+    {
+      "flag": 12414781,
+      "exit_code": 0,
+      "result": "event_flag=12414781 set=false"
+    },
+    {
+      "flag": 12414782,
+      "exit_code": 0,
+      "result": "event_flag=12414782 set=false"
+    },
+    {
+      "flag": 12414783,
+      "exit_code": 0,
+      "result": "event_flag=12414783 set=false"
+    }
+  ]
+}

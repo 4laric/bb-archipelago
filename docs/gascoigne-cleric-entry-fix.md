@@ -1,5 +1,22 @@
 # Gascoigne at Cleric Beast: grounded entry
 
+## Defeat acknowledgement follow-up
+
+The player subsequently reported killing the transformed beast with no defeat
+banner and the fog still active. A read-only live probe found group 12990 absent:
+the original phase flag 12990001 and terminal flag 12990004 cannot be stored.
+The entry control 12411702 was true and completion 12411700 was false. This
+explains why the terminal's wait on 12990004 cannot complete. Collision checks
+and compilation had not tested runtime flag storage.
+
+The four helper event IDs now use 12414780--12414783 in destination-native group
+12414. All four resolved and read clear using the existing validated flag reader;
+all are absent from original event operands and MSB actors. The adapter rejects
+unsupported groups. See `gascoigne-flag-bank-readback.json` for the readback.
+The session eboot base was 0x05630000, CUSA03173 01.09, shadPS4 0.18.0. No process
+or save writes were used. Other experimental adapters using synthetic 1299x
+flag groups require the same backing audit; this fix does not validate them.
+
 The reported installed seed displayed an empty Father Gascoigne health bar with
 no visible boss. Its compiled event 12411702 still warped actor 2410800 to
 Cleric Beast's leap-origin region 2412831, then played Gascoigne animation 7001
@@ -29,15 +46,15 @@ it. Only an active beast phase can satisfy the beast-death terminal branch.
 
 Validation:
 
-- Seven Gascoigne contract tests pass, including regressions asserting the exact
+- Eight Gascoigne contract tests pass, including regressions asserting the exact
   entry-only changes and preservation of trigger/restoration order.
 - An original-input native build passes across all three Central Yharnam map
   states, with ten output files verified and no missing AI goals.
 - The native writer harness passes, including 41 actor-transplant assertions.
   Destination-anchor placement is explicit; existing source-relative behavior
   remains the default, and unknown placement policies are rejected.
-- A staged repair for the user's existing seed changes four event bodies and
-  the beast position in three map states. All other 254 binary event fingerprints
+- The updated staged repair changes nine event bodies/IDs and
+  the beast position in three map states. All other 249 binary event fingerprints
   and 6,172 other part fingerprints per map remain exact. The repair is not
   activated, and no save or running-game files were changed.
 
@@ -45,7 +62,7 @@ Installed input EMEVD SHA-256:
 `5c2d08ae940c9571438bbb9ded6f9668570e1d23cc416d5b03f3e6c5ba6d3923`
 
 Staged repaired EMEVD SHA-256:
-`bd0cda5ca3d8a3d22af7ec237287edab62a013bdbabca32bb06b7b06c6bc22ca`
+`9ed97f11d78bff80534d788b9c8debf605224b8ee77df09b95dc8f3a1a7a452d`
 
 An in-game retest is still required. The installed launcher package reports
 revision dcd0ef36f170662d34edeab45847281fbcc129a3 with a dirty worktree; the
