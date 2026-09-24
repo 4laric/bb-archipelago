@@ -95,6 +95,10 @@ internal static class ChaliceInfrastructureTests
             WritePlan([Requirement(bankA, first), Requirement(bankA, first)], [Merge(bankA, 111)]);
             Refused(() => CharacterFfxBankRequirements.Read(plan),
                 "duplicate character FFX destination actor requirement");
+            WritePlan([Requirement(bankA, first), Requirement(bankC, first)],
+                [Merge(bankA, 111), Merge(bankC, 222)]);
+            Refused(() => CharacterFfxBankRequirements.Read(plan),
+                "duplicate character FFX actor root across banks");
             WritePlan([Requirement(bankA, first, "m24_02_00_00")], [Merge(bankA, 111)]);
             Refused(() => CharacterFfxBankRequirements.Read(plan),
                 "bank filename does not match map area/subarea");

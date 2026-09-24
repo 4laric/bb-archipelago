@@ -33,9 +33,11 @@ internal static class CharacterFfxBankRequirements
     static string Bank(string map, string file) {
         Need(map is not null && Regex.IsMatch(map, @"^m\d{2}_\d{2}_\d{2}_\d{2}$"),
             "invalid character FFX bank map");
-        var match = Regex.Match(file ?? "", @"^frpg_sfxbnd_(m\d{2})(?:_(\d{2}))?\.ffxbnd\.dcx$");
+        // Chalice character effects are split across four area banks, not m29 itself.
+        var match = Regex.Match(file ?? "", @"^frpg_sfxbnd_(m\d{2})(?:_(\d{2})|([a-d]))?\.ffxbnd\.dcx$");
         Need(match.Success && match.Groups[1].Value == map![..3]
-            && (!match.Groups[2].Success || match.Groups[2].Value == map.Substring(4, 2)),
+            && (!match.Groups[2].Success || match.Groups[2].Value == map.Substring(4, 2))
+            && (!match.Groups[3].Success || match.Groups[1].Value == "m29"),
             "character FFX bank filename does not match map area/subarea");
         return file!;
     }
@@ -59,7 +61,8 @@ internal static class CharacterFfxBankRequirements
         var rows = node.Deserialize<List<Requirement>>(Json)
             ?? throw new InvalidDataException("invalid boss_character_ffx_bank_requirements");
         Need(rows.Count > 0, "boss_character_ffx_bank_requirements must not be empty");
-        Need(rows.Select(row => (row.DestinationMap, row.DestinationPart, row.DestinationEntityId))
+        Need(rows.Select(row => (row.DestinationMap, row.DestinationPart, row.DestinationEntityId,
+                row.SourceFfxFile, row.DestinationFfxFile))
             .Distinct().Count() == rows.Count, "duplicate character FFX destination actor requirement");
         foreach (var row in rows) {
             Need(row.Format == "bb-boss-character-ffx-bank-requirement-v1",
@@ -74,6 +77,12 @@ internal static class CharacterFfxBankRequirements
                 && root.SourceTaeEntryId >= 0 && root.Witness is not null && root.Witness.EffectId > 0)
                 && row.Roots.Select(root => root.Witness.EffectId).Distinct().Count() == row.Roots.Count,
                 "duplicate or invalid character FFX bank root");
+        }
+        foreach (var actor in rows.GroupBy(row =>
+                     (row.DestinationMap, row.DestinationPart, row.DestinationEntityId))) {
+            var roots = actor.SelectMany(row => row.Roots).Select(root => root.Witness.EffectId).ToList();
+            Need(roots.Distinct().Count() == roots.Count,
+                "duplicate character FFX actor root across banks");
         }
         return rows;
     }

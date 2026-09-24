@@ -53,6 +53,7 @@ from tools.bb_enemizer.boss_pool import (
     combine_ordinary_and_boss_plans,
 )
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
+from tools.bb_enemizer.chalice_recipes import chalice_recipes, validate_original_source
 from tools.bb_enemizer.boss_entrances import skip_replacement_entrance
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.gascoigne_contract import (
@@ -187,6 +188,10 @@ for package in (GEHRMAN_PACKAGE, MOON_PACKAGE, MARIA_PACKAGE):
     # their distinct arena/terminal contracts are passed to the pair planner.
     ARENAS[package.key] = package
     PACKAGES[package.key] = package
+
+CHALICE_PACKAGES = {recipe.donor.key: recipe.donor for recipe in chalice_recipes().values()}
+# Explicit direct builds only: reviewed_compatibility remains the main-game pool.
+PACKAGES.update(CHALICE_PACKAGES)
 
 MARIA_ATTACHMENTS = MariaClericAttachmentIds(12990011)
 CLERIC_MARIA_ATTACHMENTS = ClericMariaAttachmentIds(12990012, 12990013, 12990014, 12990015)
@@ -514,6 +519,11 @@ def inspect_actor_map(args, name: str) -> dict:
             raise ValueError('invalid actor source map name')
         path = next((args.maps / (name + suffix) for suffix in ('.msb.dcx', '.msb')
                      if (args.maps / (name + suffix)).is_file()), None)
+        if path is None and name.startswith('m29_'):
+            directory = name[:-2] + '00'
+            path = next((args.maps / directory / (name + suffix)
+                         for suffix in ('.msb.dcx', '.msb')
+                         if (args.maps / directory / (name + suffix)).is_file()), None)
         if path is None:
             raise ValueError('missing actor source map state ' + name)
         run = subprocess.run(command_for(args) + ['--boss-actor-pins', str(path)],
@@ -771,6 +781,13 @@ def verify_receipt(root: Path) -> dict:
 def build(args) -> dict:
     args._actor_pin_cache = {}
     recipes = reusable_recipes()
+    experimental = chalice_recipes()
+    recipes.update(experimental)
+    direct_chalice = (getattr(args, 'arena', None), getattr(args, 'donor', None)) in experimental
+    if getattr(args, 'donor', None) in CHALICE_PACKAGES and not direct_chalice:
+        raise ValueError('experimental chalice donors currently require the Cleric arena')
+    if direct_chalice:
+        validate_original_source(args.events, args.donor)
     ludwig = getattr(args, 'donor', None) == 'ludwig'
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
@@ -895,7 +912,7 @@ def build(args) -> dict:
         scratch = Path(temporary)
         inventory = scratch / 'inventory.tsv'
         inventory.write_bytes(read_blob(args.bundle, 'mined/msb_enemies.tsv'))
-        slots = load_slots(inventory)
+        slots = load_slots(inventory, fixed_maps_only=not direct_chalice)
         npcs, effects = load_params(args.bundle)
         materializations = {}
         for arena, package in pairs:
