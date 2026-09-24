@@ -44,6 +44,7 @@ ERROR_CODES = (
     "seed-identity-mismatch",
     "verification-failed",
     "conflict",
+    "package-exists",
     "interrupted",
     "cancelled",
     "stale-session",

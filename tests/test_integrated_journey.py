@@ -93,6 +93,31 @@ def journey_backend(state: str, *, route: str = "copy",
 
 
 class SimulatedJourneyTests(unittest.TestCase):
+    def test_existing_inactive_package_offers_typed_rerandomization(self) -> None:
+        from bb_launcher.external import ExternalPackageExists
+
+        with tempfile.TemporaryDirectory() as temp:
+            existing = Path(temp) / "Mods" / "Archipelago-Player-existing"
+            existing.mkdir(parents=True)
+            marker = existing / "retained.bin"
+            marker.write_bytes(b"existing prepared mod")
+
+            def collision(params, op_id):
+                raise ExternalPackageExists(existing)
+
+            backend = Backend(Path(temp) / "state", prepare_fn=collision)
+            for enabled in (True, False):
+                reply = backend.handle(request("prepare_play", {
+                    "enemizer": {"enabled": enabled},
+                }))
+                self.assertFalse(reply["ok"])
+                self.assertEqual("package-exists", reply["error"]["code"])
+                self.assertEqual(enabled, reply["error"]["retryable"])
+                self.assertEqual(["rerandomize-enemies"] if enabled else [],
+                                 reply["error"]["recovery"])
+                self.assertEqual(existing.name, reply["error"]["ids"]["package_name"])
+                self.assertEqual(b"existing prepared mod", marker.read_bytes())
+
     def test_choose_seed_then_play(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             backend = journey_backend(state)
@@ -330,4 +355,3 @@ class ClaimedProcessTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

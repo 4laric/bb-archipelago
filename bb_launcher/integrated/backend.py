@@ -34,6 +34,7 @@ from typing import Any, Callable, Mapping
 
 from ..client_config import session_key
 from ..core import ValidationError
+from ..external import ExternalPackageExists
 from . import fork_identity
 from .import_state import detect_installations, import_companion_state
 from .journal import append_entry, decide_recovery, plan_activation, read_journal
@@ -237,7 +238,14 @@ class Backend:
             "state_root": str(self.state_root),
             "enemizer": enemizer_options_record(options),
         }
-        prepared = self.prepare_fn(prepare_params, op_id)  # real: workflow.prepare_seed + export
+        try:
+            prepared = self.prepare_fn(prepare_params, op_id)  # workflow + inactive export
+        except ExternalPackageExists as exc:
+            raise ProtocolError(
+                "package-exists", str(exc), retryable=options.enabled,
+                recovery=("rerandomize-enemies",) if options.enabled else (),
+                ids={"package_name": exc.path.name},
+            ) from exc
         receipt_id = str(prepared["receipt_id"])
         existing = find_play_by_receipt(self.state_root, receipt_id)
         if existing is not None:
