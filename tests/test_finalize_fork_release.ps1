@@ -64,6 +64,18 @@ try {
         files = $records
     }
     $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $package 'candidate-manifest.json')
+    $manifestBefore = (Get-FileHash -LiteralPath (Join-Path $package 'candidate-manifest.json') -Algorithm SHA256).Hash
+    $unsignedRefused = $false
+    try {
+        & (Join-Path $repo 'packaging/finalize_fork_release.ps1') `
+            -PackageRoot $package -ArchivePath $archive -ExpectedSignerSubject 'CN=Fixture Signer'
+    } catch {
+        $unsignedRefused = $_.Exception.Message -like '*Authenticode verification failed*'
+    }
+    if (-not $unsignedRefused -or (Test-Path -LiteralPath $archive) -or
+        (Get-FileHash -LiteralPath (Join-Path $package 'candidate-manifest.json') -Algorithm SHA256).Hash -ne $manifestBefore) {
+        throw 'Unsigned release was not refused without modifying outputs.'
+    }
 
     # Simulate signing changing executable bytes.  The mock is intentionally
     # scoped to this process; production always calls the real Windows API.

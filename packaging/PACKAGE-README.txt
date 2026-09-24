@@ -14,6 +14,8 @@ mode uses an AP seed/player and client. Standalone uses a seed string and
 starts no AP client or server. Enemy randomization is optional; reviewed boss
 shuffle runs with Archipelago enemy randomization. Scaling defaults on. The package
 contains its frozen backend, native tools, client, and provenance manifest.
+On first launch it can import an existing regular BBLauncher setup from nearby
+folders or Downloads, preserving the original configuration.
 
 BloodborneAPLauncher-win-x64.zip is the original Archipelago launcher. Run
 BloodborneAPLauncher.exe, select shadPS4, your AP seed request and server,

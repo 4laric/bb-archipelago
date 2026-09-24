@@ -2,6 +2,9 @@ BBLauncher-AP: local next-run candidate
 
 Keep this folder intact and run BBLauncher-AP.exe. Select your existing
 Bloodborne installation and shadPS4 build in the launcher's settings.
+On first launch, the AP fork looks for a regular BBLauncher setup beside its
+folder or in Downloads and imports valid game/emulator paths and ordinary
+preferences. It preserves the original config and any existing AP config.
 
 Open the Archipelago page:
 - Archipelago: choose your AP seed file and player/connection details.
