@@ -309,6 +309,21 @@ internal static class BossActorTests
             WritePlan(unpinnedDummy);
             Refused(() => BossActorTransplant.Apply(planPath, source, destination, Path.Combine(root, "unpinned-dummy"), false), "requires source provenance pin");
 
+            // A dormant transformation body must not inherit an offstage
+            // vertical displacement from the source arena.
+            var grounded = JsonSerializer.SerializeToNode(addition)!.AsObject();
+            grounded["placement_policy"] = "destination-anchor";
+            WritePlan(grounded);
+            string groundedOutput = Path.Combine(root, "grounded");
+            Need(BossActorTransplant.Apply(planPath, source, destination, groundedOutput, false) == 1);
+            var groundedMap = MSBB.Read(Path.Combine(groundedOutput, "m24_01_00_00.msb"));
+            Need(groundedMap.Parts.Enemies.Single(e => e.Name == addition.destination_part).Position
+                == groundedMap.Parts.Enemies.Single(e => e.Name == "target_anchor").Position);
+            grounded["placement_policy"] = "misspelled-policy";
+            WritePlan(grounded);
+            Refused(() => BossActorTransplant.Apply(planPath, source, destination,
+                Path.Combine(root, "bad-placement"), false), "unsupported actor placement policy");
+
             Console.WriteLine($"PASS: {assertions} boss actor transplant assertions");
         } finally { Directory.Delete(root, true); }
     }

@@ -47,6 +47,7 @@ class GascoigneContractTests(unittest.TestCase):
             self.assertEqual("c2720_0000", addition["source_part"])
             self.assertEqual("c2710_0000", addition["source_anchor_part"])
             self.assertEqual("c5000_0000", addition["destination_anchor_part"])
+            self.assertEqual("destination-anchor", addition["placement_policy"])
             self.assertEqual(GASCOIGNE_BEAST, addition["source_entity_id"])
             self.assertEqual("enemy", addition["source_part_kind"])
             self.assertEqual("bb-boss-actor-pin-v1", addition["source_provenance"]["format"])
@@ -62,9 +63,14 @@ class GascoigneContractTests(unittest.TestCase):
         before, after = event_blocks(original), event_blocks(patched)
         self.assertEqual(before[12411700].replace("    WaitFor(CharacterDead(2410800));\n",
                                                    "    WaitFor(EventFlag(12990004));\n"), after[12411700])
-        self.assertIn("WaitFor(humanDead || beastDead);", after[12990004])
+        self.assertIn("WaitFor(humanDead || (beastPhase && beastDead));", after[12990004])
+        self.assertIn("beastPhase = EventFlag(12990001);", after[12990004])
         self.assertIn("ChangeCharacterEnableState(980001, Disabled);", after[12990004])
         self.assertIn("CreateReferredDamagePair(2410800, 980001);", after[12414702])
+        link = after[12414702].index("CreateReferredDamagePair(2410800, 980001);")
+        self.assertLess(after[12414702].index(
+            "SetCharacterInvincibility(980001, Disabled);"
+        ), link)
         self.assertIn("WaitFor(EventFlag(12414700) || EventFlag(12415400));", after[12414702])
         self.assertIn("IssueBossRoomEntryNotification(0);", after[12414702])
         self.assertNotIn("12414223", after[12414702])
@@ -73,6 +79,31 @@ class GascoigneContractTests(unittest.TestCase):
         self.assertNotIn("9337", after[12990001])
         self.assertIn("$InitializeEvent(0, 12990004);", after[0])
         self.assertEqual(set(before) | {12990001, 12990002, 12990003, 12990004}, set(after))
+
+    def test_beast_is_isolated_until_post_warp_phase_activation_and_restored_on_reload(self):
+        original = read_blob(BUNDLE, "event/m24_01_00_00.emevd.dcx.js").decode("utf-8-sig")
+        phase = event_blocks(patch_gascoigne_at_cleric(original, self.allocation()))[12990001]
+        pre_phase = (
+            "    ChangeCharacterEnableState(980001, Disabled);\n"
+            "    SetCharacterInvincibility(980001, Enabled);\n"
+            "    SetCharacterAIState(980001, Disabled);\n"
+            "    SetCharacterHPBarDisplay(980001, Disabled);\n"
+            "    SetCharacterGravity(980001, Disabled);"
+        )
+        self.assertIn(pre_phase, phase)
+        warp = phase.index("WarpCharacterAndCopyFloor(980001")
+        enabled = phase.index("ChangeCharacterEnableState(980001, Enabled);", warp)
+        vulnerable = phase.index("SetCharacterInvincibility(980001, Disabled);", enabled)
+        gravity = phase.index("SetCharacterGravity(980001, Enabled);", vulnerable)
+        combat = phase.index("SetCharacterAIState(980001, Enabled);", gravity)
+        self.assertLess(warp, enabled)
+        self.assertLess(enabled, vulnerable)
+        self.assertLess(vulnerable, gravity)
+        self.assertLess(gravity, combat)
+        completed = phase.split("L0:", 1)[0]
+        self.assertIn("ChangeCharacterEnableState(980001, Enabled);", completed)
+        self.assertIn("SetCharacterInvincibility(980001, Disabled);", completed)
+        self.assertIn("SetCharacterGravity(980001, Enabled);", completed)
 
     def test_entry_uses_native_combat_placement_without_cleric_leap_warp(self):
         original = read_blob(BUNDLE, "event/m24_01_00_00.emevd.dcx.js").decode("utf-8-sig")
