@@ -254,6 +254,55 @@ jobs:
           -PackageRoot $PWD\build\BloodborneAPLauncher
           -ReleaseVersion $env:RELEASE_TAG
 
+      - name: Read pinned BBLauncher source
+        id: bblauncher
+        shell: pwsh
+        run: |
+          $ref = (Get-Content packaging/bblauncher-ref.txt -Raw).Trim()
+          if ($ref -notmatch '^[0-9a-f]{40}$') { throw 'BBLauncher pin must be a full commit SHA' }
+          "ref=$ref" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          repository: 4laric/BB_Launcher-AP
+          ref: ${{ steps.bblauncher.outputs.ref }}
+          path: _bblauncher
+          submodules: recursive
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.10.0'
+          arch: win64_msvc2022_64
+          modules: 'qtmultimedia qtimageformats qtwebview qtwebsockets'
+          setup-python: false
+          cache: true
+
+      - name: Build and test BBLauncher against this release backend
+        shell: pwsh
+        run: |
+          python -m pip install pathspec pyyaml schema jellyfish websockets platformdirs typing_extensions orjson colorama certifi bsdiff4 jinja2
+          if ($LASTEXITCODE -ne 0) { throw 'BBLauncher test dependencies failed to install' }
+          ./packaging/build_bblauncher.ps1 -ForkSourceRoot $PWD\_bblauncher -QtRoot $env:QT_ROOT_DIR
+
+      - name: Package and smoke BBLauncher with the matching release tools
+        shell: pwsh
+        run: >-
+          ./packaging/build_fork_bundle.ps1
+          -ForkExecutable $PWD\_bblauncher\build-ap-release\BB_Launcher.exe
+          -ForkSourceRoot $PWD\_bblauncher
+          -QtBin "$env:QT_ROOT_DIR\bin"
+          -ToolsDirectory $PWD\build\BloodborneAPLauncher\tools
+          -SuppressionDirectory $PWD\work\release-binder
+          -ClientPath $PWD\_client\target\release\bb-ap-client.exe
+          -ClientRef ${{ steps.client-sha.outputs.sha }}
+          -ReleaseVersion $env:RELEASE_TAG
+          -ApworldPath $PWD\build\bloodborne.apworld
+          -OutputRoot $PWD\build\fork-release
+
       - name: Azure login for Artifact Signing
         uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac
         with:
@@ -276,6 +325,18 @@ jobs:
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBToastWriter.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBEventWriter.exe
             ${{ github.workspace }}\build\BloodborneAPLauncher\tools\MSBBMiner.exe
+            ${{ github.workspace }}\build\BloodborneAPLauncher\tools\BBBossEncounterBuilder\BBBossEncounterBuilder.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\BBLauncher-AP.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\bb-ap-backend.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\ap-client\bb-ap-client.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\bb-ap-client.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\BBEnemizerPlanner\BBEnemizerPlanner.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\BBBossEncounterBuilder\BBBossEncounterBuilder.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\BBEnemizerWriter.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\BBSuppressionWriter.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\BBToastWriter.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\BBEventWriter.exe
+            ${{ github.workspace }}\build\fork-release\BBLauncher-AP\ap_backend\tools\MSBBMiner.exe
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
@@ -302,7 +363,8 @@ jobs:
             "tools\BBSuppressionWriter.exe",
             "tools\BBToastWriter.exe",
             "tools\BBEventWriter.exe",
-            "tools\MSBBMiner.exe"
+            "tools\MSBBMiner.exe",
+            "tools\BBBossEncounterBuilder\BBBossEncounterBuilder.exe"
           )
           $expected = $env:EXPECTED_SIGNER_SUBJECT
           foreach ($relative in $catalog) {
@@ -352,19 +414,29 @@ jobs:
         env:
           EXPECTED_SIGNER_SUBJECT: ${{ vars.ARTIFACT_SIGNING_EXPECTED_SUBJECT }}
 
+      - name: Verify signed BBLauncher and create its final archive
+        shell: pwsh
+        run: |
+          ./packaging/finalize_fork_release.ps1 -PackageRoot $PWD\build\fork-release\BBLauncher-AP -ArchivePath $PWD\build\BBLauncher-AP-win-x64.zip -ExpectedSignerSubject $env:EXPECTED_SIGNER_SUBJECT
+          python packaging/smoke_fork_bundle.py build/fork-release/BBLauncher-AP
+          if ($LASTEXITCODE -ne 0) { throw 'Signed BBLauncher smoke failed' }
+        env:
+          EXPECTED_SIGNER_SUBJECT: ${{ vars.ARTIFACT_SIGNING_EXPECTED_SUBJECT }}
+
       - name: Attest the release artifacts
         if: env.RELEASE_DRAFT != 'true'
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: |
             build/BloodborneAPLauncher-win-x64.zip
+            build/BBLauncher-AP-win-x64.zip
             build/bloodborne.apworld
 
       - name: Hash the release artifacts
         shell: pwsh
         run: |
           $lines = @("", "## Artifact hashes (SHA-256, built by this workflow run: $env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID)")
-          foreach ($f in "build\BloodborneAPLauncher-win-x64.zip","build\bloodborne.apworld") {
+          foreach ($f in "build\BloodborneAPLauncher-win-x64.zip","build\BBLauncher-AP-win-x64.zip","build\bloodborne.apworld") {
             $h = (Get-FileHash $f -Algorithm SHA256).Hash.ToLower()
             $lines += "``$h``  $(Split-Path $f -Leaf)"
           }
@@ -392,7 +464,7 @@ jobs:
               throw "Refusing to upload draft artifacts into the existing published release $env:RELEASE_TAG"
             }
             gh release upload "$env:RELEASE_TAG" --repo ${{ github.repository }} `
-              build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld --clobber
+              build/BloodborneAPLauncher-win-x64.zip build/BBLauncher-AP-win-x64.zip build/bloodborne.apworld --clobber
             if ($LASTEXITCODE -ne 0) { throw "Replacing release artifacts failed" }
             if ($isDraft) {
               # --latest accepts only true here; GitHub's API rejects any
@@ -431,17 +503,17 @@ jobs:
                 --target "$env:GITHUB_SHA" `
                 --title "Bloodborne Archipelago $env:RELEASE_TAG" `
                 --notes-file packaging/PACKAGE-README.txt --draft `
-                build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+                build/BloodborneAPLauncher-win-x64.zip build/BBLauncher-AP-win-x64.zip build/bloodborne.apworld
             } elseif ($isPrerelease) {
               gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
                 --title "Bloodborne Archipelago $env:RELEASE_TAG" `
                 --notes-file packaging/PACKAGE-README.txt --prerelease `
-                build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+                build/BloodborneAPLauncher-win-x64.zip build/BBLauncher-AP-win-x64.zip build/bloodborne.apworld
             } else {
               gh release create "$env:RELEASE_TAG" --repo ${{ github.repository }} `
                 --title "Bloodborne Archipelago $env:RELEASE_TAG" `
                 --notes-file packaging/PACKAGE-README.txt --latest `
-                build/BloodborneAPLauncher-win-x64.zip build/bloodborne.apworld
+                build/BloodborneAPLauncher-win-x64.zip build/BBLauncher-AP-win-x64.zip build/bloodborne.apworld
             }
             if ($LASTEXITCODE -ne 0) { throw "Creating the release failed" }
           }
@@ -504,6 +576,20 @@ jobs:
             [pscustomobject]@{ Label = "tools/BBEventWriter.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\BBEventWriter.exe") },
             [pscustomobject]@{ Label = "tools/MSBBMiner.exe"; Path = (Join-Path $expanded "BloodborneAPLauncher\tools\MSBBMiner.exe") }
           )
+          # Older releases predate BBLauncher; scan-only remains usable for them.
+          $assetNames = gh release view "$env:RELEASE_TAG" --repo "${{ github.repository }}" --json assets --jq '.assets[].name'
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect release assets for scanning' }
+          if ($assetNames -contains 'BBLauncher-AP-win-x64.zip') {
+            gh release download "$env:RELEASE_TAG" --repo "${{ github.repository }}" --dir scan --pattern BBLauncher-AP-win-x64.zip
+            if ($LASTEXITCODE -ne 0) { throw 'Cannot download BBLauncher release for scanning' }
+            $forkArchive = Join-Path $PWD 'scan\BBLauncher-AP-win-x64.zip'
+            $forkExpanded = Join-Path $PWD 'scan\fork-expanded'
+            Expand-Archive -LiteralPath $forkArchive -DestinationPath $forkExpanded
+            $scanTargets += [pscustomobject]@{ Label = 'BBLauncher-AP-win-x64.zip'; Path = $forkArchive }
+            foreach ($relative in @('BBLauncher-AP.exe', 'ap_backend\bb-ap-backend.exe', 'ap_backend\tools\BBBossEncounterBuilder\BBBossEncounterBuilder.exe')) {
+              $scanTargets += [pscustomobject]@{ Label = "BBLauncher-AP/$relative"; Path = (Join-Path $forkExpanded "BBLauncher-AP\$relative") }
+            }
+          }
           foreach ($target in $scanTargets) {
             if (-not (Test-Path -LiteralPath $target.Path -PathType Leaf)) {
               throw "VirusTotal scan target is missing: $($target.Label) ($($target.Path))"
