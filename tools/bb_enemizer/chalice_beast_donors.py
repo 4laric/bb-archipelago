@@ -13,11 +13,13 @@ from typing import Mapping, Sequence
 
 from .boss_canary import event_blocks
 from .boss_contracts import ARENAS, ArenaContract
+from .boss_entrances import skip_replacement_entrance
 from .encounter_recipes import EncounterRecipe
 from .gascoigne_donor import (
     CO_OP_RESTORE_EVENTS, _adapt_activation, _noop, _replace_events, _retired,
     _original_ids,
 )
+from .arena_port import GEHRMAN_PORT
 from .model import Archetype, Slot, Swap
 from .scaling import plan_scaling
 
@@ -89,7 +91,7 @@ BEAST_POSSESSED_SOUL = ChaliceBeastDonor(
      ("chr/c7500.anibnd.dcx", "ac50117b2128f436e1afcd0ce63b9df0e59bfbfaf0cec6a973521e6896033b68")),
 )
 DONORS = (WATCHDOG, ABHORRENT, BEAST_POSSESSED_SOUL)
-SUPPORTED_ARENAS = ARENAS
+SUPPORTED_ARENAS = (*ARENAS, GEHRMAN_PORT.arena)
 SOURCE_INITIALIZATION = {"talk_id": 0, "unk_t18": -1, "init_anim_id": -1, "damage_anim_id": -1}
 # Five distinct source limb controllers per family. Source Event(0) passes
 # (2900100, 1, 1) through (2900100, 5, 5) in the pinned per-map constructors.
@@ -113,15 +115,25 @@ def _source_blocks(source: str, donor: ChaliceBeastDonor) -> dict[int, str]:
 
 
 def _one_phase_music(body: str, arena: ArenaContract) -> str:
-    # m29's limb routines signal message 300, but never Cleric's phase 100.
-    # Retain the destination's start/fog/music gate and its first track.
-    if arena.key != "cleric-beast":
-        raise ValueError(f"{arena.key} single-phase music requires a reviewed route")
-    marker = "        EnableBossMapSound(2413802, Enabled);"
-    prefix, found, _ = body.partition(marker)
-    if not found or body.count(marker) != 1:
-        raise ValueError("Cleric first-track music witness drifted")
-    return (prefix + marker + f"\n        WaitFor(EventFlag({arena.completion_event}));"
+    # The m29 limbs signal recovery message 300, but none of these three donors
+    # emit the receiving arena's model-specific music transition. Preserve the
+    # arena's original fog/room/first-track gate, including Ebrietas's flag,
+    # and keep that track alive until its original completion event. This also
+    # leaves the music event unfinished across an in-progress reload.
+    if arena.key == GEHRMAN_PORT.arena.key:
+        witness = f"        chrFlagArea &= {GEHRMAN_PORT.music_phase_witness};"
+    elif arena.phase_music_event_flag is not None:
+        witness = f"        flagArea2 &= EventFlag({arena.phase_music_event_flag});"
+    elif arena.phase_music_message is not None:
+        witness = (f"        chrFlagArea &= CharacterHasEventMessage("
+                   f"{arena.actor}, {arena.phase_music_message});")
+    else:
+        raise ValueError(f"{arena.key} lacks a phase music witness")
+    prefix = body[:body.index(witness)] if body.count(witness) == 1 else ""
+    first_tracks = re.findall(r"^        EnableBossMapSound\((\d+), Enabled\);$", prefix, re.MULTILINE)
+    if not prefix or len(first_tracks) != 1:
+        raise ValueError(f"{arena.key} first-track music witness drifted")
+    return (prefix.rstrip() + f"\n        WaitFor(EventFlag({arena.completion_event}));"
             "\n        EndEvent();\n    }\nL0:\n    EndEvent();\n});")
 
 
@@ -141,9 +153,7 @@ def _validate_ids(destination: str, donor: ChaliceBeastDonor) -> None:
 
 def patch_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
                         destination: str, donor_source: str) -> str:
-    # The Cleric route is the conservative minimum while other arena entries
-    # await per-arena music/entry review. No generic map-prefix substitution.
-    if arena.key != "cleric-beast" or donor not in DONORS:
+    if arena not in SUPPORTED_ARENAS or donor not in DONORS:
         raise ValueError("unsupported chalice beast route")
     original = event_blocks(destination)
     for event, expected in arena.expected.items():
@@ -152,21 +162,27 @@ def patch_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
             raise ValueError(f"{arena.key} event {event} drifted")
     source = _source_blocks(donor_source, donor)
     _validate_ids(destination, donor)
-    retired = _retired(arena)
+    retired = (set(GEHRMAN_PORT.retired_events)
+               if arena.key == GEHRMAN_PORT.arena.key else _retired(arena))
     edits = {event: _noop(original[event]) for event in retired}
-    edits[arena.activation_event] = _adapt_activation(arena, original[arena.activation_event])
+    if arena.key != GEHRMAN_PORT.arena.key:
+        edits[arena.activation_event] = _adapt_activation(arena, original[arena.activation_event])
+    else:
+        # The shared entrance policy performs the pinned cutscene-to-local-warp
+        # rewrite after event composition; account for that reviewed edit.
+        edits[arena.activation_event] = original[arena.activation_event]
     edits[arena.music_event] = _one_phase_music(original[arena.music_event], arena)
     old_label = f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {arena.health_bar_label});"
     new_label = f"DisplayBossHealthBar(Enabled, {arena.actor}, 0, {donor.health_bar_label});"
     if original[arena.health_bar_event].count(old_label) != 1:
-        raise ValueError("Cleric health label witness drifted")
+        raise ValueError(f"{arena.key} health label witness drifted")
     edits[arena.health_bar_event] = original[arena.health_bar_event].replace(old_label, new_label)
     additions: list[str] = []
     if donor.source_handlers:
         constructor = original[0]
         anchor = f"    $InitializeEvent(0, {arena.health_bar_event});"
         if constructor.count(anchor) != 1:
-            raise ValueError("Cleric health constructor anchor drifted")
+            raise ValueError(f"{arena.key} health constructor anchor drifted")
         calls = []
         for index, (source_id, target_id) in enumerate(zip(donor.source_handlers, ATTACHMENT_IDS[donor.key], strict=True)):
             additions.append(_event_as(source[source_id], source_id, target_id))
@@ -176,13 +192,17 @@ def patch_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
     if additions:
         result += "\n\n" + "\n\n".join(additions)
     result += "\n"
+    if arena.key == GEHRMAN_PORT.arena.key:
+        result = skip_replacement_entrance(arena.key, destination, result)
     output = event_blocks(result)
     if set(output) != set(original) | set(ATTACHMENT_IDS.get(donor.key, ())):
         raise ValueError("chalice beast adapter changed unexpected event identities")
     for event, body in original.items():
         if event not in edits and output[event] != body:
             raise ValueError(f"chalice beast adapter changed unrelated event {event}")
-    for event in (arena.completion_event, CO_OP_RESTORE_EVENTS[arena.key]):
+    co_op = (arena.co_op_entry_event if arena.key == GEHRMAN_PORT.arena.key
+             else CO_OP_RESTORE_EVENTS[arena.key])
+    for event in (arena.completion_event, co_op):
         if output[event] != original[event]:
             raise ValueError(f"chalice beast adapter changed protected event {event}")
     return result
@@ -191,7 +211,7 @@ def patch_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
 def native_plan_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
                               slots: Sequence[Slot], npcs: Mapping[int, dict],
                               effects: Mapping[int, dict], seed: str) -> dict:
-    if arena.key != "cleric-beast" or donor not in DONORS:
+    if arena not in SUPPORTED_ARENAS or donor not in DONORS:
         raise ValueError("unsupported chalice beast route")
     sources = [row for row in slots if row.map_name == donor.source_map and
                row.part_name == donor.source_part and row.entity_id == donor.source_entity]
@@ -200,9 +220,12 @@ def native_plan_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
     source = sources[0]
     destinations = sorted((row for row in slots if row.entity_id == arena.actor and
                            row.map_name.startswith(arena.map_prefix)), key=lambda row: row.map_name)
+    expected_talk = (GEHRMAN_PORT.primary_talk_id
+                     if arena.key == GEHRMAN_PORT.arena.key else 0)
     if (len(destinations) != arena.destination_count or
             len({row.logical_key for row in destinations}) != 1 or
-            any(row.dummy or row.archetype != arena.archetype or row.talk_id for row in destinations)):
+            any(row.dummy or row.archetype != arena.archetype or
+                row.talk_id != expected_talk for row in destinations)):
         raise ValueError(f"{arena.key} requires every exact destination actor state")
     swap = Swap(
         destinations[0].logical_key, [row.key for row in destinations],
@@ -222,21 +245,54 @@ def native_plan_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
         "source_initialization": dict(SOURCE_INITIALIZATION),
         "destination_map": row.map_name, "destination_part": row.part_name,
         "destination_entity_id": row.entity_id, "destination_original_talk_id": row.talk_id,
-        "required_native_fields": ["talk_id", "unk_t18", "init_anim_id", "damage_anim_id", "provenance"],
+        **({"destination_talk_id_override": 0} if expected_talk else {}),
+        "required_native_fields": ["talk_id", "unk_t18", "init_anim_id", "damage_anim_id", "provenance",
+                                   *(["destination_talk_id_override"] if expected_talk else [])],
     } for row in destinations]
+    contract = {
+        "arena": arena.key, "donor": donor.key, "family": donor.family,
+        "combat_owner": "m29-donor", "progression_owner": "destination-arena",
+        "source_event_file": "event/" + donor.event_file,
+        "source_map": donor.source_map, "source_map_sha256": donor.source_map_sha256,
+        "source_constructor_sha256": donor.source_constructor_sha256,
+        "source_handlers": list(donor.source_handlers),
+        "model_assets": [{"path": path, "sha256": sha} for path, sha in donor.model_assets],
+        "validation_status": "static-contract-only",
+    }
+    if arena.key == GEHRMAN_PORT.arena.key:
+        # The dialogue actor and offstage event target remain destination-owned.
+        # Record exact original Parts so build_boss_encounters verifies their
+        # native pins before transplanting the talk-bound combat actor.
+        retained = []
+        evidence = ((arena.actor, GEHRMAN_PORT.primary_part_sha256,
+                     GEHRMAN_PORT.primary_talk_id, "original primary before replacement"),
+                    *((item.entity_id, item.part_sha256, item.talk_id, item.policy)
+                      for item in GEHRMAN_PORT.retained_native_actors))
+        for entity, fingerprint, talk, policy in evidence:
+            rows = [row for row in slots if row.map_name == GEHRMAN_PORT.destination_map
+                    and row.entity_id == entity and row.talk_id == talk and not row.dummy]
+            if len(rows) != 1:
+                raise ValueError("Gehrman port requires exact retained native actors")
+            row = rows[0]
+            retained.append({
+                "map": row.map_name, "part": row.part_name, "entity_id": entity,
+                "archetype": asdict(row.archetype),
+                "source_provenance": {"format": "bb-boss-actor-pin-v1", "part_sha256": fingerprint},
+                "source_initialization": {**SOURCE_INITIALIZATION, "talk_id": talk},
+                "policy": policy,
+            })
+        contract["destination_native_evidence"] = {
+            "map": GEHRMAN_PORT.destination_map,
+            "msb_sha256": GEHRMAN_PORT.destination_msb_sha256,
+            "primary_part_sha256": GEHRMAN_PORT.primary_part_sha256,
+            "original_talk_id": GEHRMAN_PORT.primary_talk_id,
+        }
+        contract["retained_destination_helpers"] = retained
+        contract["protected_destination_events"] = list(GEHRMAN_PORT.protected_events)
     return {
         "format": "bb-enemizer-plan-v2", "dry_run": True, "seed": seed,
         "swap_count": 1, "swaps": [swap.json()],
-        "boss_contract": {
-            "arena": arena.key, "donor": donor.key, "family": donor.family,
-            "combat_owner": "m29-donor", "progression_owner": "destination-arena",
-            "source_event_file": "event/" + donor.event_file,
-            "source_map": donor.source_map, "source_map_sha256": donor.source_map_sha256,
-            "source_constructor_sha256": donor.source_constructor_sha256,
-            "source_handlers": list(donor.source_handlers),
-            "model_assets": [{"path": path, "sha256": sha} for path, sha in donor.model_assets],
-            "validation_status": "static-contract-only",
-        },
+        "boss_contract": contract,
         "primary_init_source_bindings": bindings,
         "scaling": {"enabled": bool(changes), "mechanism": "inferred_static_npc_clone_sp_effect",
                     "change_count": len(changes), "changes": [row.json() for row in changes],
@@ -245,19 +301,19 @@ def native_plan_chalice_beast(arena: ArenaContract, donor: ChaliceBeastDonor,
 
 
 def chalice_beast_recipes() -> tuple[EncounterRecipe, ...]:
-    """Explicit, opt-in Cleric routes; not inserted in the reviewed 22 graph."""
-    arena = next(arena for arena in SUPPORTED_ARENAS if arena.key == "cleric-beast")
+    """Explicit opt-in routes; not inserted in the reviewed main-boss graph."""
     recipes = []
-    for donor in DONORS:
-        def patch(destination: str, source: str, *, _donor=donor) -> str:
-            return patch_chalice_beast(arena, _donor, destination, source)
+    for arena in SUPPORTED_ARENAS:
+        for donor in DONORS:
+            def patch(destination: str, source: str, *, _arena=arena, _donor=donor) -> str:
+                return patch_chalice_beast(_arena, _donor, destination, source)
 
-        def native_plan(slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
-                        seed: str, *, _donor=donor) -> dict:
-            return native_plan_chalice_beast(arena, _donor, slots, npcs, effects, seed)
+            def native_plan(slots: list, npcs: Mapping[int, dict], effects: Mapping[int, dict],
+                            seed: str, *, _arena=arena, _donor=donor) -> dict:
+                return native_plan_chalice_beast(_arena, _donor, slots, npcs, effects, seed)
 
-        recipes.append(EncounterRecipe(
-            arena, donor, "m29-chalice-beast:source-combat", patch,
-            native_plan, lambda slots: [],
-        ))
+            recipes.append(EncounterRecipe(
+                arena, donor, "m29-chalice-beast:source-combat", patch,
+                native_plan, lambda slots: [],
+            ))
     return tuple(recipes)
