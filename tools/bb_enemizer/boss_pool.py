@@ -86,6 +86,7 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
     emevd_ffx_bindings = set()
     character_ffx_requirements = {}
     character_bank_requirements = {}
+    character_bank_roots = set()
     added_parts, added_entities = set(), set()
     generator_names, generator_events = set(), set()
     initializations, initialized_parts = [], set()
@@ -137,10 +138,16 @@ def combine_native_plans(seed: str, plans: Sequence[dict]) -> dict:
                 raise ValueError('boss pair plans disagree on character FFX provenance')
             character_ffx_requirements[binding] = copy.deepcopy(requirement)
         for requirement in plan.get('boss_character_ffx_bank_requirements', []):
-            binding = (requirement['destination_map'], requirement['destination_part'],
-                       requirement['destination_entity_id'])
+            actor = (requirement['destination_map'], requirement['destination_part'],
+                     requirement['destination_entity_id'])
+            binding = (*actor, requirement['source_ffx_file'], requirement['destination_ffx_file'])
             if binding in character_bank_requirements:
                 raise ValueError('boss pair plans overlap a character FFX bank destination')
+            for root in requirement['roots']:
+                effect = (*actor, root['witness']['effect_id'])
+                if effect in character_bank_roots:
+                    raise ValueError('boss pair plans repeat a character FFX root across banks')
+                character_bank_roots.add(effect)
             character_bank_requirements[binding] = copy.deepcopy(requirement)
         for reference in plan.get('boss_external_references', []):
             binding = (reference['destination_event_file'], reference['destination_event_id'],
