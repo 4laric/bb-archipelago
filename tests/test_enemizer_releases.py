@@ -70,7 +70,7 @@ class ReleaseRecordTests(unittest.TestCase):
             self.assertEqual(RELEASE_FORMAT, record["format"])
             self.assertEqual(tranche, record["tranche"])
             self.assertGreater(len(record["releases"]), 0)
-            if tranche != "wakeup":
+            if tranche not in ("wakeup", "scripted"):
                 self.assertGreater(len(record["releases"]), 100)
 
     def test_snatcher_and_quest_carriers_never_released(self):
@@ -98,7 +98,8 @@ class ReleaseRecordTests(unittest.TestCase):
 
     def test_record_counts(self):
         counts = {tranche: len(record["releases"]) for tranche, record in self.records.items()}
-        self.assertEqual({"contracts": 750, "spawns": 588, "chara": 294, "wakeup": 10}, counts)
+        self.assertEqual({"contracts": 750, "spawns": 588, "chara": 294, "wakeup": 10,
+                          "scripted": 21}, counts)
 
     def test_central_wakeup_fallback_is_source_pinned(self):
         record = self.records["wakeup"]

@@ -15,6 +15,7 @@ from .inventory import (
 )
 from .planner import EnemizerConfig, StressProfile, plan_swaps
 from .scaling import load_params, plan_scaling
+from .scripted_fallbacks import fallback_rows as scripted_fallback_rows
 from .wakeup_fallback import event_for
 
 
@@ -73,7 +74,7 @@ def _stress_matched(stress: StressProfile, swap) -> bool:
 
 
 RELEASE_FORMAT = "bb-enemizer-release-v1"
-RELEASE_TRANCHES = ("contracts", "spawns", "chara", "wakeup")
+RELEASE_TRANCHES = ("contracts", "spawns", "chara", "wakeup", "scripted")
 
 
 def load_release_files(paths: list[str]) -> dict[str, set[str]]:
@@ -220,6 +221,11 @@ def main(argv: list[str] | None = None) -> int:
             "skips": scaling_skips,
         },
     }
+    # Boss-pool only: the reviewed boss builder applies these at the JS level
+    # and removes them from the combined plan it publishes.
+    scripted = scripted_fallback_rows(swaps, slots, release)
+    if scripted:
+        payload["scripted_fallbacks"] = scripted
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

@@ -110,6 +110,24 @@ EMEVD-protected; the tranche composes (union) rather than acting alone.
   `BBEnemizerWriter --event-fingerprint <dvdroot>/event/m24_01_00_00.emevd.dcx 12410340`
   on an installed game, set both constants to its `body_fingerprint`, and
   regenerate `release_wakeup.json` with `build_release`.
+- **Scripted-AI initializer fallbacks in the reviewed boss pool**
+  (`release_scripted.json`, `tools/bb_enemizer/scripted_fallbacks.py`):
+  with expanded options and the reviewed boss pool, the boss builder already
+  decompiles, patches and recompiles map events with the pinned DarkScript.
+  For every swapped pinned placement it removes only that placement's
+  `$InitializeEvent` lines, as one more constructor variant composed with the
+  boss adapters and AP overrides, so the donor behaves normally in place.
+  Covered: the ten Central Yharnam sleep-to-wake `c1120` (event 12415130),
+  the nine sewer rat ambush `c1100` (12410340), five Cathedral Ward lantern
+  servants `c2700` (display mask, 12405210) and the Church Giants `c2730`
+  plus `c2700_0008` (AI IDs and poses 12405000-12405030; breakable parts and
+  hitmask 12405430/12405400/12405460). Each removed line is pinned verbatim
+  and each callee by the SHA-256 of its decompiled block; the giants'
+  part/break flags are only read by their own suppressed initializers.
+  Patrol (12405670), wake-on-proximity (12405600) and SpEffect (12405120)
+  initializers stay. The builder records applied rows as
+  `boss_scripted_fallbacks` and leaves `wakeup_fallbacks` empty. Outside the
+  boss pool the Cathedral keys are not released (no native m24_00 path).
 - **Never released by any tranche**: talk bindings, non-character models,
   missing NPC/Think rows, unapproved (non-hostile) archetypes, the
   Snatcher progression row, quest-drop carriers, boss/parts/AI-ID/AI-command/
