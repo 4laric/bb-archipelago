@@ -440,6 +440,10 @@ jobs:
             $h = (Get-FileHash $f -Algorithm SHA256).Hash.ToLower()
             $lines += "``$h``  $(Split-Path $f -Leaf)"
           }
+          $lines += @("", "## Source and build instructions",
+            "- [Backend and release build scripts](https://github.com/${{ github.repository }}/tree/$env:GITHUB_SHA)",
+            "- [BBLauncher source](https://github.com/4laric/BB_Launcher-AP/tree/${{ steps.bblauncher.outputs.ref }}) (including pinned submodules)",
+            "- [AP client source](https://github.com/4laric/from-software-archipelago-clients/tree/${{ steps.client-sha.outputs.sha }})")
           Add-Content packaging\PACKAGE-README.txt ($lines -join "`n")
 
       - name: Publish the release with the package zip
