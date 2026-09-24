@@ -28,23 +28,27 @@ def _required_path(params: Mapping[str, Any], name: str) -> Path:
     return Path(value).expanduser().absolute()
 
 
-def _choices(params: Mapping[str, Any]) -> tuple[str, bool, bool]:
+def _choices(params: Mapping[str, Any]) -> tuple[str, bool, bool, bool]:
     seed = params.get("seed")
     if not isinstance(seed, str) or not seed.strip():
         raise ProtocolError("bad-request", "standalone seed must be non-empty text")
-    for name in ("include_dlc", "randomize_enemies"):
+    for name in ("include_dlc", "randomize_enemies", "expanded_coverage"):
         if name in params and not isinstance(params[name], bool):
             raise ProtocolError("bad-request", f"standalone {name} must be a boolean")
-    # These are the two supported choices in the integrated player flow.
-    # Never silently reinterpret AP/enemizer or speculative boss options.
+    # Keep standalone choices separate from AP-only boss settings.
     unsupported = sorted(set(params) - {
-        "seed", "include_dlc", "randomize_enemies", "game_root", "mods_root",
+        "seed", "include_dlc", "randomize_enemies", "expanded_coverage",
+        "game_root", "mods_root",
         "state_root",
     })
     if unsupported:
         raise ProtocolError("bad-request", "unsupported standalone option(s): "
                             + ", ".join(unsupported))
-    return seed, params.get("include_dlc", False), params.get("randomize_enemies", False)
+    enemies = params.get("randomize_enemies", False)
+    expanded = params.get("expanded_coverage", False)
+    if expanded and not enemies:
+        raise ProtocolError("bad-request", "expanded coverage requires enemy randomization")
+    return seed, params.get("include_dlc", False), enemies, expanded
 
 
 def _source_directory(install: GameInstall, relative: str, destination: Path,
@@ -113,7 +117,7 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
         export_directory, package_name, validate_overlay, verify_export,
     )
 
-    seed, include_dlc, randomize_enemies = _choices(params)
+    seed, include_dlc, randomize_enemies, expanded_coverage = _choices(params)
     game_root = _required_path(params, "game_root")
     mods_root = _required_path(params, "mods_root")
     if mods_root.name.casefold() != "mods" or not mods_root.is_dir() or mods_root.is_symlink():
@@ -125,6 +129,9 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
         install = GameInstall.from_root(game_root)
         gameparam = install.resolve_file(GAMEPARAM_PATH, include_mods=False)[1]
         paramdef = install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]
+        wakeup_event = (install.resolve_file(
+            "dvdroot_ps4/event/m24_01_00_00.emevd.dcx", include_mods=False)[1]
+            if expanded_coverage else None)
         tools = application_root() / "tools"
         item_writer = tools / "BBSuppressionWriter.exe"
         enemy_writer = tools / "BBEnemizerWriter.exe" if randomize_enemies else None
@@ -149,13 +156,17 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
                 seed=seed, gameparam=gameparam, paramdef=paramdef,
                 item_writer=item_writer, output=output,
                 item_options=StandaloneOptions(include_dlc=include_dlc),
-                enemy_options=EnemyOptions(enabled=randomize_enemies),
+                enemy_options=EnemyOptions(
+                    enabled=randomize_enemies, expanded_coverage=expanded_coverage),
                 maps=maps, scripts=scripts, enemy_writer=enemy_writer,
+                wakeup_event=wakeup_event,
             ))
         overlay = validate_overlay(output)
         if (overlay.identity["seed"] != seed
                 or overlay.identity["options"]["items"].get("include_dlc") != include_dlc
-                or overlay.identity["options"]["enemies"].get("enabled") != randomize_enemies):
+                or overlay.identity["options"]["enemies"].get("enabled") != randomize_enemies
+                or overlay.identity["options"]["enemies"].get(
+                    "expanded_coverage", False) != expanded_coverage):
             raise ValueError("standalone build identity differs from requested seed or options")
         name = package_name(overlay)
         existing_package = mods_root / name
@@ -205,9 +216,11 @@ def verify_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[st
     if not isinstance(record, dict) or record.get("format") != "bb-integrated-standalone-prepared-v1":
         raise ProtocolError("verification-failed", "standalone prepared record is invalid")
     required = ("package_name", "seed", "game_root", "mods_root",
-                "include_dlc", "randomize_enemies")
+                "include_dlc", "randomize_enemies", "expanded_coverage")
     if any(name not in params for name in required):
         raise ProtocolError("bad-request", "standalone verification identity is incomplete")
+    if not isinstance(params["expanded_coverage"], bool):
+        raise ProtocolError("bad-request", "standalone expanded_coverage must be a boolean")
     identity_matches = (
         record.get("receipt_id") == receipt_id
         and record.get("package_path") == str(package)
@@ -218,6 +231,8 @@ def verify_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[st
         and record.get("mods_root") == str(_required_path(params, "mods_root"))
         and record.get("options", {}).get("items", {}).get("include_dlc") == params["include_dlc"]
         and record.get("options", {}).get("enemies", {}).get("enabled") == params["randomize_enemies"]
+        and record.get("options", {}).get("enemies", {}).get(
+            "expanded_coverage", False) == params["expanded_coverage"]
     )
     if not identity_matches:
         raise ProtocolError("verification-failed", "standalone selection differs from prepared export")

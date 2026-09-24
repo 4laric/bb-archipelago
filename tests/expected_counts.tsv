@@ -122,10 +122,10 @@ module	test_standalone_randomizer	8
 # --require test_standalone_item_writer=5 with BB_STANDALONE_WRITER_INPUTS.
 # Their collection still contributes five tests to the total floor.
 
-module	test_standalone_build	8
+module	test_standalone_build	10
 
-module	test_standalone_mod_export	10
+module	test_standalone_mod_export	12
 
 module	test_standalone_package	7
 
-module	test_integrated_standalone	6
+module	test_integrated_standalone	7

@@ -67,13 +67,24 @@ class FakeToolchain:
                 command[command.index("--inventory") + 1]
             ).read_bytes()
             seed = command[command.index("--seed") + 1]
+            release_files = [
+                Path(command[index + 1]).stem.removeprefix("release_")
+                for index, argument in enumerate(command[:-1])
+                if argument == "--release-file"
+            ]
             output.write_text(
                 json.dumps(
                     {
                         "format": "bb-enemizer-plan-v2",
                         "seed": seed,
                         "dry_run": True,
+                        "options": {"release_tranches": sorted(release_files)},
                         "swaps": [{"logical_key": "m21_00:test"}],
+                        "wakeup_fallbacks": ([{
+                            "logical_key": "m24_01_00_00:c1120_0009",
+                            "entity_id": 2410148, "map": "m24_01_00_00",
+                            "event_id": 12415130,
+                        }] if "wakeup" in release_files else []),
                         "scaling": {
                             "enabled": "--normalize-scaling" in command,
                             "mechanism": "inferred_static_npc_clone_sp_effect",
@@ -87,6 +98,19 @@ class FakeToolchain:
                 encoding="utf-8",
             )
             return subprocess.CompletedProcess(command, 0, "planned\n", "")
+        if "--wakeup-fallback" in command:
+            index = command.index("--wakeup-fallback")
+            plan, source, output, report_path = map(Path, command[index + 1:index + 5])
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_bytes(b"wakeup:" + source.read_bytes())
+            report_path.write_text(json.dumps({
+                "format": "bb-enemizer-wakeup-fallback-v1", "applied": True,
+                "plan_sha256": digest(plan),
+                "source_event_sha256": digest(source),
+                "output_event_sha256": digest(output),
+                "wakeup_fallbacks": json.loads(plan.read_text())["wakeup_fallbacks"],
+            }), encoding="utf-8")
+            return subprocess.CompletedProcess(command, 0, "wakeup\n", "")
         if "--scaled" in command:
             if self.fail_on == "scaled":
                 raise subprocess.CalledProcessError(1, command)
@@ -199,6 +223,8 @@ class StandaloneBuildTests(unittest.TestCase):
         self.scripts.mkdir()
         (self.maps / "m21_00_00_00.msb.dcx").write_bytes(b"original map")
         (self.scripts / "m21_00_00_00.luabnd.dcx").write_bytes(b"original script")
+        self.wakeup_event = inputs / "m24_01_00_00.emevd.dcx"
+        self.wakeup_event.write_bytes(b"original wakeup")
         self.output = self.root / "result" / "overlay"
         self.seed = "standalone-build-test"
         self.toolchain = FakeToolchain(self)
@@ -221,7 +247,7 @@ class StandaloneBuildTests(unittest.TestCase):
             "unsupported": [],
         }
 
-    def config(self, *, enemies=False, scaling=False) -> BuildConfig:
+    def config(self, *, enemies=False, scaling=False, expanded=False) -> BuildConfig:
         return BuildConfig(
             seed=self.seed,
             gameparam=self.gameparam,
@@ -232,11 +258,13 @@ class StandaloneBuildTests(unittest.TestCase):
             enemy_options=EnemyOptions(
                 enabled=enemies, seed="local-enemies" if enemies else None,
                 normalize_scaling=scaling,
+                expanded_coverage=expanded,
             ),
             maps=self.maps if enemies else None,
             scripts=self.scripts if enemies else None,
             enemy_writer=self.enemy_writer if enemies else None,
             enemy_inventory=self.inventory,
+            wakeup_event=self.wakeup_event if expanded else None,
         )
 
     def test_item_only_build_has_native_command_identity_and_receipt(self):
@@ -279,14 +307,41 @@ class StandaloneBuildTests(unittest.TestCase):
         self.assertTrue((self.output / "enemy-ai-receipt.json").is_file())
         self.assertFalse((self.output / "dvdroot_ps4/script.json").exists())
         identity = json.loads((self.output / "standalone-build-identity.json").read_text())
-        self.assertIn(
-            "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx",
-            identity["source_hashes"],
-        )
-        self.assertIn(
-            "dvdroot_ps4/script/m21_00_00_00.luabnd.dcx",
-            identity["source_hashes"],
-        )
+        self.assertIn("dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx",
+                      identity["source_hashes"])
+        self.assertIn("dvdroot_ps4/script/m21_00_00_00.luabnd.dcx",
+                      identity["source_hashes"])
+
+    def test_expanded_enemy_release_composes_pinned_wakeup_event(self):
+        build(self.config(enemies=True, expanded=True), runner=self.toolchain,
+              planner=self.plan)
+        planner = next(command for command in self.toolchain.commands
+                       if "tools.bb_enemizer.cli" in command)
+        release_files = [Path(planner[index + 1]).name
+                         for index, argument in enumerate(planner[:-1])
+                         if argument == "--release-file"]
+        self.assertEqual(
+            ["release_contracts.json", "release_spawns.json",
+             "release_chara.json", "release_wakeup.json"], release_files)
+        self.assertFalse(any(flag.startswith("--boss") for flag in planner))
+        event = self.output / "dvdroot_ps4/event/m24_01_00_00.emevd.dcx"
+        self.assertEqual(b"wakeup:original wakeup", event.read_bytes())
+        identity = json.loads((self.output / "standalone-build-identity.json").read_text())
+        self.assertTrue(identity["options"]["enemies"]["expanded_coverage"])
+        self.assertEqual(digest(self.wakeup_event),
+                         identity["source_hashes"]["dvdroot_ps4/event/m24_01_00_00.emevd.dcx"])
+        receipt = json.loads((self.output / "standalone-build-receipt.json").read_text())
+        self.assertEqual(digest(event), receipt["wakeup_writer"]["output_event_sha256"])
+
+    def test_expanded_enemy_release_requires_enemies_and_event_before_writer(self):
+        with self.assertRaisesRegex(ValueError, "requires enemy randomization"):
+            build(self.config(expanded=True), runner=self.toolchain, planner=self.plan)
+        self.assertFalse(self.toolchain.commands)
+        config = self.config(enemies=True, expanded=True)
+        self.wakeup_event.unlink()
+        with self.assertRaisesRegex(ValueError, "original wakeup event"):
+            build(config, runner=self.toolchain, planner=self.plan)
+        self.assertFalse(self.toolchain.commands)
 
     def test_scaling_starts_from_item_modified_binder(self):
         receipt = build(
