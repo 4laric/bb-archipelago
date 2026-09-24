@@ -12,26 +12,40 @@ Original map evidence places the native combat actor at
 the reported disappearance and rapid health loss; the precise runtime death
 mechanism has not been observed.
 
+The generated beast helper also inherited a source-arena offset: its position
+was (-122.85982, -58.12, 68.91717), 31.1 units below the human. Its old phase
+controller only disabled gravity, and its death could trigger the terminal even
+before transformation. Ground-level placement and an explicit dormant lifecycle
+remove this additional failure path.
+
 The fix removes the leap-origin warp and guessed replacement animation, keeping
 the native combat placement. The 110-frame leap delay becomes one frame.
 Entry triggers, enable/gravity restoration, encounter flags, and progression
-remain unchanged. Neither form's combat, health link, nor terminal is changed.
+remain unchanged. The beast starts at the destination anchor, disabled with AI,
+gravity and its health display off. Initialization protection is cleared before
+the original referred-damage link is established, preserving forwarded combat
+damage. Transformation warps it before enabling combat; phase-two reloads restore
+it. Only an active beast phase can satisfy the beast-death terminal branch.
 
 Validation:
 
-- Six Gascoigne contract tests pass, including a regression asserting the exact
+- Seven Gascoigne contract tests pass, including regressions asserting the exact
   entry-only changes and preservation of trigger/restoration order.
 - An original-input native build passes across all three Central Yharnam map
   states, with ten output files verified and no missing AI goals.
-- A staged repair for the user's existing seed changes only event 12411702;
-  all other 257 binary event fingerprints remain exact. The repair is not
+- The native writer harness passes, including 41 actor-transplant assertions.
+  Destination-anchor placement is explicit; existing source-relative behavior
+  remains the default, and unknown placement policies are rejected.
+- A staged repair for the user's existing seed changes four event bodies and
+  the beast position in three map states. All other 254 binary event fingerprints
+  and 6,172 other part fingerprints per map remain exact. The repair is not
   activated, and no save or running-game files were changed.
 
 Installed input EMEVD SHA-256:
 `5c2d08ae940c9571438bbb9ded6f9668570e1d23cc416d5b03f3e6c5ba6d3923`
 
 Staged repaired EMEVD SHA-256:
-`f453ff32e87f5f529f40789c7a39db0f66afd4c5235ae970f3608e830e858a34`
+`bd0cda5ca3d8a3d22af7ec237287edab62a013bdbabca32bb06b7b06c6bc22ca`
 
 An in-game retest is still required. The installed launcher package reports
 revision dcd0ef36f170662d34edeab45847281fbcc129a3 with a dirty worktree; the
