@@ -40,12 +40,12 @@ SEED = "12345"
 # determinism is pinned separately below).
 PINNED_COUNTS = {
     (): 308,
-    ("contracts",): 822,
+    ("contracts",): 800,
     ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1617,
+    ("chara", "contracts", "spawns"): 1589,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1627,
+    ("chara", "contracts", "spawns", "wakeup"): 1599,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -263,7 +263,11 @@ class ReleasePlanningTests(unittest.TestCase):
         # NpcParam 402021 / 405020: 1 HP cutscene patient and mummified fishman;
         # the rest of c4020 / c4050 stays in the pool.
         excluded = {"c4520", "c7110"}
-        excluded_npcs = {402021, 405020}
+        # Hunter's Dream actors, invisible emitters/dummies and attachment
+        # parts: not standalone enemies (Old Yharnam crash, 2026-09-24).
+        excluded_npcs = {402021, 405020, 902000, 902010, 902020, 902032, 902035, 902040,
+                         904000, 905000, 360, 251001, 256100, 256610, 256910, 403050,
+                         403100, 212750, 212751, 257100, 257101}
 
         def banned(archetype):
             return (archetype.model_name in excluded

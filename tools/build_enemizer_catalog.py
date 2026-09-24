@@ -29,6 +29,28 @@ NON_TARGET_MODELS = {
 NON_TARGET_NPC_PARAMS = {
     402021: "Clocktower patient, cutscene-only 1 HP actor",
     405020: "Mummified fishman, a 1 HP decoration",
+    # Hunter's Dream actors, invisible emitters/dummies and attachment parts
+    # pass the hostile gate but are not standalone enemies; placed alone they
+    # break or crash (Old Yharnam, 2026-09-24).
+    902000: "Hunter's Dream Messenger (costume change)",
+    902010: "Hunter's Dream Messenger (gravestone)",
+    902020: "Hunter's Dream Messenger (chalice)",
+    902032: "Hunter's Dream Messenger (shop 3)",
+    902035: "Hunter's Dream Messenger (Insight shop)",
+    902040: "Hunter's Dream Messenger (weapon choice/item gift)",
+    904000: "Hunter's Dream right-hand weapon rack",
+    905000: "Hunter's Dream left-hand weapon rack",
+    360: "invisible no-hit dummy character",
+    251001: "Moon offspring bullet-firing dummy",
+    256100: "Winter Lantern bullet-firing dummy",
+    256610: "Winter Lantern bullet-firing dummy",
+    256910: "Winter Lantern bullet-firing dummy",
+    403050: "Patient B HP-management helper",
+    403100: "Patient B meteor-firing dummy",
+    212750: "Brigade snake, head attachment",
+    212751: "Brigade snake, chest attachment",
+    257100: "Celestial Emissary lower tentacle helper",
+    257101: "Celestial Emissary upper tentacle helper",
 }
 
 
