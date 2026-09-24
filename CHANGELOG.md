@@ -6,6 +6,9 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Randomize all enemies (experimental) now also randomizes script-spawned
+  enemies that carry a starting pose, such as the face-down crawlers in the
+  Central Yharnam sewer and Dry Dock (78 placements game-wide).
 - Launcher: **Randomize** and **Launch** are now separate buttons. Randomize
   builds and verifies the seed without starting the game and reports the swap
   count; Launch reuses that build (or builds first). The enemy choice moved

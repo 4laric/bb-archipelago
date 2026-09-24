@@ -148,7 +148,9 @@ def _write_release_records(args, slots, tags, slot_policy) -> None:
             detail["reason"] = ("EMEVD-protected placement whose script contracts "
                                 "are all supported operations")
             releases["contracts"][logical_key] = detail
-        if args.release_script_spawns and dummy and not talk and not chara and not broken_model:
+        # A CharaInit-bound spawn Part also needs the chara tranche; the two
+        # gates compose, so neither tranche alone releases it.
+        if args.release_script_spawns and dummy and not talk and not broken_model:
             detail["reason"] = ("hostile script-spawn placement; entity ID, part name "
                                 "and spawn triggers preserved; size gate bounds overflow")
             releases["spawns"][logical_key] = detail

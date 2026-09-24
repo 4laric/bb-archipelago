@@ -43,9 +43,9 @@ PINNED_COUNTS = {
     ("contracts",): 827,
     ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1545,
+    ("chara", "contracts", "spawns"): 1623,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1555,
+    ("chara", "contracts", "spawns", "wakeup"): 1633,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -98,7 +98,7 @@ class ReleaseRecordTests(unittest.TestCase):
 
     def test_record_counts(self):
         counts = {tranche: len(record["releases"]) for tranche, record in self.records.items()}
-        self.assertEqual({"contracts": 750, "spawns": 588, "chara": 294, "wakeup": 10}, counts)
+        self.assertEqual({"contracts": 750, "spawns": 666, "chara": 294, "wakeup": 10}, counts)
 
     def test_central_wakeup_fallback_is_source_pinned(self):
         record = self.records["wakeup"]
@@ -258,9 +258,9 @@ class ReleasePlanningTests(unittest.TestCase):
 
     def test_central_yharnam_visibility(self):
         expected = {(): 49, ("contracts",): 94, ("spawns",): 106,
-                    ("chara",): 59, ("chara", "contracts", "spawns"): 177,
+                    ("chara",): 59, ("chara", "contracts", "spawns"): 189,
                     ("wakeup",): 57,
-                    ("chara", "contracts", "spawns", "wakeup"): 187}
+                    ("chara", "contracts", "spawns", "wakeup"): 199}
         for tranches, count in expected.items():
             swaps, _rejections, _release = self._plan(tranches)
             central = [swap for swap in swaps
