@@ -17,6 +17,7 @@ from tools.export_standalone_mod import (
     BUILD_RECEIPT_FORMAT,
     BUILD_RECEIPT_NAME,
     GAMEPARAM_PATH,
+    WAKEUP_EVENT_PATH,
     export_directory,
     export_zip,
     load_export_receipt,
@@ -124,6 +125,65 @@ class StandaloneModExportTests(unittest.TestCase):
 
     def tearDown(self):
         self.temp.cleanup()
+
+    def _wakeup_overlay(self):
+        overlay = make_overlay(self.root, seed="expanded")
+        event = overlay / WAKEUP_EVENT_PATH
+        event.parent.mkdir(parents=True)
+        event.write_bytes(b"native-wakeup-event")
+        plan_path = overlay / "standalone-enemy-plan.json"
+        plan = json.loads(plan_path.read_text())
+        plan["wakeup_fallbacks"] = [{"logical_key": "test", "entity_id": 2410001,
+                                    "map": "m24_01_00_00", "event_id": 12410510}]
+        write_json(plan_path, plan)
+        identity = json.loads((overlay / BUILD_IDENTITY_NAME).read_text())
+        identity["enemy_plan_sha256"] = digest(plan_path.read_bytes())
+        identity["source_hashes"][WAKEUP_EVENT_PATH] = "d" * 64
+        write_json(overlay / BUILD_IDENTITY_NAME, identity)
+        report = {"format": "bb-enemizer-wakeup-fallback-v1", "applied": True,
+                  "plan_sha256": identity["enemy_plan_sha256"],
+                  "wakeup_fallbacks": plan["wakeup_fallbacks"],
+                  "source_event_sha256": "d" * 64,
+                  "output_event_sha256": digest(event.read_bytes())}
+        write_json(overlay / "wakeup-fallback-report.json", report)
+        receipt = json.loads((overlay / BUILD_RECEIPT_NAME).read_text())
+        receipt.update(identity_sha256=digest((overlay / BUILD_IDENTITY_NAME).read_bytes()),
+                       source_hashes=identity["source_hashes"], wakeup_writer=report)
+        receipt["files"] = [file_record(overlay, p.relative_to(overlay).as_posix())
+                            for p in overlay.rglob("*")
+                            if p.is_file() and p.name != BUILD_RECEIPT_NAME]
+        write_json(overlay / BUILD_RECEIPT_NAME, receipt)
+        return overlay
+
+    def test_expanded_wakeup_event_exports_and_tampering_is_refused(self):
+        overlay = self._wakeup_overlay()
+        result = export_directory(overlay, mods_root=self.mods, receipt_root=self.receipts)
+        self.assertTrue((result.package_path / WAKEUP_EVENT_PATH).is_file())
+        self.assertFalse((result.package_path / "wakeup-fallback-report.json").exists())
+        verify_export(result.package_path, result.receipt_path, overlay_root=overlay)
+        (result.package_path / WAKEUP_EVENT_PATH).write_bytes(b"tampered")
+        with self.assertRaises(ValueError):
+            verify_export(result.package_path, result.receipt_path, overlay_root=overlay)
+
+    def test_wakeup_writer_provenance_and_other_event_paths_are_refused(self):
+        for mutation in ("source", "plan", "output", "unexpected-event"):
+            with self.subTest(mutation=mutation):
+                overlay = self._wakeup_overlay()
+                receipt_path = overlay / BUILD_RECEIPT_NAME
+                receipt = json.loads(receipt_path.read_text())
+                if mutation == "unexpected-event":
+                    extra = "dvdroot_ps4/event/m99_00_00_00.emevd.dcx"
+                    (overlay / extra).write_bytes(b"unowned-event")
+                    receipt["files"].append(file_record(overlay, extra))
+                else:
+                    field = {"source": "source_event_sha256", "plan": "plan_sha256",
+                             "output": "output_event_sha256"}[mutation]
+                    receipt["wakeup_writer"][field] = "e" * 64
+                    write_json(overlay / "wakeup-fallback-report.json", receipt["wakeup_writer"])
+                    receipt["files"] = [file_record(overlay, r["path"]) for r in receipt["files"]]
+                write_json(receipt_path, receipt)
+                with self.assertRaises(ValueError):
+                    validate_overlay(overlay)
 
     def test_directory_export_is_data_only_and_verifies_exact_native_paths(self):
         result = export_directory(

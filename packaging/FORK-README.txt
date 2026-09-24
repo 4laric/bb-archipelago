@@ -3,7 +3,7 @@ BBLauncher-AP: local next-run candidate
 Keep this folder intact and run BBLauncher-AP.exe. Select your existing
 Bloodborne installation and shadPS4 build in the launcher's settings.
 
-Open the randomizer page:
+Open the Archipelago page:
 - Archipelago: choose your AP seed file and player/connection details.
 - Standalone: enter any seed text and choose whether to include the DLC.
   No AP server or client is needed for this mode.
@@ -13,8 +13,8 @@ run, then starts the game. Changed generation inputs invalidate preparation.
 Regular play removes the randomizer package owned by this launcher while
 preserving unrelated mods. Stop the game before changing active mods or modes.
 
-AP supports the expanded enemy options and reviewed boss shuffle. Standalone
-currently supports the ordinary curated enemy pool. Boss gameplay and the full
+Both modes support reviewed or expanded ordinary-enemy coverage. AP also
+supports reviewed boss shuffle; standalone does not shuffle bosses. Boss gameplay and the full
 roster expansion remain experimental; this package includes landed fixes.
 
 The candidate has offline build and fixture-test evidence, not completed live

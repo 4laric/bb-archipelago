@@ -9,9 +9,9 @@ Changing generation inputs invalidates the prepared selection. Advanced enemy
 tuning stays out of the ordinary flow.
 
 Archipelago mode uses a seed file and the AP client. Standalone mode generates
-local item rewards from a seed string and needs no AP room or client. Its enemy
-choice covers the ordinary curated pool; experimental releases and boss shuffle
-are not standalone features in this candidate. Existing packages and generated
+local item rewards from a seed string and needs no AP room or client. Both modes offer reviewed or expanded ordinary-enemy coverage, including the
+scripted wake-up fallback needed by expanded placements. Boss shuffle remains
+an AP-only feature in this candidate. Existing packages and generated
 seeds remain pinned to the rules used to create them.
 
 ## Short acceptance pass during the next run
