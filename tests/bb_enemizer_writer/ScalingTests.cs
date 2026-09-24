@@ -110,6 +110,33 @@ internal static class ScalingTests
         }))!;
         void Save() => File.WriteAllText(planPath, plan.ToJsonString());
         Save();
+        var unscaledPlan = plan.DeepClone().AsObject();
+        unscaledPlan["options"] = JsonNode.Parse("""{"normalize_scaling":false}""");
+        unscaledPlan["scaling"] = JsonNode.Parse("""
+            {"enabled":false,"mechanism":"inferred_static_npc_clone_sp_effect",
+             "change_count":0,"changes":[],"skip_count":1,
+             "skips":[{"logical_key":"m24_01_00_00:c1000_0000","reason":"disabled by player"}]}
+            """);
+        unscaledPlan.Remove("boss_actor_scaling");
+        string unscaledPath = Path.Combine(input, "unscaled-plan.json");
+        File.WriteAllText(unscaledPath, unscaledPlan.ToJsonString());
+        Check(!BossEncounter.ScalingEnabled(unscaledPlan), "explicit unscaled ledger accepted");
+        string unscaledOutput = Path.Combine(root, "unscaled-output");
+        BossEncounter.RunUnscaled(unscaledPath, unscaledPlan, gamePath, defsPath,
+            maps, scripts, unscaledOutput);
+        Check(File.ReadAllBytes(gamePath).SequenceEqual(File.ReadAllBytes(Path.Combine(
+            unscaledOutput, "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx"))),
+            "unscaled route preserves composed binder bytes");
+        using (var unscaledReceipt = JsonDocument.Parse(File.ReadAllText(Path.Combine(
+            unscaledOutput, "scaling-report.json")))) {
+            Check(!unscaledReceipt.RootElement.GetProperty("applied").GetBoolean()
+                && unscaledReceipt.RootElement.GetProperty("npc_clones").GetInt32() == 0,
+                "unscaled receipt attests zero clones");
+        }
+        Check(Directory.GetFiles(Path.Combine(unscaledOutput, "dvdroot_ps4/map/MapStudio")).Length == 2,
+            "unscaled route still writes both map states");
+        Check(File.Exists(Path.Combine(unscaledOutput, "dvdroot_ps4/script/m24_01_00_00.luabnd.dcx")),
+            "unscaled route still composes AI");
         string output = Path.Combine(root, "scaled-output");
         ScalingTransplant.Run(planPath, gamePath, defsPath, maps, scripts, output, bossPrepared: true);
         var written = BND4.Read(Path.Combine(output, "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx"));

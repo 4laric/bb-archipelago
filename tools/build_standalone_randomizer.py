@@ -34,6 +34,10 @@ BUILD_FORMAT = "bb-standalone-build-identity-v1"
 RECEIPT_FORMAT = "bb-standalone-build-receipt-v1"
 MAP_ROOT = Path("dvdroot_ps4/map/MapStudio")
 SCRIPT_ROOT = Path("dvdroot_ps4/script")
+WAKEUP_EVENT_PATH = "dvdroot_ps4/event/m24_01_00_00.emevd.dcx"
+WAKEUP_REPORT_NAME = "wakeup-fallback-report.json"
+EXPANDED_RELEASES = ("contracts", "spawns", "chara", "wakeup")
+RELEASE_ROOT = ROOT / "research" / "enemizer"
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
 Runner = Callable[..., subprocess.CompletedProcess[str]]
 
@@ -42,9 +46,10 @@ Runner = Callable[..., subprocess.CompletedProcess[str]]
 class EnemyOptions:
     enabled: bool = False
     seed: str | None = None
-    allow_tier_mixing: bool = False
+    allow_tier_mixing: bool = True
     preserve_locomotion: bool = False
-    normalize_scaling: bool = False
+    normalize_scaling: bool = True
+    expanded_coverage: bool = False
 
 
 @dataclass(frozen=True)
@@ -61,6 +66,7 @@ class BuildConfig:
     scripts: Path | None = None
     enemy_writer: Path | None = None
     enemy_inventory: Path | None = None
+    wakeup_event: Path | None = None
 
 
 def _hash_file(path: Path) -> str:
@@ -199,6 +205,10 @@ def _snapshot(config: BuildConfig) -> tuple[dict[str, str], dict[Path, str]]:
             source_hashes[logical] = physical[path] = _hash_file(path)
         if config.enemy_inventory is not None:
             physical[config.enemy_inventory] = _hash_file(config.enemy_inventory)
+        if config.enemy_options.expanded_coverage:
+            assert config.wakeup_event is not None
+            source_hashes[WAKEUP_EVENT_PATH] = physical[config.wakeup_event] = _hash_file(
+                config.wakeup_event)
     return source_hashes, physical
 
 
@@ -222,7 +232,20 @@ def _validate(config: BuildConfig) -> None:
         if config.output == source or _is_under(config.output, source.parent):
             raise ValueError(f"output must be outside original input directory: {source.parent}")
     enemy = config.enemy_options
+    if not isinstance(enemy.expanded_coverage, bool):
+        raise ValueError("expanded enemy coverage must be a boolean")
+    if enemy.expanded_coverage and not enemy.enabled:
+        raise ValueError("expanded enemy coverage requires enemy randomization")
     if enemy.enabled:
+        if enemy.allow_tier_mixing is not True:
+            raise ValueError("standalone enemy randomization requires mixed tiers")
+        if enemy.expanded_coverage:
+            if config.wakeup_event is None:
+                raise ValueError("expanded enemy coverage requires the original wakeup event")
+            _regular_file(config.wakeup_event, "original wakeup event")
+            for tranche in EXPANDED_RELEASES:
+                _regular_file(RELEASE_ROOT / f"release_{tranche}.json",
+                              f"expanded enemy {tranche} release")
         if config.maps is None or config.scripts is None or config.enemy_writer is None:
             raise ValueError(
                 "enemy randomization requires --maps, --enemy-scripts and --enemy-writer"
@@ -268,6 +291,22 @@ def _verify_enemy_plan(path: Path, seed: str) -> dict[str, Any]:
     ):
         raise ValueError("ordinary enemy planner produced an invalid or empty plan")
     return plan
+
+
+def _verify_wakeup_receipt(
+    report_path: Path, plan_path: Path, source: Path, output: Path,
+    fallbacks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    report = _read_object(report_path, "wakeup fallback report")
+    if (report.get("format") != "bb-enemizer-wakeup-fallback-v1"
+            or report.get("applied") is not True
+            or report.get("plan_sha256") != _hash_file(plan_path)
+            or report.get("source_event_sha256") != _hash_file(source)
+            or report.get("wakeup_fallbacks") != fallbacks
+            or not output.is_file() or output.is_symlink()
+            or report.get("output_event_sha256") != _hash_file(output)):
+        raise ValueError("wakeup fallback writer produced an invalid report or event")
+    return report
 
 
 def _verify_ai(stage: Path, plan_path: Path) -> dict[str, Any]:
@@ -379,6 +418,7 @@ def build(
         enemy_plan: dict[str, Any] | None = None
         enemy_plan_path: Path | None = None
         enemy_receipt: dict[str, Any] | None = None
+        wakeup_receipt: dict[str, Any] | None = None
         enemy_inventory_path: Path | None = None
         enemy_inventory_sha256: str | None = None
         if config.enemy_options.enabled:
@@ -408,16 +448,26 @@ def build(
                 "--output",
                 str(enemy_plan_path),
             ]
-            if config.enemy_options.allow_tier_mixing:
-                planner_command.append("--allow-tier-mixing")
+            planner_command.append("--allow-tier-mixing")
             if config.enemy_options.preserve_locomotion:
                 planner_command.append("--preserve-locomotion")
+            if config.enemy_options.expanded_coverage:
+                for tranche in EXPANDED_RELEASES:
+                    planner_command.extend(
+                        ["--release-file", str(RELEASE_ROOT / f"release_{tranche}.json")]
+                    )
             if config.enemy_options.normalize_scaling:
                 planner_command.extend(
                     ["--normalize-scaling", "--bundle", str(ROOT / "research/bb_inputs.db")]
                 )
             _run(planner_command, runner)
             enemy_plan = _verify_enemy_plan(enemy_plan_path, enemy_seed)
+            if config.enemy_options.expanded_coverage:
+                plan_options = enemy_plan.get("options")
+                if (not isinstance(plan_options, dict)
+                        or plan_options.get("release_tranches") != sorted(EXPANDED_RELEASES)
+                        or not isinstance(enemy_plan.get("wakeup_fallbacks"), list)):
+                    raise ValueError("expanded enemy plan omitted or added release tranches")
             assert config.maps is not None and config.scripts is not None
             assert config.enemy_writer is not None
             enemy_native = _native_command(config.dotnet, config.enemy_writer)
@@ -475,6 +525,20 @@ def build(
                             if config.enemy_options.normalize_scaling else enemy_plan_path)
             _verify_ai(stage, applied_plan)
             (stage / "dvdroot_ps4/script.json").rename(stage / "enemy-ai-receipt.json")
+            if config.enemy_options.expanded_coverage and enemy_plan["wakeup_fallbacks"]:
+                assert config.wakeup_event is not None
+                output_event = stage / WAKEUP_EVENT_PATH
+                output_event.parent.mkdir(parents=True, exist_ok=True)
+                report_path = work / WAKEUP_REPORT_NAME
+                _run(enemy_native + [
+                    "--wakeup-fallback", str(enemy_plan_path),
+                    str(config.wakeup_event), str(output_event), str(report_path),
+                ], runner)
+                wakeup_receipt = _verify_wakeup_receipt(
+                    report_path, enemy_plan_path, config.wakeup_event, output_event,
+                    enemy_plan["wakeup_fallbacks"],
+                )
+                shutil.copyfile(report_path, stage / WAKEUP_REPORT_NAME)
         else:
             stage.mkdir()
             final_binder = stage / GAMEPARAM_PATH
@@ -505,6 +569,12 @@ def build(
                     "enemy_facts": _hash_file(ROOT / "research/enemizer/archetype_facts.json"),
                 }
             )
+            if config.enemy_options.expanded_coverage:
+                tool_hashes.update({
+                    f"enemy_release_{tranche}": _hash_file(
+                        RELEASE_ROOT / f"release_{tranche}.json")
+                    for tranche in EXPANDED_RELEASES
+                })
             if config.enemy_inventory is None:
                 tool_hashes["enemy_inventory_bundle"] = _hash_file(DEFAULT_BUNDLE)
         identity = {
@@ -534,6 +604,7 @@ def build(
             "composed_gameparam_sha256": _hash_file(stage / GAMEPARAM_PATH),
             "item_writer": item_receipt,
             "enemy_writer": enemy_receipt,
+            "wakeup_writer": wakeup_receipt,
             "files": _file_records(stage),
         }
         _write_json(stage / "standalone-build-receipt.json", receipt)
@@ -572,9 +643,13 @@ def _parse_args(argv: Sequence[str] | None) -> BuildConfig:
     parser.add_argument(
         "--enemy-inventory", type=Path,
     )
-    parser.add_argument("--allow-tier-mixing", action="store_true")
+    parser.add_argument("--wakeup-event", type=Path)
     parser.add_argument("--preserve-locomotion", action="store_true")
-    parser.add_argument("--normalize-enemy-scaling", action="store_true")
+    parser.add_argument("--normalize-enemy-scaling", dest="normalize_enemy_scaling",
+                        action="store_true", default=True)
+    parser.add_argument("--no-normalize-enemy-scaling", dest="normalize_enemy_scaling",
+                        action="store_false")
+    parser.add_argument("--expanded-coverage", action="store_true")
     parser.add_argument(
         "--apply", action="store_true", help="write a new verified overlay directory"
     )
@@ -601,14 +676,16 @@ def _parse_args(argv: Sequence[str] | None) -> BuildConfig:
         enemy_options=EnemyOptions(
             enabled=args.randomize_enemies,
             seed=args.enemy_seed,
-            allow_tier_mixing=args.allow_tier_mixing,
+            allow_tier_mixing=True,
             preserve_locomotion=args.preserve_locomotion,
             normalize_scaling=args.normalize_enemy_scaling,
+            expanded_coverage=args.expanded_coverage,
         ),
         maps=paths.get("maps"),
         scripts=paths.get("enemy_scripts"),
         enemy_writer=paths.get("enemy_writer"),
         enemy_inventory=paths.get("enemy_inventory"),
+        wakeup_event=paths.get("wakeup_event"),
     )
 
 

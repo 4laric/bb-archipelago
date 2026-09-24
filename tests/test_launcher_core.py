@@ -170,18 +170,22 @@ def sample_plan(seed: str) -> dict:
 
 def write_boss_encounter_overlay(
     root: Path, *, source_binder: Path, seed: str, cathedral_input: bytes | None = None,
-    hemwick_boss_event: bool = False,
+    hemwick_boss_event: bool = False, scaled: bool = True,
 ) -> Path:
     """A closed native-output fixture with two encounter events and audit files."""
     overlay = root / "boss-encounter-output"
     plan = sample_plan(seed)
+    plan["scaling"] = {"enabled": scaled}
+    if not scaled:
+        plan["options"]["normalize_scaling"] = False
     if cathedral_input is not None:
         plan["input_event_overrides"] = [{
             "file": "m24_00_00_00.emevd.dcx",
             "sha256": hashlib.sha256(cathedral_input).hexdigest(),
         }]
     outputs = {
-        core.SUPPRESSION_PATH: b"composed-ap-binder-plus-boss-scaling",
+        core.SUPPRESSION_PATH: (b"composed-ap-binder-plus-boss-scaling"
+                                if scaled else source_binder.read_bytes()),
         f"{core.MAP_PREFIX}m24_01_00_00.msb.dcx": b"cleric-map",
         f"{core.MAP_PREFIX}m35_00_00_00.msb.dcx": b"maria-map",
         f"{core.AI_PREFIX}m24_01_00_00.luabnd.dcx": b"cleric-ai",
@@ -203,7 +207,7 @@ def write_boss_encounter_overlay(
     plan_hash = hashlib.sha256(outputs[core.ENEMIZER_PLAN_NAME]).hexdigest()
     source_plan_hash = hashlib.sha256(outputs["source-enemizer-plan.json"]).hexdigest()
     outputs["scaling-report.json"] = json.dumps({
-        "format": "bb-enemizer-scaling-v1", "applied": True,
+        "format": "bb-enemizer-scaling-v1", "applied": scaled,
         "source_gameparam_sha256": sha256_file(source_binder),
         "output_gameparam_sha256": hashlib.sha256(outputs[core.SUPPRESSION_PATH]).hexdigest(),
         "source_plan_sha256": source_plan_hash, "output_plan_sha256": plan_hash,
@@ -303,6 +307,28 @@ class LauncherCoreTests(unittest.TestCase):
         )
         self.assertTrue((build.path / audit["receipt"]["path"]).is_file())
         cache.verify(build.path)
+
+    def test_unscaled_boss_receipt_retains_exact_ap_binder_and_rejects_wrong_choice(self):
+        source_binder = self.root / "composed-ap-gameparam.parambnd.dcx"
+        source_binder.write_bytes(b"ap-parameter-edits")
+        overlay = write_boss_encounter_overlay(
+            self.root, source_binder=source_binder, seed="boss-seed", scaled=False)
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(identity(
+            "boss-seed", b"source", enemizer_seed="boss-seed",
+            options={"enemy_randomizer": True, "boss_encounters": True,
+                     "normalize_scaling": False}),
+            source_binder, boss_encounter_overlay=overlay)
+        self.assertEqual(source_binder.read_bytes(),
+                         (build.path / core.SUPPRESSION_PATH).read_bytes())
+        self.assertFalse(build.manifest["enemizer"]["scaling"]["applied"])
+        cache.verify(build.path)
+        with self.assertRaisesRegex(ValidationError, "scaling choice and receipt"):
+            SeedCache(self.root / "wrong-choice-cache").build(identity(
+                "boss-seed", b"source", enemizer_seed="boss-seed",
+                options={"enemy_randomizer": True, "boss_encounters": True,
+                         "normalize_scaling": True}),
+                source_binder, boss_encounter_overlay=overlay)
 
     def test_generic_boss_receipt_binds_ap_input_before_staging_composed_event(self):
         binder = self.root / "binder.dcx"

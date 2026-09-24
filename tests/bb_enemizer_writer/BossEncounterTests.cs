@@ -78,6 +78,16 @@ internal static class BossEncounterTests
             "skips":[{"logical_key":"m24_01_00_00:c5000_0000","reason":"unknown source or destination tier"}]}}
             """)!.AsObject();
         Need(!BossEncounter.ScalingEnabled(unscaled));
+        var playerDisabled = unscaled.DeepClone().AsObject();
+        playerDisabled["options"] = JsonNode.Parse("""{"normalize_scaling":false}""");
+        playerDisabled["scaling"]!["skips"]![0]!["reason"] = "disabled by player";
+        Need(!BossEncounter.ScalingEnabled(playerDisabled));
+        var undeclared = playerDisabled.DeepClone().AsObject();
+        undeclared["options"]!["normalize_scaling"] = true;
+        Refused(() => BossEncounter.ScalingEnabled(undeclared));
+        var enabledWithPlayerSkip = playerDisabled.DeepClone().AsObject();
+        enabledWithPlayerSkip["scaling"]!["enabled"] = true;
+        Refused(() => BossEncounter.ScalingEnabled(enabledWithPlayerSkip));
         var randomKey = unscaled.DeepClone().AsObject();
         randomKey["scaling"]!["skips"]![0]!["logical_key"] = "m99_00_00_00:invented";
         Refused(() => BossEncounter.ScalingEnabled(randomKey));

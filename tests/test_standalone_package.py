@@ -43,6 +43,7 @@ class StandalonePackageTests(unittest.TestCase):
                         "--output",
                         str(output),
                         "--randomize-enemies",
+                        "--expanded-coverage",
                         "--normalize-enemy-scaling",
                     ],
                     package_root=package,
@@ -64,10 +65,13 @@ class StandalonePackageTests(unittest.TestCase):
             self.assertEqual(str(game / "script"), values["--enemy-scripts"])
             self.assertEqual(str(item_writer), values["--item-writer"])
             self.assertEqual(str(enemy_writer), values["--enemy-writer"])
+            self.assertEqual(str(game / "event/m24_01_00_00.emevd.dcx"),
+                             command[command.index("--wakeup-event") + 1])
             for flag in (
                 "--apply",
                 "--randomize-enemies",
                 "--normalize-enemy-scaling",
+                "--expanded-coverage",
             ):
                 self.assertIn(flag, command)
 

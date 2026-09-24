@@ -29,6 +29,7 @@ BUILD_IDENTITY_FORMAT = "bb-standalone-build-identity-v1"
 BUILD_RECEIPT_FORMAT = "bb-standalone-build-receipt-v1"
 EXPORT_RECEIPT_FORMAT = "bb-standalone-bblauncher-export-v1"
 GAMEPARAM_PATH = "dvdroot_ps4/param/gameparam/gameparam.parambnd.dcx"
+WAKEUP_EVENT_PATH = "dvdroot_ps4/event/m24_01_00_00.emevd.dcx"
 ACTIVE_MODS_DIR_NAME = "Mods-Active (DO NOT DELETE)"
 PACKAGE_PREFIX = "Bloodborne-Standalone-"
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
@@ -207,7 +208,7 @@ def _require_sha256(value: Any, label: str) -> str:
 
 
 def _is_native_payload_path(relative: str) -> bool:
-    if relative == GAMEPARAM_PATH:
+    if relative in (GAMEPARAM_PATH, WAKEUP_EVENT_PATH):
         return True
     parts = PurePosixPath(relative).parts
     if len(parts) == 4 and parts[:3] == ("dvdroot_ps4", "map", "MapStudio"):
@@ -296,6 +297,27 @@ def validate_overlay(path: Path | str) -> ValidatedOverlay:
             raise ValueError("standalone enemy plan exists without identity provenance")
     elif enemy_plan is None or enemy_digest != enemy_plan.sha256:
         raise ValueError("standalone enemy plan provenance does not match the build identity")
+
+    plan = (_read_object(root / "standalone-enemy-plan.json", "standalone enemy plan")
+            if enemy_plan is not None else {})
+    fallbacks = plan.get("wakeup_fallbacks", [])
+    wakeup = receipt.get("wakeup_writer")
+    if fallbacks:
+        event = by_name.get(WAKEUP_EVENT_PATH)
+        report_record = by_name.get("wakeup-fallback-report.json")
+        if event is None or report_record is None or not isinstance(wakeup, dict):
+            raise ValueError("standalone wakeup fallback requires its event and writer receipt")
+        report = _read_object(root / report_record.path, "standalone wakeup receipt")
+        if (report != wakeup or report.get("format") != "bb-enemizer-wakeup-fallback-v1"
+                or report.get("applied") is not True
+                or report.get("plan_sha256") != enemy_digest
+                or report.get("wakeup_fallbacks") != fallbacks
+                or report.get("source_event_sha256") != source_hashes.get(WAKEUP_EVENT_PATH)
+                or WAKEUP_EVENT_PATH not in source_hashes
+                or report.get("output_event_sha256") != event.sha256):
+            raise ValueError("standalone wakeup receipt differs from its plan, source or output")
+    elif WAKEUP_EVENT_PATH in by_name or wakeup is not None:
+        raise ValueError("standalone wakeup event has no planned fallback")
 
     game_records = tuple(
         record for record in records if record.path.startswith("dvdroot_ps4/")

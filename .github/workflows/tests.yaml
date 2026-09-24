@@ -22,6 +22,15 @@ env:
     orjson colorama certifi bsdiff4 jinja2
 
 jobs:
+  fork-release-packaging:
+    name: BBLauncher release finalizer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify signing gates and archive hashes with synthetic fixtures
+        shell: pwsh
+        run: ./tests/test_finalize_fork_release.ps1
+
   # Does this pull request touch anything the suppression binder build reads?
   # #391..#397 left main red because a pull request moved
   # SUPPRESSION_PLAN_SHA256 while the binder job only ran on main, so nothing

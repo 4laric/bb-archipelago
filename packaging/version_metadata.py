@@ -121,6 +121,10 @@ def write_metadata(output: Path, raw_version: str) -> dict[str, object]:
             "Bloodborne Enemy Randomization Planner",
             "BBEnemizerPlanner.exe",
         ),
+        "backend-version.txt": (
+            "Bloodborne Archipelago Launcher Backend",
+            "bb-ap-backend.exe",
+        ),
     }
     for name, (description, filename) in resources.items():
         (output / name).write_text(

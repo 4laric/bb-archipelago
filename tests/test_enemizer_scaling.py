@@ -163,7 +163,7 @@ class StaticScalingTests(unittest.TestCase):
             self.assertFalse(default["scaling"]["enabled"])
             self.assertEqual(0, len(default["scaling"]["changes"]))
             self.assertTrue(enabled["scaling"]["enabled"])
-            self.assertEqual(237, enabled["scaling"]["change_count"])
+            self.assertEqual(239, enabled["scaling"]["change_count"])
 
 
 if __name__ == "__main__":

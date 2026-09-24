@@ -33,7 +33,8 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from ..client_config import session_key
-from ..core import ValidationError
+from ..core import ValidationError, ConflictError, RecoveryError
+from ..external import ExternalPackageExists
 from . import fork_identity
 from .import_state import detect_installations, import_companion_state
 from .journal import append_entry, decide_recovery, plan_activation, read_journal
@@ -96,6 +97,7 @@ class Backend:
             "inspect_install": self._inspect_install,
             "inspect_seed": self._inspect_seed,
             "prepare_play": self._prepare_play,
+            "migrate_legacy_overlay": self._migrate_legacy_overlay,
             "prepare_standalone": self._prepare_standalone,
             "verify_standalone": self._verify_standalone,
             "verify_and_arm": self._verify_and_arm,
@@ -129,7 +131,7 @@ class Backend:
             "protocol": PROTOCOL_VERSION,
             "operations": [
                 "capabilities", "inspect_install", "inspect_seed", "prepare_play",
-                "prepare_standalone", "verify_standalone",
+                "prepare_standalone", "verify_standalone", "migrate_legacy_overlay",
                 "verify_and_arm", "connect_and_start_client", "session_status",
                 "stop_client", "cancel_operation",
             ],
@@ -226,6 +228,28 @@ class Backend:
 
         return verify_standalone(params, state_root=self.state_root)
 
+    def _migrate_legacy_overlay(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
+        from .migration import migrate_legacy_overlay
+
+        game_root = params.get("game_root")
+        if not isinstance(game_root, str) or not game_root.strip():
+            raise ProtocolError("bad-request", "Choose a Bloodborne installation before launching.")
+        if self.process_check_fn is None:
+            raise ProtocolError("missing-prerequisite", "Cannot check whether the game is stopped. Restart the launcher.")
+        if op_id in self.cancelled:
+            raise ProtocolError("cancelled", "operation was cancelled")
+        def game_running() -> bool:
+            observed = self.process_check_fn()
+            if observed.get("reason") == "process-query-refused":
+                raise ProtocolError("missing-prerequisite", "Cannot check whether the game is stopped. Close the emulator and restart the launcher.")
+            return observed.get("game_running") is not False
+
+        try:
+            return migrate_legacy_overlay(game_root, process_is_running=game_running,
+                                          state_root=self.state_root)
+        except (ConflictError, RecoveryError, ValidationError) as exc:
+            raise ProtocolError("conflict", str(exc), retryable=True) from exc
+
     def _prepare_play(self, params: Mapping[str, Any], op_id: str) -> dict[str, Any]:
         if op_id in self.cancelled:
             raise ProtocolError("cancelled", "operation was cancelled")
@@ -237,7 +261,14 @@ class Backend:
             "state_root": str(self.state_root),
             "enemizer": enemizer_options_record(options),
         }
-        prepared = self.prepare_fn(prepare_params, op_id)  # real: workflow.prepare_seed + export
+        try:
+            prepared = self.prepare_fn(prepare_params, op_id)  # workflow + inactive export
+        except ExternalPackageExists as exc:
+            raise ProtocolError(
+                "package-exists", str(exc), retryable=options.enabled,
+                recovery=("rerandomize-enemies",) if options.enabled else (),
+                ids={"package_name": exc.path.name},
+            ) from exc
         receipt_id = str(prepared["receipt_id"])
         existing = find_play_by_receipt(self.state_root, receipt_id)
         if existing is not None:

@@ -36,9 +36,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--randomize-enemies", action="store_true")
     parser.add_argument("--enemy-seed")
-    parser.add_argument("--allow-tier-mixing", action="store_true")
     parser.add_argument("--preserve-locomotion", action="store_true")
     parser.add_argument("--normalize-enemy-scaling", action="store_true")
+    parser.add_argument("--expanded-coverage", action="store_true")
     parser.add_argument("--maps", type=Path, help="development override for MapStudio")
     parser.add_argument(
         "--enemy-scripts", type=Path, help="development override for enemy AI scripts"
@@ -46,6 +46,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--enemy-inventory", type=Path, help="development override for enemy inventory"
     )
+    parser.add_argument("--wakeup-event", type=Path,
+                        help="development override for the original wakeup event")
     parser.add_argument(
         "--item-writer", type=Path, help="development override for the item writer"
     )
@@ -108,10 +110,13 @@ def build_arguments(args: argparse.Namespace, package_root: Path) -> list[str]:
         command.extend(
             ("--enemy-inventory", str(args.enemy_inventory.expanduser().resolve()))
         )
+    if args.expanded_coverage:
+        event = args.wakeup_event or game / "event/m24_01_00_00.emevd.dcx"
+        command.extend(("--wakeup-event", str(event.expanduser().resolve())))
     for enabled, flag in (
-        (args.allow_tier_mixing, "--allow-tier-mixing"),
         (args.preserve_locomotion, "--preserve-locomotion"),
         (args.normalize_enemy_scaling, "--normalize-enemy-scaling"),
+        (args.expanded_coverage, "--expanded-coverage"),
     ):
         if enabled:
             command.append(flag)

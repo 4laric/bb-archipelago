@@ -40,12 +40,12 @@ SEED = "12345"
 # determinism is pinned separately below).
 PINNED_COUNTS = {
     (): 308,
-    ("contracts",): 800,
+    ("contracts",): 806,
     ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1589,
+    ("chara", "contracts", "spawns"): 1595,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1599,
+    ("chara", "contracts", "spawns", "wakeup"): 1605,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 

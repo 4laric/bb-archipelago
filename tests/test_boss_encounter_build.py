@@ -11,7 +11,7 @@ from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_co
 from tools.build_boss_encounters import (
     ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
     event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
-    build,
+    build, disable_player_scaling,
     is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers, pin_region_requirements, pin_actor_requirements, pin_object_requirements,
 )
 from tools.bb_enemizer.boss_pool import compose_event_patches, assign_donors
@@ -22,6 +22,29 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EncounterBuildTests(unittest.TestCase):
+    def test_player_disables_every_combined_scaling_clone_before_native_write(self):
+        plan = {
+            'swaps': [{'logical_key': 'ordinary'}, {'logical_key': 'boss'}],
+            'options': {'allow_tier_mixing': True},
+            'scaling': {'enabled': True, 'changes': [{'logical_key': 'ordinary'}],
+                        'skips': [{'logical_key': 'boss', 'reason': 'no free spEffectID slot'}]},
+            'boss_actor_scaling': [{'parent_logical_key': 'ordinary'}],
+        }
+        disabled = disable_player_scaling(plan)
+        self.assertIs(disabled, plan)
+        self.assertEqual({'enabled': False, 'change_count': 0, 'changes': []},
+                         {key: disabled['scaling'][key]
+                          for key in ('enabled', 'change_count', 'changes')})
+        self.assertEqual([
+            {'logical_key': key, 'reason': 'disabled by player'}
+            for key in ('boss', 'ordinary')], disabled['scaling']['skips'])
+        self.assertEqual(2, disabled['scaling']['skip_count'])
+        self.assertFalse(disabled['options']['normalize_scaling'])
+        self.assertNotIn('boss_actor_scaling', disabled)
+        with self.assertRaisesRegex(ValueError, 'does not cover'):
+            disable_player_scaling({'swaps': plan['swaps'], 'options': {},
+                                    'scaling': {'changes': [], 'skips': []}})
+
     def test_reusable_specialized_donor_routes_reach_the_compiler_pin_gate(self):
         from tools.bb_enemizer.laurence_donor import SUPPORTED_LAURENCE_ARENAS
         from tools.bb_enemizer.logarius_donor import SUPPORTED_LOGARIUS_ARENAS

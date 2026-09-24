@@ -57,7 +57,9 @@ class IntegratedStandaloneTests(unittest.TestCase):
         self.app_patcher.start()
         self.params = {
             "seed": "Moonlight-101", "include_dlc": False,
-            "randomize_enemies": False, "game_root": str(self.root / "game"),
+            "randomize_enemies": False, "expanded_coverage": False,
+            "normalize_scaling": True,
+            "game_root": str(self.root / "game"),
             "mods_root": str(self.mods),
         }
 
@@ -85,7 +87,17 @@ class IntegratedStandaloneTests(unittest.TestCase):
                     for source in source_root.iterdir():
                         identity["source_hashes"][f"{logical_root}/{source.name}"] = (
                             hashlib.sha256(source.read_bytes()).hexdigest())
+            if config.wakeup_event is not None:
+                identity["source_hashes"][
+                    "dvdroot_ps4/event/m24_01_00_00.emevd.dcx"] = (
+                    hashlib.sha256(config.wakeup_event.read_bytes()).hexdigest())
             identity["options"]["enemies"]["enabled"] = config.enemy_options.enabled
+            identity["options"]["enemies"]["allow_tier_mixing"] = (
+                config.enemy_options.allow_tier_mixing)
+            identity["options"]["enemies"]["expanded_coverage"] = (
+                config.enemy_options.expanded_coverage)
+            identity["options"]["enemies"]["normalize_scaling"] = (
+                config.enemy_options.normalize_scaling)
             write_json(identity_path, identity)
             receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
             receipt["source_hashes"] = identity["source_hashes"]
@@ -137,6 +149,11 @@ class IntegratedStandaloneTests(unittest.TestCase):
         }))
         self.assertFalse(bad["ok"])
         self.assertEqual("bad-request", bad["error"]["code"])
+        expanded_without_enemies = self.backend.handle(request("prepare_standalone", {
+            **self.params, "expanded_coverage": True,
+        }))
+        self.assertFalse(expanded_without_enemies["ok"])
+        self.assertEqual("bad-request", expanded_without_enemies["error"]["code"])
         prepared = self._prepare()["result"]
         foreign = self.root / "other" / "receipt.json"
         foreign.parent.mkdir()
@@ -198,6 +215,67 @@ class IntegratedStandaloneTests(unittest.TestCase):
             "verify_standalone", self._verify_params(prepared["result"]), 8))
         self.assertFalse(changed["ok"])
         self.assertEqual("verification-failed", changed["error"]["code"])
+
+    def test_expanded_choice_is_bound_to_prepared_receipt(self):
+        self.params.update(randomize_enemies=True, expanded_coverage=True)
+        (self.tools / "BBEnemizerWriter.exe").write_bytes(b"enemy writer")
+        for relative in (
+            "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx",
+            "dvdroot_ps4/script/m21_00_00_00.luabnd.dcx",
+        ):
+            source = self.install.root / relative
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_bytes(b"original enemy source")
+        prepared = self._prepare()
+        self.assertTrue(prepared["ok"], prepared)
+        self.assertTrue(prepared["result"]["options"]["enemies"]["expanded_coverage"])
+        self.assertTrue(prepared["result"]["options"]["enemies"]["allow_tier_mixing"])
+        valid = self.backend.handle(request(
+            "verify_standalone", self._verify_params(prepared["result"]), 9))
+        self.assertTrue(valid["ok"], valid)
+        wrong = self.backend.handle(request("verify_standalone", {
+            **self._verify_params(prepared["result"]), "expanded_coverage": False,
+        }, 10))
+        self.assertFalse(wrong["ok"])
+        self.assertEqual("verification-failed", wrong["error"]["code"])
+
+    def test_scaling_defaults_on_and_is_bound_to_prepared_receipt(self):
+        self.params["randomize_enemies"] = True
+        self.params.pop("normalize_scaling")
+        (self.tools / "BBEnemizerWriter.exe").write_bytes(b"enemy writer")
+        for relative in (
+            "dvdroot_ps4/map/MapStudio/m21_00_00_00.msb.dcx",
+            "dvdroot_ps4/script/m21_00_00_00.luabnd.dcx",
+        ):
+            source = self.install.root / relative
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_bytes(b"original enemy source")
+        prepared = self._prepare()
+        self.assertTrue(prepared["ok"], prepared)
+        self.assertTrue(prepared["result"]["options"]["enemies"]["normalize_scaling"])
+        verified = self.backend.handle(request("verify_standalone", {
+            **self._verify_params(prepared["result"]), "normalize_scaling": True,
+        }, 11))
+        self.assertTrue(verified["ok"], verified)
+        wrong = self.backend.handle(request("verify_standalone", {
+            **self._verify_params(prepared["result"]), "normalize_scaling": False,
+        }, 12))
+        self.assertFalse(wrong["ok"])
+        self.assertEqual("verification-failed", wrong["error"]["code"])
+
+    def test_scaling_off_override_is_receipted_and_verified(self):
+        self.params["normalize_scaling"] = False
+        prepared = self._prepare()
+        self.assertTrue(prepared["ok"], prepared)
+        self.assertFalse(prepared["result"]["options"]["enemies"]["normalize_scaling"])
+        verified = self.backend.handle(request(
+            "verify_standalone", self._verify_params(prepared["result"]), 13))
+        self.assertTrue(verified["ok"], verified)
+        wrong = self.backend.handle(request("verify_standalone", {
+            **self._verify_params(prepared["result"]), "normalize_scaling": True,
+        }, 14))
+        self.assertFalse(wrong["ok"])
+        self.assertEqual("verification-failed", wrong["error"]["code"])
 
 
 if __name__ == "__main__":
