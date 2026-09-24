@@ -61,6 +61,9 @@ CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
 BOSS_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_01_00_00.emevd.dcx"
+# Central Yharnam scripted-AI initializer events the wakeup fallback may
+# suppress: 12415130 sleep-to-wake, 12410340 sewer rat ambush.
+WAKEUP_FALLBACK_EVENTS = frozenset({12415130, 12410340})
 BOSS_ENCOUNTER_REPORT_NAME = "boss-encounters-report.json"
 # Native encounter outputs include plans and diagnostic receipts alongside
 # loose game files.  They are retained under this cache-only path, never
@@ -839,7 +842,7 @@ class SeedCache:
                         or not isinstance(row.get("entity_id"), int)
                         or isinstance(row.get("entity_id"), bool)
                         or row.get("map") != "m24_01_00_00"
-                        or row.get("event_id") != 12415130):
+                        or row.get("event_id") not in WAKEUP_FALLBACK_EVENTS):
                     raise ValidationError("enemizer plan carries an invalid wakeup fallback row")
             if encounter is not None or boss_event is not None:
                 raise ValidationError("wakeup fallback cannot be combined with a boss event overlay")
