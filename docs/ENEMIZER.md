@@ -266,7 +266,7 @@ Ordinary seeds sample the compatibility rules; a stress profile drives them
 to a chosen limit in one map so a single playtest session can falsify an
 assumption instead of waiting for it to surface. A profile is an enemy seed
 of the form `stress:<kind>[=<argument>][:<map prefix>]`, typed into the
-launcher's Enemy seed field (Advanced enemy options) or passed to the
+launcher's Enemy seed field (on Play, under Enemies) or passed to the
 planner's `--seed`:
 
 | Seed | What every swap in the focus does |

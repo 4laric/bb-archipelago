@@ -983,7 +983,7 @@ def _check_pickup_names(chain: _Chain) -> DoctorFinding:
     try:
         owner = _load_owner(root)
     except LauncherError as exc:
-        return DoctorFinding(FAIL, "pickup names", str(exc), "Run Randomize & Launch to rebuild the overlay.")
+        return DoctorFinding(FAIL, "pickup names", str(exc), "Press Launch to rebuild the overlay.")
     if not any(record["path"] in ITEM_NAMES_PATHS for record in owner["files"]):
         return DoctorFinding(SKIP, "pickup names", "no pickup-name archive active")
     return DoctorFinding(PASS, "pickup names", "active item-name archives and parameter binder hashes verified")

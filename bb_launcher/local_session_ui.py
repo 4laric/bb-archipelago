@@ -52,8 +52,12 @@ class LocalSessionPanel:
         self.ap_root = tk.StringVar(value=str(Path.home() / "Archipelago"))
         self.python = tk.StringVar()
         self.players = tk.StringVar()
-        self.use_folder = tk.BooleanVar(value=False)
+        # Who the seed is for: "solo" writes one player file from Play's name,
+        # "folder" generates from a folder of player YAML files.
+        self.source = tk.StringVar(value="solo")
         self.include_dlc = tk.BooleanVar(value=False)
+        # Set by whichever Create button was pressed, not a checkbox: the
+        # world-install retry re-runs _generate() and must keep the choice.
         self.auto_host = tk.BooleanVar(value=True)
         self.port = tk.StringVar(value="38281")
         self.status = tk.StringVar(value="Create a solo seed, or use a folder of player YAML files.")
@@ -63,11 +67,11 @@ class LocalSessionPanel:
         self.install_label = tk.StringVar(value="Install Bloodborne world")
         self._install_root = None
         self._load()
-        from .theme import field, option, page_header, scroll_page, section
+        from .theme import field, page_header, scroll_page, section
         host_frame = ttk.Frame(notebook)
-        # Play and Enemies are what every normal launch touches; Create & host
-        # is occasional setup, so it sits after them, ahead of Advanced. This
-        # constructor runs after Play and Enemies are added and before
+        # Play is what every normal launch touches; Create & host is
+        # occasional setup, so it sits after it, ahead of Advanced. This
+        # constructor runs after Play is added and before
         # Advanced is, so a plain append already lands in the right place --
         # a numeric notebook.insert(2, ...) crashed the packaged build
         # ("Slave index 2 out of bounds"): the bundled Tcl/Tk there rejects a
@@ -76,18 +80,37 @@ class LocalSessionPanel:
         notebook.add(host_frame, text="Create & host")
         frame = scroll_page(tk, ttk, host_frame)
         row = page_header(ttk, frame, "Create & host", "Generate a seed on this PC and host it for yourself.")
-        row = section(ttk, frame, row, "Your game", first=True)
-        # Player name lives on Play now: it's the same concept whether it
-        # authors a new solo seed here or picks your slot in a seed you got
-        # some other way, so it isn't siloed to this page.
-        option(ttk, frame, row, "Include The Old Hunters DLC", self.include_dlc)
+        # Choices, not checkboxes: who the seed is for (only that path's
+        # inputs are shown), which content, and -- on the buttons themselves
+        # -- whether to host it right away.
+        row = section(ttk, frame, row, "Players", first=True)
+        # Player name lives on Play: it's the same concept whether it authors
+        # a new solo seed here or picks your slot in a seed you got some
+        # other way, so it isn't siloed to this page.
+        sources = ttk.Frame(frame)
+        sources.grid(row=row, column=0, columnspan=3, sticky="w", pady=(0, 6))
+        for column, (value, label) in enumerate((
+            ("solo", "Just me"), ("folder", "A folder of player YAML files"),
+        )):
+            ttk.Radiobutton(
+                sources, text=label, variable=self.source, value=value,
+                command=self._source_changed,
+            ).grid(row=0, column=column, sticky="w", padx=(0, 24))
+        dlc_label = ttk.Label(frame, text="Content", style="Field.TLabel")
+        dlc_label.grid(row=row + 1, column=0, sticky="w", padx=(0, 14), pady=4)
+        dlc = ttk.Frame(frame)
+        dlc.grid(row=row + 1, column=1, columnspan=2, sticky="w", pady=4)
+        for column, (value, label) in enumerate((
+            (False, "Base game"), (True, "Base game + The Old Hunters"),
+        )):
+            ttk.Radiobutton(dlc, text=label, variable=self.include_dlc, value=value).grid(
+                row=0, column=column, sticky="w", padx=(0, 24))
         wizard_row = ttk.Frame(frame)
-        wizard_row.grid(row=row + 1, column=0, columnspan=3, sticky="ew", pady=(6, 0))
+        wizard_row.grid(row=row + 2, column=0, columnspan=3, sticky="ew", pady=(6, 0))
         ttk.Label(
             wizard_row,
-            text="Want to choose your goal, item pool, deathlink, and everything else the "
-                 "apworld exposes? Build a custom yaml in your browser instead of just the "
-                 "DLC choice above.",
+            text="Want to choose your goal, item pool, deathlink, and everything else? "
+                 "Build a yaml in your browser, then use it as a YAML folder.",
             style="Dim.TLabel", wraplength=520,
         ).grid(row=0, column=0, sticky="w")
         ttk.Button(
@@ -95,29 +118,31 @@ class LocalSessionPanel:
             command=self._open_wizard,
         ).grid(row=0, column=1, sticky="e", padx=(12, 0))
         wizard_row.columnconfigure(0, weight=1)
-        row = section(ttk, frame, row + 2, "Multiworld")
-        option(ttk, frame, row, "Use existing player YAML files", self.use_folder,
-               caption="Bring your own player files, including one from the yaml builder above.")
-        field(ttk, frame, row + 1, "YAML folder", self.players, browse=self._browse_players)
-        row = section(ttk, frame, row + 2, "Local server")
-        option(ttk, frame, row, "Start the server after generation", self.auto_host)
-        field(ttk, frame, row + 1, "Port", self.port, trailing="this PC only")
-        row = section(ttk, frame, row + 2, "Archipelago install")
+        folder_widgets = field(ttk, frame, row + 3, "YAML folder", self.players, browse=self._browse_players)
+        self._solo_widgets = (dlc_label, dlc, wizard_row)
+        self._folder_widgets = tuple(widget for widget in folder_widgets if widget is not None)
+        self._source_changed()
+        row = section(ttk, frame, row + 4, "Local server")
+        field(ttk, frame, row, "Port", self.port, trailing="this PC only")
+        row = section(ttk, frame, row + 1, "Archipelago install")
         field(ttk, frame, row, "Archipelago folder", self.ap_root, browse=self._browse_root)
         field(ttk, frame, row + 1, "Python", self.python, browse=self._browse_python)
         ttk.Label(frame, text="Only for a source checkout of Archipelago.", style="Dim.TLabel").grid(
             row=row + 2, column=1, sticky="w", pady=(0, 4))
         actions = ttk.Frame(frame)
         actions.grid(row=row + 3, column=0, columnspan=3, sticky="ew", pady=(18, 6))
-        self.create = ttk.Button(actions, text="Create seed", command=self._generate, style="Accent.TButton")
+        self.create = ttk.Button(actions, text="Create & host", command=lambda: self._create(True),
+                                 style="Accent.TButton")
         self.create.pack(side="left")
+        self.create_only = ttk.Button(actions, text="Create only", command=lambda: self._create(False),
+                                      style="Ghost.TButton")
+        self.create_only.pack(side="left", padx=(10, 0))
         self.host_button = ttk.Button(actions, text="Host selected seed", command=self._host_selected)
         self.host_button.pack(side="left", padx=(10, 0))
+        # Stop, Cancel and Install appear only while they can do something;
+        # a row of dead buttons overflowed a narrow window.
         self.stop_button = ttk.Button(actions, text="Stop server", command=self._stop, state="disabled",
                                       style="Ghost.TButton")
-        self.stop_button.pack(side="left", padx=(10, 0))
-        # Cancel and Install appear only while they can do something; a row of
-        # five buttons, three of them dead, overflowed a narrow window.
         self.cancel_button = ttk.Button(actions, text="Cancel generation", command=self.cancel.set,
                                         state="disabled", style="Ghost.TButton")
         self.install_button = ttk.Button(
@@ -127,6 +152,18 @@ class LocalSessionPanel:
         frame.bind("<Configure>", lambda e: status.configure(wraplength=max(300, e.width - 60)), add="+")
         app.root.protocol("WM_DELETE_WINDOW", self._close)
         app.root.after(1000, self._poll)
+
+    def _source_changed(self):
+        """Show only the inputs the chosen player source uses."""
+        solo = self.source.get() != "folder"
+        for widget in self._solo_widgets:
+            widget.grid() if solo else widget.grid_remove()
+        for widget in self._folder_widgets:
+            widget.grid_remove() if solo else widget.grid()
+
+    def _create(self, host):
+        self.auto_host.set(host)
+        self._generate()
 
     def _open_wizard(self):
         """Open the full options builder; never fails the app if it can't."""
@@ -149,7 +186,8 @@ class LocalSessionPanel:
         value = self.app.filedialog.askdirectory(title="Folder containing player YAML files")
         if value:
             self.players.set(value)
-            self.use_folder.set(True)
+            self.source.set("folder")
+            self._source_changed()
 
     def _load(self):
         try:
@@ -202,7 +240,7 @@ class LocalSessionPanel:
         self._clear_world_install()
         try:
             state = self.app._state_root()
-            if self.use_folder.get():
+            if self.source.get() == "folder":
                 if not self.players.get().strip():
                     raise ValidationError("Choose the folder containing your player YAML files.")
                 players = Path(self.players.get().strip())
@@ -386,6 +424,11 @@ class LocalSessionPanel:
             self.host = None
             self.status.set("Local server exited. See Progress for details; restart with Host selected seed.")
         self.create.configure(state="disabled" if self.app._busy or active else "normal")
+        self.create_only.configure(state="disabled" if self.app._busy or active else "normal")
+        if active and not self.stop_button.winfo_manager():
+            self.stop_button.pack(side="left", padx=(10, 0))
+        elif not active and self.stop_button.winfo_manager():
+            self.stop_button.pack_forget()
         self.host_button.configure(state="disabled" if self.app._busy or active else "normal")
         self.stop_button.configure(state="normal" if active and not self.app._busy else "disabled")
         self.app.root.after(1000, self._poll)
