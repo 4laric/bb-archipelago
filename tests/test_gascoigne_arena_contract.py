@@ -9,9 +9,9 @@ from tools.bb_inputs import read_blob
 from tools.bb_enemizer.boss_canary import event_blocks
 from tools.bb_enemizer.boss_contracts import AMYGDALA_PACKAGE, BSB_PACKAGE, PACKAGES
 from tools.bb_enemizer.gascoigne_arena_contract import (
-    ACTIVATION_EVENT, ATTACHMENT_EVENTS, BEAST_PINS, BULLET_OWNER_ENTITY,
+    ACTIVATION_EVENT, ATTACHMENT_EVENTS, BACKED_EVENT_RANGE, BEAST_PINS, BULLET_OWNER_ENTITY,
     DEFAULT_IDS, EVENT_FILE, GASCOIGNE_ARENA_CONTRACT, MAP_STATES,
-    OWNER_CLEANUP_EVENT, PROXY_CLEANUP_EVENT, SOURCE_PART_PINS, _original_literals,
+    OWNER_CLEANUP_EVENT, PROXY_CLEANUP_EVENT, SOURCE_PART_PINS, GascoigneArenaIds, _original_literals,
     gascoigne_arena_contract, native_plan_portable_donor_at_gascoigne,
     patch_portable_donor_at_gascoigne, portable_gascoigne_donors,
 )
@@ -42,11 +42,28 @@ class GascoigneArenaContractTests(unittest.TestCase):
         self.assertEqual({package.key for package in PACKAGES},
                          {package.key for package in portable_gascoigne_donors()})
         self.assertEqual(0, len(set(DEFAULT_IDS.values()) & _original_literals()))
-        self.assertEqual((12995300, 12995301, 12995302, 12995303, 12995304),
+        self.assertEqual((12414880, 12414881, 12414882, 12414883, 12414884),
                          ATTACHMENT_EVENTS)
-        self.assertEqual((12995305, 12995306, 12995307, 982800),
+        self.assertEqual((12414885, 12414886, 12414887, 982800),
                          (OWNER_CLEANUP_EVENT, ACTIVATION_EVENT,
                           PROXY_CLEANUP_EVENT, BULLET_OWNER_ENTITY))
+        self.assertEqual(tuple(range(12414880, 12414888)), BACKED_EVENT_RANGE)
+
+    def test_runtime_persistent_events_require_the_exact_live_backed_range(self):
+        old_unbacked = GascoigneArenaIds(
+            attachment_events=(12995300, 12995301, 12995302, 12995303, 12995304),
+            owner_cleanup_event=12995305,
+            activation_event=12995306,
+            proxy_cleanup_event=12995307,
+        )
+        with self.assertRaisesRegex(ValueError, "live-backed range 12414880-12414887"):
+            patch_portable_donor_at_gascoigne(
+                self.destination, BSB_PACKAGE, self.sources[BSB_PACKAGE.key], old_unbacked)
+        with self.assertRaisesRegex(ValueError, "live-backed range 12414880-12414887"):
+            native_plan_portable_donor_at_gascoigne(
+                BSB_PACKAGE, self.slots, self.npcs, self.effects, "unbacked", old_unbacked)
+        with self.assertRaisesRegex(ValueError, "live-backed range 12414880-12414887"):
+            gascoigne_arena_contract(BSB_PACKAGE, old_unbacked)
 
     def test_all_donors_preserve_terminal_entry_coop_and_generic_navigation_body(self):
         before = event_blocks(self.destination)

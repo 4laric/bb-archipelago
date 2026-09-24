@@ -481,9 +481,10 @@ ORPHAN_ALLOCATION = OrphanIds(
 
 GASCOIGNE_ALLOCATION = ProjectOwnedIds(
     beast_entity_id=980001,
-    phase_event_ids={12414807: 12990001, 12414808: 12990002, 12414809: 12990003},
-    terminal_bridge_event_id=12990004, destination_part='ap_gascoigne_beast',
-    evidence='BB AP Gascoigne-at-Cleric allocation v1; full original corpus collision scan',
+    phase_event_ids={12414807: 12414780, 12414808: 12414781, 12414809: 12414782},
+    terminal_bridge_event_id=12414783, destination_part='ap_gascoigne_beast',
+    evidence=('BB AP Gascoigne-at-Cleric allocation v2; full original corpus collision scan; '
+              '12414 flag group and 12414780-12414783 probed backed and clear in live client'),
 )
 
 GASCOIGNE_ARENA_ATTACHMENTS = ClericGascoigneIds(
