@@ -265,6 +265,24 @@ def _regular_directory(path: Path | str, label: str) -> Path:
     return candidate
 
 
+def _inactive_mods_directory(path: Path | str, *, create: bool = False) -> Path:
+    """Allow a fresh BBLauncher library, but never create an arbitrary output root."""
+    mods = _absolute(path)
+    _check_existing_ancestors(mods, "BBLauncher Mods directory")
+    if mods.exists() or mods.is_symlink():
+        return _regular_directory(mods, "BBLauncher Mods directory")
+    if mods.name.casefold() != "mods" or mods.parent.name.casefold() != "bblauncher":
+        raise ValidationError(f"BBLauncher Mods directory is not a regular directory: {mods}")
+    _regular_directory(mods.parent, "BBLauncher managed directory")
+    if create:
+        try:
+            mods.mkdir()
+        except OSError as exc:
+            raise ValidationError(f"could not create BBLauncher Mods directory {mods}: {exc}") from exc
+        return _regular_directory(mods, "BBLauncher Mods directory")
+    return mods
+
+
 def _overlap(left: Path, right: Path) -> bool:
     try:
         common = os.path.commonpath((os.path.normcase(str(left)), os.path.normcase(str(right))))
@@ -446,7 +464,7 @@ def export_external_package(
     compatibility = _compatibility(pin, allow_live_acceptance_candidate=allow_live_acceptance_candidate)
     if not client_version.strip():
         raise ValidationError("external export requires a client version")
-    mods = _regular_directory(mods_root, "BBLauncher Mods directory")
+    mods = _inactive_mods_directory(mods_root)
     if _inside_named_directory(mods, ACTIVE_MODS_DIR_NAME):
         raise ValidationError("selected BBLauncher Mods directory is the active package directory")
     managed_root = mods.parent
@@ -468,7 +486,8 @@ def export_external_package(
     records = _manifest_files(verified)
     package_name = f"{PACKAGE_PREFIX}{_safe_slot(selected.slot)}-{verified.cache_key[:12]}"
     target = mods / package_name
-    stale = _replaceable_package(mods, package_name, replace=replace_existing)
+    if mods.is_dir():
+        _replaceable_package(mods, package_name, replace=replace_existing)
     active_root = mods.with_name(ACTIVE_MODS_DIR_NAME)
     if active_root.exists() or active_root.is_symlink():
         active = _regular_directory(active_root, "BBLauncher active Mods directory")
@@ -504,6 +523,8 @@ def export_external_package(
     if receipt_path.exists() or receipt_path.is_symlink():
         raise ValidationError(f"immutable external receipt already exists: {receipt_path}")
 
+    mods = _inactive_mods_directory(mods, create=True)
+    stale = _replaceable_package(mods, package_name, replace=replace_existing)
     stage.mkdir()
     try:
         for record in records:

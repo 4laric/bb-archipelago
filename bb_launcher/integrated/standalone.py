@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..core import GameInstall, ValidationError, _write_json_atomic, sha256_file
+from ..external import (_inactive_mods_directory, _require_outside_bblauncher,
+                        _require_separate)
 from ..resources import application_root
 from .protocol import ProtocolError
 
@@ -122,8 +124,12 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
     seed, include_dlc, randomize_enemies, expanded_coverage, normalize_scaling = _choices(params)
     game_root = _required_path(params, "game_root")
     mods_root = _required_path(params, "mods_root")
-    if mods_root.name.casefold() != "mods" or not mods_root.is_dir() or mods_root.is_symlink():
+    if mods_root.name.casefold() != "mods":
         raise ProtocolError("bad-request", "standalone mods_root must be the inactive Mods directory")
+    try:
+        _inactive_mods_directory(mods_root)
+    except ValidationError as error:
+        raise ProtocolError("bad-request", str(error)) from error
     state = state_root.expanduser().resolve()
     if "state_root" in params and _required_path(params, "state_root").resolve() != state:
         raise ProtocolError("bad-request", "standalone state_root differs from backend state")
@@ -176,6 +182,11 @@ def prepare_standalone(params: Mapping[str, Any], *, state_root: Path) -> dict[s
                     "normalize_scaling") != normalize_scaling):
             raise ValueError("standalone build identity differs from requested seed or options")
         name = package_name(overlay)
+        _require_separate(mods_root, (("game root", install.root),
+                                      ("generated overlay", output),
+                                      ("standalone state root", state)))
+        _require_outside_bblauncher(state, "standalone state root", mods_root.parent)
+        _inactive_mods_directory(mods_root, create=True)
         existing_package = mods_root / name
         existing_receipt = receipts / f"{name}.export-receipt.json"
         if existing_package.exists() or existing_receipt.exists():

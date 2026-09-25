@@ -169,6 +169,30 @@ class ExternalArtifactTests(unittest.TestCase):
                          self.selected_identity.suppression_plan_sha256)
         self.assertEqual(raw["enemizer_identity"], None)
 
+    def test_export_initializes_missing_conventional_mods_library(self):
+        self.mods_root.rmdir()
+        exported = self.export()
+        self.assertTrue(self.mods_root.is_dir())
+        self.assertEqual(exported.package_path.parent, self.mods_root)
+        self.assertEqual(list(self.mods_root.iterdir()), [exported.package_path])
+
+    def test_export_rejects_file_instead_of_missing_mods_library(self):
+        self.mods_root.rmdir()
+        self.mods_root.write_bytes(b"foreign file")
+        with self.assertRaisesRegex(ValidationError, "not a regular directory"):
+            self.export()
+        self.assertEqual(self.mods_root.read_bytes(), b"foreign file")
+
+    def test_invalid_destination_does_not_initialize_missing_mods_library(self):
+        self.mods_root.rmdir()
+        with self.assertRaisesRegex(ValidationError, "BBLauncher managed root"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.mods_root.parent / "state", install=self.install,
+                bblauncher=self.pin, client_version="client-test",
+            )
+        self.assertFalse(self.mods_root.exists())
+
     def snapshot_game(self):
         return {
             path.relative_to(self.install.root).as_posix(): sha256_file(path)

@@ -143,6 +143,29 @@ class IntegratedStandaloneTests(unittest.TestCase):
         self.assertFalse(rejected["ok"])
         self.assertEqual("verification-failed", rejected["error"]["code"])
 
+    def test_prepare_initializes_missing_conventional_mods_library(self):
+        self.mods.rmdir()
+        prepared = self._prepare()
+        self.assertTrue(prepared["ok"], prepared)
+        self.assertTrue(self.mods.is_dir())
+        self.assertEqual(self.mods, Path(prepared["result"]["package_path"]).parent)
+
+    def test_prepare_rejects_file_at_mods_library(self):
+        self.mods.rmdir()
+        self.mods.write_bytes(b"foreign file")
+        prepared = self._prepare()
+        self.assertFalse(prepared["ok"])
+        self.assertEqual("bad-request", prepared["error"]["code"])
+        self.assertEqual(self.mods.read_bytes(), b"foreign file")
+
+    def test_invalid_state_does_not_initialize_missing_mods_library(self):
+        self.mods.rmdir()
+        self.backend = Backend(self.mods.parent / "state")
+        bad = self._prepare()
+        self.assertFalse(bad["ok"])
+        self.assertEqual("verification-failed", bad["error"]["code"])
+        self.assertFalse(self.mods.exists())
+
     def test_rejects_invalid_choices_and_foreign_receipt(self):
         bad = self.backend.handle(request("prepare_standalone", {
             **self.params, "include_dlc": "yes",
