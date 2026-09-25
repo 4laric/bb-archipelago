@@ -15,6 +15,24 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+
+function Test-GitTrackedDirty([string]$Root) {
+    # `git status --porcelain` can report a tracked file as modified on Windows
+    # when a generator rewrites only its worktree line endings.  Git's actual
+    # normalized diff is empty in that case, so it is not a source change and
+    # must not poison release provenance.  Check both the index and worktree
+    # diffs instead; `--ignore-submodules=none` keeps real submodule drift in
+    # the release gate.
+    & git -C $Root diff --quiet --ignore-submodules=none --
+    $worktreeExit = $LASTEXITCODE
+    & git -C $Root diff --cached --quiet --ignore-submodules=none --
+    $indexExit = $LASTEXITCODE
+    if ($worktreeExit -gt 1 -or $indexExit -gt 1) {
+        throw "Cannot inspect tracked source changes in $Root."
+    }
+    return ($worktreeExit -eq 1 -or $indexExit -eq 1)
+}
+
 if (-not $OutputRoot) { $OutputRoot = Join-Path $repo 'build/fork-candidate' }
 $output = [IO.Path]::GetFullPath($OutputRoot)
 $buildPrefix = [IO.Path]::GetFullPath((Join-Path $repo 'build')).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
@@ -157,7 +175,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Frozen fork bundle smoke failed.' }
 $manifest = [ordered]@{
     format = 'bb-ap-fork-candidate-v1'
     backend_revision = $backendRevision
-    backend_dirty = [bool]((& git -C $repo status --porcelain --untracked-files=no | Out-String).Trim())
+    backend_dirty = [bool](Test-GitTrackedDirty $repo)
     fork_sha256 = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
     client_ref = $ClientRef
     client_sha256 = (Get-FileHash -LiteralPath $ClientPath -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -170,7 +188,7 @@ $manifest = [ordered]@{
 }
 if ($ForkSourceRoot) {
     $manifest.fork_revision = $forkRevision
-    $manifest.fork_dirty = [bool]((& git -C $ForkSourceRoot status --porcelain --untracked-files=no | Out-String).Trim())
+    $manifest.fork_dirty = [bool](Test-GitTrackedDirty $ForkSourceRoot)
 }
 $manifest.tools = @(Get-ChildItem -LiteralPath (Join-Path $backend 'tools') -File -Recurse |
     Sort-Object FullName | ForEach-Object {
