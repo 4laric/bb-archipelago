@@ -215,6 +215,19 @@ class StandaloneModExportTests(unittest.TestCase):
         for forbidden in ("archipelago", "server", "slot", "client", "suppression"):
             self.assertNotIn(forbidden, serialized)
 
+    def test_directory_verifier_accepts_flat_package_restored_by_bblauncher(self):
+        result = export_directory(self.overlay, mods_root=self.mods, receipt_root=self.receipts)
+        wrapper = result.package_path / "dvdroot_ps4"
+        for child in wrapper.iterdir():
+            child.rename(result.package_path / child.name)
+        wrapper.rmdir()
+        verified = verify_export(
+            result.package_path, result.receipt_path, overlay_root=self.overlay)
+        self.assertEqual(verified["package_name"], result.package_path.name)
+        (result.package_path / "foreign-marker").write_bytes(b"foreign")
+        with self.assertRaisesRegex(ValueError, "file set differs"):
+            verify_export(result.package_path, result.receipt_path, overlay_root=self.overlay)
+
     def test_zip_is_deterministic_safe_and_extracts_as_one_bblauncher_package(self):
         first_root = self.root / "zip-one"
         second_root = self.root / "zip-two"

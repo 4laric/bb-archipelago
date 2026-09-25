@@ -202,6 +202,19 @@ class IntegratedStandaloneTests(unittest.TestCase):
         self.assertFalse(wrong_game["ok"])
         self.assertEqual("verification-failed", wrong_game["error"]["code"])
 
+    def test_repeated_prepare_reuses_flat_package_restored_by_bblauncher(self):
+        first = self._prepare()
+        self.assertTrue(first["ok"], first)
+        package = Path(first["result"]["package_path"])
+        wrapper = package / "dvdroot_ps4"
+        for child in wrapper.iterdir():
+            child.rename(package / child.name)
+        wrapper.rmdir()
+        second = self._prepare()
+        self.assertTrue(second["ok"], second)
+        self.assertEqual(first["result"]["receipt_id"], second["result"]["receipt_id"])
+        self.assertEqual(package, Path(second["result"]["package_path"]))
+
     def test_selected_serial_directory_survives_install_root_normalization(self):
         self.params["game_root"] = str(self.root / "game" / "CUSA03173")
         prepared = self._prepare()

@@ -434,8 +434,16 @@ def _ensure_roots(
 
 def _verify_directory_files(root: Path, records: tuple[FileRecord, ...]) -> None:
     actual = _tree_files(root, "exported BBLauncher package")
-    expected = {record.path: record for record in records}
-    if set(actual) != set(expected):
+    wrapped = {record.path: record for record in records}
+    flat = {
+        record.path[len("dvdroot_ps4/"):]: record for record in records
+        if record.path.startswith("dvdroot_ps4/")
+    }
+    if set(actual) == set(wrapped):
+        expected = wrapped
+    elif len(flat) == len(records) and set(actual) == set(flat):
+        expected = flat
+    else:
         raise ValueError("exported BBLauncher package file set differs from its receipt")
     for relative, record in expected.items():
         path = actual[relative]

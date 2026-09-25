@@ -402,8 +402,13 @@ def _require_owned_inactive_package(
     if not owned:
         raise ValidationError(f"inactive package has no matching companion receipt: {package}")
     files = _walk_regular_files(package, "inactive companion package")
-    expected = {record.path: record for record in records}
-    if set(files) != set(expected):
+    wrapped = {record.path: record for record in records}
+    flat = {record.path[len(DVDROOT_PREFIX):]: record for record in records}
+    if set(files) == set(wrapped):
+        expected = wrapped
+    elif set(files) == set(flat):
+        expected = flat
+    else:
         raise ValidationError(f"inactive companion package file set drifted: {package}")
     for relative, record in expected.items():
         current = files[relative]
