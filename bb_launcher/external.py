@@ -376,6 +376,41 @@ def _replaceable_package(mods: Path, package_name: str, *, replace: bool) -> Pat
     return existing
 
 
+def _require_owned_inactive_package(
+    package: Path, receipt_root: Path, *, identity: SeedIdentity,
+    records: tuple[ExternalFile, ...], install: GameInstall,
+) -> None:
+    """A Launch retry may replace only a byte-exact package backed by our receipt."""
+    owned = False
+    if receipt_root.is_dir() and not _is_reparse(receipt_root):
+        for path in receipt_root.glob("*.json"):
+            try:
+                receipt = load_external_receipt(path, allow_live_acceptance_candidate=True)
+            except ValidationError:
+                continue
+            if (receipt.package_name == package.name
+                    and receipt.cache_key == identity.cache_key
+                    and receipt.identity.seed == identity.seed
+                    and receipt.identity.slot == identity.slot
+                    and receipt.identity.cache_material() == identity.cache_material()
+                    and receipt.files == records
+                    and receipt.game_root == _absolute(install.root)
+                    and receipt.game_serial == install.serial
+                    and receipt.app_version == install.app_version):
+                owned = True
+                break
+    if not owned:
+        raise ValidationError(f"inactive package has no matching companion receipt: {package}")
+    files = _walk_regular_files(package, "inactive companion package")
+    expected = {record.path: record for record in records}
+    if set(files) != set(expected):
+        raise ValidationError(f"inactive companion package file set drifted: {package}")
+    for relative, record in expected.items():
+        current = files[relative]
+        if current.stat().st_size != record.size or sha256_file(current) != record.sha256:
+            raise ValidationError(f"inactive companion package file drifted: {relative}")
+
+
 def _manifest_files(build: BuildResult) -> tuple[ExternalFile, ...]:
     records = build.manifest.get("files")
     if not isinstance(records, list) or not records:
@@ -439,6 +474,7 @@ def export_external_package(
     created_at: datetime | None = None,
     allow_live_acceptance_candidate: bool = False,
     replace_existing: bool = False,
+    require_owned_existing: bool = False,
 ) -> ExternalExport:
     """Publish one data-only inactive package plus its out-of-band receipt.
 
@@ -525,6 +561,10 @@ def export_external_package(
 
     mods = _inactive_mods_directory(mods, create=True)
     stale = _replaceable_package(mods, package_name, replace=replace_existing)
+    if stale is not None and require_owned_existing:
+        _require_owned_inactive_package(
+            stale, receipt_root, identity=selected, records=records, install=install,
+        )
     stage.mkdir()
     try:
         for record in records:
@@ -541,6 +581,10 @@ def export_external_package(
         # published package can never exist without its verification authority.
         stale = _replaceable_package(mods, package_name, replace=replace_existing)
         if stale is not None:
+            if require_owned_existing:
+                _require_owned_inactive_package(
+                    stale, receipt_root, identity=selected, records=records, install=install,
+                )
             shutil.rmtree(stale)
         os.rename(stage, target)
     finally:

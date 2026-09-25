@@ -87,6 +87,19 @@ class CapabilitiesTests(unittest.TestCase):
 
 
 class WorkflowFailureTests(unittest.TestCase):
+    def test_prepare_requires_boolean_reuse_intent(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            calls = []
+            backend = Backend(Path(state), prepare_fn=lambda params, op_id: calls.append(params))
+            for value in ("true", 1, None, []):
+                with self.subTest(value=value):
+                    response = backend.handle(request("prepare_play", {
+                        "game_root": state, "reuse_existing": value,
+                    }))
+                    self.assertFalse(response["ok"])
+                    self.assertEqual("bad-request", response["error"]["code"])
+            self.assertEqual(calls, [])
+
     def test_failed_build_tool_exposes_sanitized_native_reason(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             def prepare(_params: dict, _op_id: str) -> dict:

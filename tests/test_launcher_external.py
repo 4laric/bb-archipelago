@@ -253,6 +253,54 @@ class ExternalArtifactTests(unittest.TestCase):
             {path: digest for path, digest in self.tree_bytes(first.package_path).items()},
         )
 
+    def test_owned_replacement_requires_receipt_and_exact_inactive_bytes(self):
+        first = self.export()
+        first.receipt_path.unlink()
+        with self.assertRaisesRegex(ValidationError, "no matching companion receipt"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", replace_existing=True,
+                require_owned_existing=True,
+            )
+        self.assertTrue(first.package_path.is_dir())
+        first.receipt_path.write_text(
+            json.dumps(first.receipt.as_dict()), encoding="utf-8")
+        (first.package_path / "foreign-marker").write_bytes(b"foreign")
+        with self.assertRaisesRegex(ValidationError, "file set drifted"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", replace_existing=True,
+                require_owned_existing=True,
+            )
+        self.assertEqual((first.package_path / "foreign-marker").read_bytes(), b"foreign")
+
+    def test_owned_replacement_accepts_verified_companion_package(self):
+        first = self.export()
+        before = self.tree_bytes(first.package_path)
+        replaced = export_external_package(
+            self.build, self.selected_identity, mods_root=self.mods_root,
+            state_root=self.state_root, install=self.install, bblauncher=self.pin,
+            client_version="client-test", replace_existing=True,
+            require_owned_existing=True,
+        )
+        self.assertEqual(replaced.package_path, first.package_path)
+        self.assertEqual(self.tree_bytes(replaced.package_path), before)
+
+    def test_owned_replacement_requires_matching_seed_and_slot(self):
+        first = self.export()
+        before = self.tree_bytes(first.package_path)
+        self.selected_identity = identity("different-seed")
+        with self.assertRaisesRegex(ValidationError, "no matching companion receipt"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", replace_existing=True,
+                require_owned_existing=True,
+            )
+        self.assertEqual(self.tree_bytes(first.package_path), before)
+
     def test_replace_existing_never_touches_an_activated_or_foreign_entry(self):
         package_name = f"Archipelago-Hunter-One-{self.build.cache_key[:12]}"
         active_root = self.mods_root.with_name(ACTIVE_MODS_DIR_NAME)

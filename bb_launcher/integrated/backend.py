@@ -327,11 +327,15 @@ class Backend:
             raise ProtocolError("cancelled", "operation was cancelled")
         if self.prepare_fn is None:
             raise ProtocolError("internal-error", "backend has no prepare function wired")
+        reuse_existing = params.get("reuse_existing", False)
+        if type(reuse_existing) is not bool:
+            raise ProtocolError("bad-request", "reuse_existing must be a boolean")
         options = parse_enemizer_options(params)
         prepare_params = {
             **params,
             "state_root": str(self.state_root),
             "enemizer": enemizer_options_record(options),
+            "reuse_existing": reuse_existing,
         }
         try:
             prepared = self.prepare_fn(prepare_params, op_id)  # workflow + inactive export

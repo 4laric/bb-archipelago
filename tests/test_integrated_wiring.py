@@ -197,10 +197,15 @@ class ProductionPrepareOptionsTests(unittest.TestCase):
                 patch("bb_launcher.workflow.EnemizerToolchain"),
                 patch("bb_launcher.integrated.wiring._suppression_file",
                       side_effect=lambda p, s, kind: binder if kind == "binder" else manifest),
-                patch("bb_launcher.external.export_external_package", return_value=export_result),
+                patch("bb_launcher.external.export_external_package", return_value=export_result) as exporter,
                 patch("bb_launcher.core.sha256_file", return_value="d" * 64),
             ):
                 result = wiring.production_prepare(params, "op")
+                self.assertFalse(exporter.call_args.kwargs["replace_existing"])
+                self.assertFalse(exporter.call_args.kwargs["require_owned_existing"])
+                wiring.production_prepare({**params, "reuse_existing": True}, "launch")
+                self.assertTrue(exporter.call_args.kwargs["replace_existing"])
+                self.assertTrue(exporter.call_args.kwargs["require_owned_existing"])
 
             normalized = {**options_payload, "preserve_locomotion": False}
             self.assertEqual(captured["options"], EnemizerOptions(**normalized))
