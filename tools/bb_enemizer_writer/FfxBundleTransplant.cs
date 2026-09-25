@@ -21,7 +21,7 @@ internal static class FfxBundleTransplant
     static void Need(bool value, string why) { if (!value) throw new InvalidDataException(why); }
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     static string Resolve(string root, string name) {
-        Need(Regex.IsMatch(name, @"^frpg_sfxbnd_m\d{2}(?:_\d{2})?\.ffxbnd\.dcx$"), "invalid FFX binder filename");
+        Need(Regex.IsMatch(name, @"^frpg_sfxbnd_(?:m\d{2}(?:_\d{2})?|m29[a-d])\.ffxbnd\.dcx$"), "invalid FFX binder filename");
         return Path.Combine(root, name);
     }
     static void RequireHash(string path, string expected) {

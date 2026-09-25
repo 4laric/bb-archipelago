@@ -1,0 +1,398 @@
+{
+  "format": "bb-chalice-donor-native-smoke-v1",
+  "date": "2026-09-24",
+  "source_game": "CUSA03173 original files",
+  "compiler": "pinned DarkScript3 3.6.3",
+  "scope": "Native file builds and receipt verification; no installed overlay or gameplay test",
+  "donors": [
+    {
+      "donor": "pthumerian-descendant",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_50_90_00/m29_50_90_00.emevd.dcx",
+        "sha256": "cdbea21c051b8621a34a8a0ec01ed97a0ed29d00cb22fcfddbd5a1d288fa4b72",
+        "source_map": "m29_50_90_00"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [],
+      "typed_root_delivery_receipts": 105,
+      "source_banks": [
+        "frpg_sfxbnd_m29a.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "8f1c358fba2c05136da25a4506ca89ed98b00fae564048ccd69f5072d0b9dae7",
+      "runtime_validated": false
+    },
+    {
+      "donor": "pthumerian-elder",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_31_90_00/m29_31_90_00.emevd.dcx",
+        "sha256": "c06a28d958a5eb942deddaaf3f1dcd7517f07f8ac6db358eccfe8c3c0985dadf",
+        "source_map": "m29_31_90_00"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [],
+      "typed_root_delivery_receipts": 105,
+      "source_banks": [
+        "frpg_sfxbnd_m29a.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "02bcf0c9db7b15276ddd5b3cd5549bd1f8a3ebaaa10d14950d8065aa4df5b777",
+      "runtime_validated": false
+    },
+    {
+      "donor": "keeper-of-old-lords",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_40_90_00/m29_40_90_00.emevd.dcx",
+        "sha256": "55ecd00a77f65ebaf8e3c7cdaca6eb7772629730e3ebf16a388bb07c7ebc4bc6",
+        "source_map": "m29_40_90_00"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [],
+      "typed_root_delivery_receipts": 30,
+      "source_banks": [
+        "frpg_sfxbnd_m29b.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "3e202de1a504441ea511a56ff445fa7363480bf5f69c09e2d22175366aee1c18",
+      "runtime_validated": false
+    },
+    {
+      "donor": "watchdog-of-the-old-lords",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_01_11_00/m29_01_11_00.emevd.dcx",
+        "sha256": "36e02415bfbbc2d4047ab6c1e4d3d516bdcde71f0e7f2d848ad43bd2f3bf1a69",
+        "source_map": "m29_01_11_00"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        0,
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [
+        12997200,
+        12997201,
+        12997202,
+        12997203,
+        12997204
+      ],
+      "typed_root_delivery_receipts": 141,
+      "source_banks": [
+        "frpg_sfxbnd_m29a.ffxbnd.dcx",
+        "frpg_sfxbnd_m29c.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "3dd5e8cd44f8418a158816c0fcc1839fdd5456b68d3d382eb177240e2264f303",
+      "runtime_validated": false
+    },
+    {
+      "donor": "abhorrent-beast",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_01_13_00/m29_01_13_00.emevd.dcx",
+        "sha256": "8af61ed166ac56f6209cb6fce6568d376a1c910b1d0890a696676ff3c10569c3",
+        "source_map": "m29_01_13_00"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        0,
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [
+        12997210,
+        12997211,
+        12997212,
+        12997213,
+        12997214
+      ],
+      "typed_root_delivery_receipts": 90,
+      "source_banks": [
+        "frpg_sfxbnd_m29a.ffxbnd.dcx",
+        "frpg_sfxbnd_m29c.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "d91c6f955615060585cb58707c853de4b563b75573e66444bcd570922f75af5d",
+      "runtime_validated": false
+    },
+    {
+      "donor": "beast-possessed-soul",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_01_13_00/m29_01_13_09.emevd.dcx",
+        "sha256": "d33d8fc51cc48bcfb015236fb70200f1fece1b0fec3e8c1766743ef2faf1907b",
+        "source_map": "m29_01_13_09"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [],
+      "typed_root_delivery_receipts": 30,
+      "source_banks": [
+        "frpg_sfxbnd_m29b.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "4fc9d86feb21c8b7e34429c3087245ecb289fbf5ea4cb830d80d21529c7de63f",
+      "runtime_validated": false
+    },
+    {
+      "donor": "undead-giant",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_01_13_00/m29_01_13_08.emevd.dcx",
+        "sha256": "dcd1647ce988569df7ba76a7904a365a9e5161ae929c4d4a8d4c48ec45805298",
+        "source_map": "m29_01_13_08"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [],
+      "typed_root_delivery_receipts": 36,
+      "source_banks": [
+        "frpg_sfxbnd_m29a.ffxbnd.dcx",
+        "frpg_sfxbnd_m29c.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "f2afa9ce594159d87d44e47a6ce3f8fbed27354d0bca2fea1f16c0a88da2e1fd",
+      "runtime_validated": false
+    },
+    {
+      "donor": "bloodletting-beast",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_05_00_00/m29_05_00_08.emevd.dcx",
+        "sha256": "d0bb3c2733fd65267cc5027bd91993f762a6e706710f9f615f0b1b3803680a8b",
+        "source_map": "m29_05_00_08"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        0,
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [
+        12997000,
+        12997001,
+        12997002,
+        12997003,
+        12997004,
+        12997005,
+        12997006,
+        12997007
+      ],
+      "typed_root_delivery_receipts": 48,
+      "source_banks": [
+        "frpg_sfxbnd_m29a.ffxbnd.dcx",
+        "frpg_sfxbnd_m29c.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "1689297d3d3feb8c8633537c80bb05009e414225449396f057a6f0bc09fe8a4d",
+      "runtime_validated": false
+    },
+    {
+      "donor": "headless-bloodletting-beast",
+      "arena": "cleric-beast",
+      "verified_file_count": 11,
+      "actor_state_count": 3,
+      "source_constructor": {
+        "event_file": "m29_05_00_00/m29_05_00_11.emevd.dcx",
+        "sha256": "ec8f6ed92dc36efc0c77ad99515d53a0e0fa6b71d1d42f279f5342dcffc3cdc5",
+        "source_map": "m29_05_00_11"
+      },
+      "scaling": {
+        "change_count": 0,
+        "changes": [],
+        "enabled": false,
+        "mechanism": "inferred_static_npc_clone_sp_effect",
+        "skip_count": 1,
+        "skips": [
+          {
+            "logical_key": "m24_01_00_00:c5000_0000",
+            "reason": "unknown source or destination tier"
+          }
+        ]
+      },
+      "changed_event_ids": [
+        12411702,
+        12414702,
+        12414703,
+        12414707,
+        12414708,
+        12414710,
+        12414720
+      ],
+      "added_event_ids": [],
+      "typed_root_delivery_receipts": 48,
+      "source_banks": [
+        "frpg_sfxbnd_m29a.ffxbnd.dcx",
+        "frpg_sfxbnd_m29c.ffxbnd.dcx"
+      ],
+      "event_output_sha256": "1df8ee42da3a56a11d50b2af9b9565ec9e6b9951f91c19791176dc9c088d8b7c",
+      "runtime_validated": false
+    }
+  ]
+}

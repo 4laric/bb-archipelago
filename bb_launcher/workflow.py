@@ -1055,8 +1055,8 @@ class EnemizerToolchain:
         inputs, including AP event rewrites, and publishes its own audited
         overlay rather than allowing launcher-side file splicing.
         """
-        if options.boss_pool != "reviewed":
-            raise ValidationError("unsupported reviewed boss pool")
+        if options.boss_pool not in ("reviewed", "good"):
+            raise ValidationError("unsupported boss pool")
         if not darkscript.is_file():
             raise ValidationError(f"reviewed boss encounters require DarkScript3: {darkscript}")
         planned = self.build(**kwargs, normalize_scaling=True, plan_only=True)
@@ -1066,8 +1066,9 @@ class EnemizerToolchain:
         scripts = inputs / "script"
         events = inputs / "event"
         sfx = inputs / "sfx"
+        characters = inputs / "chr"
         overrides = inputs / "event-overrides"
-        for directory in (maps, scripts, events, sfx, overrides):
+        for directory in (maps, scripts, events, sfx, characters, overrides):
             directory.mkdir(parents=True)
         for source in kwargs["map_studio_source"].iterdir():
             if source.is_file() and source.name.lower().endswith((".msb", ".msb.dcx")):
@@ -1080,8 +1081,16 @@ class EnemizerToolchain:
             shutil.copyfile(source, target)
             if sha256_file(source) != sha256_file(target):
                 raise ValidationError(f"boss AI input copy failed: {relative}")
-        for relative, source in encounter_event_sources(install).items():
-            target = events / Path(relative).name
+        if options.boss_pool == "good":
+            for relative, source in chalice_map_sources(install).items():
+                target = maps / relative.split('/MapStudio/', 1)[1]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+                if sha256_file(source) != sha256_file(target):
+                    raise ValidationError(f"chalice map input copy failed: {relative}")
+        for relative, source in encounter_event_sources(install, chalice=options.boss_pool == "good").items():
+            target = events / relative.split('/event/', 1)[1]
+            target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, target)
             if sha256_file(source) != sha256_file(target):
                 raise ValidationError(f"boss event input copy failed: {relative}")
@@ -1090,6 +1099,11 @@ class EnemizerToolchain:
             shutil.copyfile(source, target)
             if sha256_file(source) != sha256_file(target):
                 raise ValidationError(f"boss SFX input copy failed: {relative}")
+        for relative, source in encounter_character_sources(install).items():
+            target = characters / Path(relative).name
+            shutil.copyfile(source, target)
+            if sha256_file(source) != sha256_file(target):
+                raise ValidationError(f"boss character input copy failed: {relative}")
         for relative, source in event_overrides.items():
             if relative not in encounter_event_sources(install):
                 raise ValidationError(f"unsupported AP event override for reviewed boss pool: {relative}")
@@ -1118,9 +1132,9 @@ class EnemizerToolchain:
             "--gameparam", str(staged_binder),
             "--paramdef", str(install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]),
             "--maps", str(maps), "--scripts", str(scripts), "--events", str(events),
-            "--sfx", str(sfx),
+            "--sfx", str(sfx), "--characters", str(characters),
             "--event-overrides", str(overrides),
-            "--ordinary-plan", str(planned.plan_path), "--pool", "reviewed",
+            "--ordinary-plan", str(planned.plan_path), "--pool", options.boss_pool,
             "--bundle", str(self.repo_root / "research" / "bb_inputs.db"),
             "--seed", kwargs["seed"], "--output", str(output), "--apply",
         ]
@@ -1619,7 +1633,7 @@ def enemy_map_sources(install: GameInstall, selected: Path | None) -> dict[str, 
     return maps
 
 
-def encounter_event_sources(install: GameInstall) -> dict[str, Path]:
+def encounter_event_sources(install: GameInstall, *, chalice: bool = False) -> dict[str, Path]:
     """Resolve complete map/common EMEVD input set with update precedence."""
     prefix = f"{DVDROOT_PREFIX}event/"
     names = {
@@ -1629,6 +1643,10 @@ def encounter_event_sources(install: GameInstall) -> dict[str, Path]:
     }
     if not names:
         raise ValidationError("reviewed boss encounters require installed map EMEVD files")
+    if chalice:
+        from tools.bb_enemizer.chalice_recipes import source_manifest, chalice_recipes
+        names.add('m29.emevd.dcx')
+        names.update(source_manifest(donor)['event_file'] for _, donor in chalice_recipes())
     return {prefix + name: install.resolve_file(prefix + name, include_mods=False)[1]
             for name in sorted(names)}
 
@@ -1639,10 +1657,26 @@ def encounter_sfx_sources(install: GameInstall) -> dict[str, Path]:
     names = {
         path.name for _name, layer in install.content_backends()
         for path in (layer / "dvdroot_ps4" / "sfx").glob("*.ffxbnd.dcx")
-        if re.fullmatch(r"frpg_sfxbnd_m\d{2}\.ffxbnd\.dcx", path.name)
+        if re.fullmatch(r"frpg_sfxbnd_(?:m\d{2}(?:_\d{2})?|m29[a-d])\.ffxbnd\.dcx", path.name)
     }
     return {prefix + name: install.resolve_file(prefix + name, include_mods=False)[1]
             for name in sorted(names)}
+
+
+def encounter_character_sources(install: GameInstall) -> dict[str, Path]:
+    prefix = f"{DVDROOT_PREFIX}chr/"
+    names = {path.name for _name, layer in install.content_backends()
+             for path in (layer / 'dvdroot_ps4' / 'chr').glob('c*.anibnd.dcx')
+             if re.fullmatch(r'c\d{4}\.anibnd\.dcx', path.name)}
+    return {prefix + name: install.resolve_file(prefix + name, include_mods=False)[1]
+            for name in sorted(names)}
+
+
+def chalice_map_sources(install: GameInstall) -> dict[str, Path]:
+    from tools.bb_enemizer.chalice_recipes import source_manifest, chalice_recipes
+    names = {source_manifest(donor)['source_map'] for _, donor in chalice_recipes()}
+    paths = [f'{DVDROOT_PREFIX}map/MapStudio/{name[:-2]}00/{name}.msb.dcx' for name in sorted(names)]
+    return {path: install.resolve_file(path, include_mods=False)[1] for path in paths}
 
 
 def _source_hashes(
@@ -1949,8 +1983,8 @@ class LauncherWorkflow:
         request['category8_awards'] = effective_awards
         if migrated_awards:
             progress("Migrating legacy category-8 reward lots; token and acknowledgement identities are preserved.")
-        if options.boss_pool not in (None, "reviewed"):
-            raise ValidationError("the only available experimental boss pool is reviewed")
+        if options.boss_pool not in (None, "reviewed", "good"):
+            raise ValidationError("supported boss pools are reviewed and good")
         if options.boss_pool is not None and not options.enabled:
             raise ValidationError("reviewed boss encounters require Randomize Enemies")
         if options.boss_pool is not None and options.boss_canary:
@@ -2010,9 +2044,14 @@ class LauncherWorkflow:
                     settings.state_root or default_state_root(), progress
                 )
                 sources.update({relative: sha256_file(path)
-                                for relative, path in encounter_event_sources(install).items()})
+                                for relative, path in encounter_event_sources(install, chalice=options.boss_pool == "good").items()})
                 sources.update({relative: sha256_file(path)
                                 for relative, path in encounter_sfx_sources(install).items()})
+                sources.update({relative: sha256_file(path)
+                                for relative, path in encounter_character_sources(install).items()})
+                if options.boss_pool == "good":
+                    sources.update({relative: sha256_file(path)
+                                    for relative, path in chalice_map_sources(install).items()})
                 identity_inputs = getattr(self.toolchain, "boss_encounter_identity_inputs", None)
                 if not callable(identity_inputs):
                     raise ValidationError("reviewed boss toolchain cannot report its pinned build inputs")

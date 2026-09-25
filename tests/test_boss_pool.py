@@ -43,6 +43,17 @@ class BossPoolTests(unittest.TestCase):
                 'boss_character_ffx_bank_requirements': [row]}
         self.assertEqual([row], combine_native_plans('bank', [plan])[
             'boss_character_ffx_bank_requirements'])
+        second_bank = copy.deepcopy(row)
+        second_bank['source_ffx_file'] = 'frpg_sfxbnd_m24.ffxbnd.dcx'
+        second_bank['roots'][0]['witness']['effect_id'] = 625701
+        two_banks = copy.deepcopy(plan)
+        two_banks['boss_character_ffx_bank_requirements'].append(second_bank)
+        self.assertEqual([second_bank, row], combine_native_plans('bank', [two_banks])[
+            'boss_character_ffx_bank_requirements'])
+        same_root = copy.deepcopy(two_banks)
+        same_root['boss_character_ffx_bank_requirements'][1]['roots'][0]['witness']['effect_id'] = 625700
+        with self.assertRaisesRegex(ValueError, 'repeat a character FFX root across banks'):
+            combine_native_plans('bank', [same_root])
         with self.assertRaisesRegex(ValueError, 'character FFX bank destination'):
             combine_native_plans('bank', [plan, copy.deepcopy(plan)])
         ordinary = {**copy.deepcopy(plan), 'options': {},
@@ -54,6 +65,9 @@ class BossPoolTests(unittest.TestCase):
         ordinary.pop('boss_character_ffx_bank_requirements')
         combined = combine_ordinary_and_boss_plans(ordinary, [plan])
         self.assertEqual([row], combined['boss_character_ffx_bank_requirements'])
+        combined_two_banks = combine_ordinary_and_boss_plans(ordinary, [two_banks])
+        self.assertEqual([second_bank, row],
+                         combined_two_banks['boss_character_ffx_bank_requirements'])
         combined['boss_character_ffx_bank_requirements'][0]['roots'][0]['witness']['effect_id'] = 123
         self.assertEqual(625700, row['roots'][0]['witness']['effect_id'])
 

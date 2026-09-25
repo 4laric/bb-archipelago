@@ -38,10 +38,12 @@ New-Item -ItemType Directory -Path $package, $work | Out-Null
 $worldData = @(Get-ChildItem -LiteralPath (Join-Path $repo 'worlds/bloodborne') -File |
     Where-Object { $_.Extension -in '.json', '.tsv' } |
     ForEach-Object { '--add-data'; "$($_.FullName);worlds/bloodborne" })
+$bossData = @(Get-ChildItem -LiteralPath (Join-Path $repo 'tools/bb_enemizer') -Filter '*.json' -File |
+    ForEach-Object { '--add-data'; "$($_.FullName);tools/bb_enemizer" })
 & $PythonExecutable -m PyInstaller --noconfirm --clean --console --onedir --name bb-ap-backend `
     --paths $repo --collect-submodules worlds `
     --add-data "$(Join-Path $repo 'research/bb_inputs.db');research" `
-    --add-data "$(Join-Path $repo 'research/enemizer');research/enemizer" @worldData `
+    --add-data "$(Join-Path $repo 'research/enemizer');research/enemizer" @worldData @bossData `
     --distpath (Join-Path $work 'dist') --workpath (Join-Path $work 'pyi') --specpath $work `
     (Join-Path $PSScriptRoot 'backend_entry.py')
 if ($LASTEXITCODE -ne 0) { throw 'Frozen backend build failed.' }
