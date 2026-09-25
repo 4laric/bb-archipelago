@@ -7,6 +7,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock
 
 from bb_launcher.integrated.backend import Backend
 from bb_launcher.integrated.protocol import (
@@ -87,6 +88,26 @@ class CapabilitiesTests(unittest.TestCase):
 
 
 class WorkflowFailureTests(unittest.TestCase):
+    def test_prepare_requires_boolean_reuse_intent(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            prepare = Mock(side_effect=WorkflowError("preparation witness"))
+            backend = Backend(Path(state), prepare_fn=prepare)
+            for value in ("true", 1, None, []):
+                with self.subTest(value=value):
+                    response = backend.handle(request("prepare_play", {
+                        "game_root": state, "reuse_existing": value,
+                    }))
+                    self.assertFalse(response["ok"])
+                    self.assertEqual("bad-request", response["error"]["code"])
+            prepare.assert_not_called()
+            # Prove this spy is connected to preparation: valid intent reaches
+            # it, unlike every malformed value above.
+            backend.handle(request("prepare_play", {
+                "game_root": state, "reuse_existing": True,
+            }, op_id="valid-reuse"))
+            prepare.assert_called_once()
+            self.assertIs(prepare.call_args.args[0]["reuse_existing"], True)
+
     def test_failed_build_tool_exposes_sanitized_native_reason(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             def prepare(_params: dict, _op_id: str) -> dict:

@@ -169,6 +169,30 @@ class ExternalArtifactTests(unittest.TestCase):
                          self.selected_identity.suppression_plan_sha256)
         self.assertEqual(raw["enemizer_identity"], None)
 
+    def test_export_initializes_missing_conventional_mods_library(self):
+        self.mods_root.rmdir()
+        exported = self.export()
+        self.assertTrue(self.mods_root.is_dir())
+        self.assertEqual(exported.package_path.parent, self.mods_root)
+        self.assertEqual(list(self.mods_root.iterdir()), [exported.package_path])
+
+    def test_export_rejects_file_instead_of_missing_mods_library(self):
+        self.mods_root.rmdir()
+        self.mods_root.write_bytes(b"foreign file")
+        with self.assertRaisesRegex(ValidationError, "not a regular directory"):
+            self.export()
+        self.assertEqual(self.mods_root.read_bytes(), b"foreign file")
+
+    def test_invalid_destination_does_not_initialize_missing_mods_library(self):
+        self.mods_root.rmdir()
+        with self.assertRaisesRegex(ValidationError, "BBLauncher managed root"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.mods_root.parent / "state", install=self.install,
+                bblauncher=self.pin, client_version="client-test",
+            )
+        self.assertFalse(self.mods_root.exists())
+
     def snapshot_game(self):
         return {
             path.relative_to(self.install.root).as_posix(): sha256_file(path)
@@ -228,6 +252,88 @@ class ExternalArtifactTests(unittest.TestCase):
             self.tree_bytes(replaced.package_path),
             {path: digest for path, digest in self.tree_bytes(first.package_path).items()},
         )
+
+    def test_owned_replacement_requires_receipt_and_exact_inactive_bytes(self):
+        first = self.export()
+        first.receipt_path.unlink()
+        with self.assertRaisesRegex(ValidationError, "no matching companion receipt"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", replace_existing=True,
+                require_owned_existing=True,
+            )
+        self.assertTrue(first.package_path.is_dir())
+        first.receipt_path.write_text(
+            json.dumps(first.receipt.as_dict()), encoding="utf-8")
+        (first.package_path / "foreign-marker").write_bytes(b"foreign")
+        with self.assertRaisesRegex(ValidationError, "file set drifted"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", replace_existing=True,
+                require_owned_existing=True,
+            )
+        self.assertEqual((first.package_path / "foreign-marker").read_bytes(), b"foreign")
+
+    def test_owned_replacement_accepts_verified_companion_package(self):
+        first = self.export()
+        before = self.tree_bytes(first.package_path)
+        replaced = export_external_package(
+            self.build, self.selected_identity, mods_root=self.mods_root,
+            state_root=self.state_root, install=self.install, bblauncher=self.pin,
+            client_version="client-test", replace_existing=True,
+            require_owned_existing=True,
+        )
+        self.assertEqual(replaced.package_path, first.package_path)
+        self.assertEqual(self.tree_bytes(replaced.package_path), before)
+
+    def test_owned_replacement_accepts_flat_package_restored_by_bblauncher(self):
+        first = self.export()
+        wrapper = first.package_path / "dvdroot_ps4"
+        for child in wrapper.iterdir():
+            child.rename(first.package_path / child.name)
+        wrapper.rmdir()
+        self.assertFalse(wrapper.exists())
+        replaced = export_external_package(
+            self.build, self.selected_identity, mods_root=self.mods_root,
+            state_root=self.state_root, install=self.install, bblauncher=self.pin,
+            client_version="client-test", replace_existing=True,
+            require_owned_existing=True,
+        )
+        self.assertEqual(replaced.package_path, first.package_path)
+        self.assertTrue((replaced.package_path / "dvdroot_ps4").is_dir())
+        self.assertEqual(
+            set(self.tree_bytes(replaced.package_path)),
+            {record.path for record in replaced.receipt.files},
+        )
+
+    def test_owned_replacement_rejects_mixed_flat_and_wrapped_layout(self):
+        first = self.export()
+        wrapper = first.package_path / "dvdroot_ps4"
+        child = next(wrapper.iterdir())
+        child.rename(first.package_path / child.name)
+        with self.assertRaisesRegex(ValidationError, "file set drifted"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", replace_existing=True,
+                require_owned_existing=True,
+            )
+        self.assertTrue((first.package_path / child.name).exists())
+
+    def test_owned_replacement_requires_matching_seed_and_slot(self):
+        first = self.export()
+        before = self.tree_bytes(first.package_path)
+        self.selected_identity = identity("different-seed")
+        with self.assertRaisesRegex(ValidationError, "no matching companion receipt"):
+            export_external_package(
+                self.build, self.selected_identity, mods_root=self.mods_root,
+                state_root=self.state_root, install=self.install, bblauncher=self.pin,
+                client_version="client-test", replace_existing=True,
+                require_owned_existing=True,
+            )
+        self.assertEqual(self.tree_bytes(first.package_path), before)
 
     def test_replace_existing_never_touches_an_activated_or_foreign_entry(self):
         package_name = f"Archipelago-Hunter-One-{self.build.cache_key[:12]}"

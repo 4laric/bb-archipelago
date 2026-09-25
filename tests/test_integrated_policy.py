@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from bb_launcher.integrated import fork_identity
@@ -300,6 +302,9 @@ class SupervisorTests(unittest.TestCase):
                         executable_sha256=hashlib.sha256(b"e").hexdigest(),
                         pid=4242, creation_time=987654, process_alive=True)
             reattach_session(state, "session_abc", **good)
+            self.assertEqual(987654, reattach_session(
+                state, "session_abc", **dict(good, creation_time="987654")
+            ).creation_time)
             # Reused PID, different birth identity -> fail closed.
             bad = dict(good, creation_time=111111)
             with self.assertRaises(ProtocolError) as caught:
@@ -308,6 +313,22 @@ class SupervisorTests(unittest.TestCase):
             # Dead process -> fail closed.
             with self.assertRaises(ProtocolError):
                 reattach_session(state, "session_abc", **dict(good, process_alive=False))
+            with self.assertRaises(ProtocolError):
+                reattach_session(state, "session_abc", **dict(good,
+                                 executable="C:\\different\\shadPS4.exe"))
+            with self.assertRaises(ProtocolError):
+                reattach_session(state, "session_abc", **dict(good,
+                                 executable_sha256=hashlib.sha256(b"different").hexdigest()))
+
+    @patch("bb_launcher.integrated.path_identity.os", SimpleNamespace(name="nt"))
+    def test_reattach_accepts_qt_forward_slashes(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            register_session(state, self._session())
+            session = reattach_session(
+                state, "session_abc", executable="C:/GAMES/./shadPS4.exe",
+                executable_sha256=hashlib.sha256(b"e").hexdigest(),
+                pid=4242, creation_time=987654, process_alive=True)
+            self.assertEqual(session.pid, 4242)
 
     def test_duplicate_client_claim_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as state:

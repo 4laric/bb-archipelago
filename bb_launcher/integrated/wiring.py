@@ -134,6 +134,10 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
     from .enemizer import enemizer_options_record, parse_enemizer_options
     from .policy import fork_build_warning
 
+    reuse_existing = params.get("reuse_existing", False)
+    if type(reuse_existing) is not bool:
+        raise ValidationError("reuse_existing must be a boolean")
+
     game_root = Path(str(params["game_root"])).expanduser().resolve()
     state_root = Path(str(params.get("state_root", ""))).expanduser().resolve()
     mods_root = Path(str(params["mods_root"])).expanduser().resolve()
@@ -180,6 +184,7 @@ def production_prepare(params: Mapping[str, Any], op_id: str) -> Mapping[str, An
         namespace=ExternalNamespace(
             prepared.build.cache_key,
             session_key(prepared.identity.seed, prepared.identity.slot)),
+        replace_existing=reuse_existing, require_owned_existing=reuse_existing,
     )
     import hashlib
 

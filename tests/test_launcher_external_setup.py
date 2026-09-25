@@ -55,7 +55,19 @@ class ExternalSetupTests(unittest.TestCase):
             self.executable, self.root / "missing-library", self.game
         )
         self.assertIn(str(self.inactive), missing_library)
-        self.assertIn("start BBLauncher once", missing_library)
+        self.assertIn("regular directories", missing_library)
+
+    def test_missing_conventional_library_is_ready_without_creating_it(self):
+        self.inactive.rmdir()
+        before = self.snapshot()
+        self.assertIsNone(setup_problem(self.executable, self.inactive, self.game))
+        self.assertEqual(self.snapshot(), before)
+
+    def test_file_at_conventional_library_is_rejected(self):
+        self.inactive.rmdir()
+        self.inactive.write_bytes(b"foreign file")
+        self.assertIn("inactive mod library", setup_problem(
+            self.executable, self.inactive, self.game))
 
     def test_game_overlay_and_its_parent_are_rejected_as_live_output(self):
         selections = (self.overlay, self.overlay / "dvdroot_ps4", self.game.parent)

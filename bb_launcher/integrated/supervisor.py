@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from ..core import ValidationError, _require_sha256, _write_json_atomic
+from .path_identity import same_path
 from .protocol import ProtocolError
 from .sessions import integrated_root
 
@@ -113,7 +114,7 @@ def reattach_session(
     executable: str,
     executable_sha256: str,
     pid: int,
-    creation_time: int | None,
+    creation_time: int | str | None,
     process_alive: bool,
 ) -> SupervisorSession:
     """Reopen/reattach: validate executable, creation identity and session.
@@ -128,7 +129,7 @@ def reattach_session(
     if not isinstance(raw, dict):
         raise ProtocolError("stale-session", f"no supervisor session: {session_id}",
                             retryable=False, recovery=("fresh-boot",))
-    if str(raw.get("executable", "")).casefold() != executable.casefold():
+    if not same_path(str(raw.get("executable", "")), executable):
         raise ProtocolError("stale-session", "supervisor executable path changed",
                             retryable=False, recovery=("fresh-boot",))
     if str(raw.get("executable_sha256", "")).lower() != executable_sha256.lower():
@@ -137,13 +138,14 @@ def reattach_session(
     if int(raw.get("pid", -1)) != pid or not process_alive:
         raise ProtocolError("stale-session", "supervised process is gone",
                             retryable=False, recovery=("fresh-boot",))
-    if raw.get("creation_time") is not None and creation_time != raw["creation_time"]:
+    if (raw.get("creation_time") is not None
+            and str(creation_time) != str(raw["creation_time"])):
         raise ProtocolError("stale-session", "PID was reused by another process",
                             retryable=False, recovery=("fresh-boot",))
     return SupervisorSession(
         session_id=raw["session_id"], play_id=raw["play_id"], arm_id=raw["arm_id"],
         executable=raw["executable"], executable_sha256=raw["executable_sha256"],
-        pid=pid, creation_time=creation_time, owner=raw["owner"],
+        pid=pid, creation_time=raw.get("creation_time"), owner=raw["owner"],
         client_pid=raw.get("client_pid"), created_at=float(raw.get("created_at", 0)),
     )
 

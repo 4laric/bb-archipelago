@@ -33,6 +33,7 @@ from typing import Any, Iterator, Mapping
 
 from ..client_config import session_key
 from ..core import ValidationError, _require_sha256, _write_json_atomic
+from .path_identity import canonical_path
 
 INTEGRATED_DIR_NAME = "integrated"
 PLAY_HANDLE_PREFIX = "play_"
@@ -60,7 +61,7 @@ def _mint(prefix: str) -> str:
 
 
 def install_hash(game_root: Path | str) -> str:
-    resolved = str(Path(game_root).expanduser().resolve()).casefold()
+    resolved = canonical_path(str(Path(game_root).expanduser().resolve()))
     return hashlib.sha256(resolved.encode("utf-8")).hexdigest()[:16]
 
 

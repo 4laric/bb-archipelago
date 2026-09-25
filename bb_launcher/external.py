@@ -265,6 +265,24 @@ def _regular_directory(path: Path | str, label: str) -> Path:
     return candidate
 
 
+def _inactive_mods_directory(path: Path | str, *, create: bool = False) -> Path:
+    """Allow a fresh BBLauncher library, but never create an arbitrary output root."""
+    mods = _absolute(path)
+    _check_existing_ancestors(mods, "BBLauncher Mods directory")
+    if mods.exists() or mods.is_symlink():
+        return _regular_directory(mods, "BBLauncher Mods directory")
+    if mods.name.casefold() != "mods" or mods.parent.name.casefold() != "bblauncher":
+        raise ValidationError(f"BBLauncher Mods directory is not a regular directory: {mods}")
+    _regular_directory(mods.parent, "BBLauncher managed directory")
+    if create:
+        try:
+            mods.mkdir()
+        except OSError as exc:
+            raise ValidationError(f"could not create BBLauncher Mods directory {mods}: {exc}") from exc
+        return _regular_directory(mods, "BBLauncher Mods directory")
+    return mods
+
+
 def _overlap(left: Path, right: Path) -> bool:
     try:
         common = os.path.commonpath((os.path.normcase(str(left)), os.path.normcase(str(right))))
@@ -358,6 +376,46 @@ def _replaceable_package(mods: Path, package_name: str, *, replace: bool) -> Pat
     return existing
 
 
+def _require_owned_inactive_package(
+    package: Path, receipt_root: Path, *, identity: SeedIdentity,
+    records: tuple[ExternalFile, ...], install: GameInstall,
+) -> None:
+    """A Launch retry may replace only a byte-exact package backed by our receipt."""
+    owned = False
+    if receipt_root.is_dir() and not _is_reparse(receipt_root):
+        for path in receipt_root.glob("*.json"):
+            try:
+                receipt = load_external_receipt(path, allow_live_acceptance_candidate=True)
+            except ValidationError:
+                continue
+            if (receipt.package_name == package.name
+                    and receipt.cache_key == identity.cache_key
+                    and receipt.identity.seed == identity.seed
+                    and receipt.identity.slot == identity.slot
+                    and receipt.identity.cache_material() == identity.cache_material()
+                    and receipt.files == records
+                    and receipt.game_root == _absolute(install.root)
+                    and receipt.game_serial == install.serial
+                    and receipt.app_version == install.app_version):
+                owned = True
+                break
+    if not owned:
+        raise ValidationError(f"inactive package has no matching companion receipt: {package}")
+    files = _walk_regular_files(package, "inactive companion package")
+    wrapped = {record.path: record for record in records}
+    flat = {record.path[len(DVDROOT_PREFIX):]: record for record in records}
+    if set(files) == set(wrapped):
+        expected = wrapped
+    elif set(files) == set(flat):
+        expected = flat
+    else:
+        raise ValidationError(f"inactive companion package file set drifted: {package}")
+    for relative, record in expected.items():
+        current = files[relative]
+        if current.stat().st_size != record.size or sha256_file(current) != record.sha256:
+            raise ValidationError(f"inactive companion package file drifted: {relative}")
+
+
 def _manifest_files(build: BuildResult) -> tuple[ExternalFile, ...]:
     records = build.manifest.get("files")
     if not isinstance(records, list) or not records:
@@ -421,6 +479,7 @@ def export_external_package(
     created_at: datetime | None = None,
     allow_live_acceptance_candidate: bool = False,
     replace_existing: bool = False,
+    require_owned_existing: bool = False,
 ) -> ExternalExport:
     """Publish one data-only inactive package plus its out-of-band receipt.
 
@@ -446,7 +505,7 @@ def export_external_package(
     compatibility = _compatibility(pin, allow_live_acceptance_candidate=allow_live_acceptance_candidate)
     if not client_version.strip():
         raise ValidationError("external export requires a client version")
-    mods = _regular_directory(mods_root, "BBLauncher Mods directory")
+    mods = _inactive_mods_directory(mods_root)
     if _inside_named_directory(mods, ACTIVE_MODS_DIR_NAME):
         raise ValidationError("selected BBLauncher Mods directory is the active package directory")
     managed_root = mods.parent
@@ -468,7 +527,8 @@ def export_external_package(
     records = _manifest_files(verified)
     package_name = f"{PACKAGE_PREFIX}{_safe_slot(selected.slot)}-{verified.cache_key[:12]}"
     target = mods / package_name
-    stale = _replaceable_package(mods, package_name, replace=replace_existing)
+    if mods.is_dir():
+        _replaceable_package(mods, package_name, replace=replace_existing)
     active_root = mods.with_name(ACTIVE_MODS_DIR_NAME)
     if active_root.exists() or active_root.is_symlink():
         active = _regular_directory(active_root, "BBLauncher active Mods directory")
@@ -504,6 +564,12 @@ def export_external_package(
     if receipt_path.exists() or receipt_path.is_symlink():
         raise ValidationError(f"immutable external receipt already exists: {receipt_path}")
 
+    mods = _inactive_mods_directory(mods, create=True)
+    stale = _replaceable_package(mods, package_name, replace=replace_existing)
+    if stale is not None and require_owned_existing:
+        _require_owned_inactive_package(
+            stale, receipt_root, identity=selected, records=records, install=install,
+        )
     stage.mkdir()
     try:
         for record in records:
@@ -520,6 +586,10 @@ def export_external_package(
         # published package can never exist without its verification authority.
         stale = _replaceable_package(mods, package_name, replace=replace_existing)
         if stale is not None:
+            if require_owned_existing:
+                _require_owned_inactive_package(
+                    stale, receipt_root, identity=selected, records=records, install=install,
+                )
             shutil.rmtree(stale)
         os.rename(stage, target)
     finally:

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 from .core import MODS_DIR_NAME, SERIAL
-from .external import ACTIVE_MODS_DIR_NAME
+from .external import ACTIVE_MODS_DIR_NAME, _inactive_mods_directory
 
 
 INACTIVE_MODS_RELATIVE = Path("BBLauncher") / "Mods"
@@ -98,12 +98,13 @@ def setup_problem(
         )
 
     try:
-        library_ok = library.is_dir() and not library.is_symlink()
+        _inactive_mods_directory(library)
+        library_ok = True
     except (OSError, RuntimeError, ValueError):
         library_ok = False
     if not library_ok:
         return (
-            f"The inactive mod library was not found at {library}. Choose {expected}; "
-            "start BBLauncher once if it has not created the folder yet."
+            f"The inactive mod library is unavailable or unsafe at {library}. Choose {expected}; "
+            "check that BBLauncher and its inactive Mods folder are regular directories."
         )
     return None
