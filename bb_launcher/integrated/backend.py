@@ -78,6 +78,11 @@ def _build_diagnostic(message: str) -> str | None:
         line = raw.strip()
         if not line or re.search(r"(?i)traceback|^file\s+[\"']|^at\s+", line):
             continue
+        if ("CalledProcessError:" in line or
+                re.search(r"(?i)failed to execute script|returned non-zero exit status", line)):
+            # Python and PyInstaller append wrapper failures after the native
+            # validation line; their argv and stack are not the root cause.
+            continue
         match = re.match(
             r"(?i)^(?:unhandled exception\.\s*)?"
             r"(?:[\w.]+(?:error|exception)|error|fatal|failed)\s*:\s*(.+)$",

@@ -96,7 +96,13 @@ class WorkflowFailureTests(unittest.TestCase):
                     "Unhandled exception. System.IO.InvalidDataException: "
                     "missing original character bank C:\\Users\\private\\game "
                     "password=hunter2\n"
-                    "   at Internal.Native.Apply()"
+                    "   at Internal.Native.Apply()\n"
+                    "Traceback (most recent call last):\n"
+                    "  File \"boss_encounter_entry.py\", line 6, in <module>\n"
+                    "subprocess.CalledProcessError: Command '['C:\\private\\builder.exe', "
+                    "'--apply']' returned non-zero exit status 7.\n"
+                    "[PYI-100:ERROR] Failed to execute script 'boss_encounter_entry' "
+                    "due to unhandled exception!"
                 )
 
             response = Backend(Path(state), prepare_fn=prepare).handle(
@@ -107,8 +113,29 @@ class WorkflowFailureTests(unittest.TestCase):
             self.assertIn("exit code 7", detail)
             self.assertIn("missing original character bank", detail)
             for secret in ("hunter2", "C:\\", "private", "Traceback", "Internal.Native",
-                           "InvalidDataException", "builder.exe"):
+                           "InvalidDataException", "builder.exe", "CalledProcessError", "PYI"):
                 self.assertNotIn(secret, detail)
+
+    def test_native_ffx_conflict_survives_python_wrapper_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            def prepare(_params: dict, _op_id: str) -> dict:
+                raise WorkflowError(
+                    "build tool exited with code 3762504530: C:\\private\\builder.exe --apply\n"
+                    "Unhandled exception. System.IO.InvalidDataException: "
+                    "conflicting FFX entry: effect/f000620900.fxr\n"
+                    "   at FfxBundleTransplant.Apply(...)\n"
+                    "Traceback (most recent call last):\n"
+                    "subprocess.CalledProcessError: Command '['C:\\private\\writer.exe']' "
+                    "returned non-zero exit status 3762504530.\n"
+                    "[PYI-19432:ERROR] Failed to execute script 'boss_encounter_entry' "
+                    "due to unhandled exception!"
+                )
+            response = Backend(Path(state), prepare_fn=prepare).handle(
+                request("prepare_play", {"game_root": state}))
+            self.assertEqual(response["error"]["code"], "verification-failed")
+            self.assertIn("conflicting FFX entry: effect/f000620900.fxr",
+                          response["error"]["detail"])
+            self.assertNotIn("private", response["error"]["detail"])
 
     def test_other_workflow_failures_use_fixed_recovery_copy(self) -> None:
         cases = (
