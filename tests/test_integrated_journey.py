@@ -19,6 +19,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from bb_launcher.integrated.backend import Backend
 from bb_launcher.integrated.protocol import PROTOCOL_VERSION, ProtocolError
@@ -350,7 +351,7 @@ class ClaimedProcessTests(unittest.TestCase):
                 "pid": 4242, "creation_time": 987654})
             self.assertTrue(response["ok"], response)
 
-    @unittest.skipUnless(os.name == "nt", "Windows Qt path convention")
+    @patch("bb_launcher.integrated.path_identity.os", SimpleNamespace(name="nt"))
     def test_qt_slashes_and_native_path_are_same_process_through_status(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             backend = claimed_backend(state, self.live)

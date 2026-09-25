@@ -7,6 +7,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from bb_launcher.integrated import fork_identity
@@ -319,7 +320,7 @@ class SupervisorTests(unittest.TestCase):
                 reattach_session(state, "session_abc", **dict(good,
                                  executable_sha256=hashlib.sha256(b"different").hexdigest()))
 
-    @unittest.skipUnless(os.name == "nt", "Windows Qt path convention")
+    @patch("bb_launcher.integrated.path_identity.os", SimpleNamespace(name="nt"))
     def test_reattach_accepts_qt_forward_slashes(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             register_session(state, self._session())
