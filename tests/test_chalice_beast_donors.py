@@ -45,7 +45,7 @@ class ChaliceBeastDonorTests(unittest.TestCase):
         source = event_blocks(self.common)
         for event, digest in SOURCE_EVENT_SHA256.items():
             self.assertEqual(digest, hashlib.sha256(source[event].encode()).hexdigest())
-        self.assertEqual((), BEAST_POSSESSED_SOUL.source_handlers)
+        self.assertEqual(len(BEAST_POSSESSED_SOUL.source_handlers), 0)
         self.assertEqual(5, len(WATCHDOG.source_handlers))
         self.assertEqual(5, len(ABHORRENT.source_handlers))
         self.assertEqual(10, len(set(sum(ATTACHMENT_IDS.values(), ()))))

@@ -36,23 +36,23 @@ def planned_routes() -> set[tuple[str, str]]:
 class GoodBossPoolTests(unittest.TestCase):
     def test_current_implemented_graph_covers_all_families_but_reports_loran_absence(self):
         report = coverage_report(reviewed_routes())
-        self.assertEqual(report["arenas_without_good_routes"], [])
-        self.assertEqual(report["families_without_routes"], [])
+        self.assertEqual(report["arena_count"], 22)
+        self.assertEqual(len(report["arenas_without_good_routes"]), 0)
+        self.assertEqual(len(report["families_without_routes"]), 0)
         self.assertIn("loran-darkbeast", report["unavailable_variants"])
         assignment = assign_good_bosses("current", reviewed_routes())
         self.assertEqual(len(assignment.arena_to_donor), 22)
-        self.assertEqual(assignment.self_pairs, ())
+        self.assertEqual(len(assignment.self_pairs), 0)
 
     def test_planned_specialist_routes_admit_complete_no_self_matching(self):
         assignment = assign_good_bosses("feasibility", planned_routes())
         self.assertEqual(len(assignment.arena_to_donor), 22)
         self.assertEqual(set(assignment.arena_to_donor), set(GOOD_ARENAS))
         self.assertEqual(set(assignment.arena_to_family.values()), set(GOOD_FAMILIES))
-        self.assertEqual(assignment.self_pairs, ())
+        self.assertEqual(len(assignment.self_pairs), 0)
         self.assertEqual(assignment, assign_good_bosses("feasibility", planned_routes()))
         self.assertEqual(assignment.unavailable_variants, ("loran-darkbeast",))
-        self.assertTrue(all((arena, donor) in planned_routes()
-                            for arena, donor in assignment.arena_to_donor.items()))
+        self.assertTrue(set(assignment.arena_to_donor.items()).issubset(planned_routes()))
         self.assertEqual({donor_family(d) for d in assignment.arena_to_donor.values()},
                          set(GOOD_FAMILIES))
 
@@ -73,7 +73,7 @@ class GoodBossPoolTests(unittest.TestCase):
         self.assertEqual(assignment.selected_variants["darkbeast-paarl"], "loran-darkbeast")
         self.assertEqual(assignment.selected_variants["bloodletting-beast"],
                          "headless-bloodletting-beast")
-        self.assertEqual(assignment.unavailable_variants, ())
+        self.assertEqual(len(assignment.unavailable_variants), 0)
         self.assertEqual(len(set(assignment.arena_to_family.values())), 22)
 
     def test_hall_deficit_fails_even_with_each_family_individually_available(self):
@@ -83,7 +83,8 @@ class GoodBossPoolTests(unittest.TestCase):
         routes |= {(arena, family)
                    for arena, family in zip(GOOD_ARENAS[2:], GOOD_FAMILIES[1:])}
         routes.add((GOOD_ARENAS[2], GOOD_FAMILIES[-1]))
-        self.assertEqual(coverage_report(routes)["families_without_routes"], [])
+        self.assertEqual({donor_family(donor) for _, donor in routes}, set(GOOD_FAMILIES))
+        self.assertEqual(len(coverage_report(routes)["families_without_routes"]), 0)
         with self.assertRaises(CoverageError) as caught:
             assign_good_bosses("hall", routes)
         self.assertEqual(caught.exception.report["maximum_matching_size"], 21)

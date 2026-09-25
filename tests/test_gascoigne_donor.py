@@ -169,7 +169,7 @@ class GascoigneDonorTests(unittest.TestCase):
                                                     "gascoigne-reusable")
                 primary = plan["primary_init_source_bindings"]
                 additions = plan["boss_actor_additions"]
-                self.assertTrue(all(row["placement_policy"] == "destination-anchor" for row in additions))
+                self.assertEqual({row["placement_policy"] for row in additions}, {"destination-anchor"})
                 self.assertEqual(arena.destination_count, len(primary))
                 self.assertEqual(arena.destination_count, len(additions))
                 self.assertEqual({GASCOIGNE_HUMAN}, {row["source_entity_id"] for row in primary})

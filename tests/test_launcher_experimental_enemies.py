@@ -327,7 +327,7 @@ class ExperimentalLauncherTests(unittest.TestCase):
             patched.write_bytes(b'official constructor v2')
             changed = launch()
         self.assertEqual(2, len(tools.calls))
-        self.assertTrue(all(call['options'].boss_pool == 'good' for call in tools.calls))
+        self.assertEqual({call['options'].boss_pool for call in tools.calls}, {'good'})
         self.assertFalse(changed.reused)
         self.assertNotEqual(first.cache_key, changed.cache_key)
         identity = json.loads((changed.build_path / 'seed-manifest.json').read_text())['identity']
