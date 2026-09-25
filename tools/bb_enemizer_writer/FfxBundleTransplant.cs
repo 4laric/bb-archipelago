@@ -18,6 +18,7 @@ internal static class FfxBundleTransplant
     internal sealed record Imported(string Name, int Id, string Sha256, int Size);
     internal sealed record Applied(string SourceFile, string DestinationFile, int SourceEntryCount,
         int RetainedEntryCount, List<Imported> ImportedEntries, string OutputSha256);
+    internal sealed record Conflict(string DestinationFile, string LeftFile, string RightFile, string Entry);
     static void Need(bool value, string why) { if (!value) throw new InvalidDataException(why); }
     static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     static string Resolve(string root, string name) {
@@ -179,6 +180,70 @@ internal static class FfxBundleTransplant
                 && left.Bytes.SequenceEqual(right.Bytes), "FFX round-trip entry or order changed");
         }
         _ = Index(actual);
+    }
+    internal static List<Conflict> FindConflicts(string planPath, string originals) {
+        var merges = Read(planPath);
+        if (merges.Count == 0) return [];
+        Need(Directory.Exists(originals), "boss FFX preflight requires original --sfx inputs");
+        var cache = new Dictionary<string, (string Sha256, Dictionary<string, BinderFile> Entries)>(StringComparer.Ordinal);
+        Dictionary<string, BinderFile> Load(string name, string expected) {
+            if (!cache.TryGetValue(name, out var bank)) {
+                string path = Resolve(originals, name);
+                RequireHash(path, expected);
+                bank = (Hash(File.ReadAllBytes(path)), Index(BND4.Read(path)));
+                cache.Add(name, bank);
+            }
+            Need(bank.Sha256 == expected, "FFX binder provenance drift: " + name);
+            return bank.Entries;
+        }
+        var conflicts = new List<Conflict>();
+        foreach (var group in merges.GroupBy(row => row.DestinationFile, StringComparer.Ordinal)
+                     .OrderBy(group => group.Key, StringComparer.Ordinal)) {
+            var sources = new SortedDictionary<string, Dictionary<string, BinderFile>>(StringComparer.Ordinal);
+            Dictionary<string, BinderFile>? destination = null;
+            foreach (var row in group.OrderBy(row => row.SourceFile, StringComparer.Ordinal)) {
+                var source = Load(row.SourceFile, row.SourceSha256);
+                destination ??= Load(row.DestinationFile, row.DestinationSha256);
+                // A later row with the same destination must still prove its
+                // own pin, even when that binder was already cached.
+                _ = Load(row.DestinationFile, row.DestinationSha256);
+                foreach (var id in row.RequiredEffectIds)
+                    Need(source.ContainsKey($"effect/f{id:D9}.fxr"), "declared FFX effect missing from donor binder");
+                if (row.SourceFile != row.DestinationFile) sources.Add(row.SourceFile, source);
+            }
+            Need(destination is not null, "FFX preflight has no destination bank");
+            var banks = new List<(string Name, Dictionary<string, BinderFile> Entries)> {
+                (group.Key, destination!),
+            };
+            banks.AddRange(sources.Select(source => (source.Key, source.Value)));
+            for (int left = 0; left < banks.Count; left++) {
+                for (int right = left + 1; right < banks.Count; right++) {
+                    string? entry = banks[left].Entries.Keys
+                        .Where(key => banks[right].Entries.TryGetValue(key, out var other)
+                                      && !banks[left].Entries[key].Bytes.SequenceEqual(other.Bytes))
+                        .OrderBy(key => key, StringComparer.OrdinalIgnoreCase)
+                        .ThenBy(key => key, StringComparer.Ordinal)
+                        .FirstOrDefault();
+                    if (entry is not null)
+                        conflicts.Add(new Conflict(group.Key, banks[left].Name, banks[right].Name, entry));
+                }
+            }
+        }
+        return conflicts;
+    }
+    internal static int Preflight(string planPath, string originals, string reportPath) {
+        string fullReport = Path.GetFullPath(reportPath), fullOriginals = Path.GetFullPath(originals);
+        string relative = Path.GetRelativePath(fullOriginals, fullReport);
+        Need(Path.GetFullPath(planPath) != fullReport, "FFX preflight report would replace its plan");
+        Need(relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)
+             || Path.IsPathRooted(relative), "FFX preflight report must be outside original SFX inputs");
+        Need(Directory.Exists(Path.GetDirectoryName(fullReport)), "FFX preflight report parent is missing");
+        var conflicts = FindConflicts(planPath, originals);
+        File.WriteAllText(fullReport, JsonSerializer.Serialize(new {
+            format = "bb-boss-ffx-preflight-v1", conflicts,
+        }, Json));
+        Console.WriteLine($"ffx_conflicts={conflicts.Count} report={fullReport}");
+        return 0;
     }
     internal static List<Applied> Apply(string planPath, string? originals, string outputSfx) {
         var merges = Read(planPath);
