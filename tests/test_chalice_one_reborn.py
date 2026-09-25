@@ -55,7 +55,8 @@ class OneRebornChaliceTests(unittest.TestCase):
         plan = recipes()[0].native_plan(self.slots, self.npcs, self.effects, "one-seed")
         self.assertEqual(plan["swap_count"], 1)
         self.assertEqual(plan["boss_contract"]["added_event_ids"], [BRIDGE])
-        self.assertEqual(plan["boss_contract"]["source_handlers"], [])
+        self.assertIn(12906806, event_blocks(self.source))
+        self.assertEqual(len(plan["boss_contract"]["source_handlers"]), 0)
         self.assertEqual(len(plan["primary_init_source_bindings"]), 2)
         self.assertEqual({row["destination_map"] for row in plan["primary_init_source_bindings"]},
                          set(STATES))

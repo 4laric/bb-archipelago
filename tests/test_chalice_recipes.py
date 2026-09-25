@@ -33,8 +33,8 @@ class ChaliceIntegrationTests(unittest.TestCase):
         reviewed = reviewed_compatibility()
         self.assertEqual(len(reviewed), 22)
         self.assertFalse(set(CHALICE_PACKAGES) & set(reviewed))
-        self.assertTrue(all(not set(donors) & set(CHALICE_PACKAGES)
-                            for donors in reviewed.values()))
+        self.assertFalse({donor for donors in reviewed.values() for donor in donors}
+                         & set(CHALICE_PACKAGES))
 
     def test_original_constructor_is_required_and_hash_checked(self):
         manifest = source_manifest('pthumerian-elder')
@@ -62,7 +62,7 @@ class ChaliceIntegrationTests(unittest.TestCase):
             self.assertEqual(len(banks), 2)
             self.assertEqual({row['source_ffx_file'] for row in banks}, {
                 'frpg_sfxbnd_m29a.ffxbnd.dcx', 'frpg_sfxbnd_m29c.ffxbnd.dcx'})
-            self.assertTrue(all(row['destination_map'] == actor['destination_map'] for row in banks))
+            self.assertEqual({row['destination_map'] for row in banks}, {actor['destination_map']})
             declared = [root['witness']['effect_id'] for bank in banks for root in bank['roots']]
             self.assertEqual(len(declared), len(set(declared)))
             self.assertEqual(plan['chalice_character_effect_limits']['runtime_bank_precedence'],
