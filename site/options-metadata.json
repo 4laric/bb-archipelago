@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "game": "Bloodborne",
- "apworld_version": "0.1.0",
+ "apworld_version": "0.2.0",
  "source": "worlds/bloodborne/__init__.py -> BloodborneOptions (parsed)",
  "source_sha256": "2bf44fb1ddd15f27fd3ee8a33d74021e026e0aee5ab381d292759e8278716f71",
  "field_order": [
