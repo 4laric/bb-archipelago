@@ -231,6 +231,7 @@ try
     BossObjectTests.Run();
     BossSfxTests.Run();
     FfxBundleTests.Run();
+    FfxPreflightTests.Run();
     CharacterFfxRequirementTests.Run();
     CharacterFfxBankRequirementTests.Run();
     ChaliceInfrastructureTests.Run();

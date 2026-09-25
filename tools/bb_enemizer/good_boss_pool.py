@@ -11,6 +11,8 @@ import random
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
+from .boss_pool import _forbidden_route_sets
+
 GOOD_FAMILIES = (
     "father-gascoigne", "lady-maria", "orphan-of-kos", "cleric-beast",
     "pthumerian-elder", "vicar-amelia", "abhorrent-beast",
@@ -151,10 +153,69 @@ def _maximum_matching(graph: dict[str, dict[str, set[str]]],
     return {arena: family for family, arena in by_family.items()}
 
 
+def _constrained_matching(graph: dict[str, dict[str, set[str]]],
+                          selected: Mapping[str, str], seed: str, *, allow_self: bool,
+                          forbidden: tuple[frozenset[tuple[str, str]], ...]
+                          ) -> dict[str, str] | None:
+    """Find a complete family matching without any forbidden physical routes."""
+    rng = random.Random("bb-good-boss-v1:" + seed + (":self" if allow_self else ":no-self"))
+    options: dict[str, list[tuple[str, str]]] = {}
+    for arena, families in graph.items():
+        candidates = [family for family, donors in families.items()
+                      if family not in selected or selected[family] in donors]
+        if not allow_self:
+            candidates = [family for family in candidates if family != arena]
+        candidates.sort()
+        rng.shuffle(candidates)
+        options[arena] = [(family, selected.get(family, family)) for family in candidates]
+    assigned: dict[str, str] = {}
+    routes: set[tuple[str, str]] = set()
+
+    def can_complete(remaining: tuple[str, ...], used: set[str]) -> bool:
+        owners: dict[str, str] = {}
+
+        def augment(arena: str, seen: set[str]) -> bool:
+            for family, donor in options[arena]:
+                if family in used or family in seen or frozenset(((arena, donor),)) in forbidden:
+                    continue
+                seen.add(family)
+                owner = owners.get(family)
+                if owner is None or augment(owner, seen):
+                    owners[family] = arena
+                    return True
+            return False
+
+        return all(augment(arena, set()) for arena in remaining)
+
+    def search(remaining: tuple[str, ...], used: set[str]) -> bool:
+        if not remaining:
+            return True
+        if not can_complete(remaining, used):
+            return False
+        arena = min(remaining, key=lambda item: (
+            sum(family not in used for family, _donor in options[item]), item))
+        for family, donor in options[arena]:
+            if family in used:
+                continue
+            route = (arena, donor)
+            routes.add(route)
+            if not any(conflict.issubset(routes) for conflict in forbidden):
+                assigned[arena] = family
+                if search(tuple(item for item in remaining if item != arena), used | {family}):
+                    return True
+                assigned.pop(arena)
+            routes.remove(route)
+        return False
+
+    return dict(assigned) if search(tuple(graph), set()) else None
+
+
 def assign_good_bosses(seed: str, routes: Mapping | Iterable, *,
                        arenas: Iterable[str] = GOOD_ARENAS,
                        required_variants: Mapping[str, str] | None = None,
-                       allow_self: bool = True) -> GoodBossAssignment:
+                       allow_self: bool = True,
+                       forbidden_combinations: Iterable[Iterable[tuple[str, str]]] = ()
+                       ) -> GoodBossAssignment:
     """Assign every requested family once, or fail with concrete coverage.
 
     A requested variant is mandatory. Without one, seeded variant order is
@@ -168,6 +229,7 @@ def assign_good_bosses(seed: str, routes: Mapping | Iterable, *,
     if len(selected_arenas) != len(GOOD_FAMILIES) or len(set(selected_arenas)) != len(selected_arenas):
         raise ValueError("good-boss assignment requires 22 distinct arenas")
     pairs = _route_pairs(routes)
+    forbidden = _forbidden_route_sets(forbidden_combinations)
     graph = _graph(pairs, selected_arenas)
     report = coverage_report(pairs, arenas=selected_arenas)
     required = dict(required_variants or {})
@@ -199,6 +261,12 @@ def assign_good_bosses(seed: str, routes: Mapping | Iterable, *,
                 best = len(matched), matched
             if len(matched) != len(GOOD_FAMILIES):
                 continue
+            physical = {(arena, chosen.get(family, family)) for arena, family in matched.items()}
+            if forbidden and any(conflict.issubset(physical) for conflict in forbidden):
+                matched = _constrained_matching(graph, chosen, seed,
+                                                allow_self=self_allowed, forbidden=forbidden)
+                if matched is None:
+                    continue
             donor_by_arena = {}
             for arena, family in matched.items():
                 donors = graph[arena][family]
@@ -218,5 +286,6 @@ def assign_good_bosses(seed: str, routes: Mapping | Iterable, *,
             )
     report.update(maximum_matching_size=best[0],
                   unmatched_arenas=sorted(set(selected_arenas) - set(best[1])),
-                  unmatched_families=sorted(set(GOOD_FAMILIES) - set(best[1].values())))
+                  unmatched_families=sorted(set(GOOD_FAMILIES) - set(best[1].values())),
+                  forbidden_combination_count=len(forbidden))
     raise CoverageError("good-boss routes have no complete 22-family matching", report)

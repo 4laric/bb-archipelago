@@ -839,7 +839,86 @@ def verify_receipt(root: Path) -> dict:
     return receipt
 
 
+class FfxCompatibilityError(ValueError):
+    def __init__(self, conflicts, combinations):
+        self.conflicts = conflicts
+        self.combinations = combinations
+        super().__init__('boss effect banks conflict: ' + '; '.join(
+            f"{row['left_file']} + {row['right_file']} in {row['destination_file']} ({row['entry']})"
+            for row in conflicts))
+
+
+def ffx_conflict_combinations(conflicts, pairs, plans):
+    """Attribute byte conflicts to route combinations, not arbitrary donor bans."""
+    owners = {}
+    for (arena, donor), plan in zip(pairs, plans, strict=True):
+        for merge in plan.get('boss_ffx_merges', []):
+            owners.setdefault((merge['destination_file'], merge['source_file']), set()).add((arena, donor))
+    combinations = set()
+    for conflict in conflicts:
+        destination = conflict['destination_file']
+        left, right = conflict['left_file'], conflict['right_file']
+        left_owners = owners.get((destination, left), set())
+        right_owners = owners.get((destination, right), set())
+        if left == destination:
+            if not right_owners:
+                raise ValueError('FFX preflight conflict has no contributing route')
+            combinations.update(frozenset((route,)) for route in right_owners)
+        elif right == destination:
+            if not left_owners:
+                raise ValueError('FFX preflight conflict has no contributing route')
+            combinations.update(frozenset((route,)) for route in left_owners)
+        else:
+            if not left_owners or not right_owners:
+                raise ValueError('FFX preflight conflict has no contributing route')
+            combinations.update(frozenset((a, b)) for a in left_owners for b in right_owners)
+    return combinations
+
+
+def preflight_boss_effects(args, scratch, pairs, plans):
+    merges = [row for plan in plans for row in plan.get('boss_ffx_merges', [])]
+    if not merges:
+        return
+    # The normal composer handles repeated merge requirements across routes.
+    composed = combine_native_plans(args.seed, plans)
+    path, report_path = scratch / 'ffx-preflight-plan.json', scratch / 'ffx-preflight-report.json'
+    path.write_text(json.dumps({'boss_ffx_merges': composed['boss_ffx_merges']}), encoding='utf-8')
+    if not getattr(args, 'sfx', None):
+        raise ValueError('boss effect preflight requires original --sfx inputs')
+    subprocess.run(command_for(args) + ['--boss-ffx-preflight', str(path), str(args.sfx),
+                                       str(report_path)], check=True)
+    report = json.loads(report_path.read_text(encoding='utf-8-sig'))
+    if report.get('format') != 'bb-boss-ffx-preflight-v1' or not isinstance(report.get('conflicts'), list):
+        raise ValueError('invalid native FFX preflight report')
+    if report['conflicts']:
+        routes = [(arena.key, donor.key) for arena, donor in pairs]
+        raise FfxCompatibilityError(report['conflicts'],
+                                    ffx_conflict_combinations(report['conflicts'], routes, plans))
+
+
 def build(args) -> dict:
+    # Retain the exact same seed and ordinary placements while the matcher
+    # learns only collisions proved by these original effect-bank bytes.
+    forbidden = set()
+    evidence = []
+    for attempt in range(1, 33):
+        args._ffx_forbidden_combinations = forbidden
+        args._ffx_selection = {'attempt': attempt, 'conflicts_avoided': evidence}
+        try:
+            return _build_once(args)
+        except FfxCompatibilityError as exc:
+            if not getattr(args, 'pool', None):
+                raise
+            new = exc.combinations - forbidden
+            if not new:
+                raise ValueError('boss effect selection repeated an excluded layout') from exc
+            forbidden.update(new)
+            evidence.extend(exc.conflicts)
+            print(f'Boss effect compatibility: choosing another placement after {len(exc.conflicts)} bank conflicts.', flush=True)
+    raise ValueError('could not find an effect-compatible boss layout after 32 attempts')
+
+
+def _build_once(args) -> dict:
     args._actor_pin_cache = {}
     recipes = reusable_recipes()
     experimental = chalice_recipes()
@@ -952,10 +1031,12 @@ def build(args) -> dict:
             'cleric-beast': ('laurence',), 'laurence': ('cleric-beast',),
         } if args.pool == 'laurence-cleric' else FINAL_COMPATIBILITY if args.pool == 'finals' else reviewed_compatibility()
         if args.pool == 'good':
-            good_assignment = assign_good_bosses(args.seed, good_boss_routes(), allow_self=False)
+            good_assignment = assign_good_bosses(args.seed, good_boss_routes(), allow_self=False,
+                forbidden_combinations=getattr(args, '_ffx_forbidden_combinations', ()))
             mapping = good_assignment.arena_to_donor
         else:
-            mapping = assign_donors(args.seed, graph)
+            mapping = assign_donors(args.seed, graph,
+                forbidden_combinations=getattr(args, '_ffx_forbidden_combinations', ()))
         pairs = [(ARENAS[key], PACKAGES[value]) for key, value in mapping.items()]
     else:
         pairs = [(ARENAS[args.arena], PACKAGES[args.donor])]
@@ -1206,17 +1287,6 @@ def build(args) -> dict:
             protected_by_file[filename] = protected
             combined = compose_event_patches(texts[filename], patches, protected, terminals.get(filename, ()))
             (source / filename).write_text(combined, encoding='utf-8')
-        compile_events(args.darkscript, 'compile', source, compiled,
-                       pairs[0][0].event_file.removesuffix('.js'))
-        records = []
-        for filename in sorted(variants):
-            event_name = filename.removesuffix('.js')
-            pins_run = subprocess.run(command_for(args) + ['--boss-encounter-pins', str(compiled / event_name)],
-                                      check=True, capture_output=True, text=True)
-            records.append(event_record(originals / event_name, texts[filename],
-                                        (source / filename).read_text(encoding='utf-8'),
-                                        json.loads(pins_run.stdout), protected_by_file[filename],
-                                        terminals.get(filename, ())))
         plans = []
         for arena, package in pairs:
             ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
@@ -1437,6 +1507,18 @@ def build(args) -> dict:
             verify_sfx_requirements(args, plan.get('boss_sfx_additions', []))
             verify_retained_helpers(args, plan)
             plans.append(plan)
+        preflight_boss_effects(args, scratch, pairs, plans)
+        compile_events(args.darkscript, 'compile', source, compiled,
+                       pairs[0][0].event_file.removesuffix('.js'))
+        records = []
+        for filename in sorted(variants):
+            event_name = filename.removesuffix('.js')
+            pins_run = subprocess.run(command_for(args) + ['--boss-encounter-pins', str(compiled / event_name)],
+                                      check=True, capture_output=True, text=True)
+            records.append(event_record(originals / event_name, texts[filename],
+                                        (source / filename).read_text(encoding='utf-8'),
+                                        json.loads(pins_run.stdout), protected_by_file[filename],
+                                        terminals.get(filename, ())))
         if ordinary_plan is not None:
             if ordinary_plan.get('seed') != args.seed:
                 raise ValueError('ordinary and boss seed differ')
@@ -1446,6 +1528,7 @@ def build(args) -> dict:
         if good_assignment is not None:
             plan['boss_contract']['good_boss_assignment'] = good_assignment.as_dict()
             plan.setdefault('options', {})['boss_pool'] = 'good'
+        plan['boss_contract']['asset_compatibility'] = getattr(args, '_ffx_selection', {'attempt': 1})
         # Combat helpers declare a parent swap explicitly or are matched to a
         # reviewed phase-body source. Both feed one post-combination allocator.
         helper_parents = {}

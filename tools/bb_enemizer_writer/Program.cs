@@ -22,6 +22,8 @@ if (args.Length == 2 && args[0] == "--boss-object-pins")
     return BossObjectTransplant.Inspect(args[1]);
 if (args.Length == 2 && args[0] == "--boss-sfx-pins")
     return BossSfxTransplant.Inspect(args[1]);
+if (args.Length == 4 && args[0] == "--boss-ffx-preflight")
+    return FfxBundleTransplant.Preflight(args[1], args[2], args[3]);
 if (args.Length == 14 && args[0] == "--boss-encounters" && args[9] == "--sfx" && args[11] == "--characters" && args[13] == "--apply")
     return BossEncounter.Run(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[10], args[12]);
 if (args.Length == 12 && args[0] == "--boss-encounters" && args[9] == "--characters" && args[11] == "--apply")
@@ -60,6 +62,7 @@ if (args.Length != 4 || args[3] != "--apply")
     Console.Error.WriteLine("Region evidence: BBEnemizerWriter --boss-region-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("Object evidence: BBEnemizerWriter --boss-object-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("SFX evidence: BBEnemizerWriter --boss-sfx-pins <original-map.msb.dcx>");
+    Console.Error.WriteLine("FFX preflight: BBEnemizerWriter --boss-ffx-preflight <plan.json> <original-sfx-dir> <report.json>");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }

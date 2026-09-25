@@ -18,6 +18,7 @@ from bb_launcher.integrated.protocol import (
     redact_for_log,
 )
 from bb_launcher.integrated.sessions import load_play
+from bb_launcher.workflow import WorkflowError
 
 
 def digest(text: str) -> str:
@@ -83,6 +84,91 @@ class CapabilitiesTests(unittest.TestCase):
             self.assertEqual(response["error"]["code"], "incompatible-protocol")
             # No receipt paths, no tracebacks in the envelope.
             self.assertNotIn("traceback", json.dumps(response).lower())
+
+
+class WorkflowFailureTests(unittest.TestCase):
+    def test_failed_build_tool_exposes_sanitized_native_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            def prepare(_params: dict, _op_id: str) -> dict:
+                # The exact envelope/tail shape produced by run_command.
+                raise WorkflowError(
+                    "build tool exited with code 7: C:\\private\\builder.exe --apply\n"
+                    "Unhandled exception. System.IO.InvalidDataException: "
+                    "missing original character bank C:\\Users\\private\\game "
+                    "password=hunter2\n"
+                    "   at Internal.Native.Apply()\n"
+                    "Traceback (most recent call last):\n"
+                    "  File \"boss_encounter_entry.py\", line 6, in <module>\n"
+                    "subprocess.CalledProcessError: Command '['C:\\private\\builder.exe', "
+                    "'--apply']' returned non-zero exit status 7.\n"
+                    "[PYI-100:ERROR] Failed to execute script 'boss_encounter_entry' "
+                    "due to unhandled exception!"
+                )
+
+            response = Backend(Path(state), prepare_fn=prepare).handle(
+                request("prepare_play", {"game_root": state, "password": "hunter2"}))
+            self.assertFalse(response["ok"])
+            self.assertEqual(response["error"]["code"], "verification-failed")
+            detail = response["error"]["detail"]
+            self.assertIn("exit code 7", detail)
+            self.assertIn("missing original character bank", detail)
+            for secret in ("hunter2", "C:\\", "private", "Traceback", "Internal.Native",
+                           "InvalidDataException", "builder.exe", "CalledProcessError", "PYI"):
+                self.assertNotIn(secret, detail)
+
+    def test_native_ffx_conflict_survives_python_wrapper_tail(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            def prepare(_params: dict, _op_id: str) -> dict:
+                raise WorkflowError(
+                    "build tool exited with code 3762504530: C:\\private\\builder.exe --apply\n"
+                    "Unhandled exception. System.IO.InvalidDataException: "
+                    "conflicting FFX entry: effect/f000620900.fxr\n"
+                    "   at FfxBundleTransplant.Apply(...)\n"
+                    "Traceback (most recent call last):\n"
+                    "subprocess.CalledProcessError: Command '['C:\\private\\writer.exe']' "
+                    "returned non-zero exit status 3762504530.\n"
+                    "[PYI-19432:ERROR] Failed to execute script 'boss_encounter_entry' "
+                    "due to unhandled exception!"
+                )
+            response = Backend(Path(state), prepare_fn=prepare).handle(
+                request("prepare_play", {"game_root": state}))
+            self.assertEqual(response["error"]["code"], "verification-failed")
+            self.assertIn("conflicting FFX entry: effect/f000620900.fxr",
+                          response["error"]["detail"])
+            self.assertNotIn("private", response["error"]["detail"])
+
+    def test_other_workflow_failures_use_fixed_recovery_copy(self) -> None:
+        cases = (
+            ("could not start build tool C:\\secret\\builder.exe: token=abc",
+             "missing-prerequisite", "required build tool"),
+            ("AP server/slot does not match the selected seed package; "
+             "server=private:38281 password=hunter2", "seed-identity-mismatch",
+             "matching seed and server"),
+            ("refusing to clean unexpected build path: C:\\secret\\cache",
+             "conflict", "build/cache folder"),
+            ("unclassified private token=hunter2", "internal-error",
+             "Preparation stopped before launch"),
+        )
+        with tempfile.TemporaryDirectory() as state:
+            for message, code, useful in cases:
+                with self.subTest(code=code):
+                    def prepare(_params: dict, _op_id: str) -> dict:
+                        raise WorkflowError(message)
+                    response = Backend(Path(state), prepare_fn=prepare).handle(
+                        request("prepare_play", {"game_root": state}))
+                    self.assertEqual(response["error"]["code"], code)
+                    self.assertIn(useful, response["error"]["detail"])
+                    self.assertNotIn("hunter2", response["error"]["detail"])
+                    self.assertNotIn("C:\\secret", response["error"]["detail"])
+
+    def test_unknown_exception_remains_generic(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            def prepare(_params: dict, _op_id: str) -> dict:
+                raise RuntimeError("private password=hunter2")
+            response = Backend(Path(state), prepare_fn=prepare).handle(
+                request("prepare_play", {"game_root": state}))
+            self.assertEqual(response["error"]["code"], "internal-error")
+            self.assertEqual(response["error"]["detail"], "coordinator failed: RuntimeError")
 
 
 class OpaqueHandleTests(unittest.TestCase):

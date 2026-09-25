@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -35,6 +36,7 @@ from typing import Any, Callable, Mapping
 from ..client_config import session_key
 from ..core import ValidationError, ConflictError, RecoveryError
 from ..external import ExternalPackageExists
+from ..workflow import WorkflowError
 from . import fork_identity
 from .import_state import detect_installations, import_companion_state
 from .journal import append_entry, decide_recovery, plan_activation, read_journal
@@ -68,6 +70,74 @@ PrepareFn = Callable[..., Mapping[str, Any]]
 VerifyFn = Callable[..., Any]
 SpawnFn = Callable[..., Mapping[str, Any]]
 ProcessCheckFn = Callable[[], Mapping[str, Any]]
+
+
+def _build_diagnostic(message: str) -> str | None:
+    """Keep a bounded validation reason, never a command, path or traceback."""
+    for raw in reversed(message.splitlines()[1:]):
+        line = raw.strip()
+        if not line or re.search(r"(?i)traceback|^file\s+[\"']|^at\s+", line):
+            continue
+        if ("CalledProcessError:" in line or
+                re.search(r"(?i)failed to execute script|returned non-zero exit status", line)):
+            # Python and PyInstaller append wrapper failures after the native
+            # validation line; their argv and stack are not the root cause.
+            continue
+        match = re.match(
+            r"(?i)^(?:unhandled exception\.\s*)?"
+            r"(?:[\w.]+(?:error|exception)|error|fatal|failed)\s*:\s*(.+)$",
+            line,
+        )
+        if match is None:
+            continue
+        detail = match.group(1).strip()
+        # Tool stdout is untrusted. A useful prefix is enough when the rest
+        # contains a path, address or credential-bearing argument.
+        unsafe = re.search(
+            r"(?i)(?:[a-z]:[\\/]|(?<!\w)/\S+|(?:https?|ap)://|"
+            r"\b(?:password|passwd|secret|token|authorization|api[_-]?key|bearer)\b\s*(?:[:=]|\s))",
+            detail,
+        )
+        if unsafe is not None:
+            detail = detail[:unsafe.start()].rstrip(" :;,.-")
+        if (not detail or len(detail) > 200 or
+                re.search(r"[\x00-\x1f\x7f]", detail)):
+            continue
+        return detail
+    return None
+
+
+def _workflow_error(exc: WorkflowError) -> ProtocolError:
+    """Translate known safe build failures without returning arbitrary logs."""
+    message = str(exc)
+    exit_code = re.match(r"^build tool exited with code (-?\d+):", message)
+    if exit_code is not None:
+        detail = f"Build tool failed (exit code {exit_code.group(1)})."
+        diagnostic = _build_diagnostic(message)
+        detail += (f" {diagnostic}" if diagnostic else
+                   " Check the original game files and packaged build tools, then retry.")
+        return ProtocolError("verification-failed", detail)
+    if message.startswith("could not start build tool "):
+        return ProtocolError(
+            "missing-prerequisite",
+            "Could not start a required build tool. Check the launcher package and retry.",
+        )
+    if message.startswith("AP server/slot does not match the selected seed package"):
+        return ProtocolError(
+            "seed-identity-mismatch",
+            "AP server/slot does not match the selected seed package. Select the matching "
+            "seed and server, or use the explicit mismatch override.",
+        )
+    if message.startswith(("refusing to evict unexpected cache path:",
+                           "refusing to clean unexpected build path:")):
+        return ProtocolError(
+            "conflict", "An unexpected build/cache folder blocks preparation. "
+            "Choose a different cache location or remove the conflicting folder.",
+        )
+    return ProtocolError(
+        "internal-error", "Preparation stopped before launch. Check the selected game "
+        "installation and launcher package, then retry.",
+    )
 
 
 @dataclass
@@ -115,6 +185,8 @@ class Backend:
                 request["id"], request["seq"],
                 ProtocolError("bad-request", str(exc), retryable=False),
             )
+        except WorkflowError as exc:
+            return error_response(request["id"], request["seq"], _workflow_error(exc))
         except Exception as exc:  # fail closed, never leak internals
             return error_response(
                 request["id"], request["seq"],

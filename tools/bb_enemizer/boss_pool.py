@@ -373,12 +373,28 @@ def combine_ordinary_and_boss_plans(ordinary_plan: Mapping, boss_plans: Sequence
     return result
 
 
+def _forbidden_route_sets(forbidden_combinations: Iterable[Iterable[tuple[str, str]]]
+                          ) -> tuple[frozenset[tuple[str, str]], ...]:
+    """Normalize asset conflicts without silently accepting malformed routes."""
+    result = set()
+    for combination in forbidden_combinations:
+        routes = frozenset(combination)
+        if not routes or any(not isinstance(route, tuple) or len(route) != 2
+                             or any(not isinstance(value, str) or not value for value in route)
+                             for route in routes):
+            raise ValueError('forbidden boss combination requires nonempty (arena, donor) routes')
+        result.add(routes)
+    return tuple(sorted(result, key=lambda routes: (len(routes), tuple(sorted(routes)))))
+
+
 def assign_donors(seed: str, compatible: Mapping[str, Sequence[str]], *,
-                  allow_identity: bool = False) -> dict[str, str]:
+                  allow_identity: bool = False,
+                  forbidden_combinations: Iterable[Iterable[tuple[str, str]]] = ()) -> dict[str, str]:
     """Find a seeded one-to-one assignment; never silently shrink the roster."""
     arenas = sorted(compatible)
     if not arenas:
         raise ValueError('boss pool is empty')
+    forbidden = _forbidden_route_sets(forbidden_combinations)
     donors = set(arenas)
     choices = {}
     rng = random.Random('bb-boss-pool-v1:' + seed)
@@ -423,6 +439,8 @@ def assign_donors(seed: str, compatible: Mapping[str, Sequence[str]], *,
             if donor in used:
                 continue
             result[arena] = donor
+            if forbidden and any(routes.issubset(result.items()) for routes in forbidden):
+                continue
             if search([key for key in remaining if key != arena], used | {donor}):
                 return True
         result.pop(arena, None)
