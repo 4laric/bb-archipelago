@@ -2,11 +2,17 @@
 import json
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from bb_launcher.core import BOSS_EVENT_PATH, SUPPRESSION_PATH, SeedCache, ValidationError, sha256_file
-from bb_launcher.workflow import EnemizerBuild, EnemizerOptions, LauncherWorkflow, encounter_sfx_sources
+from bb_launcher.workflow import (
+    EnemizerBuild, EnemizerOptions, EnemizerToolchain, LauncherWorkflow,
+    chalice_map_sources, encounter_character_sources, encounter_event_sources,
+    encounter_sfx_sources,
+)
 from test_launcher_core import write_boss_encounter_overlay
 import test_launcher_ui as fixtures
+from tools.bb_enemizer.chalice_recipes import chalice_recipes, source_manifest
 
 
 class ExperimentalToolchain(fixtures.FakeToolchain):
@@ -105,6 +111,29 @@ class ExperimentalLauncherTests(unittest.TestCase):
     def launch(self, **options):
         return self.workflow.randomize_and_launch(self.fixture.settings(), EnemizerOptions(**options),
                                                   process_is_running=lambda: False)
+
+    def seed_good_pool_inputs(self):
+        install = self.fixture.install
+        donors = {donor for _arena, donor in chalice_recipes()}
+        self.assertEqual(9, len(donors))
+        for donor in donors:
+            source = source_manifest(donor)
+            event = Path('dvdroot_ps4/event') / source['event_file']
+            map_name = source['source_map']
+            map_path = Path('dvdroot_ps4/map/MapStudio') / f'{map_name[:-2]}00' / f'{map_name}.msb.dcx'
+            for relative in (event, map_path):
+                target = install.base / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(f'base {donor} {relative.name}'.encode())
+        for relative, content in (
+            ('dvdroot_ps4/event/m29.emevd.dcx', b'base chalice constructor'),
+            ('dvdroot_ps4/chr/c5010.anibnd.dcx', b'base watchdog character'),
+            ('dvdroot_ps4/sfx/frpg_sfxbnd_m29a.ffxbnd.dcx', b'base chalice effects'),
+        ):
+            target = install.base / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+        return donors
 
     def test_switching_boss_scaling_and_normal_modes_changes_cache_and_restores_event(self):
         boss = self.launch(boss_canary=True)
@@ -239,6 +268,126 @@ class ExperimentalLauncherTests(unittest.TestCase):
         manifest = json.loads((changed.build_path / 'seed-manifest.json').read_text())
         self.assertEqual(sha256_file(bank), manifest['identity']['source_hashes'][
             'dvdroot_ps4/sfx/frpg_sfxbnd_m35.ffxbnd.dcx'])
+
+    def test_good_pool_selects_exact_chalice_sources_and_never_reads_mods(self):
+        donors = self.seed_good_pool_inputs()
+        install = self.fixture.install
+        selected = source_manifest('watchdog-of-the-old-lords')
+        event_key = 'dvdroot_ps4/event/' + selected['event_file']
+        map_name = selected['source_map']
+        map_key = f'dvdroot_ps4/map/MapStudio/{map_name[:-2]}00/{map_name}.msb.dcx'
+        for relative in (event_key, map_key, 'dvdroot_ps4/chr/c5010.anibnd.dcx',
+                         'dvdroot_ps4/sfx/frpg_sfxbnd_m29a.ffxbnd.dcx'):
+            patched = install.patch / relative
+            patched.parent.mkdir(parents=True, exist_ok=True)
+            patched.write_bytes(b'official update ' + relative.encode())
+            modded = install.mods / relative
+            modded.parent.mkdir(parents=True, exist_ok=True)
+            modded.write_bytes(b'active mod ' + relative.encode())
+        unrelated = install.base / 'dvdroot_ps4/event/m29_99_99_00/unselected.emevd.dcx'
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_bytes(b'unselected source')
+        events = encounter_event_sources(install, chalice=True)
+        maps = chalice_map_sources(install)
+        characters = encounter_character_sources(install)
+        effects = encounter_sfx_sources(install)
+        self.assertEqual({source_manifest(d)['event_file'] for d in donors},
+                         {key.split('dvdroot_ps4/event/', 1)[1] for key in events
+                          if key.startswith('dvdroot_ps4/event/m29_')})
+        self.assertEqual(9, len(maps))
+        self.assertEqual(install.base / 'dvdroot_ps4/event/m29.emevd.dcx',
+                         events['dvdroot_ps4/event/m29.emevd.dcx'])
+        for key, sources in ((event_key, events), (map_key, maps),
+                             ('dvdroot_ps4/chr/c5010.anibnd.dcx', characters),
+                             ('dvdroot_ps4/sfx/frpg_sfxbnd_m29a.ffxbnd.dcx', effects)):
+            self.assertEqual(install.patch / key, sources[key])
+        self.assertNotIn('dvdroot_ps4/event/m29_99_99_00/unselected.emevd.dcx', events)
+
+    def test_good_pool_forwards_mode_and_pins_original_chalice_inputs(self):
+        self.seed_good_pool_inputs()
+        install = self.fixture.install
+        selected = source_manifest('watchdog-of-the-old-lords')
+        key = 'dvdroot_ps4/event/' + selected['event_file']
+        patched = install.patch / key
+        patched.parent.mkdir(parents=True, exist_ok=True)
+        patched.write_bytes(b'official constructor v1')
+        compiler = self.fixture.root / 'DarkScript3.exe'
+        compiler.write_bytes(b'pinned compiler')
+        tools = ReviewedBossToolchain(self.fixture.root / 'good-tools')
+        workflow = LauncherWorkflow(self.fixture.repo, toolchain=tools,
+            process_launcher=lambda _: [fixtures.Process(10), fixtures.Process(11)])
+        with patch('bb_launcher.boss_compiler.ensure_boss_compiler', return_value=compiler):
+            def launch():
+                return workflow.randomize_and_launch(self.fixture.settings(),
+                    EnemizerOptions(boss_pool='good'), process_is_running=lambda: False)
+            first = launch()
+            reused = launch()
+            self.assertTrue(reused.reused)
+            self.assertEqual(first.cache_key, reused.cache_key)
+            patched.write_bytes(b'official constructor v2')
+            changed = launch()
+        self.assertEqual(2, len(tools.calls))
+        self.assertTrue(all(call['options'].boss_pool == 'good' for call in tools.calls))
+        self.assertFalse(changed.reused)
+        self.assertNotEqual(first.cache_key, changed.cache_key)
+        identity = json.loads((changed.build_path / 'seed-manifest.json').read_text())['identity']
+        self.assertEqual('good', identity['options']['boss_pool'])
+        self.assertEqual(sha256_file(patched), identity['source_hashes'][key])
+        self.assertIn('dvdroot_ps4/event/m29.emevd.dcx', identity['source_hashes'])
+        self.assertIn('dvdroot_ps4/chr/c5010.anibnd.dcx', identity['source_hashes'])
+
+    def test_good_builder_stages_nested_originals_and_passes_selected_pool(self):
+        self.seed_good_pool_inputs()
+        install = self.fixture.install
+        selected = source_manifest('beast-possessed-soul')
+        event_relative = 'dvdroot_ps4/event/' + selected['event_file']
+        source = install.patch / event_relative
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_bytes(b'updated original BPS constructor')
+        modded = install.mods / event_relative
+        modded.parent.mkdir(parents=True, exist_ok=True)
+        modded.write_bytes(b'modded constructor')
+        compiler = self.fixture.root / 'DarkScript3.exe'
+        compiler.write_bytes(b'pinned compiler')
+        tool_root = self.fixture.root / 'builder-tools'
+        builder = tool_root / 'tools/BBBossEncounterBuilder/BBBossEncounterBuilder.exe'
+        writer = tool_root / 'tools/BBEnemizerWriter.exe'
+        for executable in (builder, writer):
+            executable.parent.mkdir(parents=True, exist_ok=True)
+            executable.write_bytes(b'tool')
+        commands = []
+
+        def runner(command, _cwd, _progress):
+            commands.append(command)
+            args = {command[index]: command[index + 1]
+                    for index in range(len(command) - 1) if command[index].startswith('--')}
+            self.assertEqual('good', args['--pool'])
+            self.assertEqual(b'updated original BPS constructor',
+                             (Path(args['--events']) / selected['event_file']).read_bytes())
+            map_name = selected['source_map']
+            self.assertTrue((Path(args['--maps']) / f'{map_name[:-2]}00' / f'{map_name}.msb.dcx').is_file())
+            self.assertEqual(b'base watchdog character',
+                             (Path(args['--characters']) / 'c5010.anibnd.dcx').read_bytes())
+            output = Path(args['--output'])
+            output.mkdir()
+            (output / 'boss-encounters-report.json').write_text(json.dumps({
+                'format': 'bb-boss-encounters-v1', 'applied': True, 'files': [{'path': 'fixture'}]}))
+            (output / 'bb-enemizer-plan.json').write_text('{}')
+
+        toolchain = EnemizerToolchain(self.fixture.repo, app_root=tool_root, runner=runner)
+        def ordinary_plan(**kwargs):
+            path = kwargs['output_root'] / 'ordinary-plan.json'
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('{}')
+            return EnemizerBuild(self.fixture.maps, {}, sha256_file(path), path)
+        with patch.object(toolchain, 'build', side_effect=ordinary_plan):
+            toolchain.build_boss_encounters(
+                options=EnemizerOptions(boss_pool='good'), install=install,
+                input_binder=self.fixture.suppression, darkscript=compiler, event_overrides={},
+                output_root=self.fixture.root / 'direct-good', map_studio_source=self.fixture.maps,
+                seed='fixture:1', progress=lambda _: None,
+            )
+        self.assertEqual(1, len(commands))
 
 
 if __name__ == '__main__':

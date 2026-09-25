@@ -58,6 +58,13 @@ internal static class BossActorTransplant
         Need(Path.GetFileName(map) == map && Bare(map).StartsWith("m", StringComparison.Ordinal), "invalid actor map name");
         string bare = Bare(map);
         foreach (string ext in new[] { ".msb.dcx", ".msb" }) { string path = Path.Combine(root, bare + ext); if (File.Exists(path)) return path; }
+        if (System.Text.RegularExpressions.Regex.IsMatch(bare, @"^m29_\d{2}_\d{2}_\d{2}$")) {
+            string directory = bare[..^2] + "00";
+            foreach (string ext in new[] { ".msb.dcx", ".msb" }) {
+                string path = Path.Combine(root, directory, bare + ext);
+                if (File.Exists(path)) return path;
+            }
+        }
         throw new FileNotFoundException("no MSBB for actor addition " + map);
     }
     static IEnumerable<MSBB.Part> Parts(MSBB map) => map.Parts.GetEntries();

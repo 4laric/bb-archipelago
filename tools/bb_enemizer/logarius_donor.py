@@ -11,6 +11,12 @@ from typing import Mapping, Sequence
 from tools.bb_inputs import read_blob, read_prefix
 
 from .boss_contracts import ARENAS, ArenaContract
+from .arena_port import (
+    ArenaPort,
+    PortableCombatFragments,
+    compose_arena_port,
+    primary_death_terminal_bridge,
+)
 from .gascoigne_arena_contract import (
     BEAST_ARCHETYPE,
     BEAST_PINS,
@@ -82,7 +88,15 @@ DESTINATION_FFX = {
     # m24_01's three physical MSB states share its m24 area SFX binder and
     # one EMEVD file.  Do not manufacture a state-suffixed event filename.
     "father-gascoigne": ("frpg_sfxbnd_m24.ffxbnd.dcx", "56103cdfe6b3f9298a32fc515be67c6117f555ae69cb87a8cbbb8bcba2abac99"),
+    "gehrman": ("frpg_sfxbnd_m21.ffxbnd.dcx", "ac9c86d74fe048b694f8b63940ae404404de6b78184d01d613362b3774258825"),
+    "moon-presence": ("frpg_sfxbnd_m21.ffxbnd.dcx", "ac9c86d74fe048b694f8b63940ae404404de6b78184d01d613362b3774258825"),
+    "micolash": ("frpg_sfxbnd_m26.ffxbnd.dcx", "3c6867267f838ed63d7071f95466ba90c3046b302d590ce2780161c32db70bfb"),
 }
+
+# One Logarius exists per seed, so this source-corpus-free event can be shared
+# by his three special-arena routes.  It is separate from the destination
+# cinematic and performs only the donor's 7000 wake after arena readiness.
+PORT_LOGARIUS_ACTIVATION_EVENT = 12996810
 
 DESTINATION_CO_OP = {
     "cleric-beast": (12411703, "f4982068db5c19d893ac320045e14491832a5722d1fd89a8038ef4cb8b372ce9"),
@@ -467,8 +481,102 @@ def _mapping(arena: ArenaContract, ids: LogariusDonorIds) -> dict[int, int]:
     }
 
 
-def logarius_donor_contract(arena: ArenaContract,
+def _port_music(port: ArenaPort, body: str) -> str:
+    witness = port.music_phase_witness
+    if body.count(witness) != 1:
+        raise ValueError(f"{port.arena.key} music lacks its pinned phase witness")
+    return body.replace(
+        witness,
+        f"CharacterHasSpEffect({port.arena.actor}, {LOGARIUS_PHASE_EFFECT})",
+        1,
+    )
+
+
+def _port_activation(port: ArenaPort, ids: LogariusDonorIds) -> str:
+    arena = port.arena
+    return f"""$Event({PORT_LOGARIUS_ACTIVATION_EVENT}, Default, function() {{
+    EndIf(EventFlag({arena.completion_event}));
+    SetCharacterAIState({arena.actor}, Disabled);
+    SetCharacterHPBarDisplay({arena.actor}, Disabled);
+    WaitFor(EventFlag({arena.start_flag}));
+    SetCharacterInvincibility({arena.actor}, Disabled);
+    ForceAnimationPlayback({arena.actor}, {LOGARIUS_ENTRY_ANIMATION}, false, false, false);
+    SetEventFlag({ids.readiness_flag}, ON);
+}});"""
+
+
+def _logarius_port_contract(port: ArenaPort,
+                            ids: LogariusDonorIds) -> dict:
+    _validate_ids(ids)
+    if (PORT_LOGARIUS_ACTIVATION_EVENT in _original_literals()
+            or PORT_LOGARIUS_ACTIVATION_EVENT in ids.numeric_ids()):
+        raise ValueError("Logarius arena-port activation allocation collides")
+    added = [*ids.event_ids(), PORT_LOGARIUS_ACTIVATION_EVENT]
+    if port.terminal_bridge_event is not None:
+        added.append(port.terminal_bridge_event)
+    return {
+        "format": "bb-logarius-arena-port-contract-v1",
+        "status": "experimental",
+        "arena": port.arena.key,
+        "donor": "martyr-logarius",
+        "allocation": {**asdict(ids),
+                       "port_activation_event": PORT_LOGARIUS_ACTIVATION_EVENT},
+        "placement_policy": port.placement_policy,
+        "source_hash_pins": dict(SOURCE_HASHES),
+        "constructor_insertion": {
+            "anchor_event": port.constructor.event_id,
+            "anchor_slot": port.constructor.slot,
+            "anchor_arguments": list(port.constructor.arguments),
+        },
+        "preserved_destination_events": list(port.protected_events),
+        "adapted_destination_events": [
+            port.arena.activation_event, port.arena.health_bar_event,
+            port.arena.music_event, port.arena.lockcam_event,
+        ],
+        "retired_destination_controllers": list(port.retired_events),
+        "added_events": added,
+        "readiness": {
+            "event": PORT_LOGARIUS_ACTIVATION_EVENT,
+            "flag": ids.readiness_flag,
+            "trigger": port.arena.start_flag,
+            "animation": LOGARIUS_ENTRY_ANIMATION,
+            "reset_each_load": True,
+        },
+        "helper_lifecycle": {
+            "sword": ids.sword_entity,
+            "effect_owner": ids.effect_owner_entity,
+            "completion": port.arena.completion_event,
+            "cleanup_event": ids.lifecycle_event,
+        },
+        "entry_policy": {
+            "event": port.arena.activation_event,
+            "cinematic_rewrite_owner": "boss_entrances.skip_replacement_entrance",
+        },
+        "terminal_policy": (
+            f"bridge opens destination flag {port.terminal_release_flag} after Logarius death"
+            if port.terminal_bridge_event is not None
+            else "destination completion remains the only progression authority"
+        ),
+        "ffx_requirement": {
+            "effect_id": LOGARIUS_SWORD_EFFECT,
+            "source_event": LOGARIUS_SWORD_EVENT,
+            "policy": "preserve_destination_union_source_v1",
+        },
+        "destination_native_evidence": {
+            "map": port.destination_map,
+            "msb_sha256": port.destination_msb_sha256,
+            "primary_entity": port.arena.actor,
+            "primary_part_sha256": port.primary_part_sha256,
+            "original_talk_id": port.primary_talk_id,
+        },
+        "runtime_status": "unobserved",
+    }
+
+
+def logarius_donor_contract(arena: ArenaContract | ArenaPort,
                             ids: LogariusDonorIds = DEFAULT_LOGARIUS_IDS) -> dict:
+    if isinstance(arena, ArenaPort):
+        return _logarius_port_contract(arena, ids)
     _validate_ids(ids)
     co_op_event, co_op_sha256 = DESTINATION_CO_OP[arena.key]
     preserved = [arena.completion_event, co_op_event]
@@ -546,8 +654,102 @@ def logarius_donor_contract(arena: ArenaContract,
     }
 
 
-def patch_logarius_donor(arena: ArenaContract, destination: str, donor_source: str,
+def _patch_logarius_at_port(port: ArenaPort, destination: str, donor_source: str,
+                            ids: LogariusDonorIds) -> str:
+    arena = port.arena
+    original = _verify(destination, arena.expected, f"{arena.key} arena")
+    donor = _verify(donor_source, SOURCE_HASHES, "Logarius donor")
+    _validate_ids(ids, destination)
+    _logarius_port_contract(port, ids)
+    mapping = _mapping(arena, ids)
+    health = _health_for_arena(
+        arena, donor[LOGARIUS_HEALTH_EVENT], original[arena.health_bar_event],
+        mapping, ids,
+    )
+    health = _replace_once(
+        health,
+        f"        WaitFor(EventFlag({arena.start_flag}));",
+        f"        WaitFor(EventFlag({ids.readiness_flag}));",
+        "special-arena fresh readiness gate",
+    )
+    health = _replace_once(
+        health,
+        f"L0:\n    SetEventFlag({_notification_flag(arena, ids)}, ON);",
+        f"L0:\n    WaitFor(EventFlag({ids.readiness_flag}));\n"
+        f"    SetEventFlag({_notification_flag(arena, ids)}, ON);",
+        "special-arena saved readiness gate",
+    )
+    camera = _remap(donor[LOGARIUS_CAMERA_EVENT], mapping)
+    if camera.count("SetLockcamSlotNumber(25, 0,") != 2:
+        raise ValueError("Logarius camera lacks its two source bindings")
+    camera = camera.replace(
+        "SetLockcamSlotNumber(25, 0,",
+        f"SetLockcamSlotNumber({arena.lockcam_map}, {arena.lockcam_subarea},",
+    )
+    sword = _remap(donor[LOGARIUS_SWORD_EVENT], mapping)
+    sword = _replace_once(
+        sword, "    StartTimeMeasurement(2501000, 116, Enabled);\n", "",
+        "source sword measurement start",
+    )
+    sword = _replace_once(
+        sword, "    EndTimeMeasurement(2501000);\n", "",
+        "source sword measurement end",
+    )
+    aura = _remap(donor[LOGARIUS_AURA_EVENT], mapping)
+    cleanup = _remap(donor[LOGARIUS_CLEANUP_EVENT], mapping)
+    lifecycle = f"""$Event({ids.lifecycle_event}, Default, function() {{
+    if (!ThisEvent()) {{
+        WaitFor(EventFlag({arena.completion_event}));
+    }}
+    SetCharacterAIState({ids.sword_entity}, Disabled);
+    ChangeCharacterEnableState({ids.sword_entity}, Disabled);
+    ForceCharacterDeath({ids.sword_entity}, false);
+    SetCharacterAIState({ids.effect_owner_entity}, Disabled);
+    ChangeCharacterEnableState({ids.effect_owner_entity}, Disabled);
+    ForceCharacterDeath({ids.effect_owner_entity}, false);
+}});"""
+    calls: list[str] = []
+    for source, target, count in (
+        (LOGARIUS_SWORD_EVENT, ids.sword_event, 2),
+        (LOGARIUS_AURA_EVENT, ids.aura_event, 1),
+        (LOGARIUS_CLEANUP_EVENT, ids.cleanup_event, 1),
+    ):
+        for line in _initializer_calls(donor[0], source, count):
+            calls.append(re.sub(
+                r"(\$InitializeEvent\([^,]+,\s*)" + str(source) + r"(?=,|\))",
+                r"\g<1>" + str(target), line, count=1,
+            ))
+    calls.extend((
+        f"    $InitializeEvent(0, {ids.lifecycle_event});",
+        f"    $InitializeEvent(0, {PORT_LOGARIUS_ACTIVATION_EVENT});",
+    ))
+    additions = {
+        ids.sword_event: sword,
+        ids.aura_event: aura,
+        ids.cleanup_event: cleanup,
+        ids.lifecycle_event: lifecycle,
+        PORT_LOGARIUS_ACTIVATION_EVENT: _port_activation(port, ids),
+    }
+    if port.terminal_bridge_event is not None:
+        additions[port.terminal_bridge_event] = primary_death_terminal_bridge(port)
+        calls.append(f"    $InitializeEvent(0, {port.terminal_bridge_event});")
+    fragments = PortableCombatFragments(
+        replacements={
+            arena.health_bar_event: health,
+            arena.music_event: _port_music(port, original[arena.music_event]),
+            arena.lockcam_event: camera,
+        },
+        additions=additions,
+        initializers=tuple(calls),
+        constructor_resets=(ids.readiness_flag,),
+    )
+    return compose_arena_port(destination, port, fragments)
+
+
+def patch_logarius_donor(arena: ArenaContract | ArenaPort, destination: str, donor_source: str,
                          ids: LogariusDonorIds = DEFAULT_LOGARIUS_IDS) -> str:
+    if isinstance(arena, ArenaPort):
+        return _patch_logarius_at_port(arena, destination, donor_source, ids)
     # Reuse the destination adapter's reviewed corpus/installed-source pins.
     # The inventory-facing ArenaContract carries only one digest per event.
     expected = GASCOIGNE_HASHES if arena.key == "father-gascoigne" else {
@@ -689,9 +891,148 @@ def _gascoigne_terminal_proxies(slots: Sequence[Slot]) -> list[Slot]:
     return found
 
 
-def native_plan_logarius_donor(arena: ArenaContract, slots: Sequence[Slot],
+def _native_plan_logarius_at_port(port: ArenaPort, slots: Sequence[Slot],
+                                  npcs: Mapping[int, dict], effects: Mapping[int, dict],
+                                  seed: str, ids: LogariusDonorIds) -> dict:
+    arena = port.arena
+    _verify(read_blob(BUNDLE, LOGARIUS_EVENT_SOURCE).decode("utf-8-sig"),
+            SOURCE_HASHES, "Logarius donor")
+    _validate_ids(ids)
+    _logarius_port_contract(port, ids)
+    destinations = [
+        slot for slot in slots
+        if (slot.map_name == port.destination_map and slot.entity_id == arena.actor
+            and slot.archetype == arena.archetype and not slot.dummy
+            and slot.talk_id == port.primary_talk_id)
+    ]
+    core = _require(slots, LOGARIUS_CORE, LOGARIUS_ARCHETYPE, "m25_00_00_00")
+    sword = _require(slots, LOGARIUS_SWORD, SWORD_ARCHETYPE, "m25_00_00_00")
+    owner = _require(slots, LOGARIUS_EFFECT_OWNER, EFFECT_OWNER_ARCHETYPE,
+                     "m25_00_00_00")
+    retained = {
+        evidence.entity_id: [
+            slot for slot in slots
+            if slot.map_name == port.destination_map
+            and slot.entity_id == evidence.entity_id
+            and slot.talk_id == evidence.talk_id
+        ]
+        for evidence in port.retained_native_actors
+    }
+    if (len(destinations) != 1 or len(core) != 1 or len(sword) != 1
+            or len(owner) != 1 or any(len(rows) != 1 for rows in retained.values())):
+        raise ValueError(f"Logarius/{arena.key} requires exact pinned native actors")
+    target = destinations[0]
+    warnings = (["runtime initial-area geometry/navigation fit remains unobserved"]
+                if port.placement_policy == "original-initial-area-direct-fight" else [])
+    swap = Swap(
+        target.logical_key, [target.key], {target.key: target.archetype},
+        target.archetype, LOGARIUS_ARCHETYPE, warnings=warnings,
+        destinations={target.key: {
+            "map_name": target.map_name, "entity_id": target.entity_id,
+            "x": target.x, "y": target.y, "z": target.z,
+        }},
+    )
+    changes, skips = plan_scaling(
+        [swap], [target], dict(npcs), dict(effects), boss_tiers=True
+    )
+    additions, scaling = [], []
+    for source, archetype, pin, part, entity in (
+        (sword[0], SWORD_ARCHETYPE, SWORD_PIN, ids.sword_part, ids.sword_entity),
+        (owner[0], EFFECT_OWNER_ARCHETYPE, EFFECT_OWNER_PIN,
+         ids.effect_owner_part, ids.effect_owner_entity),
+    ):
+        row = {
+            "source_map": source.map_name, "source_part": source.part_name,
+            "source_anchor_part": core[0].part_name,
+            "source_entity_id": source.entity_id,
+            "source_archetype": asdict(archetype), "source_part_kind": "enemy",
+            "destination_map": target.map_name,
+            "destination_anchor_part": target.part_name,
+            "destination_part": part, "destination_entity_id": entity,
+            "allocation_evidence": ids.evidence,
+        }
+        row.update(_native(pin, anchor=True))
+        additions.append(row)
+        scaling.append({
+            "destination_map": target.map_name, "destination_part": part,
+            "parent_logical_key": swap.logical_key,
+            "source_npc_param_id": archetype.npc_param_id,
+            "strategy": "allocate_distinct_verified_helper_clone",
+        })
+    binding = {
+        "source_map": core[0].map_name, "source_part": core[0].part_name,
+        "source_entity_id": core[0].entity_id,
+        "source_archetype": asdict(LOGARIUS_ARCHETYPE),
+        "source_talk_id": core[0].talk_id,
+        "destination_map": target.map_name, "destination_part": target.part_name,
+        "destination_entity_id": target.entity_id,
+        "destination_original_talk_id": target.talk_id,
+        "required_native_fields": [
+            "talk_id", "unk_t18", "init_anim_id", "damage_anim_id", "provenance",
+        ],
+    }
+    binding.update(_native(CORE_PIN, anchor=False))
+    if target.talk_id:
+        binding["destination_talk_id_override"] = 0
+        binding["required_native_fields"].append("destination_talk_id_override")
+    contract = _logarius_port_contract(port, ids)
+    contract["retained_destination_helpers"] = [
+        {
+            "map": rows[0].map_name, "part": rows[0].part_name,
+            "entity_id": evidence.entity_id,
+            "archetype": asdict(rows[0].archetype),
+            "source_provenance": {"format": "bb-boss-actor-pin-v1",
+                                  "part_sha256": evidence.part_sha256},
+            "source_initialization": {
+                "talk_id": evidence.talk_id, "unk_t18": -1,
+                "init_anim_id": -1, "damage_anim_id": -1,
+            },
+            "policy": evidence.policy,
+        }
+        for evidence in port.retained_native_actors
+        for rows in (retained[evidence.entity_id],)
+    ]
+    ffx_file, ffx_hash = DESTINATION_FFX[arena.key]
+    return {
+        "format": "bb-enemizer-plan-v2", "dry_run": True, "seed": seed,
+        "swap_count": 1, "swaps": [swap.json()],
+        "boss_contract": contract,
+        "boss_actor_additions": additions,
+        "primary_init_source_bindings": [binding],
+        "boss_actor_scaling_requirements": scaling,
+        "boss_emevd_ffx_requirements": [{
+            "format": "bb-boss-emevd-ffx-requirement-v1",
+            "source_map": "m25_00_00_00", "destination_map": target.map_name,
+            "source_event_file": "m25_00_00_00.emevd.dcx",
+            "source_event_sha256": LOGARIUS_EVENT_FILE_SHA256,
+            "source_event_id": LOGARIUS_SWORD_EVENT,
+            "destination_event_file": arena.event_file.removesuffix(".js"),
+            "destination_event_id": ids.sword_event,
+            "effect_id": LOGARIUS_SWORD_EFFECT,
+        }],
+        "boss_ffx_merges": [{
+            "source_file": "frpg_sfxbnd_m25.ffxbnd.dcx",
+            "source_sha256": LOGARIUS_FFX_SHA256,
+            "destination_file": ffx_file, "destination_sha256": ffx_hash,
+            "required_effect_ids": [LOGARIUS_SWORD_EFFECT],
+            "policy": "preserve_destination_union_source_v1",
+        }],
+        "scaling": {
+            "enabled": bool(changes),
+            "mechanism": "inferred_static_npc_clone_sp_effect",
+            "change_count": len(changes), "changes": [row.json() for row in changes],
+            "skip_count": len(skips), "skips": skips,
+        },
+    }
+
+
+def native_plan_logarius_donor(arena: ArenaContract | ArenaPort, slots: Sequence[Slot],
                                 npcs: Mapping[int, dict], effects: Mapping[int, dict], seed: str,
                                 ids: LogariusDonorIds = DEFAULT_LOGARIUS_IDS) -> dict:
+    if isinstance(arena, ArenaPort):
+        return _native_plan_logarius_at_port(
+            arena, slots, npcs, effects, seed, ids
+        )
     _verify(read_blob(BUNDLE, LOGARIUS_EVENT_SOURCE).decode("utf-8-sig"),
             SOURCE_HASHES, "Logarius donor")
     _validate_ids(ids)

@@ -176,6 +176,37 @@ internal static class FfxBundleTests
             WritePlanWithRequirements([FirstMerge()], [Requirement(Hash(File.ReadAllBytes(sourceEventPath)))]);
             Refused(() => FfxBundleTransplant.ValidateEmevdInputs(plan, events, [encounter]),
                 "exactly one declared SpawnOneshotSFX effect");
+            object CountedRequirement(int count) {
+                var node = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(
+                    Requirement(Hash(File.ReadAllBytes(sourceEventPath)))))!;
+                node["occurrence_count"] = count; return node;
+            }
+            WritePlanWithRequirements([FirstMerge()], [CountedRequirement(2)]);
+            var repeatedRequirements = FfxBundleTransplant.ValidateEmevdInputs(plan, events, [encounter]);
+            Need(repeatedRequirements[0].OccurrenceCount == 2, "explicit repeated source effect count is preserved");
+            var repeatedFinal = OneSfxEvent(900, 111);
+            repeatedFinal.Events[0].Instructions.Add(new EMEVD.Instruction(2006, 3, SfxArgs(111)));
+            File.WriteAllBytes(finalEventPath, repeatedFinal.Write());
+            FfxBundleTransplant.ValidateEmevdFinal(repeatedRequirements, finalEvents);
+            FfxBundleTransplant.VerifyCoverage(plan, []);
+            Need(FfxBundleTransplant.Read(plan).Single().RequiredEffectIds.SequenceEqual(new[] { 111 }),
+                "repeated event occurrences require one effect asset, not duplicate roots");
+            File.WriteAllBytes(finalEventPath, OneSfxEvent(900, 111).Write());
+            Refused(() => FfxBundleTransplant.ValidateEmevdFinal(repeatedRequirements, finalEvents),
+                "exactly 2 declared SpawnOneshotSFX");
+            repeatedFinal.Events[0].Instructions.Add(new EMEVD.Instruction(2006, 3, SfxArgs(111)));
+            File.WriteAllBytes(finalEventPath, repeatedFinal.Write());
+            Refused(() => FfxBundleTransplant.ValidateEmevdFinal(repeatedRequirements, finalEvents),
+                "exactly 2 declared SpawnOneshotSFX");
+            duplicateEffect.Events[0].Parameters.Add(new EMEVD.Parameter(1, 12, 0, 4));
+            File.WriteAllBytes(sourceEventPath, duplicateEffect.Write());
+            WritePlanWithRequirements([FirstMerge()], [CountedRequirement(2)]);
+            Refused(() => FfxBundleTransplant.ValidateEmevdInputs(plan, events, [encounter]),
+                "parameterizes the declared SpawnOneshotSFX effect operand");
+            foreach (int invalidCount in new[] { 0, -1 }) {
+                WritePlanWithRequirements([FirstMerge()], [CountedRequirement(invalidCount)]);
+                Refused(() => FfxBundleTransplant.ReadEmevdRequirements(plan), "occurrence count");
+            }
             File.WriteAllBytes(sourceEventPath, OneSfxEvent(500, 111).Write());
             WritePlanWithRequirements([FirstMerge()], [Requirement(Hash(File.ReadAllBytes(sourceEventPath)))]);
             Refused(() => FfxBundleTransplant.ValidateEmevdInputs(plan, events,

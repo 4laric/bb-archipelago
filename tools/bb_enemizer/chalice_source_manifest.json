@@ -1,0 +1,50 @@
+{
+  "format": "bb-chalice-source-manifest-v1",
+  "donors": {
+    "pthumerian-descendant": {
+      "source_map": "m29_50_90_00",
+      "event_file": "m29_50_90_00/m29_50_90_00.emevd.dcx",
+      "sha256": "cdbea21c051b8621a34a8a0ec01ed97a0ed29d00cb22fcfddbd5a1d288fa4b72"
+    },
+    "pthumerian-elder": {
+      "source_map": "m29_31_90_00",
+      "event_file": "m29_31_90_00/m29_31_90_00.emevd.dcx",
+      "sha256": "c06a28d958a5eb942deddaaf3f1dcd7517f07f8ac6db358eccfe8c3c0985dadf"
+    },
+    "keeper-of-old-lords": {
+      "source_map": "m29_40_90_00",
+      "event_file": "m29_40_90_00/m29_40_90_00.emevd.dcx",
+      "sha256": "55ecd00a77f65ebaf8e3c7cdaca6eb7772629730e3ebf16a388bb07c7ebc4bc6"
+    },
+    "watchdog-of-the-old-lords": {
+      "source_map": "m29_01_11_00",
+      "event_file": "m29_01_11_00/m29_01_11_00.emevd.dcx",
+      "sha256": "36e02415bfbbc2d4047ab6c1e4d3d516bdcde71f0e7f2d848ad43bd2f3bf1a69"
+    },
+    "abhorrent-beast": {
+      "source_map": "m29_01_13_00",
+      "event_file": "m29_01_13_00/m29_01_13_00.emevd.dcx",
+      "sha256": "8af61ed166ac56f6209cb6fce6568d376a1c910b1d0890a696676ff3c10569c3"
+    },
+    "beast-possessed-soul": {
+      "source_map": "m29_01_13_09",
+      "event_file": "m29_01_13_00/m29_01_13_09.emevd.dcx",
+      "sha256": "d33d8fc51cc48bcfb015236fb70200f1fece1b0fec3e8c1766743ef2faf1907b"
+    },
+    "undead-giant": {
+      "source_map": "m29_01_13_08",
+      "event_file": "m29_01_13_00/m29_01_13_08.emevd.dcx",
+      "sha256": "dcd1647ce988569df7ba76a7904a365a9e5161ae929c4d4a8d4c48ec45805298"
+    },
+    "bloodletting-beast": {
+      "source_map": "m29_05_00_08",
+      "event_file": "m29_05_00_00/m29_05_00_08.emevd.dcx",
+      "sha256": "d0bb3c2733fd65267cc5027bd91993f762a6e706710f9f615f0b1b3803680a8b"
+    },
+    "headless-bloodletting-beast": {
+      "source_map": "m29_05_00_11",
+      "event_file": "m29_05_00_00/m29_05_00_11.emevd.dcx",
+      "sha256": "ec8f6ed92dc36efc0c77ad99515d53a0e0fa6b71d1d42f279f5342dcffc3cdc5"
+    }
+  }
+}

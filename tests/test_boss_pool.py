@@ -1,6 +1,7 @@
 import unittest
 import copy
 import tempfile
+from itertools import permutations
 from pathlib import Path
 
 from tools.bb_enemizer.boss_pool import (
@@ -28,6 +29,137 @@ $Event(30, Default, function() {
 
 
 class BossPoolTests(unittest.TestCase):
+    def test_character_bank_bindings_survive_composition_and_reject_destination_overlap(self):
+        row = {'source_map': 'm24_02_00_00', 'source_part': 'c2570_0001',
+               'source_entity_id': 2420811, 'source_character': 'c2570',
+               'destination_map': 'm23_00_00_00', 'destination_part': 'giant',
+               'destination_entity_id': 984000, 'source_ffx_file': 'frpg_sfxbnd_m24_02.ffxbnd.dcx',
+               'destination_ffx_file': 'frpg_sfxbnd_m23.ffxbnd.dcx',
+               'roots': [{'source_tae_entry_id': 3000000, 'witness': {'effect_id': 625700}}]}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'bank', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_character_ffx_bank_requirements': [row]}
+        self.assertEqual([row], combine_native_plans('bank', [plan])[
+            'boss_character_ffx_bank_requirements'])
+        second_bank = copy.deepcopy(row)
+        second_bank['source_ffx_file'] = 'frpg_sfxbnd_m24.ffxbnd.dcx'
+        second_bank['roots'][0]['witness']['effect_id'] = 625701
+        two_banks = copy.deepcopy(plan)
+        two_banks['boss_character_ffx_bank_requirements'].append(second_bank)
+        self.assertEqual([second_bank, row], combine_native_plans('bank', [two_banks])[
+            'boss_character_ffx_bank_requirements'])
+        same_root = copy.deepcopy(two_banks)
+        same_root['boss_character_ffx_bank_requirements'][1]['roots'][0]['witness']['effect_id'] = 625700
+        with self.assertRaisesRegex(ValueError, 'repeat a character FFX root across banks'):
+            combine_native_plans('bank', [same_root])
+        with self.assertRaisesRegex(ValueError, 'character FFX bank destination'):
+            combine_native_plans('bank', [plan, copy.deepcopy(plan)])
+        ordinary = {**copy.deepcopy(plan), 'options': {},
+                    'swaps': [{'logical_key': 'ordinary', 'destination_keys': ['m24_00_00_00:ordinary']}]}
+        ordinary['scaling'].update(skip_count=1, skips=[{'logical_key': 'ordinary'}])
+        ordinary.pop('boss_contract')
+        with self.assertRaisesRegex(ValueError, 'already carries boss metadata'):
+            combine_ordinary_and_boss_plans(ordinary, [plan])
+        ordinary.pop('boss_character_ffx_bank_requirements')
+        combined = combine_ordinary_and_boss_plans(ordinary, [plan])
+        self.assertEqual([row], combined['boss_character_ffx_bank_requirements'])
+        combined_two_banks = combine_ordinary_and_boss_plans(ordinary, [two_banks])
+        self.assertEqual([second_bank, row],
+                         combined_two_banks['boss_character_ffx_bank_requirements'])
+        combined['boss_character_ffx_bank_requirements'][0]['roots'][0]['witness']['effect_id'] = 123
+        self.assertEqual(625700, row['roots'][0]['witness']['effect_id'])
+
+    def test_character_effect_witnesses_survive_both_compositions_and_refuse_disagreement(self):
+        row = {'source_map': 'm36_00_00_00', 'source_part': 'c4540_0000',
+               'source_entity_id': 3600800, 'source_character': 'c4540',
+               'source_anibnd_sha256': 'a' * 64, 'direct_effect_ids': [645400],
+               'typed_event_witnesses': [{'animation_id': 0, 'effect_id': 645400}]}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'characters', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_character_ffx_requirements': [row]}
+        second = copy.deepcopy(plan)
+        combined = combine_native_plans('characters', [plan, second])
+        self.assertEqual([row], combined['boss_character_ffx_requirements'])
+        ordinary = copy.deepcopy(plan)
+        ordinary['options'] = {}
+        ordinary['swaps'] = [{'logical_key': 'ordinary', 'destination_keys': ['m24_00_00_00:ordinary']}]
+        ordinary['scaling'].update(skip_count=1, skips=[{'logical_key': 'ordinary'}])
+        ordinary.pop('boss_contract')
+        ordinary.pop('boss_character_ffx_requirements')
+        with self.assertRaisesRegex(ValueError, 'already carries boss metadata'):
+            combine_ordinary_and_boss_plans(dict(ordinary, boss_character_ffx_requirements=[row]), [plan])
+        both = combine_ordinary_and_boss_plans(ordinary, [plan, second])
+        self.assertEqual([row], both['boss_character_ffx_requirements'])
+        both['boss_character_ffx_requirements'][0]['direct_effect_ids'].append(123)
+        self.assertEqual([645400], row['direct_effect_ids'])
+        second['boss_character_ffx_requirements'][0]['source_anibnd_sha256'] = 'b' * 64
+        with self.assertRaisesRegex(ValueError, 'disagree on character FFX provenance'):
+            combine_native_plans('characters', [plan, second])
+        second = copy.deepcopy(plan)
+        second['boss_character_ffx_requirements'][0]['source_character'] = 'c4541'
+        with self.assertRaisesRegex(ValueError, 'disagree on character FFX provenance'):
+            combine_native_plans('characters', [plan, second])
+        duplicate = copy.deepcopy(plan)
+        duplicate['boss_character_ffx_requirements'].append(copy.deepcopy(row))
+        with self.assertRaisesRegex(ValueError, 'repeats a character FFX actor binding'):
+            combine_native_plans('characters', [duplicate])
+        second = copy.deepcopy(plan)
+        second['boss_character_ffx_requirements'][0].update(source_part='c4540_0001', source_entity_id=3600801)
+        self.assertEqual(2, len(combine_native_plans('characters', [plan, second])[
+            'boss_character_ffx_requirements']))
+
+    def test_multi_tae_proofs_preserve_every_entry_and_refuse_changed_shared_actor(self):
+        entries = [
+            {'source_tae_entry_id': index, 'source_tae_entry': f'chr/c0000/tae/a{index:02}.tae',
+             'source_tae_sha256': str(index + 1) * 64, 'source_animation_count': 1,
+             'decoded_event_types': [96, 100, 118],
+             'typed_event_witnesses': [{'animation_id': 0, 'event_index': 0,
+                 'event_type': 96, 'parameter_offset': 160, 'effect_id': 7000 + index}],
+             'direct_effect_ids': [7000 + index]}
+            for index in range(2)
+        ]
+        row = {'format': 'bb-boss-character-ffx-requirement-v2',
+               'source_map': 'm26_00_00_00', 'source_part': 'shared-human',
+               'source_entity_id': 2600800, 'source_character': 'c0000',
+               'source_anibnd_file': 'c0000.anibnd.dcx',
+               'source_anibnd_sha256': 'a' * 64, 'source_tae_entries': entries,
+               'direct_effect_ids': [7000, 7001]}
+        plan = {'format': 'bb-enemizer-plan-v2', 'seed': 'multi-tae', 'dry_run': True,
+                'swaps': [], 'scaling': {'enabled': False,
+                    'mechanism': 'inferred_static_npc_clone_sp_effect', 'change_count': 0,
+                    'changes': [], 'skip_count': 0, 'skips': []}, 'boss_contract': {},
+                'boss_character_ffx_requirements': [row]}
+        ordinary = copy.deepcopy(plan)
+        ordinary.pop('boss_contract')
+        ordinary.pop('boss_character_ffx_requirements')
+        ordinary['options'] = {}
+        ordinary['swaps'] = [{'logical_key': 'ordinary',
+                             'destination_keys': ['m24_00_00_00:ordinary']}]
+        ordinary['scaling'].update(skip_count=1, skips=[{'logical_key': 'ordinary'}])
+        result = combine_ordinary_and_boss_plans(ordinary, [plan, copy.deepcopy(plan)])
+        self.assertEqual([row], result['boss_character_ffx_requirements'])
+        # Mutation of a nested receipt/plan must not rewrite another donor's proof.
+        result['boss_character_ffx_requirements'][0]['source_tae_entries'][1][
+            'typed_event_witnesses'][0]['effect_id'] = 9999
+        self.assertEqual(7001, entries[1]['typed_event_witnesses'][0]['effect_id'])
+        for field, value in (('source_tae_entry_id', 3),
+                             ('source_tae_entry', 'chr/c0000/tae/a03.tae'),
+                             ('source_tae_sha256', 'b' * 64),
+                             ('decoded_event_types', [96, 99, 100, 108, 109, 112, 118])):
+            changed = copy.deepcopy(plan)
+            changed['boss_character_ffx_requirements'][0]['source_tae_entries'][1][field] = value
+            with self.subTest(field=field), self.assertRaisesRegex(
+                    ValueError, 'disagree on character FFX provenance'):
+                combine_native_plans('multi-tae', [plan, changed])
+        truncated = copy.deepcopy(plan)
+        truncated['boss_character_ffx_requirements'][0]['source_tae_entries'].pop()
+        with self.assertRaisesRegex(ValueError, 'disagree on character FFX provenance'):
+            combine_native_plans('multi-tae', [plan, truncated])
+
     def test_effect_composition_unions_pinned_banks_and_rejects_native_collisions(self):
         effect = {'destination_map': 'm34_00_00_00', 'destination_event': 'meteor',
                   'destination_event_id': 980032, 'destination_entity_id': 980027}
@@ -215,6 +347,36 @@ class BossPoolTests(unittest.TestCase):
     def test_impossible_pool_is_refused_instead_of_dropping_boss(self):
         with self.assertRaisesRegex(ValueError, 'no complete'):
             assign_donors('seed', {'a': ['b'], 'b': ['a'], 'c': ['b']})
+        # Every arena has candidates and the union covers every donor, but
+        # three arenas compete for only two distinct donors. A global union
+        # or nonempty-candidate check cannot detect this impossible pool.
+        graph = {'a': ['d', 'e'], 'b': ['d', 'e'], 'c': ['d', 'e'],
+                 'd': ['a', 'b', 'c'], 'e': ['a', 'b', 'c']}
+        with self.assertRaisesRegex(ValueError, 'no complete'):
+            assign_donors('hall-subset', graph)
+
+        # Independent exhaustive oracle: every four-boss directed graph,
+        # compared with permutations rather than another matching algorithm.
+        roster = ('a', 'b', 'c', 'd')
+        edges = [(a, d) for a in roster for d in roster if a != d]
+        candidates = list(permutations(roster))
+        for mask in range(1 << len(edges)):
+            graph = {arena: [] for arena in roster}
+            for index, (arena, donor) in enumerate(edges):
+                if mask & (1 << index):
+                    graph[arena].append(donor)
+            possible = any(all(donor in graph[arena]
+                               for arena, donor in zip(roster, assignment))
+                           for assignment in candidates)
+            if possible:
+                assignment = assign_donors('exhaustive', graph)
+                self.assertEqual(set(roster), set(assignment))
+                self.assertEqual(set(roster), set(assignment.values()))
+                for arena in roster:
+                    self.assertIn(assignment[arena], graph[arena])
+            else:
+                with self.assertRaisesRegex(ValueError, 'no complete'):
+                    assign_donors('exhaustive', graph)
 
     def test_same_map_disjoint_constructor_edits_compose_in_either_order(self):
         first = SOURCE.replace('$InitializeEvent(0, 10, 100);', '$InitializeEvent(0, 10, 300);')
@@ -239,6 +401,47 @@ class BossPoolTests(unittest.TestCase):
         arbitrary = second.replace('$InitializeEvent(0, 50, 500);', 'SetEventFlag(500, ON);')
         with self.assertRaisesRegex(ValueError, 'literal initializers'):
             compose_event_patches(SOURCE, [first, arbitrary], [30])
+
+    def test_distinct_bullet_owners_compose_preserving_package_order(self):
+        anchor = '    $InitializeEvent(0, 20, 200);'
+        first = SOURCE.replace(anchor, anchor + '\n    $InitializeEvent(0, 40);')
+        group = ('\n    $InitializeEvent(0, 50);\n    CreateBulletOwner(983700);'
+                 '\n    $InitializeEvent(0, 51);')
+        second = SOURCE.replace(anchor, anchor + group)
+        result = compose_event_patches(SOURCE, [first, second], [30])
+        self.assertEqual(result, compose_event_patches(SOURCE, [second, first], [30]))
+        self.assertIn(group, result)
+        duplicate = first.replace('$InitializeEvent(0, 40);',
+                                  'CreateBulletOwner(983700);\n    $InitializeEvent(0, 40);')
+        with self.assertRaisesRegex(ValueError, 'bullet owner'):
+            compose_event_patches(SOURCE, [duplicate, second], [30])
+        for expression in ('0', '-1', 'owner_id'):
+            with self.assertRaises(ValueError):
+                compose_event_patches(SOURCE, [first, second.replace('983700', expression)], [30])
+
+    def test_leading_readiness_resets_commute_but_mixed_or_late_writes_do_not(self):
+        header = '$Event(0, Default, function() {'
+        self.assertIn(header, SOURCE)
+        first = SOURCE.replace(header, header + '\n    SetEventFlag(12995105, OFF);')
+        second = SOURCE.replace(header, header + '\n    SetEventFlag(12995905, OFF);')
+        result = compose_event_patches(SOURCE, [first, second], [30])
+        self.assertEqual(result, compose_event_patches(SOURCE, [second, first], [30]))
+        for flag in (12995105, 12995905):
+            reset = f'SetEventFlag({flag}, OFF);'
+            self.assertEqual(1, result.count(reset))
+            self.assertLess(result.index(reset), result.index('$InitializeEvent('))
+        for invalid in (
+            second.replace('12995905, OFF', '12995905, ON'),
+            second.replace('SetEventFlag(12995905, OFF);',
+                           'SetEventFlag(12995905, OFF);\n    $InitializeEvent(0, 99);'),
+        ):
+            with self.assertRaisesRegex(ValueError, 'literal initializers'):
+                compose_event_patches(SOURCE, [first, invalid], [30])
+        anchor = '    $InitializeEvent(0, 20, 200);'
+        late = [SOURCE.replace(anchor, anchor + f'\n    SetEventFlag({flag}, OFF);')
+                for flag in (12995105, 12995905)]
+        with self.assertRaisesRegex(ValueError, 'literal initializers'):
+            compose_event_patches(SOURCE, late, [30])
 
     def test_conflicting_constructor_and_completion_changes_are_refused(self):
         first = SOURCE.replace('$InitializeEvent(0, 10, 100);', '$InitializeEvent(0, 10, 300);')

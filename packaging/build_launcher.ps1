@@ -100,6 +100,8 @@ $worldData = @(
         ForEach-Object { "--add-data"; "$($_.FullName);worlds\bloodborne" }
 )
 if ($worldData.Count -lt 2) { throw "No apworld data files found to bundle." }
+$bossData = @(Get-ChildItem -LiteralPath (Join-Path $repo 'tools/bb_enemizer') -Filter '*.json' -File |
+    ForEach-Object { '--add-data'; "$($_.FullName);tools/bb_enemizer" })
 & python @pyinstaller --windowed --onedir --name BloodborneAPLauncher `
     --distpath (Join-Path $work "launcher-dist") `
     --version-file (Join-Path $versionRoot "launcher-version.txt") `
@@ -113,7 +115,7 @@ if ($worldData.Count -lt 2) { throw "No apworld data files found to bundle." }
     --add-data "$(Join-Path $repo 'research\enemizer\release_wakeup.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\enemizer\release_scripted.json');research\enemizer" `
     --add-data "$(Join-Path $repo 'research\bb_inputs.db');research" `
-    @worldData `
+    @worldData @bossData `
     (Join-Path $repo "packaging\launcher_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller launcher build failed." }
 
@@ -127,7 +129,7 @@ if ($LASTEXITCODE -ne 0) { throw "PyInstaller planner build failed." }
     --distpath (Join-Path $work "boss-dist") `
     --version-file (Join-Path $versionRoot "planner-version.txt") `
     --add-data "$(Join-Path $repo 'research\bb_inputs.db');research" `
-    @worldData `
+    @worldData @bossData `
     (Join-Path $repo "packaging\boss_encounter_entry.py")
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller boss encounter builder failed." }
 

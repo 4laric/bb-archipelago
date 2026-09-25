@@ -1,0 +1,712 @@
+{
+  "format": "bb-original-area-bank-conflict-survey-v1",
+  "scope": "13 fixed-boss area banks; undirected original-byte conflicts; no runtime precedence or safe omission inferred",
+  "banks": [
+    {
+      "file": "frpg_sfxbnd_m21.ffxbnd.dcx",
+      "sha256": "ac9c86d74fe048b694f8b63940ae404404de6b78184d01d613362b3774258825"
+    },
+    {
+      "file": "frpg_sfxbnd_m22.ffxbnd.dcx",
+      "sha256": "b02ae9d7086e1306c52abae497eedf2ad97abbde41d103190ca21589af79195e"
+    },
+    {
+      "file": "frpg_sfxbnd_m23.ffxbnd.dcx",
+      "sha256": "b92037c5ae58ac81e5e59f7b9596966faf65ea56bf1b9ea9913045097213cfec"
+    },
+    {
+      "file": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "sha256": "56103cdfe6b3f9298a32fc515be67c6117f555ae69cb87a8cbbb8bcba2abac99"
+    },
+    {
+      "file": "frpg_sfxbnd_m25.ffxbnd.dcx",
+      "sha256": "4e1cc0ffb8a47b369ceb4dc57b095d42b4b302bc61952b3b1fe3c3102fe57584"
+    },
+    {
+      "file": "frpg_sfxbnd_m26.ffxbnd.dcx",
+      "sha256": "3c6867267f838ed63d7071f95466ba90c3046b302d590ce2780161c32db70bfb"
+    },
+    {
+      "file": "frpg_sfxbnd_m27.ffxbnd.dcx",
+      "sha256": "adb5b10fa4a7c6e02f007b4c9ccf087ceffc1b0956952ef839f341e12af2d5e4"
+    },
+    {
+      "file": "frpg_sfxbnd_m28.ffxbnd.dcx",
+      "sha256": "5bd699c3256482caa252964c553356e957ca0ec259480d090f0b0040bf3c0f6c"
+    },
+    {
+      "file": "frpg_sfxbnd_m32.ffxbnd.dcx",
+      "sha256": "3a1a2b79c8fff0f13fdd4a6b65622f11946dda346cdf1768c17043ae18bdbf7b"
+    },
+    {
+      "file": "frpg_sfxbnd_m33.ffxbnd.dcx",
+      "sha256": "850e8354601f85e59166aaeceb0dea48018fd21afbad005f78b7732fc3889a29"
+    },
+    {
+      "file": "frpg_sfxbnd_m34.ffxbnd.dcx",
+      "sha256": "c02322d8ad0e50b18e5f678f3bbfe735971e24aa4c5484f3849ace93f1dfd3b3"
+    },
+    {
+      "file": "frpg_sfxbnd_m35.ffxbnd.dcx",
+      "sha256": "fd656c4a23d3a45202e7d0a5aec1b4f3bea95f71d96af3d1b4b181bcf24b931e"
+    },
+    {
+      "file": "frpg_sfxbnd_m36.ffxbnd.dcx",
+      "sha256": "6b3a7971712c29fb16a4eec322254447dba1d8add16e4311d03ae9b24e34be73"
+    }
+  ],
+  "pairs": [
+    {
+      "source": "frpg_sfxbnd_m22.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000626200.fxr",
+          "source_sha256": "3efbb38179ff33dd6bc00175f7f948bb9babc5fba758347f68942961895a7168",
+          "destination_sha256": "9ebee71752cc3d7e0db26401c61b6e186ad926c6022142cbeb0512dcb5c99411",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626210.fxr",
+          "source_sha256": "bea120dd903fb92e500d4f78969fa31f7b0946931dc46d35ee75f6a6225f041c",
+          "destination_sha256": "6aea2ad74624b6be97ac622ffb632fe7bd17200dc745efc92399a50f9e21855c",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626217.fxr",
+          "source_sha256": "ab260324d79601e7a3b421a1685fd7cc62db569f08c40c67fa149ee54a91ddb2",
+          "destination_sha256": "a8ecbc4d89c14c3f29a06d152774481fc575cd140adcc9b9582fae2d2358b030",
+          "source_size": 52400,
+          "destination_size": 52400
+        },
+        {
+          "path": "effect/f000626220.fxr",
+          "source_sha256": "ce94c3531132703ff87092fcc85e57e90744ccc0c7d0f8aa78a7783f51710cd6",
+          "destination_sha256": "caf6a482d480bdad5af4468db3c58d96e4cc329efa1391f84b7c3e711583fdea",
+          "source_size": 57528,
+          "destination_size": 48888
+        },
+        {
+          "path": "effect/f000626223.fxr",
+          "source_sha256": "16c1232da8dce1b2bfe9f4db923e2e2e7c582096e2f28f2c451f5cd1b106e1de",
+          "destination_sha256": "9aab33d71ceed86804444efbbbaf0270874ab45885fb554e0603bdb8f03c00dd",
+          "source_size": 21328,
+          "destination_size": 21328
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m22.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m35.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000626200.fxr",
+          "source_sha256": "3efbb38179ff33dd6bc00175f7f948bb9babc5fba758347f68942961895a7168",
+          "destination_sha256": "9ebee71752cc3d7e0db26401c61b6e186ad926c6022142cbeb0512dcb5c99411",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626210.fxr",
+          "source_sha256": "bea120dd903fb92e500d4f78969fa31f7b0946931dc46d35ee75f6a6225f041c",
+          "destination_sha256": "6aea2ad74624b6be97ac622ffb632fe7bd17200dc745efc92399a50f9e21855c",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626217.fxr",
+          "source_sha256": "ab260324d79601e7a3b421a1685fd7cc62db569f08c40c67fa149ee54a91ddb2",
+          "destination_sha256": "a8ecbc4d89c14c3f29a06d152774481fc575cd140adcc9b9582fae2d2358b030",
+          "source_size": 52400,
+          "destination_size": 52400
+        },
+        {
+          "path": "effect/f000626220.fxr",
+          "source_sha256": "ce94c3531132703ff87092fcc85e57e90744ccc0c7d0f8aa78a7783f51710cd6",
+          "destination_sha256": "caf6a482d480bdad5af4468db3c58d96e4cc329efa1391f84b7c3e711583fdea",
+          "source_size": 57528,
+          "destination_size": 48888
+        },
+        {
+          "path": "effect/f000626223.fxr",
+          "source_sha256": "16c1232da8dce1b2bfe9f4db923e2e2e7c582096e2f28f2c451f5cd1b106e1de",
+          "destination_sha256": "9aab33d71ceed86804444efbbbaf0270874ab45885fb554e0603bdb8f03c00dd",
+          "source_size": 21328,
+          "destination_size": 21328
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m23.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000626200.fxr",
+          "source_sha256": "3efbb38179ff33dd6bc00175f7f948bb9babc5fba758347f68942961895a7168",
+          "destination_sha256": "9ebee71752cc3d7e0db26401c61b6e186ad926c6022142cbeb0512dcb5c99411",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626210.fxr",
+          "source_sha256": "bea120dd903fb92e500d4f78969fa31f7b0946931dc46d35ee75f6a6225f041c",
+          "destination_sha256": "6aea2ad74624b6be97ac622ffb632fe7bd17200dc745efc92399a50f9e21855c",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626217.fxr",
+          "source_sha256": "ab260324d79601e7a3b421a1685fd7cc62db569f08c40c67fa149ee54a91ddb2",
+          "destination_sha256": "a8ecbc4d89c14c3f29a06d152774481fc575cd140adcc9b9582fae2d2358b030",
+          "source_size": 52400,
+          "destination_size": 52400
+        },
+        {
+          "path": "effect/f000626220.fxr",
+          "source_sha256": "ce94c3531132703ff87092fcc85e57e90744ccc0c7d0f8aa78a7783f51710cd6",
+          "destination_sha256": "caf6a482d480bdad5af4468db3c58d96e4cc329efa1391f84b7c3e711583fdea",
+          "source_size": 57528,
+          "destination_size": 48888
+        },
+        {
+          "path": "effect/f000626223.fxr",
+          "source_sha256": "16c1232da8dce1b2bfe9f4db923e2e2e7c582096e2f28f2c451f5cd1b106e1de",
+          "destination_sha256": "9aab33d71ceed86804444efbbbaf0270874ab45885fb554e0603bdb8f03c00dd",
+          "source_size": 21328,
+          "destination_size": 21328
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m23.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m34.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000620900.fxr",
+          "source_sha256": "8e782fc7517c6823a9f89ca140b33f53cb72e4e0317f67bbb6944d3da22eb7a4",
+          "destination_sha256": "84f63890c5d40c0be5e135bf1d2cb6d718d94d9a3251a9fe218a4d3db103fb81",
+          "source_size": 46080,
+          "destination_size": 46080
+        },
+        {
+          "path": "effect/f000620901.fxr",
+          "source_sha256": "dc6fbd0c8f4ed89cde476e58a5a74ba4a0c1832c4d9185bf75cfda6b2a550df8",
+          "destination_sha256": "8375523cc8a803173fbfbbc36b0f4f78c06d799bd51cb70653aa13668e6d257c",
+          "source_size": 42136,
+          "destination_size": 42120
+        },
+        {
+          "path": "effect/f000620910.fxr",
+          "source_sha256": "53dcf0a88a0481876e83e46b40c5a981879b67f8fb1a09713a03dff45481ed85",
+          "destination_sha256": "d27dcd452c048b510b17ee0a362ccf0bef083015600cd295ebb8f5a07b471102",
+          "source_size": 26816,
+          "destination_size": 26816
+        },
+        {
+          "path": "effect/f000620911.fxr",
+          "source_sha256": "33bd1f062247a39c213f736f780e0815b51968ac948d29f6b56a54ed9d3d6a50",
+          "destination_sha256": "b975b4e645499c7ca32dd2ad75e63184d5f0320a56a55dab8302379b38b53210",
+          "source_size": 45672,
+          "destination_size": 45672
+        },
+        {
+          "path": "effect/f000620915.fxr",
+          "source_sha256": "8d7f6d09f2a858f489efe01fe45a38a7cada286e203e006a6c38aae49fe852c8",
+          "destination_sha256": "ff7c66a03eb0f60c7c67ddf696c16d9bc5681ce64677c2c4f3c8abb1e14f67fd",
+          "source_size": 46232,
+          "destination_size": 46232
+        },
+        {
+          "path": "effect/f000620921.fxr",
+          "source_sha256": "e7a54bbeb000c3573c8189fc49793e2f541437b14132e4321958ee4cd39fc481",
+          "destination_sha256": "86f5706d841e15d32915cbe82478256454fbd53a723ffd1a464809788f01e717",
+          "source_size": 141248,
+          "destination_size": 141248
+        },
+        {
+          "path": "effect/f000620955.fxr",
+          "source_sha256": "aed5ad629ee548064f5f4558bce7e86610a14b87473710f3faa41d2e791dcd52",
+          "destination_sha256": "01ea4a5ae9174c1a31f4eb639423de1895af2fced72cf9675cb342f06c4d11ad",
+          "source_size": 15584,
+          "destination_size": 15584
+        },
+        {
+          "path": "effect/f000620961.fxr",
+          "source_sha256": "b2b38b7b9fc919fa773a0df83a341d8702b32b2cd31ecce48e5256a02b87ab3d",
+          "destination_sha256": "2a8c1f967710af6eedd8ee3953ab86a7007e81ca749e8fa2357b82093de86548",
+          "source_size": 25784,
+          "destination_size": 25784
+        },
+        {
+          "path": "effect/f000620965.fxr",
+          "source_sha256": "178d0d10489074d0a3ad8c15d5c64f0c80d5741b133141177ab15d5eac5ba69b",
+          "destination_sha256": "3ac814f638017cdc7bd42d7b8c7238c3171c5af003aa3ab37ab0d266e75f4df7",
+          "source_size": 15584,
+          "destination_size": 15584
+        },
+        {
+          "path": "effect/f000620990.fxr",
+          "source_sha256": "0deefcc3dba28f7f040c06f5263b53dcb1cd561fa19e8343e95329b78ac52154",
+          "destination_sha256": "01f2c64899b426827dfb510b824c96836db871a1a6c995cf284c0fbaa1599e8f",
+          "source_size": 136488,
+          "destination_size": 136488
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m23.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m35.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000626200.fxr",
+          "source_sha256": "3efbb38179ff33dd6bc00175f7f948bb9babc5fba758347f68942961895a7168",
+          "destination_sha256": "9ebee71752cc3d7e0db26401c61b6e186ad926c6022142cbeb0512dcb5c99411",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626210.fxr",
+          "source_sha256": "bea120dd903fb92e500d4f78969fa31f7b0946931dc46d35ee75f6a6225f041c",
+          "destination_sha256": "6aea2ad74624b6be97ac622ffb632fe7bd17200dc745efc92399a50f9e21855c",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626217.fxr",
+          "source_sha256": "ab260324d79601e7a3b421a1685fd7cc62db569f08c40c67fa149ee54a91ddb2",
+          "destination_sha256": "a8ecbc4d89c14c3f29a06d152774481fc575cd140adcc9b9582fae2d2358b030",
+          "source_size": 52400,
+          "destination_size": 52400
+        },
+        {
+          "path": "effect/f000626220.fxr",
+          "source_sha256": "ce94c3531132703ff87092fcc85e57e90744ccc0c7d0f8aa78a7783f51710cd6",
+          "destination_sha256": "caf6a482d480bdad5af4468db3c58d96e4cc329efa1391f84b7c3e711583fdea",
+          "source_size": 57528,
+          "destination_size": 48888
+        },
+        {
+          "path": "effect/f000626223.fxr",
+          "source_sha256": "16c1232da8dce1b2bfe9f4db923e2e2e7c582096e2f28f2c451f5cd1b106e1de",
+          "destination_sha256": "9aab33d71ceed86804444efbbbaf0270874ab45885fb554e0603bdb8f03c00dd",
+          "source_size": 21328,
+          "destination_size": 21328
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m27.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000627300.fxr",
+          "source_sha256": "aaf035d7233274a1e0c3d2fef941f8562e72c85822551d74e6c6e2b0fb63b04d",
+          "destination_sha256": "99ad333a0005aabc8703f9e4aad8de4c58b0bc5378ddfef758ae0fca4d9ef400",
+          "source_size": 42296,
+          "destination_size": 42296
+        },
+        {
+          "path": "effect/f000627305.fxr",
+          "source_sha256": "d6e4c5630755725ad98246cf20012305b27d6a18261cac32323fd220718f5c58",
+          "destination_sha256": "4d7c922aa07fbae05efa03f858334e3d3b1c6e2352a22eeddc1e405cba4ece8c",
+          "source_size": 34120,
+          "destination_size": 34120
+        },
+        {
+          "path": "effect/f000627306.fxr",
+          "source_sha256": "d52398c3de59166f122deadcf342dbd39d64a2b411ba9dbd892000924f50b95a",
+          "destination_sha256": "417419ca777bf5287c467077baab240582a8d6f2e178888a6081b599138f23c3",
+          "source_size": 53504,
+          "destination_size": 53504
+        },
+        {
+          "path": "effect/f000627307.fxr",
+          "source_sha256": "b1a5cf671e0eb98ba09b992ee9991bfe928b3b62d47976c61ae6339b02c09785",
+          "destination_sha256": "103ef4bdab230247da44517c926b7629e935f8e3dedb172783dcbcd8398cd121",
+          "source_size": 68472,
+          "destination_size": 68472
+        },
+        {
+          "path": "effect/f000627308.fxr",
+          "source_sha256": "fd327d316e4c0f42ec0607c7826026cda7444ced2be34312543f59772d84b5ef",
+          "destination_sha256": "6036a5150b442ae9c85fe03be812ee76bf3d07a05448e10ada6cf1787ec56904",
+          "source_size": 73552,
+          "destination_size": 73552
+        },
+        {
+          "path": "effect/f000631310.fxr",
+          "source_sha256": "6f9cec4ab226a260206a2900ee3b590d7bb58252a739150fc3df17d6b008137a",
+          "destination_sha256": "136ca20e8886b77728bae26bcbfdf3b2d0198287f439c212333168dc692f4332",
+          "source_size": 46080,
+          "destination_size": 46080
+        },
+        {
+          "path": "effect/f000929225.fxr",
+          "source_sha256": "063d5c058749d2790a6bc403fa64a84e910fcee1e251a5a98078adef63943dc8",
+          "destination_sha256": "aa579901beb3fe1c83901e29ea68959fe21b01e336fdea82a4f31113eace4d29",
+          "source_size": 118232,
+          "destination_size": 118232
+        },
+        {
+          "path": "effect/f000929226.fxr",
+          "source_sha256": "ed8d473afb569a145012ef487e9a7b673246c84aba79c06576d7878d1c351b56",
+          "destination_sha256": "674f9cd1035cce7186a349571d3db9f90a19bb0655dc9a6b33bf0b3933534652",
+          "source_size": 82760,
+          "destination_size": 82760
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m28.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000610502.fxr",
+          "source_sha256": "ca84ce22986a339956ad4a425edfe5869da2d3208356cd460ea98a1d09e27c80",
+          "destination_sha256": "7a8fd223b4d2118fab34a796167747a0f104611df37783b80fdb2dcc7ced2bd1",
+          "source_size": 38280,
+          "destination_size": 42480
+        },
+        {
+          "path": "effect/f000610516.fxr",
+          "source_sha256": "bb0ed9b6200c6ddc1f3549856c07fc510bd9120fd167700b006c14fe4c08b373",
+          "destination_sha256": "7cb2cafe09669d5cf5b5c1d06d1d5e4b63d049828293ea0267d93ef6bc65eb6c",
+          "source_size": 35120,
+          "destination_size": 35120
+        },
+        {
+          "path": "effect/f000620203.fxr",
+          "source_sha256": "8492dc88f375ad349f9fcc22a920599b5e5aeb1c4ed67bab96405ab14d2db3e1",
+          "destination_sha256": "bfda0900f98cf637db7148d745054409cdbfe9def262c4ab2170836798e69051",
+          "source_size": 57392,
+          "destination_size": 57392
+        },
+        {
+          "path": "effect/f000620213.fxr",
+          "source_sha256": "b26347872d645ac6f9d562c0a70442c4421807664e4500fc3178588e29f771a5",
+          "destination_sha256": "d55564a5e753133b870724cd0bef5d72614064137fe715e8d81a11d0ca404667",
+          "source_size": 54736,
+          "destination_size": 54736
+        },
+        {
+          "path": "effect/f000620252.fxr",
+          "source_sha256": "3b73fe0b5b1709d87e228bbc7651f981917c1534e1d5235fb9adc640c68f55f4",
+          "destination_sha256": "daefbd35af91d64da921446489733d6537e7333dcebc53061fc4dc7ac219fc5c",
+          "source_size": 27696,
+          "destination_size": 25136
+        },
+        {
+          "path": "effect/f000626200.fxr",
+          "source_sha256": "9ebee71752cc3d7e0db26401c61b6e186ad926c6022142cbeb0512dcb5c99411",
+          "destination_sha256": "3efbb38179ff33dd6bc00175f7f948bb9babc5fba758347f68942961895a7168",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626210.fxr",
+          "source_sha256": "6aea2ad74624b6be97ac622ffb632fe7bd17200dc745efc92399a50f9e21855c",
+          "destination_sha256": "bea120dd903fb92e500d4f78969fa31f7b0946931dc46d35ee75f6a6225f041c",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626217.fxr",
+          "source_sha256": "a8ecbc4d89c14c3f29a06d152774481fc575cd140adcc9b9582fae2d2358b030",
+          "destination_sha256": "ab260324d79601e7a3b421a1685fd7cc62db569f08c40c67fa149ee54a91ddb2",
+          "source_size": 52400,
+          "destination_size": 52400
+        },
+        {
+          "path": "effect/f000626220.fxr",
+          "source_sha256": "caf6a482d480bdad5af4468db3c58d96e4cc329efa1391f84b7c3e711583fdea",
+          "destination_sha256": "ce94c3531132703ff87092fcc85e57e90744ccc0c7d0f8aa78a7783f51710cd6",
+          "source_size": 48888,
+          "destination_size": 57528
+        },
+        {
+          "path": "effect/f000626223.fxr",
+          "source_sha256": "9aab33d71ceed86804444efbbbaf0270874ab45885fb554e0603bdb8f03c00dd",
+          "destination_sha256": "16c1232da8dce1b2bfe9f4db923e2e2e7c582096e2f28f2c451f5cd1b106e1de",
+          "source_size": 21328,
+          "destination_size": 21328
+        },
+        {
+          "path": "effect/f000627300.fxr",
+          "source_sha256": "aaf035d7233274a1e0c3d2fef941f8562e72c85822551d74e6c6e2b0fb63b04d",
+          "destination_sha256": "99ad333a0005aabc8703f9e4aad8de4c58b0bc5378ddfef758ae0fca4d9ef400",
+          "source_size": 42296,
+          "destination_size": 42296
+        },
+        {
+          "path": "effect/f000627305.fxr",
+          "source_sha256": "d6e4c5630755725ad98246cf20012305b27d6a18261cac32323fd220718f5c58",
+          "destination_sha256": "4d7c922aa07fbae05efa03f858334e3d3b1c6e2352a22eeddc1e405cba4ece8c",
+          "source_size": 34120,
+          "destination_size": 34120
+        },
+        {
+          "path": "effect/f000627306.fxr",
+          "source_sha256": "d52398c3de59166f122deadcf342dbd39d64a2b411ba9dbd892000924f50b95a",
+          "destination_sha256": "417419ca777bf5287c467077baab240582a8d6f2e178888a6081b599138f23c3",
+          "source_size": 53504,
+          "destination_size": 53504
+        },
+        {
+          "path": "effect/f000627307.fxr",
+          "source_sha256": "b1a5cf671e0eb98ba09b992ee9991bfe928b3b62d47976c61ae6339b02c09785",
+          "destination_sha256": "103ef4bdab230247da44517c926b7629e935f8e3dedb172783dcbcd8398cd121",
+          "source_size": 68472,
+          "destination_size": 68472
+        },
+        {
+          "path": "effect/f000627308.fxr",
+          "source_sha256": "fd327d316e4c0f42ec0607c7826026cda7444ced2be34312543f59772d84b5ef",
+          "destination_sha256": "6036a5150b442ae9c85fe03be812ee76bf3d07a05448e10ada6cf1787ec56904",
+          "source_size": 73552,
+          "destination_size": 73552
+        },
+        {
+          "path": "effect/f000631310.fxr",
+          "source_sha256": "6f9cec4ab226a260206a2900ee3b590d7bb58252a739150fc3df17d6b008137a",
+          "destination_sha256": "136ca20e8886b77728bae26bcbfdf3b2d0198287f439c212333168dc692f4332",
+          "source_size": 46080,
+          "destination_size": 46080
+        },
+        {
+          "path": "effect/f000651217.fxr",
+          "source_sha256": "7e9053fa6493056efd40509d10c7958b9c21e9304b2dc1141cd17c59b15ae980",
+          "destination_sha256": "ad62e35cca2f49b7e5b299e53333a6ba23bcb3a7730033d401315fd70d4f1ff7",
+          "source_size": 64128,
+          "destination_size": 64128
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m32.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000610610.fxr",
+          "source_sha256": "9d7e78b5d21b14652dc75a5560a0d2e16fadf227d65bf6554a1c0dab1f9c689d",
+          "destination_sha256": "ad4f7fb8fe5c3323a7f7f8f70a9a6e4c3d80f7c42888836cbefda17c678f06e3",
+          "source_size": 35288,
+          "destination_size": 35288
+        },
+        {
+          "path": "effect/f000610611.fxr",
+          "source_sha256": "fe5f37bf6d1dd2373c8420fee6474110e9f0f5987f89c06046c405d12f6ec503",
+          "destination_sha256": "6e85eae5529ca96deb87f8e49d437060e8679d6af0e461f8fa6c3d57e40c51dd",
+          "source_size": 125776,
+          "destination_size": 125776
+        },
+        {
+          "path": "effect/f000610612.fxr",
+          "source_sha256": "46e81a60ebe63bc819151b4aa43d266a39ebbcd7ebffe845862003971fc6d98d",
+          "destination_sha256": "326e95edc214ad4ca14fe580bcbf2b9a77649282fe593e55f5522052a35c4652",
+          "source_size": 67448,
+          "destination_size": 67448
+        },
+        {
+          "path": "effect/f000610615.fxr",
+          "source_sha256": "596f6964ec724b58c004d4a063f68dde1bef66ce634ea69de980cae267a9239b",
+          "destination_sha256": "3877fbb39801f1cd00ce789b5237e6147d11b3b6fd33570f546b103aa5806d32",
+          "source_size": 32896,
+          "destination_size": 31376
+        },
+        {
+          "path": "effect/f000610616.fxr",
+          "source_sha256": "4b55004d63be1b9d61a896b1657a6ec0a223e09c25eb6360bef346de2e029472",
+          "destination_sha256": "d4f2a180cfe03d4b2536b6ff6370feee55672411d952d2349237ee9afe0d334e",
+          "source_size": 112696,
+          "destination_size": 105416
+        },
+        {
+          "path": "effect/f000610617.fxr",
+          "source_sha256": "99871705bd7d5d4b14c78a67b41feefc05e4dcbc23c77feb72f8b5c43fa7cca0",
+          "destination_sha256": "f44544e33ad5c5908be403d25fddc2565a7e3eec4020f362473b4c32da6cca0d",
+          "source_size": 52544,
+          "destination_size": 49600
+        },
+        {
+          "path": "effect/f000610621.fxr",
+          "source_sha256": "a853edb806761a732cd03b444758266e8bd58918d0ea75f575765ac6de1578ba",
+          "destination_sha256": "a2f911e515886ed528b3878b17ef3bd0933e64269675aec20bc312ec86f42b3b",
+          "source_size": 57960,
+          "destination_size": 57960
+        },
+        {
+          "path": "effect/f000610622.fxr",
+          "source_sha256": "5a581e1ddad03b8a65f57f664204848ff8f32f3ce0fb5a1693a18cda6c420974",
+          "destination_sha256": "db7812990afddf29b007d5eb364866682670d16345f8f15fae8b492277d23882",
+          "source_size": 44688,
+          "destination_size": 44688
+        },
+        {
+          "path": "effect/f000610625.fxr",
+          "source_sha256": "ffd32ba9067a20058e12d49c9423a5ddfc8b6b3049c723168e5ac74e15adad1c",
+          "destination_sha256": "dd27675789986a6cd4cdd6e51f1db6b1d275223fe1875c681d43a925dff999af",
+          "source_size": 55064,
+          "destination_size": 55064
+        },
+        {
+          "path": "effect/f000610626.fxr",
+          "source_sha256": "018d199ce125df4a0ef0847ced8fbad81300267186c364fd47339d26ffb0e872",
+          "destination_sha256": "0ca96eac48e4a872db4710a7bba807b84df6af10143da95034687134364345b9",
+          "source_size": 9560,
+          "destination_size": 9560
+        },
+        {
+          "path": "effect/f000627300.fxr",
+          "source_sha256": "aaf035d7233274a1e0c3d2fef941f8562e72c85822551d74e6c6e2b0fb63b04d",
+          "destination_sha256": "99ad333a0005aabc8703f9e4aad8de4c58b0bc5378ddfef758ae0fca4d9ef400",
+          "source_size": 42296,
+          "destination_size": 42296
+        },
+        {
+          "path": "effect/f000627305.fxr",
+          "source_sha256": "d6e4c5630755725ad98246cf20012305b27d6a18261cac32323fd220718f5c58",
+          "destination_sha256": "4d7c922aa07fbae05efa03f858334e3d3b1c6e2352a22eeddc1e405cba4ece8c",
+          "source_size": 34120,
+          "destination_size": 34120
+        },
+        {
+          "path": "effect/f000627306.fxr",
+          "source_sha256": "d52398c3de59166f122deadcf342dbd39d64a2b411ba9dbd892000924f50b95a",
+          "destination_sha256": "417419ca777bf5287c467077baab240582a8d6f2e178888a6081b599138f23c3",
+          "source_size": 53504,
+          "destination_size": 53504
+        },
+        {
+          "path": "effect/f000627307.fxr",
+          "source_sha256": "b1a5cf671e0eb98ba09b992ee9991bfe928b3b62d47976c61ae6339b02c09785",
+          "destination_sha256": "103ef4bdab230247da44517c926b7629e935f8e3dedb172783dcbcd8398cd121",
+          "source_size": 68472,
+          "destination_size": 68472
+        },
+        {
+          "path": "effect/f000627308.fxr",
+          "source_sha256": "fd327d316e4c0f42ec0607c7826026cda7444ced2be34312543f59772d84b5ef",
+          "destination_sha256": "6036a5150b442ae9c85fe03be812ee76bf3d07a05448e10ada6cf1787ec56904",
+          "source_size": 73552,
+          "destination_size": 73552
+        },
+        {
+          "path": "effect/f000631310.fxr",
+          "source_sha256": "6f9cec4ab226a260206a2900ee3b590d7bb58252a739150fc3df17d6b008137a",
+          "destination_sha256": "136ca20e8886b77728bae26bcbfdf3b2d0198287f439c212333168dc692f4332",
+          "source_size": 46080,
+          "destination_size": 46080
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m24.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m33.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000651217.fxr",
+          "source_sha256": "7e9053fa6493056efd40509d10c7958b9c21e9304b2dc1141cd17c59b15ae980",
+          "destination_sha256": "ad62e35cca2f49b7e5b299e53333a6ba23bcb3a7730033d401315fd70d4f1ff7",
+          "source_size": 64128,
+          "destination_size": 64128
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m26.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m36.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000625601.fxr",
+          "source_sha256": "5e916b0c27cf84f33d082fb3fad00e6ff5ba08679525a22cdf682800686e25f6",
+          "destination_sha256": "ba885f6a5244ce38f7da7d7ad253978e1d81709712645facdbcef5ecc74dcdb5",
+          "source_size": 22592,
+          "destination_size": 22592
+        },
+        {
+          "path": "effect/f000926023.fxr",
+          "source_sha256": "284830ab5f78b4c9b80093bcc52d2e0f885fce770731cfa18930a9f049bb1937",
+          "destination_sha256": "bc6222766030cb848589c000250f358d9367e1759cb8542950dbe16ae8856ae9",
+          "source_size": 128040,
+          "destination_size": 69200
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m28.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m35.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000626200.fxr",
+          "source_sha256": "3efbb38179ff33dd6bc00175f7f948bb9babc5fba758347f68942961895a7168",
+          "destination_sha256": "9ebee71752cc3d7e0db26401c61b6e186ad926c6022142cbeb0512dcb5c99411",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626210.fxr",
+          "source_sha256": "bea120dd903fb92e500d4f78969fa31f7b0946931dc46d35ee75f6a6225f041c",
+          "destination_sha256": "6aea2ad74624b6be97ac622ffb632fe7bd17200dc745efc92399a50f9e21855c",
+          "source_size": 55696,
+          "destination_size": 55696
+        },
+        {
+          "path": "effect/f000626217.fxr",
+          "source_sha256": "ab260324d79601e7a3b421a1685fd7cc62db569f08c40c67fa149ee54a91ddb2",
+          "destination_sha256": "a8ecbc4d89c14c3f29a06d152774481fc575cd140adcc9b9582fae2d2358b030",
+          "source_size": 52400,
+          "destination_size": 52400
+        },
+        {
+          "path": "effect/f000626220.fxr",
+          "source_sha256": "ce94c3531132703ff87092fcc85e57e90744ccc0c7d0f8aa78a7783f51710cd6",
+          "destination_sha256": "caf6a482d480bdad5af4468db3c58d96e4cc329efa1391f84b7c3e711583fdea",
+          "source_size": 57528,
+          "destination_size": 48888
+        },
+        {
+          "path": "effect/f000626223.fxr",
+          "source_sha256": "16c1232da8dce1b2bfe9f4db923e2e2e7c582096e2f28f2c451f5cd1b106e1de",
+          "destination_sha256": "9aab33d71ceed86804444efbbbaf0270874ab45885fb554e0603bdb8f03c00dd",
+          "source_size": 21328,
+          "destination_size": 21328
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m28.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m36.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000926023.fxr",
+          "source_sha256": "284830ab5f78b4c9b80093bcc52d2e0f885fce770731cfa18930a9f049bb1937",
+          "destination_sha256": "bc6222766030cb848589c000250f358d9367e1759cb8542950dbe16ae8856ae9",
+          "source_size": 128040,
+          "destination_size": 69200
+        }
+      ]
+    },
+    {
+      "source": "frpg_sfxbnd_m33.ffxbnd.dcx",
+      "destination": "frpg_sfxbnd_m36.ffxbnd.dcx",
+      "conflicts": [
+        {
+          "path": "effect/f000625601.fxr",
+          "source_sha256": "5e916b0c27cf84f33d082fb3fad00e6ff5ba08679525a22cdf682800686e25f6",
+          "destination_sha256": "ba885f6a5244ce38f7da7d7ad253978e1d81709712645facdbcef5ecc74dcdb5",
+          "source_size": 22592,
+          "destination_size": 22592
+        },
+        {
+          "path": "effect/f000926023.fxr",
+          "source_sha256": "284830ab5f78b4c9b80093bcc52d2e0f885fce770731cfa18930a9f049bb1937",
+          "destination_sha256": "bc6222766030cb848589c000250f358d9367e1759cb8542950dbe16ae8856ae9",
+          "source_size": 128040,
+          "destination_size": 69200
+        }
+      ]
+    }
+  ]
+}

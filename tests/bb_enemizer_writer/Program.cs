@@ -231,6 +231,9 @@ try
     BossObjectTests.Run();
     BossSfxTests.Run();
     FfxBundleTests.Run();
+    CharacterFfxRequirementTests.Run();
+    CharacterFfxBankRequirementTests.Run();
+    ChaliceInfrastructureTests.Run();
     BossExternalReferenceTests.Run();
     ScalingTests.Run(root, gamePath, defsPath, scriptRoot);
     WakeupFallbackTests.Run();

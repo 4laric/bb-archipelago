@@ -26,6 +26,13 @@ from .boss_contracts import (
     ArenaContract,
 )
 from .laurence_arena_contract import LAURENCE_ARENA_CONTRACT
+from .arena_port import (
+    ArenaPort,
+    MARIA_CROSS_ARENA_PORTS,
+    PortableCombatFragments,
+    compose_arena_port,
+    primary_death_terminal_bridge,
+)
 from .maria_contract import (
     MARIA_ARENA,
     MARIA_EVENT_TARGET_REFERENCE,
@@ -257,6 +264,8 @@ def _append_cleanup_initializer(arena: ArenaContract, event_zero: str,
 def maria_donor_contract(arena: ArenaContract,
                          allocation: MariaArenaAllocation) -> dict:
     """Describe the exact source bodies and native witnesses used by a swap."""
+    if isinstance(arena, ArenaPort):
+        return _maria_port_contract(arena, allocation)
     _require_allocation(allocation)
     copied = (
         (MARIA_ARENA.health_event, arena.health_bar_event),
@@ -343,9 +352,157 @@ def maria_donor_contract(arena: ArenaContract,
     }
 
 
-def patch_maria_donor(arena: ArenaContract, destination: str, donor_source: str,
+def _maria_port_contract(port: ArenaPort,
+                         allocation: MariaArenaAllocation) -> dict:
+    arena = port.arena
+    _require_allocation(allocation)
+    allocation_values = {allocation.phase_cleanup_event,
+                         allocation.health_initialized_flag}
+    if port.terminal_bridge_event is not None:
+        if (port.terminal_bridge_event in allocation_values
+                or port.terminal_bridge_event in _original_game_literals()):
+            raise ValueError("Maria arena-port helper allocation collides with original corpus")
+    additions = [allocation.phase_cleanup_event]
+    if port.terminal_bridge_event is not None:
+        additions.append(port.terminal_bridge_event)
+    return {
+        "format": "bb-maria-arena-port-contract-v1",
+        "status": "experimental",
+        "arena": arena.key,
+        "donor": MARIA_PACKAGE.key,
+        "allocation": asdict(allocation),
+        "placement_policy": port.placement_policy,
+        "constructor_insertion": {
+            "anchor_event": port.constructor.event_id,
+            "anchor_slot": port.constructor.slot,
+            "anchor_arguments": list(port.constructor.arguments),
+        },
+        "retired_destination_controllers": list(port.retired_events),
+        "preserved_destination_events": list(port.protected_events),
+        "adapted_destination_events": [
+            arena.activation_event, arena.health_bar_event,
+            arena.music_event, arena.lockcam_event,
+        ],
+        "added_events": additions,
+        "source_owned_not_copied": [
+            MARIA_ARENA.completion_event,
+            MARIA_ARENA.cutscene_entry_event,
+            MARIA_ARENA.co_op_restore_event,
+            MARIA_ARENA.host_fog_event,
+            MARIA_ARENA.guest_fog_event,
+            MARIA_ARENA.music_event,
+            MARIA_ARENA.music_cleanup_event,
+            *MARIA_ARENA.source_reward_flags,
+        ],
+        "copied_source_events": [
+            {"source_event": MARIA_ARENA.health_event,
+             "destination_event": arena.health_bar_event,
+             "expected_source_sha256": MARIA_PACKAGE.expected[MARIA_ARENA.health_event]},
+            {"source_event": MARIA_ARENA.lockcam_event,
+             "destination_event": arena.lockcam_event,
+             "expected_source_sha256": MARIA_PACKAGE.expected[MARIA_ARENA.lockcam_event]},
+            {"source_event": MARIA_ARENA.phase_cleanup_event,
+             "destination_event": allocation.phase_cleanup_event,
+             "expected_source_sha256": MARIA_PACKAGE.expected[MARIA_ARENA.phase_cleanup_event]},
+        ],
+        "entry_policy": {
+            "event": arena.activation_event,
+            "cinematic_rewrite_owner": "boss_entrances.skip_replacement_entrance",
+            "combat_ready_flag": arena.start_flag,
+        },
+        "music_policy": "Maria message 100 drives the destination final track",
+        "terminal_policy": (
+            f"bridge opens destination flag {port.terminal_release_flag} after Maria death"
+            if port.terminal_bridge_event is not None
+            else "destination completion remains the only progression authority"
+        ),
+        "destination_native_evidence": {
+            "map": port.destination_map,
+            "msb_sha256": port.destination_msb_sha256,
+            "primary_entity": arena.actor,
+            "primary_part_sha256": port.primary_part_sha256,
+            "original_talk_id": port.primary_talk_id,
+        },
+        "opaque_external_references": [{
+            **asdict(MARIA_EVENT_TARGET_REFERENCE),
+            "destination_event": arena.health_bar_event,
+            "destination_actor": arena.actor,
+        }],
+        "behavioral_unknown": "3500801 remains opaque; static effect is unobserved",
+        "runtime_status": "unobserved",
+    }
+
+
+def _port_music(port: ArenaPort, block: str) -> str:
+    witness = port.music_phase_witness
+    if block.count(witness) != 1:
+        raise ValueError(f"{port.arena.key} music lacks its pinned phase witness")
+    replacement = f"CharacterHasEventMessage({port.arena.actor}, 100)"
+    if witness == replacement:
+        return block
+    return block.replace(witness, replacement, 1)
+
+
+def _patch_maria_at_port(port: ArenaPort, destination: str, donor_source: str,
+                         allocation: MariaArenaAllocation) -> str:
+    arena = port.arena
+    original, donor = event_blocks(destination), event_blocks(donor_source)
+    _verify(original, arena.expected, f"{arena.key} arena")
+    _verify(donor, MARIA_PACKAGE.expected, "Lady Maria donor")
+    _require_allocation(allocation)
+    validate_maria_allocation(allocation, (destination,))
+    _maria_port_contract(port, allocation)  # includes helper allocation checks
+
+    health = _numbers(donor[MARIA_ARENA.health_event], {
+        MARIA_ARENA.health_event: arena.health_bar_event,
+        MARIA_PACKAGE.actor: arena.actor,
+        MARIA_ARENA.completion_event: arena.completion_event,
+        MARIA_ARENA.encounter_start_flag: arena.start_flag,
+        MARIA_ARENA.health_started_flag: allocation.health_initialized_flag,
+    })
+    health = _destination_health_telemetry(health, original[arena.health_bar_event])
+    lockcam = _numbers(donor[MARIA_ARENA.lockcam_event], {
+        MARIA_ARENA.lockcam_event: arena.lockcam_event,
+        MARIA_PACKAGE.actor: arena.actor,
+        MARIA_ARENA.completion_event: arena.completion_event,
+    })
+    source_camera = (
+        f"SetLockcamSlotNumber({MARIA_PACKAGE.lockcam_map}, "
+        f"{MARIA_PACKAGE.lockcam_subarea},"
+    )
+    if lockcam.count(source_camera) != 2:
+        raise ValueError("Maria lockcam lacks the exact two-call source witness")
+    lockcam = lockcam.replace(
+        source_camera,
+        f"SetLockcamSlotNumber({arena.lockcam_map}, {arena.lockcam_subarea},",
+    )
+    cleanup = _numbers(donor[MARIA_ARENA.phase_cleanup_event], {
+        MARIA_ARENA.phase_cleanup_event: allocation.phase_cleanup_event,
+        MARIA_PACKAGE.actor: arena.actor,
+        MARIA_ARENA.completion_event: arena.completion_event,
+    })
+    additions = {allocation.phase_cleanup_event: cleanup}
+    initializers = (f"    $InitializeEvent(0, {allocation.phase_cleanup_event});",)
+    if port.terminal_bridge_event is not None:
+        additions[port.terminal_bridge_event] = primary_death_terminal_bridge(port)
+        initializers += (f"    $InitializeEvent(0, {port.terminal_bridge_event});",)
+    fragments = PortableCombatFragments(
+        replacements={
+            arena.health_bar_event: health,
+            arena.music_event: _port_music(port, original[arena.music_event]),
+            arena.lockcam_event: lockcam,
+        },
+        additions=additions,
+        initializers=initializers,
+    )
+    return compose_arena_port(destination, port, fragments)
+
+
+def patch_maria_donor(arena: ArenaContract | ArenaPort, destination: str, donor_source: str,
                       allocation: MariaArenaAllocation) -> str:
     """Install Maria combat in an ArenaContract without moving progression."""
+    if isinstance(arena, ArenaPort):
+        return _patch_maria_at_port(arena, destination, donor_source, allocation)
     original, donor = event_blocks(destination), event_blocks(donor_source)
     _verify(original, arena.expected, f"{arena.key} arena")
     _verify(donor, MARIA_PACKAGE.expected, "Lady Maria donor")
@@ -416,10 +573,14 @@ def patch_maria_donor(arena: ArenaContract, destination: str, donor_source: str,
     return result
 
 
-def native_plan_maria_donor(arena: ArenaContract, slots: list[Slot],
+def native_plan_maria_donor(arena: ArenaContract | ArenaPort, slots: list[Slot],
                             npcs: Mapping[int, dict], effects: Mapping[int, dict],
                             allocation: MariaArenaAllocation, seed: str) -> dict:
     """Build one native swap with Maria's exact original MSB initialization."""
+    if isinstance(arena, ArenaPort):
+        return _native_plan_maria_at_port(
+            arena, slots, npcs, effects, allocation, seed
+        )
     _require_allocation(allocation)
     destinations = [
         slot for slot in slots
@@ -482,6 +643,125 @@ def native_plan_maria_donor(arena: ArenaContract, slots: list[Slot],
                 "talk_id", "unk_t18", "init_anim_id", "damage_anim_id", "provenance"
             ],
         } for slot in destinations],
+        "scaling": {
+            "enabled": bool(changes),
+            "mechanism": "inferred_static_npc_clone_sp_effect",
+            "change_count": len(changes),
+            "changes": [change.json() for change in changes],
+            "skip_count": len(skips),
+            "skips": skips,
+        },
+    }
+
+
+def _native_plan_maria_at_port(port: ArenaPort, slots: list[Slot],
+                               npcs: Mapping[int, dict], effects: Mapping[int, dict],
+                               allocation: MariaArenaAllocation, seed: str) -> dict:
+    arena = port.arena
+    _require_allocation(allocation)
+    _maria_port_contract(port, allocation)
+    destinations = [
+        slot for slot in slots
+        if (slot.map_name == port.destination_map
+            and slot.entity_id == arena.actor
+            and slot.archetype == arena.archetype)
+    ]
+    sources = [
+        slot for slot in slots
+        if (slot.map_name == "m35_00_00_00"
+            and slot.entity_id == MARIA_PACKAGE.actor
+            and slot.archetype == MARIA_PACKAGE.archetype)
+    ]
+    retained = {
+        evidence.entity_id: [
+            slot for slot in slots
+            if slot.map_name == port.destination_map
+            and slot.entity_id == evidence.entity_id
+            and slot.talk_id == evidence.talk_id
+        ]
+        for evidence in port.retained_native_actors
+    }
+    if (len(destinations) != 1 or destinations[0].talk_id != port.primary_talk_id
+            or destinations[0].dummy or len(sources) != 1 or sources[0].dummy
+            or sources[0].talk_id != 0
+            or any(len(found) != 1 for found in retained.values())):
+        raise ValueError(
+            f"Maria/{arena.key} plan requires the exact pinned destination roster "
+            "and original Maria source part"
+        )
+    target, source = destinations[0], sources[0]
+    warnings = []
+    if port.placement_policy == "original-initial-area-direct-fight":
+        warnings.append("runtime initial-area geometry/navigation fit remains unobserved")
+    swap = Swap(
+        target.logical_key,
+        [target.key],
+        {target.key: target.archetype},
+        target.archetype,
+        source.archetype,
+        warnings=warnings,
+        destinations={target.key: {
+            "map_name": target.map_name,
+            "entity_id": target.entity_id,
+            "x": target.x, "y": target.y, "z": target.z,
+        }},
+    )
+    changes, skips = plan_scaling(
+        [swap], [target], dict(npcs), dict(effects), boss_tiers=True
+    )
+    binding = {
+        "source_event_file": "event/" + MARIA_PACKAGE.event_file,
+        "source_map": source.map_name,
+        "source_part": source.part_name,
+        "source_entity_id": source.entity_id,
+        "source_archetype": asdict(source.archetype),
+        "source_talk_id": source.talk_id,
+        "source_provenance": {
+            "format": "bb-boss-actor-pin-v1", "part_sha256": MARIA_PRIMARY_PIN,
+        },
+        "source_initialization": dict(MARIA_PRIMARY_INITIALIZATION),
+        "destination_map": target.map_name,
+        "destination_part": target.part_name,
+        "destination_entity_id": target.entity_id,
+        "destination_original_talk_id": target.talk_id,
+        "required_native_fields": [
+            "talk_id", "unk_t18", "init_anim_id", "damage_anim_id", "provenance",
+        ],
+    }
+    if target.talk_id != 0:
+        binding["destination_talk_id_override"] = 0
+        binding["required_native_fields"].append("destination_talk_id_override")
+    contract = _maria_port_contract(port, allocation)
+    contract["retained_destination_helpers"] = [
+        {
+            "map": found[0].map_name,
+            "part": found[0].part_name,
+            "entity_id": evidence.entity_id,
+            "archetype": asdict(found[0].archetype),
+            "source_provenance": {
+                "format": "bb-boss-actor-pin-v1",
+                "part_sha256": evidence.part_sha256,
+            },
+            "source_initialization": {
+                "talk_id": evidence.talk_id,
+                "unk_t18": -1,
+                "init_anim_id": -1,
+                "damage_anim_id": -1,
+            },
+            "policy": evidence.policy,
+        }
+        for evidence in port.retained_native_actors
+        for found in (retained[evidence.entity_id],)
+    ]
+    return {
+        "format": "bb-enemizer-plan-v2",
+        "dry_run": True,
+        "seed": seed,
+        "swap_count": 1,
+        "swaps": [swap.json()],
+        "options": {"experimental_boss_contract": f"{arena.key}<-lady-maria"},
+        "boss_contract": contract,
+        "primary_init_source_bindings": [binding],
         "scaling": {
             "enabled": bool(changes),
             "mechanism": "inferred_static_npc_clone_sp_effect",

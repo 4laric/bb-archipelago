@@ -54,6 +54,8 @@ from tools.bb_enemizer.boss_pool import (
     combine_ordinary_and_boss_plans,
 )
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
+from tools.bb_enemizer.chalice_recipes import chalice_recipes, validate_original_source
+from tools.bb_enemizer.good_boss_pool import assign_good_bosses
 from tools.bb_enemizer.boss_entrances import skip_replacement_entrance
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.gascoigne_contract import (
@@ -189,6 +191,10 @@ for package in (GEHRMAN_PACKAGE, MOON_PACKAGE, MARIA_PACKAGE):
     ARENAS[package.key] = package
     PACKAGES[package.key] = package
 
+CHALICE_PACKAGES = {recipe.donor.key: recipe.donor for recipe in chalice_recipes().values()}
+# Explicit direct builds only: reviewed_compatibility remains the main-game pool.
+PACKAGES.update(CHALICE_PACKAGES)
+
 MARIA_ATTACHMENTS = MariaClericAttachmentIds(12990011)
 CLERIC_MARIA_ATTACHMENTS = ClericMariaAttachmentIds(12990012, 12990013, 12990014, 12990015)
 MARIA_AMELIA_ATTACHMENTS = MariaAmeliaAttachmentIds(12990016)
@@ -276,6 +282,11 @@ def reviewed_compatibility() -> dict[str, tuple[str, ...]]:
     for arena, donor in reusable_recipes():
         graph[arena] = tuple(dict.fromkeys((*graph.get(arena, ()), donor)))
     return dict(sorted(graph.items()))
+
+
+def good_boss_routes() -> set[tuple[str, str]]:
+    return {(arena, donor) for arena, donors in reviewed_compatibility().items()
+            for donor in donors} | set(chalice_recipes())
 
 
 def dlc_pair_flags(arena, package) -> tuple[bool, bool, bool, bool]:
@@ -515,6 +526,11 @@ def inspect_actor_map(args, name: str) -> dict:
             raise ValueError('invalid actor source map name')
         path = next((args.maps / (name + suffix) for suffix in ('.msb.dcx', '.msb')
                      if (args.maps / (name + suffix)).is_file()), None)
+        if path is None and name.startswith('m29_'):
+            directory = name[:-2] + '00'
+            path = next((args.maps / directory / (name + suffix)
+                         for suffix in ('.msb.dcx', '.msb')
+                         if (args.maps / directory / (name + suffix)).is_file()), None)
         if path is None:
             raise ValueError('missing actor source map state ' + name)
         run = subprocess.run(command_for(args) + ['--boss-actor-pins', str(path)],
@@ -826,6 +842,14 @@ def verify_receipt(root: Path) -> dict:
 def build(args) -> dict:
     args._actor_pin_cache = {}
     recipes = reusable_recipes()
+    experimental = chalice_recipes()
+    recipes.update(experimental)
+    good_assignment = None
+    direct_chalice = (getattr(args, 'arena', None), getattr(args, 'donor', None)) in experimental
+    if getattr(args, 'donor', None) in CHALICE_PACKAGES and not direct_chalice:
+        raise ValueError('no supported experimental chalice route for this arena')
+    if direct_chalice:
+        validate_original_source(args.events, args.donor)
     ludwig = getattr(args, 'donor', None) == 'ludwig'
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
@@ -834,27 +858,32 @@ def build(args) -> dict:
         raise ValueError('Shadows arena requires a reviewed Ludwig or One Reborn donor adapter')
     if direct_orphan[1] == 'shadows-of-yharnam' and direct_orphan[0] not in ('orphan-of-kos', 'celestial-emissary'):
         raise ValueError('Shadows donor requires a reviewed Orphan or Celestial arena adapter')
-    if direct_orphan[0] == 'the-one-reborn' and direct_orphan[1] not in ('rom', 'witch-of-hemwick'):
+    if direct_orphan[0] == 'the-one-reborn' and direct_orphan not in recipes and direct_orphan[1] not in ('rom', 'witch-of-hemwick'):
         raise ValueError('One Reborn arena requires a reviewed Rom or Witch donor adapter')
-    if direct_orphan[1] == 'the-one-reborn' and direct_orphan[0] not in ('ebrietas', 'shadows-of-yharnam'):
+    if (direct_orphan[1] == 'the-one-reborn' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('ebrietas', 'shadows-of-yharnam')):
         raise ValueError('One Reborn donor requires a reviewed Ebrietas or Shadows arena adapter')
-    if direct_orphan[1] == 'celestial-emissary' and direct_orphan[0] not in ('darkbeast-paarl', 'rom'):
+    if (direct_orphan[1] == 'celestial-emissary' and direct_orphan not in reusable_recipes()
+            and direct_orphan[0] not in ('darkbeast-paarl', 'rom')):
         raise ValueError('Celestial donor requires a reviewed Paarl or Rom arena adapter')
-    if direct_orphan[1] == 'micolash' and direct_orphan[0] not in ('moon-presence', 'gehrman'):
+    if (direct_orphan[1] == 'micolash' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('moon-presence', 'gehrman')):
         raise ValueError('Micolash donor requires a reviewed Moon Presence or Gehrman arena adapter')
     if direct_orphan[1] == 'witch-of-hemwick' and direct_orphan[0] not in ('amygdala', 'the-one-reborn'):
         raise ValueError('Witch donor requires a reviewed Amygdala or One Reborn arena adapter')
-    if direct_orphan[0] == 'micolash' and direct_orphan[1] not in ('gehrman', 'moon-presence'):
+    if (direct_orphan[0] == 'micolash' and direct_orphan not in recipes
+            and direct_orphan[1] not in ('gehrman', 'moon-presence')):
         raise ValueError('Micolash arena requires a reviewed Gehrman or Moon Presence donor adapter')
     if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] not in ('vicar-amelia', 'father-gascoigne'):
         raise ValueError('Witch arena requires a reviewed Amelia or Gascoigne donor adapter')
-    if direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan[0] not in ('blood-starved-beast', 'martyr-logarius'):
+    if (direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('blood-starved-beast', 'martyr-logarius')):
         raise ValueError('Wet Nurse donor requires a reviewed BSB or Logarius arena adapter')
     if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] not in ('blood-starved-beast', 'amygdala', 'shadows-of-yharnam'):
         raise ValueError('Celestial Emissary arena requires a reviewed BSB, Amygdala or Shadows donor adapter')
     if direct_orphan[1] == 'living-failures' and direct_orphan[0] not in ('laurence', 'lady-maria'):
         raise ValueError('Living Failures donor requires a reviewed Laurence or Maria arena adapter')
-    if direct_orphan[0] == 'rom' and direct_orphan[1] not in ('ebrietas', 'celestial-emissary'):
+    if direct_orphan[0] == 'rom' and direct_orphan not in recipes and direct_orphan[1] not in ('ebrietas', 'celestial-emissary'):
         raise ValueError('Rom arena requires a reviewed Ebrietas or Celestial donor adapter')
     if direct_orphan[1] == 'rom' and direct_orphan[0] not in ('ebrietas', 'the-one-reborn'):
         raise ValueError('Rom donor requires a reviewed Ebrietas or One Reborn arena adapter')
@@ -870,7 +899,8 @@ def build(args) -> dict:
         ('orphan-of-kos', 'blood-starved-beast'),
         ('orphan-of-kos', 'ludwig'),
     }
-    if direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in reviewed_orphan_pairs:
+    if (direct_orphan[0] == 'orphan-of-kos' and direct_orphan not in recipes
+            and direct_orphan not in reviewed_orphan_pairs):
         raise ValueError('Orphan arena requires a reviewed donor adapter')
     direct_logarius = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if (direct_logarius[0] == 'martyr-logarius' and direct_logarius not in recipes
@@ -882,7 +912,8 @@ def build(args) -> dict:
     laurence_arena = getattr(args, 'arena', None) == 'laurence'
     ludwig_arena = getattr(args, 'arena', None) == 'ludwig'
     reviewed_ludwig_donors = LUDWIG_COMPATIBILITY['ludwig']
-    if ludwig_arena and getattr(args, 'donor', None) not in reviewed_ludwig_donors:
+    if (ludwig_arena and direct_orphan not in recipes
+            and getattr(args, 'donor', None) not in reviewed_ludwig_donors):
         raise ValueError('Ludwig arena requires a reviewed donor adapter')
     if (laurence_arena and direct_orphan not in recipes
             and getattr(args, 'donor', None) not in (*LAURENCE_COMPATIBILITY['laurence'], 'living-failures')):
@@ -898,7 +929,8 @@ def build(args) -> dict:
     if direct_gascoigne[0] == 'father-gascoigne' or direct_gascoigne[1] == 'father-gascoigne':
         if direct_gascoigne not in reviewed_gascoigne_pairs and direct_gascoigne not in recipes:
             raise ValueError('Father Gascoigne is available only in the reviewed Cleric reciprocal adapters')
-    if ludwig and not getattr(args, 'pool', None) and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam'):
+    if (ludwig and not getattr(args, 'pool', None) and direct_orphan not in recipes
+            and args.arena not in ('cleric-beast', 'orphan-of-kos', 'shadows-of-yharnam')):
         raise ValueError('Ludwig donor requires a reviewed Cleric, Orphan or Shadows arena adapter')
     if (laurence and direct_orphan not in recipes
             and (getattr(args, 'pool', None) or args.arena not in ('cleric-beast', 'ludwig', 'living-failures'))):
@@ -919,16 +951,26 @@ def build(args) -> dict:
         } if args.pool == 'ludwig-cleric' else {
             'cleric-beast': ('laurence',), 'laurence': ('cleric-beast',),
         } if args.pool == 'laurence-cleric' else FINAL_COMPATIBILITY if args.pool == 'finals' else reviewed_compatibility()
-        mapping = assign_donors(args.seed, graph)
+        if args.pool == 'good':
+            good_assignment = assign_good_bosses(args.seed, good_boss_routes(), allow_self=False)
+            mapping = good_assignment.arena_to_donor
+        else:
+            mapping = assign_donors(args.seed, graph)
         pairs = [(ARENAS[key], PACKAGES[value]) for key, value in mapping.items()]
     else:
         pairs = [(ARENAS[args.arena], PACKAGES[args.donor])]
+    has_chalice = any(package.key in CHALICE_PACKAGES for _, package in pairs)
+    for _, package in pairs:
+        if package.key in CHALICE_PACKAGES:
+            validate_original_source(args.events, package.key)
     if digest(args.darkscript) != DARKSCRIPT_SHA256:
         raise ValueError('requires pinned DarkScript 3.6.3')
     check_output(args.output, (args.maps, args.scripts, args.events, args.gameparam,
                               args.paramdef, args.bundle, args.writer, args.darkscript))
     if getattr(args, 'sfx', None):
         check_output(args.output, (args.sfx,))
+    if getattr(args, 'characters', None):
+        check_output(args.output, (args.characters,))
     event_overrides = getattr(args, 'event_overrides', None)
     if event_overrides is not None:
         if not event_overrides.is_dir():
@@ -940,7 +982,7 @@ def build(args) -> dict:
         scratch = Path(temporary)
         inventory = scratch / 'inventory.tsv'
         inventory.write_bytes(read_blob(args.bundle, 'mined/msb_enemies.tsv'))
-        slots = load_slots(inventory)
+        slots = load_slots(inventory, fixed_maps_only=not has_chalice)
         npcs, effects = load_params(args.bundle)
         materializations = {}
         for arena, package in pairs:
@@ -1401,6 +1443,9 @@ def build(args) -> dict:
             plan = retire_applied_fallbacks(combine_ordinary_and_boss_plans(ordinary_plan, plans))
         else:
             plan = plans[0] if len(plans) == 1 else combine_native_plans(args.seed, plans)
+        if good_assignment is not None:
+            plan['boss_contract']['good_boss_assignment'] = good_assignment.as_dict()
+            plan.setdefault('options', {})['boss_pool'] = 'good'
         # Combat helpers declare a parent swap explicitly or are matched to a
         # reviewed phase-body source. Both feed one post-combination allocator.
         helper_parents = {}
@@ -1437,11 +1482,13 @@ def build(args) -> dict:
         plan_path.parent.mkdir()
         plan_path.write_text(json.dumps(plan, indent=2, sort_keys=True) + '\n', encoding='utf-8')
         output = scratch / 'overlay'
-        sfx_args = ['--sfx', str(args.sfx)] if getattr(args, 'sfx', None) else []
+        asset_args = ['--sfx', str(args.sfx)] if getattr(args, 'sfx', None) else []
+        if getattr(args, 'characters', None):
+            asset_args.extend(['--characters', str(args.characters)])
         subprocess.run(command_for(args) + [
             '--boss-encounters', str(plan_path), str(args.gameparam), str(args.paramdef),
             str(args.maps), str(args.scripts), str(originals), str(compiled), str(output),
-        ] + sfx_args + ['--apply'], check=True)
+        ] + asset_args + ['--apply'], check=True)
         receipt = verify_receipt(output)
         if args.output.exists():
             raise ValueError('output appeared during build; refusing to replace it')
@@ -1455,6 +1502,7 @@ def main(argv=None) -> int:
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--dotnet', type=Path)
     parser.add_argument('--sfx', type=Path, help='original effective SFX binder directory for encounter asset closure')
+    parser.add_argument('--characters', type=Path, help='original animation binders for declared character effect witnesses')
     parser.add_argument('--ordinary-plan', type=Path,
                         help='compose an ordinary enemy plan before one shared scaling/map/AI pass')
     parser.add_argument('--event-overrides', type=Path,
@@ -1462,7 +1510,7 @@ def main(argv=None) -> int:
     parser.add_argument('--bundle', type=Path, default=ROOT / 'research/bb_inputs.db')
     selection = parser.add_mutually_exclusive_group(required=True)
     selection.add_argument('--arena', choices=sorted(ARENAS))
-    selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'logarius-bsb', 'ludwig-cleric', 'laurence-cleric', 'finals', 'reviewed'))
+    selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'logarius-bsb', 'ludwig-cleric', 'laurence-cleric', 'finals', 'reviewed', 'good'))
     parser.add_argument('--donor', choices=sorted(PACKAGES))
     parser.add_argument('--seed', required=True)
     parser.add_argument('--no-scaling', action='store_true',

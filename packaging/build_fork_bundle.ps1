@@ -67,13 +67,15 @@ if ($ApworldPath -and -not (Test-Path -LiteralPath $ApworldPath -PathType Leaf))
 $worldData = @(Get-ChildItem -LiteralPath (Join-Path $repo 'worlds/bloodborne') -File |
     Where-Object { $_.Extension -in '.json', '.tsv' } |
     ForEach-Object { '--add-data'; "$($_.FullName);worlds/bloodborne" })
+$bossData = @(Get-ChildItem -LiteralPath (Join-Path $repo 'tools/bb_enemizer') -Filter '*.json' -File |
+    ForEach-Object { '--add-data'; "$($_.FullName);tools/bb_enemizer" })
 & $PythonExecutable -m PyInstaller --noconfirm --clean --console --onedir --name bb-ap-backend `
     --paths $repo --collect-submodules worlds `
     --hidden-import tools.build_standalone_randomizer `
     --hidden-import tools.export_standalone_mod `
     --hidden-import tools.bb_standalone.generate --hidden-import tools.bb_enemizer.cli `
     --add-data "$(Join-Path $repo 'research/bb_inputs.db');research" `
-    --add-data "$(Join-Path $repo 'research/enemizer');research/enemizer" @worldData `
+    --add-data "$(Join-Path $repo 'research/enemizer');research/enemizer" @worldData @bossData `
     --add-data "$(Join-Path $repo 'tools/bb_standalone/award_targets.json');tools/bb_standalone" `
     @versionArgument --distpath (Join-Path $work 'dist') --workpath (Join-Path $work 'pyi') --specpath $work `
     (Join-Path $PSScriptRoot 'backend_entry.py')
