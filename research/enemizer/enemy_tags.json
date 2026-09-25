@@ -2786,7 +2786,7 @@
     "notes": "NpcParam 212750; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=0; scalingEffect=7010; scalingHp=2.558; placements=4",
     "scaling_hp": 2.558,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c2121:212751:1:0": {
@@ -3538,7 +3538,7 @@
     "notes": "NpcParam 256100; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=0; scalingEffect=7029; scalingHp=2.911; placements=1",
     "scaling_hp": 2.911,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c2561:256100:256100:5": {
@@ -3546,7 +3546,7 @@
     "notes": "NpcParam 256100; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=0; scalingEffect=7029; scalingHp=2.911; placements=2",
     "scaling_hp": 2.911,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c2561:256610:256610:0": {
@@ -3554,7 +3554,7 @@
     "notes": "NpcParam 256610; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=0; scalingEffect=7020; scalingHp=7.823; placements=4",
     "scaling_hp": 7.823,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c2561:256910:256910:0": {
@@ -3562,7 +3562,7 @@
     "notes": "NpcParam 256910; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=2",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c2570:257010:257010:0": {
@@ -3578,7 +3578,7 @@
     "notes": "NpcParam 257100; hp=450; radius=0.2; height=0.5; team=23; npcType=0; disableRespawn=0; scalingEffect=7016; scalingHp=6.911; placements=2",
     "scaling_hp": 6.911,
     "size_class": "S",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c2571:257101:1:0": {
@@ -3586,7 +3586,7 @@
     "notes": "NpcParam 257101; hp=450; radius=0.2; height=0.5; team=23; npcType=0; disableRespawn=0; scalingEffect=7016; scalingHp=6.911; placements=2",
     "scaling_hp": 6.911,
     "size_class": "S",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c2600:260000:260000:0": {
@@ -5657,7 +5657,7 @@
     "notes": "NpcParam 402021; hp=1; radius=0.3; height=1.8; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4020:402021:402020:6": {
@@ -5665,7 +5665,7 @@
     "notes": "NpcParam 402021; hp=1; radius=0.3; height=1.8; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4020:402024:402024:0": {
@@ -5993,7 +5993,7 @@
     "notes": "NpcParam 403050; hp=2700; radius=0.4; height=3.6; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "XL",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c4031:403100:403100:0": {
@@ -6001,7 +6001,7 @@
     "notes": "NpcParam 403100; hp=99999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "boss"
   },
   "c4040:0:0:0": {
@@ -6281,7 +6281,7 @@
     "notes": "NpcParam 405020; hp=1; radius=0.4; height=1.2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4050:405020:405021:0": {
@@ -6289,7 +6289,7 @@
     "notes": "NpcParam 405020; hp=1; radius=0.4; height=1.2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4050:405020:405022:0": {
@@ -6297,7 +6297,7 @@
     "notes": "NpcParam 405020; hp=1; radius=0.4; height=1.2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c4051:405100:405100:0": {
@@ -6737,7 +6737,7 @@
     "notes": "NpcParam 452091; hp=800; radius=0.3; height=2; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c4540:454000:454000:0": {
@@ -6977,7 +6977,7 @@
     "notes": "NpcParam 711000; hp=1; radius=0.5; height=1.8; team=23; npcType=0; disableRespawn=0; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "M",
-    "target": true,
+    "target": false,
     "tier": "common"
   },
   "c7500:750100:750000:0": {
@@ -7081,7 +7081,7 @@
     "notes": "NpcParam 251001; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=0; scalingEffect=7017; scalingHp=6.941; placements=2",
     "scaling_hp": 6.941,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9010:350:1:0": {
@@ -7097,7 +7097,7 @@
     "notes": "NpcParam 360; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=12",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9010:402285:1:0": {
@@ -7241,7 +7241,7 @@
     "notes": "NpcParam 902000; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=4",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9011:901100:0:0": {
@@ -7265,7 +7265,7 @@
     "notes": "NpcParam 902000; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=4",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9020:902010:1:0": {
@@ -7273,7 +7273,7 @@
     "notes": "NpcParam 902010; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=4",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9020:902020:1:0": {
@@ -7281,7 +7281,7 @@
     "notes": "NpcParam 902020; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=7",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9020:902030:1:0": {
@@ -7305,7 +7305,7 @@
     "notes": "NpcParam 902032; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9020:902035:1:0": {
@@ -7313,7 +7313,7 @@
     "notes": "NpcParam 902035; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9020:902040:1:0": {
@@ -7321,7 +7321,7 @@
     "notes": "NpcParam 902040; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=5",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9030:903000:0:0": {
@@ -7409,7 +7409,7 @@
     "notes": "NpcParam 904000; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "c9050:905000:1:0": {
@@ -7417,7 +7417,7 @@
     "notes": "NpcParam 905000; hp=999; radius=0.1; height=0.3; team=23; npcType=0; disableRespawn=1; scalingEffect=0; scalingHp=1; placements=1",
     "scaling_hp": 1.0,
     "size_class": "XS",
-    "target": true,
+    "target": false,
     "tier": "elite"
   },
   "m900020:0:0:0": {

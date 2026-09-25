@@ -203,7 +203,7 @@ def load_context(settings: LauncherSettings, *, player_name: str = "") -> Report
     install = GameInstall.from_root(settings.game_root)
     if not install.mods.exists():
         raise ValidationError(
-            "no Bloodborne AP overlay is active; run Randomize & Launch first, then report"
+            "no Bloodborne AP overlay is active; press Launch first, then report"
         )
     owner = _load_owner(install.mods)
     enemizer = owner.get("enemizer") if isinstance(owner.get("enemizer"), dict) else {}

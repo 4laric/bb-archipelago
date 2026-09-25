@@ -100,6 +100,26 @@ class LocalSessionUiTests(unittest.TestCase):
             self.assertEqual([sentinel], list(root.iterdir()),
                               "witness: no player directory was created")
 
+    def test_each_create_button_carries_its_own_host_choice(self):
+        # No "start the server" checkbox: the button pressed decides, and the
+        # choice is stored where the world-install retry's _generate() reads it.
+        for host in (True, False):
+            chosen = []
+            panel = SimpleNamespace(auto_host=Mock(), _generate=lambda: chosen.append('generate'))
+            LocalSessionPanel._create(panel, host)
+            panel.auto_host.set.assert_called_once_with(host)
+            self.assertEqual(chosen, ['generate'])
+
+    def test_only_the_chosen_player_source_shows_its_inputs(self):
+        solo, folder = [Mock(), Mock()], [Mock(), Mock()]
+        panel = SimpleNamespace(source=Mock(), _solo_widgets=solo, _folder_widgets=folder)
+        panel.source.get.return_value = "folder"
+        LocalSessionPanel._source_changed(panel)
+        for widget in solo:
+            widget.grid_remove.assert_called_once_with()
+        for widget in folder:
+            widget.grid.assert_called_once_with()
+
     def test_generated_seed_flows_into_play_without_manual_path_entry(self):
         app = SimpleNamespace(_set_busy=Mock(), _accept_ap_request=Mock(), fields={'ap_request': Mock()},
                               notebook=Mock(), play_tab='play')

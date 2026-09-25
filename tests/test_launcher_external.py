@@ -431,7 +431,7 @@ class ExternalArtifactTests(unittest.TestCase):
         exported = self.export()
         self.activate_copy(exported)
         (self.install.mods / ".bb-ap-owner.json").write_text("{}", encoding="utf-8")
-        with self.assertRaisesRegex(ValidationError, "standalone"):
+        with self.assertRaisesRegex(ValidationError, "standalone mode.*Launch Vanilla"):
             verify_external_activation(
                 exported.receipt, install=self.install, mods_root=self.mods_root,
                 allow_live_acceptance_candidate=True,

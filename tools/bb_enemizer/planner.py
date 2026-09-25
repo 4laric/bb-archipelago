@@ -4,7 +4,7 @@ import hashlib
 import math
 import random
 from collections import defaultdict
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any, Mapping
 
 from .model import (
@@ -24,7 +24,6 @@ class EnemizerConfig:
     seed: str
     max_size_up: int = 1
     max_size_down: int = 3
-    preserve_tier: bool = True
     preserve_locomotion: bool = False
 
 
@@ -117,8 +116,6 @@ def compatible(
         return False, ["target archetype not approved"]
     if target_key in policy.bans:
         return False, ["target banned for slot"]
-    if config.preserve_tier and policy.tier != target_tag.tier:
-        return False, [f"tier mismatch: {policy.tier} -> {target_tag.tier}"]
     if (
         config.preserve_locomotion
         and policy.locomotion != "unknown"
@@ -215,8 +212,6 @@ def plan_swaps(
     """
     facts = facts or {}
     stress = StressProfile.parse(config.seed)
-    if stress is not None and stress.kind == "tier-up":
-        config = replace(config, preserve_tier=False)
     grouped: dict[str, list[Slot]] = defaultdict(list)
     for slot in slots:
         grouped[slot.logical_key].append(slot)

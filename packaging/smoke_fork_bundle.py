@@ -14,6 +14,8 @@ import zlib
 def smoke(package: Path) -> None:
     backend = package / 'ap_backend' / 'bb-ap-backend.exe'
     required = [package / 'BBLauncher-AP.exe', backend,
+                package / 'qml/QtQuick/qmldir',
+                package / 'qml/QtWebView/qmldir',
                 package / 'ap_backend/ap-client/bb-ap-client.exe',
                 package / 'ap_backend/suppression/gameparam.parambnd.dcx',
                 package / 'ap_backend/suppression/build-manifest.json']
@@ -30,6 +32,13 @@ def smoke(package: Path) -> None:
     )
     if qt.returncode:
         raise RuntimeError(f'Packaged Qt launcher exited {qt.returncode}: {qt.stderr}')
+    webview = subprocess.run(
+        [str((package / 'BBLauncher-AP.exe').resolve()), '--ap-webview-smoke'],
+        env=dict(os.environ, QT_QPA_PLATFORM='windows'),
+        capture_output=True, text=True, timeout=30,
+    )
+    if webview.returncode:
+        raise RuntimeError(f'Packaged Mod Downloader browser failed to load: {webview.stderr}')
     client = subprocess.run(
         [str((package / 'ap_backend/ap-client/bb-ap-client.exe').resolve()), '--version'],
         capture_output=True, text=True, timeout=15,
@@ -63,6 +72,12 @@ def smoke(package: Path) -> None:
             raise RuntimeError('Frozen response IDs do not match requests')
         if responses[1]['result'].get('selected') != 'Package tester':
             raise RuntimeError('Frozen seed inspection did not select the sole player')
+        operations = responses[0]['result'].get('operations', [])
+        if not {'prepare_standalone', 'verify_standalone', 'migrate_legacy_overlay'} <= set(operations):
+            raise RuntimeError('Frozen backend lacks the standalone or legacy migration operations')
+        catalog = package / 'ap_backend/_internal/tools/bb_standalone/award_targets.json'
+        if not catalog.is_file():
+            raise RuntimeError('Frozen backend lacks the standalone item award catalog')
         # Run the shipped planner, with shipped catalogs, from outside the
         # checkout. This catches stale executables or missing expansion data.
         data = package / 'ap_backend/_internal/research'
@@ -90,6 +105,17 @@ def smoke(package: Path) -> None:
                 raise RuntimeError(f'Packaged enemy planner failed: {result.stderr}')
             plan = json.loads(output.read_text(encoding='utf-8'))
             counts.append(plan['swap_count'])
+            standalone_output = Path(temp) / f'standalone-enemies-{expanded}.json'
+            standalone_command = [str(backend.resolve()), '--internal-enemy-planner',
+                                  *command[1:]]
+            standalone_command[standalone_command.index('--output') + 1] = str(standalone_output)
+            standalone_run = subprocess.run(standalone_command, capture_output=True,
+                                            text=True, timeout=90, cwd=temp)
+            if standalone_run.returncode:
+                raise RuntimeError(f'Frozen standalone planner failed: {standalone_run.stderr}')
+            standalone_plan = json.loads(standalone_output.read_text(encoding='utf-8'))
+            if standalone_plan.get('swaps') != plan.get('swaps') or standalone_plan['swap_count'] != counts[-1]:
+                raise RuntimeError('AP and standalone frozen planners disagree on the selected curated pool')
             if expanded and plan['options']['release_tranches'] != ['chara', 'contracts', 'spawns', 'wakeup']:
                 raise RuntimeError('Packaged planner did not apply expanded coverage')
             if expanded and not plan.get('wakeup_fallbacks'):
@@ -99,6 +125,7 @@ def smoke(package: Path) -> None:
     print(f'Packaged client: {client.stdout.strip()}')
     print('Packaged Qt launcher: startup passed (no installation opened).')
     print('Frozen fork backend: capabilities and seed inspection passed (no game touched).')
+    print('Frozen standalone planner: same reviewed and expanded pools as the AP planner.')
     print(f'Packaged enemy planner: {counts[0]} normal / {counts[1]} expanded swaps (seed 12345).')
 
 

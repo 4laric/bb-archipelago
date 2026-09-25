@@ -40,12 +40,12 @@ SEED = "12345"
 # determinism is pinned separately below).
 PINNED_COUNTS = {
     (): 308,
-    ("contracts",): 827,
-    ("spawns",): 797,
+    ("contracts",): 806,
+    ("spawns",): 796,
     ("chara",): 345,
-    ("chara", "contracts", "spawns"): 1546,
+    ("chara", "contracts", "spawns"): 1595,
     ("wakeup",): 316,
-    ("chara", "contracts", "spawns", "wakeup"): 1556,
+    ("chara", "contracts", "spawns", "wakeup"): 1605,
 }
 SNATCHER = "m24_00_00_00:c2020_0000"
 
@@ -70,7 +70,7 @@ class ReleaseRecordTests(unittest.TestCase):
             self.assertEqual(RELEASE_FORMAT, record["format"])
             self.assertEqual(tranche, record["tranche"])
             self.assertGreater(len(record["releases"]), 0)
-            if tranche != "wakeup":
+            if tranche not in ("wakeup", "scripted"):
                 self.assertGreater(len(record["releases"]), 100)
 
     def test_snatcher_and_quest_carriers_never_released(self):
@@ -98,7 +98,8 @@ class ReleaseRecordTests(unittest.TestCase):
 
     def test_record_counts(self):
         counts = {tranche: len(record["releases"]) for tranche, record in self.records.items()}
-        self.assertEqual({"contracts": 750, "spawns": 588, "chara": 294, "wakeup": 10}, counts)
+        self.assertEqual({"contracts": 750, "spawns": 666, "chara": 294, "wakeup": 10,
+                          "scripted": 21}, counts)
 
     def test_central_wakeup_fallback_is_source_pinned(self):
         record = self.records["wakeup"]
@@ -160,6 +161,69 @@ class ReleaseRecordTests(unittest.TestCase):
         self.assertEqual(10, text.count("52410270"))
 
 
+class AmbushFallbackTests(unittest.TestCase):
+    """The sewer rat ambush joins the wakeup record only once pinned natively."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        _inventory, cls.event_root = materialize_bundle(
+            ROOT / "research/bb_inputs.db", Path(cls._tmp.name))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def test_python_and_native_fingerprints_agree(self):
+        import re
+        from tools.bb_enemizer import wakeup_fallback
+        source = (ROOT / "tools/bb_enemizer_writer/WakeupFallback.cs").read_text(encoding="utf-8")
+        native = re.search(r'AmbushBodyFingerprint = (null|"([0-9a-f]{64})");', source)
+        self.assertIsNotNone(native)
+        self.assertEqual(wakeup_fallback.AMBUSH_BODY_FINGERPRINT, native.group(2))
+        for key, (entity, slot, home) in wakeup_fallback.AMBUSH_PINS.items():
+            self.assertIn(f'["{key}"] = Ambush({entity}, {slot}, {home})', source)
+
+    def test_committed_record_matches_the_pin_state(self):
+        from tools.bb_enemizer import wakeup_fallback
+        record = json.loads(RELEASE_FILES["wakeup"].read_text(encoding="utf-8"))
+        pinned = wakeup_fallback.AMBUSH_BODY_FINGERPRINT is not None
+        self.assertEqual(pinned, "ambush_fallback" in record)
+        self.assertEqual(pinned, bool(set(record["releases"]) & set(wakeup_fallback.AMBUSH_PINS)))
+
+    def test_ambush_record_is_source_pinned(self):
+        from tools.bb_enemizer import wakeup_fallback
+        record = wakeup_fallback.build_release(self.event_root, include_ambush=True)
+        self.assertEqual(19, len(record["releases"]))
+        ambush = record["ambush_fallback"]
+        self.assertEqual(12410340, ambush["event_id"])
+        self.assertEqual(
+            {(item["entity_id"], item["event_slot"], tuple(item["arguments"]))
+             for item in ambush["initializers"]},
+            {(entity, slot, (entity, home, 10, 2412220))
+             for entity, slot, home in wakeup_fallback.AMBUSH_PINS.values()},
+        )
+        self.assertEqual(12410340, wakeup_fallback.event_for("m24_01_00_00:c1100_0000"))
+        self.assertEqual(12415130, wakeup_fallback.event_for("m24_01_00_00:c1120_0009"))
+
+    def test_ambush_refuses_changed_source(self):
+        from tools.bb_enemizer import wakeup_fallback
+        text = (self.event_root / wakeup_fallback.EVENT_FILE).read_text(encoding="utf-8-sig")
+        wakeup_fallback.verify_ambush(text)
+        start = text.index("$Event(12410340,")
+        head, body = text[:start], text[start:]
+        cases = (
+            text.replace("12410340, 2410226, 2412236", "12410340, 2410226, 2412230", 1),
+            head + body.replace("RequestCharacterAICommand(chrEntityId, -1, 0);",
+                                "RequestCharacterAICommand(chrEntityId, -1, 0);\n    SetEventFlag(1, ON);", 1),
+            head + body.replace("RequestCharacterAICommand(chrEntityId, -1, 0);", "", 1),
+        )
+        for changed in cases:
+            self.assertNotEqual(text, changed)
+            with self.assertRaises(ValueError):
+                wakeup_fallback.verify_ambush(changed)
+
+
 class ReleasePlanningTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -192,6 +256,32 @@ class ReleasePlanningTests(unittest.TestCase):
         for tranches, expected in PINNED_COUNTS.items():
             swaps, _rejections, _release = self._plan(tranches)
             self.assertEqual(expected, len(swaps), f"tranches={tranches}")
+
+    def test_excluded_models_never_enter_the_ordinary_pool(self):
+        # c4520 Lady Maria: AI broken outside her fight; boss shuffle owns her.
+        # c7110 Cainhurst carriage: a stationary prop, not an enemy.
+        # NpcParam 402021 / 405020: 1 HP cutscene patient and mummified fishman;
+        # the rest of c4020 / c4050 stays in the pool.
+        excluded = {"c4520", "c7110"}
+        # Hunter's Dream actors, invisible emitters/dummies and attachment
+        # parts: not standalone enemies (Old Yharnam crash, 2026-09-24).
+        excluded_npcs = {402021, 405020, 902000, 902010, 902020, 902032, 902035, 902040,
+                         904000, 905000, 360, 251001, 256100, 256610, 256910, 403050,
+                         403100, 212750, 257100, 257101}
+
+        def banned(archetype):
+            return (archetype.model_name in excluded
+                    or archetype.npc_param_id in excluded_npcs)
+
+        self.assertFalse([key for key, tag in self.tags.items()
+                          if tag.target and (key.split(":", 1)[0] in excluded
+                                             or int(key.split(":")[1]) in excluded_npcs)])
+        self.assertTrue(self.tags["c4020:402020:402020:0"].target)
+        self.assertTrue(self.tags["c4050:405000:405000:0"].target)
+        swaps, _rejections, _release = self._plan(
+            ("chara", "contracts", "spawns", "wakeup"))
+        self.assertFalse([swap.logical_key for swap in swaps
+                          if banned(swap.source) or banned(swap.target)])
 
     def test_tranche_determinism(self):
         for tranches in [("contracts",), ("chara", "contracts", "spawns")]:
@@ -249,9 +339,9 @@ class ReleasePlanningTests(unittest.TestCase):
 
     def test_central_yharnam_visibility(self):
         expected = {(): 49, ("contracts",): 94, ("spawns",): 106,
-                    ("chara",): 59, ("chara", "contracts", "spawns"): 177,
+                    ("chara",): 59, ("chara", "contracts", "spawns"): 189,
                     ("wakeup",): 57,
-                    ("chara", "contracts", "spawns", "wakeup"): 187}
+                    ("chara", "contracts", "spawns", "wakeup"): 199}
         for tranches, count in expected.items():
             swaps, _rejections, _release = self._plan(tranches)
             central = [swap for swap in swaps

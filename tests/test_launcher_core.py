@@ -170,17 +170,22 @@ def sample_plan(seed: str) -> dict:
 
 def write_boss_encounter_overlay(
     root: Path, *, source_binder: Path, seed: str, cathedral_input: bytes | None = None,
+    hemwick_boss_event: bool = False, scaled: bool = True,
 ) -> Path:
     """A closed native-output fixture with two encounter events and audit files."""
     overlay = root / "boss-encounter-output"
     plan = sample_plan(seed)
+    plan["scaling"] = {"enabled": scaled}
+    if not scaled:
+        plan["options"]["normalize_scaling"] = False
     if cathedral_input is not None:
         plan["input_event_overrides"] = [{
             "file": "m24_00_00_00.emevd.dcx",
             "sha256": hashlib.sha256(cathedral_input).hexdigest(),
         }]
     outputs = {
-        core.SUPPRESSION_PATH: b"composed-ap-binder-plus-boss-scaling",
+        core.SUPPRESSION_PATH: (b"composed-ap-binder-plus-boss-scaling"
+                                if scaled else source_binder.read_bytes()),
         f"{core.MAP_PREFIX}m24_01_00_00.msb.dcx": b"cleric-map",
         f"{core.MAP_PREFIX}m35_00_00_00.msb.dcx": b"maria-map",
         f"{core.AI_PREFIX}m24_01_00_00.luabnd.dcx": b"cleric-ai",
@@ -193,6 +198,8 @@ def write_boss_encounter_overlay(
     }
     if cathedral_input is not None:
         outputs[core.CATHEDRAL_EVENT_PATH] = b"native-composed-cathedral-plus-boss"
+    if hemwick_boss_event:
+        outputs[core.HEMWICK_EVENT_PATH] = b"boss-encounter-hemwick-event"
     for relative, content in outputs.items():
         path = overlay.joinpath(*relative.split("/"))
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -200,7 +207,7 @@ def write_boss_encounter_overlay(
     plan_hash = hashlib.sha256(outputs[core.ENEMIZER_PLAN_NAME]).hexdigest()
     source_plan_hash = hashlib.sha256(outputs["source-enemizer-plan.json"]).hexdigest()
     outputs["scaling-report.json"] = json.dumps({
-        "format": "bb-enemizer-scaling-v1", "applied": True,
+        "format": "bb-enemizer-scaling-v1", "applied": scaled,
         "source_gameparam_sha256": sha256_file(source_binder),
         "output_gameparam_sha256": hashlib.sha256(outputs[core.SUPPRESSION_PATH]).hexdigest(),
         "source_plan_sha256": source_plan_hash, "output_plan_sha256": plan_hash,
@@ -301,6 +308,28 @@ class LauncherCoreTests(unittest.TestCase):
         self.assertTrue((build.path / audit["receipt"]["path"]).is_file())
         cache.verify(build.path)
 
+    def test_unscaled_boss_receipt_retains_exact_ap_binder_and_rejects_wrong_choice(self):
+        source_binder = self.root / "composed-ap-gameparam.parambnd.dcx"
+        source_binder.write_bytes(b"ap-parameter-edits")
+        overlay = write_boss_encounter_overlay(
+            self.root, source_binder=source_binder, seed="boss-seed", scaled=False)
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(identity(
+            "boss-seed", b"source", enemizer_seed="boss-seed",
+            options={"enemy_randomizer": True, "boss_encounters": True,
+                     "normalize_scaling": False}),
+            source_binder, boss_encounter_overlay=overlay)
+        self.assertEqual(source_binder.read_bytes(),
+                         (build.path / core.SUPPRESSION_PATH).read_bytes())
+        self.assertFalse(build.manifest["enemizer"]["scaling"]["applied"])
+        cache.verify(build.path)
+        with self.assertRaisesRegex(ValidationError, "scaling choice and receipt"):
+            SeedCache(self.root / "wrong-choice-cache").build(identity(
+                "boss-seed", b"source", enemizer_seed="boss-seed",
+                options={"enemy_randomizer": True, "boss_encounters": True,
+                         "normalize_scaling": True}),
+                source_binder, boss_encounter_overlay=overlay)
+
     def test_generic_boss_receipt_binds_ap_input_before_staging_composed_event(self):
         binder = self.root / "binder.dcx"
         binder.write_bytes(b"suppressed")
@@ -325,6 +354,30 @@ class LauncherCoreTests(unittest.TestCase):
             SeedCache(self.root / "cache-two").build(
                 seed, binder, cathedral_event=cathedral, boss_encounter_overlay=overlay,
             )
+
+    def test_generic_hemwick_boss_event_does_not_claim_ap_access_gate(self):
+        binder = self.root / "binder.dcx"
+        binder.write_bytes(b"suppressed")
+        cathedral = self.root / "cathedral.emevd.dcx"
+        cathedral.write_bytes(b"AP cathedral without Hemwick gate")
+        overlay = write_boss_encounter_overlay(
+            self.root, source_binder=binder, seed="seed:boss",
+            cathedral_input=cathedral.read_bytes(), hemwick_boss_event=True,
+        )
+        seed = identity(
+            "seed", b"suppressed", enemizer_seed="seed:boss",
+            options={"enemy_randomizer": True, "boss_encounters": True},
+        )
+        cache = SeedCache(self.root / "cache")
+        build = cache.build(seed, binder, cathedral_event=cathedral,
+                            boss_encounter_overlay=overlay)
+        self.assertEqual([12400760, 12401803, 12405710],
+                         build.manifest["cathedral_event"]["events"])
+        self.assertIsNone(build.manifest["hemwick_event"])
+        event = next(row for row in build.manifest["files"]
+                     if row["path"] == core.HEMWICK_EVENT_PATH)
+        self.assertEqual("boss-encounter-event", event["component"])
+        cache.verify(build.path)
 
     def test_generic_boss_receipt_refuses_unlisted_output_and_retained_receipt_tampering(self):
         source_binder = self.root / "composed-ap-gameparam.parambnd.dcx"
@@ -1492,6 +1545,31 @@ class ForeignOverlayHealingTests(unittest.TestCase):
         self.assertIn(f"Player mods go in {USER_MODS_DIR_NAME}.", message)
         self.assertEqual(mine.read_bytes(), b"hand made")
         self.assertEqual(foreign_overlays(self.install), [decoy])
+
+    def test_a_directory_without_any_ownership_manifest_is_adopted_when_confirmed(self):
+        """bb-archipelago's foreign-overlay refusal used to be a dead end: the
+        only remedy was renaming the folder outside the app. A caller that has
+        gotten the player's explicit confirmation may pass
+        ``adopt_foreign_overlay=True`` to have it moved aside instead, the same
+        way a damaged owned overlay is healed -- never deleted.
+        """
+        self.install.mods.mkdir(parents=True)
+        mine = self.install.mods / "dvdroot_ps4" / "chr" / "mine.bnd.dcx"
+        mine.parent.mkdir(parents=True)
+        mine.write_bytes(b"hand made")
+        owner = activate_build(
+            self.install, self.build, process_is_running=lambda: False,
+            adopt_foreign_overlay=True,
+        )
+        aside = foreign_overlays(self.install)
+        self.assertEqual(len(aside), 1)
+        self.assertEqual(
+            aside[0].joinpath("dvdroot_ps4", "chr", "mine.bnd.dcx").read_bytes(),
+            b"hand made",
+        )
+        note = owner["healed_from"][0]
+        self.assertIn("without a Bloodborne AP ownership manifest", note["reason"])
+        self.assertEqual(note["moved_to"], aside[0].name)
 
     def test_another_launchers_manifest_is_still_refused(self):
         decoy = self.sentinel_aside()

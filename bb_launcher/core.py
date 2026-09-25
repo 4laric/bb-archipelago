@@ -61,6 +61,9 @@ CATHEDRAL_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_00_00_00.emevd.dcx"
 HEMWICK_EVENT_PATH = f"{DVDROOT_PREFIX}event/m22_00_00_00.emevd.dcx"
 COMMON_EVENT_PATH = f"{DVDROOT_PREFIX}event/common.emevd.dcx"
 BOSS_EVENT_PATH = f"{DVDROOT_PREFIX}event/m24_01_00_00.emevd.dcx"
+# Central Yharnam scripted-AI initializer events the wakeup fallback may
+# suppress: 12415130 sleep-to-wake, 12410340 sewer rat ambush.
+WAKEUP_FALLBACK_EVENTS = frozenset({12415130, 12410340})
 BOSS_ENCOUNTER_REPORT_NAME = "boss-encounters-report.json"
 # Native encounter outputs include plans and diagnostic receipts alongside
 # loose game files.  They are retained under this cache-only path, never
@@ -147,7 +150,7 @@ FOREIGN_OVERLAY_ADVICE = (
 )
 # Every strict caller guards what shadPS4 is about to load, so it must not
 # heal -- but it can say which button rebuilds the overlay.
-REBUILD_OVERLAY_HINT = " Run Randomize & Launch again to rebuild the overlay."
+REBUILD_OVERLAY_HINT = " Press Launch again to rebuild the overlay."
 
 
 class LauncherError(RuntimeError):
@@ -398,6 +401,17 @@ def _read_boss_encounter_ingress(overlay: Path | str, source_binder: Path) -> Bo
     ai = _read_json(auxiliary_files[f"{DVDROOT_PREFIX}script.json"], "boss encounter AI report")
     if scaling.get("format") != "bb-enemizer-scaling-v1":
         raise ValidationError("boss encounter scaling report has an unsupported format")
+    plan_scaling = plan_document.get("scaling")
+    if (not isinstance(plan_scaling, dict)
+            or not isinstance(plan_scaling.get("enabled"), bool)
+            or not isinstance(scaling.get("applied"), bool)
+            or plan_scaling["enabled"] != scaling["applied"]):
+        raise ValidationError("boss encounter scaling plan and receipt disagree")
+    if not scaling["applied"]:
+        if (plan_document.get("options", {}).get("normalize_scaling") is not False
+                or "boss_actor_scaling" in plan_document
+                or sha256_file(overlay_files[SUPPRESSION_PATH]) != sha256_file(source_binder)):
+            raise ValidationError("unscaled boss encounter changed parameter input")
     if scaling.get("source_gameparam_sha256") != sha256_file(source_binder):
         raise ValidationError("boss encounter scaling report does not start from the composed AP binder")
     if scaling.get("output_gameparam_sha256") != sha256_file(overlay_files[SUPPRESSION_PATH]):
@@ -839,7 +853,7 @@ class SeedCache:
                         or not isinstance(row.get("entity_id"), int)
                         or isinstance(row.get("entity_id"), bool)
                         or row.get("map") != "m24_01_00_00"
-                        or row.get("event_id") != 12415130):
+                        or row.get("event_id") not in WAKEUP_FALLBACK_EVENTS):
                     raise ValidationError("enemizer plan carries an invalid wakeup fallback row")
             if encounter is not None or boss_event is not None:
                 raise ValidationError("wakeup fallback cannot be combined with a boss event overlay")
@@ -1230,6 +1244,12 @@ class SeedCache:
         cathedral = manifest.get("cathedral_event")
         cathedral_record = expected.get(CATHEDRAL_EVENT_PATH)
         hemwick_record = expected.get(HEMWICK_EVENT_PATH)
+        # Reviewed boss encounters may emit the Hemwick map event for a boss
+        # without enabling our AP Hemwick access gate. Only the AP-owned
+        # component is evidence that the Cathedral gate event was installed.
+        hemwick_gate_record = (hemwick_record if hemwick_record is not None
+                               and hemwick_record.get("component") == "hemwick-event"
+                               else None)
         if (cathedral is None) != (cathedral_record is None):
             raise ValidationError(
                 "Cathedral event file and witness metadata must either both be present or both be absent"
@@ -1245,7 +1265,7 @@ class SeedCache:
             if cathedral.get("sha256") != cathedral_record.get("sha256"):
                 raise ValidationError("Cathedral event witness hash does not match its record")
             expected_cathedral_events = ([12400760, 12401803, 12405710, 12409990]
-                                         if hemwick_record is not None
+                                         if hemwick_gate_record is not None
                                          else [12400760, 12401803, 12405710])
             if cathedral.get("events") != expected_cathedral_events:
                 raise ValidationError("Cathedral event witness has unexpected owned events")
@@ -1257,7 +1277,7 @@ class SeedCache:
                 raise ValidationError("Cathedral event witness has the wrong Laurence flag")
             if cathedral.get("suppressed_password_flag") != 12401803:
                 raise ValidationError("Cathedral event witness has the wrong password flag")
-            expected_gate = (None if hemwick_record is None else {
+            expected_gate = (None if hemwick_gate_record is None else {
                 "event": 12409990, "access_flag": 12201898,
                 "object": 2401995, "sfx": 2403995,
             })
@@ -1276,14 +1296,13 @@ class SeedCache:
                     or common.get("event") != 98000000):
                 raise ValidationError("Common category-8 event witness is invalid")
         hemwick = manifest.get("hemwick_event")
-        if (hemwick is None) != (hemwick_record is None):
+        if (hemwick is None) != (hemwick_gate_record is None):
             raise ValidationError("Hemwick event file and witness must both be present or absent")
         if hemwick is not None:
             if not isinstance(hemwick, dict) or hemwick.get("path") != HEMWICK_EVENT_PATH:
                 raise ValidationError("Hemwick event witness points outside the managed event")
-            assert hemwick_record is not None
-            if (hemwick_record.get("component") != "hemwick-event"
-                    or hemwick.get("sha256") != hemwick_record.get("sha256")
+            assert hemwick_gate_record is not None
+            if (hemwick.get("sha256") != hemwick_gate_record.get("sha256")
                     or hemwick.get("event") != 12209990
                     or hemwick.get("access_flag") != 12201898
                     or hemwick.get("object") != 2201999
@@ -1465,6 +1484,18 @@ class SeedCache:
                     or scaling.get('output_plan_sha256') != plan_record.get('sha256')
                     or scaling.get('output_gameparam_sha256') != expected[SUPPRESSION_PATH].get('sha256')):
                 raise ValidationError('boss encounter scaling receipt mismatch')
+            expected_scaled = identity.options.get('normalize_scaling', True) is True
+            if scaling.get('applied') is not expected_scaled:
+                raise ValidationError('boss encounter scaling choice and receipt disagree')
+            plan_scaling = adjusted.get('scaling')
+            if (not isinstance(plan_scaling, dict)
+                    or plan_scaling.get('enabled') is not expected_scaled):
+                raise ValidationError('boss encounter scaling choice and plan disagree')
+            if not expected_scaled:
+                if (adjusted.get('options', {}).get('normalize_scaling') is not False
+                        or 'boss_actor_scaling' in adjusted
+                        or scaling.get('source_gameparam_sha256') != scaling.get('output_gameparam_sha256')):
+                    raise ValidationError('unscaled boss encounter retained parameter changes')
             if (not isinstance(ai, dict) or ai != _read_json(ai_path, 'retained boss AI report')
                     or ai.get('format') != 'bb-enemizer-ai-v1'
                     or ai.get('plan_sha256') != plan_record.get('sha256')):
@@ -2256,6 +2287,7 @@ def activate_build(
     failpoint: Callable[[str], None] | None = None,
     suppression_override: Sequence[str] | None = None,
     identity: SeedIdentity | None = None,
+    adopt_foreign_overlay: bool = False,
 ) -> dict[str, Any]:
     """Atomically activate a verified build, preserving any owned predecessor.
 
@@ -2268,7 +2300,12 @@ def activate_build(
     modified is moved aside and rebuilt, and the resulting owner dict carries a
     ``healed_from`` note for the caller to report (bb-archipelago#408).  A
     directory with no ownership manifest, or one from another launcher, is
-    still refused -- it may be the player's own work.
+    still refused by default -- it may be the player's own work, and moving it
+    is a bigger decision than the launcher gets to make on its own.  A caller
+    that has gotten the player's explicit confirmation that the folder is not
+    theirs to keep may pass ``adopt_foreign_overlay=True`` to have it moved
+    aside (never deleted), the same way a damaged owned overlay is healed,
+    instead of leaving the player to rename it outside the app.
     """
 
     _require_shad_stopped(process_is_running)
@@ -2292,12 +2329,15 @@ def activate_build(
             heal_notes.append(_move_overlay_aside(install, str(exc)))
         except ConflictError as exc:
             # No manifest at all, or another launcher's: possibly the player's
-            # own mod folder.  Moving it is not the launcher's call.  A
-            # symlinked or non-directory path is a different problem and keeps
-            # its own message.
+            # own mod folder.  Moving it is not the launcher's call, unless the
+            # player has explicitly said otherwise via adopt_foreign_overlay.
+            # A symlinked or non-directory path is a different problem and
+            # keeps its own message regardless.
             if not install.mods.is_dir() or install.mods.is_symlink():
                 raise
-            raise ConflictError(f"{exc} {FOREIGN_OVERLAY_ADVICE}") from exc
+            if not adopt_foreign_overlay:
+                raise ConflictError(f"{exc} {FOREIGN_OVERLAY_ADVICE}") from exc
+            heal_notes.append(_move_overlay_aside(install, str(exc)))
     if previous_owner is not None:
         active_fingerprint = ""
         section = previous_owner.get("user_merge")

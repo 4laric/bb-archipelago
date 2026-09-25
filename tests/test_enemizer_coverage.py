@@ -158,10 +158,10 @@ class CoverageDeltaTests(unittest.TestCase):
             counts.add(len(forward))
         self.assertEqual({327}, counts)
 
-    def test_tier_mixing_has_its_own_determinism_and_effect_pin(self):
+    def test_tier_mixing_is_default_deterministic_engine_behavior(self):
         counts = set()
         for index in range(6):
-            config = EnemizerConfig(f"tier-mix-{index}", preserve_tier=False)
+            config = EnemizerConfig(f"tier-mix-{index}")
             (forward, _), _policies = self._plan(config)
             policies = {
                 s.key: apply_archetype_tag(
@@ -175,28 +175,7 @@ class CoverageDeltaTests(unittest.TestCase):
         self.assertEqual({308}, counts)
 
         (mixed, _), policies = self._plan(
-            EnemizerConfig("12345", preserve_tier=False)
-        )
-        (default, _), _default_policies = self._plan(EnemizerConfig("12345"))
-        default_by_slot = {swap.logical_key: swap for swap in default}
-        slots_by_key = {slot.key: slot for slot in self.slots}
-        changed_by_map = Counter(
-            slots_by_key[swap.destination_keys[0]].map_name
-            for swap in mixed
-            if swap.target.key != default_by_slot[swap.logical_key].target.key
-        )
-        self.assertEqual(32, sum(changed_by_map.values()))
-        self.assertEqual(
-            {
-                "m24_02_00_00": 3,
-                "m25_00_00_00": 1,
-                "m26_00_00_00": 2,
-                "m27_00_00_00": 8,
-                "m32_00_00_00": 1,
-                "m33_00_00_00": 10,
-                "m34_00_00_00": 7,
-            },
-            dict(changed_by_map),
+            EnemizerConfig("12345")
         )
         cross_tier = Counter(
             (policies[swap.destination_keys[0]].tier, self.tags[swap.target.key].tier)

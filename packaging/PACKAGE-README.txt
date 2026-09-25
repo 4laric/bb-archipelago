@@ -1,71 +1,43 @@
-Bloodborne Archipelago launcher (Windows x64)
-================================================
+Bloodborne Archipelago downloads (Windows x64)
+==============================================
 
-New here? Read docs\PLAYTESTING.md first -- it is the five-minute setup
-guide written for players, including what to send back after a session.
+This release offers two launcher downloads. Unzip either one into its own
+folder and keep that folder intact. Neither archive includes Bloodborne or
+shadPS4 files.
 
-Quick version:
+BBLauncher-AP-win-x64.zip is the BBLauncher fork. It combines the existing
+BBLauncher settings and mod manager with Archipelago and standalone local
+randomization. Select your game and emulator in Settings, then choose a mode
+on the randomizer page. Randomize prepares an inactive mod; Launch verifies
+and activates that prepared run before starting the emulator. Archipelago
+mode uses an AP seed/player and client. Standalone uses a seed string and
+starts no AP client or server. Enemy randomization is optional; reviewed boss
+shuffle runs with Archipelago enemy randomization. Scaling defaults on. The package
+contains its frozen backend, native tools, client, and provenance manifest.
+On first launch it can import an existing regular BBLauncher setup from nearby
+folders or Downloads, preserving the original configuration.
 
-Experimental enemizer playtest (v0.1.0-enemizer-playtest.1):
-On Enemy randomization, enable Randomize Enemies and Advanced enemy options.
-"Normalize enemy stats" enables experimental destination scaling.
-"Boss playtest: BSB at Cleric Beast" instead changes only that encounter,
-including its AI, scaling and phase scripts; other enemies remain vanilla.
-These options default off. "Boss shuffle: reviewed encounters" combines normal
-enemy swaps with an experimental ten-encounter boss pool. Full boss coverage
-is still under development. First use downloads the pinned upstream DarkScript3
-compiler; later builds use its verified local cache.
-Use a backed-up character with Cleric undefeated and report idle enemies,
-phase failures, falls/passive Echoes, crashes or missing progression through
-Report Bad Enemy. Rebuild/relaunch after changing a mode. These features pass
-offline build checks but have not been live-validated. See the boss canary guide.
+BloodborneAPLauncher-win-x64.zip is the original Archipelago launcher. Run
+BloodborneAPLauncher.exe, select shadPS4, your AP seed request and server,
+save Setup, then use its plan/Doctor and Play flow. It remains available for
+existing players and download links.
 
-1. Run BloodborneAPLauncher.exe.
-2. Pick your shadPS4.exe, your AP seed request (....bbenemizer.json, from
-   whoever generated the seed), and the Archipelago server address.
-   Everything else fills itself in. Save Setup.
-3. Click Generate Launch Plan once, then Doctor -- every line should say
-   PASS before you play.
-4. Randomize & Launch.
+bloodborne.apworld is attached separately for people generating seeds. The
+original launcher archive also contains it at worlds\bloodborne.apworld and
+can install it into a selected Archipelago installation. Players connecting
+to an existing seed do not need to install the apworld themselves.
 
-One character per session, never switch characters while connected, and if
-something looks wrong, stop and report it (see the PLAYTESTING guide).
+Keep the previous launcher folder for rollback, and stop the game before
+changing launchers or active mods. For the BBLauncher fork's short integration
+check, see docs\BBLAUNCHER-NEXT-RUN.md in that archive. For original launcher
+setup, see docs\PLAYTESTING.md in its archive.
 
-The package contains the launcher, the enemy planner, the map miner, the
-guarded native writers, the item-grant Cheat Engine table, the AP client,
-the Bloodborne apworld the launcher can install for seed generators,
-and -- when the build had one -- the vanilla-suppression binder with its
-build manifest. It contains no Bloodborne or shadPS4 files, and it never
-writes to your base or update game trees; every change lives in a verified
-overlay the launcher owns and can roll back.
+These archives and the apworld are built from this repository's release tag.
+Verify the exact download with GitHub's attestation command:
 
-See docs\LAUNCHER.md for the safety model and file formats.
-See https://github.com/4laric/bb-archipelago/security/policy for the security
-model, release-provenance checks, and private vulnerability reporting.
-
-Every release links its VirusTotal scan. The client reads game-process memory,
-so a few heuristic engines routinely flag unsigned tooling of this kind; the
-signal to watch is the major engines and that results stay consistent release
-to release. The artifact hashes below and this command prove any download is
-exactly what this public CI built from this public source:
-
+  gh attestation verify BBLauncher-AP-win-x64.zip --repo 4laric/bb-archipelago
   gh attestation verify BloodborneAPLauncher-win-x64.zip --repo 4laric/bb-archipelago
 
-bloodborne.apworld ships INSIDE this package, at worlds\bloodborne.apworld,
-and is also attached alongside the zip. Only the person GENERATING seeds
-needs it. You do not have to place it yourself: on Create & host, pick your
-Archipelago installation and press Create seed -- if the Bloodborne world is
-missing or is a different version, the launcher says so and offers one button
-that installs or updates it in that installation's custom_worlds. Nothing is
-installed until you press it. Archipelago reads its worlds at start, so close
-and reopen ArchipelagoLauncher afterwards.
-
-Copying it by hand still works: drop bloodborne.apworld in
-Archipelago\custom_worlds, or install it with ArchipelagoLauncher. If your
-Archipelago is a source checkout that already carries the world under
-worlds\bloodborne, update that checkout instead -- the launcher refuses to
-install beside it. Players who only connect to a hosted server need none of
-this.
-
-Verify that the launcher archive was built by this repository's public CI:
-gh attestation verify BloodborneAPLauncher-win-x64.zip --repo 4laric/bb-archipelago
+See https://github.com/4laric/bb-archipelago/security/policy for release
+provenance and private vulnerability reporting. Release notes link the scans
+and hashes for the published assets.

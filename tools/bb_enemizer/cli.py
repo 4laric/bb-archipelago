@@ -15,6 +15,8 @@ from .inventory import (
 )
 from .planner import EnemizerConfig, StressProfile, plan_swaps
 from .scaling import load_params, plan_scaling
+from .scripted_fallbacks import fallback_rows as scripted_fallback_rows
+from .wakeup_fallback import event_for
 
 
 def parser() -> argparse.ArgumentParser:
@@ -34,7 +36,9 @@ def parser() -> argparse.ArgumentParser:
                         help="per-NpcParam name/echo/HP facts stamped into every swap "
                              "for the player-facing enemy report (default: generated table)")
     result.add_argument("--output", required=True, help="manifest JSON path")
-    result.add_argument("--allow-tier-mixing", action="store_true")
+    # Retain the old affirmative flag for existing callers; tier mixing is
+    # intrinsic to ordinary enemy planning, not a selectable policy.
+    result.add_argument("--allow-tier-mixing", action="store_true", help=argparse.SUPPRESS)
     result.add_argument("--preserve-locomotion", action="store_true")
     result.add_argument(
         "--release-file", action="append", default=[],
@@ -72,7 +76,7 @@ def _stress_matched(stress: StressProfile, swap) -> bool:
 
 
 RELEASE_FORMAT = "bb-enemizer-release-v1"
-RELEASE_TRANCHES = ("contracts", "spawns", "chara", "wakeup")
+RELEASE_TRANCHES = ("contracts", "spawns", "chara", "wakeup", "scripted")
 
 
 def load_release_files(paths: list[str]) -> dict[str, set[str]]:
@@ -109,7 +113,7 @@ def wakeup_fallbacks(swaps, slots, release: dict[str, set[str]]) -> list[dict]:
             "logical_key": logical_key,
             "entity_id": ids.pop(),
             "map": "m24_01_00_00",
-            "event_id": 12415130,
+            "event_id": event_for(logical_key),
         })
     return records
 
@@ -180,7 +184,6 @@ def main(argv: list[str] | None = None) -> int:
     }
     config = EnemizerConfig(
         seed=args.seed,
-        preserve_tier=not args.allow_tier_mixing,
         preserve_locomotion=args.preserve_locomotion,
     )
     swaps, rejections = plan_swaps(slots, policies, tags, config, facts)
@@ -194,7 +197,7 @@ def main(argv: list[str] | None = None) -> int:
         "dry_run": True,
         "inventory": inventory_summary(slots, policies),
         "options": {
-            "allow_tier_mixing": bool(args.allow_tier_mixing),
+            "allow_tier_mixing": True,
             "preserve_locomotion": bool(args.preserve_locomotion),
             "release_tranches": sorted({tranche for tranches in release.values()
                                         for tranche in tranches}),
@@ -219,6 +222,11 @@ def main(argv: list[str] | None = None) -> int:
             "skips": scaling_skips,
         },
     }
+    # Boss-pool only: the reviewed boss builder applies these at the JS level
+    # and removes them from the combined plan it publishes.
+    scripted = scripted_fallback_rows(swaps, slots, release)
+    if scripted:
+        payload["scripted_fallbacks"] = scripted
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")

@@ -30,6 +30,7 @@ def parse_enemizer_options(params: Mapping[str, Any]):
     if unknown:
         raise ProtocolError("bad-request", "unknown enemizer option(s): " + ", ".join(unknown))
     values: dict[str, Any] = {name: False for name in _BOOLEAN_FIELDS}
+    values["normalize_scaling"] = True
     values.update({name: None for name in _OPTIONAL_TEXT_FIELDS})
     for name in _BOOLEAN_FIELDS:
         if name in raw:
@@ -40,6 +41,10 @@ def parse_enemizer_options(params: Mapping[str, Any]):
         if name in raw and raw[name] is not None and not isinstance(raw[name], str):
             raise ProtocolError("bad-request", f"enemizer.{name} must be a string or null")
         values[name] = raw.get(name)
+    # Player-facing presets own these policies; stale settings must not
+    # silently reintroduce controls removed from the launcher.
+    values["preserve_locomotion"] = False
+    values["boss_pool"] = "reviewed" if values["enabled"] else None
     return EnemizerOptions(**values)
 
 

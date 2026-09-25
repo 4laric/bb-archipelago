@@ -27,7 +27,7 @@ module	test_storage_probe	62
 module	test_fixed_location_catalog	7
 module	test_ce_table_inventory	3
 module	test_launcher_client_config	6
-module	test_launcher_core	61
+module	test_launcher_core	62
 module	test_launcher_readiness	7
 module	test_launcher_ui	72
 module	test_launcher_seed_zip	23
@@ -136,3 +136,19 @@ module	test_one_reborn_character_ffx	4
 module	test_maria_cross_arena	6
 module	test_logarius_gascoigne_cross_arena	3
 module	test_celestial_arena_contract	7
+
+module	test_standalone_randomizer	8
+# Native standalone item tests need original game inputs; use
+# --require test_standalone_item_writer=5 with BB_STANDALONE_WRITER_INPUTS.
+# Their collection still contributes five tests to the total floor.
+
+module	test_standalone_build	10
+
+module	test_standalone_mod_export	12
+
+module	test_standalone_package	7
+
+module	test_integrated_standalone	9
+
+module	test_integrated_journey	14
+module	test_integrated_migration	6

@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from tools.bb_enemizer.scripted_fallbacks import patch_initializers, scripted_fallback_keys
 from tools.bb_enemizer.boss_contracts import (
     ARENAS as ARENA_CONTRACTS, PACKAGES as COMBAT_PACKAGES, COMPATIBILITY, event_blocks, patch_contract_swap,
     plan_contract_swap, actor_addition_requirements,
@@ -699,6 +700,60 @@ def lift_zero_argument_initializers(source: str) -> str:
     return re.sub(r'(?<![\w$])InitializeEvent\((\d+),\s*(\d+)\);', replace, source)
 
 
+def add_scripted_variants(variants: dict, texts: dict, scripted: dict) -> None:
+    """Swapped scripted-AI placements lose only their pinned initializers.
+
+    Each map's removal is one more constructor variant, composed against the
+    same original as every boss adapter and AP override, then recompiled.
+    """
+    for filename, keys in sorted(scripted.items()):
+        variants.setdefault(filename, []).append(
+            patch_initializers(filename[:12], texts[filename], keys))
+
+
+def retire_applied_fallbacks(plan: dict) -> dict:
+    """Move JS-applied fallback rows out of the rows the launcher would apply.
+
+    The launcher's native wakeup writer never runs for a boss build and
+    refuses a boss plan that still carries rows, so they are recorded as
+    applied instead.
+    """
+    applied = [*plan.get('wakeup_fallbacks', []), *plan.pop('scripted_fallbacks', [])]
+    plan['wakeup_fallbacks'] = []
+    if applied:
+        plan['boss_scripted_fallbacks'] = sorted(applied, key=lambda row: row['logical_key'])
+    return plan
+
+
+def disable_player_scaling(plan: dict) -> dict:
+    """Retain reviewed placements while explicitly declining every parameter clone."""
+    swaps = plan.get('swaps')
+    scaling = plan.get('scaling')
+    if not isinstance(swaps, list) or not swaps or not isinstance(scaling, dict):
+        raise ValueError('unscaled boss plan has no placements or scaling ledger')
+    keys = [row.get('logical_key') for row in swaps if isinstance(row, dict)]
+    if len(keys) != len(swaps) or any(not isinstance(key, str) or not key for key in keys):
+        raise ValueError('unscaled boss plan has invalid placement keys')
+    changes, skips = scaling.get('changes'), scaling.get('skips')
+    if not isinstance(changes, list) or not isinstance(skips, list):
+        raise ValueError('unscaled boss plan has an invalid scaling ledger')
+    accounted = [row.get('logical_key') for row in changes + skips if isinstance(row, dict)]
+    if (len(accounted) != len(changes) + len(skips)
+            or any(not isinstance(key, str) or not key for key in accounted)
+            or len(set(keys)) != len(keys) or sorted(accounted) != sorted(keys)):
+        raise ValueError('unscaled boss plan scaling ledger does not cover every placement')
+    plan['scaling'] = {
+        'enabled': False, 'mechanism': 'inferred_static_npc_clone_sp_effect',
+        'change_count': 0, 'changes': [], 'skip_count': len(keys),
+        'skips': [{'logical_key': key, 'reason': 'disabled by player'} for key in sorted(keys)],
+    }
+    if not isinstance(plan.get('options'), dict):
+        raise ValueError('unscaled boss plan has invalid options')
+    plan['options']['normalize_scaling'] = False
+    plan.pop('boss_actor_scaling', None)
+    return plan
+
+
 def validate_allocations(bundle: Path, slots, records: list[dict], plan: dict) -> None:
     """Check project-owned identifiers against the entire original corpus."""
     used = {slot.entity_id for slot in slots}
@@ -976,9 +1031,14 @@ def build(args) -> dict:
                 requirements = actor_addition_requirements(arena, package, slots)
                 if requirements:
                     materializations[arena.key] = pin_actor_requirements(args, requirements)
+        ordinary_plan_path = getattr(args, 'ordinary_plan', None)
+        ordinary_plan = (json.loads(ordinary_plan_path.read_text(encoding='utf-8-sig'))
+                         if ordinary_plan_path is not None else None)
+        scripted = scripted_fallback_keys(ordinary_plan) if ordinary_plan is not None else {}
         originals, source, compiled = (scratch / name for name in ('original', 'source', 'compiled'))
         originals.mkdir()
         filenames = {item.event_file.removesuffix('.js') for pair in pairs for item in pair if item is not None}
+        filenames |= {filename.removesuffix('.js') for filename in scripted}
         for name in filenames | {'common.emevd.dcx'}:
             shutil.copyfile(args.events / name, originals / name)
         compile_events(args.darkscript, 'decompile', originals, source, pairs[0][0].event_file)
@@ -1120,6 +1180,7 @@ def build(args) -> dict:
                     allow_materialized_actor_additions=bool(materializations.get(arena.key)))
             patched = skip_replacement_entrance(arena.key, texts[arena.event_file], patched)
             variants.setdefault(arena.event_file, []).append(patched)
+        add_scripted_variants(variants, texts, scripted)
         override_inputs = []
         if event_overrides is not None:
             override_binary, override_source = scratch / 'override-binary', scratch / 'override-source'
@@ -1376,12 +1437,10 @@ def build(args) -> dict:
             verify_sfx_requirements(args, plan.get('boss_sfx_additions', []))
             verify_retained_helpers(args, plan)
             plans.append(plan)
-        ordinary_plan_path = getattr(args, 'ordinary_plan', None)
-        if ordinary_plan_path is not None:
-            ordinary_plan = json.loads(ordinary_plan_path.read_text(encoding='utf-8-sig'))
+        if ordinary_plan is not None:
             if ordinary_plan.get('seed') != args.seed:
                 raise ValueError('ordinary and boss seed differ')
-            plan = combine_ordinary_and_boss_plans(ordinary_plan, plans)
+            plan = retire_applied_fallbacks(combine_ordinary_and_boss_plans(ordinary_plan, plans))
         else:
             plan = plans[0] if len(plans) == 1 else combine_native_plans(args.seed, plans)
         if good_assignment is not None:
@@ -1411,8 +1470,10 @@ def build(args) -> dict:
                 if existing is not None and existing != parent:
                     raise ValueError('combat helper has conflicting parent declarations')
                 helper_parents[helper] = parent
-        if helper_parents:
+        if helper_parents and not getattr(args, 'no_scaling', False):
             plan['boss_actor_scaling'] = allocate_actor_scaling(plan, npcs, helper_parents)
+        if getattr(args, 'no_scaling', False):
+            disable_player_scaling(plan)
         validate_allocations(args.bundle, slots, records, plan)
         plan['boss_encounters'] = {'format': 'bb-boss-encounters-v1', 'encounters': records}
         if override_inputs:
@@ -1452,6 +1513,8 @@ def main(argv=None) -> int:
     selection.add_argument('--pool', choices=('bsb-paarl', 'maria-cleric', 'gascoigne-cleric', 'logarius-bsb', 'ludwig-cleric', 'laurence-cleric', 'finals', 'reviewed', 'good'))
     parser.add_argument('--donor', choices=sorted(PACKAGES))
     parser.add_argument('--seed', required=True)
+    parser.add_argument('--no-scaling', action='store_true',
+                        help='retain original enemy parameters for every ordinary and boss placement')
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args(argv)
     if bool(args.arena) != bool(args.donor):

@@ -93,6 +93,55 @@ def journey_backend(state: str, *, route: str = "copy",
 
 
 class SimulatedJourneyTests(unittest.TestCase):
+    def test_legacy_migration_uses_backend_process_guard_and_state_lock(self) -> None:
+        from unittest.mock import patch
+        from bb_launcher.core import ConflictError
+
+        with tempfile.TemporaryDirectory() as temp:
+            backend = Backend(Path(temp), process_check_fn=lambda: {"game_running": False})
+            seen = {}
+
+            def migrate(game_root, *, process_is_running, state_root):
+                seen.update(game_root=game_root, state_root=state_root)
+                self.assertFalse(process_is_running())
+                return {"status": "no_legacy"}
+
+            params = {"game_root": "selected-install"}
+            with patch("bb_launcher.integrated.migration.migrate_legacy_overlay", side_effect=migrate):
+                reply = backend.handle(request("migrate_legacy_overlay", params))
+            self.assertTrue(reply["ok"])
+            self.assertEqual({"game_root": "selected-install", "state_root": Path(temp)}, seen)
+            with patch("bb_launcher.integrated.migration.migrate_legacy_overlay",
+                       side_effect=ConflictError("Close the game before switching mods.")):
+                reply = backend.handle(request("migrate_legacy_overlay", params))
+            self.assertEqual("conflict", reply["error"]["code"])
+            self.assertIn("Close the game", reply["error"]["detail"])
+
+    def test_existing_inactive_package_offers_typed_rerandomization(self) -> None:
+        from bb_launcher.external import ExternalPackageExists
+
+        with tempfile.TemporaryDirectory() as temp:
+            existing = Path(temp) / "Mods" / "Archipelago-Player-existing"
+            existing.mkdir(parents=True)
+            marker = existing / "retained.bin"
+            marker.write_bytes(b"existing prepared mod")
+
+            def collision(params, op_id):
+                raise ExternalPackageExists(existing)
+
+            backend = Backend(Path(temp) / "state", prepare_fn=collision)
+            for enabled in (True, False):
+                reply = backend.handle(request("prepare_play", {
+                    "enemizer": {"enabled": enabled},
+                }))
+                self.assertFalse(reply["ok"])
+                self.assertEqual("package-exists", reply["error"]["code"])
+                self.assertEqual(enabled, reply["error"]["retryable"])
+                self.assertEqual(["rerandomize-enemies"] if enabled else [],
+                                 reply["error"]["recovery"])
+                self.assertEqual(existing.name, reply["error"]["ids"]["package_name"])
+                self.assertEqual(b"existing prepared mod", marker.read_bytes())
+
     def test_choose_seed_then_play(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             backend = journey_backend(state)
@@ -330,4 +379,3 @@ class ClaimedProcessTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
