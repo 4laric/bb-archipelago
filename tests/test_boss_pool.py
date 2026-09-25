@@ -344,6 +344,33 @@ class BossPoolTests(unittest.TestCase):
         results = {tuple(assign_donors(str(seed), graph).items()) for seed in range(12)}
         self.assertGreater(len(results), 1)
 
+    def test_seeded_matching_respects_route_and_joint_asset_conflicts(self):
+        graph = {arena: ('a', 'b', 'c', 'd') for arena in 'abcd'}
+        original = assign_donors('conflicts', graph)
+        routes = frozenset(original.items())
+        first, second = tuple(sorted(routes))[:2]
+        self.assertEqual(original, assign_donors('conflicts', graph,
+                                                forbidden_combinations=[]))
+        banned_route = assign_donors('conflicts', graph,
+                                     forbidden_combinations=[{first}])
+        self.assertNotEqual(first[1], banned_route[first[0]])
+        joint = assign_donors('conflicts', graph,
+                              forbidden_combinations=[{first, second}])
+        self.assertFalse({first, second}.issubset(joint.items()))
+        self.assertEqual(joint, assign_donors('conflicts', dict(reversed(list(graph.items()))),
+                                              forbidden_combinations=[{second, first}]))
+        # A two-route conflict must not turn either individual route into a ban.
+        for retained, excluded in ((first, second), (second, first)):
+            alternatives = [{(retained[0], donor)} for donor in graph[retained[0]]
+                            if donor != retained[1]]
+            forced = assign_donors('conflicts', graph,
+                forbidden_combinations=[{first, second}, *alternatives])
+            self.assertEqual(retained[1], forced[retained[0]])
+            self.assertNotEqual(excluded[1], forced[excluded[0]])
+        with self.assertRaisesRegex(ValueError, 'no complete'):
+            assign_donors('conflicts', graph,
+                          forbidden_combinations=[{('a', donor)} for donor in graph['a']])
+
     def test_impossible_pool_is_refused_instead_of_dropping_boss(self):
         with self.assertRaisesRegex(ValueError, 'no complete'):
             assign_donors('seed', {'a': ['b'], 'b': ['a'], 'c': ['b']})

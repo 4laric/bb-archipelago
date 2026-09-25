@@ -76,6 +76,35 @@ class GoodBossPoolTests(unittest.TestCase):
         self.assertEqual(len(assignment.unavailable_variants), 0)
         self.assertEqual(len(set(assignment.arena_to_family.values())), 22)
 
+    def test_asset_conflicts_exclude_joint_routes_without_losing_variant_families(self):
+        routes = planned_routes()
+        routes |= {(arena, 'loran-darkbeast') for arena, donor in routes
+                   if donor == 'darkbeast-paarl'}
+        variants = {'darkbeast-paarl': 'loran-darkbeast',
+                    'bloodletting-beast': 'headless-bloodletting-beast'}
+        original = assign_good_bosses('asset-conflicts', routes, required_variants=variants)
+        self.assertEqual(original, assign_good_bosses(
+            'asset-conflicts', routes, required_variants=variants,
+            forbidden_combinations=[]))
+        first, second = sorted(original.arena_to_donor.items())[:2]
+        pair = {first, second}
+        changed = assign_good_bosses('asset-conflicts', routes,
+            required_variants=variants, forbidden_combinations=[pair])
+        self.assertFalse(pair.issubset(changed.arena_to_donor.items()))
+        self.assertEqual(changed, assign_good_bosses('asset-conflicts', reversed(sorted(routes)),
+            required_variants=variants, forbidden_combinations=[{second, first}]))
+        self.assertEqual(set(changed.arena_to_family.values()), set(GOOD_FAMILIES))
+        self.assertEqual(changed.selected_variants, variants)
+        self.assertEqual(len(changed.arena_to_donor), 22)
+        singled = assign_good_bosses('asset-conflicts', routes,
+            required_variants=variants, forbidden_combinations=[{first}])
+        self.assertNotIn(first, singled.arena_to_donor.items())
+        with self.assertRaises(CoverageError) as caught:
+            assign_good_bosses('asset-conflicts', routes, required_variants=variants,
+                forbidden_combinations=[{route} for route in routes if route[0] == first[0]])
+        self.assertEqual(caught.exception.report['forbidden_combination_count'],
+                         sum(arena == first[0] for arena, _ in routes))
+
     def test_hall_deficit_fails_even_with_each_family_individually_available(self):
         # Two arenas can only use the same family, while all 22 families appear.
         routes = {(GOOD_ARENAS[0], GOOD_FAMILIES[0]),
