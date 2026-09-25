@@ -11,15 +11,17 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from dataclasses import dataclass
 from pathlib import Path
+from types import SimpleNamespace
 
 from bb_launcher.integrated.backend import Backend
-from bb_launcher.integrated.protocol import PROTOCOL_VERSION
+from bb_launcher.integrated.protocol import PROTOCOL_VERSION, ProtocolError
 
 
 def digest(text: str) -> str:
@@ -347,6 +349,68 @@ class ClaimedProcessTests(unittest.TestCase):
                 "executable_sha256": digest("shad-exe"),
                 "pid": 4242, "creation_time": 987654})
             self.assertTrue(response["ok"], response)
+
+    @unittest.skipUnless(os.name == "nt", "Windows Qt path convention")
+    def test_qt_slashes_and_native_path_are_same_process_through_status(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, self.live)
+            arm_id = armed_stopped(backend, state)
+            response = self.connect(backend, state, arm_id, {
+                "executable": "C:/GAMES/./shadPS4.exe",
+                "executable_sha256": digest("shad-exe"),
+                "pid": 4242, "creation_time": 987654,
+            })
+            self.assertTrue(response["ok"], response)
+            session_id = response["result"]["session_id"]
+            backend.client_processes[session_id] = SimpleNamespace(poll=lambda: None)
+            status = backend.handle(request("session_status", {
+                "play_id": backend.handle(request("prepare_play", {"game_root": state}))[
+                    "result"]["play_id"],
+            }))
+            self.assertTrue(status["ok"], status)
+            self.assertEqual(status["result"]["state"], "playing")
+
+    def test_claimed_hash_pid_and_birth_still_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, self.live)
+            for changed in (
+                {"executable_sha256": digest("different")},
+                {"pid": 9999},
+                {"creation_time": 111111},
+            ):
+                with self.subTest(changed=changed):
+                    claim = {
+                        "executable": self.live["executable"],
+                        "executable_sha256": digest("shad-exe"),
+                        "pid": 4242, "creation_time": 987654,
+                        **changed,
+                    }
+                    with self.assertRaises(ProtocolError) as caught:
+                        backend._check_claimed_process(claim, self.live)
+                    self.assertEqual(caught.exception.code, "stale-session")
+
+    def test_duplicate_connect_uses_live_birth_identity(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, self.live)
+            arm_id = armed_stopped(backend, state)
+            first = self.connect(backend, state, arm_id, {
+                "executable": self.live["executable"],
+                "executable_sha256": digest("shad-exe"),
+                "pid": 4242, "creation_time": 987654,
+            })
+            self.assertTrue(first["ok"], first)
+            repeated = self.connect(backend, state, arm_id, {
+                "executable": self.live["executable"],
+                "executable_sha256": digest("shad-exe"),
+                "pid": 4242, "creation_time": "987654",
+            })
+            self.assertTrue(repeated["ok"], repeated)
+            self.assertTrue(repeated["result"]["reused"])
+            changed = self.connect(backend, state, arm_id, None, {
+                **self.live, "creation_time": 111111,
+            })
+            self.assertFalse(changed["ok"])
+            self.assertEqual(changed["error"]["code"], "stale-session")
 
     def test_reused_pid_with_new_birth_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as state:

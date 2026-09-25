@@ -41,6 +41,7 @@ from . import fork_identity
 from .import_state import detect_installations, import_companion_state
 from .journal import append_entry, decide_recovery, plan_activation, read_journal
 from .policy import fork_build_warning
+from .path_identity import same_path
 from .protocol import PROTOCOL_VERSION, ProtocolError, check_request, error_response, ok_response
 from .enemizer import enemizer_options_record, parse_enemizer_options
 from .sessions import (
@@ -447,7 +448,7 @@ class Backend:
             live = {**live, **matching[0]}
         claimed_exe = str(claimed.get("executable", ""))
         live_exe = str(live.get("executable", ""))
-        if claimed_exe and live_exe and claimed_exe.casefold() != live_exe.casefold():
+        if claimed_exe and live_exe and not same_path(claimed_exe, live_exe):
             raise ProtocolError("stale-session", "game executable path changed",
                                 retryable=False, recovery=("fresh-boot",))
         claimed_sha = str(claimed.get("executable_sha256", "")).lower()
@@ -501,9 +502,12 @@ class Backend:
         if prior is not None and live.get("pid") == prior.pid:
             # Duplicate Play reuses the live session instead of spawning again.
             reattached = reattach_session(
-                self.state_root, prior.session_id, executable=prior.executable,
-                executable_sha256=prior.executable_sha256, pid=prior.pid,
-                creation_time=prior.creation_time, process_alive=bool(live.get("alive")),
+                self.state_root, prior.session_id,
+                executable=str(live.get("executable") or prior.executable),
+                executable_sha256=str(live.get("executable_sha256") or prior.executable_sha256),
+                pid=prior.pid,
+                creation_time=live.get("creation_time", prior.creation_time),
+                process_alive=bool(live.get("alive")),
             )
             return {"session_id": reattached.session_id, "reused": True,
                     "client_pid": reattached.client_pid}
@@ -549,7 +553,7 @@ class Backend:
         if same_process and session.creation_time is not None and live.get("creation_time") is not None:
             same_process = str(session.creation_time) == str(live.get("creation_time"))
         if same_process and session.executable and live.get("executable"):
-            same_process = session.executable.casefold() == str(live["executable"]).casefold()
+            same_process = same_path(session.executable, str(live["executable"]))
         if same_process and session.executable_sha256 and live.get("executable_sha256"):
             same_process = session.executable_sha256.lower() == str(
                 live["executable_sha256"]).lower()
