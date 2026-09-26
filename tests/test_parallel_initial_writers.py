@@ -112,10 +112,11 @@ class ParallelInitialWriterTests(unittest.TestCase):
         toolchain.barrier = threading.Barrier(3, timeout=0.01)
         # The fake still writes valid outputs; hitting the overlap barrier
         # would fail if a missing packaged executable accidentally enabled it.
-        toolchain._overlap = lambda _values: None
+        toolchain._overlap = lambda _values: toolchain.worker_threads.append(threading.get_ident())
         workflow = LauncherWorkflow(self.fixture.repo, toolchain=toolchain)
         workflow.prepare_seed(self.fixture.settings(enemy_inputs=False),
                               EnemizerOptions(enabled=False))
+        self.assertEqual([toolchain.caller, toolchain.caller], toolchain.worker_threads)
         self.assertEqual(["cathedral", "common"], [kind for kind, _ in toolchain.event_calls])
 
 

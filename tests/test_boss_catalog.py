@@ -34,6 +34,32 @@ $Event(123, Default, function() {
         with self.assertRaisesRegex(ValueError, "unclosed"):
             parse_events("$Event(1, Default, function() { HandleBossDefeat(2);")
 
+    def test_repeated_parse_cannot_be_poisoned_by_a_caller_or_stale_text(self):
+        text = "$Event(7, Default, function() { HandleBossDefeat(10); });"
+        first = parse_events(text)
+        first.clear()
+        self.assertEqual(7, parse_events(text)[0].event_id)
+        self.assertEqual(11, parse_events(text.replace("(10)", "(11)"))[0].calls[0].integer(0))
+        with self.assertRaisesRegex(ValueError, "unclosed"):
+            parse_events(text[:-3])
+
+    def test_line_references_after_long_prefix_and_multiline_calls(self):
+        for newline in ("\n", "\r\n"):
+            with self.subTest(newline=repr(newline)):
+                lines = ["// padding"] * 1000 + [
+                    "$Event(123, Default, function() {",
+                    "    WaitFor(",
+                    "        CharacterDead(10));",
+                    "});",
+                    "$Event(456, Default, function() { EndEvent(); });",
+                ]
+                events = parse_events(newline.join(lines))
+                self.assertEqual([(1001, 1004), (1005, 1005)],
+                                 [(event.first_line, event.last_line) for event in events])
+                self.assertEqual([("WaitFor", 1002), ("CharacterDead", 1003)],
+                                 [(call.operation, call.line) for call in events[0].calls])
+                self.assertEqual(1005, events[1].calls[0].line)
+
     def test_distinct_completion_proxy_and_healthbar_actors_and_alternates(self):
         script = '''$Event(123, Default, function() {
     if (ThisEvent()) { EndEvent(); }
