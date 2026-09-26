@@ -97,9 +97,9 @@ $configure = @(
 )
 & $cmake @configure
 if ($LASTEXITCODE -ne 0) { throw 'BBLauncher CMake configuration failed.' }
-& $cmake --build $build --target BB_Launcher apbackend_test apui_test regular_settings_import_test --parallel $Parallel
+& $cmake --build $build --target BB_Launcher apbackend_test apui_test regular_settings_import_test modservice_test --parallel $Parallel
 if ($LASTEXITCODE -ne 0) { throw 'BBLauncher or fork test build failed.' }
-& $ctest --test-dir $build --output-on-failure --no-tests=error -R '^(apbackend_test|apui_test|regular_settings_import_test)$'
+& $ctest --test-dir $build --output-on-failure --no-tests=error -R '^(apbackend_test|apui_test|regular_settings_import_test|modservice_test)$'
 if ($LASTEXITCODE -ne 0) {
     # Qt writes these test reports to files, so CTest has no captured output.
     # Include their assertions in the release log before failing the build.
