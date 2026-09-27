@@ -1,8 +1,9 @@
 """Source-pinned removal of destination boss entrance cinematics.
 
 The destination still owns the trigger, room notification, cutscene-control
-flag, actor enablement, encounter-start flag, and progression.  Only the
-original entrance ``PlayCutscene*`` instruction is replaced.  Combat phase
+flag, actor enablement, encounter-start flag, and progression. Original
+entrance ``PlayCutscene*`` instructions are replaced, and Cleric's model-only
+leap warp, animation, and delay are removed. Combat phase
 cinematics and post-defeat/endings live in other events and are outside this
 policy.
 
@@ -62,8 +63,8 @@ def _short_warp(region: int) -> str:
     return f"IssueShortWarpRequest(10000, TargetEntityType.Area, {region}, -1);"
 
 
-# Complete AP boss-arena census.  Entries with no edits prove that their
-# original activation event has no entrance cinematic and must stay unchanged.
+# Complete AP boss-arena census. Entries with no cinematic edits normally
+# remain unchanged; Cleric additionally removes its model-specific leap warp.
 ENTRANCE_POLICIES: dict[str, EntrancePolicy] = {
     "cleric-beast": EntrancePolicy(
         "m24_01_00_00.emevd.dcx.js", 12411702,
@@ -187,7 +188,7 @@ def _replace_event(source: str, event_id: int, replacement: str) -> str:
 
 
 def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> str:
-    """Skip one destination entrance cinematic while preserving its lifecycle."""
+    """Remove destination-only entrance choreography, retaining its lifecycle."""
     if arena_key not in ENTRANCE_POLICIES:
         raise ValueError(f"no entrance policy for arena {arena_key}")
     policy = ENTRANCE_POLICIES[arena_key]
@@ -213,6 +214,29 @@ def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> st
         patched_body = event_blocks(patched).get(policy.event_id)
         if patched_body is None or "PlayCutscene" in patched_body:
             raise ValueError(f"{arena_key} adapter introduced an entrance cinematic")
+        if arena_key == "cleric-beast":
+            from .gascoigne_contract import grounded_cleric_entry
+            warp = "    IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);\n"
+            animation = "    ForceAnimationPlayback(2410800, 3028, false, false, false);\n"
+            long_wait = "    WaitFixedTimeFrames(110);"
+            short_wait = "    WaitFixedTimeFrames(1);"
+            original_leap = (patched_body.count(warp) == 1
+                             and patched_body.count(long_wait) == 1
+                             and patched_body.count(animation) <= 1
+                             and short_wait not in patched_body)
+            grounded = all((warp not in patched_body, animation not in patched_body,
+                            long_wait not in patched_body, short_wait in patched_body))
+            if original_leap:
+                # Some donor adapters already remove model-specific 3028 but
+                # leave its warp and delay; both known forms need grounding.
+                if animation not in patched_body:
+                    adapted = patched_body.replace(warp, "", 1).replace(
+                        long_wait, short_wait, 1)
+                    return _replace_event(patched, policy.event_id, adapted)
+                return _replace_event(patched, policy.event_id,
+                                      grounded_cleric_entry(patched_body))
+            if not grounded:
+                raise ValueError("Cleric adapter has a partial or unknown entrance leap")
         return patched
 
     patched_blocks = event_blocks(patched)
