@@ -17,6 +17,7 @@ from typing import Mapping, Sequence
 from tools.bb_inputs import read_prefix
 
 from .boss_canary import event_blocks, parse_events
+from .boss_activation import arena_entry_predicate
 from .boss_contracts import (
     AMELIA_ARENA, AMYGDALA_ARENA, BSB_ARENA, CLERIC_ARENA,
     EBRIETAS_ARENA, PAARL_ARENA, ArenaContract,
@@ -246,7 +247,8 @@ def _calls(zero: str, event: int, count: int) -> list[str]:
     return found
 
 
-def _phase_graph(donor: Mapping[int, str], mapping: Mapping[int, int]) -> tuple[list[str], list[str]]:
+def _phase_graph(donor: Mapping[int, str], mapping: Mapping[int, int],
+                 allocation: LudwigDonorAllocation) -> tuple[list[str], list[str]]:
     normal = _normal_constructor(donor[0])
     initializers: list[str] = []
     bodies: list[str] = []
@@ -267,7 +269,21 @@ def _phase_graph(donor: Mapping[int, str], mapping: Mapping[int, int]) -> tuple[
         elif event == 13404824:
             body = _replace_once(body, "    SetEventFlag(9180, ON);\n", "",
                                  "source phase cutscene flag")
+            body = _replace_once(
+                body, "    WaitFor(HPRatio(3400800) < 0.5 && HPRatio(3400800) > 0);",
+                f"    WaitFor(EventFlag({allocation.readiness_event}));\n"
+                "    WaitFor(CharacterBackreadStatus(3400800) && "
+                "HPRatio(3400800) < 0.5 && HPRatio(3400800) > 0);",
+                "loaded phase-one threshold",
+            )
         elif event == 13404825:
+            body = _replace_once(
+                body,
+                "    WaitFor(CharacterType(10000, TargetType.Alive) && EventFlag(13404824));",
+                f"    WaitFor(EventFlag({allocation.readiness_event}));\n"
+                "    WaitFor(CharacterType(10000, TargetType.Alive) && EventFlag(13404824));",
+                "destination phase readiness",
+            )
             first = body.index("    if (!HasMultiplayerState(MultiplayerState.Multiplayer)) {")
             last = body.index("    DisplayBossHealthBar(Disabled, 3400800, 0, 451000);", first)
             body = body[:first] + body[last:]
@@ -289,6 +305,13 @@ def _phase_graph(donor: Mapping[int, str], mapping: Mapping[int, int]) -> tuple[
                 "    WarpCharacterAndCopyFloor(3400801, TargetEntityType.Area, 3402806, -1, 3400800);\n",
             ):
                 body = _replace_once(body, line, "", "source arena warp")
+        if event not in (13404824, 13404825):
+            body = _replace_once(
+                body, "    EndIf(EventFlag(9471));\n",
+                "    EndIf(EventFlag(9471));\n"
+                f"    WaitFor(EventFlag({allocation.readiness_event}));\n",
+                "destination phase-graph readiness",
+            )
         bodies.append(_remap(body, mapping))
     return initializers, bodies
 
@@ -312,7 +335,8 @@ def _readiness(arena: ArenaContract, allocation: LudwigDonorAllocation) -> str:
     }[arena.key]
     lines = [f"$Event({allocation.readiness_event}, Default, function() {{",
              f"    EndIf(EventFlag({arena.completion_event}));",
-             f"    WaitFor(EventFlag({arena.start_flag}));", *restore, "});"]
+             f"    WaitFor(EventFlag({arena.start_flag}) && ({arena_entry_predicate(arena.key)}));",
+             *restore, "});"]
     return "\n".join(lines)
 
 
@@ -452,7 +476,7 @@ def patch_ludwig_donor(arena: ArenaContract, destination: str, donor_source: str
     _validate(allocation, destination)
     notification = _notification_flag(original[arena.health_bar_event], allocation)
     mapping = _mapping(arena, allocation, notification)
-    initializers, source_bodies = _phase_graph(donor, mapping)
+    initializers, source_bodies = _phase_graph(donor, mapping, allocation)
     copied = dict(zip(EVENTS, source_bodies))
     activation = _activation(arena, original[arena.activation_event])
     if notification == allocation.notification_flag:

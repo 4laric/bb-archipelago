@@ -26,7 +26,21 @@ class CelestialRomContractTests(unittest.TestCase):
         self.assertIn("DisplayBossHealthBar(Enabled, 3200800, 0, 257000)", health)
         phase = after[DEFAULT_IDS.giant_phase]
         self.assertIn("CreateReferredDamagePair(3200800, 982000)", phase)
+        self.assertIn("PlayerInMap(32, 0) && InArea(10000, 3202801)", phase)
+        for witness in (
+            "CharacterBackreadStatus(3200800)",
+            "CharacterHPValue(3200800) > 0",
+            "CharacterBackreadStatus(982000)",
+            "CharacterHPValue(982000) > 0",
+        ):
+            self.assertIn(witness, phase)
         bridge = after[DEFAULT_IDS.giant_death_bridge]
+        self.assertIn("CharacterBackreadStatus(982000)", bridge)
+        self.assertIn("CharacterHPValue(982000) > 0", bridge)
+        self.assertLess(
+            bridge.index("CharacterHPValue(982000) > 0"),
+            bridge.index("WaitFor(CharacterDead(982000));"),
+        )
         self.assertLess(
             bridge.index("WaitFor(CharacterDead(982000));"),
             bridge.index("ForceCharacterDeath(3200800, false);"),
