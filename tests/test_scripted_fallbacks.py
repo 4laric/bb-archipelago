@@ -34,7 +34,27 @@ class ScriptedFallbackTests(unittest.TestCase):
     def test_committed_record_is_rebuilt_from_the_bundle(self):
         committed = json.loads((RELEASE / "release_scripted.json").read_text(encoding="utf-8"))
         self.assertEqual(committed, fallbacks.build_release(self.events))
-        self.assertEqual(21, len(committed["releases"]))
+        self.assertEqual(30, len(committed["releases"]))
+
+    def test_yharnam_sleepers_and_bridge_keep_boulder_and_safe_home_events(self):
+        from tools.bb_enemizer.boss_canary import event_blocks
+        keys = sorted(fallbacks._YHARNAM_LINES)
+        original = self.texts[CENTRAL]
+        patched = fallbacks.patch_initializers(CENTRAL, original, keys)
+        self.assertEqual(9, len(keys))
+        removed = {line.strip() for line in original.splitlines()} - {
+            line.strip() for line in patched.splitlines()}
+        self.assertEqual({line for key in keys for line in fallbacks.LINES[key]}, removed)
+        before, after = event_blocks(original), event_blocks(patched)
+        for event_id in before:
+            if event_id != 0:
+                self.assertEqual(before[event_id], after[event_id])
+        self.assertIn("$InitializeEvent(0, 12415232, 2410178, 2412086);", patched)
+        # Selective swaps leave every other sleeper/bridge initializer intact.
+        one = fallbacks.patch_initializers(CENTRAL, original, [keys[0]])
+        for key in keys[1:]:
+            for line in fallbacks.LINES[key]:
+                self.assertIn(line, one)
 
     def test_every_pinned_line_names_its_entity(self):
         self.assertEqual(set(fallbacks.LINES), set(fallbacks.ENTITY_IDS))
