@@ -67,7 +67,7 @@ FIELD_DEFINITIONS = (
 )
 DEVELOPMENT_FIELDS = {"enemy_inventory", "soulsformats_next"}
 # The empty-state line under the seed row names both shapes the field accepts.
-SEED_PROMPT = "Choose a seed (.zip or .bbseed.json) to see its player and build."
+SEED_PROMPT = "Choose a seed (.zip, .bbseed or .bbseed.json) to see its player and build."
 PRIMARY_FIELDS = {"ap_request", "game_root", "shad_executable"}
 ENEMY_FIELDS = {"map_studio_source", "enemy_inventory", "soulsformats_next"}
 
@@ -210,6 +210,7 @@ def derive_ap_request(roots: Iterable[Path], player_name: str = "") -> Path | No
             directory = root / "Archipelago" / name
             if directory.is_dir():
                 candidates.extend(directory.rglob("*.bbseed.json"))
+                candidates.extend(directory.rglob("*.bbseed"))
                 candidates.extend(directory.rglob("*.bbenemizer.json"))
                 candidates.extend(directory.rglob("AP_*.zip"))
     wanted = player_name.strip()

@@ -57,7 +57,7 @@ def is_request_name(name: str) -> bool:
 
 
 def looks_like_archive(path: Path | str) -> bool:
-    return Path(path).name.lower().endswith(".zip")
+    return Path(path).name.lower().endswith((".zip", ".bbseed"))
 
 
 def _request_formats() -> tuple[str, ...]:
