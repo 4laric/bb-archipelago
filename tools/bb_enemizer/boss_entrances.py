@@ -225,7 +225,12 @@ def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> st
                              and patched_body.count(animation) <= 1
                              and short_wait not in patched_body)
             grounded = all((warp not in patched_body, animation not in patched_body,
-                            long_wait not in patched_body, short_wait in patched_body))
+                            long_wait not in patched_body,
+                            ("SetCharacterGravity(2410800, Enabled);" in patched_body
+                             or "SetCharacterGravity(2410800, Disabled);" not in patched_body),
+                            ("SetCharacterMaphits(2410800, false);" in patched_body
+                             or "SetCharacterMaphits(2410800, true);" not in patched_body),
+                            "SetEventFlag(12414700, ON);" in patched_body))
             if original_leap:
                 # Some donor adapters already remove model-specific 3028 but
                 # leave its warp and delay; both known forms need grounding.
@@ -235,6 +240,18 @@ def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> st
                     return _replace_event(patched, policy.event_id, adapted)
                 return _replace_event(patched, policy.event_id,
                                       grounded_cleric_entry(patched_body))
+            # Donor-specific entrance choreography can replace the leap and its
+            # delay while retaining Cleric's elevated warp. Keep those donor
+            # motions, but start them at the grounded map placement.
+            if (patched_body.count(warp) == 1 and animation not in patched_body
+                    and long_wait not in patched_body
+                    and ("SetCharacterGravity(2410800, Enabled);" in patched_body
+                         or "SetCharacterGravity(2410800, Disabled);" not in patched_body)
+                    and ("SetCharacterMaphits(2410800, false);" in patched_body
+                         or "SetCharacterMaphits(2410800, true);" not in patched_body)
+                    and "SetEventFlag(12414700, ON);" in patched_body):
+                return _replace_event(patched, policy.event_id,
+                                      patched_body.replace(warp, "", 1))
             if not grounded:
                 raise ValueError("Cleric adapter has a partial or unknown entrance leap")
         return patched
@@ -272,3 +289,29 @@ def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> st
         if event_id != policy.event_id and result_blocks.get(event_id) != block:
             raise ValueError(f"entrance policy changed unrelated event {event_id}")
     return result
+
+
+def strip_destination_entrance_animations(arena_key: str, original: str, patched: str) -> str:
+    """Remove only source-boss entrance motions, never donor combat phases.
+
+    Required ground/player relocations, actor state restoration, flags and
+    progression remain intact. The shared cinematic policy verifies the exact
+    source activation body before this narrower model-animation edit.
+    """
+    import re
+    from .boss_activation import ACTIVATION_POLICIES
+    patched = skip_replacement_entrance(arena_key, original, patched)
+    entrance = ENTRANCE_POLICIES[arena_key]
+    policy = ACTIVATION_POLICIES[arena_key]
+    source = event_blocks(original)
+    actors = {int(value) for value in re.findall(
+        r"DisplayBossHealthBar\(Enabled, (\d+),", source[policy.health_event])}
+    actors.add(policy.actor)
+    motions = set()
+    for line in source[entrance.event_id].splitlines():
+        match = re.match(r"\s*ForceAnimationPlayback\((\d+),", line)
+        if match and int(match[1]) in actors:
+            motions.add(line.strip())
+    body = event_blocks(patched)[entrance.event_id]
+    changed = "\n".join(line for line in body.splitlines() if line.strip() not in motions)
+    return _replace_event(patched, entrance.event_id, changed)

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from tools.bb_inputs import read_blob, read_prefix
 from tools.bb_enemizer.boss_canary import event_blocks
+from tools.bb_enemizer.boss_activation import arena_entry_predicate
 from tools.bb_enemizer.boss_contracts import ARENAS
 from tools.bb_enemizer.gascoigne_donor import (
     BEAST_PINS,
@@ -74,6 +75,11 @@ class GascoigneDonorTests(unittest.TestCase):
                 self.assertEqual(2, health.count(
                     f"WaitFor(EventFlag({IDS.readiness_event}))"))
                 phase = after[IDS.phase_event]
+                phase_gate = (f"WaitFor(EventFlag({IDS.readiness_event}) && "
+                              f"CharacterBackreadStatus({arena.actor}) && "
+                              f"HPRatio({arena.actor}) > 0)")
+                self.assertLess(phase.index(phase_gate),
+                                phase.index(f"hp = HPRatio({arena.actor}) < 0.34"))
                 self.assertIn(f"ChangeCharacterEnableState({IDS.beast_entity}, Enabled)", phase)
                 self.assertIn(f"SetCharacterInvincibility({IDS.beast_entity}, Disabled)", phase)
                 self.assertIn(
@@ -83,6 +89,11 @@ class GascoigneDonorTests(unittest.TestCase):
                 self.assertNotIn("SetEventFlag(9337, ON)", phase)
                 self.assertIn(f"CharacterHasEventMessage({arena.actor}, 10)", after[IDS.human_special_event])
                 self.assertIn(f"CharacterHasEventMessage({IDS.beast_entity}, 20)", after[IDS.beast_special_event])
+                for special in (IDS.human_special_event, IDS.beast_special_event):
+                    self.assertLess(
+                        after[special].index(f"WaitFor(EventFlag({IDS.readiness_event}))"),
+                        after[special].index("RequestCharacterAICommand("),
+                    )
 
     def test_lifecycle_keeps_beast_hidden_until_phase_then_transfers_death_to_unchanged_terminal(self):
         for arena in SUPPORTED_GASCOIGNE_ARENAS:
@@ -104,6 +115,8 @@ class GascoigneDonorTests(unittest.TestCase):
                                 cleanup.index(f"WaitFor(EventFlag({arena.completion_event}))"))
                 self.assertIn(f"ForceCharacterDeath({IDS.beast_entity}, false)", cleanup)
                 bridge = blocks[IDS.terminal_bridge_event]
+                self.assertLess(bridge.index(f"WaitFor(EventFlag({IDS.readiness_event}))"),
+                                bridge.index(f"humanDead = CharacterDead({arena.actor})"))
                 self.assertIn(f"humanDead = CharacterDead({arena.actor})", bridge)
                 self.assertIn(f"beastDead = EventFlag({IDS.phase_event}) && CharacterDead({IDS.beast_entity})", bridge)
                 self.assertLess(bridge.index("WaitFor(humanDead || beastDead)"),
@@ -123,7 +136,9 @@ class GascoigneDonorTests(unittest.TestCase):
                 initialize = f"$InitializeEvent(0, {IDS.readiness_event})"
                 self.assertLess(constructor.index(reset), constructor.index(initialize))
                 ready = blocks[IDS.readiness_event]
-                self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))", ready)
+                self.assertIn(
+                    f"WaitFor(EventFlag({arena.start_flag}) && "
+                    f"({arena_entry_predicate(arena.key)}))", ready)
                 health = blocks[arena.health_bar_event]
                 self.assertLess(
                     health.index(f"SetCharacterInvincibility({IDS.beast_entity}, Disabled)"),

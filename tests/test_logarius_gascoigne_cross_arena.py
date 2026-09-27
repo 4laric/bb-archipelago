@@ -8,6 +8,7 @@ from pathlib import Path
 from tools.bb_inputs import read_blob
 from tools.bb_enemizer.arena_port import MARIA_CROSS_ARENA_PORTS, MICOLASH_PORT
 from tools.bb_enemizer.boss_canary import event_blocks
+from tools.bb_enemizer.boss_activation import arena_entry_predicate
 from tools.bb_enemizer.gascoigne_donor import (
     BEAST_PINS,
     DEFAULT_GASCOIGNE_IDS,
@@ -101,9 +102,18 @@ class LogariusGascoigneCrossArenaTests(unittest.TestCase):
                 for event_id in port.protected_events:
                     self.assertEqual(before[event_id], after[event_id])
                 self.assertNotIn("PlayCutscene", after[arena.activation_event])
-                self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))",
-                              after[ids.readiness_event])
+                self.assertIn(
+                    f"WaitFor(EventFlag({arena.start_flag}) && "
+                    f"({arena_entry_predicate(arena.key)}))",
+                    after[ids.readiness_event],
+                )
                 phase = after[ids.phase_event]
+                self.assertLess(
+                    phase.index(f"WaitFor(EventFlag({ids.readiness_event}) && "
+                                f"CharacterBackreadStatus({arena.actor}) && "
+                                f"HPRatio({arena.actor}) > 0)"),
+                    phase.index(f"hp = HPRatio({arena.actor}) < 0.34"),
+                )
                 self.assertIn(f"ChangeCharacterEnableState({ids.beast_entity}, Enabled)", phase)
                 self.assertNotIn("9337", phase)
                 self.assertNotIn("$InitializeEvent(0, 9350", phase)

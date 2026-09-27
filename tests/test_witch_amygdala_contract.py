@@ -69,6 +69,19 @@ class WitchAmygdalaContractTests(unittest.TestCase):
         self.assertIn(
             "CharacterHPValue(3300800) == 1 || CharacterHPValue(980800) == 1", music
         )
+        phase = after[DEFAULT_IDS.phase]
+        self.assertIn("PlayerInMap(33, 0) && InArea(10000, 3302802)", phase)
+        for witness in (
+            "CharacterBackreadStatus(3300800)",
+            "CharacterHPValue(3300800) > 0",
+            "CharacterBackreadStatus(980800)",
+            "CharacterHPValue(980800) > 0",
+        ):
+            self.assertIn(witness, phase)
+        self.assertLess(
+            phase.index("CharacterHPValue(980800) > 0"),
+            phase.index("WaitFor(CharacterHPValue(3300800) == 1"),
+        )
         self.assertIn("SetLockcamSlotNumber(33, 0, 1);", after[13304804])
         for event in (13304807, 13304808, 13304820, 13304830, 13304840):
             self.assertEqual("    EndEvent();", after[event].splitlines()[1])

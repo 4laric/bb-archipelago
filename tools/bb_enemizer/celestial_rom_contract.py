@@ -17,6 +17,7 @@ from .boss_canary import event_blocks
 from .bosses import parse_events
 from .model import Archetype, Slot, Swap
 from .scaling import plan_scaling
+from .boss_activation import arena_entry_predicate
 from . import celestial_paarl_contract as ce
 from .ebrietas_rom_contract import (
     ARENA_HASHES,
@@ -191,6 +192,9 @@ def _validate(ids: CelestialRomIds, destination: str) -> None:
 def _bridge(ids: CelestialRomIds) -> str:
     return f"""$Event({ids.giant_death_bridge}, Default, function() {{
     EndIf(EventFlag(13201800));
+    WaitFor({arena_entry_predicate('rom')}
+        && CharacterBackreadStatus({GIANT})
+        && CharacterHPValue({GIANT}) > 0);
     WaitFor(CharacterDead({GIANT}));
     EndIf(EventFlag(13201800));
     ForceCharacterDeath({PRIMARY}, false);
@@ -276,7 +280,20 @@ def patch_celestial_emissary_at_rom(
         13204810: _end(arena[13204810]),
     }
     for dest, src, _ in transplant:
-        edits[dest] = _remap(ce._remap(donor[src], cm), t)
+        body = _remap(ce._remap(donor[src], cm), t)
+        if dest == ids.giant_phase:
+            body = _replace_once(
+                body,
+                "    WaitFor(HPRatio(3200800) < 0.6 && HPRatio(982000) > 0);",
+                f"    WaitFor({arena_entry_predicate('rom')}\n"
+                "        && CharacterBackreadStatus(3200800)\n"
+                "        && CharacterHPValue(3200800) > 0\n"
+                "        && CharacterBackreadStatus(982000)\n"
+                "        && CharacterHPValue(982000) > 0);\n"
+                "    WaitFor(HPRatio(3200800) < 0.6 && HPRatio(982000) > 0);",
+                "giant phase readiness and threshold",
+            )
+        edits[dest] = body
     edits[ids.giant_death_bridge] = _bridge(ids)
     edits[ids.lifecycle_cleanup] = _cleanup(ids)
     out = (
