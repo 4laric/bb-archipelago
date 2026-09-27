@@ -194,6 +194,8 @@ Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-AI.md") -Destination (Joi
 Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-BOSS-CANARY.md") -Destination (Join-Path $package "docs\ENEMIZER-BOSS-CANARY.md")
 Copy-Item -LiteralPath (Join-Path $repo "docs\ENEMIZER-BOSS-SHUFFLE.md") -Destination (Join-Path $package "docs\ENEMIZER-BOSS-SHUFFLE.md")
 Copy-Item -LiteralPath (Join-Path $repo "SECURITY.md") -Destination (Join-Path $package "SECURITY.md")
+Copy-Item -LiteralPath (Join-Path $repo "LICENSE") -Destination (Join-Path $package "LICENSE")
+Copy-Item -LiteralPath (Join-Path $repo "LICENSING.md") -Destination (Join-Path $package "LICENSING.md")
 Copy-Item -LiteralPath (Join-Path $repo "packaging\PACKAGE-README.txt") -Destination (Join-Path $package "README.txt")
 Copy-Item -LiteralPath (Join-Path $repo "tables\Bloodborne-native-item-grant-auto-v2.CT") -Destination (Join-Path $package "tools")
 

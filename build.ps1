@@ -342,6 +342,11 @@ if ($Apworld) {
     })
     $zip = [IO.Compression.ZipFile]::Open($outFile, [IO.Compression.ZipArchiveMode]::Create)
     try {
+        foreach ($notice in @('LICENSE', 'LICENSING.md')) {
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $zip, (Join-Path $Repo $notice), "bloodborne/$notice"
+            ) | Out-Null
+        }
         foreach ($file in $files) {
             $relative = $file.FullName.Substring($source.Length).TrimStart('\', '/').Replace('\', '/')
             [IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
