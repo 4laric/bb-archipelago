@@ -71,8 +71,8 @@ class GascoigneDonorTests(unittest.TestCase):
                 self.assertEqual(set(IDS.event_ids()), set(after) - set(before))
                 health = after[arena.health_bar_event]
                 self.assertIn(f"CreateReferredDamagePair({arena.actor}, {IDS.beast_entity})", health)
-                self.assertEqual(2, health.count(
-                    f"WaitFor(EventFlag({IDS.readiness_event}))"))
+                self.assertEqual(1 if arena.key == "blood-starved-beast" else 2,
+                                 health.count(f"WaitFor(EventFlag({IDS.readiness_event}))"))
                 phase = after[IDS.phase_event]
                 self.assertIn(f"ChangeCharacterEnableState({IDS.beast_entity}, Enabled)", phase)
                 self.assertIn(f"SetCharacterInvincibility({IDS.beast_entity}, Disabled)", phase)
@@ -123,15 +123,38 @@ class GascoigneDonorTests(unittest.TestCase):
                 initialize = f"$InitializeEvent(0, {IDS.readiness_event})"
                 self.assertLess(constructor.index(reset), constructor.index(initialize))
                 ready = blocks[IDS.readiness_event]
-                self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))", ready)
+                if arena.key == "blood-starved-beast":
+                    self.assertIn(
+                        f"WaitFor(EventFlag({arena.start_flag}) && InArea(10000, 2302801))",
+                        ready,
+                    )
+                    original_music = event_blocks(self.destinations[arena.key])[arena.music_event]
+                    self.assertEqual(1, original_music.count("flagArea &= InArea(10000, 2302801);"))
+                    self.assertEqual(1, original_music.count("flagArea2 &= InArea(10000, 2302801);"))
+                else:
+                    self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))", ready)
                 health = blocks[arena.health_bar_event]
                 self.assertLess(
                     health.index(f"SetCharacterInvincibility({IDS.beast_entity}, Disabled)"),
                     health.index(f"CreateReferredDamagePair({arena.actor}, {IDS.beast_entity})"))
                 gate = f"WaitFor(EventFlag({IDS.readiness_event}))"
-                self.assertEqual(2, health.count(gate))
-                self.assertLess(health.rindex(gate),
+                final_gate = (f"WaitFor(EventFlag({IDS.readiness_event}) && InArea(10000, 2302801))"
+                              if arena.key == "blood-starved-beast" else gate)
+                self.assertEqual(1 if arena.key == "blood-starved-beast" else 2,
+                                 health.count(gate))
+                self.assertLess(health.rindex(final_gate),
                                 health.index(f"SetCharacterAIState({arena.actor}, Enabled)"))
+                if arena.key == "blood-starved-beast":
+                    phase = blocks[IDS.phase_event]
+                    live_room = (
+                        f"EventFlag({IDS.readiness_event}) && InArea(10000, 2302801) "
+                        f"&& CharacterBackreadStatus({arena.actor}) && HPRatio({arena.actor}) > 0"
+                    )
+                    self.assertIn(live_room, phase)
+                    self.assertLess(phase.index(live_room),
+                                    phase.index(f"HPRatio({arena.actor}) < 0.34"))
+                    self.assertLess(phase.index(live_room),
+                                    phase.index(f"DisplayBossHealthBar(Enabled, {IDS.beast_entity}"))
                 if arena.key == "amygdala":
                     for instruction in (
                         f"SetCharacterGravity({arena.actor}, Enabled)",

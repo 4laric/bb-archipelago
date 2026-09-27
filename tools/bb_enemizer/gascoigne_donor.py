@@ -234,6 +234,37 @@ def _linked_damage_health(body: str, arena: ArenaContract, ids: GascoigneDonorId
         "hidden beast must receive linked human damage")
 
 
+def _guard_bsb_room(health: str, phase: str, music: str,
+                    arena: ArenaContract, ids: GascoigneDonorIds) -> tuple[str, str]:
+    """Start BSB's imported bars only after entering its original boss room.
+
+    The original m23 music checks 2302801 on both first entry and resume.
+    The donor's ThisEvent health fast path and phase HP check otherwise have
+    no geography witness when m23 is streamed from a neighboring area.
+    """
+    if arena.key != "blood-starved-beast":
+        return health, phase
+    room = "InArea(10000, 2302801)"
+    if (music.count(f"flagArea &= {room};") != 1
+            or music.count(f"flagArea2 &= {room};") != 1):
+        raise ValueError("BSB music lacks the reviewed boss-room region")
+    health = _replace_once(
+        health,
+        f"L0:\n    WaitFor(EventFlag({ids.readiness_event}));",
+        f"L0:\n    WaitFor(EventFlag({ids.readiness_event}) && {room});",
+        "BSB health resume room gate",
+    )
+    phase = _replace_once(
+        phase,
+        f"L0:\n    SetCharacterGravity({ids.beast_entity}, Disabled);",
+        f"L0:\n    WaitFor(EventFlag({ids.readiness_event}) && {room} "
+        f"&& CharacterBackreadStatus({arena.actor}) && HPRatio({arena.actor}) > 0);\n"
+        f"    SetCharacterGravity({ids.beast_entity}, Disabled);",
+        "BSB phase live-room gate",
+    )
+    return health, phase
+
+
 def _adapt_activation(arena: ArenaContract, body: str) -> str:
     if arena.key == "cleric-beast":
         return grounded_cleric_entry(body)
@@ -313,7 +344,9 @@ def _readiness(arena: ArenaContract, ids: GascoigneDonorIds) -> str:
     return "\n".join((
         f"$Event({ids.readiness_event}, Default, function() {{",
         f"    EndIf(EventFlag({arena.completion_event}));",
-        f"    WaitFor(EventFlag({arena.start_flag}));",
+        (f"    WaitFor(EventFlag({arena.start_flag}) && InArea(10000, 2302801));"
+         if arena.key == "blood-starved-beast" else
+         f"    WaitFor(EventFlag({arena.start_flag}));"),
         *restore,
         "});",
     ))
@@ -330,7 +363,9 @@ def _port_readiness(port: ArenaPort, ids: GascoigneDonorIds) -> str:
     return "\n".join((
         f"$Event({ids.readiness_event}, Default, function() {{",
         f"    EndIf(EventFlag({arena.completion_event}));",
-        f"    WaitFor(EventFlag({arena.start_flag}));",
+        (f"    WaitFor(EventFlag({arena.start_flag}) && InArea(10000, 2302801));"
+         if arena.key == "blood-starved-beast" else
+         f"    WaitFor(EventFlag({arena.start_flag}));"),
         f"    SetCharacterInvincibility({arena.actor}, Disabled);",
         "});",
     ))
@@ -459,6 +494,8 @@ def _patch_gascoigne_at_port(port: ArenaPort, destination: str, donor_source: st
                 "beast materialization",
             )
         imports[target] = block
+    health, imports[ids.phase_event] = _guard_bsb_room(
+        health, imports[ids.phase_event], original[arena.music_event], arena, ids)
     bridge = f"""$Event({ids.terminal_bridge_event}, Default, function() {{
     EndIf(EventFlag({arena.completion_event}));
     humanDead = CharacterDead({arena.actor});
@@ -563,6 +600,8 @@ def patch_gascoigne_donor(arena: ArenaContract | ArenaPort, destination: str, do
                 f"    SetCharacterInvincibility({ids.beast_entity}, Disabled);\n"
                 f"    SetCharacterGravity({ids.beast_entity}, Enabled);\n", "beast materialization")
         imports[target] = block
+    health, imports[ids.phase_event] = _guard_bsb_room(
+        health, imports[ids.phase_event], original[arena.music_event], arena, ids)
     bridge = f'''$Event({ids.terminal_bridge_event}, Default, function() {{
     EndIf(EventFlag({arena.completion_event}));
     humanDead = CharacterDead({arena.actor});
