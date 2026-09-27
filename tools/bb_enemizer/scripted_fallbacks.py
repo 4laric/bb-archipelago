@@ -30,6 +30,10 @@ CALLEE_BODIES: dict[str, dict[int, str]] = {
     "m24_01_00_00": {
         # c1120 sleep-to-wake: AI IDs 112499/112400 around animations 9000/9061
         12415130: "da8216c084ed51b6baf036f67cb9360599d62d51fb0146c65f8bbd55385969da",
+        # Huntsman sleep/sit AI and bridge rally commands.
+        12415150: "850498e3df2ef875a8d04b88c199fd5660e6d3a31daaab5663f68cfdd98639a1",
+        12415080: "3db95d010aa9dfda9cd03f869463d665597027273e59522be06902a0b6c5439f",
+        12415372: "df38368c25fcdc9c056e19cdf5bc242b0356c61a1791a2d7a924d9b890396d5d",
         # c1100 sewer rat ambush: AI command 10 toward a pinned home region
         12410340: "dc5741a67f69a2e5d5710eba18c8da4bfc78b40d991cac669a5e108a3cdb80ff",
     },
@@ -99,11 +103,53 @@ _CATHEDRAL_LINES = {
 }
 
 # logical key -> pinned initializer lines removed when that placement swaps
-LINES: dict[str, list[str]] = {**_WAKEUP_LINES, **_AMBUSH_LINES, **_CATHEDRAL_LINES}
+# Model-specific sleep poses/AI and bridge commands are omitted only when
+# these placements swap; the boulder object event and safe home events stay.
+_YHARNAM_LINES = {
+    "m24_01_00_00:c2630_0003": [
+        "$InitializeEvent(2, 12415150, 2410103, 7010, 7011, 4, 263499, 263450);",
+    ],
+    "m24_01_00_00:c2630_0004": [
+        "$InitializeEvent(2, 12415372, 2410025);",
+    ],
+    "m24_01_00_00:c2630_0006": [
+        "$InitializeEvent(3, 12415372, 2410026);",
+    ],
+    "m24_01_00_00:c2630_0007": [
+        "$InitializeEvent(4, 12415372, 2410027);",
+    ],
+    "m24_01_00_00:c2630_0010": [
+        "$InitializeEvent(3, 12415080, 2410178, 7010, 7011, 2412154, 263496, 263431, 2);",
+    ],
+    "m24_01_00_00:c2630_0012": [
+        "$InitializeEvent(0, 12415372, 2410023);",
+    ],
+    "m24_01_00_00:c2630_0021": [
+        "$InitializeEvent(1, 12415372, 2410024);",
+    ],
+    "m24_01_00_00:c2630_0033": [
+        "$InitializeEvent(0, 12415150, 2410100, 7010, 7011, 6, 263499, 263450);",
+    ],
+    "m24_01_00_00:c2630_0039": [
+        "$InitializeEvent(1, 12415150, 2410101, 7014, 7015, 7, 263499, 263440);",
+    ],
+}
+
+LINES: dict[str, list[str]] = {**_WAKEUP_LINES, **_AMBUSH_LINES, **_CATHEDRAL_LINES, **_YHARNAM_LINES}
 # Released only by this boss-pool tranche; the wakeup keys already have their
 # own tranche and native fallback, and ride along here when they swap.
-RELEASED_KEYS = frozenset({**_AMBUSH_LINES, **_CATHEDRAL_LINES})
+RELEASED_KEYS = frozenset({**_AMBUSH_LINES, **_CATHEDRAL_LINES, **_YHARNAM_LINES})
 ENTITY_IDS: dict[str, int] = {
+    "m24_01_00_00:c2630_0003": 2410103,
+    "m24_01_00_00:c2630_0033": 2410100,
+    "m24_01_00_00:c2630_0039": 2410101,
+    "m24_01_00_00:c2630_0010": 2410178,
+    "m24_01_00_00:c2630_0004": 2410025,
+    "m24_01_00_00:c2630_0006": 2410026,
+    "m24_01_00_00:c2630_0007": 2410027,
+    "m24_01_00_00:c2630_0012": 2410023,
+    "m24_01_00_00:c2630_0021": 2410024,
+
     **{key: entity for key, (entity, _slot, _flag) in WAKEUP_PINS.items()},
     **{key: entity for key, (entity, _slot, _home) in AMBUSH_PINS.items()},
     "m24_00_00_00:c2700_0000": 2400116, "m24_00_00_00:c2700_0004": 2400125,
