@@ -25,6 +25,28 @@ def source(policy):
 
 
 class BossEntranceTests(unittest.TestCase):
+    def test_cleric_grounding_repairs_animation_stripped_adapter(self):
+        original = source(ENTRANCE_POLICIES["cleric-beast"])
+        stripped = original.replace(
+            "    ForceAnimationPlayback(2410800, 3028, false, false, false);",
+            "", 1,
+        )
+        grounded = skip_replacement_entrance("cleric-beast", original, stripped)
+        entry = event_blocks(grounded)[12411702]
+        self.assertNotIn("2412831", entry)
+        self.assertNotIn("WaitFixedTimeFrames(110)", entry)
+        self.assertIn("WaitFixedTimeFrames(1)", entry)
+        self.assertEqual(grounded, skip_replacement_entrance("cleric-beast", original, grounded))
+
+    def test_cleric_grounding_refuses_partial_leap_adapter(self):
+        original = source(ENTRANCE_POLICIES["cleric-beast"])
+        partial = original.replace(
+            "    IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);",
+            "", 1,
+        )
+        with self.assertRaisesRegex(ValueError, "partial or unknown entrance leap"):
+            skip_replacement_entrance("cleric-beast", original, partial)
+
     def test_census_pins_all_22_activation_events_and_12_cinematics(self):
         self.assertEqual(22, len(ENTRANCE_POLICIES))
         cinematic = {
@@ -77,11 +99,14 @@ class BossEntranceTests(unittest.TestCase):
                     if event_id != policy.event_id:
                         self.assertEqual(block, after[event_id])
                 expected = before[policy.event_id]
+                if key == "cleric-beast":
+                    from tools.bb_enemizer.gascoigne_contract import grounded_cleric_entry
+                    expected = grounded_cleric_entry(expected)
                 for edit in policy.edits:
                     expected = expected.replace(edit.instruction, edit.replacement)
                 self.assertEqual(expected, after[policy.event_id])
                 self.assertNotIn("PlayCutscene", after[policy.event_id])
-                if not policy.has_cinematic:
+                if not policy.has_cinematic and key != "cleric-beast":
                     self.assertEqual(original, result)
                 # Replacing one instruction with one instruction keeps relative
                 # EMEVD SkipIf/label instruction counts stable.
