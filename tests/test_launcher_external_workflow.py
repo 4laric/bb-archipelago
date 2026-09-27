@@ -59,6 +59,31 @@ class ExternalWorkflowTests(unittest.TestCase):
     def connect(self):
         return connect_external(self.workflow_instance, self.settings, player_name="Hunter", allow_live_acceptance_candidate=True)
 
+    def test_server_reuse_requires_opt_in_and_preserves_other_identity_and_history(self):
+        from bb_launcher.workflow import (check_seed_slot_identity, read_ap_identity_lock,
+                                         load_process_plan, _ap_client_server, WorkflowError)
+        from bb_launcher.external_workflow import _state
+        self.arm()
+        self.boot()
+        state = _state(self.settings)
+        server = _ap_client_server(load_process_plan(self.settings.process_plan))
+        check_seed_slot_identity(state, server=server, seed="old", slot="OldHunter")
+        check_seed_slot_identity(state, server="other:123", seed="other", slot="Other")
+        history = state / "keep-ledger.json"
+        history.write_text('{"received": [1, 2]}')
+        self.launched.append("unchanged")
+        with self.assertRaisesRegex(WorkflowError, "Reuse server address"):
+            self.connect()
+        self.assertEqual(["unchanged"], self.launched)
+        self.launched.clear()
+        result = connect_external(self.workflow_instance, self.settings, player_name="Hunter",
+                                  allow_seed_mismatch=True, allow_live_acceptance_candidate=True)
+        self.assertEqual([p.name for p in self.launched], ["AP client"])
+        self.assertTrue(result.client_config.is_file())
+        self.assertNotEqual("old", read_ap_identity_lock(state, server)["seed"])
+        self.assertEqual({"seed": "other", "slot": "Other"}, read_ap_identity_lock(state, "other:123"))
+        self.assertEqual('{"received": [1, 2]}', history.read_text())
+
     def test_external_starts_only_capable_pinned_client(self):
         self.arm()
         self.boot()

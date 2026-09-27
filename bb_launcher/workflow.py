@@ -1489,11 +1489,13 @@ def check_seed_slot_identity(
                 "AP server/slot does not match the selected seed package -- delivery "
                 "stays disarmed. Selected seed package expects "
                 f"seed {seed!r} slot {slot!r}; server {server!r} was last connected "
-                f"as seed {recorded['seed']!r} slot {recorded['slot']!r}. Fix the AP "
+                f"as seed {recorded['seed']!r} slot {recorded['slot']!r}. This is a local "
+                "remembered selection, not a check of the server's current room. Fix the AP "
                 "server field to the room for this seed package (or select the seed "
                 "package for that room) -- a different Bloodborne save slot does not "
                 "resolve this. If you intend to reuse this server for a different "
-                "seed on purpose, enable the explicit seed/slot mismatch override."
+                "seed on purpose, enable Advanced > Reuse server address for this seed "
+                "(this session), then retry. Do not delete delivery history."
             )
     _write_ap_identity_lock(state_root, server, seed=seed, slot=slot)
 
