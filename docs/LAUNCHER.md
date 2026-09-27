@@ -667,4 +667,5 @@ BBLauncher companion mode. It is off by default and is not saved across launcher
 restarts. Receipt, installed-file and process checks still apply; delivery
 ledgers and other server records are kept. The remembered selection is local
 history, not a query of the live server. Do not delete delivery history to resolve
-this refusal. The integrated BBLauncher-AP panel does not use this legacy guard.
+this refusal. The native C++ BBLauncher-AP application does not use this legacy guard;
+this differs from the Python launcher's BBLauncher companion panel.
