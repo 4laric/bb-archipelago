@@ -99,7 +99,7 @@ class ReleaseRecordTests(unittest.TestCase):
     def test_record_counts(self):
         counts = {tranche: len(record["releases"]) for tranche, record in self.records.items()}
         self.assertEqual({"contracts": 750, "spawns": 666, "chara": 294, "wakeup": 10,
-                          "scripted": 21}, counts)
+                          "scripted": 30}, counts)
 
     def test_central_wakeup_fallback_is_source_pinned(self):
         record = self.records["wakeup"]
