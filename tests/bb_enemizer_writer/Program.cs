@@ -223,6 +223,7 @@ try
             "receipt retains helper anchor provenance");
     }
     Plan();
+    IndependentNativeStagesTests.Run();
     BossTests.Run();
     MapTransplantTests.Run();
     BossEncounterTests.Run();

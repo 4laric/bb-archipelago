@@ -6,9 +6,11 @@ Only literal operands are resolved; initializer indirection stays explicit.
 from __future__ import annotations
 
 import hashlib
+from bisect import bisect_left
 import re
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
+from functools import lru_cache
 from typing import Iterable, Mapping
 
 from .model import Slot, canonical_map
@@ -82,7 +84,17 @@ class Event:
 
 
 def parse_events(text: str) -> list[Event]:
+    # Adapters repeatedly inspect the same scripts. Events and Calls are frozen;
+    # return a fresh outer list so caller edits cannot poison later inspections.
+    return list(_parsed_events(text))
+
+
+@lru_cache(maxsize=32)
+def _parsed_events(text: str) -> tuple[Event, ...]:
     code = mask_comments_and_strings(text)
+    # Index once: rescanning the whole prefix for every call is quadratic on
+    # large map scripts, and encounter composition parses them repeatedly.
+    newlines = [match.start() for match in re.finditer("\n", code)]
     events = []
     for match in DECLARATION.finditer(code):
         brace = match.end() - 1
@@ -93,13 +105,13 @@ def parse_events(text: str) -> list[Event]:
             opening = call.end() - 1
             closing = _closing(body, opening, "(", ")")
             calls.append(Call(call[1], _arguments(body[opening + 1:closing]),
-                              code.count("\n", 0, brace + 1 + call.start()) + 1))
+                              bisect_left(newlines, brace + 1 + call.start()) + 1))
         events.append(Event(int(match[1]), match[2], _arguments(match[3]),
-                            code.count("\n", 0, match.start()) + 1,
-                            code.count("\n", 0, end) + 1, tuple(calls)))
+                            bisect_left(newlines, match.start()) + 1,
+                            bisect_left(newlines, end) + 1, tuple(calls)))
     if code.count("$Event(") != len(events):
         raise ValueError("unsupported event declaration in boss corpus")
-    return events
+    return tuple(events)
 
 
 def _entity(call: Call) -> int | None:
