@@ -555,12 +555,16 @@ class LauncherApp:
         from .external_ui import BBLauncherPanel
         self.bblauncher_panel = BBLauncherPanel(self, bblauncher)
 
-        # Session overrides (suppression-binder mismatch, seed/slot mismatch,
-        # research captures) retired from the GUI: they were operator-only,
-        # never-saved escape hatches that had outlived their usefulness here.
-        # The vars stay permanently False now that nothing sets them; the CLI
-        # doctor command (--allow-suppression-mismatch, --allow-seed-mismatch)
-        # remains the way to invoke them when genuinely needed.
+        # A remembered address can legitimately host a new room. This recovery
+        # is session-only; it never clears delivery ledgers or persists consent.
+        reuse_server, _reuse_row = option(
+            ttk, troubleshooting, troubleshooting_row,
+            "Reuse server address for this seed (this session)", self.allow_seed_mismatch,
+            caption="Use only after checking the server and selected seed. Allows replacing "
+                    "this address's remembered seed/slot; delivery history is kept.",
+        )
+        troubleshooting_row += 3
+        # Suppression mismatch and research captures remain CLI-only.
         troubleshooting_row = section(ttk, troubleshooting, troubleshooting_row, "Paths")
         paths = ttk.Frame(troubleshooting)
         paths.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")

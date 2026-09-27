@@ -656,3 +656,16 @@ and bridge state from disk; live AP connection state is still only visible in
 the client's own output. A release package
 must still be given the prebuilt native client; CI uses the explicitly labeled
 tools-only mode.
+
+### Reusing a server address for a new seed
+
+In the separate BloodborneAPLauncher, Advanced includes **Reuse server address
+for this seed (this session)**. Use it after verifying that the server address
+and selected seed package refer to the same room. It permits replacing that
+address's remembered seed/slot selection, including in the Python launcher's
+BBLauncher companion mode. It is off by default and is not saved across launcher
+restarts. Receipt, installed-file and process checks still apply; delivery
+ledgers and other server records are kept. The remembered selection is local
+history, not a query of the live server. Do not delete delivery history to resolve
+this refusal. The native C++ BBLauncher-AP application does not use this legacy guard;
+this differs from the Python launcher's BBLauncher companion panel.

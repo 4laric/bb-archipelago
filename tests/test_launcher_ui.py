@@ -1161,14 +1161,9 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertIn("tools.bb_enemizer.cli", (self.repo / "bb_launcher" / "workflow.py").read_text())
         self.assertIn("BBEnemizerWriter.csproj", (self.repo / "bb_launcher" / "workflow.py").read_text())
 
-    def test_session_override_checkboxes_are_retired_from_the_gui(self):
-        """These were operator-only, never-saved escape hatches (bb-archipelago
-        #183, #347) that had outlived their usefulness as GUI controls. The
-        vars stay (permanently False, since nothing sets them any more) so the
-        background-thread call signatures below them are untouched; only the
-        checkbox text goes. The CLI doctor command keeps the real escape hatch.
-        """
+    def test_server_reuse_is_visible_but_session_overrides_are_not_saved(self):
         source = (self.repo / "bb_launcher" / "ui.py").read_text(encoding="utf-8")
+        self.assertIn("Reuse server address for this seed (this session)", source)
         for retired in ('"Allow suppression binder mismatch"', '"Enable research captures"',
                         '"Allow AP seed/slot mismatch"'):
             self.assertNotIn(retired, source)
