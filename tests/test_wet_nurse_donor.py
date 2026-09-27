@@ -114,6 +114,12 @@ class WetNurseDonorTests(unittest.TestCase):
                     f"SetEventFlag({arena.start_flag}, ON)",
                     normalized[arena.activation_event],
                 )
+                if arena.key == "cleric-beast":
+                    entry = normalized[arena.activation_event]
+                    self.assertNotIn("2412831", entry)
+                    self.assertNotIn("ForceAnimationPlayback(2410800, 3028", entry)
+                    self.assertNotIn("WaitFixedTimeFrames(110)", entry)
+                    self.assertIn("WaitFixedTimeFrames(1)", entry)
 
     def test_health_keeps_full_three_body_proxy_graph_and_destination_telemetry(self):
         for arena in ARENAS:
@@ -137,6 +143,18 @@ class WetNurseDonorTests(unittest.TestCase):
                 self.assertIn(
                     f"CreateReferredDamagePair({IDS.support_entity}, {IDS.proxy_entity})",
                     health,
+                )
+                self.assertIn(
+                    f"SetCharacterDefaultBackreadState({IDS.proxy_entity}, Enabled);",
+                    health,
+                )
+                self.assertIn(
+                    f"SetNetworkUpdateRate({IDS.proxy_entity}, true, CharacterUpdateFrequency.AlwaysUpdate);",
+                    health,
+                )
+                self.assertLess(
+                    health.index(f"SetCharacterDefaultBackreadState({IDS.proxy_entity}, Enabled)"),
+                    health.index(f"DisplayBossHealthBar(Enabled, {IDS.proxy_entity}"),
                 )
                 for instruction in ("CreatePlaylog", "StartTimeMeasurement"):
                     expected = [
@@ -180,8 +198,16 @@ class WetNurseDonorTests(unittest.TestCase):
                 self.assertEqual(2, emergence.count(f"{EMEVD_EFFECT}"))
                 self.assertIn(f"WarpObjectToCharacter({IDS.object_entity}", emergence)
                 bridge = after[IDS.terminal_bridge_event]
+                armed = (f"EventFlag({arena.start_flag}) && "
+                         f"CharacterBackreadStatus({IDS.proxy_entity}) && "
+                         f"HPRatio({IDS.proxy_entity}) > 0")
+                dead = (f"CharacterBackreadStatus({IDS.proxy_entity}) && "
+                        f"HPRatio({IDS.proxy_entity}) <= 0")
+                self.assertIn(armed, bridge)
+                self.assertIn(dead, bridge)
+                self.assertLess(bridge.index(armed), bridge.index(dead))
                 self.assertLess(
-                    bridge.index(f"HPRatio({IDS.proxy_entity}) <= 0"),
+                    bridge.index(dead),
                     bridge.index(f"ForceCharacterDeath({arena.actor}, false)"),
                 )
                 self.assertLess(
@@ -346,7 +372,10 @@ class WetNurseDonorTests(unittest.TestCase):
                     path = source / arena.event_file
                     destination = path.read_text(encoding="utf-8-sig")
                     path.write_text(
-                        patch_wet_nurse_donor(arena, destination, donor, IDS),
+                        skip_replacement_entrance(
+                            arena.key, destination,
+                            patch_wet_nurse_donor(arena, destination, donor, IDS),
+                        ),
                         encoding="utf-8-sig",
                     )
                 output = work / ("output-" + suffix)

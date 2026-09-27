@@ -10,8 +10,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from pathlib import Path
+from queue import SimpleQueue
 from typing import Any, Callable, Mapping, Sequence
 
 from .core import (
@@ -88,6 +90,30 @@ PLAN_FORMAT = "bb-enemizer-plan-v2"
 PARAMDEF_PATH = "dvdroot_ps4/paramdef/paramdef.paramdefbnd.dcx"
 Progress = Callable[[str], None]
 CommandRunner = Callable[[Sequence[str], Path, Progress], None]
+
+
+def _run_initial_writers(
+    writers: Sequence[Callable[[Progress], None]], progress: Progress,
+    *, parallel: bool,
+) -> None:
+    """Join every started writer before the caller may clean its staging tree."""
+    if not parallel or len(writers) < 2:
+        for writer in writers:
+            writer(progress)
+        return
+    messages: SimpleQueue[str] = SimpleQueue()
+    with ThreadPoolExecutor(max_workers=min(4, len(writers))) as pool:
+        futures = [pool.submit(writer, messages.put) for writer in writers]
+        pending = set(futures)
+        while pending:
+            _, pending = wait(pending, timeout=0.05, return_when=FIRST_COMPLETED)
+            while not messages.empty():
+                progress(messages.get_nowait())
+        while not messages.empty():
+            progress(messages.get_nowait())
+        # Raise the first failure in source order, after every writer has joined.
+        for future in futures:
+            future.result()
 
 
 @dataclass(frozen=True)
@@ -1431,7 +1457,7 @@ def _ap_identity_lock_path(state_root: Path | str, server: str) -> Path:
 
 
 def read_ap_identity_lock(state_root: Path | str, server: str) -> dict[str, str] | None:
-    """The seed/slot last connected through ``server``, or None if unknown.
+    """The last seed/slot selected for ``server``, or None if unknown.
 
     Read-only and tolerant of a missing or corrupt lock file: an unknown
     prior identity is not a mismatch, only an absence of evidence.
@@ -1488,12 +1514,14 @@ def check_seed_slot_identity(
             raise WorkflowError(
                 "AP server/slot does not match the selected seed package -- delivery "
                 "stays disarmed. Selected seed package expects "
-                f"seed {seed!r} slot {slot!r}; server {server!r} was last connected "
-                f"as seed {recorded['seed']!r} slot {recorded['slot']!r}. Fix the AP "
+                f"seed {seed!r} slot {slot!r}; server {server!r} was previously selected "
+                f"as seed {recorded['seed']!r} slot {recorded['slot']!r}. This is a local "
+                "remembered selection, not a check of the server's current room. Fix the AP "
                 "server field to the room for this seed package (or select the seed "
                 "package for that room) -- a different Bloodborne save slot does not "
                 "resolve this. If you intend to reuse this server for a different "
-                "seed on purpose, enable the explicit seed/slot mismatch override."
+                "seed on purpose, enable Advanced > Reuse server address for this seed "
+                "(this session), then retry. Do not delete delivery history."
             )
     _write_ap_identity_lock(state_root, server, seed=seed, slot=slot)
 
@@ -2180,24 +2208,25 @@ class LauncherWorkflow:
                 source_event = install.resolve_file(
                     CATHEDRAL_EVENT_PATH, include_mods=False
                 )[1]
-                self.toolchain.write_cathedral_event(
+                writers: list[Callable[[Progress], None]] = []
+                writers.append(lambda report: self.toolchain.write_cathedral_event(
                     source=source_event, output=cathedral_output,
                     manifest=cathedral_manifest,
-                    soulsformats_next=settings.soulsformats_next, progress=progress,
+                    soulsformats_next=settings.soulsformats_next, progress=report,
                     access_flag=(request["hemwick_gate"] or {}).get("access_flag"),
-                )
+                ))
                 if request["hemwick_gate"] is not None:
                     hemwick_output = temporary / HEMWICK_EVENT_PATH
                     hemwick_manifest = temporary / "hemwick-event-manifest.json"
                     source_hemwick = install.resolve_file(
                         HEMWICK_EVENT_PATH, include_mods=False
                     )[1]
-                    self.toolchain.write_hemwick_event(
+                    writers.append(lambda report: self.toolchain.write_hemwick_event(
                         source=source_hemwick, output=hemwick_output,
                         manifest=hemwick_manifest,
                         access_flag=request["hemwick_gate"]["access_flag"],
-                        soulsformats_next=settings.soulsformats_next, progress=progress,
-                    )
+                        soulsformats_next=settings.soulsformats_next, progress=report,
+                    ))
                 # The bridge carries the complete reviewed category-8 table, not
                 # only this seed's rows, exactly as the compiled overlay did:
                 # an initializer for an unshuffled row is inert because its
@@ -2214,11 +2243,11 @@ class LauncherWorkflow:
                     ),
                 }, indent=2) + "\n", encoding="utf-8")
                 source_common = install.resolve_file(COMMON_EVENT_PATH, include_mods=False)[1]
-                self.toolchain.write_common_event(
+                writers.append(lambda report: self.toolchain.write_common_event(
                     request_path=common_rows, source=source_common,
                     output=common_output, manifest=common_manifest,
-                    soulsformats_next=settings.soulsformats_next, progress=progress,
-                )
+                    soulsformats_next=settings.soulsformats_next, progress=report,
+                ))
                 if _composes_seed_binder(request):
                     assert temporary is not None
                     composed_binder = temporary / "gameparam.parambnd.dcx"
@@ -2229,11 +2258,21 @@ class LauncherWorkflow:
                         parameter_request.write_text(json.dumps({
                             **request['request'], 'category8_awards': effective_awards,
                         }, indent=2) + '\n', encoding='utf-8')
-                    self.toolchain.write_seed_weapons(
+                    writers.append(lambda report: self.toolchain.write_seed_weapons(
                         request_path=parameter_request, input_binder=binder, paramdef=paramdef,
                         output_binder=composed_binder,
-                        soulsformats_next=settings.soulsformats_next, progress=progress,
-                    )
+                        soulsformats_next=settings.soulsformats_next, progress=report,
+                    ))
+                # Separate packaged executables read immutable inputs and write
+                # disjoint files. Source `dotnet run` calls can build the same
+                # project simultaneously, so retain their original serial order.
+                parallel_writers = (
+                    isinstance(self.toolchain, EnemizerToolchain)
+                    and self.toolchain.event_writer_executable.is_file()
+                    and (not _composes_seed_binder(request)
+                         or self.toolchain.parameter_writer_executable.is_file())
+                )
+                _run_initial_writers(writers, progress, parallel=parallel_writers)
                 if request["toast_placeholders"] is not None:
                     names_output = {}
                     binder_hash = None

@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 from tools.bb_inputs import read_blob, read_prefix
 from tools.bb_enemizer.boss_actor_scaling import allocate_actor_scaling
 from tools.bb_enemizer.boss_canary import event_blocks
+from tools.bb_enemizer.boss_activation import arena_entry_predicate
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.ludwig_donor import (
     ARENAS, CO_OP_RESTORE_EVENTS, DEFAULT_ALLOCATION, DESTINATION_FFX,
@@ -83,6 +84,17 @@ class LudwigDonorTests(unittest.TestCase):
                     f"ChangeCharacterEnableState({IDS.phase_entity}, Enabled)", health
                 )
                 transition = after[IDS.phase_25]
+                phase_threshold = after[IDS.phase_24]
+                self.assertLess(
+                    phase_threshold.index(f"WaitFor(EventFlag({IDS.readiness_event}))"),
+                    phase_threshold.index(f"CharacterBackreadStatus({arena.actor}) && "
+                                          f"HPRatio({arena.actor}) < 0.5 && "
+                                          f"HPRatio({arena.actor}) > 0"),
+                )
+                self.assertLess(
+                    transition.index(f"WaitFor(EventFlag({IDS.readiness_event}))"),
+                    transition.index(f"EventFlag({IDS.phase_24})"),
+                )
                 self.assertIn(
                     f"WarpCharacterAndCopyFloor({IDS.phase_entity}, "
                     f"TargetEntityType.Character, {arena.actor}, -1, {arena.actor})",
@@ -96,6 +108,14 @@ class LudwigDonorTests(unittest.TestCase):
                 self.assertNotIn("13400999", "\n".join(
                     after[IDS.event_ids()[event]] for event in EVENTS
                 ))
+                for source in EVENTS:
+                    if source not in (13404824, 13404825):
+                        imported = after[IDS.event_ids()[source]]
+                        self.assertLess(
+                            imported.index(f"WaitFor(EventFlag({IDS.readiness_event}))"),
+                            imported.index("WaitFor(", imported.index(
+                                f"WaitFor(EventFlag({IDS.readiness_event}))") + 1),
+                        )
                 self.assertEqual(3, after[0].count(
                     f", {IDS.limb_event},"))
 
@@ -116,7 +136,9 @@ class LudwigDonorTests(unittest.TestCase):
                 initialize = f"$InitializeEvent(0, {IDS.readiness_event})"
                 self.assertLess(constructor.index(reset), constructor.index(initialize))
                 ready = after[IDS.readiness_event]
-                self.assertIn(f"WaitFor(EventFlag({arena.start_flag}))", ready)
+                self.assertIn(
+                    f"WaitFor(EventFlag({arena.start_flag}) && "
+                    f"({arena_entry_predicate(arena.key)}))", ready)
                 if restorations[arena.key]:
                     self.assertIn(restorations[arena.key], ready)
                 health = after[arena.health_bar_event]

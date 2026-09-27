@@ -110,12 +110,6 @@ def _process_plan(params: Mapping[str, Any], state_root: Path) -> Path:
         "runtime_build": str(request.get("runtime_build", "")),
         "shad_build": DEFAULT_SHAD_BUILD,
     }
-    key = hashlib.sha256(canonical_json(material)).hexdigest()[:16]
-    directory = state_root / "integrated" / "plans"
-    directory.mkdir(parents=True, exist_ok=True)
-    path = directory / f"plan-{key}.json"
-    if path.is_file() and not path.is_symlink():
-        return path
     document = generate_process_plan(
         shad_executable=material["shad_executable"],
         runtime_build=material["runtime_build"],
@@ -124,6 +118,13 @@ def _process_plan(params: Mapping[str, Any], state_root: Path) -> Path:
         shad_build=material["shad_build"],
         server=material["server"],
     )
+    # Include executable content pins: updates at the same path need a new plan.
+    key = hashlib.sha256(canonical_json(document)).hexdigest()[:16]
+    directory = state_root / "integrated" / "plans"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"plan-{key}.json"
+    if path.is_file() and not path.is_symlink():
+        return path
     return write_process_plan(path, document)
 
 

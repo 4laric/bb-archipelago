@@ -422,7 +422,16 @@ def _health(
     destination: str,
     mapping: Mapping[int, int],
 ) -> str:
-    return _telemetry(_remap(source, mapping), destination)
+    result = _telemetry(_remap(source, mapping), destination)
+    proxy = mapping[PROXY]
+    return _replace_once(
+        result,
+        f"    SetCharacterGravity({proxy}, Disabled);\n",
+        f"    SetCharacterDefaultBackreadState({proxy}, Enabled);\n"
+        f"    SetNetworkUpdateRate({proxy}, true, CharacterUpdateFrequency.AlwaysUpdate);\n"
+        f"    SetCharacterGravity({proxy}, Disabled);\n",
+        "Wet Nurse proxy backread setup",
+    )
 
 
 def _music(arena: ArenaContract, block: str, proxy_entity: int) -> str:
@@ -496,7 +505,8 @@ def _constructor(
 def _terminal_bridge(arena: ArenaContract, allocation: WetNurseDonorAllocation) -> str:
     return f"""$Event({allocation.terminal_bridge_event}, Default, function() {{
     EndIf(EventFlag({arena.completion_event}));
-    WaitFor(HPRatio({allocation.proxy_entity}) <= 0);
+    WaitFor(EventFlag({arena.start_flag}) && CharacterBackreadStatus({allocation.proxy_entity}) && HPRatio({allocation.proxy_entity}) > 0);
+    WaitFor(CharacterBackreadStatus({allocation.proxy_entity}) && HPRatio({allocation.proxy_entity}) <= 0);
     EndIf(EventFlag({arena.completion_event}));
     RequestCharacterAnimationReset({arena.actor}, Interpolation.Uninterpolated);
     RequestCharacterAnimationReset({allocation.support_entity}, Interpolation.Uninterpolated);

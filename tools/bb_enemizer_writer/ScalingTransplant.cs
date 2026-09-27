@@ -293,8 +293,9 @@ internal static class ScalingTransplant
             string adjustedPlan = Path.Combine(staging, "bb-enemizer-plan.json");
             File.Copy(planPath, Path.Combine(staging, "source-enemizer-plan.json"));
             File.WriteAllText(adjustedPlan, plan.ToJsonString(Json));
-            MapTransplant.Run(adjustedPlan, mapsPath, Path.Combine(staging, "dvdroot_ps4", "map", "MapStudio"), scalingPrepared: true, bossPrepared: bossPrepared);
-            AiTransplant.Run(adjustedPlan, gamePath, defsPath, scriptsPath, Path.Combine(staging, "dvdroot_ps4", "script"), true, bossPrepared);
+            IndependentNativeStages.Run(
+                () => MapTransplant.Run(adjustedPlan, mapsPath, Path.Combine(staging, "dvdroot_ps4", "map", "MapStudio"), scalingPrepared: true, bossPrepared: bossPrepared),
+                () => AiTransplant.Run(adjustedPlan, gamePath, defsPath, scriptsPath, Path.Combine(staging, "dvdroot_ps4", "script"), true, bossPrepared));
             var report = new {
                 format = "bb-enemizer-scaling-v1", applied = true, live_validated = false,
                 source_plan_sha256 = HashFile(planPath), source_gameparam_sha256 = HashFile(gamePath),

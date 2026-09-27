@@ -56,7 +56,8 @@ from tools.bb_enemizer.boss_pool import (
 from tools.bb_enemizer.encounter_recipes import reusable_recipes
 from tools.bb_enemizer.chalice_recipes import chalice_recipes, validate_original_source
 from tools.bb_enemizer.good_boss_pool import assign_good_bosses
-from tools.bb_enemizer.boss_entrances import skip_replacement_entrance
+from tools.bb_enemizer.boss_entrances import strip_destination_entrance_animations
+from tools.bb_enemizer.boss_activation import guard_shuffled_activation
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.gascoigne_contract import (
     ProjectOwnedIds, NativeActorPin, patch_gascoigne_at_cleric, native_plan_gascoigne_at_cleric,
@@ -1259,7 +1260,8 @@ def _build_once(args) -> dict:
             else:
                 patched = patch_contract_swap(arena, package, texts[arena.event_file], texts[package.event_file],
                     allow_materialized_actor_additions=bool(materializations.get(arena.key)))
-            patched = skip_replacement_entrance(arena.key, texts[arena.event_file], patched)
+            patched = strip_destination_entrance_animations(arena.key, texts[arena.event_file], patched)
+            patched = guard_shuffled_activation(arena, texts[arena.event_file], patched)
             variants.setdefault(arena.event_file, []).append(patched)
         add_scripted_variants(variants, texts, scripted)
         override_inputs = []

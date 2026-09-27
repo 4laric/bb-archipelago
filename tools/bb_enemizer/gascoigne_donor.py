@@ -19,6 +19,7 @@ from tools.bb_inputs import read_blob, read_prefix
 
 from .boss_canary import event_blocks
 from .boss_contracts import ARENAS, ArenaContract
+from .boss_activation import arena_entry_predicate
 from .arena_port import (
     ArenaPort,
     PortableCombatFragments,
@@ -234,6 +235,26 @@ def _linked_damage_health(body: str, arena: ArenaContract, ids: GascoigneDonorId
         "hidden beast must receive linked human damage")
 
 
+def _guard_phase(block: str, arena: ArenaContract, ids: GascoigneDonorIds) -> str:
+    # The donor's HP threshold may read zero for an unloaded actor. Wait for the
+    # destination encounter and live human before evaluating that threshold.
+    return _replace_once(
+        block, "L0:\n    SetCharacterGravity(",
+        f"L0:\n    WaitFor(EventFlag({ids.readiness_event}) && "
+        f"CharacterBackreadStatus({arena.actor}) && HPRatio({arena.actor}) > 0);\n"
+        "    SetCharacterGravity(", "loaded phase-one actor",
+    )
+
+
+def _guard_special(block: str, ids: GascoigneDonorIds) -> str:
+    header = block.splitlines()[0] + "\n"
+    return _replace_once(
+        block, header,
+        header + f"    WaitFor(EventFlag({ids.readiness_event}));\n",
+        "destination special readiness",
+    )
+
+
 def _adapt_activation(arena: ArenaContract, body: str) -> str:
     if arena.key == "cleric-beast":
         return grounded_cleric_entry(body)
@@ -313,7 +334,7 @@ def _readiness(arena: ArenaContract, ids: GascoigneDonorIds) -> str:
     return "\n".join((
         f"$Event({ids.readiness_event}, Default, function() {{",
         f"    EndIf(EventFlag({arena.completion_event}));",
-        f"    WaitFor(EventFlag({arena.start_flag}));",
+        f"    WaitFor(EventFlag({arena.start_flag}) && ({arena_entry_predicate(arena.key)}));",
         *restore,
         "});",
     ))
@@ -330,7 +351,7 @@ def _port_readiness(port: ArenaPort, ids: GascoigneDonorIds) -> str:
     return "\n".join((
         f"$Event({ids.readiness_event}, Default, function() {{",
         f"    EndIf(EventFlag({arena.completion_event}));",
-        f"    WaitFor(EventFlag({arena.start_flag}));",
+        f"    WaitFor(EventFlag({arena.start_flag}) && ({arena_entry_predicate(arena.key)}));",
         f"    SetCharacterInvincibility({arena.actor}, Disabled);",
         "});",
     ))
@@ -445,6 +466,7 @@ def _patch_gascoigne_at_port(port: ArenaPort, destination: str, donor_source: st
     ):
         block = _remap(donor[source], mapping)
         if source == 12414807:
+            block = _guard_phase(block, arena, ids)
             block = _replace_once(
                 block,
                 "    EndIf(EventFlag(9337));\n    $InitializeEvent(0, 9350, 1);\n    SetEventFlag(9337, ON);\n",
@@ -458,9 +480,12 @@ def _patch_gascoigne_at_port(port: ArenaPort, destination: str, donor_source: st
                 f"    SetCharacterGravity({ids.beast_entity}, Enabled);\n",
                 "beast materialization",
             )
+        else:
+            block = _guard_special(block, ids)
         imports[target] = block
     bridge = f"""$Event({ids.terminal_bridge_event}, Default, function() {{
     EndIf(EventFlag({arena.completion_event}));
+    WaitFor(EventFlag({ids.readiness_event}));
     humanDead = CharacterDead({arena.actor});
     beastDead = EventFlag({ids.phase_event}) && CharacterDead({ids.beast_entity});
     WaitFor(humanDead || beastDead);
@@ -554,6 +579,7 @@ def patch_gascoigne_donor(arena: ArenaContract | ArenaPort, destination: str, do
                            (12414809, ids.beast_special_event)):
         block = _remap(donor[source], mapping)
         if source == 12414807:
+            block = _guard_phase(block, arena, ids)
             block = _replace_once(block,
                 "    EndIf(EventFlag(9337));\n    $InitializeEvent(0, 9350, 1);\n    SetEventFlag(9337, ON);\n",
                 "", "Gascoigne progression tail")
@@ -562,9 +588,12 @@ def patch_gascoigne_donor(arena: ArenaContract | ArenaPort, destination: str, do
                 f"    ChangeCharacterEnableState({ids.beast_entity}, Enabled);\n"
                 f"    SetCharacterInvincibility({ids.beast_entity}, Disabled);\n"
                 f"    SetCharacterGravity({ids.beast_entity}, Enabled);\n", "beast materialization")
+        else:
+            block = _guard_special(block, ids)
         imports[target] = block
     bridge = f'''$Event({ids.terminal_bridge_event}, Default, function() {{
     EndIf(EventFlag({arena.completion_event}));
+    WaitFor(EventFlag({ids.readiness_event}));
     humanDead = CharacterDead({arena.actor});
     beastDead = EventFlag({ids.phase_event}) && CharacterDead({ids.beast_entity});
     WaitFor(humanDead || beastDead);

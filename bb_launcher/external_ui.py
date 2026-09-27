@@ -244,6 +244,7 @@ class BBLauncherPanel:
                 release_chara=app.release_chara.get())
             player = app.player_name.get().strip()
             captures = app.research_captures.get()
+            allow_seed_mismatch = app.allow_seed_mismatch.get()
         except LauncherError as exc:
             app.messagebox.showerror("Setup incomplete", str(exc), parent=app.root)
             return
@@ -268,7 +269,8 @@ class BBLauncherPanel:
                     )
                 else:
                     result = connect_external(app.workflow, settings, player_name=player,
-                                              research_captures=captures, progress=app._progress_message, **kwargs)
+                                              research_captures=captures, allow_seed_mismatch=allow_seed_mismatch,
+                                              progress=app._progress_message, **kwargs)
                     runtime = json.loads(result.client_config.read_text(encoding="utf-8-sig"))
                     contract = runtime.get("external_activation") if isinstance(runtime, dict) else None
                     if not isinstance(contract, dict) or not isinstance(
