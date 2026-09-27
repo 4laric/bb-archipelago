@@ -21,6 +21,7 @@ from .boss_canary import event_blocks
 from .bosses import parse_events
 from .model import Archetype, Slot, Swap
 from .scaling import plan_scaling
+from .boss_activation import arena_entry_predicate
 
 BUNDLE = Path(__file__).resolve().parents[2] / "research" / "bb_inputs.db"
 WITCH_SOURCE = "event/m22_00_00_00.emevd.dcx.js"
@@ -553,6 +554,17 @@ def patch_witch_at_amygdala(
         destination_event: _remap(donor[source_event], mapping)
         for source_event, destination_event, _ in copied_events
     }
+    imported[ids.phase] = _replace_once(
+        imported[ids.phase],
+        "    WaitFor(CharacterHPValue(3300800) == 1 || CharacterHPValue(980800) == 1);",
+        f"    WaitFor({arena_entry_predicate('amygdala')}\n"
+        "        && CharacterBackreadStatus(3300800)\n"
+        "        && CharacterHPValue(3300800) > 0\n"
+        "        && CharacterBackreadStatus(980800)\n"
+        "        && CharacterHPValue(980800) > 0);\n"
+        "    WaitFor(CharacterHPValue(3300800) == 1 || CharacterHPValue(980800) == 1);",
+        "second healthbar readiness and trigger",
+    )
     minions = tuple(ids.minion_first_entity + offset for offset in range(3))
     generators = tuple(ids.generator_entity_first + offset for offset in range(3))
     imported = {

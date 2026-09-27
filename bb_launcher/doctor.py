@@ -773,11 +773,11 @@ def _check_seed_slot_identity(
         return DoctorFinding(
             PASS,
             "AP seed/slot identity",
-            f"{address} was last connected as seed {seed!r} slot {slot!r}, matching this seed package",
+            f"{address} was previously selected as seed {seed!r} slot {slot!r}, matching this seed package",
         )
     detail = (
         f"selected seed package expects seed {seed!r} slot {slot!r}, but "
-        f"{address} was last connected as seed {recorded['seed']!r} "
+        f"{address} was previously selected as seed {recorded['seed']!r} "
         f"slot {recorded['slot']!r}"
     )
     if allow_seed_mismatch:
@@ -795,7 +795,8 @@ def _check_seed_slot_identity(
         detail,
         "fix the AP server field to the room for this seed package (or select "
         "the seed package for that room) -- a different Bloodborne save slot "
-        "does not resolve this; enable the seed/slot mismatch override only if "
+        "does not resolve this; use Advanced > Reuse server address for this seed "
+        "(the session-only seed/slot mismatch override) only if "
         "you deliberately intend to reuse this server for a different seed",
     )
 

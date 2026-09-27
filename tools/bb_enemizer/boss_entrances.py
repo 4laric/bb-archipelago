@@ -1,8 +1,9 @@
 """Source-pinned removal of destination boss entrance cinematics.
 
 The destination still owns the trigger, room notification, cutscene-control
-flag, actor enablement, encounter-start flag, and progression.  Only the
-original entrance ``PlayCutscene*`` instruction is replaced.  Combat phase
+flag, actor enablement, encounter-start flag, and progression. Original
+entrance ``PlayCutscene*`` instructions are replaced, and Cleric's model-only
+leap warp, animation, and delay are removed. Combat phase
 cinematics and post-defeat/endings live in other events and are outside this
 policy.
 
@@ -62,8 +63,8 @@ def _short_warp(region: int) -> str:
     return f"IssueShortWarpRequest(10000, TargetEntityType.Area, {region}, -1);"
 
 
-# Complete AP boss-arena census.  Entries with no edits prove that their
-# original activation event has no entrance cinematic and must stay unchanged.
+# Complete AP boss-arena census. Entries with no cinematic edits normally
+# remain unchanged; Cleric additionally removes its model-specific leap warp.
 ENTRANCE_POLICIES: dict[str, EntrancePolicy] = {
     "cleric-beast": EntrancePolicy(
         "m24_01_00_00.emevd.dcx.js", 12411702,
@@ -187,7 +188,7 @@ def _replace_event(source: str, event_id: int, replacement: str) -> str:
 
 
 def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> str:
-    """Skip one destination entrance cinematic while preserving its lifecycle."""
+    """Remove destination-only entrance choreography, retaining its lifecycle."""
     if arena_key not in ENTRANCE_POLICIES:
         raise ValueError(f"no entrance policy for arena {arena_key}")
     policy = ENTRANCE_POLICIES[arena_key]
@@ -213,6 +214,46 @@ def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> st
         patched_body = event_blocks(patched).get(policy.event_id)
         if patched_body is None or "PlayCutscene" in patched_body:
             raise ValueError(f"{arena_key} adapter introduced an entrance cinematic")
+        if arena_key == "cleric-beast":
+            from .gascoigne_contract import grounded_cleric_entry
+            warp = "    IssueShortWarpRequest(2410800, TargetEntityType.Area, 2412831, -1);\n"
+            animation = "    ForceAnimationPlayback(2410800, 3028, false, false, false);\n"
+            long_wait = "    WaitFixedTimeFrames(110);"
+            short_wait = "    WaitFixedTimeFrames(1);"
+            original_leap = (patched_body.count(warp) == 1
+                             and patched_body.count(long_wait) == 1
+                             and patched_body.count(animation) <= 1
+                             and short_wait not in patched_body)
+            grounded = all((warp not in patched_body, animation not in patched_body,
+                            long_wait not in patched_body,
+                            ("SetCharacterGravity(2410800, Enabled);" in patched_body
+                             or "SetCharacterGravity(2410800, Disabled);" not in patched_body),
+                            ("SetCharacterMaphits(2410800, false);" in patched_body
+                             or "SetCharacterMaphits(2410800, true);" not in patched_body),
+                            "SetEventFlag(12414700, ON);" in patched_body))
+            if original_leap:
+                # Some donor adapters already remove model-specific 3028 but
+                # leave its warp and delay; both known forms need grounding.
+                if animation not in patched_body:
+                    adapted = patched_body.replace(warp, "", 1).replace(
+                        long_wait, short_wait, 1)
+                    return _replace_event(patched, policy.event_id, adapted)
+                return _replace_event(patched, policy.event_id,
+                                      grounded_cleric_entry(patched_body))
+            # Donor-specific entrance choreography can replace the leap and its
+            # delay while retaining Cleric's elevated warp. Keep those donor
+            # motions, but start them at the grounded map placement.
+            if (patched_body.count(warp) == 1 and animation not in patched_body
+                    and long_wait not in patched_body
+                    and ("SetCharacterGravity(2410800, Enabled);" in patched_body
+                         or "SetCharacterGravity(2410800, Disabled);" not in patched_body)
+                    and ("SetCharacterMaphits(2410800, false);" in patched_body
+                         or "SetCharacterMaphits(2410800, true);" not in patched_body)
+                    and "SetEventFlag(12414700, ON);" in patched_body):
+                return _replace_event(patched, policy.event_id,
+                                      patched_body.replace(warp, "", 1))
+            if not grounded:
+                raise ValueError("Cleric adapter has a partial or unknown entrance leap")
         return patched
 
     patched_blocks = event_blocks(patched)
@@ -248,3 +289,29 @@ def skip_replacement_entrance(arena_key: str, original: str, patched: str) -> st
         if event_id != policy.event_id and result_blocks.get(event_id) != block:
             raise ValueError(f"entrance policy changed unrelated event {event_id}")
     return result
+
+
+def strip_destination_entrance_animations(arena_key: str, original: str, patched: str) -> str:
+    """Remove only source-boss entrance motions, never donor combat phases.
+
+    Required ground/player relocations, actor state restoration, flags and
+    progression remain intact. The shared cinematic policy verifies the exact
+    source activation body before this narrower model-animation edit.
+    """
+    import re
+    from .boss_activation import ACTIVATION_POLICIES
+    patched = skip_replacement_entrance(arena_key, original, patched)
+    entrance = ENTRANCE_POLICIES[arena_key]
+    policy = ACTIVATION_POLICIES[arena_key]
+    source = event_blocks(original)
+    actors = {int(value) for value in re.findall(
+        r"DisplayBossHealthBar\(Enabled, (\d+),", source[policy.health_event])}
+    actors.add(policy.actor)
+    motions = set()
+    for line in source[entrance.event_id].splitlines():
+        match = re.match(r"\s*ForceAnimationPlayback\((\d+),", line)
+        if match and int(match[1]) in actors:
+            motions.add(line.strip())
+    body = event_blocks(patched)[entrance.event_id]
+    changed = "\n".join(line for line in body.splitlines() if line.strip() not in motions)
+    return _replace_event(patched, entrance.event_id, changed)

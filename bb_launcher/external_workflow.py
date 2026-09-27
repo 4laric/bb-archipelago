@@ -153,6 +153,7 @@ def verify_before_boot(workflow, settings, *, player_name="",
 
 
 def connect_external(workflow, settings, *, player_name="", research_captures=False,
+                     allow_seed_mismatch=False,
                      progress=lambda _: None, allow_live_acceptance_candidate=False):
     install, receipt, verified = _verify(settings, candidate=allow_live_acceptance_candidate)
     observation_path = _observation_path(settings)
@@ -209,7 +210,8 @@ def connect_external(workflow, settings, *, player_name="", research_captures=Fa
     server = _ap_client_server(plan)
     if not server or server.startswith("-") or "{" in server or "}" in server:
         raise ValidationError("AP client has no valid server address")
-    check_seed_slot_identity(_state(settings), server=server, seed=request["seed"], slot=request["slot"])
+    check_seed_slot_identity(_state(settings), server=server, seed=request["seed"],
+                             slot=request["slot"], allow_mismatch=allow_seed_mismatch)
     manifest = settings.suppression_manifest
     if _composes_seed_binder(request) or names is not None:
         manifest = _write_seed_suppression_manifest(
