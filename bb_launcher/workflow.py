@@ -366,6 +366,7 @@ class EnemizerOptions:
     seed: str | None = None
     allow_tier_mixing: bool = True
     preserve_locomotion: bool = False
+    no_winter_lanterns: bool = False
     normalize_scaling: bool = False
     boss_canary: bool = False
     # Reviewed encounter packages are an explicit experimental opt-in.  Keep
@@ -857,6 +858,7 @@ class EnemizerToolchain:
         normalize_scaling: bool = False,
         boss_canary: bool = False,
         plan_only: bool = False,
+        no_winter_lanterns: bool = False,
         release_contracts: bool = False,
         release_spawns: bool = False,
         release_chara: bool = False,
@@ -909,6 +911,8 @@ class EnemizerToolchain:
         ]
         if allow_tier_mixing:
             planner.append("--allow-tier-mixing")
+        if no_winter_lanterns:
+            planner.append("--no-winter-lanterns")
         if preserve_locomotion:
             planner.append("--preserve-locomotion")
         for enabled, name in ((release_contracts, "contracts"),
@@ -2030,6 +2034,8 @@ class LauncherWorkflow:
             raise ValidationError("supported boss pools are reviewed and good")
         if options.boss_pool is not None and not options.enabled:
             raise ValidationError("reviewed boss encounters require Randomize Enemies")
+        if options.enabled and options.no_winter_lanterns and not options.boss_pool:
+            raise ValidationError("No Winter Lanterns requires reviewed boss encounters for its event patches")
         if options.boss_pool is not None and options.boss_canary:
             raise ValidationError("reviewed boss encounters cannot be combined with the legacy boss canary")
         plan = load_process_plan(settings.process_plan)
@@ -2124,6 +2130,7 @@ class LauncherWorkflow:
                 "enemy_ai_version": 3 if options.enabled else None,
                 "allow_tier_mixing": options.allow_tier_mixing,
                 "preserve_locomotion": options.preserve_locomotion,
+                "no_winter_lanterns": options.no_winter_lanterns,
                 "release_tranches": sorted(
                     name for name, enabled in
                     (("contracts", options.release_contracts),
@@ -2324,6 +2331,7 @@ class LauncherWorkflow:
                         output_root=temporary,
                         allow_tier_mixing=options.allow_tier_mixing,
                         preserve_locomotion=options.preserve_locomotion,
+                        no_winter_lanterns=options.no_winter_lanterns,
                         release_contracts=options.release_contracts,
                         release_spawns=options.release_spawns,
                         release_chara=options.release_chara,
@@ -2401,6 +2409,7 @@ class LauncherWorkflow:
                     enemizer_options=None if enemizer is None or boss_encounter_overlay is not None else {
                         "allow_tier_mixing": options.allow_tier_mixing,
                         "preserve_locomotion": options.preserve_locomotion,
+                        "no_winter_lanterns": options.no_winter_lanterns,
                         "normalize_scaling": options.normalize_scaling or options.boss_canary,
                         "boss_canary": options.boss_canary,
                         "release_tranches": sorted(

@@ -326,6 +326,7 @@ class LauncherApp:
         self._randomized_key: str | None = None
         self.allow_tier_mixing = tk.BooleanVar(value=True)
         self.preserve_locomotion = tk.BooleanVar(value=False)
+        self.no_winter_lanterns = tk.BooleanVar(value=False)
         self.normalize_scaling = tk.BooleanVar(value=True)
         # The BSB-at-Cleric-Beast single-boss playtest mode is retired from the
         # GUI (kept in the settings schema and workflow for a hand-edited
@@ -388,7 +389,7 @@ class LauncherApp:
         for variable in (
             *self.fields.values(), self.player_name, self.enemy_seed, self.randomize_enemies,
             self.boss_pool, self.allow_tier_mixing, self.preserve_locomotion,
-            self.normalize_scaling, self.release_contracts, self.release_spawns,
+            self.normalize_scaling, self.no_winter_lanterns, self.release_contracts, self.release_spawns,
             self.release_chara,
         ):
             variable.trace_add("write", self._forget_randomized)
@@ -543,6 +544,10 @@ class LauncherApp:
             ttk, troubleshooting, troubleshooting_row, "Scaling", self.normalize_scaling,
             caption="Scale replacements to the slot they fill.",
         )
+        troubleshooting_row += 3
+        option(ttk, troubleshooting, troubleshooting_row, "No Winter Lanterns",
+               self.no_winter_lanterns,
+               caption="Replace their normal spawns and exclude them from replacements.")
         troubleshooting_row += 3
         enemy_inputs = ttk.Frame(troubleshooting)
         enemy_inputs.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
@@ -969,6 +974,7 @@ class LauncherApp:
                 "allow_tier_mixing": self.allow_tier_mixing.get(),
                 "preserve_locomotion": self.preserve_locomotion.get(),
                 "normalize_scaling": self.normalize_scaling.get(),
+                "no_winter_lanterns": self.no_winter_lanterns.get(),
                 "boss_canary": self.boss_canary.get(),
                 "boss_pool": self.boss_pool.get(),
                 "release_contracts": self.release_contracts.get(),
@@ -1005,6 +1011,7 @@ class LauncherApp:
             self.allow_tier_mixing.set(True)
             self.preserve_locomotion.set(False)
             self.normalize_scaling.set(bool(value.get("normalize_scaling", True)))
+            self.no_winter_lanterns.set(bool(value.get("no_winter_lanterns", False)))
             self.boss_canary.set(bool(value.get("boss_canary", False)))
             self.boss_pool.set(True)
             self.release_contracts.set(bool(value.get("release_contracts", False)))
@@ -1174,6 +1181,7 @@ class LauncherApp:
             allow_tier_mixing=self.allow_tier_mixing.get(),
             preserve_locomotion=False,
             normalize_scaling=self.normalize_scaling.get(),
+            no_winter_lanterns=self.no_winter_lanterns.get(),
             boss_canary=self.boss_canary.get(),
             boss_pool="reviewed" if self.randomize_enemies.get() and not self.boss_canary.get() else None,
             release_contracts=self.release_contracts.get(),

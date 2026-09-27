@@ -10,7 +10,7 @@ from .protocol import ProtocolError
 
 _BOOLEAN_FIELDS = (
     "enabled", "allow_tier_mixing", "preserve_locomotion", "normalize_scaling",
-    "boss_canary", "release_contracts", "release_spawns", "release_chara",
+    "no_winter_lanterns", "boss_canary", "release_contracts", "release_spawns", "release_chara",
 )
 _OPTIONAL_TEXT_FIELDS = ("seed", "boss_pool")
 

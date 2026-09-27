@@ -73,6 +73,23 @@ Without catalog tags, candidate slots carry `size compatibility unknown`.
 The shipped catalog supplies collider-derived size and inferred tiers. These
 constraints and the binary verification do not prove live combat or traversal.
 
+## No Winter Lanterns
+
+Archipelago enemy randomization offers an optional **No Winter Lanterns** checkbox
+(default off). It excludes the entire Winter Lantern model family from replacements
+and replaces all nine normal placements in Nightmare of Mensis, Nightmare Frontier,
+and Fishing Hamlet. The normal conservative or expanded policy remains in effect
+for other enemies. A separate scripted Mensis actor remains protected.
+
+The reviewed encounter builder also disables the invisible frenzy helpers and removes
+Lantern-specific AI switches at these placements. The planner option alone is not a
+complete playable overlay: this requires the Archipelago encounter-building path,
+and is not currently offered in standalone mode. Changing the checkbox invalidates
+the prepared layout; Randomize or Launch rebuilds it with the new choice.
+
+Deterministic planning, event composition, and native event compilation are checked;
+live combat validation is still needed.
+
 ## Generate a manifest
 
 ```powershell

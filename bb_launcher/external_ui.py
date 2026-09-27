@@ -239,6 +239,7 @@ class BBLauncherPanel:
             settings = app._settings()
             options = EnemizerOptions(enabled=app.randomize_enemies.get(), seed=app.enemy_seed.get().strip() or None,
                 allow_tier_mixing=app.allow_tier_mixing.get(), preserve_locomotion=app.preserve_locomotion.get(),
+                no_winter_lanterns=app.no_winter_lanterns.get(),
                 normalize_scaling=app.normalize_scaling.get(), boss_canary=app.boss_canary.get(),
                 release_contracts=app.release_contracts.get(), release_spawns=app.release_spawns.get(),
                 release_chara=app.release_chara.get())
