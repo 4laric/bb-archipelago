@@ -182,6 +182,17 @@ class WorkflowFailureTests(unittest.TestCase):
                     self.assertNotIn("hunter2", response["error"]["detail"])
                     self.assertNotIn("C:\\secret", response["error"]["detail"])
 
+    def test_launch_failure_has_safe_actionable_detail(self) -> None:
+        from bb_launcher.core import LaunchError
+        with tempfile.TemporaryDirectory() as state:
+            def prepare(_params, _op_id):
+                raise LaunchError("AP client executable hash mismatch: private password=hunter2")
+            response = Backend(Path(state), prepare_fn=prepare).handle(
+                request("prepare_play", {"game_root": state}))
+            self.assertEqual(response["error"]["code"], "verification-failed")
+            self.assertIn("changed since", response["error"]["detail"])
+            self.assertNotIn("hunter2", response["error"]["detail"])
+
     def test_unknown_exception_remains_generic(self) -> None:
         with tempfile.TemporaryDirectory() as state:
             def prepare(_params: dict, _op_id: str) -> dict:
