@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from ..client_config import session_key
-from ..core import ValidationError, ConflictError, RecoveryError
+from ..core import ValidationError, ConflictError, RecoveryError, LaunchError
 from ..external import ExternalPackageExists
 from ..workflow import WorkflowError
 from . import fork_identity
@@ -185,6 +185,17 @@ class Backend:
             return error_response(
                 request["id"], request["seq"],
                 ProtocolError("bad-request", str(exc), retryable=False),
+            )
+        except LaunchError as exc:
+            detail = "The client could not start. Check Diagnostics and retry Launch."
+            if "executable hash mismatch:" in str(exc):
+                detail = ("A launcher component changed since its launch plan was prepared. "
+                          "Restart the launcher to refresh its plan, then retry Launch.")
+            elif "does not exist:" in str(exc):
+                detail = "A launch component or folder is missing. Repair the installation and retry Launch."
+            return error_response(
+                request["id"], request["seq"],
+                ProtocolError("verification-failed", detail, retryable=True),
             )
         except WorkflowError as exc:
             return error_response(request["id"], request["seq"], _workflow_error(exc))

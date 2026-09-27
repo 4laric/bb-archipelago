@@ -16,6 +16,37 @@ from bb_launcher.integrated import wiring
 from bb_launcher.client_config import _write_runtime_config
 
 
+class GeneratedPlanTests(unittest.TestCase):
+    def test_executable_updates_get_new_pins_without_changing_old_plan(self):
+        from bb_launcher.workflow import load_process_plan
+        from bb_launcher.core import validate_processes, LaunchError
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            client, shad = root / "client.exe", root / "shad.exe"
+            client.write_bytes(b"client-v1")
+            shad.write_bytes(b"shad-v1")
+            params = dict(ap_client=str(client), shad_executable=str(shad),
+                          server="localhost:38281", seed_path=str(root / "seed.zip"))
+            with patch("bb_launcher.workflow._request_identity", return_value={
+                "request": {"player_name": "Hunter", "runtime_build": "test"}
+            }):
+                first = wiring._process_plan(params, root)
+                original = first.read_bytes()
+                self.assertEqual(first, wiring._process_plan(params, root))
+                client.write_bytes(b"client-v2")
+                second = wiring._process_plan(params, root)
+                self.assertNotEqual(first, second)
+                self.assertEqual(original, first.read_bytes())
+                with self.assertRaises(LaunchError):
+                    validate_processes(load_process_plan(first).processes)
+                self.assertEqual(len(validate_processes(load_process_plan(second).processes)), 2)
+                shad.write_bytes(b"shad-v2")
+                third = wiring._process_plan(params, root)
+                self.assertNotEqual(second, third)
+                self.assertEqual(len(validate_processes(load_process_plan(third).processes)), 2)
+                self.assertEqual(wiring._process_plan({"process_plan": str(first)}, root), first)
+
+
 class ProductionSpawnTests(unittest.TestCase):
     def test_connect_starts_only_client_and_records_qt_emulator_identity(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
