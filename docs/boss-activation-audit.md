@@ -114,3 +114,24 @@ activation passes pass. The matching gameplay symptom supports this diagnosis,
 but a live retest is still required. The boss-encounter cache version changes so
 previously prepared event files are rebuilt. Other Orphan routes are not claimed
 runtime-validated by this correction.
+
+### Additional linked-health routes
+
+The follow-up census found the same startup disable in the reusable Orphan and
+Ludwig donors (Cleric, BSB, Paarl, Amelia, Amygdala and Ebrietas), plus Ludwig at
+Orphan and Shadows: 14 additional routes. These now keep the referred body enabled,
+request default backread and wait for loading before linking damage. AI remains
+off and gravity is suspended before the pair is created while phase one is active;
+saved phase-two state does not acquire a new gravity disable. Existing transition
+warps, gravity restoration, combat AI and terminal cleanup remain in place.
+
+Cloned bodies use the native writer's source-relative placement: Orphan's original
+second body is 82.42 units below its primary; Ludwig's is 103.8 units below. Ludwig
+at Orphan reuses the original staged second-body placement. Keeping a body enabled
+there does not move it into the arena; the phase transition performs that warp.
+These are source/serialization checks, not proof of every destination's gameplay.
+
+Validation covers a generated 14-route census plus existing donor/phase tests and
+native compilation/decompilation after the final entrance and activation passes.
+The longer-term replacement for cross-phase health coupling is specified in
+[Independent boss phases](INDEPENDENT-BOSS-PHASES.md); it is not implemented here.

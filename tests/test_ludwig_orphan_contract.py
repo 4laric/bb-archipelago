@@ -49,7 +49,7 @@ class LudwigOrphanContractTests(unittest.TestCase):
             after[event] for event in (*DEFAULT_IDS.event_ids.values(), 13604802)
         )
         self.assertIn("CreateReferredDamagePair(3600800, 3600801);", health)
-        self.assertIn("ChangeCharacterEnableState(3600801, Disabled);", health)
+        self.assertIn("ChangeCharacterEnableState(3600801, Enabled);", health)
         self.assertIn("ChangeCharacterEnableState(3600803, Disabled);", health)
         self.assertNotIn("13400999", copied)
         self.assertIn(

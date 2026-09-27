@@ -52,7 +52,7 @@ class LudwigShadowsTests(unittest.TestCase):
             self.assertEqual("    EndEvent();", after[event].splitlines()[1])
         health = after[12704802]
         self.assertIn("SetCharacterAIState(981200, Disabled);", health)
-        self.assertIn("ChangeCharacterEnableState(981200, Disabled);", health)
+        self.assertIn("ChangeCharacterEnableState(981200, Enabled);", health)
         for entity in (2705001, 2705002, 2705003):
             self.assertIn(f"DeactivateGenerator({entity}, Disabled);", health)
         for entity in (2700803, 2700804, 2700805, 2700810, 2700811, 2700813, 2700814):

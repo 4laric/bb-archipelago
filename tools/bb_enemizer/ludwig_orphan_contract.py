@@ -232,7 +232,11 @@ def _health(donor: str, mapping: Mapping[int, int]) -> str:
         result,
         "    SetCharacterAIState(3400801, Disabled);\n",
         "    SetCharacterAIState(3400801, Disabled);\n"
-        "    ChangeCharacterEnableState(3400801, Disabled);\n"
+        "    ChangeCharacterEnableState(3400801, Enabled);\n"
+        "    SetCharacterDefaultBackreadState(3400801, Enabled);\n"
+        "    if (!EventFlag(13404825)) {\n"
+        "        SetCharacterGravity(3400801, Disabled);\n"
+        "    }\n"
         "    SetCharacterAIState(3600803, Disabled);\n"
         "    SetCharacterHPBarDisplay(3600803, Disabled);\n"
         "    ChangeCharacterEnableState(3600803, Disabled);\n",
@@ -246,6 +250,13 @@ def _health(donor: str, mapping: Mapping[int, int]) -> str:
         "    }\n"
         "    if (!EventFlag(13404825)) {",
         "saved phase actor visibility",
+    )
+    # The hidden phase body must remain loaded to receive referred damage.
+    result = _replace_once(
+        result, "    CreateReferredDamagePair(3400800, 3400801);",
+        "    WaitFor(CharacterBackreadStatus(3400801));\n"
+        "    CreateReferredDamagePair(3400800, 3400801);",
+        "loaded referred-health body",
     )
     return _remap(result, mapping)
 
