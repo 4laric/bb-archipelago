@@ -97,3 +97,20 @@ actors; cleanup is not blocked on room entry.
 - All five affected Cleric routes compiled with the pinned DarkScript fixture
   after applying both shared safety passes. Donor/phase suites also compiled
   the affected source-specific outputs.
+
+## Orphan at Gascoigne: linked health body
+
+A 0.2.0.5 playtest reported hit numbers without visible HP loss for Orphan in
+Gascoigne's arena. This route inserted a disable for the second Orphan body
+(2410811), even though it is the referred-damage target and displayed HP owner.
+Neither original two-body encounter disables its second body during phase one.
+The route now keeps that body enabled and requests its backread before creating
+the damage pair. Its AI remains off; the original phase routine suspends it at
+Gascoigne's below-arena staging position until the transformation warps it in.
+Saved-phase handling and Gascoigne's terminal/reward events remain unchanged.
+
+Regression checks and native compile/decompile with the final entrance and
+activation passes pass. The matching gameplay symptom supports this diagnosis,
+but a live retest is still required. The boss-encounter cache version changes so
+previously prepared event files are rebuilt. Other Orphan routes are not claimed
+runtime-validated by this correction.
