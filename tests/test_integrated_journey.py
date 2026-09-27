@@ -440,6 +440,19 @@ class ClaimedProcessTests(unittest.TestCase):
                                     {**self.live, "game_running": False})
             self.assertFalse(response["ok"])
             self.assertEqual(response["error"]["code"], "stale-session")
+            self.assertIn("did not stay running after Launch", response["error"]["detail"])
+            self.assertIn("do not need to randomize again", response["error"]["detail"])
+
+    def test_failed_process_query_explains_verification_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as state:
+            backend = claimed_backend(state, self.live)
+            arm_id = armed_stopped(backend, state)
+            response = self.connect(backend, state, arm_id, {"pid": 4242},
+                                    {"game_running": False, "reason": "process-query-refused"})
+            self.assertFalse(response["ok"])
+            self.assertEqual(response["error"]["code"], "stale-session")
+            self.assertIn("Windows could not verify", response["error"]["detail"])
+            self.assertIn("same privilege level", response["error"]["detail"])
 
 
 if __name__ == "__main__":
