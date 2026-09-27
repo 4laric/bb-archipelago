@@ -1551,7 +1551,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         # identity from the cleared seed.
         self.assertEqual("Hunter", app.player_name.get())
         self.assertEqual("", app.enemy_seed.get())
-        self.assertEqual("Choose a seed (.zip or .bbseed.json) to see its player and build.", app.seed_summary.get())
+        self.assertEqual("Choose a seed (.zip, .bbseed or .bbseed.json) to see its player and build.", app.seed_summary.get())
         app._refresh_launch_gate.assert_called_once_with()
         app._refresh_status.assert_called_once_with()
 

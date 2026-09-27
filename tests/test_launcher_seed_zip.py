@@ -55,6 +55,50 @@ def write_seed_zip(path: Path, members: dict[str, object]) -> Path:
 
 
 class SingleSlotZipTests(unittest.TestCase):
+    def test_generated_player_container_uses_standard_webhost_filename(self):
+        import ast
+        # Execute the real container class without loading the AP world registry.
+        world = Path(__file__).resolve().parents[1] / "worlds/bloodborne/__init__.py"
+        tree = ast.parse(world.read_text(encoding="utf-8"))
+        node = next(n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)
+                    and n.name == "BloodborneContainer")
+        class PlayerContainer:
+            def __init__(self, path, player, player_name):
+                self.path = path
+            def write_contents(self, opened):
+                opened.writestr("archipelago.json", '{"game":"Bloodborne","player":1}')
+        scope = {"APPlayerContainer": PlayerContainer, "GAME": "Bloodborne",
+                 "Path": Path, "Any": object, "json": json}
+        exec(compile(ast.Module(body=[node], type_ignores=[]), str(world), "exec"), scope)
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = request_payload(1, "Badgerous")
+            container = scope["BloodborneContainer"](
+                payload, "AP_8161017344730151451_P1_Badgerous", tmp, 1, "Badgerous")
+            name = Path(container.path).name
+            self.assertEqual(".bbseed", Path(name).suffix)
+            # WebHost's generic player-file branch extracts P1 from this shape;
+            # a .zip suffix instead selects its incompatible Factorio branch.
+            _, _, slot_id, _ = name.split('.')[0].split('_', 3)
+            self.assertEqual(1, int(slot_id[1:]))
+            with zipfile.ZipFile(container.path, "w") as opened:
+                container.write_contents(opened)
+            result = resolve_request_source(container.path, state_root=Path(tmp) / "state")
+            self.assertEqual(payload, json.loads(result.path.read_text()))
+
+    def test_new_and_legacy_player_container_extensions_resolve(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            payload = request_payload(1, "Tester")
+            for suffix in (".bbseed", ".bbseed.zip"):
+                archive = write_seed_zip(root / ("AP_1_P1_Tester" + suffix), {
+                    "seed.bbseed.json": payload,
+                    "archipelago.json": {"game": "Bloodborne", "player": 1},
+                })
+                resolved = resolve_request_source(archive, state_root=root / "state")
+                self.assertEqual("Tester", resolved.player_name)
+                self.assertEqual(payload, json.loads(resolved.path.read_text()))
+                self.assertEqual(archive, resolved.archive)
+
     def test_lone_bloodborne_slot_is_chosen_without_a_player_name(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

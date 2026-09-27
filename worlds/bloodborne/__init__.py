@@ -945,12 +945,12 @@ else:
         this game" regardless of which server hosted the room.
         """
         game: str = GAME
-        patch_file_ending = ".bbseed.zip"
+        patch_file_ending = ".bbseed"
 
         def __init__(self, request: dict[str, Any], out_base: str, output_directory: str,
                      player: int, player_name: str) -> None:
             self.request = request
-            container_path = str(Path(output_directory) / f"{out_base}.bbseed.zip")
+            container_path = str(Path(output_directory) / f"{out_base}{self.patch_file_ending}")
             super().__init__(container_path, player, player_name)
 
         def write_contents(self, opened_zipfile) -> None:

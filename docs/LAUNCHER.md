@@ -657,6 +657,15 @@ the client's own output. A release package
 must still be given the prebuilt native client; CI uses the explicitly labeled
 tools-only mode.
 
+### Player packages and web hosting
+
+New per-player packages use `.bbseed` (ZIP contents with an `archipelago.json`
+manifest). Keep the outer `AP_<seed>.zip` name for a generated multiworld.
+Archipelago WebHost treats unregistered inner `.zip` files as Factorio output;
+using `.bbseed` avoids that parser and preserves the player package for download.
+The launcher still accepts older `.bbseed.zip`, multiworld ZIPs, and loose
+`.bbseed.json` requests. Existing output archives are not rewritten automatically.
+
 ### Reusing a server address for a new seed
 
 In the separate BloodborneAPLauncher, Advanced includes **Reuse server address
