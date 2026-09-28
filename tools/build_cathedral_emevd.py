@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -31,12 +32,23 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def compiler_environment() -> dict[str, str]:
+    """Keep DarkScript numeric serialization independent of Windows locale."""
+    environment = os.environ.copy()
+    # DarkScript 3.6.3 formats floats using the current culture (1,5 in de-DE).
+    # Its output is JavaScript and the event contracts require decimal points.
+    environment["DOTNET_SYSTEM_GLOBALIZATION_INVARIANT"] = "1"
+    environment["DOTNET_SYSTEM_GLOBALIZATION_PREDEFINED_CULTURES_ONLY"] = "0"
+    return environment
+
+
 def run_compiler(executable: Path, mode: str, source: Path, output: Path) -> None:
     output.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [str(executable), "/cmd", f"-{mode}", "-game", "bb", "-indir", str(source),
          "-outdir", str(output), "-force", "-silent"],
         check=True,
+        env=compiler_environment(),
     )
 
 
