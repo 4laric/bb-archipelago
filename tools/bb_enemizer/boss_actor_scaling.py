@@ -38,7 +38,7 @@ def allocate_actor_scaling(plan: dict, npcs: Mapping[int, dict],
             raise ValueError('combat helper anchor differs from parent placement')
         source_id = addition['source_archetype']['npc_param_id']
         row = npcs.get(source_id)
-        if row is None or npc_native_level(row, boss_tiers=True) != change['source_level']:
+        if row is None or npc_native_level(row) != change['source_level']:
             raise ValueError('combat helper source tier differs from parent')
         slot = free_effect_slot(row)
         if slot is None:

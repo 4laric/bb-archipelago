@@ -14,11 +14,11 @@ class BossActorScalingTests(unittest.TestCase):
         for effect, tier in expected.items():
             with self.subTest(effect=effect):
                 self.assertIn(f'レベル{tier}：', effects[effect]['Name'])
-                self.assertEqual(tier, npc_native_level({'GameClearSpEffectID': str(effect)}, boss_tiers=True))
-        self.assertEqual(1, npc_native_level(npcs[271000], boss_tiers=True))
-        self.assertEqual(1, npc_native_level(npcs[272000], boss_tiers=True))
+                self.assertEqual(tier, npc_native_level({'GameClearSpEffectID': str(effect)}))
+        self.assertEqual(1, npc_native_level(npcs[271000]))
+        self.assertEqual(1, npc_native_level(npcs[272000]))
         self.assertEqual('7423', npcs[251000]['GameClearSpEffectID'])
-        self.assertEqual(11, npc_native_level(npcs[251000], boss_tiers=True))
+        self.assertEqual(11, npc_native_level(npcs[251000]))
 
     def fixture(self):
         parent = 'm24_01_00_00:primary'

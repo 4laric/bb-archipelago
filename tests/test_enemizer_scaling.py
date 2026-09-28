@@ -131,6 +131,16 @@ class StaticScalingTests(unittest.TestCase):
             self.assertGreaterEqual(change.defense_multiplier, MIN_MULTIPLIER)
             self.assertLessEqual(change.defense_multiplier, MAX_MULTIPLIER)
 
+    def test_ordinary_enemies_on_named_tier_rows_are_scaled(self):
+        # Playtest 2026-09-27: Mensis Shadows (7424) and Cathedral Ward
+        # huntsmen (7420/7426/7427) arrived with vanilla stats because these
+        # rows were only read for boss actors.
+        from tools.bb_enemizer.scaling import npc_native_level
+        for npc, tier in ((212600, 12), (212610, 12), (212620, 12),
+                          (263400, 1), (263203, 3), (263200, 3), (256600, 12)):
+            with self.subTest(npc=npc):
+                self.assertEqual(tier, npc_native_level(self.npcs[npc]))
+
     def test_clone_contract_preserves_reward_fields_by_copying_the_source_row(self):
         changes, _ = plan_scaling(self.swaps, self.slots, self.npcs, self.effects)
         reward_fields = ("getSoul", "itemLotId_1", "itemLotId_2", "itemLotId_3",
@@ -163,7 +173,7 @@ class StaticScalingTests(unittest.TestCase):
             self.assertFalse(default["scaling"]["enabled"])
             self.assertEqual(0, len(default["scaling"]["changes"]))
             self.assertTrue(enabled["scaling"]["enabled"])
-            self.assertEqual(239, enabled["scaling"]["change_count"])
+            self.assertEqual(289, enabled["scaling"]["change_count"])
 
 
 if __name__ == "__main__":
