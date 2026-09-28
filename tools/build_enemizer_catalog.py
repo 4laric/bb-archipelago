@@ -47,8 +47,9 @@ NON_TARGET_NPC_PARAMS = {
     # without its gaze attack and applies no frenzy buildup (playtest,
     # 2026-09-27). That is accepted as the intended enemizer behaviour: an
     # early-map lantern with vanilla frenzy would be far harsher than its slot.
-    # Lanterns left in their vanilla maps keep frenzy unless the separate
-    # No Winter Lanterns option strips their helpers (winter_lanterns.py).
+    # Lanterns left in their vanilla maps keep frenzy; the separate No Winter
+    # Lanterns option replaces those placements and disables their helpers
+    # (winter_lanterns.py, docs/ENEMIZER.md).
     256100: "Winter Lantern bullet-firing dummy",
     256610: "Winter Lantern bullet-firing dummy",
     256910: "Winter Lantern bullet-firing dummy",
