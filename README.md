@@ -7,6 +7,9 @@ Supported target: `CUSA03173`, AppVer `01.09`, running under shadPS4.
 `CUSA00900` support is still an evidence-gathering task tracked in issue #115;
 the launcher intentionally refuses it today.
 
+Original project code and documentation are [MIT-licensed](LICENSE).
+See [licensing scope](LICENSING.md) for third-party dependencies and game material.
+
 This project does not reuse or adapt the existing Bloodborne randomizer. Its code, binaries,
 extracted datasets, address tables, and patches are out of scope. See `docs/RESEARCH-BASELINE.md`
 for the evidence boundary and the labelling discipline every address claim is held to.

@@ -115,15 +115,18 @@ def derive_ladder(effects: dict[int, dict[str, str]]) -> dict[int, LadderRung]:
     return result
 
 
-def npc_native_level(row: dict[str, str], *, boss_tiers: bool = False) -> int | None:
+def npc_native_level(row: dict[str, str]) -> int | None:
     effect = int(row["GameClearSpEffectID"])
     if 7401 <= effect <= 7413:
         return effect - 7400
-    # Original SpEffectParam names explicitly assign these boss-specific NG+
-    # rows to the same area tiers. Their individual NG+ multipliers differ:
-    # this is the existing inferred tier normalization, not inversion of those
-    # boss-specific multipliers. See ENEMIZER-BOSS-SHUFFLE.md.
-    if boss_tiers and 7420 <= effect <= 7429:
+    # Original SpEffectParam names explicitly assign these NG+ rows to the same
+    # area tiers ("レベル6：生贄街・初回", ...). Their individual NG+ multipliers
+    # differ: this is the existing inferred tier normalization, not inversion
+    # of those multipliers. See ENEMIZER-BOSS-SHUFFLE.md. Despite the family
+    # being used by bosses, 115 ordinary pool enemies also sit on these rows
+    # (Mensis Shadows, Yharnam huntsmen, Church Servants), so the mapping
+    # applies to every NPC, not only boss actors.
+    if 7420 <= effect <= 7429:
         return {7420: 1, 7421: 1, 7422: 6, 7423: 11, 7424: 12,
                 7425: 13, 7426: 3, 7427: 3, 7428: 5, 7429: 7}[effect]
     if 7490 <= effect <= 7497:
@@ -167,7 +170,7 @@ def plan_scaling(
             # level 11. This boss arena was absent from the ordinary oracle.
             destination_level = 11
         target_row = npcs.get(swap.target.npc_param_id)
-        source_level = npc_native_level(target_row, boss_tiers=boss_tiers) if target_row else None
+        source_level = npc_native_level(target_row) if target_row else None
         if source_level is None or destination_level is None:
             skipped.append({"logical_key": swap.logical_key, "reason": "unknown source or destination tier"})
             continue

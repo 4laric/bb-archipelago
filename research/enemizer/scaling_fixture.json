@@ -1,7 +1,7 @@
 {
   "seed": "scaling-fixture",
   "swap_count": 308,
-  "change_count": 239,
-  "skip_count": 69,
-  "scaling_sha256": "9725a1b588af93e4c1a49ca350b6707ee9e29a1860ca7f5d9f4677b9c8029b77"
+  "change_count": 289,
+  "skip_count": 19,
+  "scaling_sha256": "5e1e2d5213093c4be0f115902951043fdfecc0f0c5ba58e7e599e341b44bb34c"
 }

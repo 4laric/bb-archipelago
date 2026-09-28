@@ -47,7 +47,20 @@ class OrphanGascoigneContractTests(unittest.TestCase):
         health = after[12414802]
         self.assertIn("SetEventFlag(12991700, ON);", health)
         self.assertIn("CreateReferredDamagePair(2410810, 2410811);", health)
-        self.assertIn("ChangeCharacterEnableState(2410811, Disabled);", health)
+        original_health = event_blocks(self.orphan)[13604802]
+        self.assertIn("CreateReferredDamagePair(3600800, 3600801);", original_health)
+        self.assertNotIn("ChangeCharacterEnableState(3600801, Disabled);", original_health)
+        self.assertIn("ChangeCharacterEnableState(2410811, Enabled);", health)
+        self.assertNotIn("ChangeCharacterEnableState(2410811, Disabled);", health)
+        self.assertIn("SetCharacterAIState(2410811, Disabled);", health)
+        phase = after[DEFAULT_IDS.phase_event]
+        self.assertLess(phase.index("SetCharacterGravity(2410811, Disabled);"),
+                        phase.index("WaitFor(HPRatio(2410810) < 0.5);"))
+        self.assertIn("SetCharacterGravity(2410811, Enabled);", phase)
+        self.assertIn("SetCharacterDefaultBackreadState(2410811, Enabled);", health)
+        self.assertIn("DisplayBossHealthBar(Enabled, 2410811, 0, 453000);", health)
+        self.assertLess(health.index("WaitFor(CharacterBackreadStatus(2410811)"),
+                        health.index("CreateReferredDamagePair(2410810, 2410811);"))
         self.assertNotIn("ForceCharacterDeath", health)
         self.assertIn("EventFlag(12991700)", after[12414803])
         cleanup = after[DEFAULT_IDS.cleanup_event]

@@ -2147,6 +2147,7 @@ class LauncherWorkflow:
                 "boss_canary": bool(options.enabled and options.boss_canary),
                 "boss_pool": options.boss_pool if options.enabled else None,
                 "boss_encounters": bool(options.enabled and options.boss_pool),
+                "boss_encounter_version": 2 if options.enabled and options.boss_pool else None,
                 "experimental_enemy_version": 1 if options.enabled and (options.normalize_scaling or options.boss_canary or options.boss_pool) else None,
                 "starting_weapons": request["starting_weapons"],
                 "weapon_requirement_families": request["weapon_requirement_families"],

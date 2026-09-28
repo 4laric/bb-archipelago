@@ -102,7 +102,7 @@ class OrphanDonorTests(unittest.TestCase):
                     health,
                 )
                 self.assertIn(
-                    f"ChangeCharacterEnableState({IDS.phase_entity}, Disabled)", health
+                    f"ChangeCharacterEnableState({IDS.phase_entity}, Enabled)", health
                 )
                 self.assertIn(
                     f"ChangeCharacterEnableState({IDS.support_entity}, Disabled)",

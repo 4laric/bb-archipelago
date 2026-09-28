@@ -221,9 +221,18 @@ def patch_ludwig_at_shadows(destination, donor, ids=DEFAULT_IDS):
     )
     health = health.replace(
         f"    SetCharacterAIState({ids.phase_entity}, Disabled);",
-        f"    SetCharacterAIState({ids.phase_entity}, Disabled);\n    ChangeCharacterEnableState({ids.phase_entity}, Disabled);\n"
+        f"    SetCharacterAIState({ids.phase_entity}, Disabled);\n    ChangeCharacterEnableState({ids.phase_entity}, Enabled);\n"
+        f"    SetCharacterDefaultBackreadState({ids.phase_entity}, Enabled);\n"
+        f"    if (!EventFlag({ids.phase_flag})) {{\n"
+        f"        SetCharacterGravity({ids.phase_entity}, Disabled);\n"
+        "    }\n"
         + disabled,
     )
+    link = f"    CreateReferredDamagePair(2700800, {ids.phase_entity});"
+    if health.count(link) != 1:
+        raise ValueError("Ludwig/Shadows linked-health witness drift")
+    health = health.replace(link,
+        f"    WaitFor(CharacterBackreadStatus({ids.phase_entity}));\n" + link, 1)
     health = health.replace(
         "    CreatePlaylog(46);\n    StartTimeMeasurement(2700010, 62, Enabled);",
         "    CreatePlaylog(82);\n    StartTimeMeasurement(2700010, 98, Enabled);",
