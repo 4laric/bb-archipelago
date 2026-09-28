@@ -238,7 +238,8 @@ class ProductionPrepareOptionsTests(unittest.TestCase):
                 self.assertTrue(exporter.call_args.kwargs["replace_existing"])
                 self.assertTrue(exporter.call_args.kwargs["require_owned_existing"])
 
-            normalized = {**options_payload, "preserve_locomotion": False}
+            normalized = {**options_payload, "preserve_locomotion": False,
+                          "no_winter_lanterns": False}
             self.assertEqual(captured["options"], EnemizerOptions(**normalized))
             self.assertEqual(result["launch_config"]["enemizer"], normalized)
             self.assertEqual(result["enemizer"]["swap_count"], 72)
