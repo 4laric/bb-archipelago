@@ -565,7 +565,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(owner["enemizer"]["plan"]["sha256"], digest(retained.read_bytes()))
         self.assertEqual(
             owner["enemizer"]["plan"]["options"],
-            {"allow_tier_mixing": True, "preserve_locomotion": True, "normalize_scaling": False, "boss_canary": False,
+            {"allow_tier_mixing": True, "preserve_locomotion": True, "normalize_scaling": False, "no_winter_lanterns": False, "boss_canary": False,
              "release_tranches": []},
         )
         self.assertFalse((self.install.mods / "bb-enemizer-plan.json").exists())

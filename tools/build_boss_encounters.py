@@ -1121,6 +1121,10 @@ def _build_once(args) -> dict:
         originals.mkdir()
         filenames = {item.event_file.removesuffix('.js') for pair in pairs for item in pair if item is not None}
         filenames |= {filename.removesuffix('.js') for filename in scripted}
+        no_lanterns = bool(ordinary_plan and ordinary_plan.get('options', {}).get('no_winter_lanterns'))
+        if no_lanterns:
+            from tools.bb_enemizer.winter_lanterns import CALLEES, patch_winter_lanterns
+            filenames |= {m + '.emevd.dcx' for m in CALLEES}
         for name in filenames | {'common.emevd.dcx'}:
             shutil.copyfile(args.events / name, originals / name)
         compile_events(args.darkscript, 'decompile', originals, source, pairs[0][0].event_file)
@@ -1263,6 +1267,10 @@ def _build_once(args) -> dict:
             patched = strip_destination_entrance_animations(arena.key, texts[arena.event_file], patched)
             patched = guard_shuffled_activation(arena, texts[arena.event_file], patched)
             variants.setdefault(arena.event_file, []).append(patched)
+        if no_lanterns:
+            for map_name in CALLEES:
+                name = map_name + ".emevd.dcx.js"
+                variants.setdefault(name, []).append(patch_winter_lanterns(map_name, texts[name]))
         add_scripted_variants(variants, texts, scripted)
         override_inputs = []
         if event_overrides is not None:
