@@ -320,9 +320,11 @@ pool plus boss shuffle; the default), **Randomize all enemies
 (experimental)** (also turns on the three reviewed-but-untested release
 tranches: supported script contracts, script-spawn ambushes and chara-bound
 hunters), or **Vanilla**. The **Enemy seed** below it is filled from the AP
-seed whenever one is chosen; edit it for a different shuffle. Boss shuffle,
-tier mixing, locomotion and stat normalization live under **Advanced → Enemy
-tuning**.
+seed whenever one is chosen; edit it for a different shuffle. **Boss pool**
+offers **Reviewed** (the default) or **Only the good bosses (experimental)**.
+The launcher saves this choice and applies it when enemies are randomized;
+Vanilla disables the selector without losing the saved choice. Stat
+normalization lives under **Advanced → Enemy tuning**.
 
 The action bar has two steps. **Randomize** builds and verifies the seed
 into the cache without activating anything or starting a process, and
