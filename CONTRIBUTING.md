@@ -26,6 +26,30 @@ reproducible, repo-only work. Tasks that require a game session are labelled
 Create a focused branch named `agent/<description>` (or an equivalently clear
 contributor prefix). Keep unrelated fixes in separate pull requests.
 
+## Don't invent randomization restrictions
+
+A randomizer's job is to randomize. Contributors, especially LLM agents, tend
+to be conservative when unsure, and in practice that produces fabricated
+rules: "only this location", "exclude this boss", "not in that area". Each
+one hardens into a requirement the next contributor obeys. This extends
+*Own constraints* above to what the randomizer may place, shuffle or pair.
+
+1. **Default to permissive.** When nothing forbids a placement, shuffle or
+   option, allow it. Uncertainty is a reason to test, not to restrict.
+2. **Every restriction cites its source:** an owner decision (link it), a game
+   or runtime fact with a named source (crash, softlock, unreachable check,
+   broken logic, or a param or EMEVD reference), or a failing test. Put the
+   citation next to the restriction in code or data. An unsourced restriction
+   is a defect, and any contributor may remove it.
+3. **Evidence is not a whitelist.** "We proved it works here" never means "it
+   only works here". Record where something was proven; don't restrict it to
+   there.
+4. **Don't close gaps by excluding things.** Fix the problem or open a specific
+   issue. Don't quietly drop an item, boss or enemy from the pool, narrow its
+   placement, or gate it behind an option to make a test pass.
+5. **List new restrictions in the pull request** with their source, so the
+   owner can overrule them.
+
 ## Evidence and source boundaries
 
 Read `docs/RESEARCH-BASELINE.md` before changing runtime claims. Its evidence
