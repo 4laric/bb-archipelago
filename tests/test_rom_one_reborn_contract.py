@@ -152,7 +152,7 @@ class RomOneRebornTests(unittest.TestCase):
                    for event in contract.COMBAT[4:] for slot in range(30))]
         self.assertEqual(97, len(flags))
         self.assertEqual(len(flags), len(set(flags)))
-        self.assertTrue(all(flag // 1000 == 12804 for flag in flags))
+        self.assertEqual({12804}, {flag // 1000 for flag in flags})
         self.assertIn(12804600, contract._original_ids_with_slot_flags())
         self.assertFalse(set(flags) & contract._original_ids_with_slot_flags())
         with self.assertRaisesRegex(ValueError, "original One Reborn"):

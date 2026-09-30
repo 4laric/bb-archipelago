@@ -157,7 +157,12 @@ class GuestBaseTests(unittest.TestCase):
         self.assertEqual(base.guest_base, moved)
         self.assertNotEqual(base.guest_base, FALLBACK_GUEST_BASE)
         results = verify_sites(reader, base.guest_base)
-        self.assertTrue(all(r.matched is not False for r in results))
+        self.assertTrue(HOOK_SITES)
+        self.assertEqual(
+            [(s.name, moved + s.offset, True if s.expected is not None else None)
+             for s in HOOK_SITES],
+            [(r.site.name, r.address, r.matched) for r in results],
+        )
 
     def test_missing_export_falls_back_but_is_marked_untrustworthy(self):
         reader = reader_with_game(exports={"nope": 0x2100})
@@ -177,7 +182,11 @@ class HookSiteTests(unittest.TestCase):
     def test_a_clean_image_verifies_every_recorded_site(self):
         reader = reader_with_game()
         results = verify_sites(reader, GUEST_BASE)
-        self.assertTrue(all(r.matched is not False for r in results))
+        self.assertTrue(HOOK_SITES)
+        self.assertEqual(
+            [(s.name, True if s.expected is not None else None) for s in HOOK_SITES],
+            [(r.site.name, r.matched) for r in results],
+        )
         verified = [r for r in results if r.matched is True]
         self.assertEqual(len(verified), sum(1 for s in HOOK_SITES if s.expected is not None))
 
