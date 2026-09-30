@@ -20,7 +20,8 @@ internal static class BossRegionTransplant
         string SourceMap, string SourceRegion, int SourceEntityId, RegionProvenance SourceProvenance,
         string SourceAnchorPart, AnchorProvenance SourceAnchorProvenance,
         string DestinationMap, string DestinationRegion, int DestinationEntityId,
-        string DestinationAnchorPart, AnchorProvenance DestinationAnchorProvenance);
+        string DestinationAnchorPart, AnchorProvenance DestinationAnchorProvenance,
+        string? PlacementPolicy = null);
     internal sealed record Applied(string DestinationMap, string DestinationRegion, int DestinationEntityId,
         string OutputRegionSha256);
 
@@ -87,7 +88,10 @@ internal static class BossRegionTransplant
             Need(!required, "missing boss_region_additions"); return [];
         }
         var additions = node.Deserialize<List<Addition>>(Json) ?? throw new InvalidDataException("invalid boss_region_additions");
-        Need(additions.Count > 0, "boss_region_additions must not be empty"); RequireUnique(additions); return additions;
+        Need(additions.Count > 0, "boss_region_additions must not be empty");
+        Need(additions.All(item => item.PlacementPolicy is null or "source-relative" or "destination-anchor"),
+            "unsupported region placement policy");
+        RequireUnique(additions); return additions;
     }
     internal static void ValidatePlan(string planPath, bool required) { _ = Read(planPath, required); }
 
@@ -162,7 +166,8 @@ internal static class BossRegionTransplant
             var clone = source.DeepCopy();
             float yaw = destinationAnchor.Rotation.Y - sourceAnchor.Rotation.Y;
             clone.Name = add.DestinationRegion; clone.EntityID = add.DestinationEntityId;
-            clone.Position = destinationAnchor.Position + BossActorTransplant.RotateOffset(source.Position - sourceAnchor.Position, yaw);
+            clone.Position = add.PlacementPolicy == "destination-anchor" ? destinationAnchor.Position
+                : destinationAnchor.Position + BossActorTransplant.RotateOffset(source.Position - sourceAnchor.Position, yaw);
             clone.Rotation = source.Rotation + new Vector3(0, yaw, 0);
             target.Current.Regions.Regions.Add(clone);
             target.Expected.Add(new Applied(Bare(add.DestinationMap), clone.Name, clone.EntityID,

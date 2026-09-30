@@ -1,3 +1,5 @@
+import csv
+import io
 import tempfile
 import unittest
 from dataclasses import replace
@@ -90,8 +92,26 @@ class RomOneRebornTests(unittest.TestCase):
                 expected = contract.rom._remap(line, contract._mapping())
                 self.assertIn(expected, self.patched[0])
         phase = self.patched[contract.EVENT_MAP[13204807]]
-        for entity in contract.WARPS:
-            self.assertIn(str(entity), phase)
+        self.assertEqual(2, phase.count(
+            f"IssueShortWarpRequest(2800800, TargetEntityType.Area, {contract.WARP_TARGET}, -1);"
+        ))
+        self.assertNotIn("981130", phase)
+        self.assertNotIn("981131", phase)
+        self.assertIn(f"SetEventFlag({contract.WAVE_FLAGS[0]}, ON);", phase)
+        self.assertIn(f"SetEventFlag({contract.WAVE_FLAGS[1]}, ON);", phase)
+        # Positive witnesses: the target is an existing floor Point in each
+        # destination state, not an unbound allocation or a foreign-map region.
+        regions = csv.DictReader(io.StringIO(read_blob(
+            contract.BUNDLE, "mined/msb_regions.tsv"
+        ).decode("utf-8-sig")), delimiter="\t")
+        targets = [row for row in regions if row["map_name"] in contract.STATES
+                   and int(row["entity_id"]) == contract.WARP_TARGET]
+        self.assertEqual(set(contract.STATES), {row["map_name"] for row in targets})
+        self.assertEqual(2, len(targets))
+        for row in targets:
+            self.assertEqual("Point", row["shape"])
+            self.assertEqual((402.9, -123.9, -237.5),
+                             tuple(float(row[key]) for key in ("x", "y", "z")))
         self.assertIn("CharacterHasEventMessage(3200800, 10)", self.source[13204803])
         self.assertIn("CharacterHasEventMessage(2800800, 10)", self.patched[12804803])
 
@@ -106,7 +126,8 @@ class RomOneRebornTests(unittest.TestCase):
         self.assertEqual(1, plan["swap_count"])
         self.assertEqual(2, len(plan["swaps"][0]["destination_keys"]))
         self.assertEqual(60, len(plan["boss_actor_additions"]))
-        self.assertEqual(4, len(plan["boss_region_additions"]))
+        self.assertNotIn("boss_region_additions", plan)
+        self.assertEqual(contract.WARP_TARGET, plan["boss_contract"]["warp_target"])
         self.assertEqual(60, len(plan["boss_actor_scaling_requirements"]))
         self.assertEqual(18, len(plan["boss_contract"]["retained_destination_helpers"]))
         for state in contract.STATES:
@@ -123,23 +144,17 @@ class RomOneRebornTests(unittest.TestCase):
                 [contract.rom.ROM_CORE_PINS[source_state]] * 30,
                 [row["source_provenance"]["anchor_sha256"] for row in helpers],
             )
-            regions = [
-                row
-                for row in plan["boss_region_additions"]
-                if row["destination_map"] == state
-            ]
-            self.assertEqual(
-                set(contract.WARPS), {row["destination_entity_id"] for row in regions}
-            )
-            self.assertEqual(
-                [contract.ACTOR_WITNESSES[state][contract.PRIMARY]["sha256"]] * 2,
-                [
-                    row["destination_anchor_provenance"]["part_sha256"]
-                    for row in regions
-                ],
-            )
 
     def test_original_event_drift_and_allocated_id_collision_are_rejected(self):
+        flags = [contract.BRIDGE, *contract.WAVE_FLAGS,
+                 *(contract.EVENT_MAP[event] for event in contract.COMBAT[:4]),
+                 *(contract.EVENT_MAP[event] + slot
+                   for event in contract.COMBAT[4:] for slot in range(30))]
+        self.assertEqual(97, len(flags))
+        self.assertEqual(len(flags), len(set(flags)))
+        self.assertTrue(all(flag // 1000 == 12804 for flag in flags))
+        self.assertIn(12804600, contract._original_ids_with_slot_flags())
+        self.assertFalse(set(flags) & contract._original_ids_with_slot_flags())
         with self.assertRaisesRegex(ValueError, "original One Reborn"):
             contract.patch_rom_at_one_reborn(
                 self.arena.replace("AwardItemLot(50700000);", "AwardItemLot(1);"),

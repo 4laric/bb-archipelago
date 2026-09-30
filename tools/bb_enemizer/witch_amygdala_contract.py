@@ -33,7 +33,11 @@ WITCH_ARCHETYPE = Archetype("c2100", 210020, 210020, 0)
 SECOND_ARCHETYPE = Archetype("c2100", 210020, 210021, 0)
 MINION_ARCHETYPE = Archetype("c2050", 205010, 205010, 2)
 AMYGDALA_ARCHETYPE = Archetype("c5120", 512000, 512000, 0)
-PROJECT_MIN, PROJECT_MAX = 12993000, 12993099
+# Source destination flags already use group 13304. Runtime readbacks recorded
+# in docs/gascoigne-cleric-entry-fix.md show synthetic 1299x groups need not
+# exist, so allocate a corpus-clear range in the destination's native group.
+# Backing of this group's individual new bits remains inferred until readback.
+PROJECT_MIN, PROJECT_MAX = 13304400, 13304699
 
 DONOR_HASHES = {
     0: "905725c3c1e58539e378d2bfb3f1a73dc90d1a702b49168c55d1590ce625a822",
@@ -197,39 +201,39 @@ GENERATOR_PINS = (
 
 @dataclass(frozen=True)
 class WitchAmygdalaIds:
-    phase: int = 12993000
-    visibility: int = 12993001
-    second_start: int = 12993002
-    patrol: int = 12993003
-    revival: int = 12993004
-    warp_select: int = 12993005
-    warp: int = 12993006
-    post_warp: int = 12993007
-    minion_count: int = 12993008
-    minion_watch: int = 12993009
-    summon: int = 12993010
-    generator_manager: int = 12993011
-    summon_one: int = 12993012
-    summon_two: int = 12993013
-    summon_three: int = 12993014
-    minion_setup: int = 12993015
-    insight: int = 12993016
-    completion_cleanup: int = 12993017
+    phase: int = 13304400
+    visibility: int = 13304410
+    second_start: int = 13304420
+    patrol: int = 13304430
+    revival: int = 13304440
+    warp_select: int = 13304450
+    warp: int = 13304460
+    post_warp: int = 13304470
+    minion_count: int = 13304480
+    minion_watch: int = 13304490
+    summon: int = 13304500
+    generator_manager: int = 13304510
+    summon_one: int = 13304520
+    summon_two: int = 13304530
+    summon_three: int = 13304540
+    minion_setup: int = 13304550
+    insight: int = 13304560
+    completion_cleanup: int = 13304570
     second_entity: int = 980800
     minion_first_entity: int = 980801
     warp_first_entity: int = 980810
     spawn_first_entity: int = 980820
     generator_event_first: int = 980840
     generator_entity_first: int = 980843
-    visibility_flag_first: int = 12993040
-    warp_flag_first: int = 12993042
-    minion_count_flag: int = 12993080
-    minion_status_first: int = 12993053
-    generator_state_first: int = 12993056
-    summon_permission_first: int = 12993058
-    source_second_started_flag: int = 12993060
-    insight_flag: int = 12993061
-    shutdown_flag: int = 12993062
+    visibility_flag_first: int = 13304640
+    warp_flag_first: int = 13304642
+    minion_count_flag: int = 13304680
+    minion_status_first: int = 13304653
+    generator_state_first: int = 13304656
+    summon_permission_first: int = 13304658
+    source_second_started_flag: int = 13304660
+    insight_flag: int = 13304661
+    shutdown_flag: int = 13304662
 
     def events(self) -> tuple[int, ...]:
         return (
@@ -254,7 +258,12 @@ class WitchAmygdalaIds:
         )
 
     def project_ids(self) -> tuple[int, ...]:
-        return self.events() + (
+        # Completion flags occupy event ID + initializer slot, even when the
+        # controller itself does not read ThisEventSlot(). Keep those footprints
+        # disjoint from other controllers and explicit state flags.
+        slots = (1, 2, 1, 1, 2, 2, 8, 2, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1)
+        return tuple(event + slot for event, count in zip(self.events(), slots)
+                     for slot in range(count)) + (
             self.visibility_flag_first,
             self.visibility_flag_first + 1,
             *(self.warp_flag_first + offset for offset in range(10)),
@@ -351,7 +360,7 @@ def _validate_ids(ids: WitchAmygdalaIds, destination: str) -> None:
         or set(project) & (local | _all_original_literals())
     ):
         raise ValueError(
-            "Witch/Amygdala IDs must be collision-free project-owned 129930xx values"
+            "Witch/Amygdala IDs must be collision-free project-owned 13304400--13304699 values"
         )
     if (
         len(helpers) != len(set(helpers))
@@ -554,6 +563,32 @@ def patch_witch_at_amygdala(
         destination_event: _remap(donor[source_event], mapping)
         for source_event, destination_event, _ in copied_events
     }
+    # Source Hemwick controllers assume their actors are loaded. In a shuffled
+    # destination an unloaded actor's zero HP can satisfy the second-Witch
+    # threshold or the pair death branch before combat has started. The entry
+    # witness is pinned by boss_activation; this is an inferred load-order fix.
+    imported[ids.second_start] = _replace_once(
+        imported[ids.second_start],
+        "        WaitFor(HPRatio(3300800) <= 0.5);",
+        f"        WaitFor({arena_entry_predicate('amygdala')}\n"
+        "            && EventFlag(13304802)\n"
+        "            && CharacterBackreadStatus(3300800)\n"
+        "            && CharacterHPValue(3300800) > 0);\n"
+        "        WaitFor(HPRatio(3300800) <= 0.5);",
+        "second Witch combat readiness",
+    )
+    imported[ids.revival] = _replace_once(
+        imported[ids.revival],
+        "    SetCharacterImmortality(chrEntityId, Enabled);",
+        "    SetCharacterImmortality(chrEntityId, Enabled);\n"
+        f"    WaitFor({arena_entry_predicate('amygdala')}\n"
+        "        && EventFlag(13304802)\n"
+        "        && CharacterBackreadStatus(chrEntityId)\n"
+        "        && CharacterHPValue(chrEntityId) > 0\n"
+        "        && CharacterBackreadStatus(chrEntityId2)\n"
+        "        && CharacterHPValue(chrEntityId2) > 0);",
+        "pair revival combat readiness",
+    )
     imported[ids.phase] = _replace_once(
         imported[ids.phase],
         "    WaitFor(CharacterHPValue(3300800) == 1 || CharacterHPValue(980800) == 1);",
@@ -638,6 +673,11 @@ def _initialization(source: Slot, target: Slot) -> dict:
 
 
 def _region_additions(target: Slot, ids: WitchAmygdalaIds) -> list[dict]:
+    # Hemwick's second Witch is 40.76m from its primary in the committed
+    # msb_enemies.tsv. Copying those actor/warp/spawn offsets does not establish
+    # Amygdala arena fit. Use the pinned destination combat anchor instead.
+    # This inferred adapter choice collapses teleport/spawn variety and can
+    # produce coincident actors; runtime floor fit still requires a retest.
     rows = []
     for source_id, (source_name, fingerprint) in (
         *WARP_REGION_PINS.items(),
@@ -666,6 +706,7 @@ def _region_additions(target: Slot, ids: WitchAmygdalaIds) -> list[dict]:
                 "destination_region": f"ap_witch_{'warp' if is_warp else 'spawn'}_{index:02d}",
                 "destination_entity_id": destination_id,
                 "destination_anchor_part": target.part_name,
+                "placement_policy": "destination-anchor",
                 "destination_anchor_provenance": {
                     "format": "bb-boss-actor-pin-v1",
                     "part_sha256": AMYGDALA_PIN,
@@ -784,6 +825,7 @@ def native_plan_witch_at_amygdala(
             },
             "destination_map": target.map_name,
             "destination_anchor_part": target.part_name,
+            "placement_policy": "destination-anchor",
             "destination_part": destination_part,
             "destination_entity_id": destination_entity,
             "allocation_evidence": "project-reserved helper ID; native writer checks all Part/Region/Event collisions",
@@ -829,6 +871,7 @@ def native_plan_witch_at_amygdala(
                 13304871,
             ],
             "terminal_policy": "retain Amygdala terminal; Witch primary only dies after pinned pair revival controller reaches its two-body death path",
+            "placement_policy": "inferred destination-anchor for helpers, warp and spawn regions; coincident spawns and teleports require runtime retest",
             "native_requirements": {
                 "actor_additions": 4,
                 "region_additions": 20,

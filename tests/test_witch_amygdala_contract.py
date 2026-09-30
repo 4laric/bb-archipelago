@@ -33,18 +33,27 @@ class WitchAmygdalaContractTests(unittest.TestCase):
         after = event_blocks(patch_witch_at_amygdala(self.arena, self.witch))
         start = after[DEFAULT_IDS.second_start]
         self.assertIn("WaitFor(HPRatio(3300800) <= 0.5);", start)
+        self.assertLess(start.index("CharacterHPValue(3300800) > 0"),
+                        start.index("WaitFor(HPRatio(3300800) <= 0.5)"))
+        self.assertIn("EventFlag(13304802)", start)
         self.assertIn("ChangeCharacterEnableState(980800, Enabled);", start)
         revival = after[DEFAULT_IDS.revival]
         constructor = after[0]
         self.assertIn(
-            "$InitializeEvent(0, 12993004, 3300800, 980800, 980810, 12993040);",
+            "$InitializeEvent(0, 13304440, 3300800, 980800, 980810, 13304640);",
             constructor,
         )
         self.assertIn(
-            "$InitializeEvent(1, 12993004, 980800, 3300800, 980815, 12993041);",
+            "$InitializeEvent(1, 13304440, 980800, 3300800, 980815, 13304641);",
             constructor,
         )
         self.assertIn("SetCharacterImmortality(chrEntityId, Enabled);", revival)
+        for actor in ("chrEntityId", "chrEntityId2"):
+            self.assertIn(f"CharacterBackreadStatus({actor})", revival)
+            self.assertLess(revival.index(f"CharacterHPValue({actor}) > 0"),
+                            revival.index("hp = CharacterHPValue(chrEntityId) == 1"))
+        self.assertLess(revival.index("SetCharacterImmortality(chrEntityId, Enabled)"),
+                        revival.index("WaitFor(PlayerInMap(33, 0)"))
         self.assertIn("ForceCharacterDeath(chrEntityId, false);", revival)
         self.assertIn("ForceCharacterDeath(chrEntityId2, false);", revival)
         self.assertIn(
@@ -123,11 +132,15 @@ class WitchAmygdalaContractTests(unittest.TestCase):
         self.assertEqual(1, plan["swap_count"])
         self.assertEqual("c2100", plan["swaps"][0]["target"]["model_name"])
         self.assertEqual(4, len(plan["boss_actor_additions"]))
+        self.assertTrue(all(row["placement_policy"] == "destination-anchor"
+                            for row in plan["boss_actor_additions"]))
         self.assertEqual(
             {980800, 980801, 980802, 980803},
             {row["destination_entity_id"] for row in plan["boss_actor_additions"]},
         )
         self.assertEqual(20, len(plan["boss_region_additions"]))
+        self.assertTrue(all(row["placement_policy"] == "destination-anchor"
+                            for row in plan["boss_region_additions"]))
         self.assertEqual(
             set(range(980810, 980818)) | set(range(980820, 980832)),
             {row["destination_entity_id"] for row in plan["boss_region_additions"]},
@@ -163,13 +176,18 @@ class WitchAmygdalaContractTests(unittest.TestCase):
         )
 
     def test_collision_and_source_or_destination_drift_refuse(self):
-        with self.assertRaisesRegex(ValueError, "129930xx"):
+        with self.assertRaisesRegex(ValueError, "13304400--13304699"):
+            patch_witch_at_amygdala(
+                self.arena, self.witch,
+                replace(DEFAULT_IDS, insight_flag=DEFAULT_IDS.warp + 7),
+            )
+        with self.assertRaisesRegex(ValueError, "13304400--13304699"):
             patch_witch_at_amygdala(
                 self.arena,
                 self.witch,
                 replace(DEFAULT_IDS, insight_flag=DEFAULT_IDS.phase),
             )
-        with self.assertRaisesRegex(ValueError, "129930xx"):
+        with self.assertRaisesRegex(ValueError, "13304400--13304699"):
             patch_witch_at_amygdala(
                 self.arena,
                 self.witch,
@@ -178,7 +196,7 @@ class WitchAmygdalaContractTests(unittest.TestCase):
                     insight_flag=DEFAULT_IDS.minion_count_flag + 1,
                 ),
             )
-        with self.assertRaisesRegex(ValueError, "129930xx"):
+        with self.assertRaisesRegex(ValueError, "13304400--13304699"):
             patch_witch_at_amygdala(
                 self.arena,
                 self.witch,
