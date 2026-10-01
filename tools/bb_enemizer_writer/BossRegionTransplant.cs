@@ -12,6 +12,8 @@ internal static class BossRegionTransplant
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
         WriteIndented = true,
+        // Preserve reviewed provenance hashes on every host platform.
+        NewLine = "\r\n",
     };
 
     internal sealed record RegionProvenance(string Format, string RegionSha256);

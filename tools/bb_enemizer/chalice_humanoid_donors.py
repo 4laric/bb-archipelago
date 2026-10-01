@@ -18,7 +18,7 @@ from .boss_contracts import ARENAS, ArenaContract, CLERIC_ARENA
 from .boss_entrances import skip_replacement_entrance
 from .gascoigne_donor import CO_OP_RESTORE_EVENTS, _retired
 from .maria_donor import _activation_without_destination_animations
-from .maria_contract import MARIA_ARENA, MARIA_PACKAGE
+from .maria_contract import MARIA_ARENA, MARIA_PACKAGE, MARIA_PATCH_EXPECTED
 from .model import Archetype, Slot, Swap
 from .scaling import plan_scaling
 
@@ -134,7 +134,12 @@ def _verify(arena: ArenaContract, destination: str, donor_source: str) -> tuple[
         raise ValueError("Chalice humanoid donor requires a reviewed base arena")
     original, common = event_blocks(destination), event_blocks(donor_source)
     for event_id, expected in arena.expected.items():
-        if event_id not in original or hashlib.sha256(original[event_id].encode()).hexdigest() != expected:
+        allowed = {expected}
+        # Installed patch-layer Maria scripts have reviewed constructor and
+        # health variants, shared with the other Maria encounter adapters.
+        if arena == MARIA_HUMANOID_ARENA and event_id in MARIA_PATCH_EXPECTED:
+            allowed.add(MARIA_PATCH_EXPECTED[event_id])
+        if event_id not in original or hashlib.sha256(original[event_id].encode()).hexdigest() not in allowed:
             raise ValueError(f"{arena.key} event {event_id} drifted")
     for event_id, expected in COMMON_EVENT_PINS.items():
         if event_id not in common or hashlib.sha256(common[event_id].encode()).hexdigest() != expected:

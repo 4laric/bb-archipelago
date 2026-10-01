@@ -12,6 +12,8 @@ internal static class BossActorTransplant
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
         WriteIndented = true,
+        // Reviewed provenance pins were generated with Windows JSON newlines.
+        NewLine = "\r\n",
     };
     internal sealed record Addition(
         string SourceMap, string SourcePart, string SourceAnchorPart, int SourceEntityId,

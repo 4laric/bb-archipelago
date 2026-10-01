@@ -10,7 +10,8 @@ using SoulsFormats;
 // streaming/visibility rather than an object model's model-point geometry.
 internal static class BossObjectTransplant
 {
-    static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true, WriteIndented = true };
+    // Preserve reviewed Windows provenance hashes on every host platform.
+    static readonly JsonSerializerOptions Json = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true, WriteIndented = true, NewLine = "\r\n" };
     internal sealed record ObjectProvenance(string Format, string PartSha256);
     internal sealed record AnchorProvenance(string Format, string PartSha256);
     internal sealed record Addition(string SourceMap, string SourcePart, int SourceEntityId, ObjectProvenance SourceProvenance,

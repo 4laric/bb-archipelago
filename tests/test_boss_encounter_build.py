@@ -10,7 +10,7 @@ from tools.bb_inputs import read_prefix
 from tools.bb_enemizer.boss_contracts import CLERIC_ARENA, BSB_PACKAGE, patch_contract_swap, event_blocks
 from tools.build_boss_encounters import (
     ARENAS, PACKAGES, GASCOIGNE_ALLOCATION, GASCOIGNE_ARENA_ATTACHMENTS,
-    event_record, verify_receipt, lift_zero_argument_initializers, validate_allocations,
+    event_record, verify_receipt, validate_allocations,
     build, disable_player_scaling,
     is_gascoigne_donor_pair, is_gascoigne_arena_pair, reviewed_compatibility, verify_retained_helpers, pin_region_requirements, pin_actor_requirements, pin_object_requirements,
 )
@@ -45,7 +45,7 @@ class EncounterBuildTests(unittest.TestCase):
             disable_player_scaling({'swaps': plan['swaps'], 'options': {},
                                     'scaling': {'changes': [], 'skips': []}})
 
-    def test_reusable_specialized_donor_routes_reach_the_compiler_pin_gate(self):
+    def test_reusable_specialized_donor_routes_reach_the_native_input_gate(self):
         from tools.bb_enemizer.laurence_donor import SUPPORTED_LAURENCE_ARENAS
         from tools.bb_enemizer.logarius_donor import SUPPORTED_LOGARIUS_ARENAS
         from tools.bb_enemizer.orphan_donor import ARENAS as SUPPORTED_ORPHAN_ARENAS
@@ -87,8 +87,11 @@ class EncounterBuildTests(unittest.TestCase):
                 with self.subTest(arena=arena, donor=donor):
                     args = SimpleNamespace(arena=arena, donor=donor,
                                            pool=None, seed='donor-recipe', darkscript=compiler)
-                    with self.assertRaisesRegex(ValueError, 'requires pinned DarkScript'):
-                        build(args)
+                    for name in ('events', 'maps', 'scripts', 'gameparam', 'paramdef', 'bundle', 'writer', 'output'):
+                        setattr(args, name, Path(temporary) / name)
+                    with patch('tools.build_boss_encounters.check_output', side_effect=ValueError('native input gate')):
+                        with self.assertRaisesRegex(ValueError, 'native input gate'):
+                            build(args)
 
     def test_authored_actor_pins_are_verified_instead_of_replaced_with_current_input(self):
         part = {'name': 'core', 'entity_id': 123, 'source_archetype': {'model_name': 'c1000'},
@@ -197,15 +200,6 @@ class EncounterBuildTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'across output maps'):
             validate_allocations(ROOT / 'research/bb_inputs.db', [],
                                  [{'added_event_ids': [12990001]}, {'added_event_ids': [12990001]}], {})
-
-    def test_native_no_payload_initializer_requires_a_declared_no_argument_target(self):
-        source = '$Event(0, Default, function() {\n    InitializeEvent(0, 123);\n});\n' + \
-                 '$Event(123, Default, function() {\n    EndEvent();\n});\n'
-        result = lift_zero_argument_initializers(source)
-        self.assertEqual(source.replace('    InitializeEvent', '    $InitializeEvent'), result)
-        with self.assertRaisesRegex(ValueError, 'zero-parameter event'):
-            lift_zero_argument_initializers(source.replace('$Event(123, Default, function()',
-                                                           '$Event(123, Default, function(actor)'))
 
     @classmethod
     def setUpClass(cls):

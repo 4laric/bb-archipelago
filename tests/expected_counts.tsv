@@ -69,7 +69,8 @@ module	test_gascoigne_arena	5
 module	test_ludwig_contract	5
 module	test_laurence_contract	3
 module	test_maria_amelia_contract	4
-module	test_launcher_experimental_enemies	6
+module	test_launcher_experimental_enemies	11
+no_skip_module	test_native_events	8
 module	test_boss_actor_scaling	5
 module	test_laurence_arena	5
 module	test_ludwig_arena	4
