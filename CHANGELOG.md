@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle adds Shadows in six more arenas and Living Failures in four.
+  **Only the good bosses** also gains Pthumerian Elder, Pthumerian Descendant
+  and Keeper of the Old Lords in Gascoigne's arena, reducing repeated Orphan
+  placements there. Native builds pass; in-game validation remains outstanding.
 ## 0.2.0.9 - 2026-09-30
 
 - Boss shuffle: Rom in the One Reborn courtyard now teleports to the native

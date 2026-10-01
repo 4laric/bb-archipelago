@@ -1,0 +1,482 @@
+{
+  "reviewed": {
+    "amygdala": {
+      "witch-of-hemwick": 510,
+      "living-failures": 55,
+      "orphan-of-kos": 80,
+      "moon-presence": 21,
+      "laurence": 28,
+      "celestial-emissary": 50,
+      "father-gascoigne": 44,
+      "the-one-reborn": 44,
+      "mergos-wet-nurse": 43,
+      "ludwig": 27,
+      "gehrman": 13,
+      "micolash": 15,
+      "shadows-of-yharnam": 30,
+      "lady-maria": 16,
+      "martyr-logarius": 13,
+      "darkbeast-paarl": 3,
+      "cleric-beast": 4,
+      "blood-starved-beast": 1,
+      "ebrietas": 1,
+      "vicar-amelia": 2
+    },
+    "blood-starved-beast": {
+      "the-one-reborn": 118,
+      "father-gascoigne": 131,
+      "mergos-wet-nurse": 124,
+      "ludwig": 55,
+      "moon-presence": 39,
+      "shadows-of-yharnam": 54,
+      "lady-maria": 57,
+      "orphan-of-kos": 144,
+      "gehrman": 35,
+      "celestial-emissary": 110,
+      "amygdala": 8,
+      "laurence": 53,
+      "micolash": 35,
+      "martyr-logarius": 24,
+      "ebrietas": 3,
+      "vicar-amelia": 3,
+      "cleric-beast": 4,
+      "darkbeast-paarl": 3
+    },
+    "celestial-emissary": {
+      "shadows-of-yharnam": 331,
+      "amygdala": 327,
+      "blood-starved-beast": 342
+    },
+    "cleric-beast": {
+      "mergos-wet-nurse": 123,
+      "lady-maria": 61,
+      "shadows-of-yharnam": 59,
+      "moon-presence": 43,
+      "living-failures": 115,
+      "celestial-emissary": 83,
+      "father-gascoigne": 88,
+      "micolash": 32,
+      "orphan-of-kos": 132,
+      "ludwig": 51,
+      "vicar-amelia": 5,
+      "the-one-reborn": 96,
+      "laurence": 48,
+      "martyr-logarius": 24,
+      "gehrman": 30,
+      "ebrietas": 4,
+      "darkbeast-paarl": 2,
+      "blood-starved-beast": 3,
+      "amygdala": 1
+    },
+    "darkbeast-paarl": {
+      "micolash": 33,
+      "the-one-reborn": 112,
+      "celestial-emissary": 106,
+      "shadows-of-yharnam": 60,
+      "ludwig": 63,
+      "orphan-of-kos": 166,
+      "mergos-wet-nurse": 136,
+      "father-gascoigne": 112,
+      "lady-maria": 62,
+      "gehrman": 26,
+      "moon-presence": 30,
+      "ebrietas": 8,
+      "laurence": 47,
+      "martyr-logarius": 21,
+      "cleric-beast": 7,
+      "vicar-amelia": 4,
+      "blood-starved-beast": 1,
+      "amygdala": 6
+    },
+    "ebrietas": {
+      "living-failures": 56,
+      "orphan-of-kos": 73,
+      "rom": 490,
+      "celestial-emissary": 48,
+      "lady-maria": 24,
+      "father-gascoigne": 53,
+      "shadows-of-yharnam": 39,
+      "moon-presence": 22,
+      "ludwig": 27,
+      "the-one-reborn": 46,
+      "mergos-wet-nurse": 48,
+      "martyr-logarius": 10,
+      "laurence": 22,
+      "micolash": 20,
+      "gehrman": 17,
+      "darkbeast-paarl": 1,
+      "blood-starved-beast": 1,
+      "cleric-beast": 1,
+      "vicar-amelia": 2
+    },
+    "father-gascoigne": {
+      "orphan-of-kos": 262,
+      "cleric-beast": 149,
+      "darkbeast-paarl": 110,
+      "martyr-logarius": 197,
+      "ebrietas": 69,
+      "vicar-amelia": 81,
+      "amygdala": 92,
+      "blood-starved-beast": 40
+    },
+    "gehrman": {
+      "moon-presence": 414,
+      "micolash": 377,
+      "cleric-beast": 51,
+      "ebrietas": 39,
+      "vicar-amelia": 36,
+      "darkbeast-paarl": 32,
+      "blood-starved-beast": 14,
+      "amygdala": 37
+    },
+    "lady-maria": {
+      "laurence": 203,
+      "blood-starved-beast": 25,
+      "amygdala": 57,
+      "cleric-beast": 72,
+      "martyr-logarius": 149,
+      "darkbeast-paarl": 49,
+      "vicar-amelia": 32,
+      "living-failures": 378,
+      "ebrietas": 35
+    },
+    "laurence": {
+      "martyr-logarius": 106,
+      "living-failures": 301,
+      "cleric-beast": 78,
+      "lady-maria": 337,
+      "blood-starved-beast": 16,
+      "amygdala": 38,
+      "darkbeast-paarl": 50,
+      "ebrietas": 49,
+      "vicar-amelia": 25
+    },
+    "living-failures": {
+      "lady-maria": 387,
+      "laurence": 377,
+      "blood-starved-beast": 236
+    },
+    "ludwig": {
+      "blood-starved-beast": 74,
+      "darkbeast-paarl": 140,
+      "laurence": 170,
+      "amygdala": 182,
+      "cleric-beast": 240,
+      "ebrietas": 96,
+      "vicar-amelia": 98
+    },
+    "martyr-logarius": {
+      "amygdala": 101,
+      "mergos-wet-nurse": 415,
+      "darkbeast-paarl": 74,
+      "ebrietas": 94,
+      "cleric-beast": 186,
+      "blood-starved-beast": 50,
+      "vicar-amelia": 80
+    },
+    "mergos-wet-nurse": {
+      "darkbeast-paarl": 435,
+      "martyr-logarius": 433,
+      "blood-starved-beast": 132
+    },
+    "micolash": {
+      "cleric-beast": 40,
+      "moon-presence": 384,
+      "gehrman": 454,
+      "vicar-amelia": 24,
+      "ebrietas": 32,
+      "blood-starved-beast": 18,
+      "darkbeast-paarl": 18,
+      "amygdala": 30
+    },
+    "moon-presence": {
+      "gehrman": 405,
+      "vicar-amelia": 22,
+      "micolash": 452,
+      "amygdala": 25,
+      "darkbeast-paarl": 18,
+      "ebrietas": 27,
+      "cleric-beast": 39,
+      "blood-starved-beast": 12
+    },
+    "orphan-of-kos": {
+      "vicar-amelia": 63,
+      "shadows-of-yharnam": 361,
+      "ludwig": 209,
+      "ebrietas": 60,
+      "blood-starved-beast": 32,
+      "amygdala": 92,
+      "darkbeast-paarl": 60,
+      "cleric-beast": 123
+    },
+    "rom": {
+      "ebrietas": 481,
+      "celestial-emissary": 519
+    },
+    "shadows-of-yharnam": {
+      "ludwig": 514,
+      "the-one-reborn": 486
+    },
+    "the-one-reborn": {
+      "rom": 510,
+      "witch-of-hemwick": 490
+    },
+    "vicar-amelia": {
+      "celestial-emissary": 84,
+      "orphan-of-kos": 143,
+      "the-one-reborn": 98,
+      "laurence": 52,
+      "father-gascoigne": 95,
+      "mergos-wet-nurse": 111,
+      "lady-maria": 56,
+      "micolash": 36,
+      "living-failures": 95,
+      "gehrman": 20,
+      "moon-presence": 47,
+      "amygdala": 4,
+      "shadows-of-yharnam": 66,
+      "ludwig": 54,
+      "martyr-logarius": 23,
+      "darkbeast-paarl": 5,
+      "cleric-beast": 6,
+      "blood-starved-beast": 3,
+      "ebrietas": 2
+    },
+    "witch-of-hemwick": {
+      "father-gascoigne": 477,
+      "vicar-amelia": 523
+    }
+  },
+  "good": {
+    "amygdala": {
+      "undead-giant": 348,
+      "bloodletting-beast": 167,
+      "abhorrent-beast": 144,
+      "headless-bloodletting-beast": 179,
+      "gehrman": 3,
+      "watchdog-of-the-old-lords": 111,
+      "pthumerian-descendant": 5,
+      "orphan-of-kos": 6,
+      "blood-starved-beast": 4,
+      "darkbeast-paarl": 4,
+      "moon-presence": 3,
+      "vicar-amelia": 4,
+      "lady-maria": 1,
+      "cleric-beast": 2,
+      "shadows-of-yharnam": 4,
+      "keeper-of-old-lords": 3,
+      "father-gascoigne": 6,
+      "pthumerian-elder": 5,
+      "mergos-wet-nurse": 1
+    },
+    "blood-starved-beast": {
+      "watchdog-of-the-old-lords": 136,
+      "abhorrent-beast": 145,
+      "undead-giant": 343,
+      "headless-bloodletting-beast": 159,
+      "bloodletting-beast": 160,
+      "orphan-of-kos": 6,
+      "amygdala": 6,
+      "darkbeast-paarl": 5,
+      "pthumerian-descendant": 3,
+      "keeper-of-old-lords": 3,
+      "vicar-amelia": 2,
+      "shadows-of-yharnam": 6,
+      "moon-presence": 4,
+      "father-gascoigne": 5,
+      "lady-maria": 1,
+      "gehrman": 4,
+      "cleric-beast": 2,
+      "mergos-wet-nurse": 3,
+      "martyr-logarius": 4,
+      "pthumerian-elder": 3
+    },
+    "celestial-emissary": {
+      "amygdala": 215,
+      "shadows-of-yharnam": 656,
+      "blood-starved-beast": 129
+    },
+    "cleric-beast": {
+      "bloodletting-beast": 140,
+      "undead-giant": 252,
+      "headless-bloodletting-beast": 145,
+      "watchdog-of-the-old-lords": 226,
+      "abhorrent-beast": 176,
+      "gehrman": 8,
+      "father-gascoigne": 4,
+      "mergos-wet-nurse": 4,
+      "shadows-of-yharnam": 8,
+      "amygdala": 5,
+      "vicar-amelia": 5,
+      "moon-presence": 3,
+      "orphan-of-kos": 5,
+      "keeper-of-old-lords": 3,
+      "pthumerian-elder": 4,
+      "blood-starved-beast": 3,
+      "pthumerian-descendant": 2,
+      "darkbeast-paarl": 4,
+      "lady-maria": 3
+    },
+    "darkbeast-paarl": {
+      "father-gascoigne": 44,
+      "moon-presence": 55,
+      "vicar-amelia": 60,
+      "amygdala": 39,
+      "pthumerian-descendant": 56,
+      "abhorrent-beast": 56,
+      "mergos-wet-nurse": 51,
+      "watchdog-of-the-old-lords": 62,
+      "cleric-beast": 54,
+      "pthumerian-elder": 54,
+      "orphan-of-kos": 56,
+      "lady-maria": 39,
+      "gehrman": 55,
+      "shadows-of-yharnam": 52,
+      "martyr-logarius": 52,
+      "blood-starved-beast": 58,
+      "keeper-of-old-lords": 50,
+      "undead-giant": 57,
+      "bloodletting-beast": 29,
+      "headless-bloodletting-beast": 21
+    },
+    "ebrietas": {
+      "keeper-of-old-lords": 203,
+      "gehrman": 72,
+      "orphan-of-kos": 312,
+      "martyr-logarius": 35,
+      "father-gascoigne": 21,
+      "blood-starved-beast": 20,
+      "shadows-of-yharnam": 29,
+      "moon-presence": 111,
+      "vicar-amelia": 29,
+      "cleric-beast": 35,
+      "mergos-wet-nurse": 73,
+      "amygdala": 15,
+      "darkbeast-paarl": 27,
+      "lady-maria": 18
+    },
+    "father-gascoigne": {
+      "orphan-of-kos": 396,
+      "pthumerian-elder": 151,
+      "pthumerian-descendant": 170,
+      "keeper-of-old-lords": 131,
+      "vicar-amelia": 37,
+      "amygdala": 22,
+      "blood-starved-beast": 17,
+      "darkbeast-paarl": 28,
+      "cleric-beast": 23,
+      "martyr-logarius": 25
+    },
+    "gehrman": {
+      "abhorrent-beast": 479,
+      "watchdog-of-the-old-lords": 465,
+      "blood-starved-beast": 14,
+      "cleric-beast": 13,
+      "vicar-amelia": 6,
+      "moon-presence": 10,
+      "amygdala": 6,
+      "darkbeast-paarl": 7
+    },
+    "lady-maria": {
+      "pthumerian-descendant": 262,
+      "pthumerian-elder": 288,
+      "amygdala": 39,
+      "darkbeast-paarl": 34,
+      "keeper-of-old-lords": 230,
+      "blood-starved-beast": 30,
+      "martyr-logarius": 51,
+      "vicar-amelia": 26,
+      "cleric-beast": 40
+    },
+    "laurence": {
+      "blood-starved-beast": 93,
+      "vicar-amelia": 185,
+      "lady-maria": 69,
+      "martyr-logarius": 206,
+      "cleric-beast": 173,
+      "amygdala": 137,
+      "darkbeast-paarl": 137
+    },
+    "living-failures": {
+      "lady-maria": 849,
+      "blood-starved-beast": 151
+    },
+    "ludwig": {
+      "darkbeast-paarl": 198,
+      "blood-starved-beast": 132,
+      "cleric-beast": 264,
+      "vicar-amelia": 208,
+      "amygdala": 198
+    },
+    "martyr-logarius": {
+      "cleric-beast": 48,
+      "mergos-wet-nurse": 787,
+      "blood-starved-beast": 33,
+      "vicar-amelia": 46,
+      "darkbeast-paarl": 41,
+      "amygdala": 45
+    },
+    "mergos-wet-nurse": {
+      "martyr-logarius": 609,
+      "darkbeast-paarl": 267,
+      "blood-starved-beast": 124
+    },
+    "micolash": {
+      "moon-presence": 722,
+      "cleric-beast": 39,
+      "vicar-amelia": 35,
+      "gehrman": 97,
+      "blood-starved-beast": 31,
+      "amygdala": 44,
+      "darkbeast-paarl": 32
+    },
+    "moon-presence": {
+      "gehrman": 703,
+      "amygdala": 64,
+      "cleric-beast": 78,
+      "darkbeast-paarl": 63,
+      "vicar-amelia": 58,
+      "blood-starved-beast": 34
+    },
+    "orphan-of-kos": {
+      "shadows-of-yharnam": 216,
+      "darkbeast-paarl": 132,
+      "cleric-beast": 203,
+      "vicar-amelia": 191,
+      "amygdala": 151,
+      "blood-starved-beast": 107
+    },
+    "rom": {
+      "pthumerian-elder": 364,
+      "keeper-of-old-lords": 258,
+      "pthumerian-descendant": 378
+    },
+    "shadows-of-yharnam": {
+      "ludwig": 1000
+    },
+    "the-one-reborn": {
+      "beast-possessed-soul": 1000
+    },
+    "vicar-amelia": {
+      "mergos-wet-nurse": 81,
+      "pthumerian-elder": 131,
+      "gehrman": 58,
+      "keeper-of-old-lords": 119,
+      "moon-presence": 92,
+      "pthumerian-descendant": 124,
+      "orphan-of-kos": 219,
+      "darkbeast-paarl": 21,
+      "cleric-beast": 26,
+      "blood-starved-beast": 20,
+      "lady-maria": 20,
+      "father-gascoigne": 28,
+      "amygdala": 14,
+      "martyr-logarius": 18,
+      "shadows-of-yharnam": 29
+    },
+    "witch-of-hemwick": {
+      "vicar-amelia": 108,
+      "father-gascoigne": 892
+    }
+  }
+}
