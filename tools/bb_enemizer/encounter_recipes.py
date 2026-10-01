@@ -737,6 +737,25 @@ def _late_arena_recipes() -> tuple[EncounterRecipe, ...]:
     return tuple(recipes)
 
 
+def _group_donor_recipes() -> tuple[EncounterRecipe, ...]:
+    from .group_donors import DONOR_FILES, portable_group_arenas, patch_group_donor, native_plan_group_donor
+
+    recipes = []
+    for key, event_file in DONOR_FILES.items():
+        for arena in portable_group_arenas(key):
+            def patch(destination, donor_source, *, _arena=arena, _key=key):
+                return patch_group_donor(_arena, _key, destination, donor_source)
+
+            def native_plan(slots, npcs, effects, seed, *, _arena=arena, _key=key):
+                return native_plan_group_donor(_arena, _key, slots, npcs, effects, seed)
+
+            recipes.append(EncounterRecipe(
+                arena=arena, donor=DonorIdentity(key, event_file),
+                adapter="group-donor:source-combat", _patch=patch,
+                _native_plan=native_plan, _actor_requirements=lambda slots: []))
+    return tuple(recipes)
+
+
 def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
     """Return every route backed by a parameterized, source-pinned adapter."""
     arenas = {arena.key: arena for arena in ARENAS}
@@ -761,7 +780,8 @@ def reusable_recipes() -> dict[tuple[str, str], EncounterRecipe]:
                    *_gascoigne_donor_recipes(), *_ludwig_arena_recipes(),
                    *_final_boss_donor_recipes(), *_late_arena_recipes(),
                    *_wet_nurse_donor_recipes(), *_micolash_donor_recipes(),
-                   *_celestial_donor_recipes(), *_one_reborn_donor_recipes()):
+                   *_celestial_donor_recipes(), *_one_reborn_donor_recipes(),
+                   *_group_donor_recipes()):
         if recipe.arena.key == recipe.donor.key:
             raise ValueError(f"self encounter recipe is not a shuffle: {recipe.key}")
         if recipe.key in recipes:

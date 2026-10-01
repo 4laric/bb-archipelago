@@ -569,6 +569,9 @@ def native_plan_shadows_at_orphan(
     effects: Mapping[int, dict],
     seed: str,
     ids: ShadowsOrphanIds = DEFAULT_IDS,
+    *,
+    _target: Slot | None = None,
+    _target_pin: str | None = None,
 ) -> dict:
     donor_text = read_blob(BUNDLE, SHADOWS_SOURCE).decode("utf-8-sig")
     arena_text = read_blob(BUNDLE, ORPHAN_SOURCE).decode("utf-8-sig")
@@ -577,9 +580,10 @@ def native_plan_shadows_at_orphan(
         entity: _require(slots, entity, ARCHETYPES[entity], "m27_00_00_00")
         for entity in SOURCE_ACTORS
     }
-    target = _require(
+    target = _target or _require(
         slots, ORPHAN_CORE, ORPHAN_ARCHETYPES[ORPHAN_CORE], "m36_00_00_00"
     )
+    target_pin = _target_pin or ORPHAN_PINS[ORPHAN_CORE]
     retained = [
         _require(slots, entity, ORPHAN_ARCHETYPES[entity], "m36_00_00_00")
         for entity in (ORPHAN_PHASE, ORPHAN_SUPPORT)
@@ -648,7 +652,7 @@ def native_plan_shadows_at_orphan(
                 "destination_region": f"ap_shadows_snake_spawn_{index:02d}",
                 "destination_entity_id": ids.region_entity_first + index,
                 "destination_anchor_part": target.part_name,
-                "destination_anchor_provenance": _pin(ORPHAN_PINS[ORPHAN_CORE]),
+                "destination_anchor_provenance": _pin(target_pin),
             }
         )
     snake_parts = {

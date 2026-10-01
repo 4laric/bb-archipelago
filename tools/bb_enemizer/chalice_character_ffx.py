@@ -22,14 +22,23 @@ def _proof() -> dict:
 
 
 def supports_character(arena_key: str, character: str) -> bool:
-    destination = _proof()['destinations'].get(arena_key)
+    destination = _destination(_proof(), arena_key)
     return destination is not None and character in destination['characters']
+
+
+def _destination(proof: dict, arena_key: str) -> dict | None:
+    # Gascoigne and Cleric are in the same m24_01 maps and load the exact
+    # same destination bank. The pinned bank conflict proof therefore applies
+    # to both encounters; actor/geometry support is checked by their adapters.
+    if arena_key == 'father-gascoigne':
+        return proof['destinations']['cleric-beast']
+    return proof['destinations'].get(arena_key)
 
 
 def character_ffx_plan(actor: dict, arena_key: str) -> dict:
     proof = _proof()
     character = actor['source_archetype']['model_name']
-    target = proof['destinations'].get(arena_key)
+    target = _destination(proof, arena_key)
     if target is None or character not in target['characters']:
         raise ValueError('chalice character bank delivery lacks a conflict-free arena proof')
     if not actor['destination_map'].startswith(target['bank'] + '_'):

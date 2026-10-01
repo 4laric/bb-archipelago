@@ -74,12 +74,15 @@ class EncounterRecipeTests(unittest.TestCase):
         micolash_donor_keys = {(arena.key, "micolash") for arena in ARENAS}
         celestial_donor_keys = {(arena.key, "celestial-emissary") for arena in ARENAS}
         one_reborn_donor_keys = {(arena.key, "the-one-reborn") for arena in ARENAS}
+        from tools.bb_enemizer.group_donors import DONOR_FILES, portable_group_arenas
+        group_donor_keys = {(arena.key, donor) for donor in DONOR_FILES
+                            for arena in portable_group_arenas(donor)}
         groups = (base_keys, maria_keys, laurence_keys, maria_arena_keys, logarius_keys,
                   laurence_arena_keys, gascoigne_arena_keys, logarius_arena_keys,
                   orphan_keys, orphan_arena_keys, ludwig_keys, gascoigne_donor_keys,
                   ludwig_arena_keys, final_boss_donor_keys, final_arena_keys,
                   micolash_arena_keys, wet_nurse_keys, micolash_donor_keys,
-                  celestial_donor_keys, one_reborn_donor_keys)
+                  celestial_donor_keys, one_reborn_donor_keys, group_donor_keys)
         self.assertEqual(set.union(*groups), set(self.recipes))
         self.assertEqual(
             sum(len(donors) for donors in COMPATIBILITY.values()), len(base_keys)

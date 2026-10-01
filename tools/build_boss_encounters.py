@@ -1058,8 +1058,9 @@ def _build_once(args) -> dict:
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
     if direct_orphan[0] == 'shadows-of-yharnam' and direct_orphan[1] not in ('ludwig', 'the-one-reborn'):
         raise ValueError('Shadows arena requires a reviewed Ludwig or One Reborn donor adapter')
-    if direct_orphan[1] == 'shadows-of-yharnam' and direct_orphan[0] not in ('orphan-of-kos', 'celestial-emissary'):
-        raise ValueError('Shadows donor requires a reviewed Orphan or Celestial arena adapter')
+    if (direct_orphan[1] == 'shadows-of-yharnam' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('orphan-of-kos', 'celestial-emissary')):
+        raise ValueError('Shadows donor requires an implemented arena adapter')
     if direct_orphan[0] == 'the-one-reborn' and direct_orphan not in recipes and direct_orphan[1] not in ('rom', 'witch-of-hemwick'):
         raise ValueError('One Reborn arena requires a reviewed Rom or Witch donor adapter')
     if (direct_orphan[1] == 'the-one-reborn' and direct_orphan not in recipes
@@ -1083,8 +1084,9 @@ def _build_once(args) -> dict:
         raise ValueError('Wet Nurse donor requires a reviewed BSB or Logarius arena adapter')
     if direct_orphan[0] == 'celestial-emissary' and direct_orphan[1] not in ('blood-starved-beast', 'amygdala', 'shadows-of-yharnam'):
         raise ValueError('Celestial Emissary arena requires a reviewed BSB, Amygdala or Shadows donor adapter')
-    if direct_orphan[1] == 'living-failures' and direct_orphan[0] not in ('laurence', 'lady-maria'):
-        raise ValueError('Living Failures donor requires a reviewed Laurence or Maria arena adapter')
+    if (direct_orphan[1] == 'living-failures' and direct_orphan not in recipes
+            and direct_orphan[0] not in ('laurence', 'lady-maria')):
+        raise ValueError('Living Failures donor requires an implemented arena adapter')
     if direct_orphan[0] == 'rom' and direct_orphan not in recipes and direct_orphan[1] not in ('ebrietas', 'celestial-emissary'):
         raise ValueError('Rom arena requires a reviewed Ebrietas or Celestial donor adapter')
     if direct_orphan[1] == 'rom' and direct_orphan[0] not in ('ebrietas', 'the-one-reborn'):

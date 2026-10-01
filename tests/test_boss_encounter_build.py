@@ -79,7 +79,10 @@ class EncounterBuildTests(unittest.TestCase):
         pairs.extend((arena.key, 'micolash') for arena in portable_micolash_arenas())
         pairs.extend((arena.key, 'celestial-emissary') for arena in portable_celestial_arenas())
         pairs.extend((arena.key, 'the-one-reborn') for arena in portable_one_reborn_arenas())
-        self.assertEqual(89, len(pairs))
+        from tools.bb_enemizer.group_donors import DONOR_FILES, portable_group_arenas
+        pairs.extend((arena.key, donor) for donor in DONOR_FILES
+                     for arena in portable_group_arenas(donor))
+        self.assertEqual(99, len(pairs))
         with tempfile.TemporaryDirectory() as temporary:
             compiler = Path(temporary) / 'untrusted-compiler.exe'
             compiler.write_bytes(b'not the pinned compiler')
