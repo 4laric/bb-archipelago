@@ -228,6 +228,7 @@ try
     MapTransplantTests.Run();
     BossEncounterTests.Run();
     BossActorTests.Run();
+    ProvenanceFingerprintTests.Run();
     BossRegionTests.Run();
     BossObjectTests.Run();
     BossSfxTests.Run();

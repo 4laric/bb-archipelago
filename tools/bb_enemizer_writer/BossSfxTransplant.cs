@@ -12,6 +12,8 @@ internal static class BossSfxTransplant
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
         WriteIndented = true,
+        // Preserve reviewed provenance hashes on every host platform.
+        NewLine = "\r\n",
     };
 
     internal sealed record SfxProvenance(string Format, string EventSha256);
