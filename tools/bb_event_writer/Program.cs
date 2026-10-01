@@ -31,6 +31,8 @@ internal static class Program
                 "cathedral" => Cathedral(args.Skip(1).ToArray()),
                 "hemwick" => Hemwick(args.Skip(1).ToArray()),
                 "common" => Common(args.Skip(1).ToArray()),
+                "native-dump" when args.Length == 3 => NativeEvents.Dump(args[1], args[2]),
+                "native-write" when args.Length == 4 => NativeEvents.Write(args[1], args[2], args[3]),
                 _ => throw new UsageException(),
             };
         }
@@ -39,6 +41,8 @@ internal static class Program
             Console.Error.WriteLine(
                 "usage: BBEventWriter dump <emevd.dcx> [eventId ...]\n" +
                 "       BBEventWriter decompress <in.emevd.dcx> <out.emevd>\n" +
+                "       BBEventWriter native-dump <emevd.dcx-or-directory> <output.json>\n" +
+                "       BBEventWriter native-write <original.emevd.dcx> <recipe.json> <output.emevd.dcx>\n" +
                 "       BBEventWriter cathedral --source <m24_00_00_00.emevd.dcx> --output <path> --manifest <path>\n" +
                 "       BBEventWriter hemwick --source <m22_00_00_00.emevd.dcx> --output <path> --manifest <path> --access-flag <flag>\n" +
                 "       BBEventWriter common --source <common.emevd.dcx> --request <rows.json> --output <path> --manifest <path>");

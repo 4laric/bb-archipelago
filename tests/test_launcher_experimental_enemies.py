@@ -98,6 +98,25 @@ class ReviewedBossToolchain(fixtures.FakeToolchain):
 
 
 class ExperimentalLauncherTests(unittest.TestCase):
+    def test_native_catalog_identity_uses_the_builders_packaged_copy(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            toolchain = EnemizerToolchain(root, app_root=root)
+            inventory = root / 'inventory.tsv'
+            catalogue = toolchain.boss_encounter_builder_executable.parent / '_internal/tools/bb_enemizer/native_event_catalog.json'
+            fallback = root / 'tools/bb_enemizer/native_event_catalog.json'
+            for path in (toolchain.boss_encounter_builder_executable, toolchain.writer_executable,
+                         toolchain.planner_executable, toolchain.event_writer_executable,
+                         root / 'research/bb_inputs.db', inventory, catalogue, fallback):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b'fixture')
+            paths = toolchain.boss_encounter_identity_inputs(inventory)
+            self.assertEqual(catalogue, paths['launcher-tools/native-event-catalog.json'])
+            before = sha256_file(paths['launcher-tools/native-event-catalog.json'])
+            catalogue.write_bytes(b'updated native catalogue')
+            self.assertNotEqual(before, sha256_file(paths['launcher-tools/native-event-catalog.json']))
+
     def setUp(self):
         self.fixture = fixtures.LauncherUiWorkflowTests()
         self.fixture.setUp()
@@ -172,7 +191,7 @@ class ExperimentalLauncherTests(unittest.TestCase):
             process_launcher=lambda _: [fixtures.Process(10), fixtures.Process(11)],
         )
         from unittest.mock import patch
-        with patch('bb_launcher.boss_compiler.ensure_boss_compiler', return_value=compiler):
+        with patch('bb_launcher.boss_compiler.ensure_boss_compiler', side_effect=AssertionError('runtime must not download DarkScript')):
             result = workflow.randomize_and_launch(
                 self.fixture.settings(), EnemizerOptions(boss_pool='reviewed'),
                 process_is_running=lambda: False,
@@ -388,6 +407,7 @@ class ExperimentalLauncherTests(unittest.TestCase):
                 seed='fixture:1', progress=lambda _: None,
             )
         self.assertEqual(1, len(commands))
+        self.assertNotIn('--darkscript', commands[0])
 
 
 if __name__ == '__main__':

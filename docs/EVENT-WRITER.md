@@ -6,6 +6,10 @@ with SoulsFormatsNEXT. It replaced the DarkScript3 compile step on
 2026-09-03 so that players no longer install a script compiler and the .NET 6
 runtime it needed.
 
+Boss seed builds also emit native events now. Their recipe catalogue,
+composition guards and verification record are documented in
+[Native boss event emission](NATIVE-BOSS-EVENTS.md).
+
 ## What it writes
 
 | overlay | file | edits |

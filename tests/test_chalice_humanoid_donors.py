@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from unittest.mock import patch
 
 from tools.bb_inputs import read_blob
 from tools.bb_enemizer.boss_canary import event_blocks
@@ -18,6 +19,7 @@ from tools.bb_enemizer.chalice_humanoid_donors import (
 )
 from tools.bb_enemizer.gascoigne_donor import CO_OP_RESTORE_EVENTS
 from tools.bb_enemizer.inventory import load_slots
+from tools.bb_enemizer.maria_contract import MARIA_PATCH_EXPECTED
 from tools.bb_enemizer.model import Slot
 from tools.bb_enemizer.scaling import load_params
 
@@ -128,6 +130,47 @@ class ChaliceHumanoidDonorTests(unittest.TestCase):
                         self.assertEqual(donor.archetype.think_param_id,
                                          binding["source_archetype"]["think_param_id"])
                         self.assertEqual(SOURCE_INITIALIZATION, binding["source_initialization"])
+
+    def test_maria_installed_patch_health_is_accepted_and_unknown_drift_rejected(self):
+        arena = MARIA_HUMANOID_ARENA
+        source = self.destinations[arena.key].replace("\r\n", "\n")
+        before = event_blocks(source)
+        health = before[arena.health_bar_event].replace(
+            "AuthorityLevel.Normal", "AuthorityLevel.Forced")
+        self.assertEqual(MARIA_PATCH_EXPECTED[arena.health_bar_event],
+                         hashlib.sha256(health.encode()).hexdigest())
+        installed = source.replace(before[arena.health_bar_event], health)
+        for donor in DONORS.values():
+            with self.subTest(donor=donor.key):
+                after = event_blocks(patch_chalice_humanoid_donor(
+                    arena, donor, installed, self.common))
+                self.assertEqual(before[0], after[0])
+                self.assertEqual(before[arena.completion_event], after[arena.completion_event])
+                self.assertIn(str(donor.health_name_id), after[arena.health_bar_event])
+        corrupt = installed.replace(
+            "SetNetworkUpdateAuthority(3500800, AuthorityLevel.Forced)",
+            "SetNetworkUpdateAuthority(3500801, AuthorityLevel.Forced)")
+        with self.assertRaisesRegex(ValueError, "lady-maria event 13504802 drifted"):
+            patch_chalice_humanoid_donor(arena, donor, corrupt, self.common)
+
+    def test_maria_reviewed_constructor_variant_is_preserved_verbatim(self):
+        arena = MARIA_HUMANOID_ARENA
+        source = self.destinations[arena.key].replace("\r\n", "\n")
+        before = event_blocks(source)
+        # The installed constructor is outside the distributable bundle. Use a
+        # synthetic alternate pin to exercise acceptance and preservation while
+        # leaving every production digest and the hash check intact.
+        constructor = before[0].replace("function() {", "function() {\n    NoOp();", 1)
+        variant = source.replace(before[0], constructor)
+        donor = DONORS["pthumerian-elder"]
+        with self.assertRaisesRegex(ValueError, "lady-maria event 0 drifted"):
+            patch_chalice_humanoid_donor(arena, donor, variant, self.common)
+        with patch.dict(MARIA_PATCH_EXPECTED, {0: hashlib.sha256(constructor.encode()).hexdigest()}):
+            for donor in DONORS.values():
+                with self.subTest(donor=donor.key):
+                    after = event_blocks(patch_chalice_humanoid_donor(
+                        arena, donor, variant, self.common))
+                    self.assertEqual(constructor, after[0])
 
     def test_rejects_drift_missing_map_state_and_unreviewed_arena(self):
         donor = DONORS["pthumerian-elder"]

@@ -630,6 +630,10 @@ jobs:
         run: >
           dotnet run --project tests/bb_enemizer_writer -c Release
           -p:SoulsFormatsNextRoot="$PWD/_soulsformats"
+      - name: Native encounter event binary integration tests
+        run: >
+          dotnet run --project tests/native_events -c Release
+          -p:SoulsFormatsNextRoot="$PWD/_soulsformats"
       - name: Forge the synthetic fixtures
         run: |
           python tools/plan_vanilla_suppression.py --output work/integration/suppression-plan.json

@@ -2,6 +2,11 @@ using System.Numerics;
 using System.Text.Json;
 using SoulsFormats;
 
+if (args.Length == 3 && args[0] == "--native-event-dump")
+    return NativeEvents.Dump(args[1], args[2]);
+if (args.Length == 4 && args[0] == "--native-event-write")
+    return NativeEvents.Write(args[1], args[2], args[3]);
+
 if (args.Length == 2 && args[0] == "--boss-event-recipe")
     return BossCanary.ExportRecipe(args[1]);
 if (args.Length == 3 && args[0] == "--event-fingerprint")
@@ -63,6 +68,8 @@ if (args.Length != 4 || args[3] != "--apply")
     Console.Error.WriteLine("Object evidence: BBEnemizerWriter --boss-object-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("SFX evidence: BBEnemizerWriter --boss-sfx-pins <original-map.msb.dcx>");
     Console.Error.WriteLine("FFX preflight: BBEnemizerWriter --boss-ffx-preflight <plan.json> <original-sfx-dir> <report.json>");
+    Console.Error.WriteLine("Native events: BBEnemizerWriter --native-event-dump <source-or-directory> <output.json>");
+    Console.Error.WriteLine("Native event recipe: BBEnemizerWriter --native-event-write <original> <recipe.json> <output>");
     Console.Error.WriteLine("Refuses to write without the explicit --apply argument.");
     return 2;
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile reviewed arena/combat contracts into an experimental boss overlay.
 
-Uses the owner's original binaries and the pinned development compiler. No
+Uses the owner's original binaries and reviewed native event recipes. No
 overlay is activated and no game process is started. Runtime behavior remains
 unvalidated even after all structural and serialization checks pass.
 """
@@ -135,10 +135,8 @@ from tools.bb_enemizer.maria_amelia_contract import (
 from tools.bb_enemizer.scaling import load_params
 from tools.bb_enemizer.boss_actor_scaling import allocate_actor_scaling
 from tools.bb_inputs import read_blob, read_prefix
-from tools.build_boss_canary import compile_events
 from tools.build_boss_catalog import build as build_catalog
 from tools.build_boss_shuffle import check_output
-from tools.build_cathedral_emevd import DARKSCRIPT_SHA256
 
 ARENAS = {arena.key: arena for arena in ARENA_CONTRACTS}
 PACKAGES = {package.key: package for package in COMBAT_PACKAGES}
@@ -686,26 +684,11 @@ def command_for(args) -> list[str]:
     return ([str(args.dotnet)] if args.dotnet else []) + [str(args.writer)]
 
 
-def lift_zero_argument_initializers(source: str) -> str:
-    """Lift native AP calls whose absent argument payload DarkScript won't recompile.
-
-    Only zero-parameter functions declared in this file qualify. The high-level
-    form lets DarkScript encode its required unused argument padding.
-    """
-    no_parameters = {int(match[1]) for match in re.finditer(
-        r'\$Event\((\d+),\s*\w+,\s*function\(\s*\)', source)}
-    def replace(match):
-        if int(match[2]) not in no_parameters:
-            raise ValueError('argumentless initializer has no declared zero-parameter event')
-        return f'$InitializeEvent({match[1]}, {match[2]});'
-    return re.sub(r'(?<![\w$])InitializeEvent\((\d+),\s*(\d+)\);', replace, source)
-
-
 def add_scripted_variants(variants: dict, texts: dict, scripted: dict) -> None:
     """Swapped scripted-AI placements lose only their pinned initializers.
 
     Each map's removal is one more constructor variant, composed against the
-    same original as every boss adapter and AP override, then recompiled.
+    same original as every boss adapter, then emitted as native instructions.
     """
     for filename, keys in sorted(scripted.items()):
         variants.setdefault(filename, []).append(
@@ -919,6 +902,145 @@ def build(args) -> dict:
     raise ValueError('could not find an effect-compatible boss layout after 32 attempts')
 
 
+def patch_pair_events(arena, package, texts: dict, recipes: dict, terminals: dict,
+                      *, materialized: bool = False) -> str:
+    """Shared source specification used by the runtime and recipe generator."""
+    ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
+    recipe = recipes.get((arena.key, package.key))
+    if recipe is not None:
+        patched = recipe.patch(texts[arena.event_file], texts[package.event_file])
+    elif is_orphan_gascoigne_pair(arena, package):
+        patched = patch_orphan_at_gascoigne(texts[arena.event_file], texts[package.event_file])
+    elif package.key == 'orphan-of-kos':
+        patched = patch_orphan_at_cleric(texts[arena.event_file], texts[package.event_file], ORPHAN_ALLOCATION)
+        terminals[arena.event_file] = ({'event_id': 12411700, 'original_actor': 2410800,
+            'bridge_event_id': ORPHAN_ALLOCATION.terminal_bridge_event_id},)
+    elif is_bsb_orphan_pair(arena, package):
+        patched = patch_bsb_at_orphan(
+            texts[arena.event_file], texts[package.event_file]
+        )
+    elif is_ludwig_orphan_pair(arena, package):
+        patched = patch_ludwig_at_orphan(
+            texts[arena.event_file], texts[package.event_file]
+        )
+    elif is_micolash_moon_pair(arena, package):
+        patched = patch_micolash_at_moon(texts[arena.event_file], texts[package.event_file])
+    elif is_micolash_gehrman_pair(arena, package):
+        patched = patch_micolash_at_gehrman(texts[arena.event_file], texts[package.event_file])
+    elif is_one_reborn_ebrietas_pair(arena, package):
+        patched = patch_one_reborn_at_ebrietas(texts[arena.event_file], texts[package.event_file])
+    elif is_rom_one_reborn_pair(arena, package):
+        patched = patch_rom_at_one_reborn(texts[arena.event_file], texts[package.event_file])
+    elif is_ludwig_shadows_pair(arena, package):
+        patched = patch_ludwig_at_shadows(texts[arena.event_file], texts[package.event_file])
+    elif is_shadows_orphan_pair(arena, package):
+        patched = patch_shadows_at_orphan(texts[arena.event_file], texts[package.event_file])
+    elif is_maria_living_failures_pair(arena, package):
+        patched = patch_maria_at_living_failures(texts[arena.event_file], texts[package.event_file])
+    elif is_laurence_living_failures_pair(arena, package):
+        patched = patch_laurence_at_living_failures(texts[arena.event_file], texts[package.event_file])
+    elif is_celestial_paarl_pair(arena, package):
+        patched = patch_celestial_emissary_at_paarl(texts[arena.event_file], texts[package.event_file])
+    elif is_witch_amygdala_pair(arena, package):
+        patched = patch_witch_at_amygdala(texts[arena.event_file], texts[package.event_file])
+    elif is_gehrman_micolash_pair(arena, package):
+        patched = patch_gehrman_at_micolash(texts[arena.event_file], texts[package.event_file])
+    elif is_amelia_witch_pair(arena, package):
+        patched = patch_amelia_at_witch(texts[arena.event_file], texts[package.event_file])
+    elif is_logarius_wet_nurse_pair(arena, package):
+        patched = patch_logarius_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
+    elif is_gascoigne_witch_pair(arena, package):
+        patched = patch_gascoigne_at_witch(texts[arena.event_file], texts[package.event_file])
+    elif is_shadows_celestial_pair(arena, package):
+        patched = patch_shadows_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
+    elif is_witch_one_reborn_pair(arena, package):
+        patched = patch_witch_at_one_reborn(texts[arena.event_file], texts[package.event_file])
+    elif is_one_reborn_shadows_pair(arena, package):
+        patched = patch_one_reborn_at_shadows(texts[arena.event_file], texts[package.event_file])
+    elif is_celestial_rom_pair(arena, package):
+        patched = patch_celestial_emissary_at_rom(texts[arena.event_file], texts[package.event_file])
+    elif is_moon_micolash_pair(arena, package):
+        patched = patch_moon_at_micolash(texts[arena.event_file], texts[package.event_file])
+    elif is_wet_nurse_logarius_pair(arena, package):
+        patched = patch_wet_nurse_at_logarius(texts[arena.event_file], texts[package.event_file])
+    elif is_paarl_wet_nurse_pair(arena, package):
+        patched = patch_paarl_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
+    elif is_wet_nurse_bsb_pair(arena, package):
+        patched = patch_wet_nurse_at_bsb(texts[arena.event_file], texts[package.event_file])
+    elif is_amygdala_celestial_pair(arena, package):
+        patched = patch_amygdala_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
+    elif is_bsb_celestial_pair(arena, package):
+        patched = patch_bsb_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
+    elif is_living_failures_maria_pair(arena, package):
+        patched = patch_living_failures_at_maria(texts[arena.event_file], texts[package.event_file])
+    elif is_living_failures_laurence_pair(arena, package):
+        patched = patch_living_failures_at_laurence(texts[arena.event_file], texts[package.event_file])
+    elif is_ebrietas_rom_pair(arena, package):
+        patched = patch_ebrietas_at_rom(texts[arena.event_file], texts[package.event_file])
+    elif is_rom_ebrietas_pair(arena, package):
+        patched = patch_rom_at_ebrietas(texts[arena.event_file], texts[package.event_file])
+    elif is_bsb_living_failures_pair(arena, package):
+        patched = patch_bsb_at_living_failures(texts[arena.event_file], texts[package.event_file])
+    elif is_bsb_wet_nurse_pair(arena, package):
+        patched = patch_bsb_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
+    elif is_paarl_logarius_pair(arena, package):
+        patched = patch_paarl_at_logarius(texts[arena.event_file], texts[package.event_file])
+    elif is_bsb_logarius_pair(arena, package):
+        patched = patch_bsb_at_logarius(texts[arena.event_file], texts[package.event_file])
+    elif is_logarius_bsb_pair(arena, package):
+        patched = patch_logarius_at_bsb(
+            texts[arena.event_file], texts[package.event_file]
+        )
+    elif is_laurence_ludwig_pair(arena, package):
+        # Both endpoints share m34, so the adapter preserves Laurence's
+        # original bodies and emits project-owned copies for Ludwig.
+        patched = patch_laurence_at_ludwig(
+            texts[arena.event_file], texts[package.event_file]
+        )
+    elif ludwig_arena:
+        patched = patch_cleric_at_ludwig(texts[arena.event_file], texts[package.event_file])
+    elif laurence_arena:
+        patcher = (patch_bsb_at_laurence if package.key == 'blood-starved-beast'
+                   else patch_cleric_at_laurence)
+        patched = patcher(texts[arena.event_file], texts[package.event_file])
+    elif laurence:
+        patched = patch_laurence_at_cleric(texts[arena.event_file], texts['m34_00_00_00.emevd.dcx.js'], laurence_ids)
+    elif ludwig:
+        patched = patch_ludwig_at_cleric(texts[arena.event_file], texts['m34_00_00_00.emevd.dcx.js'], LUDWIG_ALLOCATION)
+        terminals[arena.event_file] = ({'event_id': 12411700, 'original_actor': 2410800,
+            'bridge_event_id': LUDWIG_ALLOCATION.bridge_event},)
+    elif is_gascoigne_donor_pair(arena, package):
+        patched = patch_gascoigne_at_cleric(texts[arena.event_file], GASCOIGNE_ALLOCATION)
+        terminals.setdefault(arena.event_file, ())
+        terminals[arena.event_file] += ({'event_id': 12411700, 'original_actor': 2410800,
+            'bridge_event_id': GASCOIGNE_ALLOCATION.terminal_bridge_event_id},)
+    elif is_gascoigne_arena_pair(arena, package):
+        patched = patch_cleric_at_gascoigne(texts[arena.event_file], texts[package.event_file],
+                                            GASCOIGNE_ARENA_ATTACHMENTS)
+    elif is_maria_pair(arena, package):
+        if (arena.key, package.key) == ('cleric-beast', 'lady-maria'):
+            patched = patch_maria_at_cleric(texts[arena.event_file], texts[package.event_file], MARIA_ATTACHMENTS)
+        elif (arena.key, package.key) == ('lady-maria', 'cleric-beast'):
+            patched = patch_cleric_at_maria(texts[arena.event_file], texts[package.event_file], CLERIC_MARIA_ATTACHMENTS)
+        elif (arena.key, package.key) == ('lady-maria', 'blood-starved-beast'):
+            patched = patch_bsb_at_maria(texts[arena.event_file], texts[package.event_file])
+        elif (arena.key, package.key) == ('vicar-amelia', 'lady-maria'):
+            patched = patch_maria_at_amelia(texts[arena.event_file], texts[package.event_file], MARIA_AMELIA_ATTACHMENTS)
+        else:
+            raise ValueError('unreviewed Maria donor/arena pair')
+    elif arena.key in FINAL_ARENAS:
+        if package.key not in FINAL_COMPATIBILITY[arena.key]:
+            raise ValueError('unreviewed final-boss donor/arena pair')
+        patcher = patch_moon_at_gehrman if arena.key == 'gehrman' else patch_gehrman_at_moon
+        patched = patcher(texts[arena.event_file], FINAL_ATTACHMENTS[arena.key])
+    else:
+        patched = patch_contract_swap(arena, package, texts[arena.event_file], texts[package.event_file],
+            allow_materialized_actor_additions=materialized)
+    patched = strip_destination_entrance_animations(arena.key, texts[arena.event_file], patched)
+    patched = guard_shuffled_activation(arena, texts[arena.event_file], patched)
+    return patched
+
+
 def _build_once(args) -> dict:
     args._actor_pin_cache = {}
     recipes = reusable_recipes()
@@ -1045,10 +1167,8 @@ def _build_once(args) -> dict:
     for _, package in pairs:
         if package.key in CHALICE_PACKAGES:
             validate_original_source(args.events, package.key)
-    if digest(args.darkscript) != DARKSCRIPT_SHA256:
-        raise ValueError('requires pinned DarkScript 3.6.3')
     check_output(args.output, (args.maps, args.scripts, args.events, args.gameparam,
-                              args.paramdef, args.bundle, args.writer, args.darkscript))
+                              args.paramdef, args.bundle, args.writer))
     if getattr(args, 'sfx', None):
         check_output(args.output, (args.sfx,))
     if getattr(args, 'characters', None):
@@ -1127,145 +1247,19 @@ def _build_once(args) -> dict:
             filenames |= {m + '.emevd.dcx' for m in CALLEES}
         for name in filenames | {'common.emevd.dcx'}:
             shutil.copyfile(args.events / name, originals / name)
-        compile_events(args.darkscript, 'decompile', originals, source, pairs[0][0].event_file)
-        texts = {name + '.js': (source / (name + '.js')).read_text(encoding='utf-8-sig')
-                 for name in filenames}
+        from tools.bb_enemizer.native_events import (
+            NativeEventCatalog, read_native_sources, write_native_events, compose_override,
+        )
+        native_catalog = NativeEventCatalog()
+        texts, native_originals = read_native_sources(
+            command_for(args), originals, scratch / 'native-originals.json', native_catalog)
+        source.mkdir()
+        native_overrides = {}
         variants = {}
         terminals = {}
         for arena, package in pairs:
-            ludwig, laurence, ludwig_arena, laurence_arena = dlc_pair_flags(arena, package)
-            recipe = recipes.get((arena.key, package.key))
-            if recipe is not None:
-                patched = recipe.patch(texts[arena.event_file], texts[package.event_file])
-            elif is_orphan_gascoigne_pair(arena, package):
-                patched = patch_orphan_at_gascoigne(texts[arena.event_file], texts[package.event_file])
-            elif package.key == 'orphan-of-kos':
-                patched = patch_orphan_at_cleric(texts[arena.event_file], texts[package.event_file], ORPHAN_ALLOCATION)
-                terminals[arena.event_file] = ({'event_id': 12411700, 'original_actor': 2410800,
-                    'bridge_event_id': ORPHAN_ALLOCATION.terminal_bridge_event_id},)
-            elif is_bsb_orphan_pair(arena, package):
-                patched = patch_bsb_at_orphan(
-                    texts[arena.event_file], texts[package.event_file]
-                )
-            elif is_ludwig_orphan_pair(arena, package):
-                patched = patch_ludwig_at_orphan(
-                    texts[arena.event_file], texts[package.event_file]
-                )
-            elif is_micolash_moon_pair(arena, package):
-                patched = patch_micolash_at_moon(texts[arena.event_file], texts[package.event_file])
-            elif is_micolash_gehrman_pair(arena, package):
-                patched = patch_micolash_at_gehrman(texts[arena.event_file], texts[package.event_file])
-            elif is_one_reborn_ebrietas_pair(arena, package):
-                patched = patch_one_reborn_at_ebrietas(texts[arena.event_file], texts[package.event_file])
-            elif is_rom_one_reborn_pair(arena, package):
-                patched = patch_rom_at_one_reborn(texts[arena.event_file], texts[package.event_file])
-            elif is_ludwig_shadows_pair(arena, package):
-                patched = patch_ludwig_at_shadows(texts[arena.event_file], texts[package.event_file])
-            elif is_shadows_orphan_pair(arena, package):
-                patched = patch_shadows_at_orphan(texts[arena.event_file], texts[package.event_file])
-            elif is_maria_living_failures_pair(arena, package):
-                patched = patch_maria_at_living_failures(texts[arena.event_file], texts[package.event_file])
-            elif is_laurence_living_failures_pair(arena, package):
-                patched = patch_laurence_at_living_failures(texts[arena.event_file], texts[package.event_file])
-            elif is_celestial_paarl_pair(arena, package):
-                patched = patch_celestial_emissary_at_paarl(texts[arena.event_file], texts[package.event_file])
-            elif is_witch_amygdala_pair(arena, package):
-                patched = patch_witch_at_amygdala(texts[arena.event_file], texts[package.event_file])
-            elif is_gehrman_micolash_pair(arena, package):
-                patched = patch_gehrman_at_micolash(texts[arena.event_file], texts[package.event_file])
-            elif is_amelia_witch_pair(arena, package):
-                patched = patch_amelia_at_witch(texts[arena.event_file], texts[package.event_file])
-            elif is_logarius_wet_nurse_pair(arena, package):
-                patched = patch_logarius_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
-            elif is_gascoigne_witch_pair(arena, package):
-                patched = patch_gascoigne_at_witch(texts[arena.event_file], texts[package.event_file])
-            elif is_shadows_celestial_pair(arena, package):
-                patched = patch_shadows_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
-            elif is_witch_one_reborn_pair(arena, package):
-                patched = patch_witch_at_one_reborn(texts[arena.event_file], texts[package.event_file])
-            elif is_one_reborn_shadows_pair(arena, package):
-                patched = patch_one_reborn_at_shadows(texts[arena.event_file], texts[package.event_file])
-            elif is_celestial_rom_pair(arena, package):
-                patched = patch_celestial_emissary_at_rom(texts[arena.event_file], texts[package.event_file])
-            elif is_moon_micolash_pair(arena, package):
-                patched = patch_moon_at_micolash(texts[arena.event_file], texts[package.event_file])
-            elif is_wet_nurse_logarius_pair(arena, package):
-                patched = patch_wet_nurse_at_logarius(texts[arena.event_file], texts[package.event_file])
-            elif is_paarl_wet_nurse_pair(arena, package):
-                patched = patch_paarl_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
-            elif is_wet_nurse_bsb_pair(arena, package):
-                patched = patch_wet_nurse_at_bsb(texts[arena.event_file], texts[package.event_file])
-            elif is_amygdala_celestial_pair(arena, package):
-                patched = patch_amygdala_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
-            elif is_bsb_celestial_pair(arena, package):
-                patched = patch_bsb_at_celestial_emissary(texts[arena.event_file], texts[package.event_file])
-            elif is_living_failures_maria_pair(arena, package):
-                patched = patch_living_failures_at_maria(texts[arena.event_file], texts[package.event_file])
-            elif is_living_failures_laurence_pair(arena, package):
-                patched = patch_living_failures_at_laurence(texts[arena.event_file], texts[package.event_file])
-            elif is_ebrietas_rom_pair(arena, package):
-                patched = patch_ebrietas_at_rom(texts[arena.event_file], texts[package.event_file])
-            elif is_rom_ebrietas_pair(arena, package):
-                patched = patch_rom_at_ebrietas(texts[arena.event_file], texts[package.event_file])
-            elif is_bsb_living_failures_pair(arena, package):
-                patched = patch_bsb_at_living_failures(texts[arena.event_file], texts[package.event_file])
-            elif is_bsb_wet_nurse_pair(arena, package):
-                patched = patch_bsb_at_wet_nurse(texts[arena.event_file], texts[package.event_file])
-            elif is_paarl_logarius_pair(arena, package):
-                patched = patch_paarl_at_logarius(texts[arena.event_file], texts[package.event_file])
-            elif is_bsb_logarius_pair(arena, package):
-                patched = patch_bsb_at_logarius(texts[arena.event_file], texts[package.event_file])
-            elif is_logarius_bsb_pair(arena, package):
-                patched = patch_logarius_at_bsb(
-                    texts[arena.event_file], texts[package.event_file]
-                )
-            elif is_laurence_ludwig_pair(arena, package):
-                # Both endpoints share m34, so the adapter preserves Laurence's
-                # original bodies and emits project-owned copies for Ludwig.
-                patched = patch_laurence_at_ludwig(
-                    texts[arena.event_file], texts[package.event_file]
-                )
-            elif ludwig_arena:
-                patched = patch_cleric_at_ludwig(texts[arena.event_file], texts[package.event_file])
-            elif laurence_arena:
-                patcher = (patch_bsb_at_laurence if package.key == 'blood-starved-beast'
-                           else patch_cleric_at_laurence)
-                patched = patcher(texts[arena.event_file], texts[package.event_file])
-            elif laurence:
-                patched = patch_laurence_at_cleric(texts[arena.event_file], texts['m34_00_00_00.emevd.dcx.js'], laurence_ids)
-            elif ludwig:
-                patched = patch_ludwig_at_cleric(texts[arena.event_file], texts['m34_00_00_00.emevd.dcx.js'], LUDWIG_ALLOCATION)
-                terminals[arena.event_file] = ({'event_id': 12411700, 'original_actor': 2410800,
-                    'bridge_event_id': LUDWIG_ALLOCATION.bridge_event},)
-            elif is_gascoigne_donor_pair(arena, package):
-                patched = patch_gascoigne_at_cleric(texts[arena.event_file], GASCOIGNE_ALLOCATION)
-                terminals.setdefault(arena.event_file, ())
-                terminals[arena.event_file] += ({'event_id': 12411700, 'original_actor': 2410800,
-                    'bridge_event_id': GASCOIGNE_ALLOCATION.terminal_bridge_event_id},)
-            elif is_gascoigne_arena_pair(arena, package):
-                patched = patch_cleric_at_gascoigne(texts[arena.event_file], texts[package.event_file],
-                                                    GASCOIGNE_ARENA_ATTACHMENTS)
-            elif is_maria_pair(arena, package):
-                if (arena.key, package.key) == ('cleric-beast', 'lady-maria'):
-                    patched = patch_maria_at_cleric(texts[arena.event_file], texts[package.event_file], MARIA_ATTACHMENTS)
-                elif (arena.key, package.key) == ('lady-maria', 'cleric-beast'):
-                    patched = patch_cleric_at_maria(texts[arena.event_file], texts[package.event_file], CLERIC_MARIA_ATTACHMENTS)
-                elif (arena.key, package.key) == ('lady-maria', 'blood-starved-beast'):
-                    patched = patch_bsb_at_maria(texts[arena.event_file], texts[package.event_file])
-                elif (arena.key, package.key) == ('vicar-amelia', 'lady-maria'):
-                    patched = patch_maria_at_amelia(texts[arena.event_file], texts[package.event_file], MARIA_AMELIA_ATTACHMENTS)
-                else:
-                    raise ValueError('unreviewed Maria donor/arena pair')
-            elif arena.key in FINAL_ARENAS:
-                if package.key not in FINAL_COMPATIBILITY[arena.key]:
-                    raise ValueError('unreviewed final-boss donor/arena pair')
-                patcher = patch_moon_at_gehrman if arena.key == 'gehrman' else patch_gehrman_at_moon
-                patched = patcher(texts[arena.event_file], FINAL_ATTACHMENTS[arena.key])
-            else:
-                patched = patch_contract_swap(arena, package, texts[arena.event_file], texts[package.event_file],
-                    allow_materialized_actor_additions=bool(materializations.get(arena.key)))
-            patched = strip_destination_entrance_animations(arena.key, texts[arena.event_file], patched)
-            patched = guard_shuffled_activation(arena, texts[arena.event_file], patched)
+            patched = patch_pair_events(arena, package, texts, recipes, terminals,
+                                        materialized=bool(materializations.get(arena.key)))
             variants.setdefault(arena.event_file, []).append(patched)
         if no_lanterns:
             for map_name in CALLEES:
@@ -1274,7 +1268,7 @@ def _build_once(args) -> dict:
         add_scripted_variants(variants, texts, scripted)
         override_inputs = []
         if event_overrides is not None:
-            override_binary, override_source = scratch / 'override-binary', scratch / 'override-source'
+            override_binary = scratch / 'override-binary'
             override_binary.mkdir()
             for filename in variants:
                 path = event_overrides / filename.removesuffix('.js')
@@ -1283,12 +1277,9 @@ def _build_once(args) -> dict:
                     override_inputs.append({'file': path.name, 'sha256': digest(path)})
             if override_inputs:
                 shutil.copyfile(originals / 'common.emevd.dcx', override_binary / 'common.emevd.dcx')
-                compile_events(args.darkscript, 'decompile', override_binary, override_source,
-                               override_inputs[0]['file'] + '.js')
-                for item in override_inputs:
-                    filename = item['file'] + '.js'
-                    variants[filename].append(lift_zero_argument_initializers(
-                        (override_source / filename).read_text(encoding='utf-8-sig')))
+                subprocess.run(command_for(args) + ['--native-event-dump',
+                    str(override_binary), str(scratch / 'native-overrides.json')], check=True)
+                native_overrides = json.loads((scratch / 'native-overrides.json').read_text())
         catalog = build_catalog(args.bundle)
         protected_by_file = {}
         for filename, patches in variants.items():
@@ -1518,17 +1509,35 @@ def _build_once(args) -> dict:
             verify_retained_helpers(args, plan)
             plans.append(plan)
         preflight_boss_effects(args, scratch, pairs, plans)
-        compile_events(args.darkscript, 'compile', source, compiled,
-                       pairs[0][0].event_file.removesuffix('.js'))
+        compiled.mkdir()
+        native_recipes = {}
+        for filename in sorted(variants):
+            event_name = filename.removesuffix('.js')
+            terminal_ids = {row['event_id'] for row in terminals.get(filename, ())}
+            protected = [eid for eid in protected_by_file[filename] if eid not in terminal_ids]
+            recipe = native_catalog.recipe(native_originals[event_name], texts[filename],
+                (source / filename).read_text(encoding='utf-8'), protected)
+            if event_name in native_overrides:
+                recipe = compose_override(native_originals[event_name], recipe, native_overrides[event_name])
+            native_recipes[filename] = recipe
+            write_native_events(command_for(args), originals / event_name, compiled / event_name,
+                scratch / (event_name + '.native.json'), recipe)
         records = []
         for filename in sorted(variants):
             event_name = filename.removesuffix('.js')
             pins_run = subprocess.run(command_for(args) + ['--boss-encounter-pins', str(compiled / event_name)],
                                       check=True, capture_output=True, text=True)
-            records.append(event_record(originals / event_name, texts[filename],
-                                        (source / filename).read_text(encoding='utf-8'),
-                                        json.loads(pins_run.stdout), protected_by_file[filename],
-                                        terminals.get(filename, ())))
+            record = event_record(originals / event_name, texts[filename],
+                                  (source / filename).read_text(encoding='utf-8'),
+                                  json.loads(pins_run.stdout), protected_by_file[filename],
+                                  terminals.get(filename, ()))
+            # Native AP overrides may also own non-boss events in the same file.
+            edits = native_recipes[filename]['fingerprints']
+            original_ids = {e['id'] for e in native_originals[event_name]['events']}
+            record['changed_event_ids'] = sorted(int(eid) for eid in edits if int(eid) in original_ids)
+            record['added_event_ids'] = sorted(int(eid) for eid in edits if int(eid) not in original_ids)
+            record['compiled_event_fingerprints'] = edits
+            records.append(record)
         if ordinary_plan is not None:
             if ordinary_plan.get('seed') != args.seed:
                 raise ValueError('ordinary and boss seed differ')
@@ -1591,8 +1600,9 @@ def _build_once(args) -> dict:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('darkscript', 'writer', 'gameparam', 'paramdef', 'maps', 'scripts', 'events', 'output'):
+    for name in ('writer', 'gameparam', 'paramdef', 'maps', 'scripts', 'events', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--darkscript', type=Path, help=argparse.SUPPRESS)
     parser.add_argument('--dotnet', type=Path)
     parser.add_argument('--sfx', type=Path, help='original effective SFX binder directory for encounter asset closure')
     parser.add_argument('--characters', type=Path, help='original animation binders for declared character effect witnesses')

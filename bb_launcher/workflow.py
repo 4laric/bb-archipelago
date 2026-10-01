@@ -1089,7 +1089,7 @@ class EnemizerToolchain:
 
     def build_boss_encounters(
         self, *, options: EnemizerOptions, install: GameInstall, input_binder: Path,
-        darkscript: Path, event_overrides: Mapping[str, Path], **kwargs,
+        event_overrides: Mapping[str, Path], darkscript: Path | None = None, **kwargs,
     ) -> EnemizerBuild:
         """Compose one ordinary normalized plan and the reviewed boss pool.
 
@@ -1100,8 +1100,6 @@ class EnemizerToolchain:
         """
         if options.boss_pool not in ("reviewed", "good"):
             raise ValidationError("unsupported boss pool")
-        if not darkscript.is_file():
-            raise ValidationError(f"reviewed boss encounters require DarkScript3: {darkscript}")
         planned = self.build(**kwargs, normalize_scaling=True, plan_only=True)
         root = kwargs["output_root"]
         inputs = root / "boss-encounter-input"
@@ -1171,7 +1169,7 @@ class EnemizerToolchain:
         output = root / "boss-encounter-overlay"
         command = [
             str(self.boss_encounter_builder_executable),
-            "--darkscript", str(darkscript), "--writer", str(self.writer_executable),
+            "--writer", str(self.writer_executable),
             "--gameparam", str(staged_binder),
             "--paramdef", str(install.resolve_file(PARAMDEF_PATH, include_mods=False)[1]),
             "--maps", str(maps), "--scripts", str(scripts), "--events", str(events),
@@ -1203,6 +1201,13 @@ class EnemizerToolchain:
             "launcher-tools/boss-planner.exe": self.planner_executable,
             "launcher-tools/boss-event-writer.exe": self.event_writer_executable,
         }
+        # PyInstaller's onedir data lives beside the executable and can change
+        # independently of its bytes. Bind the actual builder recipe catalog.
+        packaged_catalog = self.boss_encounter_builder_executable.parent / "_internal/tools/bb_enemizer/native_event_catalog.json"
+        paths["launcher-tools/native-event-catalog.json"] = (
+            packaged_catalog if packaged_catalog.is_file()
+            else self.repo_root / "tools/bb_enemizer/native_event_catalog.json"
+        )
         if inventory is None:
             paths["launcher-tools/boss-miner.exe"] = self.miner_executable
         else:
@@ -2078,20 +2083,12 @@ class LauncherWorkflow:
             if not names_paths:
                 raise ValidationError("pickup names require an installed engus or enggb item.msgbnd.dcx")
             sources.update(install.source_hashes([*names_paths, PARAMDEF_PATH]))
-        boss_darkscript: Path | None = None
         if options.enabled:
             sources.update({relative: sha256_file(path) for relative, path in enemy_ai_sources(install).items()})
             sources.update(install.source_hashes([PARAMDEF_PATH]))
             if options.boss_canary:
                 sources.update(install.source_hashes([BOSS_EVENT_PATH]))
             if options.boss_pool:
-                # DarkScript is downloaded from its official release only for
-                # this explicit experimental path; the helper pins both the
-                # archive and unpacked compiler before returning it.
-                from .boss_compiler import ensure_boss_compiler
-                boss_darkscript = ensure_boss_compiler(
-                    settings.state_root or default_state_root(), progress
-                )
                 sources.update({relative: sha256_file(path)
                                 for relative, path in encounter_event_sources(install, chalice=options.boss_pool == "good").items()})
                 sources.update({relative: sha256_file(path)
@@ -2106,7 +2103,6 @@ class LauncherWorkflow:
                     raise ValidationError("reviewed boss toolchain cannot report its pinned build inputs")
                 sources.update({label: sha256_file(source)
                                 for label, source in identity_inputs(settings.enemy_inventory).items()})
-                sources["launcher-tools/DarkScript3.exe"] = sha256_file(boss_darkscript)
         expanded_enemy_release = bool(options.enabled and (
             options.release_contracts or options.release_spawns or options.release_chara))
         wakeup_source_event: Path | None = None
@@ -2343,7 +2339,6 @@ class LauncherWorkflow:
                         progress=progress,
                     )
                     if options.boss_pool:
-                        assert boss_darkscript is not None
                         overrides = {
                             relative: event for relative, event in (
                                 (CATHEDRAL_EVENT_PATH, cathedral_output),
@@ -2353,7 +2348,7 @@ class LauncherWorkflow:
                         }
                         enemizer = self.toolchain.build_boss_encounters(
                             options=options, install=install, input_binder=composed_binder,
-                            darkscript=boss_darkscript, event_overrides=overrides, **build_args,
+                            event_overrides=overrides, **build_args,
                         )
                         overlay = enemizer.overlay
                         if overlay is None:
