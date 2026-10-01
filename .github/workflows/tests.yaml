@@ -30,6 +30,8 @@ jobs:
       - name: Verify signing gates and archive hashes with synthetic fixtures
         shell: pwsh
         run: ./tests/test_finalize_fork_release.ps1
+      - name: Verify Windows co-op telemetry positive control
+        run: python -m unittest discover -s tests -p test_coop_diagnostics.py -v
 
   # Does this pull request touch anything the suppression binder build reads?
   # #391..#397 left main red because a pull request moved

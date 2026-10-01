@@ -63,3 +63,7 @@ allow_skip	test_chalice_beast_donors.ChaliceBeastDonorTests.test_local_map_const
 allow_skip	test_chalice_humanoid_donors.ChaliceHumanoidDonorTests.test_real_map_constructor_when_local_game_extract_is_available
 module	test_chalice_beast_donors	4
 module	test_chalice_humanoid_donors	4
+
+# Windows telemetry is exercised by the Windows finalizer job.
+allow_skip	test_coop_diagnostics.WindowsPositiveControl.test_sampler_captures_known_process_and_planted_allocation
+module	test_coop_diagnostics	11
