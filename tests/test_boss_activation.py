@@ -72,8 +72,8 @@ class BossActivationTests(unittest.TestCase):
         before = event_blocks(patched)
         after = event_blocks(guard_shuffled_activation(r.arena, original, patched))
         self.assertIn("EventFlag(12504980) && CharacterBackreadStatus(2500800) "
-                      "&& HPRatio(2500800) > 0 && HPRatio(2500800) < 0.5", after[12995400])
-        self.assertIn("HPRatio(2500800) <= 0", after[12995402])
+                      "&& HPRatio(2500800) > 0 && HPRatio(2500800) < 0.5", after[12504600])
+        self.assertIn("HPRatio(2500800) <= 0", after[12504620])
         self.assertEqual(before[12501800], after[12501800])
 
     def test_shared_map_latches_compose_without_reordering_resets(self):
@@ -151,4 +151,3 @@ class EntranceMotionAuditTests(unittest.TestCase):
                     self.assertIn("IssueShortWarpRequest(3400850, TargetEntityType.Area, 3402853", after[eid])
                     self.assertIn("SetCharacterGravity(3400850, Enabled)", after[eid])
                 self.assertEqual(patched, strip_destination_entrance_animations(key, original, patched))
-
