@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 PROOF_FILE = Path(__file__).with_suffix('.json')
-PROOF_SHA256 = '94d530299db67a220ac274c1e566980480cd5ba6d0ab0ea925c8e4dbf4d330c4'
+PROOF_SHA256 = 'f3f72a0d864ffb9c3653ae55926b45f4a5ba83a3f8b738d4865bd0f6f5ef8059'
 
 
 def _proof() -> dict:

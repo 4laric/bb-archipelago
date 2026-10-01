@@ -139,7 +139,7 @@ FAILURES = ComplexArena(
 )
 SPECS = {s.arena.key: s for s in (SHADOWS, ONE_REBORN, WITCH, FAILURES)}
 PIN_FILE = Path(__file__).with_name("chalice_complex_arena_pins.json")
-PIN_SHA256 = "b3290d8e7d8252791cc5821f1f701036055d9331a396266f7285d070ba7fc718"
+PIN_SHA256 = "5572714668ed26c21ede8f6cf2641578cc98514fbda98ed38f99517a90dda02c"
 
 
 def _pins():

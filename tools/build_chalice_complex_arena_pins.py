@@ -35,5 +35,5 @@ if __name__ == '__main__':
     parser.add_argument('--dotnet', default='dotnet')
     parser.add_argument('--output', type=Path, default=PIN_FILE)
     args = parser.parse_args()
-    args.output.write_text(json.dumps(build(args.maps, args.writer, args.dotnet), indent=2) + '\n', encoding='utf-8')
+    args.output.write_text(json.dumps(build(args.maps, args.writer, args.dotnet), indent=2) + '\n', encoding='utf-8', newline='\n')
     print(hashlib.sha256(args.output.read_bytes()).hexdigest())
