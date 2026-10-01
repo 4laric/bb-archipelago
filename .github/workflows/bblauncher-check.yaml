@@ -1,0 +1,64 @@
+name: pinned BBLauncher build
+
+on:
+  pull_request:
+    paths:
+      - packaging/bblauncher-ref.txt
+      - packaging/build_bblauncher.ps1
+      - .github/workflows/bblauncher-check.yaml
+  push:
+    branches: [main]
+    paths:
+      - packaging/bblauncher-ref.txt
+      - packaging/build_bblauncher.ps1
+      - .github/workflows/bblauncher-check.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: pinned BBLauncher integration
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Read pinned BBLauncher source
+        id: bblauncher
+        shell: pwsh
+        run: |
+          $ref = (Get-Content packaging/bblauncher-ref.txt -Raw).Trim()
+          if ($ref -notmatch '^[0-9a-f]{40}$') { throw 'BBLauncher pin must be a full commit SHA' }
+          "ref=$ref" >> $env:GITHUB_OUTPUT
+      - uses: actions/checkout@v4
+        with:
+          repository: 4laric/BB_Launcher-AP
+          ref: ${{ steps.bblauncher.outputs.ref }}
+          path: _bblauncher
+          submodules: recursive
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.10.0'
+          arch: win64_msvc2022_64
+          modules: 'qtmultimedia qtimageformats qtwebview qtwebsockets'
+          setup-python: false
+          cache: true
+      - name: Build and test the pinned fork against this backend
+        shell: pwsh
+        run: |
+          python -m pip install pathspec pyyaml schema jellyfish websockets platformdirs typing_extensions orjson colorama certifi bsdiff4 jinja2
+          if ($LASTEXITCODE -ne 0) { throw 'BBLauncher test dependencies failed to install' }
+          ./packaging/build_bblauncher.ps1 -ForkSourceRoot $PWD\_bblauncher -QtRoot $env:QT_ROOT_DIR
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pinned-bblauncher-test-logs
+          path: |
+            _bblauncher/build-ap-release/Testing/Temporary/
+            _bblauncher/build-ap-release/tests_cpp/**/*results*.txt
