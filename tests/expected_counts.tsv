@@ -152,3 +152,5 @@ module	test_integrated_standalone	9
 
 module	test_integrated_journey	14
 module	test_integrated_migration	6
+
+module	test_coop_diagnostics	11
