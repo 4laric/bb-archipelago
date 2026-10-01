@@ -6,6 +6,10 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- **Only the good bosses** gains 14 more placements at Shadows, One Reborn,
+  Witch and Living Failures, opening previously forced pairings. The complete
+  family pool still has placement biases; native builds pass and gameplay
+  validation remains outstanding.
 - Boss shuffle adds Shadows in six more arenas and Living Failures in four.
   **Only the good bosses** also gains Pthumerian Elder, Pthumerian Descendant
   and Keeper of the Old Lords in Gascoigne's arena, reducing repeated Orphan

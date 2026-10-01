@@ -7,8 +7,8 @@ Bloodborne events through SoulsFormatsNEXT. The builder consumes the committed
 file in both the launcher and the standalone builder, and the launcher hashes
 the builder's copy into the build identity.
 
-The catalogue covers all 258 current directed boss routes, including chalice
-donors. It contains 2,067 authored event templates and 6,931 literal constructor
+The catalogue covers all 272 current directed boss routes, including chalice
+donors. It contains 2,093 authored event templates and 6,945 literal constructor
 statements. The existing Python adapters remain the behavior specifications;
 changing an adapter requires refreshing its native templates. This is a
 finite recipe emitter, not a general JavaScript compiler.
@@ -83,6 +83,10 @@ verified for `good` and 61 for `reviewed`. Two Living Failures routes were
 excluded after effect-bank conflicts failed preflight.
 
 ## CI and private workers
+
+The [second variety pass](boss-variety-pass-two.md) adds 14 native routes at
+the most constrained good-pool arenas. Its 51 original actor witnesses cover
+all six destination map states; each new route passed a complete native build.
 
 `tests/test_native_events.py` checks catalogue coverage and source/native
 composition guards. `tests/native_events` generates synthetic Bloodborne

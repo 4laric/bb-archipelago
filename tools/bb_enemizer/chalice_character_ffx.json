@@ -50159,6 +50159,14 @@
     "m21_00": {
       "file": "frpg_sfxbnd_m21_00.ffxbnd.dcx",
       "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m27_00": {
+      "file": "frpg_sfxbnd_m27_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
+    },
+    "m22_00": {
+      "file": "frpg_sfxbnd_m22_00.ffxbnd.dcx",
+      "sha256": "31f2b584d42fae7d923f116083f6cc9a772efe86caa2d707a66db756bd41441f"
     }
   },
   "destinations": {
@@ -50275,6 +50283,30 @@
     },
     "gehrman": {
       "bank": "m21_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "shadows-of-yharnam": {
+      "bank": "m27_00",
+      "characters": [
+        "c2160",
+        "c3050",
+        "c3130",
+        "c5010",
+        "c5040",
+        "c5090",
+        "c7500"
+      ]
+    },
+    "witch-of-hemwick": {
+      "bank": "m22_00",
       "characters": [
         "c2160",
         "c3050",

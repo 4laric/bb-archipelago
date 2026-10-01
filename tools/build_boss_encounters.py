@@ -1056,7 +1056,7 @@ def _build_once(args) -> dict:
     laurence = getattr(args, 'donor', None) == 'laurence'
     orphan = getattr(args, 'donor', None) == 'orphan-of-kos'
     direct_orphan = (getattr(args, 'arena', None), getattr(args, 'donor', None))
-    if direct_orphan[0] == 'shadows-of-yharnam' and direct_orphan[1] not in ('ludwig', 'the-one-reborn'):
+    if direct_orphan[0] == 'shadows-of-yharnam' and direct_orphan not in recipes and direct_orphan[1] not in ('ludwig', 'the-one-reborn'):
         raise ValueError('Shadows arena requires a reviewed Ludwig or One Reborn donor adapter')
     if (direct_orphan[1] == 'shadows-of-yharnam' and direct_orphan not in recipes
             and direct_orphan[0] not in ('orphan-of-kos', 'celestial-emissary')):
@@ -1077,7 +1077,7 @@ def _build_once(args) -> dict:
     if (direct_orphan[0] == 'micolash' and direct_orphan not in recipes
             and direct_orphan[1] not in ('gehrman', 'moon-presence')):
         raise ValueError('Micolash arena requires a reviewed Gehrman or Moon Presence donor adapter')
-    if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan[1] not in ('vicar-amelia', 'father-gascoigne'):
+    if direct_orphan[0] == 'witch-of-hemwick' and direct_orphan not in recipes and direct_orphan[1] not in ('vicar-amelia', 'father-gascoigne'):
         raise ValueError('Witch arena requires a reviewed Amelia or Gascoigne donor adapter')
     if (direct_orphan[1] == 'mergos-wet-nurse' and direct_orphan not in recipes
             and direct_orphan[0] not in ('blood-starved-beast', 'martyr-logarius')):
@@ -1091,7 +1091,7 @@ def _build_once(args) -> dict:
         raise ValueError('Rom arena requires a reviewed Ebrietas or Celestial donor adapter')
     if direct_orphan[1] == 'rom' and direct_orphan[0] not in ('ebrietas', 'the-one-reborn'):
         raise ValueError('Rom donor requires a reviewed Ebrietas or One Reborn arena adapter')
-    if direct_orphan[0] == 'living-failures' and direct_orphan[1] not in ('blood-starved-beast', 'lady-maria', 'laurence'):
+    if direct_orphan[0] == 'living-failures' and direct_orphan not in recipes and direct_orphan[1] not in ('blood-starved-beast', 'lady-maria', 'laurence'):
         raise ValueError('Living Failures arena requires a reviewed BSB, Maria or Laurence donor adapter')
     if direct_orphan[0] == 'mergos-wet-nurse' and direct_orphan[1] not in ('blood-starved-beast', 'martyr-logarius', 'darkbeast-paarl'):
         raise ValueError('Wet Nurse arena requires a reviewed BSB, Logarius or Paarl donor adapter')
