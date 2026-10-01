@@ -6,6 +6,25 @@ under `Unreleased` and move into a dated version section when released.
 
 ## Unreleased
 
+- Boss shuffle: Rom in the One Reborn courtyard now teleports to the native
+  courtyard encounter point instead of carrying Lake teleport offsets outside
+  the arena. Replacements in Cainhurst now use destination-native helper flags
+  for encounter activation. These corrections still need an in-game retest.
+- Boss shuffle: the Witch encounter in Amygdala's arena now keeps its helpers
+  and teleport/spawn regions at the destination combat anchor, uses native
+  encounter flags, and waits for loaded combat actors before evaluating phase
+  and revival health. Teleports and spawns currently share that anchor; an
+  in-game retest is required to check overlap and the reported sound.
+- Rom, Witch and Cainhurst encounter controllers now reserve separate completion flags
+  for their event slots, preventing one controller from marking another done.
+- **Normalize enemy stats now scales 115 more enemy types.** Enemies whose
+  original difficulty tier came from a boss-style NG+ row were skipped and kept
+  their vanilla stats wherever they landed, including the Nightmare of Mensis
+  Shadows, most Yharnam huntsmen and the Church Servants.
+- New **No Winter Lanterns** enemy option (off by default, Archipelago mode
+  only) keeps Winter Lanterns out of replacements and replaces all nine of
+  their normal placements. Without it, a Winter Lantern moved elsewhere by
+  enemy randomization applies no frenzy; that is intended.
 - Enemy randomization no longer places non-enemy actors as enemies: the Hunter's
   Dream Messengers and weapon racks, invisible projectile emitters (Winter
   Lantern, Moon offspring, Patient B's meteors), and attachment parts such as

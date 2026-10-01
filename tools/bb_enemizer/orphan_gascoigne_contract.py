@@ -210,11 +210,22 @@ def _health(source: str, mapping: Mapping[int, int]) -> str:
         source,
         "    SetCharacterAIState(3600801, Disabled);\n",
         "    SetCharacterAIState(3600801, Disabled);\n"
-        "    ChangeCharacterEnableState(3600801, Disabled);\n"
+        # This body owns the displayed/referred HP even during phase one.
+        # Leave it enabled at Gascoigne's below-arena staging position, with
+        # AI/gravity off, as both original two-body encounters do.
+        "    ChangeCharacterEnableState(3600801, Enabled);\n"
+        "    SetCharacterDefaultBackreadState(3600801, Enabled);\n"
         "    SetCharacterAIState(3600803, Disabled);\n"
         "    SetCharacterHPBarDisplay(3600803, Disabled);\n"
         "    ChangeCharacterEnableState(3600803, Disabled);\n",
         "phase/support initial state",
+    )
+    result = _replace_once(
+        result,
+        "    CreateReferredDamagePair(3600800, 3600801);",
+        "    WaitFor(CharacterBackreadStatus(3600801));\n"
+        "    CreateReferredDamagePair(3600800, 3600801);",
+        "loaded referred-health body",
     )
     result = _replace_once(
         result,

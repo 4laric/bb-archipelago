@@ -443,7 +443,16 @@ class Backend:
         """
 
         if not live.get("game_running"):
-            raise ProtocolError("stale-session", "the game is no longer running",
+            if live.get("reason") == "process-query-refused":
+                raise ProtocolError(
+                    "stale-session",
+                    "Windows could not verify the shadPS4 process after launch. "
+                    "Run BBLauncher and shadPS4 at the same privilege level, then try Launch again.",
+                    retryable=False, recovery=("fresh-boot",))
+            raise ProtocolError("stale-session",
+                                "shadPS4 did not stay running after Launch. "
+                                "Check the emulator startup log, then try Launch again. "
+                                "You do not need to randomize again.",
                                 retryable=False, recovery=("fresh-boot",))
         if live.get("ambiguous"):
             try:

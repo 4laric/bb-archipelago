@@ -92,6 +92,20 @@ internal static class BossRegionTests
                 "generator runs after and references the reviewed added region");
 
             byte[] sourceBytes = File.ReadAllBytes(sourcePath), destinationBytes = File.ReadAllBytes(destinationPath);
+            object Placement(string policy) => new { region.source_map, region.source_region, region.source_entity_id,
+                region.source_provenance, region.source_anchor_part, region.source_anchor_provenance,
+                region.destination_map, region.destination_region, region.destination_entity_id,
+                region.destination_anchor_part, region.destination_anchor_provenance, placement_policy = policy };
+            File.WriteAllText(plan, JsonSerializer.Serialize(new { boss_region_additions = new[] { Placement("destination-anchor") } }));
+            string anchoredOutput = Path.Combine(root, "anchored-output");
+            var anchored = BossRegionTransplant.Apply(plan, source, destination, anchoredOutput, false);
+            BossRegionTransplant.VerifyFinal(anchored, destination, anchoredOutput);
+            var anchoredRegion = MSBB.Read(Path.Combine(anchoredOutput, "m26_00_00_00.msb")).Regions.Regions.Single(item => item.Name == "spawned_marker");
+            Need(anchoredRegion.Position == targetAnchor.Position && anchoredRegion.Shape is MSB.Shape.Cylinder,
+                "destination-anchor placement removes source arena offsets and preserves shape");
+            File.WriteAllText(plan, JsonSerializer.Serialize(new { boss_region_additions = new[] { Placement("unsupported") } }));
+            Refused(() => BossRegionTransplant.Read(plan, false), "unsupported region placement policy");
+            File.WriteAllText(plan, JsonSerializer.Serialize(new { boss_region_additions = new[] { region }, boss_generator_additions = new[] { generator } }));
             var regionDrift = MSBB.Read(sourcePath); regionDrift.Regions.Regions.Single().Position += Vector3.UnitY; regionDrift.Write(sourcePath);
             Refused(() => BossRegionTransplant.Apply(plan, source, destination, Path.Combine(root, "region-drift"), false), "region provenance pin drift");
             File.WriteAllBytes(sourcePath, sourceBytes);

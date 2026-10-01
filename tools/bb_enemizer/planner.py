@@ -25,6 +25,7 @@ class EnemizerConfig:
     max_size_up: int = 1
     max_size_down: int = 3
     preserve_locomotion: bool = False
+    no_winter_lanterns: bool = False
 
 
 # Stress profiles: pregenerated worst-case seeds that limit-test the planner's
@@ -225,6 +226,7 @@ def plan_swaps(
         if all(policies[s.key].randomize for s in copies)
         and all(policies[s.key] == policies[copies[0].key] for s in copies)
         for slot in copies
+        if not (config.no_winter_lanterns and slot.archetype.model_name == "c2560")
     }
     target_tags = {key: tags.get(key, EnemyTag()) for key in archetypes}
     ordered_targets = sorted(archetypes)

@@ -27,13 +27,18 @@ PRIMARY_ARCHETYPE = Archetype("c2320", 232000, 232000, 0)
 SWORD_ARCHETYPE = Archetype("c2321", 232100, 232100, 0)
 OWNER_ARCHETYPE = Archetype("c9010", 232000, 232000, 0)
 
-# Proven absent from the complete bundled original EMEVD/MSB corpus.  The
-# composition builder independently scans the selected project allocations.
-ATTACHMENT_EVENTS = (12995400, 12995401, 12995402, 12995403, 12995404)
-DONOR_OWNER_CLEANUP_EVENT = 12995405
-ACTIVATION_EVENT = 12995406
-CLIENT_RESTORE_EVENT = 12995407
-HELPER_LIFECYCLE_EVENT = 12995408
+# Project allocation, absent from the complete bundled original EMEVD/MSB
+# corpus. Original m25_00 flags 12504800/12504801 witness native group 12504
+# (inferred backing; no live readback of this new range). Synthetic 12995 was
+# observed absent in the CUSA03173 01.09 Paarl/Gascoigne probe documented in
+# docs/gascoigne-cleric-entry-fix.md. Composition also checks project collisions.
+# Ten-flag spans keep each imported part routine's event+slot completion flags
+# separate from the other routines and readiness/lifecycle events.
+ATTACHMENT_EVENTS = (12504600, 12504610, 12504620, 12504630, 12504640)
+DONOR_OWNER_CLEANUP_EVENT = 12504650
+ACTIVATION_EVENT = 12504651
+CLIENT_RESTORE_EVENT = 12504652
+HELPER_LIFECYCLE_EVENT = 12504653
 BULLET_OWNER_ENTITY = 982900
 DESTINATION_PINS = {
     PRIMARY: "7c8b12caf0fe7db72697966c66efa71900bd6c869b27521bfae694078e783011",
@@ -124,7 +129,11 @@ def _original_literals() -> frozenset[int]:
     values: set[int] = set()
     for prefix in ("event/", "mined/"):
         for body in read_prefix(BUNDLE, prefix).values():
-            values.update(_numbers(body.decode("utf-8-sig")))
+            source = body.decode("utf-8-sig")
+            values.update(_numbers(source))
+            if prefix == "event/":
+                values.update(int(event) + int(slot) for slot, event in re.findall(
+                    r"\$InitializeEvent\(\s*(\d+)\s*,\s*(\d+)", source))
     return frozenset(values)
 
 def _verify(blocks: Mapping[int, str], expected: Mapping[int, str | tuple[str, ...]], role: str) -> None:
@@ -138,6 +147,8 @@ def _validate_ids(ids: LogariusArenaIds, destination: str) -> None:
     values = ids.values()
     if len(values) != len(set(values)) or any(value <= 0 for value in values):
         raise ValueError("Logarius arena IDs must be unique positive project IDs")
+    if any(value // 1000 != 12504 for value in values[:-1]):
+        raise ValueError("Logarius arena helper events require destination-native event-flag group 12504")
     collisions = set(values) & (_original_literals() | _numbers(destination))
     if collisions:
         raise ValueError(f"Logarius arena IDs collide with original inputs: {sorted(collisions)}")

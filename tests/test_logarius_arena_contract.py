@@ -1,3 +1,4 @@
+from dataclasses import replace
 import hashlib
 import re
 import shutil
@@ -43,11 +44,30 @@ class LogariusArenaContractTests(unittest.TestCase):
         self.assertEqual({p.key for p in PACKAGES},
                          {p.key for p in portable_logarius_donors()})
         self.assertEqual(0, len(set(DEFAULT_IDS.values()) & _original_literals()))
-        self.assertEqual((12995400, 12995401, 12995402, 12995403, 12995404),
+        self.assertEqual((12504600, 12504610, 12504620, 12504630, 12504640),
                          ATTACHMENT_EVENTS)
-        self.assertEqual((12995406, 12995407, 12995408, 982900),
+        self.assertEqual((12504651, 12504652, 12504653, 982900),
                          (ACTIVATION_EVENT, CLIENT_RESTORE_EVENT,
                           HELPER_LIFECYCLE_EVENT, BULLET_OWNER_ENTITY))
+
+    def test_synthetic_unbacked_readiness_group_is_rejected(self):
+        donor = portable_logarius_donors()[0]
+        with self.assertRaisesRegex(ValueError, "destination-native event-flag group 12504"):
+            patch_portable_donor_at_logarius(
+                self.destination, donor, self.sources[donor.key],
+                replace(DEFAULT_IDS, activation_event=12995406))
+
+    def test_imported_slot_flags_do_not_overlap_readiness_or_other_routines(self):
+        for donor in portable_logarius_donors():
+            constructor = event_blocks(patch_portable_donor_at_logarius(
+                self.destination, donor, self.sources[donor.key]))[0]
+            calls = [(int(event), int(slot)) for slot, event in re.findall(
+                r"\$InitializeEvent\(\s*(\d+)\s*,\s*(\d+)", constructor)
+                if int(event) in DEFAULT_IDS.values()[:-1]]
+            self.assertTrue(calls, donor.key)
+            flags = [event + slot for event, slot in calls]
+            self.assertEqual(len(flags), len(set(flags)), donor.key)
+            self.assertFalse(set(flags) & _original_literals(), donor.key)
 
     def test_terminal_fog_postboss_and_music_cleanup_remain_byte_exact(self):
         before = event_blocks(self.destination)

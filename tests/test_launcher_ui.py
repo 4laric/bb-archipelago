@@ -38,6 +38,7 @@ from bb_launcher.ui import (
     settings_from_fields,
 )
 from bb_launcher.workflow import (
+    SETTINGS_FORMAT,
     EnemizerBuild,
     EnemizerOptions,
     EnemizerToolchain,
@@ -565,7 +566,7 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         self.assertEqual(owner["enemizer"]["plan"]["sha256"], digest(retained.read_bytes()))
         self.assertEqual(
             owner["enemizer"]["plan"]["options"],
-            {"allow_tier_mixing": True, "preserve_locomotion": True, "normalize_scaling": False, "boss_canary": False,
+            {"allow_tier_mixing": True, "preserve_locomotion": True, "normalize_scaling": False, "no_winter_lanterns": False, "boss_canary": False,
              "release_tranches": []},
         )
         self.assertFalse((self.install.mods / "bb-enemizer-plan.json").exists())
@@ -1302,6 +1303,8 @@ class LauncherUiWorkflowTests(unittest.TestCase):
         troubleshooting_texts = texts_under(troubleshooting_tab)
         # The enemy seed is shown on Play, beside the choice it seeds.
         self.assertIn("Enemy seed", play_texts)
+        self.assertIn("Boss pool", play_texts)
+        self.assertEqual(parent_of["boss_modes"], "play")
         self.assertNotIn("Enemy seed", troubleshooting_texts)
         for tuning in ("Scaling",):
             self.assertIn(tuning, troubleshooting_texts)
@@ -2140,6 +2143,69 @@ class LauncherUiWorkflowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BossPoolSelectionTests(unittest.TestCase):
+    def make_app(self, settings_path):
+        import tkinter as tk
+
+        app = LauncherApp.__new__(LauncherApp)
+        app.interpreter = tk.Tcl()
+        app.settings_path = settings_path
+        app.fields = {"shad_executable": tk.StringVar(app.interpreter)}
+        for name in ("enemy_seed", "ap_server", "player_name", "status"):
+            setattr(app, name, tk.StringVar(app.interpreter))
+        app.enemy_seed.set("test-seed")
+        app.boss_pool = tk.StringVar(app.interpreter, value="reviewed")
+        for name in ("randomize_enemies", "allow_tier_mixing", "normalize_scaling"):
+            setattr(app, name, tk.BooleanVar(app.interpreter, value=True))
+        for name in ("preserve_locomotion", "no_winter_lanterns", "boss_canary",
+                     "release_contracts", "release_spawns", "release_chara"):
+            setattr(app, name, tk.BooleanVar(app.interpreter))
+        app.messagebox = Mock()
+        app.root = Mock()
+        app._settings = Mock()
+        app._settings.return_value.as_dict.return_value = {"format": SETTINGS_FORMAT}
+        return app
+
+    def test_selected_pool_reaches_build_options_and_vanilla_keeps_choice(self):
+        app = self.make_app(Path("unused.json"))
+        for pool in ("reviewed", "good"):
+            with self.subTest(pool=pool):
+                app.boss_pool.set(pool)
+                self.assertEqual(pool, app._enemizer_options(None).boss_pool)
+        app.randomize_enemies.set(False)
+        self.assertIsNone(app._enemizer_options(None).boss_pool)
+        self.assertEqual("good", app.boss_pool.get())
+        app.randomize_enemies.set(True)
+        self.assertEqual("good", app._enemizer_options(None).boss_pool)
+        app.boss_canary.set(True)
+        self.assertIsNone(app._enemizer_options(None).boss_pool)
+
+    def test_pool_survives_saving_and_reopening_setup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            app = self.make_app(path)
+            app.boss_pool.set("good")
+            app._save_settings()
+            reopened = self.make_app(path)
+            reopened._load_settings_if_present()
+            self.assertEqual("good", reopened._enemizer_options(None).boss_pool)
+            app.messagebox.showerror.assert_not_called()
+            reopened.messagebox.showwarning.assert_not_called()
+
+    def test_legacy_or_unknown_pool_settings_use_reviewed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            app = self.make_app(path)
+            for old_value in (None, True, False, "unknown", {}, []):
+                with self.subTest(old_value=old_value):
+                    path.write_text(json.dumps({"format": SETTINGS_FORMAT,
+                                                "enemy_seed": "test-seed",
+                                                "boss_pool": old_value}), encoding="utf-8")
+                    app.boss_pool.set("good")
+                    app._load_settings_if_present()
+                    self.assertEqual("reviewed", app._enemizer_options(None).boss_pool)
 
 
 class FakeMessagebox:

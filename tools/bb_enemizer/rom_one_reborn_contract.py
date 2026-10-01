@@ -2,17 +2,19 @@
 
 The original destination terminal still owns all rewards and progression.
 Rom's death kills its retained offstage proxy; the displaced body/support
-controllers are retired. Native placement retains the original relative Rom
-spider and warp geometry, whose destination fit needs gameplay validation.
+controllers are retired. Spider placement retains source-relative geometry.
+Phase warps use the native destination boss-room target; arena combat still
+needs gameplay validation.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import asdict
+from functools import cache
 from typing import Mapping, Sequence
 
-from tools.bb_inputs import read_blob
+from tools.bb_inputs import read_blob, read_prefix
 from . import rom_ebrietas_contract as rom
 from .boss_canary import event_blocks
 from .model import Archetype, Slot, Swap
@@ -52,11 +54,21 @@ RETIRED_EVENTS = (
     12804871,
 )
 COMBAT = (13204807, 13204808, 13204809, 13204810, 13204000, 13204050, 13204730)
-EVENT_MAP = dict(zip(COMBAT, range(12993300, 12993307)))
-BRIDGE = 12993307
-WAVE_FLAGS = (12993308, 12993309)
+# Native 12804 group is witnessed by original destination combat flags.
+# Synthetic 1299x groups can be absent (docs/gascoigne-cleric-entry-fix.md).
+# New bits remain inferred until readback. Leave distinct 30-slot ranges for
+# spider event completion flags, especially 13204000's ThisEventSlot guard.
+EVENT_MAP = dict(zip(COMBAT, (12804300, 12804301, 12804302, 12804303,
+                             12804310, 12804340, 12804370)))
+BRIDGE = 12804710
+WAVE_FLAGS = (12804711, 12804712)
 SPIDERS = tuple(range(981100, 981130))
-WARPS = (981130, 981131)
+# CUSA03173 01.09 mined/msb_regions.tsv: boss-room entry Point in both
+# destination states, at (402.9, -123.9, -237.5). Lake-relative warp geometry
+# is implicated by the 2026-09-30 report of an out-of-map first phase warp.
+# This same floor target for both phases is an inferred correction; animation,
+# phase progression and spider waves remain intact.
+WARP_TARGET = 2802800
 ARENA_HASHES = {
     0: "4de4c6a57d7aaffd0e6244099f666dc4ef3ca41eb3d9d5d4a7a3c1708ba8464a",
     12801800: "e9d1c62b8e026124033f59ef4837ad7a6acf0acd7370f6cef617390e3983f314",
@@ -415,9 +427,27 @@ ACTOR_WITNESSES = {
 }
 
 
+@cache
+def _original_ids_with_slot_flags() -> set[int]:
+    values = set(rom._original_ids())
+    # Slot completion flags are event ID + slot index; some are not explicit
+    # literals in the source, including m28 NPC slots extending into 128046xx.
+    for body in read_prefix(BUNDLE, "event/").values():
+        text = body.decode("utf-8-sig")
+        values.update(int(event) + int(slot) for slot, event in re.findall(
+            r"\$InitializeEvent\(\s*(\d+)\s*,\s*(\d+)", text))
+    return values
+
+
 def _validate(destination: str = "") -> None:
-    owned = set(EVENT_MAP.values()) | {BRIDGE, *WAVE_FLAGS, *SPIDERS, *WARPS}
-    if len(owned) != 42 or owned & rom._original_ids():
+    slot_flags = {EVENT_MAP[event] + slot
+                  for event in (13204000, 13204050, 13204730)
+                  for slot in range(30)}
+    flags = set(EVENT_MAP.values()) | {BRIDGE, *WAVE_FLAGS} | slot_flags
+    owned = flags | set(SPIDERS)
+    if any(flag // 1000 != 12804 for flag in flags):
+        raise ValueError("Rom/One Reborn requires destination-native flag group 12804")
+    if len(owned) != 127 or owned & _original_ids_with_slot_flags():
         raise ValueError(
             "Rom/One Reborn project allocation collides with original inputs"
         )
@@ -439,8 +469,8 @@ def _mapping() -> dict[int, int]:
         13204804: 12804804,
         13204811: WAVE_FLAGS[0],
         13204812: WAVE_FLAGS[1],
-        3202806: WARPS[0],
-        3202807: WARPS[1],
+        3202806: WARP_TARGET,
+        3202807: WARP_TARGET,
         3200010: 2800010,
         **EVENT_MAP,
         **{3200200 + i: entity for i, entity in enumerate(SPIDERS)},
@@ -594,7 +624,7 @@ def native_plan_rom_at_one_reborn(
     )
     if len(changes) > 1 or (changes and skips):
         raise ValueError("Rom/One Reborn primary normalization is ambiguous")
-    additions, bindings, regions, retained = [], [], [], []
+    additions, bindings, retained = [], [], []
     by_identity = {(row.map_name, row.entity_id): row for row in slots}
     for state, source_state in zip(STATES, rom.ROM_STATES):
         target = by_identity[state, PRIMARY]
@@ -658,32 +688,7 @@ def native_plan_rom_at_one_reborn(
                     "destination_anchor_part": target.part_name,
                     "destination_part": f"ap_rom_one_spider_{index:02d}",
                     "destination_entity_id": entity,
-                    "allocation_evidence": "reserved 981100-981131; full original literal collision scan",
-                }
-            )
-        for index, source_region in enumerate(
-            ("Event_白痴の蜘蛛_ワープ先00", "Event_白痴の蜘蛛_ワープ先01")
-        ):
-            regions.append(
-                {
-                    "source_map": source_state,
-                    "source_region": source_region,
-                    "source_entity_id": 3202806 + index,
-                    "source_provenance": {
-                        "format": "bb-boss-region-pin-v1",
-                        "region_sha256": rom.ROM_REGION_PINS[source_state][index],
-                    },
-                    "source_anchor_part": core.part_name,
-                    "source_anchor_provenance": rom._pin(
-                        rom.ROM_CORE_PINS[source_state]
-                    ),
-                    "destination_map": state,
-                    "destination_region": f"ap_rom_one_warp_{index:02d}",
-                    "destination_entity_id": WARPS[index],
-                    "destination_anchor_part": target.part_name,
-                    "destination_anchor_provenance": rom._pin(
-                        ACTOR_WITNESSES[state][PRIMARY]["sha256"]
-                    ),
+                    "allocation_evidence": "reserved 981100-981129; full original literal collision scan",
                 }
             )
     return {
@@ -693,7 +698,6 @@ def native_plan_rom_at_one_reborn(
         "swap_count": 1,
         "swaps": [swap.json()],
         "boss_actor_additions": additions,
-        "boss_region_additions": regions,
         "primary_init_source_bindings": bindings,
         "boss_actor_scaling_requirements": [
             {
@@ -711,7 +715,10 @@ def native_plan_rom_at_one_reborn(
             "donor": "rom",
             "status": "planned",
             "writer_status": "not_integrated",
-            "runtime_status": "unobserved",
+            "runtime_status": "reported_first_warp_out_of_map; correction_unvalidated",
+            "warp_target": WARP_TARGET,
+            "warp_policy": "both phase warps use the original courtyard boss-room entry point",
+            "warp_evidence": "CUSA03173 01.09 mined/msb_regions.tsv; both m28 states; inferred destination fit",
             "retained_destination_helpers": retained,
             "source_hash_pins": rom.DONOR_HASHES,
             "arena_hash_pins": ARENA_HASHES,

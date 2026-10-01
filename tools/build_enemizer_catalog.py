@@ -42,6 +42,14 @@ NON_TARGET_NPC_PARAMS = {
     905000: "Hunter's Dream left-hand weapon rack",
     360: "invisible no-hit dummy character",
     251001: "Moon offspring bullet-firing dummy",
+    # Winter Lanterns themselves (256000/256600/256900) stay in the pool, but
+    # their bullet-firing dummies are excluded, so a relocated lantern arrives
+    # without its gaze attack and applies no frenzy buildup (playtest,
+    # 2026-09-27). That is accepted as the intended enemizer behaviour: an
+    # early-map lantern with vanilla frenzy would be far harsher than its slot.
+    # Lanterns left in their vanilla maps keep frenzy; the separate No Winter
+    # Lanterns option replaces those placements and disables their helpers
+    # (winter_lanterns.py, docs/ENEMIZER.md).
     256100: "Winter Lantern bullet-firing dummy",
     256610: "Winter Lantern bullet-firing dummy",
     256910: "Winter Lantern bullet-firing dummy",

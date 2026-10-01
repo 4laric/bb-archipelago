@@ -40,6 +40,7 @@ def parser() -> argparse.ArgumentParser:
     # intrinsic to ordinary enemy planning, not a selectable policy.
     result.add_argument("--allow-tier-mixing", action="store_true", help=argparse.SUPPRESS)
     result.add_argument("--preserve-locomotion", action="store_true")
+    result.add_argument("--no-winter-lanterns", action="store_true")
     result.add_argument(
         "--release-file", action="append", default=[],
         help="bb-enemizer-release-v1 record emitted by build_enemizer_catalog.py "
@@ -176,6 +177,18 @@ def main(argv: list[str] | None = None) -> int:
     tags = load_tags(tags_path)
     overrides = load_slot_overrides(policy_path)
     release = load_release_files(args.release_file)
+    if args.no_winter_lanterns:
+        # Release only reviewed normal Winter Lantern placements, never their
+        # protected scripted helper. All other slots keep the selected preset.
+        lanterns = {s.logical_key for s in slots if s.archetype.model_name == "c2560"}
+        curated = load_release_files([str(Path(args.slot_policy).parent / f"release_{t}.json")
+                                     for t in ("contracts", "chara")])
+        for key in ("m36_00_00_00:c2560_0000", "m36_00_00_00:c2560_0001"):
+            # AI switches are removed by the pinned Winter Lantern event adapter.
+            if key in lanterns:
+                release.setdefault(key, set()).add("contracts")
+        for key in lanterns & curated.keys():
+            release.setdefault(key, set()).update(curated[key])
     policies = {
         slot.key: apply_archetype_tag(
             classify_slot(slot, overrides, release), tags.get(slot.archetype.key)
@@ -185,8 +198,16 @@ def main(argv: list[str] | None = None) -> int:
     config = EnemizerConfig(
         seed=args.seed,
         preserve_locomotion=args.preserve_locomotion,
+        no_winter_lanterns=args.no_winter_lanterns,
     )
     swaps, rejections = plan_swaps(slots, policies, tags, config, facts)
+    if args.no_winter_lanterns:
+        normal_lanterns = {s.logical_key for s in slots
+                           if s.archetype.model_name == "c2560"
+                           and s.archetype.npc_param_id in (256000, 256600, 256900)}
+        missing = normal_lanterns - {swap.logical_key for swap in swaps}
+        if missing:
+            raise ValueError("No Winter Lanterns could not replace: " + ", ".join(sorted(missing)))
     scaling, scaling_skips = [], []
     if args.normalize_scaling:
         npcs, effects = load_params(Path(args.bundle))
@@ -199,6 +220,7 @@ def main(argv: list[str] | None = None) -> int:
         "options": {
             "allow_tier_mixing": True,
             "preserve_locomotion": bool(args.preserve_locomotion),
+            "no_winter_lanterns": bool(args.no_winter_lanterns),
             "release_tranches": sorted({tranche for tranches in release.values()
                                         for tranche in tranches}),
         },

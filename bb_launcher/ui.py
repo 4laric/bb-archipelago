@@ -326,15 +326,15 @@ class LauncherApp:
         self._randomized_key: str | None = None
         self.allow_tier_mixing = tk.BooleanVar(value=True)
         self.preserve_locomotion = tk.BooleanVar(value=False)
+        self.no_winter_lanterns = tk.BooleanVar(value=False)
         self.normalize_scaling = tk.BooleanVar(value=True)
         # The BSB-at-Cleric-Beast single-boss playtest mode is retired from the
         # GUI (kept in the settings schema and workflow for a hand-edited
         # settings.json); the var stays, permanently False, so nothing else
         # that reads it needs to change.
         self.boss_canary = tk.BooleanVar(value=False)
-        # On by default alongside enemy randomization: reviewed, though
-        # gameplay-untested, boss shuffle is the intended normal experience.
-        self.boss_pool = tk.BooleanVar(value=True)
+        # Reviewed remains the default; the experimental good pool is opt-in.
+        self.boss_pool = tk.StringVar(value="reviewed")
         # Release tranches replace one blanket exclusion each with reviewed
         # compatibility handling (docs/ENEMIZER-EXPANSION.md). The GUI sets
         # all three together through "Randomize all enemies (experimental)";
@@ -388,7 +388,7 @@ class LauncherApp:
         for variable in (
             *self.fields.values(), self.player_name, self.enemy_seed, self.randomize_enemies,
             self.boss_pool, self.allow_tier_mixing, self.preserve_locomotion,
-            self.normalize_scaling, self.release_contracts, self.release_spawns,
+            self.normalize_scaling, self.no_winter_lanterns, self.release_contracts, self.release_spawns,
             self.release_chara,
         ):
             variable.trace_add("write", self._forget_randomized)
@@ -466,9 +466,9 @@ class LauncherApp:
         primary_rows = {"ap_request": seed_row, **game_rows}
         play_row += 2
 
-        # --- Enemies: one choice, on Play ---------------------------------
-        # A new player makes exactly one enemy decision, next to the seed it
-        # applies to. Each radio is a preset over the saved booleans; every
+        # --- Enemies and boss pool, on Play ---------------------------------
+        # The enemy preset and boss pool sit next to the seed each choice
+        # applies to. Enemy modes are presets over the saved booleans; every
         # fine-tuning knob lives on Advanced. One row of radios with a single
         # caption for the chosen mode keeps the page above the action bar.
         play_row = section(ttk, play, play_row, "Enemies")
@@ -483,6 +483,19 @@ class LauncherApp:
             row=play_row + 1, column=0, columnspan=3, sticky="w", pady=(2, 0)
         )
         play_row += 2
+        ttk.Label(play, text="Boss pool").grid(row=play_row, column=0, sticky="w")
+        boss_modes = ttk.Frame(play)
+        boss_modes.grid(row=play_row, column=1, columnspan=2, sticky="w")
+        for column, (pool, label) in enumerate((
+            ("reviewed", "Reviewed"),
+            ("good", "Only the good bosses (experimental)"),
+        )):
+            boss_choice = ttk.Radiobutton(
+                boss_modes, text=label, variable=self.boss_pool, value=pool,
+            )
+            boss_choice.grid(row=0, column=column, sticky="w", padx=(0, 24))
+            self._enemy_widgets.append(boss_choice)
+        play_row += 1
         # Shown, not buried: filled from the AP seed whenever one is chosen,
         # so two players on the same seed can compare it, and editable for a
         # different shuffle.
@@ -543,6 +556,10 @@ class LauncherApp:
             ttk, troubleshooting, troubleshooting_row, "Scaling", self.normalize_scaling,
             caption="Scale replacements to the slot they fill.",
         )
+        troubleshooting_row += 3
+        option(ttk, troubleshooting, troubleshooting_row, "No Winter Lanterns",
+               self.no_winter_lanterns,
+               caption="Replace their normal spawns and exclude them from replacements.")
         troubleshooting_row += 3
         enemy_inputs = ttk.Frame(troubleshooting)
         enemy_inputs.grid(row=troubleshooting_row, column=0, columnspan=3, sticky="ew")
@@ -969,6 +986,7 @@ class LauncherApp:
                 "allow_tier_mixing": self.allow_tier_mixing.get(),
                 "preserve_locomotion": self.preserve_locomotion.get(),
                 "normalize_scaling": self.normalize_scaling.get(),
+                "no_winter_lanterns": self.no_winter_lanterns.get(),
                 "boss_canary": self.boss_canary.get(),
                 "boss_pool": self.boss_pool.get(),
                 "release_contracts": self.release_contracts.get(),
@@ -1005,8 +1023,10 @@ class LauncherApp:
             self.allow_tier_mixing.set(True)
             self.preserve_locomotion.set(False)
             self.normalize_scaling.set(bool(value.get("normalize_scaling", True)))
+            self.no_winter_lanterns.set(bool(value.get("no_winter_lanterns", False)))
             self.boss_canary.set(bool(value.get("boss_canary", False)))
-            self.boss_pool.set(True)
+            saved_pool = value.get("boss_pool")
+            self.boss_pool.set(saved_pool if saved_pool in ("reviewed", "good") else "reviewed")
             self.release_contracts.set(bool(value.get("release_contracts", False)))
             self.release_spawns.set(bool(value.get("release_spawns", False)))
             self.release_chara.set(bool(value.get("release_chara", False)))
@@ -1174,8 +1194,9 @@ class LauncherApp:
             allow_tier_mixing=self.allow_tier_mixing.get(),
             preserve_locomotion=False,
             normalize_scaling=self.normalize_scaling.get(),
+            no_winter_lanterns=self.no_winter_lanterns.get(),
             boss_canary=self.boss_canary.get(),
-            boss_pool="reviewed" if self.randomize_enemies.get() and not self.boss_canary.get() else None,
+            boss_pool=self.boss_pool.get() if self.randomize_enemies.get() and not self.boss_canary.get() else None,
             release_contracts=self.release_contracts.get(),
             release_spawns=self.release_spawns.get(),
             release_chara=self.release_chara.get(),

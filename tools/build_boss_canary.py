@@ -17,14 +17,14 @@ from tools.bb_inputs import read_blob
 from tools.bb_enemizer.boss_canary import DESTINATION_EVENT_FILE, DONOR_EVENT_FILE, patch_event_source, plan_canary
 from tools.bb_enemizer.inventory import load_slots
 from tools.bb_enemizer.scaling import load_params
-from tools.build_cathedral_emevd import DARKSCRIPT_SHA256
+from tools.build_cathedral_emevd import DARKSCRIPT_SHA256, compiler_environment
 
 
 def compile_events(executable: Path, mode: str, source: Path, output: Path, expected: str) -> None:
     output.mkdir(parents=True, exist_ok=True)
     result = subprocess.run([str(executable), '/cmd', '-' + mode, '-game', 'bb',
                              '-indir', str(source), '-outdir', str(output), '-force', '-silent'],
-                            capture_output=True)
+                            capture_output=True, env=compiler_environment())
     # DarkScript can return success after a per-file compilation exception.
     if result.returncode != 0 or not (output / expected).is_file():
         detail = (result.stdout + result.stderr).decode('utf-8', errors='replace')

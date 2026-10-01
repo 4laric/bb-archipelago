@@ -237,6 +237,7 @@ def main(argv: list[str] | None = None) -> int:
                     EnemizerOptions(enabled=not args.no_enemizer,
                         seed=raw.get("enemy_seed"), allow_tier_mixing=bool(raw.get("allow_tier_mixing")),
                         preserve_locomotion=bool(raw.get("preserve_locomotion")),
+                        no_winter_lanterns=bool(raw.get("no_winter_lanterns")),
                         normalize_scaling=bool(raw.get("normalize_scaling")), boss_canary=bool(raw.get("boss_canary")),
                         release_contracts=bool(raw.get("release_contracts")),
                         release_spawns=bool(raw.get("release_spawns")),
