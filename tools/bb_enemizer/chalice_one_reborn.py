@@ -19,6 +19,7 @@ from .boss_canary import event_blocks
 from .boss_contracts import CLERIC_ARENA
 from .chalice_beast_donors import (
     BEAST_POSSESSED_SOUL as DONOR, SOURCE_INITIALIZATION, _source_blocks,
+    WATCHDOG, ABHORRENT, ATTACHMENT_IDS, _validate_ids, _event_as, _one_phase_music,
 )
 from .encounter_recipes import EncounterRecipe
 from .model import Slot, Swap
@@ -37,10 +38,10 @@ ARENA = replace(
 PRESERVED = (12801800, 12801801, 12804805, 12804880, 12804881, 12804882, 12804883)
 
 
-def _health(original: str) -> str:
+def _health(original: str, donor=DONOR) -> str:
     if "DisplayBossHealthBar(Enabled, 2800803, 0, 507000);" not in original:
         raise ValueError("One Reborn health-bar witness drifted")
-    return """$Event(12804802, Default, function() {
+    body = """$Event(12804802, Default, function() {
     EndIf(EventFlag(12801800));
     SetCharacterAIState(2800800, Disabled);
     SetCharacterHPBarDisplay(2800800, Disabled);
@@ -80,6 +81,8 @@ L4:
     CreatePlaylog(238);
     StartTimeMeasurement(2800010, 254, Enabled);
 });"""
+    return body.replace("DisplayBossHealthBar(Enabled, 2800800, 0, 750000);",
+                        f"DisplayBossHealthBar(Enabled, 2800800, 0, {donor.health_bar_label});")
 
 
 def _music(original: str) -> str:
@@ -110,9 +113,12 @@ def _bridge() -> str:
 }});"""
 
 
-def patch_one_reborn(destination: str, donor_source: str) -> str:
+def patch_one_reborn(destination: str, donor_source: str, donor=DONOR) -> str:
     original = rom._verify(destination, one.ARENA_HASHES, "One Reborn arena")
-    _source_blocks(donor_source, DONOR)
+    if donor not in (DONOR, WATCHDOG, ABHORRENT):
+        raise ValueError("unsupported One Reborn Chalice donor")
+    source_blocks = _source_blocks(donor_source, donor)
+    _validate_ids(destination, donor)
     if (BRIDGE in original or BRIDGE in rom._original_ids() or
             re.search(r"(?<!\d)12997050(?!\d)", destination)):
         raise ValueError("One Reborn chalice bridge ID collision")
@@ -120,18 +126,27 @@ def patch_one_reborn(destination: str, donor_source: str) -> str:
         original[0], "    $InitializeEvent(0, 12804871);",
         f"    $InitializeEvent(0, 12804871);\n    $InitializeEvent(0, {BRIDGE});",
         "One Reborn bridge constructor anchor")
+    additions = []
+    if donor.source_handlers:
+        calls = []
+        for index, (old, new) in enumerate(zip(donor.source_handlers, ATTACHMENT_IDS[donor.key], strict=True)):
+            additions.append(_event_as(source_blocks[old], old, new))
+            calls.append(f"    $InitializeEvent(0, {new}, 2800800, {index + 1}, {index + 1});")
+        constructor = rom._replace_once(constructor, f"    $InitializeEvent(0, {BRIDGE});",
+            f"    $InitializeEvent(0, {BRIDGE});\n" + "\n".join(calls), "source limb initializers")
     edits = {
-        0: constructor, 12804802: _health(original[12804802]),
-        12804803: _music(original[12804803]),
+        0: constructor, 12804802: _health(original[12804802], donor),
+        12804803: (_one_phase_music(original[12804803], ARENA) if donor.source_handlers
+                   else _music(original[12804803])),
         **{event: rom._end_event(original[event]) for event in one.RETIRED_EVENTS},
     }
     for event in (12801802, 12801803):
         edits[event] = rom._replace_once(
             original[event], "    ChangeCharacterEnableState(2800801, Enabled);\n",
             "", "displaced second-body activation")
-    output = rom._replace_events(destination, edits).rstrip() + "\n\n" + _bridge() + "\n"
+    output = rom._replace_events(destination, edits).rstrip() + "\n\n" + "\n\n".join([_bridge(), *additions]) + "\n"
     blocks = event_blocks(output)
-    if set(blocks) != set(original) | {BRIDGE}:
+    if set(blocks) != set(original) | {BRIDGE, *ATTACHMENT_IDS.get(donor.key, ())}:
         raise ValueError("One Reborn chalice changed event identities")
     for event, body in original.items():
         if event not in edits and blocks[event] != body:
@@ -143,16 +158,18 @@ def patch_one_reborn(destination: str, donor_source: str) -> str:
 
 
 def native_plan(slots: Sequence[Slot], npcs: Mapping[int, dict],
-                effects: Mapping[int, dict], seed: str) -> dict:
+                effects: Mapping[int, dict], seed: str, donor=DONOR) -> dict:
+    if donor not in (DONOR, WATCHDOG, ABHORRENT):
+        raise ValueError("unsupported One Reborn Chalice donor")
     arena = read_blob(one.BUNDLE, one.ARENA_SOURCE).decode("utf-8-sig")
     source = read_blob(one.BUNDLE, "event/m29.emevd.dcx.js").decode("utf-8-sig")
     rom._verify(arena, one.ARENA_HASHES, "One Reborn arena")
-    _source_blocks(source, DONOR)
+    _source_blocks(source, donor)
     if BRIDGE in event_blocks(arena) or BRIDGE in rom._original_ids():
         raise ValueError("One Reborn chalice bridge ID collision")
-    sources = [row for row in slots if row.map_name == DONOR.source_map and
-               row.part_name == DONOR.source_part and row.entity_id == DONOR.source_entity and
-               row.archetype == DONOR.source_archetype and not row.dummy and not row.talk_id]
+    sources = [row for row in slots if row.map_name == donor.source_map and
+               row.part_name == donor.source_part and row.entity_id == donor.source_entity and
+               row.archetype == donor.source_archetype and not row.dummy and not row.talk_id]
     if len(sources) != 1:
         raise ValueError("One Reborn chalice requires exact Beast-Possessed Soul source actor")
     targets = sorted((row for row in slots if row.entity_id == one.PRIMARY and
@@ -181,7 +198,7 @@ def native_plan(slots: Sequence[Slot], npcs: Mapping[int, dict],
                 })
     swap = Swap(targets[0].logical_key, [row.key for row in targets],
                 {row.key: row.archetype for row in targets}, one.ARCHETYPE,
-                DONOR.source_archetype,
+                donor.source_archetype,
                 warnings=["One Reborn chalice arena fit and runtime effects unobserved"],
                 destinations={row.key: {"map_name": row.map_name,
                                          "entity_id": row.entity_id,
@@ -189,11 +206,11 @@ def native_plan(slots: Sequence[Slot], npcs: Mapping[int, dict],
                               for row in targets})
     changes, skips = plan_scaling([swap], targets, dict(npcs), dict(effects), boss_tiers=True)
     bindings = [{
-        "source_event_file": "event/" + DONOR.event_file,
+        "source_event_file": "event/" + donor.event_file,
         "source_map": sources[0].map_name, "source_part": sources[0].part_name,
         "source_entity_id": sources[0].entity_id,
         "source_archetype": asdict(sources[0].archetype), "source_talk_id": sources[0].talk_id,
-        "source_provenance": rom._pin(DONOR.source_part_sha256),
+        "source_provenance": rom._pin(donor.source_part_sha256),
         "source_initialization": dict(SOURCE_INITIALIZATION),
         "destination_map": row.map_name, "destination_part": row.part_name,
         "destination_entity_id": row.entity_id,
@@ -204,18 +221,18 @@ def native_plan(slots: Sequence[Slot], npcs: Mapping[int, dict],
         "swap_count": 1, "swaps": [swap.json()],
         "primary_init_source_bindings": bindings,
         "boss_contract": {
-            "arena": ARENA.key, "donor": DONOR.key, "family": DONOR.family,
+            "arena": ARENA.key, "donor": donor.key, "family": donor.family,
             "combat_owner": "m29-donor", "progression_owner": "destination-arena",
-            "source_event_file": "event/" + DONOR.event_file,
-            "source_map": DONOR.source_map, "source_map_sha256": DONOR.source_map_sha256,
-            "source_constructor_sha256": DONOR.source_constructor_sha256,
-            "source_handlers": [],
-            "model_assets": [{"path": path, "sha256": sha} for path, sha in DONOR.model_assets],
+            "source_event_file": "event/" + donor.event_file,
+            "source_map": donor.source_map, "source_map_sha256": donor.source_map_sha256,
+            "source_constructor_sha256": donor.source_constructor_sha256,
+            "source_handlers": list(donor.source_handlers),
+            "model_assets": [{"path": path, "sha256": sha} for path, sha in donor.model_assets],
             "retained_destination_helpers": retained,
             "arena_hash_pins": dict(one.ARENA_HASHES),
             "preserved_destination_events": list(PRESERVED),
             "retired_events": list(one.RETIRED_EVENTS),
-            "added_event_ids": [BRIDGE],
+            "added_event_ids": [BRIDGE, *ATTACHMENT_IDS.get(donor.key, ())],
             "terminal_policy": "original proxy terminal; death bridge after donor death",
             "validation_status": "static-contract-only",
         },
@@ -227,5 +244,7 @@ def native_plan(slots: Sequence[Slot], npcs: Mapping[int, dict],
 
 
 def recipes() -> tuple[EncounterRecipe, ...]:
-    return (EncounterRecipe(ARENA, DONOR, "chalice-one-reborn:source-combat",
-                            patch_one_reborn, native_plan, lambda slots: []),)
+    return tuple(EncounterRecipe(ARENA, donor, "chalice-one-reborn:source-combat",
+        lambda destination, source, d=donor: patch_one_reborn(destination, source, d),
+        lambda slots, npcs, effects, seed, d=donor: native_plan(slots, npcs, effects, seed, d),
+        lambda slots: []) for donor in (DONOR, WATCHDOG, ABHORRENT))

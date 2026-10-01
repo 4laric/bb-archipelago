@@ -1,0 +1,936 @@
+{
+  "format": "bb-chalice-complex-arena-pins-v1",
+  "source": "CUSA03173 AppVer 01.09 original MSB; BBEnemizerWriter --boss-actor-pins",
+  "maps": {
+    "m27_00_00_00": {
+      "2700800": {
+        "name": "c2120_0000",
+        "kind": "enemy",
+        "entity_id": 2700800,
+        "fingerprint": "f91f3492e77e0bfe20d4fa74b00229042b67404c4e8549b9ce49060579424388",
+        "source_archetype": {
+          "model_name": "c2120",
+          "npc_param_id": 212700,
+          "think_param_id": 212700,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700801": {
+        "name": "c2120_0001",
+        "kind": "enemy",
+        "entity_id": 2700801,
+        "fingerprint": "8ccbe181a9a9fac58f32b5c433e61303b7616d12c6bb072cfa7c3ab4f7ba6c14",
+        "source_archetype": {
+          "model_name": "c2120",
+          "npc_param_id": 212710,
+          "think_param_id": 212710,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700802": {
+        "name": "c2120_0002",
+        "kind": "enemy",
+        "entity_id": 2700802,
+        "fingerprint": "1c6709b46409807298c98e359b537fd8ff0cf73c88a071ad608441fefe90e004",
+        "source_archetype": {
+          "model_name": "c2120",
+          "npc_param_id": 212720,
+          "think_param_id": 212720,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700810": {
+        "name": "c2121_0000",
+        "kind": "enemy",
+        "entity_id": 2700810,
+        "fingerprint": "3594fbdfd43d55c4ce6c55492bb2d617b4bb7c344365cc5e47dcd991723a5319",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212750,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700811": {
+        "name": "c2121_0001",
+        "kind": "enemy",
+        "entity_id": 2700811,
+        "fingerprint": "caefa28112ca49b443225f712689082d96756b8ee9adc49c116341af1220dbac",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212751,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700813": {
+        "name": "c2121_0003",
+        "kind": "enemy",
+        "entity_id": 2700813,
+        "fingerprint": "0e65038d5541f99afca785c76c2a724d9d81be4c787d44c5d3659acb4b7b9743",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212751,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700814": {
+        "name": "c2121_0004",
+        "kind": "enemy",
+        "entity_id": 2700814,
+        "fingerprint": "a6472d31f6ac74a5e2ba1a22d2d164f8d721224db1cc7729dc220e91ba4b700b",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212750,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700804": {
+        "name": "c5033_0000",
+        "kind": "enemy",
+        "entity_id": 2700804,
+        "fingerprint": "fe48cb5b9c15c3e2c06dce5741c44885479173f5f87d6e25ceb13b22fa4e4c75",
+        "source_archetype": {
+          "model_name": "c5033",
+          "npc_param_id": 503300,
+          "think_param_id": 503300,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700805": {
+        "name": "c5033_0001",
+        "kind": "enemy",
+        "entity_id": 2700805,
+        "fingerprint": "a7e982caff8e1c7e06b6c37904b799f74309a675e87c5f51503df80e6b1faaa5",
+        "source_archetype": {
+          "model_name": "c5033",
+          "npc_param_id": 503300,
+          "think_param_id": 503300,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700803": {
+        "name": "c5033_0003",
+        "kind": "enemy",
+        "entity_id": 2700803,
+        "fingerprint": "bffcc44cd445e14090eff8ef29a1b9d8cdf717efac0e64857bbc7797d4f8c414",
+        "source_archetype": {
+          "model_name": "c5033",
+          "npc_param_id": 503300,
+          "think_param_id": 503300,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      }
+    },
+    "m27_00_00_01": {
+      "2700800": {
+        "name": "c2120_0000",
+        "kind": "enemy",
+        "entity_id": 2700800,
+        "fingerprint": "9c63e91372ea1cf3093643f4d35c5db431459c5b7282ac67fd2da36ddf236c76",
+        "source_archetype": {
+          "model_name": "c2120",
+          "npc_param_id": 212700,
+          "think_param_id": 212700,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700801": {
+        "name": "c2120_0001",
+        "kind": "enemy",
+        "entity_id": 2700801,
+        "fingerprint": "4b16e3c84d27cecb4c199f5b15280bf3ae0ff43a3dd25df76a8a37f5fc3c2d54",
+        "source_archetype": {
+          "model_name": "c2120",
+          "npc_param_id": 212710,
+          "think_param_id": 212710,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700802": {
+        "name": "c2120_0002",
+        "kind": "enemy",
+        "entity_id": 2700802,
+        "fingerprint": "38b9927061ff3aa4e608ffabb5c5fdab0cf30157e64722be4438a5d7e7bc2bce",
+        "source_archetype": {
+          "model_name": "c2120",
+          "npc_param_id": 212720,
+          "think_param_id": 212720,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700810": {
+        "name": "c2121_0000",
+        "kind": "enemy",
+        "entity_id": 2700810,
+        "fingerprint": "c3af02df0a239c62a00c06045f9a0f5542ad5f340073a56e14f8f4e62762b95b",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212750,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700811": {
+        "name": "c2121_0001",
+        "kind": "enemy",
+        "entity_id": 2700811,
+        "fingerprint": "f8c343f1b2ff9a5fef380d3e7defee1d2930301b00f21d0437c8e5d2bd61d938",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212751,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700813": {
+        "name": "c2121_0003",
+        "kind": "enemy",
+        "entity_id": 2700813,
+        "fingerprint": "bd0f887ecdbc97e21f64d71fd514a32d1ae870a1c5a5eacc5e0d46d4c329621a",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212751,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700814": {
+        "name": "c2121_0004",
+        "kind": "enemy",
+        "entity_id": 2700814,
+        "fingerprint": "0be1e518744cc012f86953527188b54cfc3608dc1fcdabe095060a9badda6fbc",
+        "source_archetype": {
+          "model_name": "c2121",
+          "npc_param_id": 212750,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700804": {
+        "name": "c5033_0000",
+        "kind": "enemy",
+        "entity_id": 2700804,
+        "fingerprint": "01f6bd46e73554f2501a85597578fbe9cf70e319daf227b1e4ad3de8e6398b3a",
+        "source_archetype": {
+          "model_name": "c5033",
+          "npc_param_id": 503300,
+          "think_param_id": 503300,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700805": {
+        "name": "c5033_0001",
+        "kind": "enemy",
+        "entity_id": 2700805,
+        "fingerprint": "037cbbbd9ec73d136a4385e4308c04a58b798209cd215ecd1289c908096492a5",
+        "source_archetype": {
+          "model_name": "c5033",
+          "npc_param_id": 503300,
+          "think_param_id": 503300,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2700803": {
+        "name": "c5033_0003",
+        "kind": "enemy",
+        "entity_id": 2700803,
+        "fingerprint": "3e3d623cb736af26c0817953130f4e0539902d128b9cb9055c8b4aa8bbe095d6",
+        "source_archetype": {
+          "model_name": "c5033",
+          "npc_param_id": 503300,
+          "think_param_id": 503300,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      }
+    },
+    "m28_00_00_00": {
+      "2800520": {
+        "name": "c1050_0110",
+        "kind": "enemy",
+        "entity_id": 2800520,
+        "fingerprint": "ebd81e2114d3394c8a6eb28051c85c9fdf52609576b2b46714803e5b619db131",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800522": {
+        "name": "c1050_0112",
+        "kind": "enemy",
+        "entity_id": 2800522,
+        "fingerprint": "f05463f2b014ad0d946a9cf6c31ee14aaea1af7e3e9803d46faa64ea84c662fb",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105811,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800524": {
+        "name": "c1050_0114",
+        "kind": "enemy",
+        "entity_id": 2800524,
+        "fingerprint": "866b9f6e72dec776f8b696ccc37c232aa2ce23d4cdec1e62b5fdee15b575f5d2",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800525": {
+        "name": "c1050_0115",
+        "kind": "enemy",
+        "entity_id": 2800525,
+        "fingerprint": "9f93949a1af828c9e6645f92cfc0caecfea3e07a035c7734679335e70262b2e0",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800527": {
+        "name": "c1050_0117",
+        "kind": "enemy",
+        "entity_id": 2800527,
+        "fingerprint": "5cbaf933d6ca13db44cc9c14d965291f7346eecd4ea19ddac91a92f9ee75e63b",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105811,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800529": {
+        "name": "c1050_0119",
+        "kind": "enemy",
+        "entity_id": 2800529,
+        "fingerprint": "6f6b139708f0c18bca6b56768fcf9c9bcce7b1cdbbd18d7e741e182772306627",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800803": {
+        "name": "c1050_0120",
+        "kind": "enemy",
+        "entity_id": 2800803,
+        "fingerprint": "9f83ecd83b83ac250b4f22c6a59aad925febb6bb4e44d13e1f5aa9b9061e4a38",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 507000,
+          "think_param_id": 0,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800800": {
+        "name": "c5070_0000",
+        "kind": "enemy",
+        "entity_id": 2800800,
+        "fingerprint": "d63b5cc2179fe66b76a237d1286fec90c00b41068847dd2688253fe6868dff64",
+        "source_archetype": {
+          "model_name": "c5070",
+          "npc_param_id": 507000,
+          "think_param_id": 0,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800801": {
+        "name": "c5071_0000",
+        "kind": "enemy",
+        "entity_id": 2800801,
+        "fingerprint": "2e6cbceecd430e43c00cb16cbf464e4431a226fd260a1228d8f5d6fcd21b04e3",
+        "source_archetype": {
+          "model_name": "c5071",
+          "npc_param_id": 507100,
+          "think_param_id": 0,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800802": {
+        "name": "c5072_0000",
+        "kind": "enemy",
+        "entity_id": 2800802,
+        "fingerprint": "1094204441e3591e5c98e68eb6fa41133788b3c1cd1282de85609e6e8c8a75e7",
+        "source_archetype": {
+          "model_name": "c5072",
+          "npc_param_id": 507200,
+          "think_param_id": 507200,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      }
+    },
+    "m28_00_00_01": {
+      "2800520": {
+        "name": "c1050_0110",
+        "kind": "enemy",
+        "entity_id": 2800520,
+        "fingerprint": "2524a31e0ab89b13d049371be070d62514aa5cba02e28d4ffac370d65bfbf56f",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800522": {
+        "name": "c1050_0112",
+        "kind": "enemy",
+        "entity_id": 2800522,
+        "fingerprint": "ea8a36357e37ac8ef46e975a93ff7d36688c566af0a36e622a40086b393cf129",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105811,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800524": {
+        "name": "c1050_0114",
+        "kind": "enemy",
+        "entity_id": 2800524,
+        "fingerprint": "364b2a245b226feb77dc688814e7bec9acf334265bee49dfce863fd8a3046609",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800525": {
+        "name": "c1050_0115",
+        "kind": "enemy",
+        "entity_id": 2800525,
+        "fingerprint": "95b3115d07725e9dd27cd136cdf4061bf36b6ce5d4dc302be2b492eecbb2cd3a",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800527": {
+        "name": "c1050_0117",
+        "kind": "enemy",
+        "entity_id": 2800527,
+        "fingerprint": "0bcd2bec58a33eb22a16d870e93528b1213c0ccf8c02adeabb62621fc3331c19",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105811,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800529": {
+        "name": "c1050_0119",
+        "kind": "enemy",
+        "entity_id": 2800529,
+        "fingerprint": "53df7c070f759799a2beaeeab5d2380cf0c66dc1fb690edfe6e7694f7cc44c34",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 105810,
+          "think_param_id": 105810,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800803": {
+        "name": "c1050_0120",
+        "kind": "enemy",
+        "entity_id": 2800803,
+        "fingerprint": "dd53094dd91f469d2d44af6dda3084b0620f7666258057e19550f5ed5ed0f69a",
+        "source_archetype": {
+          "model_name": "c1050",
+          "npc_param_id": 507000,
+          "think_param_id": 0,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800800": {
+        "name": "c5070_0000",
+        "kind": "enemy",
+        "entity_id": 2800800,
+        "fingerprint": "3d66cbbe3ec301c4e57705524ceb6a7fc2784cc23a991afe0762c45186a4fa5f",
+        "source_archetype": {
+          "model_name": "c5070",
+          "npc_param_id": 507000,
+          "think_param_id": 0,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800801": {
+        "name": "c5071_0000",
+        "kind": "enemy",
+        "entity_id": 2800801,
+        "fingerprint": "cd731459de6be54a6633ae36584894c75b0bf6ac351c16ec32a64091fa4e144a",
+        "source_archetype": {
+          "model_name": "c5071",
+          "npc_param_id": 507100,
+          "think_param_id": 0,
+          "chara_init_id": 6553600
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2800802": {
+        "name": "c5072_0000",
+        "kind": "enemy",
+        "entity_id": 2800802,
+        "fingerprint": "911986915373bd1bd64e4f178039af5c985e50bd116c0d8cc52e910f34a6fa07",
+        "source_archetype": {
+          "model_name": "c5072",
+          "npc_param_id": 507200,
+          "think_param_id": 507200,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      }
+    },
+    "m22_00_00_00": {
+      "2200810": {
+        "name": "c2050_0000",
+        "kind": "enemy",
+        "entity_id": 2200810,
+        "fingerprint": "cc0811ed346997c67bc24077a6498b5bfd1d671406bb53d3b09ed658241acdad",
+        "source_archetype": {
+          "model_name": "c2050",
+          "npc_param_id": 205010,
+          "think_param_id": 205010,
+          "chara_init_id": 2
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2200811": {
+        "name": "c2050_0001",
+        "kind": "enemy",
+        "entity_id": 2200811,
+        "fingerprint": "6d6aca6776742a5a57b7c0d2cff745d91dc8fb2b8c585e0a4cfdd16b6956ced8",
+        "source_archetype": {
+          "model_name": "c2050",
+          "npc_param_id": 205010,
+          "think_param_id": 205010,
+          "chara_init_id": 2
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2200812": {
+        "name": "c2050_0002",
+        "kind": "enemy",
+        "entity_id": 2200812,
+        "fingerprint": "887eb3820938237cee74908be2a96bad27da4ec4e0a907de15b1ef45ad6426a4",
+        "source_archetype": {
+          "model_name": "c2050",
+          "npc_param_id": 205010,
+          "think_param_id": 205010,
+          "chara_init_id": 2
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2200800": {
+        "name": "c2100_0000",
+        "kind": "enemy",
+        "entity_id": 2200800,
+        "fingerprint": "d82ece33f61d3ed3fbcd931f1089f7be4d0f82a2690f49c9ccdf5e021550cd20",
+        "source_archetype": {
+          "model_name": "c2100",
+          "npc_param_id": 210020,
+          "think_param_id": 210020,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "2200801": {
+        "name": "c2100_0001",
+        "kind": "enemy",
+        "entity_id": 2200801,
+        "fingerprint": "263b840cd3d8e07dc328eb870cd2047e3cbde5ed9e935e739fbf7fd29897beca",
+        "source_archetype": {
+          "model_name": "c2100",
+          "npc_param_id": 210020,
+          "think_param_id": 210021,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      }
+    },
+    "m35_00_00_00": {
+      "3500851": {
+        "name": "c4030_0000",
+        "kind": "enemy",
+        "entity_id": 3500851,
+        "fingerprint": "ce7dd47b6bef551d18e340282ae6409f1920020d1ac36e85dc634f477caf51b6",
+        "source_archetype": {
+          "model_name": "c4030",
+          "npc_param_id": 403000,
+          "think_param_id": 403000,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "3500852": {
+        "name": "c4030_0001",
+        "kind": "enemy",
+        "entity_id": 3500852,
+        "fingerprint": "77607d287e7e2e2e2f282f22c8b78aa634a6ba6577a1c830b27420f86e095eea",
+        "source_archetype": {
+          "model_name": "c4030",
+          "npc_param_id": 403010,
+          "think_param_id": 403010,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "3500853": {
+        "name": "c4030_0002",
+        "kind": "enemy",
+        "entity_id": 3500853,
+        "fingerprint": "706a81c500efc571356102e5adc0a8ba3e081e64e063fc7d5d5c68bbb056f366",
+        "source_archetype": {
+          "model_name": "c4030",
+          "npc_param_id": 403020,
+          "think_param_id": 403020,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "3500854": {
+        "name": "c4030_0003",
+        "kind": "enemy",
+        "entity_id": 3500854,
+        "fingerprint": "63e33c77647f60713d39de7f80b1f4dabca1b9856446843a9e9c9a69643663d4",
+        "source_archetype": {
+          "model_name": "c4030",
+          "npc_param_id": 403030,
+          "think_param_id": 403030,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "3500850": {
+        "name": "c4030_0004",
+        "kind": "enemy",
+        "entity_id": 3500850,
+        "fingerprint": "ea596036d27313cb14f09921e698351fb97de32ce37fcab291d10f5dfcc2abbf",
+        "source_archetype": {
+          "model_name": "c4030",
+          "npc_param_id": 403050,
+          "think_param_id": 1,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      },
+      "3500860": {
+        "name": "c4031_0000",
+        "kind": "enemy",
+        "entity_id": 3500860,
+        "fingerprint": "5df657d5b8ea855cfd14b59cbd8a54c46ea41ebe0b8a5df7da67b6b0c3e360e8",
+        "source_archetype": {
+          "model_name": "c4031",
+          "npc_param_id": 403100,
+          "think_param_id": 403100,
+          "chara_init_id": 0
+        },
+        "source_initialization": {
+          "talk_id": 0,
+          "unk_t18": -1,
+          "init_anim_id": -1,
+          "damage_anim_id": -1
+        }
+      }
+    }
+  }
+}

@@ -4,6 +4,8 @@
 # When a PR adds an AP-dependent module, it adds its `no_skip_module` row here.
 
 max_skips	0
+no_skip_module	test_chalice_one_reborn	6
+no_skip_module	test_chalice_complex_arenas	7
 no_skip_module	test_group_donors	7
 no_skip_module	test_chalice_gascoigne	3
 

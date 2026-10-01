@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 PROOF_FILE = Path(__file__).with_suffix('.json')
-PROOF_SHA256 = 'cf79f4be62ccd5f6f4b66973d6141e1b060f30cf9b2f890f836507538107a754'
+PROOF_SHA256 = 'f3f72a0d864ffb9c3653ae55926b45f4a5ba83a3f8b738d4865bd0f6f5ef8059'
 
 
 def _proof() -> dict:
@@ -30,6 +30,8 @@ def _destination(proof: dict, arena_key: str) -> dict | None:
     # Gascoigne and Cleric are in the same m24_01 maps and load the exact
     # same destination bank. The pinned bank conflict proof therefore applies
     # to both encounters; actor/geometry support is checked by their adapters.
+    if arena_key == 'living-failures':
+        return proof['destinations']['lady-maria']
     if arena_key == 'father-gascoigne':
         return proof['destinations']['cleric-beast']
     return proof['destinations'].get(arena_key)

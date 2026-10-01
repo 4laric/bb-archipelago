@@ -43,6 +43,7 @@ def _humanoid_recipes():
 
 
 def chalice_recipes() -> dict[tuple[str, str], EncounterRecipe]:
+    from .chalice_complex_arenas import recipes as complex_recipes
     from .chalice_gascoigne import recipes as gascoigne_recipes
     from .chalice_beast_donors import chalice_beast_recipes
     from .chalice_giant_bloodletting_donors import chalice_recipes as giant_recipes
@@ -51,7 +52,7 @@ def chalice_recipes() -> dict[tuple[str, str], EncounterRecipe]:
 
     result = {}
     for recipe in (*_humanoid_recipes(), *chalice_beast_recipes(), *giant_recipes(),
-                   *rom_recipes(), *one_reborn_recipes(), *gascoigne_recipes()):
+                   *rom_recipes(), *one_reborn_recipes(), *gascoigne_recipes(), *complex_recipes()):
         character = getattr(recipe.donor, 'archetype', None) or recipe.donor.source_archetype
         if not supports_character(recipe.arena.key, character.model_name):
             continue

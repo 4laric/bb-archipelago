@@ -30,7 +30,7 @@ class OneRebornChaliceTests(unittest.TestCase):
         cls.npcs, cls.effects = load_params(BUNDLE)
 
     def test_patch_preserves_terminal_and_retires_displaced_controllers(self):
-        recipe, = recipes()
+        recipe = recipes()[0]
         self.assertEqual(recipe.key, ("the-one-reborn", "beast-possessed-soul"))
         before = event_blocks(self.arena)
         after = event_blocks(recipe.patch(self.arena, self.source))
@@ -86,6 +86,54 @@ class OneRebornChaliceTests(unittest.TestCase):
                           if row.map_name != BEAST_POSSESSED_SOUL.source_map]
         with self.assertRaisesRegex(ValueError, "exact Beast-Possessed Soul"):
             recipes()[0].native_plan(without_source, self.npcs, self.effects, "seed")
+
+    def test_beast_alternatives_keep_all_five_authored_limb_slots(self):
+        from tools.bb_enemizer.chalice_beast_donors import WATCHDOG, ABHORRENT, ATTACHMENT_IDS
+        before = event_blocks(self.arena)
+        for donor in (WATCHDOG, ABHORRENT):
+            recipe = next(r for r in recipes() if r.donor == donor)
+            after = event_blocks(recipe.patch(self.arena, self.source))
+            self.assertEqual(set(before) | {BRIDGE, *ATTACHMENT_IDS[donor.key]}, set(after))
+            for index, eid in enumerate(ATTACHMENT_IDS[donor.key], start=1):
+                self.assertIn(f'$InitializeEvent(0, {eid}, 2800800, {index}, {index});', after[0])
+                self.assertIn('SetNPCPartHP', after[eid])
+            for eid in PRESERVED:
+                self.assertEqual(before[eid], after[eid])
+            self.assertIn(f'DisplayBossHealthBar(Enabled, 2800800, 0, {donor.health_bar_label});', after[12804802])
+            self.assertIn('WaitFor(EventFlag(12801800));', after[12804803])
+            self.assertNotIn('CharacterHasEventMessage(2800800, 300)', after[12804803])
+
+    def test_beast_alternatives_bind_actual_source_actors_and_reject_limb_drift(self):
+        from tools.bb_enemizer.chalice_beast_donors import WATCHDOG, ABHORRENT, ATTACHMENT_IDS
+        for donor in (WATCHDOG, ABHORRENT):
+            recipe = next(r for r in recipes() if r.donor == donor)
+            plan = recipe.native_plan(self.slots, self.npcs, self.effects, 'beast-alternative')
+            self.assertEqual([BRIDGE, *ATTACHMENT_IDS[donor.key]], plan['boss_contract']['added_event_ids'])
+            self.assertEqual(list(donor.source_handlers), plan['boss_contract']['source_handlers'])
+            self.assertEqual(2, len(plan['primary_init_source_bindings']))
+            for row in plan['primary_init_source_bindings']:
+                self.assertEqual(donor.source_part_sha256, row['source_provenance']['part_sha256'])
+                self.assertEqual(donor.source_map, row['source_map'])
+            start = self.source.index(f'$Event({donor.source_handlers[0]},')
+            end = self.source.index('$Event(', start + 1)
+            body = self.source[start:end]
+            altered = body.replace('SetNPCPartHP', 'UnknownInstruction', 1)
+            self.assertNotEqual(body, altered)
+            changed = self.source[:start] + altered + self.source[end:]
+            with self.assertRaisesRegex(ValueError, 'combat handler'):
+                recipe.patch(self.arena, changed)
+
+    def test_beast_alternatives_can_complete_the_good_pool(self):
+        from tools.build_boss_encounters import good_boss_routes
+        from tools.bb_enemizer.good_boss_pool import assign_good_bosses, GOOD_FAMILIES
+        from tools.bb_enemizer.chalice_beast_donors import WATCHDOG, ABHORRENT
+        routes = good_boss_routes()
+        for donor in (WATCHDOG, ABHORRENT):
+            forbidden = [{(arena,key)} for arena,key in routes if arena == 'the-one-reborn' and key != donor.key]
+            assignment = assign_good_bosses('forced-reborn-beast', routes,
+                allow_self=False, forbidden_combinations=forbidden)
+            self.assertEqual(donor.key, assignment.arena_to_donor['the-one-reborn'])
+            self.assertEqual(set(GOOD_FAMILIES), set(assignment.arena_to_family.values()))
 
 
 if __name__ == "__main__":
