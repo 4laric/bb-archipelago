@@ -360,7 +360,7 @@ class LauncherApp:
         self._enemy_widgets: list[Any] = []
         self._busy = False
 
-        root.title("Bloodborne Archipelago")
+        root.title(f"Bloodborne Archipelago — {launcher_version()}")
         root.minsize(1000, 680)
         root.geometry("1080x860")
         root.columnconfigure(0, weight=1)
