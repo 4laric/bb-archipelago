@@ -431,6 +431,11 @@ class Sidebar:
             font=FONT_BRAND, anchor="w",
         ).pack(fill="x")
         tk.Frame(brand_block, bg=THEME_BLOOD, height=2).pack(fill="x", pady=(10, 0))
+        tk.Label(
+            brand_block, text=f"Launcher: {version}", bg=THEME_SIDEBAR,
+            fg=THEME_MUTED, font=FONT_SMALL, anchor="w", justify="left",
+            wraplength=SIDEBAR_WIDTH - 40,
+        ).pack(fill="x", pady=(8, 0))
 
         self.nav = tk.Frame(rail, bg=THEME_SIDEBAR)
         self.nav.grid(row=1, column=0, sticky="ew")
@@ -446,9 +451,6 @@ class Sidebar:
             anchor="w", justify="left", wraplength=SIDEBAR_WIDTH - 60,
         )
         self.health.grid(row=0, column=1, sticky="ew", padx=(8, 0))
-        tk.Label(
-            footer, text=version, bg=THEME_SIDEBAR, fg=THEME_DIM, font=FONT_SMALL, anchor="w",
-        ).grid(row=1, column=0, columnspan=2, sticky="ew", pady=(10, 0))
 
         notebook.bind("<<NotebookTabChanged>>", lambda _e: self._sync(), add="+")
 
